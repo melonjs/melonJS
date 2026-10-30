@@ -1,4 +1,15 @@
-import type { input } from "melonjs";
+import { input } from "melonjs";
+
+/**
+ * melonJS's hook for a gamepad driven by code, which is internal to the
+ * engine (src/input/gamepad.ts) and so not in its type definitions
+ */
+interface VirtualGamepadHook {
+	addVirtualGamepad(pad: VirtualPad, index: number): void;
+	removeVirtualGamepad(pad: VirtualPad): boolean;
+}
+
+export const virtualGamepads = input as unknown as VirtualGamepadHook;
 
 /** a button of the pad, written as the controls are pressed */
 export interface PadButton {
@@ -62,11 +73,10 @@ class PhoneVibration {
 }
 
 /**
- * The virtual gamepad the controls write to, added to a gamepad slot with
- * `input.addVirtualGamepad`: the engine reads it every frame as it reads a
- * real pad.
+ * The pad the controls write to. In its gamepad slot, the engine reads it
+ * every frame as it reads a real pad.
  */
-export class VirtualPad implements input.VirtualGamepad {
+export class VirtualPad {
 	readonly id = "melonJS virtual gamepad (STANDARD GAMEPAD)";
 	readonly buttons: PadButton[];
 	readonly axes: number[];

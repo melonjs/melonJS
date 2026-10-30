@@ -4,7 +4,6 @@
 
 ### Added
 - State: a `"pixelate"` transition, `state.transition("pixelate", color, duration, size)`: the screen breaks into growing blocks and comes back sharp. Skipped on Canvas
-- Input: `input.addVirtualGamepad(pad, index)` puts a gamepad the game drives itself, such as on-screen touch controls, in a gamepad slot, where `bindGamepad` bindings read it like a real pad (a real pad in the same slot still works). `removeVirtualGamepad(pad)` takes it out ([#1719](https://github.com/melonjs/melonJS/issues/1719))
 
 ### Fixed
 - Rendering: with `subPixel` off, each draw snaps to whole pixels once, where it lands, the same on Canvas, WebGL and WebGPU ([#1765](https://github.com/melonjs/melonJS/issues/1765)). Something at a fractional position can draw one pixel over

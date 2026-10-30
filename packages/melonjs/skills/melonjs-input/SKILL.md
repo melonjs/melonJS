@@ -1,6 +1,6 @@
 ---
 name: melonjs-input
-description: "Use this skill for keyboard, pointer, mouse, touch and gamepad input in melonJS. Covers the bindKey action indirection, registerPointerEvent on regions, the isKinematic requirement that silently blocks pointer events, which of several overlapping objects receives an event and how to consume it, world vs screen pointer coordinates, and gamepad mapping onto the same actions. Triggers on: input, bindKey, isKeyPressed, KEY, registerPointerEvent, releasePointerEvent, pointerdown, pointerup, pointermove, POINTERMOVE, gamepad, bindGamepad, triggerKeyEvent, virtual gamepad, touch controls, joystick, addVirtualGamepad, gamepad-plugin, KEYDOWN, KEYUP, press any key, splash screen, click, touch, drag, hit test, event propagation, stop propagating, overlapping, which object gets the click."
+description: "Use this skill for keyboard, pointer, mouse, touch and gamepad input in melonJS. Covers the bindKey action indirection, registerPointerEvent on regions, the isKinematic requirement that silently blocks pointer events, which of several overlapping objects receives an event and how to consume it, world vs screen pointer coordinates, and gamepad mapping onto the same actions. Triggers on: input, bindKey, isKeyPressed, KEY, registerPointerEvent, releasePointerEvent, pointerdown, pointerup, pointermove, POINTERMOVE, gamepad, bindGamepad, triggerKeyEvent, virtual gamepad, touch controls, joystick, gamepad-plugin, KEYDOWN, KEYUP, press any key, splash screen, click, touch, drag, hit test, event propagation, stop propagating, overlapping, which object gets the click."
 license: MIT
 ---
 
@@ -292,11 +292,6 @@ in turn, or a key with `{ key: input.KEY.SPACE }`. Each finger is followed on
 its own, a touch starting on the controls does not reach the game, and they
 hide while a real pad is in use. `plugin.cache.gamepad.visible` says whether
 they show, to word a prompt ("tap" or a key name).
-
-Under it is `input.addVirtualGamepad(pad, index)`: any object with an `id`,
-standard-layout `buttons` (`{ pressed, value }`) and `axes`, changed in place,
-is read every frame in that slot together with a real pad there.
-`removeVirtualGamepad(pad)` takes it out and lets go of what it held.
 
 A single key can also be pressed directly, reaching the same actions:
 

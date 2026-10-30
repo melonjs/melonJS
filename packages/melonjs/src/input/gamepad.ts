@@ -108,13 +108,12 @@ const bindings: Record<string, GamepadBindings | undefined> = {};
 const remap: Map<string, GamepadMapping> = new Map();
 
 /**
- * A gamepad the game drives itself, such as on-screen touch controls.
- *
- * Added to a slot with {@link input.addVirtualGamepad}, it is read every
- * frame like a real pad in that slot, so everything bound there with
- * {@link input.bindGamepad} works with it. Its buttons and axes follow the
- * standard layout ({@link input.GAMEPAD}); the game updates them in place.
- * @category Input
+ * A gamepad driven by code, such as the gamepad plugin's touch controls.
+ * Added to a slot with `addVirtualGamepad`, it is read every frame like a
+ * real pad there. Buttons and axes follow the standard layout and are
+ * updated in place.
+ * @ignore
+ * @internal
  */
 export interface VirtualGamepad {
 	/** an identifier, as a real pad's `id` */
@@ -764,38 +763,16 @@ function gamepads():
 }
 
 /**
- * Add a virtual gamepad, such as on-screen touch controls, to a slot.
- *
- * Everything bound to that slot with {@link input.bindGamepad} answers to it,
- * so a game reads touch controls and a real pad with the same code. The
- * {@link VirtualGamepad} is read every frame: change its buttons and axes in
- * place as the player presses.
- *
- * A real pad the browser reports in the same slot is read too, and either
- * one presses a button, so a player can switch between them at any time.
- * `activeGamepad`, `vibrateGamepad` and `hasGamepadVibration` see the real pad
- * when there is one, and the virtual one otherwise.
- *
- * No {@link event.GAMEPAD_CONNECTED} is sent for a virtual pad: that event
- * stays about hardware, so a game can listen to it to hide its touch
- * controls when the player picks up a real pad.
+ * Put a virtual gamepad in a slot, for the gamepad plugin. A real pad in the
+ * same slot is still read: a button is pressed when either has it pressed.
+ * No GAMEPAD_CONNECTED is sent for it, so that event stays about hardware.
  * @param gamepad - the virtual pad
- * @param [index=0] - the slot, 0 for the one most games bind
+ * @param [index=0] - the slot
  * @throws {RangeError} if the index is not a slot number
  * @throws {Error} if the slot already holds a virtual pad, or the pad is
  * already in a slot
- * @example
- * const pad = {
- *     id: "touch controls",
- *     buttons: Array.from({ length: 17 }, () => ({ pressed: false, value: 0 })),
- *     axes: [0, 0, 0, 0],
- * };
- * me.input.addVirtualGamepad(pad);
- * // the jump button, pressed
- * pad.buttons[me.input.GAMEPAD.BUTTONS.FACE_1] = { pressed: true, value: 1 };
- * // the stick, pushed right
- * pad.axes[me.input.GAMEPAD.AXES.LX] = 1;
- * @category Input
+ * @ignore
+ * @internal
  */
 export function addVirtualGamepad(gamepad: VirtualGamepad, index = 0): void {
 	if (!Number.isInteger(index) || index < 0) {
@@ -811,13 +788,12 @@ export function addVirtualGamepad(gamepad: VirtualGamepad, index = 0): void {
 }
 
 /**
- * Take a virtual gamepad out of its slot.
- *
- * What it held pressed is released on the next frame, as when a real pad is
- * unplugged.
- * @param gamepad - the virtual pad given to {@link input.addVirtualGamepad}
+ * Take a virtual gamepad out of its slot. What it held is released on the
+ * next frame, as when a real pad is unplugged.
+ * @param gamepad - the virtual pad
  * @returns false when it was not in any slot
- * @category Input
+ * @ignore
+ * @internal
  */
 export function removeVirtualGamepad(gamepad: VirtualGamepad): boolean {
 	const index = virtualGamepads.indexOf(gamepad);

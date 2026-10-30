@@ -14,7 +14,7 @@ import {
 } from "melonjs";
 import packageJson from "../package.json" with { type: "json" };
 import { type Look, VirtualButton, VirtualStick } from "./controls.ts";
-import { VirtualPad } from "./pad.ts";
+import { VirtualPad, virtualGamepads } from "./pad.ts";
 import type {
 	ButtonOptions,
 	GamepadPluginOptions,
@@ -274,10 +274,10 @@ export class GamepadPlugin extends plugin.BasePlugin {
 			this.releaseAll();
 		}
 		if (visible && !this.added) {
-			input.addVirtualGamepad(this.pad, this.index);
+			virtualGamepads.addVirtualGamepad(this.pad, this.index);
 			this.added = true;
 		} else if (!visible && this.added) {
-			input.removeVirtualGamepad(this.pad);
+			virtualGamepads.removeVirtualGamepad(this.pad);
 			this.added = false;
 		}
 		if (this.ready) {
