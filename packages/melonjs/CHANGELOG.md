@@ -1,6 +1,6 @@
 # Changelog
 
-## [20.12.0] (melonJS 2) - _unreleased_
+## [20.12.0] (melonJS 2) - _2026-10-30_
 
 ### Added
 - State: a `"pixelate"` transition, `state.transition("pixelate", color, duration, size)`: the screen breaks into growing blocks and comes back sharp. Skipped on Canvas
@@ -28,6 +28,7 @@
 - Input: a gamepad unplugged while a button or the stick is held lets go of the keys bound to them, instead of leaving them pressed
 - Input: a stick with only one side bound lets go of its key when it returns to the centre or rests just past it, instead of holding it until pushed that way again
 - Lighting: a `Light2d`'s glow and the darkness around it compile when the light is added to the world, not inside the first frame that draws it
+- Typings: `TextureAtlas#createAnimationFromName` declares both of its arguments optional, as they are at runtime, and is documented again
 
 ## [20.11.0] (melonJS 2) - _2026-10-27_
 
