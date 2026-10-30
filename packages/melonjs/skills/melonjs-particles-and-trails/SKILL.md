@@ -1,6 +1,6 @@
 ---
 name: melonjs-particles-and-trails
-description: "Use this skill for particle effects and motion trails in melonJS — ParticleEmitter configuration, burst versus stream emission, the referenceSpace frame of reference introduced in 20.2, 3D particle motion through elevation and minSpread/maxSpread in 20.8, and the Trail renderable. Covers the emitter that silently does nothing until you call an emit method. Triggers on: Trail3d, ribbon, exhaust trail, speed streak, ski track, tyre mark, ribbonNormal, ParticleEmitter, particles, burstParticles, streamParticles, referenceSpace, ParticleEmitterSettings, elevation, minSpread, maxSpread, spawn area, Trail, explosion, smoke, sparks, debris, ring, exhaust, emitter, tintOverLife, colour over life, color over life, flame, fire."
+description: "Use this skill for particle effects and motion trails in melonJS — ParticleEmitter configuration, burst versus stream emission, the referenceSpace frame of reference introduced in 20.2, 3D particle motion through elevation and minSpread/maxSpread in 20.8, and the Trail renderable. Covers the emitter that silently does nothing until you call an emit method. Triggers on: Trail3d, ribbon, exhaust trail, speed streak, ski track, tyre mark, ribbonNormal, ParticleEmitter, particles, particle editor, tune particles, spawn depth, volume, burstParticles, streamParticles, referenceSpace, ParticleEmitterSettings, elevation, minSpread, maxSpread, spawn area, Trail, explosion, smoke, sparks, debris, ring, exhaust, emitter, tintOverLife, colour over life, color over life, flame, fire."
 license: MIT
 ---
 
@@ -27,6 +27,45 @@ emitter.burstParticles();      // one shot
 `streamParticles(ms)` takes an optional run time; without one it uses the
 `duration` setting, which defaults to `Infinity` — a stream runs until
 `stopStream()`. `burstParticles(n)` launches `n`, or `totalParticles`.
+
+## Tuning an effect: the Particle Editor
+
+Settings are easier to find by eye than by reasoning. The
+[Particle Editor](https://melonjs.github.io/melonJS/examples/#/particle-editor)
+runs one emitter live, with every setting on a slider, from a preset (fire,
+smoke, rain, explosions, 3D bursts and rings…), a built-in texture or a sprite
+(sheet) of your own, under a 2D camera or an orbiting 3D one. It writes out the
+matching `new ParticleEmitter(...)` call, listing only what differs from the
+defaults, and the same settings as JSON, in the emitter's own units, to load at
+run time:
+
+```js
+// preloaded with { name: "smoke-fx", type: "json", src: "data/fx/smoke.json" }
+const effect = loader.getJSON("smoke-fx");
+const emitter = new ParticleEmitter(x, y, {
+    ...effect.settings,
+    // no `image` for the plain square: `getImage` would give null
+    ...(effect.image ? { image: loader.getImage(effect.image) } : {}),
+});
+```
+
+Point a user there when they are tuning numbers by trial and error.
+
+It covers every setting that changes how one emitter looks, but not:
+
+- **Layered effects.** It shows one emitter at a time. A campfire (flames,
+  sparks, smoke) or an explosion (flash, debris, smoke) is several emitters
+  at the same spot: tune each in the editor, then add them side by side,
+  the one drawn on top last (or with a higher `z`).
+- **Trails.** `Trail` and `Trail3d` are separate renderables; see below.
+- **Code-only settings.** `onComplete`, `autoDestroyOnComplete`,
+  `accurateBounds`, and a `Container` as `referenceSpace` (it offers
+  `"local"` and `"world"`). `textureAdditive` is left out: `blendMode`
+  replaces it.
+- **Changes at run time.** Calling `burstParticles()` when something
+  happens, or assigning `emitter.blendMode` while particles are alive, is
+  game code. Its "moving emitter" option previews the common case: an
+  emitter attached to something that moves.
 
 ## Sprite-sheet particles
 
@@ -116,6 +155,18 @@ const area = radius * 2;
 const emitter = new ParticleEmitter(x - area / 2, y - area / 2, {
     width: area, height: area,
 });
+```
+
+Under a `Camera3d`, `depth` (20.13) gives the area its third side: each
+particle is born at a random depth within it, centered on the emitter's own
+depth, unlike `width` and `height`. Without it every particle starts on one
+plane facing the camera, so rain or dust seen from the side is a flat sheet. A
+2D camera does not show depth, though with an order-dependent blend the
+particles are still sorted by it. It is the spawn box's size, not the
+emitter's `depth` property, which is where the emitter sits along Z.
+
+```js
+new ParticleEmitter(x, y, { width: 600, height: 20, depth: 400 });   // a volume of rain
 ```
 
 ## Particles in 3D

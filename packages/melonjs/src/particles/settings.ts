@@ -7,6 +7,7 @@ import type ParticleEmitter from "./emitter.ts";
  * to the constructor or {@link ParticleEmitter#reset}.
  * @category Particles
  * @see {@link ParticleEmitter}
+ * @see [Particle Editor](https://melonjs.github.io/melonJS/examples/#/particle-editor) — every setting on a slider, with the code or JSON to copy
  */
 export interface ParticleEmitterSettings {
 	/**
@@ -20,6 +21,20 @@ export interface ParticleEmitterSettings {
 	 * @default 1
 	 */
 	height: number;
+
+	/**
+	 * Depth of the particle spawn area, along Z: each particle is born at a
+	 * random depth within it, centered on the emitter. With
+	 * {@link ParticleEmitterSettings.width} and
+	 * {@link ParticleEmitterSettings.height} it makes the area a box, so under
+	 * a {@link Camera3d} rain falls through a volume instead of a sheet facing
+	 * the viewer. A 2D camera does not show the depth itself; with an order
+	 * dependent blend mode, the particles are then sorted by it.
+	 * <br><br>
+	 * Not {@link Renderable#depth}, the emitter's own position along Z.
+	 * @default 0
+	 */
+	depth: number;
 
 	/**
 	 * Image used for particles texture (by default melonJS will create a white
@@ -417,6 +432,7 @@ export interface ParticleEmitterSettings {
 const defaultParticleEmitterSettings: ParticleEmitterSettings = {
 	width: 1,
 	height: 1,
+	depth: 0,
 	image: undefined,
 	framewidth: undefined,
 	frameheight: undefined,
