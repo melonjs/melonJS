@@ -133,6 +133,10 @@ A real pad and the touch controls can share a slot: the engine reads both, and e
 | The stick moves but nothing walks | The game binds the stick's axes (`LX`) with a `threshold`, or the D-pad buttons; the left stick presses the D-pad, the right one does not by default |
 | `gamepad 0 already holds a virtual gamepad` | Two sets of controls in one slot: give the second one another `index` |
 
+## Developing
+
+`pnpm -F @melonjs/gamepad-plugin visual` serves a visual test page, with the controls over a small scene and toggles for each feature, to try on a desktop or a phone: see [`visual/README.md`](visual/README.md). `pnpm -F @melonjs/gamepad-plugin test` runs the tests.
+
 ## License
 
 MIT

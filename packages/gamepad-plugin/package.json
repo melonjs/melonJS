@@ -58,6 +58,7 @@
 		"tsconfig": "workspace:*",
 		"tsx": "^4.23.1",
 		"typescript": "^6.0.2",
+		"vite": "8.1.5",
 		"vitest": "^4.1.11"
 	},
 	"scripts": {
@@ -70,6 +71,7 @@
 		"tsc:watch": "tsc --project tsconfig.build.json --watch --noUnusedParameters false --noUnusedLocals false --preserveWatchOutput",
 		"test": "vitest run",
 		"test:types": "tsc",
-		"lint": "eslint src tests"
+		"lint": "eslint src tests",
+		"visual": "vite --config visual/vite.config.ts"
 	}
 }
