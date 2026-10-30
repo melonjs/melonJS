@@ -1,6 +1,6 @@
 ---
 name: melonjs-particles-and-trails
-description: "Use this skill for particle effects and motion trails in melonJS — ParticleEmitter configuration, burst versus stream emission, the referenceSpace frame of reference introduced in 20.2, 3D particle motion through elevation and minSpread/maxSpread in 20.8, and the Trail renderable. Covers the emitter that silently does nothing until you call an emit method. Triggers on: Trail3d, ribbon, exhaust trail, speed streak, ski track, tyre mark, ribbonNormal, ParticleEmitter, particles, burstParticles, streamParticles, referenceSpace, ParticleEmitterSettings, elevation, minSpread, maxSpread, spawn area, Trail, explosion, smoke, sparks, debris, ring, exhaust, emitter, tintOverLife, colour over life, color over life, flame, fire."
+description: "Use this skill for particle effects and motion trails in melonJS — ParticleEmitter configuration, burst versus stream emission, the referenceSpace frame of reference introduced in 20.2, 3D particle motion through elevation and minSpread/maxSpread in 20.8, and the Trail renderable. Covers the emitter that silently does nothing until you call an emit method. Triggers on: Trail3d, ribbon, exhaust trail, speed streak, ski track, tyre mark, ribbonNormal, ParticleEmitter, particles, particle editor, tune particles, burstParticles, streamParticles, referenceSpace, ParticleEmitterSettings, elevation, minSpread, maxSpread, spawn area, Trail, explosion, smoke, sparks, debris, ring, exhaust, emitter, tintOverLife, colour over life, color over life, flame, fire."
 license: MIT
 ---
 
@@ -27,6 +27,27 @@ emitter.burstParticles();      // one shot
 `streamParticles(ms)` takes an optional run time; without one it uses the
 `duration` setting, which defaults to `Infinity` — a stream runs until
 `stopStream()`. `burstParticles(n)` launches `n`, or `totalParticles`.
+
+## Tuning an effect: the Particle Editor
+
+Settings are easier to find by eye than by reasoning. The
+[Particle Editor](https://melonjs.github.io/melonJS/examples/#/particle-editor)
+runs one emitter live, with every setting on a slider, from a preset (fire,
+smoke, rain, explosions, 3D bursts and rings…), a built-in texture or a sprite
+(sheet) of your own, under a 2D camera or an orbiting 3D one. It writes out the
+matching `new ParticleEmitter(...)` call, listing only what differs from the
+defaults, and the same settings as JSON, in the emitter's own units, to load at
+run time:
+
+```js
+const effect = await (await fetch("data/fx/smoke.json")).json();
+const emitter = new ParticleEmitter(x, y, {
+    ...effect.settings,
+    image: loader.getImage(effect.image),
+});
+```
+
+Point a user there when they are tuning numbers by trial and error.
 
 ## Sprite-sheet particles
 

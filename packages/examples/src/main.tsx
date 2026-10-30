@@ -38,6 +38,11 @@ const ExampleBlendModeRenderables = lazy(() =>
 		(m) => ({ default: m.ExampleBlendModeRenderables }),
 	),
 );
+const ExampleParticleEditor = lazy(() =>
+	import("./examples/particleEditor/ExampleParticleEditor").then((m) => ({
+		default: m.ExampleParticleEditor,
+	})),
+);
 const ExampleParticleReferenceSpace = lazy(() =>
 	import(
 		"./examples/particleReferenceSpace/ExampleParticleReferenceSpace"
@@ -320,6 +325,14 @@ const examples: {
 		sourceDir: "blendModeRenderables",
 		description:
 			"The same blend mode applied to a sprite, text, a shape fill, particles and an image layer.",
+	},
+	{
+		component: <ExampleParticleEditor />,
+		label: "Particle Editor",
+		path: "particle-editor",
+		sourceDir: "particleEditor",
+		description:
+			"Build a particle effect from a preset, a texture or your own sprite, in 2D or 3D, and copy the code into your game.",
 	},
 	{
 		component: <ExampleParticleReferenceSpace />,
