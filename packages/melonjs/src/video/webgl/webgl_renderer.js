@@ -1,4 +1,5 @@
 import { warnOnce } from "../../lang/console.js";
+import Light2d from "../../lighting/light2d.ts";
 import { shaderList } from "../../loader/cache.js";
 import { Color, colorPool } from "./../../math/color.ts";
 import { Matrix3d } from "../../math/matrix3d.ts";
@@ -960,6 +961,42 @@ export default class WebGLRenderer extends Renderer {
 			});
 		}
 		return this._prewarmed;
+	}
+
+	/**
+	 * Warm the renderable's own draw. A program is linked when it is made on
+	 * this backend, so what is left is what the renderer makes the first
+	 * time a frame needs it: the effects a light draws with.
+	 * @param {Renderable} renderable - the renderable to warm for
+	 * @override
+	 * @ignore
+	 * @internal
+	 */
+	_warmDraw(renderable) {
+		if (renderable instanceof Light2d) {
+			this._warmLight(renderable);
+		}
+	}
+
+	/**
+	 * Link, off the frame, the effects a light draws with: its glow, through
+	 * the radial-gradient effect, and for a light with a soft edge the
+	 * stage's darkness, through the ambient-light effect (see `drawLight`,
+	 * `drawAmbientLight`). The renderer made both the first time a frame drew
+	 * a light, so they were linked inside that frame.
+	 * @param {Light2d} light - the light to warm for
+	 * @ignore
+	 * @internal
+	 */
+	_warmLight(light) {
+		const gl = this.gl;
+		if (gl === null || gl.isContextLost?.() === true) {
+			return;
+		}
+		this._lightShader ??= new RadialGradientEffect(this);
+		if (light.softness > 0) {
+			this._ambientShader ??= new AmbientLightEffect(this);
+		}
 	}
 
 	/**
