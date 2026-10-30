@@ -459,6 +459,11 @@ export class CrusherEntity extends GenericEnemyEntity {
 		}
 	}
 
+	// and while on it: its first touch of the ground may come at a corner
+	onCollisionActive(response: CollisionResponse, other: Renderable) {
+		this.onCollisionStart(response, other);
+	}
+
 	override touchPlayer(player: PlayerEntity, touch: Touch) {
 		if (touch.body) {
 			player.hurt();
