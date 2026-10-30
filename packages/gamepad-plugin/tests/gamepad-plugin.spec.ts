@@ -315,6 +315,55 @@ describe("GamepadPlugin", () => {
 		}
 	});
 
+	it("does not let a finger held on the controls select the canvas", () => {
+		// (-webkit-touch-callout, for iOS, is not read back by Chromium)
+		expect(canvas.style.getPropertyValue("user-select")).toBe("none");
+
+		const touchAt = (x: number, y: number): TouchEvent => {
+			const rect = canvas.getBoundingClientRect();
+			const touch = new Touch({
+				identifier: 1,
+				target: canvas,
+				clientX: rect.left + (x * rect.width) / app.viewport.width,
+				clientY: rect.top + (y * rect.height) / app.viewport.height,
+			});
+			const e = new TouchEvent("touchstart", {
+				touches: [touch],
+				changedTouches: [touch],
+				bubbles: true,
+				cancelable: true,
+			});
+			canvas.dispatchEvent(e);
+			return e;
+		};
+		// on a control: no selection, magnifier or image menu
+		expect(touchAt(button.center.x, button.center.y).defaultPrevented).toBe(
+			true,
+		);
+		expect(touchAt(stick.center.x, stick.center.y).defaultPrevented).toBe(true);
+		// elsewhere: the page's and the game's own business
+		expect(touchAt(app.viewport.width / 2, 20).defaultPrevented).toBe(false);
+	});
+
+	it("blocks the context menu only while the controls show", () => {
+		const menu = (): boolean => {
+			const e = new MouseEvent("contextmenu", {
+				bubbles: true,
+				cancelable: true,
+			});
+			canvas.dispatchEvent(e);
+			return e.defaultPrevented;
+		};
+		expect(menu()).toBe(true);
+		gamepad.enabled = false;
+		expect(menu()).toBe(false);
+	});
+
+	it("puts the canvas styles back once destroyed", () => {
+		gamepad.destroy();
+		expect(canvas.style.getPropertyValue("user-select")).toBe("");
+	});
+
 	it("keeps a touch on the controls from the game, and not the others", () => {
 		const spy = vi.fn();
 		input.registerPointerEvent("pointerdown", app.viewport, spy);
