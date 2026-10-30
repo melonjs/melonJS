@@ -706,11 +706,24 @@ describe("GamepadPlugin", () => {
 				return true;
 			});
 			const real = navigator.vibrate;
+			const tapped = (hasBeenActive: boolean): void => {
+				Object.defineProperty(navigator, "userActivation", {
+					value: { hasBeenActive },
+					configurable: true,
+				});
+			};
 			Object.defineProperty(navigator, "vibrate", {
 				value: vibrate,
 				configurable: true,
 			});
 			try {
+				// before the first tap has ended, the browser would refuse
+				tapped(false);
+				down(1, button.center);
+				up(1, button.center);
+				expect(vibrate).not.toHaveBeenCalled();
+
+				tapped(true);
 				down(1, button.center);
 				up(1, button.center);
 				expect(vibrate).toHaveBeenCalledWith(10);
@@ -726,6 +739,8 @@ describe("GamepadPlugin", () => {
 				up(3, gamepad.buttons[0].center);
 				expect(vibrate).not.toHaveBeenCalled();
 			} finally {
+				// back to the browser's own, on the prototype
+				delete (navigator as { userActivation?: unknown }).userActivation;
 				Object.defineProperty(navigator, "vibrate", {
 					value: real,
 					configurable: true,

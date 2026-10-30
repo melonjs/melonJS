@@ -106,6 +106,11 @@ export class VirtualPad {
 		if (duration <= 0 || typeof navigator.vibrate !== "function") {
 			return;
 		}
+		// a touch counts as the player's own only once it ends, and the
+		// browser refuses (and logs) a vibration before that
+		if (!navigator.userActivation?.hasBeenActive) {
+			return;
+		}
 		if ((this.vibrationActuator as PhoneVibration | undefined)?.playing) {
 			return;
 		}
