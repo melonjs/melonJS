@@ -1,4 +1,5 @@
 import { Rect } from "../../geometries/rectangle.ts";
+import { warnOnce } from "../../lang/console.js";
 import { vector2dPool } from "../../math/vector2d.ts";
 import { boundsPool } from "../../physics/bounds.ts";
 import Renderable from "../../renderable/renderable.js";
@@ -23,14 +24,6 @@ import * as TMXUtils from "./TMXUtils.js";
 const FLIP_H_BIT = 1 << 0;
 const FLIP_V_BIT = 1 << 1;
 const FLIP_AD_BIT = 1 << 2;
-
-// session-wide latch for the "gpuTilemap requested but no WebGL2" warning.
-// Emitted at most once across all TMXLayer instances so a multi-layer map
-// doesn't spam the console; deferred to the first layer that actually hits
-// the fallback so apps without any tilemap stay quiet (the prior heads-up
-// at Application init time fired regardless of whether a TMX layer was
-// ever loaded).
-let _warnedNoGpuTileSupportOnce = false;
 
 // the area an offset camera shows, handed to the tile renderers in its place
 // (made on first use)
@@ -542,12 +535,9 @@ export default class TMXLayer extends Renderable {
 		// no tilemap loaded stay quiet.
 		if (gpuAllowed) {
 			if (elig.reason === "no-gpu-renderer") {
-				if (!_warnedNoGpuTileSupportOnce) {
-					_warnedNoGpuTileSupportOnce = true;
-					console.warn(
-						"melonJS: gpuTilemap is enabled but the active renderer has no GPU tile-layer support — falling back to the legacy tile renderer for every tile layer",
-					);
-				}
+				warnOnce(
+					"melonJS: gpuTilemap is enabled but the active renderer has no GPU tile-layer support — falling back to the legacy tile renderer for every tile layer",
+				);
 			} else {
 				console.warn(
 					`melonJS: layer "${this.name}" using legacy tile renderer (${elig.reason})`,
@@ -700,13 +690,8 @@ export default class TMXLayer extends Renderable {
 		// `layerData` is a Uint16Array; writes silently truncate above
 		// 0xFFFF. Warn once per layer so a runtime `setTile` with a
 		// GID >= 65536 doesn't corrupt the cell undetected.
-		if (cleanGid > 0xffff && !this._truncationWarned) {
-			/**
-			 * @ignore
-			 * @internal
-			 */
-			this._truncationWarned = true;
-			console.warn(
+		if (cleanGid > 0xffff) {
+			warnOnce(
 				"melonJS: setTile received GID " +
 					cleanGid +
 					" which exceeds the 16-bit cell capacity (max 65535). Tile will be truncated and render incorrectly.",

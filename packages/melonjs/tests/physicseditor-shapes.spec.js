@@ -909,7 +909,6 @@ describe("exported shape lists", () => {
 			// Entity builds a default body in its constructor, so the file's
 			// shapes must REPLACE that rather than join it
 			vi.spyOn(console, "warn").mockImplementation(() => {});
-			vi.spyOn(console, "groupCollapsed").mockImplementation(() => {});
 			const e = new Entity(0, 0, {
 				width: 32,
 				height: 32,
@@ -923,30 +922,15 @@ describe("exported shape lists", () => {
 	});
 
 	describe("the deprecated imperative path", () => {
-		it("Body#fromJSON is still reachable after being moved out of Body", () => {
-			// it lives on the prototype from `lang/deprecated.js` now, which is
-			// loaded for its side effect. If that import were dropped, or its
-			// order changed back, the method would simply be undefined here.
-			vi.spyOn(console, "warn").mockImplementation(() => {});
-			vi.spyOn(console, "groupCollapsed").mockImplementation(() => {});
-			const body = new Body(new Renderable(0, 0, 32, 32), []);
-			expect(typeof body.fromJSON).toBe("function");
-			expect(body.fromJSON(FILE, "banana")).toBe(1);
-			expect(body.shapes).toHaveLength(1);
-		});
-
 		it("Body#fromJSON warns with the name, version and replacement", () => {
 			// the whole point of a deprecation is that the message says what to
 			// do instead, so pin the three parts rather than the word
 			// "deprecated" on its own
 			const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-			const group = vi
-				.spyOn(console, "groupCollapsed")
-				.mockImplementation(() => {});
 			const body = new Body(new Renderable(0, 0, 32, 32), []);
 			body.fromJSON(FILE, "banana");
 
-			const said = warn.mock.calls.concat(group.mock.calls).flat().join(" ");
+			const said = warn.mock.calls.flat().join(" ");
 			expect(said).toContain("is deprecated since version");
 			expect(said).toContain("Body#fromJSON");
 			expect(said).toContain("20.7.0");
@@ -957,10 +941,20 @@ describe("exported shape lists", () => {
 			expect(said).toContain("builtin, matter and planck");
 		});
 
+		it("Body#fromJSON is still reachable after being moved out of Body", () => {
+			// it lives on the prototype from `lang/deprecated.js` now, which is
+			// loaded for its side effect. If that import were dropped, or its
+			// order changed back, the method would simply be undefined here.
+			vi.spyOn(console, "warn").mockImplementation(() => {});
+			const body = new Body(new Renderable(0, 0, 32, 32), []);
+			expect(typeof body.fromJSON).toBe("function");
+			expect(body.fromJSON(FILE, "banana")).toBe(1);
+			expect(body.shapes).toHaveLength(1);
+		});
+
 		it("Body#fromJSON throws, listing ids, when the id is omitted", () => {
 			// used to read `.length` off the map, get undefined, and add nothing
 			vi.spyOn(console, "warn").mockImplementation(() => {});
-			vi.spyOn(console, "groupCollapsed").mockImplementation(() => {});
 			const body = new Body(new Renderable(0, 0, 32, 32), []);
 			expect(() => {
 				return body.fromJSON(FILE);
@@ -994,28 +988,22 @@ describe("exported shape lists", () => {
 			}).toThrow(/cannot take a loader key/);
 		});
 
+		it("Body#addShape with an exported list still works, and warns", () => {
+			const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+			const body = new Body(new Renderable(0, 0, 32, 32), []);
+			body.addShape(FILE.banana);
+			expect(body.shapes).toHaveLength(1);
+			expect(warn.mock.calls.join(" ")).toContain("deprecated");
+		});
+
 		it("Body#addShape with one fixture says it is a fixture", () => {
 			// listing its own field names as candidate body ids sends the
 			// reader somewhere there is nothing to find
 			vi.spyOn(console, "warn").mockImplementation(() => {});
-			vi.spyOn(console, "groupCollapsed").mockImplementation(() => {});
 			const body = new Body(new Renderable(0, 0, 32, 32), []);
 			expect(() => {
 				return body.addShape(FILE.banana[0]);
 			}).toThrow(/a single exported fixture, not a list of them/);
-		});
-
-		it("Body#addShape with an exported list still works, and warns", () => {
-			const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-			const group = vi
-				.spyOn(console, "groupCollapsed")
-				.mockImplementation(() => {});
-			const body = new Body(new Renderable(0, 0, 32, 32), []);
-			body.addShape(FILE.banana);
-			expect(body.shapes).toHaveLength(1);
-			expect(warn.mock.calls.concat(group.mock.calls).join(" ")).toContain(
-				"deprecated",
-			);
 		});
 
 		it("new Body(r, shapes) with real shapes is untouched", () => {

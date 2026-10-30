@@ -1,3 +1,4 @@
+import { warnOnce } from "../../lang/console.js";
 import { shaderList } from "../../loader/cache.js";
 import { Color, colorPool } from "../../math/color.ts";
 import { Matrix3d } from "../../math/matrix3d.ts";
@@ -344,11 +345,6 @@ export default class WebGPURenderer extends Renderer {
 		 * @internal
 		 */
 		this._advancedBlendParent = null;
-		/**
-		 * @ignore
-		 * @internal
-		 */
-		this._advancedBlendWarned = new Set();
 
 		// consumed as the next pass's colorLoadOp "clear" (fresh target)
 		/** @ignore
@@ -378,11 +374,6 @@ export default class WebGPURenderer extends Renderer {
 		/** @ignore
 		 * @internal */
 		this.viewportRect = null;
-		// one-shot warn: a customShader (ShaderEffect fast path) cannot host
-		// a mesh draw on this backend
-		/** @ignore
-		 * @internal */
-		this.meshEffectWarned = false;
 		// the canvas GPUTexture handle of the current frame — kept beside its
 		// view because captureFrame copies from the TEXTURE, not the view
 		/** @ignore
@@ -2043,12 +2034,7 @@ export default class WebGPURenderer extends Renderer {
 	 * @internal
 	 */
 	_warnAdvancedBlendFallback(what) {
-		const key = `${what}:${this.currentBlendMode}`;
-		if (this._advancedBlendWarned.has(key)) {
-			return;
-		}
-		this._advancedBlendWarned.add(key);
-		console.warn(
+		warnOnce(
 			`WebGPURenderer: blend mode "${this.currentBlendMode}" is not supported for ${what} and falls back to "normal"`,
 		);
 	}
@@ -2717,10 +2703,8 @@ export default class WebGPURenderer extends Renderer {
 		if (
 			this.customShader != null &&
 			customShader === null &&
-			hostedEffect === null &&
-			this.meshEffectWarned !== true
+			hostedEffect === null
 		) {
-			this.meshEffectWarned = true;
 			// Two genuinely different reasons, and saying the wrong one costs
 			// hours: a ShaderEffect IS dual-language, so telling its author it
 			// "carries no wgsl module" sends them looking for a body that is
@@ -2736,7 +2720,7 @@ export default class WebGPURenderer extends Renderer {
 							"wgsl",
 						)
 					: null;
-			console.warn(
+			warnOnce(
 				blocker !== null
 					? `melonJS: this ShaderEffect cannot be hosted on a Mesh — ${blocker}. The mesh draws with the built-in shading.`
 					: "melonJS: this custom shader cannot be hosted on a Mesh by the WebGPU renderer (it carries no `wgsl` module) — the mesh draws with the built-in shading",
@@ -2757,13 +2741,8 @@ export default class WebGPURenderer extends Renderer {
 			mesh.instanceLayout !== undefined &&
 			retained &&
 			this.supportsInstancing === true;
-		if (
-			instanced &&
-			hostedEffect !== null &&
-			this.instancedEffectWarned !== true
-		) {
-			this.instancedEffectWarned = true;
-			console.warn(
+		if (instanced && hostedEffect !== null) {
+			warnOnce(
 				"melonJS: a ShaderEffect cannot be hosted on an InstancedMesh — the instanced shading is a separate shader family. The mesh draws with the built-in shading.",
 			);
 		}
@@ -3676,12 +3655,7 @@ export default class WebGPURenderer extends Renderer {
 		this.maskLevel++;
 		if (this.maskLevel > 0xff) {
 			this.maskLevel = 0xff;
-			if (this.maskDepthWarned !== true) {
-				this.maskDepthWarned = true;
-				console.warn(
-					"melonJS: setMask nesting deeper than 255 — mask level clamped",
-				);
-			}
+			warnOnce("melonJS: setMask nesting deeper than 255 — mask level clamped");
 		}
 
 		// write phase: every fragment of the mask shape increments the
@@ -4582,13 +4556,8 @@ export default class WebGPURenderer extends Renderer {
 			usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
 		});
 
-		if (wanted && !granted && this._hdrOutputRefusalWarned !== true) {
-			/**
-			 * @ignore
-			 * @internal
-			 */
-			this._hdrOutputRefusalWarned = true;
-			console.warn(
+		if (wanted && !granted) {
+			warnOnce(
 				"hdrOutput: true was requested but hdr is off, so the effect chain has nothing above 1 to present — presenting in SDR",
 			);
 		}

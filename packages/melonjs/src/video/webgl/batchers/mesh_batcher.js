@@ -1,3 +1,4 @@
+import { warnOnce } from "../../../lang/console.js";
 import { Matrix3d } from "../../../math/matrix3d.ts";
 import { off, on, RENDER_TARGET_CHANGED } from "../../../system/event.ts";
 import {
@@ -923,12 +924,9 @@ export default class MeshBatcher extends MaterialBatcher {
 			// Compiling a user body must not take the frame down with it. The
 			// effect contract is warn-and-degrade, and this runs inside
 			// `drawMesh` — an exception here escapes mid-frame, every frame.
-			if (this._meshEffectCompileWarned !== true) {
-				this._meshEffectCompileWarned = true;
-				console.warn(
-					`melonJS: this ShaderEffect failed to compile against the mesh shader — ${error instanceof Error ? error.message : String(error)}. The mesh draws with the built-in shading.`,
-				);
-			}
+			warnOnce(
+				`melonJS: this ShaderEffect failed to compile against the mesh shader — ${error instanceof Error ? error.message : String(error)}. The mesh draws with the built-in shading.`,
+			);
 			return null;
 		}
 	}
@@ -980,12 +978,9 @@ export default class MeshBatcher extends MaterialBatcher {
 		if (blocker === null) {
 			return true;
 		}
-		if (this._meshEffectBlockedWarned !== true) {
-			this._meshEffectBlockedWarned = true;
-			console.warn(
-				`melonJS: this ShaderEffect cannot be hosted on a Mesh — ${blocker}. The mesh draws with the built-in shading.`,
-			);
-		}
+		warnOnce(
+			`melonJS: this ShaderEffect cannot be hosted on a Mesh — ${blocker}. The mesh draws with the built-in shading.`,
+		);
 		return false;
 	}
 
@@ -1257,12 +1252,8 @@ export default class MeshBatcher extends MaterialBatcher {
 		// locations — or leaves them disabled, which makes the instance matrix
 		// singular and collapses the mesh to a point. The WebGPU backend has
 		// the same limitation, so both warn and fall back identically.
-		if (
-			this.renderer.customShader != null &&
-			this._instancedShaderWarned !== true
-		) {
-			this._instancedShaderWarned = true;
-			console.warn(
+		if (this.renderer.customShader != null) {
+			warnOnce(
 				"melonJS: a custom shader cannot be hosted on an InstancedMesh — the mesh draws with the built-in instanced shading",
 			);
 		}

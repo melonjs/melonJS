@@ -43,8 +43,8 @@ export function sparkTexture() {
 
 export interface ChestFx {
 	light: Light2d;
-	glow: GlowEffect | undefined;
-	pulse: Tween | undefined;
+	glow: GlowEffect;
+	pulse: Tween;
 	sparkles: ParticleEmitter;
 }
 
@@ -68,33 +68,29 @@ export function highlightChest(
 	// below the sprites, like the torch
 	app.world.addChild(light, z - 0.5);
 
-	// shader effect, WebGL/WebGPU only; its width is in pixels of the chest's art
-	let glow: GlowEffect | undefined;
-	let pulse: Tween | undefined;
-	if (app.renderer.shaderLanguage !== null) {
-		const halo = new GlowEffect(app.renderer, {
-			color: GOLD,
-			width: 4,
-			intensity: 0.8,
-		});
-		chest.sprite.addPostEffect(halo);
-		const level = { value: 0.7 };
-		pulse = new Tween(level)
-			.to(
-				{ value: 1.8 },
-				{
-					duration: 900,
-					easing: Tween.Easing.Sinusoidal.InOut,
-					yoyo: true,
-					repeat: Infinity,
-				},
-			)
-			.onUpdate(() => {
-				halo.setIntensity(level.value);
-			})
-			.start();
-		glow = halo;
-	}
+	// a shader effect: on the Canvas renderer it does nothing. Its width is in
+	// pixels of the chest's art
+	const glow = new GlowEffect(app.renderer, {
+		color: GOLD,
+		width: 4,
+		intensity: 0.8,
+	});
+	chest.sprite.addPostEffect(glow);
+	const level = { value: 0.7 };
+	const pulse = new Tween(level)
+		.to(
+			{ value: 1.8 },
+			{
+				duration: 900,
+				easing: Tween.Easing.Sinusoidal.InOut,
+				yoyo: true,
+				repeat: Infinity,
+			},
+		)
+		.onUpdate(() => {
+			glow.setIntensity(level.value);
+		})
+		.start();
 
 	// emitter position is the top left of the spawn area
 	const sparkles = new ParticleEmitter(at.x - 18, at.y - 28, {
@@ -135,10 +131,8 @@ export function openChest(
 	at: Vector2d,
 	fx: ChestFx,
 ) {
-	fx.pulse?.stop();
-	if (fx.glow) {
-		chest.sprite.removePostEffect(fx.glow);
-	}
+	fx.pulse.stop();
+	chest.sprite.removePostEffect(fx.glow);
 	fx.sparkles.stopStream();
 
 	const burst = new ParticleEmitter(at.x - 20, at.y - 26, {

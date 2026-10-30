@@ -1,3 +1,4 @@
+import { warnOnce } from "../../lang/console.js";
 import { imgList } from "../../loader/cache.js";
 import { colorPool } from "../../math/color.ts";
 import { decode, decodeBase64Image } from "../../utils/decode.ts";
@@ -123,8 +124,6 @@ export function parseTintColor(tintcolor) {
 // the images a transparent color was applied to: per image, the result
 // for each color, so tilesets sharing an image share one copy
 const keyedImages = new WeakMap();
-// an image that cannot be read is warned about once
-let warnedUnreadable = false;
 
 /**
  * An image with Tiled's transparent color applied: every pixel of exactly
@@ -169,12 +168,9 @@ export function applyTransparentColor(image, color) {
 		context.drawImage(image, 0, 0);
 		pixels = context.getImageData(0, 0, width, height);
 	} catch {
-		if (!warnedUnreadable) {
-			warnedUnreadable = true;
-			console.warn(
-				'melonJS: a Tiled transparent color could not be applied to an image that cannot be read back (a compressed texture, or an image from another origin: load it with `loader.setOptions({ crossOrigin: "anonymous" })` from a server sending CORS headers); it is drawn as it is',
-			);
-		}
+		warnOnce(
+			'melonJS: a Tiled transparent color could not be applied to an image that cannot be read back (a compressed texture, or an image from another origin: load it with `loader.setOptions({ crossOrigin: "anonymous" })` from a server sending CORS headers); it is drawn as it is',
+		);
 		byColor.set(hex, image);
 		return image;
 	}

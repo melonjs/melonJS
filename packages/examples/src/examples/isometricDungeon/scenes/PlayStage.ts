@@ -142,16 +142,15 @@ export class PlayStage extends Stage {
 		// positional sounds are heard from the hero
 		audio.setListener(hero);
 
-		// shader effect, WebGL/WebGPU only. The threshold is high enough that
-		// only the sparks bloom, not the lit floor
-		if (app.renderer.shaderLanguage !== null) {
-			this.bloom = new BloomEffect(app.renderer, {
-				threshold: 0.94,
-				intensity: 0.6,
-				radius: 3,
-			});
-			app.viewport.addPostEffect(this.bloom);
-		}
+		// a shader effect: on the Canvas renderer it does nothing. The
+		// threshold is high enough that only the sparks bloom, not the lit
+		// floor
+		this.bloom = new BloomEffect(app.renderer, {
+			threshold: 0.94,
+			intensity: 0.6,
+			radius: 3,
+		});
+		app.viewport.addPostEffect(this.bloom);
 
 		app.viewport.follow(hero.focus, app.viewport.AXIS.BOTH, 0.12);
 		// frame the hero's body rather than the feet

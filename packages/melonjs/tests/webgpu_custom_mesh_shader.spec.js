@@ -1,6 +1,7 @@
 import "./helpers/webgpu-globals.js";
 import { describe, expect, it, vi } from "vitest";
 import { Color, GLShader, WebGPURenderer } from "../src/index.js";
+import { resetWarnOnce } from "../src/lang/console.js";
 import WebGPULitMeshBatcher from "../src/video/webgpu/batchers/lit_mesh_batcher.js";
 import WebGPUMeshBatcher from "../src/video/webgpu/batchers/mesh_batcher.js";
 import { createMockWebGPURenderer } from "./helpers/webgpu-mock-renderer.js";
@@ -205,7 +206,6 @@ describe("WebGPURenderer.drawMesh — custom shader routing (real prototype over
 			},
 			customShader: undefined,
 			meshDepthActive: false,
-			meshEffectWarned: false,
 			pendingDepthClear: false,
 		};
 	}
@@ -217,6 +217,8 @@ describe("WebGPURenderer.drawMesh — custom shader routing (real prototype over
 		const shader = makeToonShader();
 		stub.customShader = shader;
 
+		resetWarnOnce();
+		const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
 		WebGPURenderer.prototype.drawMesh.call(stub, makeMesh());
 
 		// the flush inside drawMesh saw the custom family…
@@ -226,7 +228,12 @@ describe("WebGPURenderer.drawMesh — custom shader routing (real prototype over
 			true,
 		);
 		// …and no warning fired — this is the supported path
-		expect(stub.meshEffectWarned).toBe(false);
+		expect(
+			warn.mock.calls.filter((call) => {
+				return /hosted on a Mesh/.test(String(call[0]));
+			}),
+		).toEqual([]);
+		warn.mockRestore();
 		// per-mesh state: never leaks into the next draw
 		expect(batcher.customShader).toBe(null);
 

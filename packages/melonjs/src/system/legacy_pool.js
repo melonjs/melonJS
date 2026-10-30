@@ -19,18 +19,7 @@ export function setPoolRegisterCallback(callback) {
 }
 
 /**
- * Which methods have already warned.
- *
- * Once per method, never per call: `pull` runs in the hot path of any game
- * that pools its bullets, and `warning` prints a collapsed group WITH a stack
- * trace. Firing that per bullet would be worse than the thing it warns about.
- * @ignore
- * @internal
- */
-const warned = new Set();
-
-/**
- * Say this method is on the way out, once.
+ * Say this method is on the way out (once per page, as `warning` does).
  *
  * Names both replacements, because `pool.register` was doing two unrelated
  * jobs and a caller only ever wanted one of them: recycling instances, or
@@ -39,11 +28,7 @@ const warned = new Set();
  * @ignore
  * @internal
  */
-function warnOnce(method) {
-	if (warned.has(method)) {
-		return;
-	}
-	warned.add(method);
+function warnDeprecated(method) {
 	warning(
 		"pool." + method + "()",
 		'getPool("tween") / createPool() to pool instances, or ' +
@@ -124,7 +109,7 @@ class ObjectPool {
 	 * me.pool.register("cherrysprite", Cherry, true);
 	 */
 	register(className, classObj, recycling = false) {
-		warnOnce("register");
+		warnDeprecated("register");
 		if (typeof classObj !== "undefined") {
 			const entry = {
 				class: classObj,
@@ -172,7 +157,7 @@ class ObjectPool {
 	 * app.world.removeChild(bullet);
 	 */
 	pull(name, ...args) {
-		warnOnce("pull");
+		warnDeprecated("pull");
 		const className = this.objectClass[name];
 		if (className) {
 			const proto = className["class"];
@@ -229,7 +214,7 @@ class ObjectPool {
 	 * @returns {boolean} true if the object was successfully recycled in the object pool
 	 */
 	push(obj, throwOnError = false) {
-		warnOnce("push");
+		warnDeprecated("push");
 		if (!this.poolable(obj)) {
 			if (throwOnError === true) {
 				throw new Error("me.pool: object " + obj + " cannot be recycled");

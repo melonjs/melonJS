@@ -1,4 +1,5 @@
 import Path2D from "./../geometries/path2d.ts";
+import { warnOnce } from "../lang/console.js";
 import { Color } from "./../math/color.ts";
 import { Matrix3d } from "../math/matrix3d.ts";
 import { Vector2d } from "../math/vector2d.ts";
@@ -1701,15 +1702,10 @@ export default class Renderer {
 	 * @internal
 	 */
 	_warnUnlitNormalMap() {
-		if (this._litPipelineWarned === true || this.activeLightCount === 0) {
+		if (this.activeLightCount === 0) {
 			return;
 		}
-		/**
-		 * @ignore
-		 * @internal
-		 */
-		this._litPipelineWarned = true;
-		console.warn(
+		warnOnce(
 			"melonJS: Light2d normal-map lighting requires a GPU backend " +
 				"(WebGL 2 or WebGPU); the Canvas fallback renders sprites without " +
 				"per-pixel lighting. Light2d glow and stage lighting still draw.",

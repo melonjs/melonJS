@@ -1,3 +1,4 @@
+import { warnOnce } from "../../lang/console.js";
 import { ME_LAYOUT } from "./local_space.js";
 import { shiftGroup3, spliceEffect } from "./mesh_splice.js";
 import { parseWGSLBody } from "./wgsl/parse.js";
@@ -115,10 +116,6 @@ export default class WGSLEffectRealization {
 		 */
 		this.values = new Map();
 
-		// names already warned about, so a per-frame setUniform on an
-		// unknown name doesn't flood the console
-		this.warned = new Set();
-
 		/**
 		 * device-scoped GPU state, built lazily by the renderer's effect
 		 * path and invalidated via the pipeline-cache epoch (device loss)
@@ -150,12 +147,9 @@ export default class WGSLEffectRealization {
 	setUniform(name, value) {
 		const placement = this.layout.get(name);
 		if (typeof placement === "undefined") {
-			if (!this.warned.has(name)) {
-				this.warned.add(name);
-				console.warn(
-					`ShaderEffect: unknown WGSL uniform "${name}" (not a member of the effect's uniform struct)`,
-				);
-			}
+			warnOnce(
+				`ShaderEffect: unknown WGSL uniform "${name}" (not a member of the effect's uniform struct)`,
+			);
 			return false;
 		}
 		// unwrap matrix-like objects the GLSL path also accepts

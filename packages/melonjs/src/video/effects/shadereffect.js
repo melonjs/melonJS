@@ -1,3 +1,4 @@
+import { warnOnce } from "../../lang/console.js";
 import {
 	ONCONTEXT_LOST,
 	ONCONTEXT_RESTORED,
@@ -275,8 +276,10 @@ export default class ShaderEffect {
 
 		if (typeof source !== "string") {
 			// no body this backend can compile — same inert-stub contract as
-			// the Canvas renderer: warn, stay disabled, every method no-ops
-			console.warn(
+			// the Canvas renderer: warn, stay disabled, every method no-ops.
+			// Once per page: the message names no effect, so a repeat adds
+			// nothing
+			warnOnce(
 				language === null
 					? "ShaderEffect requires a GPU backend and is disabled on this renderer (no programmable pipeline)"
 					: `ShaderEffect has no ${language} body and is disabled on this renderer (provide a { ${language}: ... } source)`,
@@ -1171,16 +1174,9 @@ export default class ShaderEffect {
 				if (nextUnit < 1) {
 					// more extra textures than the batcher can hold beside
 					// uSampler — bind what fits, warn once, skip the rest
-					if (!this._textureOverflowWarned) {
-						/**
-						 * @ignore
-						 * @internal
-						 */
-						this._textureOverflowWarned = true;
-						console.warn(
-							`ShaderEffect.setTexture: too many extra textures for ${batcher.maxBatchTextures} texture units — "${name}" and any later ones were not bound`,
-						);
-					}
+					warnOnce(
+						`ShaderEffect.setTexture: too many extra textures for ${batcher.maxBatchTextures} texture units — "${name}" and any later ones were not bound`,
+					);
 					break;
 				}
 				entry.unit = nextUnit;

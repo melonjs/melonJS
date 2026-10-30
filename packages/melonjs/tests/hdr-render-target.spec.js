@@ -32,6 +32,7 @@ import {
 	ToneMappingEffect,
 	video,
 } from "../src/index.js";
+import { resetWarnOnce } from "../src/lang/console.js";
 import WebGLRenderTarget from "../src/video/rendertarget/webglrendertarget.js";
 import {
 	getWebGLRenderer,
@@ -64,7 +65,7 @@ function withDriver(renderer, available, settings = {}) {
 	}
 	renderer._extensions.clear();
 	// a fresh driver has not refused anything yet
-	renderer._hdrRefusalWarned = false;
+	resetWarnOnce();
 	renderer._deriveCapabilities();
 	renderer._resolveColorFormat();
 
@@ -482,7 +483,7 @@ describe("hdr — setHDR at runtime", () => {
 				return null;
 			};
 			renderer._extensions.clear();
-			renderer._hdrRefusalWarned = false;
+			resetWarnOnce();
 			renderer._deriveCapabilities();
 
 			renderer.setHDR(true);
@@ -496,7 +497,7 @@ describe("hdr — setHDR at runtime", () => {
 			warn.mockRestore();
 			gl.getExtension = realGetExtension;
 			renderer._extensions.clear();
-			renderer._hdrRefusalWarned = false;
+			resetWarnOnce();
 			renderer._deriveCapabilities();
 			renderer.setHDR(realHdr === true);
 		}

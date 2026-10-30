@@ -8,6 +8,7 @@ import {
 	vi,
 } from "vitest";
 import { GLShader, Mesh } from "../src/index.js";
+import { resetWarnOnce } from "../src/lang/console.js";
 import ShineEffect from "../src/video/effects/shine.js";
 import {
 	getWebGLRenderer,
@@ -83,7 +84,7 @@ describe("WebGL drawMesh — custom shader hosting", () => {
 	afterEach(() => {
 		if (renderer) {
 			renderer.customShader = undefined;
-			renderer._meshShaderWarned = false;
+			resetWarnOnce();
 		}
 	});
 
