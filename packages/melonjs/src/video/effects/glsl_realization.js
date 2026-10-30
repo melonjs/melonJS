@@ -1,4 +1,11 @@
 import quadVertex from "../webgl/shaders/quad.vert";
+import {
+	LOCAL_FRAGMENT_GLSL,
+	LOCAL_SPACE_IDENTIFIER,
+	localVertexDeclarationsGLSL,
+	localVertexStatementsGLSL,
+	NOISE_UV_GLSL,
+} from "./local_space.js";
 
 /*
  * The GLSL realization of a ShaderEffect body — the pure source-assembly
@@ -20,11 +27,15 @@ import quadVertex from "../webgl/shaders/quad.vert";
  *   (0..1 across the screen).
  * - `noise_uv`   — varying with a frame-local coordinate across the drawn
  *   object (undoes atlas packing; scaled to object pixels so patterns keep
- *   their density when the destination is scaled).
+ *   their density when the destination is scaled). On a pass of a
+ *   renderable's effect chain, 0..1 across the renderable (local_space.js).
  *
  * The builtins only activate when referenced, and never when the body
  * carries its OWN declaration of the identifier — a shader that used these
  * names before this feature keeps compiling unchanged.
+ *
+ * The engine's own bodies also read `ME_local` and `ME_art`, where they are
+ * on the renderable they draw (see local_space.js).
  */
 const SCREEN_TEXTURE_ANNOTATION =
 	/\buniform\s+sampler2D\s+([A-Za-z_]\w*)\s*:\s*screen_texture(?:\((repeat|repeat-x|repeat-y|no-repeat)\))?\s*;/g;
@@ -69,7 +80,8 @@ function parseShaderBuiltins(fragmentBody) {
 	const noiseUV =
 		NOISE_UV_IDENTIFIER.test(body) && !hasOwnDeclaration(body, "noise_uv");
 	const spriteFrame = SPRITE_FRAME_SWITCH.test(body);
-	return { body, screenTextures, screenUV, noiseUV, spriteFrame };
+	const local = LOCAL_SPACE_IDENTIFIER.test(body);
+	return { body, screenTextures, screenUV, noiseUV, spriteFrame, local };
 }
 
 /**
@@ -84,9 +96,17 @@ function parseShaderBuiltins(fragmentBody) {
  * @internal
  */
 function buildEffectVertex(builtins) {
-	if (!builtins.screenUV && !builtins.noiseUV && !builtins.spriteFrame) {
+	if (
+		!builtins.screenUV &&
+		!builtins.noiseUV &&
+		!builtins.spriteFrame &&
+		!builtins.local
+	) {
 		return quadVertex;
 	}
+	// `noise_uv` and the local space both read where the vertex is on the
+	// renderable (local_space.js)
+	const space = builtins.noiseUV || builtins.local;
 	return [
 		"attribute vec3 aVertex;",
 		"attribute vec2 aRegion;",
@@ -111,17 +131,15 @@ function buildEffectVertex(builtins) {
 					"varying vec2 noise_uv;",
 				]
 			: []),
+		...(space ? localVertexDeclarationsGLSL(builtins) : []),
 		"void main(void) {",
 		"    vec4 ME_clip = uProjectionMatrix * vec4(aVertex, 1.0);",
 		"    gl_Position = ME_clip;",
 		...(builtins.screenUV
 			? ["    screen_uv = ME_clip.xy / ME_clip.w * 0.5 + 0.5;"]
 			: []),
-		...(builtins.noiseUV
-			? [
-					"    noise_uv = aRegion * (ME_size_img / ME_size_obj) - ME_offset / ME_size_obj;",
-				]
-			: []),
+		...(space ? localVertexStatementsGLSL(builtins) : []),
+		...(builtins.noiseUV ? [NOISE_UV_GLSL] : []),
 		...(builtins.spriteFrame
 			? [
 					// a side on the texture's own edge (within a hundredth of
@@ -169,6 +187,7 @@ export function buildGLSLProgram(fragmentBody) {
 		"varying vec2 vRegion;",
 		...(builtins.screenUV ? ["varying vec2 screen_uv;"] : []),
 		...(builtins.noiseUV ? ["varying vec2 noise_uv;"] : []),
+		...(builtins.local ? [LOCAL_FRAGMENT_GLSL] : []),
 		builtins.body,
 		"void main(void) {",
 		"    vec4 texColor = texture2D(uSampler, vRegion) * vColor;",

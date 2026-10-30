@@ -138,7 +138,8 @@ ${tapList("vec2f", (at) => {
  * sprite's silhouette and does nothing at all on an opaque frame.
  *
  * Its reach is in texels of what it filters: the screen for a camera's
- * effect, the sprite's texture on a sprite, so it follows a resize by itself.
+ * effect, the sprite's texture on a sprite (alone or with other effects, at
+ * any scale or zoom), so it follows a resize by itself.
  * @category Effects
  * @see {@link Renderable#addPostEffect} for usage
  * @example
@@ -158,7 +159,7 @@ export default class BloomEffect extends ShaderEffect {
 	 * @param {number} [options.threshold=0.75] - luminance a pixel must pass before it blooms, `0` (everything blooms) to `1` (only white does)
 	 * @param {number} [options.intensity=1.0] - how much of the gathered light is added back
 	 * @param {number} [options.radius=2.0] - halo reach, in texels
-	 * @param {number[]} [options.textureSize] - the size, `[width, height]`, of the texture its reach is measured in; by default the texture it draws (a sprite's own, the screen for a camera's effect)
+	 * @param {number[]} [options.textureSize] - the size, `[width, height]`, of the texture its reach is measured in; by default the texture it draws: a sprite's own, alone or with other effects and at any scale or zoom, the screen for a camera's effect
 	 */
 	constructor(renderer, options = {}) {
 		super(renderer, { glsl: glslFragment, wgsl: wgslFragment });

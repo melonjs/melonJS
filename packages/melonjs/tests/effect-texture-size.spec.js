@@ -27,16 +27,20 @@ import {
 	boot,
 	ChromaticAberrationEffect,
 	Color,
+	Container,
 	DropShadowEffect,
 	GlowEffect,
+	Matrix3d,
 	Mesh,
 	OutlineEffect,
 	PixelateEffect,
 	Renderable,
 	ShaderEffect,
+	Sprite,
 	state,
 	video,
 } from "../src/index.js";
+import { resetWarnOnce } from "../src/lang/console.js";
 import Renderer from "../src/video/renderer.js";
 import WebGPUMeshBatcher from "../src/video/webgpu/batchers/mesh_batcher.js";
 import WebGPUQuadBatcher from "../src/video/webgpu/batchers/quad_batcher.js";
@@ -376,6 +380,230 @@ describe("effects measure in the texels of the texture they draw (WebGL)", () =>
 			mesh.destroy();
 		}
 	});
+
+	// With two or more effects, a renderable is drawn into a capture the size
+	// of the screen, and its passes read that: they measured in the screen's
+	// pixels, so the same outline came out thinner or thicker than with one
+	// effect at any scale but 1, or under a camera's zoom
+	describe("through a chain of effects", () => {
+		// a 48 x 48 texture with a 16 px square in the middle: room around it
+		// for an outline drawn with one effect, which stays inside the sprite
+		const ART = () => {
+			return image(48, 48, 16, 16, 16);
+		};
+
+		/** an effect drawing what it is given: a second one makes a chain */
+		const passThrough = () => {
+			return new ShaderEffect(renderer, {
+				glsl: "vec4 apply(vec4 color, vec2 uv) { return color; }",
+				wgsl: "fn apply(color : vec4f, uv : vec2f) -> vec4f { return color; }",
+			});
+		};
+
+		/** draw a renderable as its container would, over black */
+		const paint = (renderable, beforeComposite) => {
+			renderer.clearColor("#000000ff");
+			renderer.save();
+			renderer.resetTransform();
+			renderable.preDraw(renderer);
+			renderable.draw(renderer);
+			beforeComposite?.();
+			renderable.postDraw(renderer);
+			renderer.restore();
+			renderer.flush();
+		};
+
+		/**
+		 * the white pixels across the middle row and down the middle column:
+		 * the outline on both sides of the square
+		 */
+		const ring = () => {
+			const gl = renderer.gl;
+			const row = new Uint8Array(SIZE * 4);
+			const column = new Uint8Array(SIZE * 4);
+			gl.readPixels(0, SIZE / 2, SIZE, 1, gl.RGBA, gl.UNSIGNED_BYTE, row);
+			gl.readPixels(SIZE / 2, 0, 1, SIZE, gl.RGBA, gl.UNSIGNED_BYTE, column);
+			const white = (pixels) => {
+				let n = 0;
+				for (let i = 0; i < pixels.length; i += 4) {
+					if (pixels[i] > 200 && pixels[i + 1] > 200 && pixels[i + 2] > 200) {
+						n++;
+					}
+				}
+				return n;
+			};
+			return [white(row), white(column)];
+		};
+
+		/**
+		 * The outline a sprite gets, through that one effect and then through
+		 * it and a pass-through. `place` sets the sprite up and returns what
+		 * wears the effects: the sprite, or a container holding it.
+		 */
+		const outlines = (place) => {
+			const result = [];
+			for (const chained of [false, true]) {
+				const sprite = new Sprite(SIZE / 2, SIZE / 2, { image: ART() });
+				const worn = place(sprite);
+				worn.addPostEffect(
+					new OutlineEffect(renderer, { color: [1, 1, 1], width: 2 }),
+				);
+				if (chained) {
+					worn.addPostEffect(passThrough());
+				}
+				paint(worn);
+				result.push(ring());
+				worn.destroy();
+			}
+			return result;
+		};
+
+		it("an outline on a scaled sprite is as wide as with one effect", (ctx) => {
+			requireWebGL(ctx);
+			const [alone, chained] = outlines((sprite) => {
+				sprite.scale(2);
+				return sprite;
+			});
+			// 2 texels at twice the size: 4 pixels each side
+			expect(alone).toEqual([8, 8]);
+			expect(chained).toEqual(alone);
+		});
+
+		it("each way at its own scale, across and down", (ctx) => {
+			requireWebGL(ctx);
+			const [alone, chained] = outlines((sprite) => {
+				sprite.scale(2, 1);
+				return sprite;
+			});
+			expect(alone).toEqual([8, 4]);
+			expect(chained).toEqual(alone);
+		});
+
+		it("turned a quarter, across and down swap", (ctx) => {
+			requireWebGL(ctx);
+			const [alone, chained] = outlines((sprite) => {
+				sprite.scale(2, 1);
+				sprite.rotate(Math.PI / 2);
+				return sprite;
+			});
+			expect(alone[0]).not.toBe(alone[1]);
+			expect(chained).toEqual(alone);
+		});
+
+		it("under a camera's zoom", (ctx) => {
+			requireWebGL(ctx);
+			const saved = renderer.projectionMatrix.clone();
+			// a camera zoomed in twice on the middle of the screen
+			renderer.setProjection(
+				new Matrix3d().ortho(40, 120, 120, 40, -1000, 1000),
+			);
+			try {
+				const [alone, chained] = outlines((sprite) => {
+					return sprite;
+				});
+				expect(alone).toEqual([8, 8]);
+				expect(chained).toEqual(alone);
+			} finally {
+				renderer.setProjection(saved);
+			}
+		});
+
+		it("on a container, in the container's own pixels", (ctx) => {
+			requireWebGL(ctx);
+			// a container of no size of its own, as most are, twice the size
+			// (with one effect, a container's is lost to its first child: a
+			// chain is how a container wears an effect)
+			const [, chained] = outlines((sprite) => {
+				const container = new Container();
+				container.scale(2);
+				sprite.pos.set(SIZE / 4, SIZE / 4);
+				container.addChild(sprite);
+				// drawn as a container draws what an update found in view
+				sprite.inViewport = true;
+				return container;
+			});
+			// 2 of its pixels at twice the size: 4 pixels each side
+			expect(chained).toEqual([8, 8]);
+		});
+
+		it("keeps a textureSize the game gives", (ctx) => {
+			requireWebGL(ctx);
+			const outline = new OutlineEffect(renderer, {
+				color: [1, 1, 1],
+				width: 2,
+				textureSize: [256, 256],
+			});
+			const sprite = new Sprite(SIZE / 2, SIZE / 2, { image: ART() });
+			sprite.scale(2);
+			sprite.addPostEffect(outline);
+			sprite.addPostEffect(passThrough());
+			try {
+				paint(sprite);
+				expect(programSize(outline._shader.program)).toEqual([256, 256]);
+			} finally {
+				sprite.destroy();
+			}
+		});
+
+		it("reads what it captured at the game's texture filter", (ctx) => {
+			requireWebGL(ctx);
+			const gl = renderer.gl;
+			// columns of white and black, a pixel each
+			const stripes = Renderer.createCanvas(32, 32);
+			const c2d = stripes.getContext("2d");
+			c2d.fillStyle = "#ffffff";
+			for (let x = 0; x < 32; x += 2) {
+				c2d.fillRect(x, 0, 1, 32);
+			}
+			// read half a pixel to the right: on the edge between two
+			// columns, a blend of both read linearly, one of them read nearest
+			const middle = (filter, leftOver) => {
+				renderer.setTextureFilter(filter);
+				const shift = new ShaderEffect(
+					renderer,
+					`
+					uniform float uHalf;
+					vec4 apply(vec4 color, vec2 uv) {
+						return texture2D(uSampler, uv + vec2(uHalf, 0.0));
+					}
+					`,
+				);
+				shift.setUniform("uHalf", 0.5 / SIZE);
+				const sprite = new Sprite(SIZE / 2, SIZE / 2, { image: stripes });
+				sprite.addPostEffect(shift);
+				sprite.addPostEffect(passThrough());
+				try {
+					// what the last draw before the composite left on the unit:
+					// the other filter
+					paint(sprite, () => {
+						renderer.samplerCache.bind(0, renderer.samplerCache.get(leftOver));
+					});
+					const out = new Uint8Array(4);
+					gl.readPixels(
+						SIZE / 2,
+						SIZE / 2,
+						1,
+						1,
+						gl.RGBA,
+						gl.UNSIGNED_BYTE,
+						out,
+					);
+					return out[0];
+				} finally {
+					sprite.destroy();
+				}
+			};
+			const mode = renderer.settings.textureFilter;
+			try {
+				const crisp = middle("nearest", gl.LINEAR);
+				expect(crisp < 30 || crisp > 225).toBe(true);
+				const smooth = middle("linear", gl.NEAREST);
+				expect(Math.abs(smooth - 128)).toBeLessThan(30);
+			} finally {
+				renderer.setTextureFilter(mode);
+			}
+		});
+	});
 });
 
 describe("a camera's effect measures in the screen's texels (WebGL)", () => {
@@ -535,6 +763,29 @@ describe("effects measure in the texels of the texture they draw (WebGPU, mock r
 		expect(sizeOf(bloom)).toEqual([120, 90]);
 	});
 
+	it("a pass of a renderable's chain measures in the renderable's own pixels", () => {
+		const renderer = createMockWebGPURenderer();
+		const batcher = new WebGPUQuadBatcher(renderer);
+		const outline = quiet(() => {
+			return new OutlineEffect({ shaderLanguage: "wgsl" });
+		});
+		const source = {
+			width: 300,
+			height: 200,
+			getMaterialBindGroup() {
+				return { rt: true };
+			},
+		};
+		// each of its pixels covers 2 of the target's across, half of one down
+		renderer._chainScale = [2, 0.5];
+		batcher.blitTexture(source, 0, 0, 300, 200, outline, false);
+		expect(sizeOf(outline)).toEqual([150, 400]);
+		// a camera's chain: the target's own
+		renderer._chainScale = null;
+		batcher.blitTexture(source, 0, 0, 300, 200, outline, false);
+		expect(sizeOf(outline)).toEqual([300, 200]);
+	});
+
 	it("keeps a textureSize the game gives", () => {
 		const renderer = createMockWebGPURenderer();
 		const batcher = new WebGPUQuadBatcher(renderer);
@@ -564,7 +815,6 @@ describe("effects measure in the texels of the texture they draw (WebGPU, mock r
 			},
 			customShader: undefined,
 			meshDepthActive: false,
-			meshEffectWarned: false,
 			pendingDepthClear: false,
 		};
 		// the one of the seven a WGSL mesh can host: the others read the
@@ -573,6 +823,8 @@ describe("effects measure in the texels of the texture they draw (WebGPU, mock r
 			return new BloomEffect({ shaderLanguage: "wgsl" });
 		});
 		stub.customShader = bloom;
+		resetWarnOnce();
+		const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
 		WebGPURenderer.prototype.drawMesh.call(stub, {
 			vertices: new Float32Array([0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0]),
 			uvs: new Float32Array([0, 0, 1, 0, 1, 1, 0, 1]),
@@ -588,7 +840,12 @@ describe("effects measure in the texels of the texture they draw (WebGPU, mock r
 			rightHanded: false,
 		});
 		// hosted, not refused
-		expect(stub.meshEffectWarned).toBe(false);
+		expect(
+			warn.mock.calls.filter((call) => {
+				return /hosted on a Mesh/.test(String(call[0]));
+			}),
+		).toEqual([]);
+		warn.mockRestore();
 		expect(sizeOf(bloom)).toEqual([32, 16]);
 	});
 });

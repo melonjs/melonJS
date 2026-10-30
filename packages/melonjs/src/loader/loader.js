@@ -1,4 +1,4 @@
-import { warning } from "../lang/console.js";
+import { warnOnce } from "../lang/console.js";
 import state from "./../state/state.ts";
 import {
 	emit,
@@ -510,7 +510,7 @@ export function setParser(type, parserFn) {
 	}
 
 	if (typeof parsers.get(type) !== "undefined") {
-		warning("overriding parser for " + type + " format");
+		warnOnce("melonJS: overriding parser for " + type + " format");
 	}
 
 	parsers.set(type, {

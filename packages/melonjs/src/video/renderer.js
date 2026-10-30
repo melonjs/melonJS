@@ -1,4 +1,5 @@
 import Path2D from "./../geometries/path2d.ts";
+import { warnOnce } from "../lang/console.js";
 import { Color } from "./../math/color.ts";
 import { Matrix3d } from "../math/matrix3d.ts";
 import { Vector2d } from "../math/vector2d.ts";
@@ -6,11 +7,16 @@ import state from "../state/state.ts";
 import { CANVAS_ONRESIZE, emit } from "../system/event.ts";
 import { isAdvancedBlendMode } from "./blendmodes.js";
 import { createCanvas } from "./canvas_factory.js";
+import { LOCAL_MODE } from "./effects/local_space.js";
 import ToneMappingEffect, { CURVES } from "./effects/tonemap.js";
 import { Gradient } from "./gradient.js";
 import RenderState from "./renderstate.js";
 import CanvasRenderTarget from "./rendertarget/canvasrendertarget.js";
 import { is2dTransform, pixelSnap } from "./utils/pixel_snap.js";
+
+// scratch: the transform a renderable is drawn through (see
+// Renderer#_drawnTransform), `[a, b, c, d, e, f]`
+const drawnTransform = new Float64Array(6);
 
 /**
  * @import RenderTargetPool from "./rendertarget/render_target_pool.js";
@@ -107,6 +113,53 @@ export default class Renderer {
 		 * @internal
 		 */
 		this.customShader = undefined;
+
+		/**
+		 * Where each renderable whose effect chain is under way is, for its
+		 * passes to read (see `_setEffectSpace`); keyed by the renderable.
+		 * @type {WeakMap<object, object>}
+		 * @ignore
+		 * @internal
+		 */
+		this._effectSpaces = new WeakMap();
+
+		/**
+		 * Where the renderable whose chain is being composited is, for the
+		 * blits of that chain to hand its effects; `null` otherwise.
+		 * @type {object|null}
+		 * @ignore
+		 * @internal
+		 */
+		this._chainSpace = null;
+
+		/**
+		 * How many of the target's pixels each pixel of a renderable whose
+		 * chain is under way covers, across and down (see
+		 * `_setEffectSpace`); keyed by the renderable.
+		 * @type {WeakMap<object, number[]>}
+		 * @ignore
+		 * @internal
+		 */
+		this._effectScales = new WeakMap();
+
+		/**
+		 * How many of the target's pixels each pixel of the renderable whose
+		 * chain is being composited covers, for the blits of that chain to
+		 * measure its effects in; `null` otherwise.
+		 * @type {number[]|null}
+		 * @ignore
+		 * @internal
+		 */
+		this._chainScale = null;
+
+		/**
+		 * Whether an effect pass's capture runs bottom-up (WebGL's
+		 * framebuffers), which the space of a chain's passes accounts for.
+		 * @type {boolean}
+		 * @ignore
+		 * @internal
+		 */
+		this._captureFlipsY = false;
 
 		/**
 		 * The render target pool for post-effect processing (ping-pong FBOs).
@@ -1164,6 +1217,316 @@ export default class Renderer {
 	}
 
 	/**
+	 * Tell a renderable's effects where it is, for those that place a
+	 * pattern on it (see effects/local_space.js). Called at the end of
+	 * `Renderable#preDraw`, once its own transform and anchor are applied,
+	 * so the transform maps its own rectangle (`pos`, `width`, `height`)
+	 * onto the target.
+	 *
+	 * Drawn with its one effect, the effect is told now, for the draws that
+	 * follow; with a chain, its passes are, as each one is composited (see
+	 * `_endEffectSpace`), along with the size of its pixels on the target
+	 * (see `_effectScaleOf`). A renderable this cannot place (no finite size, a
+	 * perspective view, a transform that is not 2D) leaves its effects in
+	 * the space `uv` always was.
+	 * @param {Renderable} renderable - the renderable about to draw
+	 * @ignore
+	 * @internal
+	 */
+	_setEffectSpace(renderable) {
+		// effects only run where there are shaders (not on Canvas)
+		if (this.shaderLanguage === null) {
+			return;
+		}
+		const effects = this._effectChainFor(renderable);
+		if (effects.length === 0) {
+			return;
+		}
+		if (this._usesPostEffectFastPath(renderable, effects)) {
+			const space = this._effectSpaceOf(renderable, LOCAL_MODE.sprite);
+			if (space !== null) {
+				effects[0]._setLocalSpace?.(space);
+			}
+			return;
+		}
+		const space = this._effectSpaceOf(renderable, LOCAL_MODE.chain);
+		if (space !== null) {
+			this._effectSpaces.set(renderable, space);
+		}
+		const scale = this._effectScaleOf(renderable);
+		if (scale !== null) {
+			this._effectScales.set(renderable, scale);
+		}
+	}
+
+	/**
+	 * The other end of `_setEffectSpace`, from `endPostEffect`, for a
+	 * renderable drawn with its one effect: that effect is put back to the
+	 * space `uv` always was, for whatever draws with it next.
+	 * @param {Renderable} renderable - the renderable done drawing
+	 * @param {object[]} effects - its enabled effect chain
+	 * @returns {boolean} true when it was drawn with its one effect
+	 * @ignore
+	 * @internal
+	 */
+	_endEffectSpace(renderable, effects) {
+		if (this._usesPostEffectFastPath(renderable, effects)) {
+			effects[0]._setLocalSpace?.(null);
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * A chain is about to be composited: its blits hand its effects where
+	 * the renderable is (`_chainSpace`) and the size of its pixels
+	 * (`_chainScale`), until `_clearChainSpace`. A camera's chain has
+	 * neither: its effects measure in the screen's pixels.
+	 * @param {Renderable} renderable - the renderable whose chain it is
+	 * @ignore
+	 * @internal
+	 */
+	_beginChainSpace(renderable) {
+		const own = renderable._postEffectManaged !== true;
+		this._chainSpace = own
+			? (this._effectSpaces.get(renderable) ?? null)
+			: null;
+		this._chainScale = own
+			? (this._effectScales.get(renderable) ?? null)
+			: null;
+		this._effectSpaces.delete(renderable);
+		this._effectScales.delete(renderable);
+	}
+
+	/**
+	 * Done compositing a chain: blits are back to the space `uv` always was.
+	 * @ignore
+	 * @internal
+	 */
+	_clearChainSpace() {
+		this._chainSpace = null;
+		this._chainScale = null;
+	}
+
+	/**
+	 * The transform the renderable about to draw is drawn through, as
+	 * `[a, b, c, d, e, f]` (x' = a x + c y + e, y' = b x + d y + f): its
+	 * transform, to the vertices it draws, or with `toTarget`, on to the
+	 * target's pixels (from its top-left corner) through the projection as
+	 * well: a camera's zoom, and where the camera sits on the screen.
+	 * `null` when it is not drawn onto a pixel grid (a perspective view, a
+	 * 3D transform) or is squashed to no area at all. The array is reused.
+	 * @param {boolean} toTarget - on to the target's pixels
+	 * @returns {Float64Array|null} the transform
+	 * @ignore
+	 * @internal
+	 */
+	_drawnTransform(toTarget) {
+		// a perspective view (Camera3d) has no pixel grid to be placed on
+		const p = this.projectionMatrix.val;
+		if (p[11] !== 0) {
+			return null;
+		}
+		// target x and y must come from the 2D part alone: a 3D view
+		// matrix mixes the depth in
+		const v = this.currentTransform.val;
+		if (v[8] !== 0 || v[9] !== 0) {
+			return null;
+		}
+		let a = v[0];
+		let b = v[1];
+		let c = v[4];
+		let d = v[5];
+		let e = v[12];
+		let f = v[13];
+		if (toTarget) {
+			// clip space to the target's pixels, y down
+			const canvas = this.getCanvas();
+			const hw = (canvas.width || 1) / 2;
+			const hh = (canvas.height || 1) / 2;
+			const pa = hw * p[0];
+			const pc = hw * p[4];
+			const pb = -hh * p[1];
+			const pd = -hh * p[5];
+			const pe = hw * (p[12] + 1);
+			const pf = hh * (1 - p[13]);
+			const ta = pa * a + pc * b;
+			const tb = pb * a + pd * b;
+			const tc = pa * c + pc * d;
+			const td = pb * c + pd * d;
+			const te = pa * e + pc * f + pe;
+			f = pb * e + pd * f + pf;
+			a = ta;
+			b = tb;
+			c = tc;
+			d = td;
+			e = te;
+		}
+		if (Math.abs(a * d - b * c) < 1e-12) {
+			return null;
+		}
+		const out = drawnTransform;
+		out[0] = a;
+		out[1] = b;
+		out[2] = c;
+		out[3] = d;
+		out[4] = e;
+		out[5] = f;
+		return out;
+	}
+
+	/**
+	 * How many of the target's pixels each pixel of the renderable about to
+	 * draw covers, across and down the target: what a pass of its chain
+	 * measures an effect's width, offset or size in (see
+	 * `ShaderEffect#_clearFrameRect`), so they come out in its own pixels
+	 * (a sprite's texels) as they do with one effect, at any scale or zoom.
+	 * `null` when it cannot be measured (see `_drawnTransform`).
+	 * @param {Renderable} renderable - the renderable
+	 * @returns {number[]|null} `[across, down]`, reused per renderable
+	 * @ignore
+	 * @internal
+	 */
+	_effectScaleOf(renderable) {
+		const m = this._drawnTransform(true);
+		if (m === null) {
+			return null;
+		}
+		let scale = renderable._effectScale;
+		if (scale === undefined) {
+			scale = [1, 1];
+			/**
+			 * @ignore
+			 * @internal
+			 */
+			renderable._effectScale = scale;
+		}
+		// the length of a pixel of its own, along each axis of the target
+		scale[0] = Math.hypot(m[0], m[2]);
+		scale[1] = Math.hypot(m[1], m[3]);
+		return scale;
+	}
+
+	/**
+	 * Where a renderable is, as the effects that place a pattern on it read
+	 * it (see effects/local_space.js): rows taking a target pixel to 0..1
+	 * across its rectangle, following its art; how a displacement there
+	 * moves the coordinate the effect samples at; and, for a chain, its
+	 * frame in its texture. `null` when it cannot be placed.
+	 * @param {Renderable} renderable - the renderable
+	 * @param {number} mode - LOCAL_MODE.sprite or LOCAL_MODE.chain
+	 * @returns {object|null} the space, reused per renderable
+	 * @ignore
+	 * @internal
+	 */
+	_effectSpaceOf(renderable, mode) {
+		const w = renderable.width;
+		const h = renderable.height;
+		if (!Number.isFinite(w) || !Number.isFinite(h) || w === 0 || h === 0) {
+			return null;
+		}
+		// with its one effect, it is placed by the vertices it draws, which
+		// the projection has not touched yet; a pass runs over the target
+		const m = this._drawnTransform(mode === LOCAL_MODE.chain);
+		if (m === null) {
+			return null;
+		}
+		const a = m[0];
+		const b = m[1];
+		const c = m[2];
+		const d = m[3];
+		const e = m[4];
+		const f = m[5];
+		const det = a * d - b * c;
+		// the frame drawn, for a sprite: its texture, and where in it
+		const frame = renderable.current;
+		const image = renderable.image;
+		const sprite =
+			frame?.offset !== undefined &&
+			image !== undefined &&
+			image !== null &&
+			renderable.offset !== undefined;
+		if (mode === LOCAL_MODE.sprite && !sprite) {
+			// drawn with its one effect, a renderable that is not a sprite
+			// samples what it draws in no way this can describe
+			return null;
+		}
+
+		let space = renderable._effectSpace;
+		if (space === undefined) {
+			space = {
+				mode,
+				localX: [0, 0, 0],
+				localY: [0, 0, 0],
+				toUV: [0, 0, 0, 0],
+				art: [0, 0, 1, 1],
+			};
+			/**
+			 * @ignore
+			 * @internal
+			 */
+			renderable._effectSpace = space;
+		}
+		space.mode = mode;
+
+		// the inverse of the transform, then across the rectangle at `pos`
+		const iw = 1 / (det * w);
+		const ih = 1 / (det * h);
+		space.localX[0] = d * iw;
+		space.localX[1] = -c * iw;
+		space.localX[2] = (c * f - d * e) * iw - renderable.pos.x / w;
+		space.localY[0] = -b * ih;
+		space.localY[1] = a * ih;
+		space.localY[2] = (b * e - a * f) * ih - renderable.pos.y / h;
+
+		let texW = 1;
+		let texH = 1;
+		if (sprite) {
+			texW = image.width || image.videoWidth || 1;
+			texH = image.height || image.videoHeight || 1;
+		}
+		const toUV = space.toUV;
+		if (mode === LOCAL_MODE.sprite) {
+			// across the sprite, in its texture: its frame's size, turned
+			// by the frame's own rotation in an atlas (see Sprite#draw)
+			const angle = frame.angle ?? 0;
+			const cos = Math.cos(-angle);
+			const sin = Math.sin(-angle);
+			toUV[0] = (w * cos) / texW;
+			toUV[1] = (w * sin) / texH;
+			toUV[2] = (-h * sin) / texW;
+			toUV[3] = (h * cos) / texH;
+		} else {
+			// across the renderable, in the capture: its transform onto the
+			// target, scaled to the capture (bottom-up on WebGL)
+			const canvas = this.getCanvas();
+			const W = canvas.width || 1;
+			const H = canvas.height || 1;
+			const yDir = this._captureFlipsY ? -1 : 1;
+			toUV[0] = (a * w) / W;
+			toUV[1] = (yDir * b * w) / H;
+			toUV[2] = (c * h) / W;
+			toUV[3] = (yDir * d * h) / H;
+		}
+
+		const art = space.art;
+		if (sprite) {
+			// the frame's whole rectangle (before any trim) in its texture
+			const trim = frame.trim;
+			art[0] = (renderable.offset.x + frame.offset.x - (trim?.x ?? 0)) / texW;
+			art[1] = (renderable.offset.y + frame.offset.y - (trim?.y ?? 0)) / texH;
+			art[2] = w / texW;
+			art[3] = h / texH;
+		} else {
+			art[0] = 0;
+			art[1] = 0;
+			art[2] = 1;
+			art[3] = 1;
+		}
+		return space;
+	}
+
+	/**
 	 * Begin capturing rendering to an offscreen buffer for post-effect processing.
 	 * Call endPostEffect() after rendering to blit the result to the screen.
 	 * No-op on Canvas renderer.
@@ -1208,9 +1571,10 @@ export default class Renderer {
 	 * @param {number} height - destination height
 	 * @param {ShaderEffect} shader - the shader effect to apply
 	 * @param {boolean} [keepBlend=false] - if true, keep current blend mode (for sprite compositing)
+	 * @param {number} [alpha=1] - the opacity to composite the blit at (0.0 to 1.0)
 	 */
 	// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
-	blitEffect(source, x, y, width, height, shader, keepBlend) {}
+	blitEffect(source, x, y, width, height, shader, keepBlend, alpha) {}
 
 	/**
 	 * Sets the viewport for the renderer.
@@ -1338,15 +1702,10 @@ export default class Renderer {
 	 * @internal
 	 */
 	_warnUnlitNormalMap() {
-		if (this._litPipelineWarned === true || this.activeLightCount === 0) {
+		if (this.activeLightCount === 0) {
 			return;
 		}
-		/**
-		 * @ignore
-		 * @internal
-		 */
-		this._litPipelineWarned = true;
-		console.warn(
+		warnOnce(
 			"melonJS: Light2d normal-map lighting requires a GPU backend " +
 				"(WebGL 2 or WebGPU); the Canvas fallback renders sprites without " +
 				"per-pixel lighting. Light2d glow and stage lighting still draw.",

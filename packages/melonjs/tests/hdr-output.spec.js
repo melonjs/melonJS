@@ -14,6 +14,7 @@
  */
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { WebGPURenderer } from "../src/index.js";
+import { resetWarnOnce } from "../src/lang/console.js";
 import {
 	getWebGLRenderer,
 	releaseWebGLRenderer,
@@ -29,9 +30,8 @@ describe("hdrOutput — WebGL2 refuses, out loud", () => {
 
 	afterEach(() => {
 		renderer?.setHDROutput(false);
-		if (renderer !== undefined) {
-			renderer._hdrOutputRefusalWarned = false;
-		}
+		// a fresh renderer has not refused anything yet
+		resetWarnOnce();
 	});
 
 	it("records the request and refuses the grant", (ctx) => {

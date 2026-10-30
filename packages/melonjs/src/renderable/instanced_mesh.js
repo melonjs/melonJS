@@ -1,4 +1,5 @@
 import Camera3d from "../camera/camera3d.ts";
+import { warnOnce } from "../lang/console.js";
 import { Matrix3d } from "../math/matrix3d.ts";
 import { AABB3d } from "../physics/broadphase/aabb3d.ts";
 import {
@@ -770,9 +771,8 @@ export default class InstancedMesh extends Mesh {
 	 * @see Mesh#shadowGroundPoint
 	 */
 	set shadowGroundPoint(value) {
-		if (value !== undefined && !this._warnedGroundPoint) {
-			this._warnedGroundPoint = true;
-			console.warn(
+		if (value !== undefined) {
+			warnOnce(
 				"melonJS: InstancedMesh does not support shadowGroundPoint — a set shares one shadow plane, built through the set's own origin. Use shadowGroundY, or one set per facet of the surface.",
 			);
 		}

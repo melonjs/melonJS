@@ -1,3 +1,5 @@
+import { warnOnce } from "../../lang/console.js";
+import Light2d from "../../lighting/light2d.ts";
 import { shaderList } from "../../loader/cache.js";
 import { Color, colorPool } from "../../math/color.ts";
 import { Matrix3d } from "../../math/matrix3d.ts";
@@ -60,7 +62,6 @@ import WebGPUTextureStore from "./texture/store.js";
  * additional import for TypeScript
  * @import {ApplicationSettings} from "../../application/settings.ts";
  * @import {Ellipse} from "../../geometries/ellipse.ts";
- * @import Light2d from "../../lighting/light2d.ts";
  * @import {Line} from "../../geometries/line.ts";
  * @import {Matrix2d} from "../../math/matrix2d.ts";
  * @import {Polygon} from "../../geometries/polygon.ts";
@@ -344,11 +345,6 @@ export default class WebGPURenderer extends Renderer {
 		 * @internal
 		 */
 		this._advancedBlendParent = null;
-		/**
-		 * @ignore
-		 * @internal
-		 */
-		this._advancedBlendWarned = new Set();
 
 		// consumed as the next pass's colorLoadOp "clear" (fresh target)
 		/** @ignore
@@ -378,11 +374,6 @@ export default class WebGPURenderer extends Renderer {
 		/** @ignore
 		 * @internal */
 		this.viewportRect = null;
-		// one-shot warn: a customShader (ShaderEffect fast path) cannot host
-		// a mesh draw on this backend
-		/** @ignore
-		 * @internal */
-		this.meshEffectWarned = false;
 		// the canvas GPUTexture handle of the current frame — kept beside its
 		// view because captureFrame copies from the TEXTURE, not the view
 		/** @ignore
@@ -401,6 +392,16 @@ export default class WebGPURenderer extends Renderer {
 		/** @ignore
 		 * @internal */
 		this.effectProjectionStack = [];
+
+		/**
+		 * The opacity each (possibly nested) post-effect pass was begun
+		 * under, by depth: the pass draws its content opaque, and the last
+		 * blit of a renderable's chain composites it at this.
+		 * @type {number[]}
+		 * @ignore
+		 * @internal
+		 */
+		this.effectAlphaStack = [];
 		/** @ignore
 		 * @internal */
 		this.effectPassDepth = 0;
@@ -1601,10 +1602,51 @@ export default class WebGPURenderer extends Renderer {
 	}
 
 	/**
+	 * Build, off the frame, what a light draws with: its glow, through the
+	 * radial-gradient effect in its own blend mode, and for a light with a
+	 * soft edge the stage's darkness, through the ambient-light effect (see
+	 * `drawLight`, `drawAmbientLight`). The renderer makes both effects the
+	 * first time a frame draws a light, so their pipelines were built inside
+	 * that frame.
+	 * @param {Light2d} light - the light to warm for
+	 * @param {Array<Array<string|number>>} scene - the targets a scene draws into, as `[format, sampleCount]`
+	 * @ignore
+	 * @internal
+	 */
+	_warmLight(light, scene) {
+		this.lightShader ??= new RadialGradientEffect(this);
+		const warm = (effect, blendMode) => {
+			// an effect that cannot run here has nothing to build
+			if (effect.wgslRealization?.valid !== true) {
+				return;
+			}
+			const family = this._effectFamily(effect);
+			for (const [format, sampleCount] of scene) {
+				void this.pipelineCache.warm(
+					family,
+					"triangle-list",
+					blendMode,
+					true,
+					"none",
+					undefined,
+					format,
+					sampleCount,
+				);
+			}
+		};
+		warm(this.lightShader, light.blendMode ?? "normal");
+		if (light.softness > 0) {
+			this._ambientShader ??= new AmbientLightEffect(this);
+			warm(this._ambientShader, "normal");
+		}
+	}
+
+	/**
 	 * Warm the renderable's own draw: a mesh through its mesh family, and
 	 * everything else that draws a texture through the quad family, each with
-	 * the renderable's blend mode. Containers draw nothing of their own, and
-	 * a camera is a chain, warmed with its effects.
+	 * the renderable's blend mode, and a light through the renderer's light
+	 * effects. Containers draw nothing of their own, and a camera is a chain,
+	 * warmed with its effects.
 	 * @param {Renderable} renderable - the renderable to warm for
 	 * @override
 	 * @ignore
@@ -1619,6 +1661,10 @@ export default class WebGPURenderer extends Renderer {
 			return;
 		}
 		const scene = this._sceneTargets();
+		if (renderable instanceof Light2d) {
+			this._warmLight(renderable, scene);
+			return;
+		}
 		if (this._hostsMeshEffect(renderable)) {
 			const batcher = this._meshBatcherFor(renderable);
 			if (batcher?.shaderKey !== undefined) {
@@ -1829,6 +1875,9 @@ export default class WebGPURenderer extends Renderer {
 				new Matrix3d();
 		}
 		savedProjection.copy(this.projectionMatrix);
+		// the opacity the renderable is drawn at: its content goes into the
+		// target opaque, and the chain's last blit composites it at this
+		this.effectAlphaStack[this.effectPassDepth] = this.globalAlpha();
 		this.effectPassDepth++;
 
 		const rt = this._postEffectPool().begin(
@@ -1872,8 +1921,9 @@ export default class WebGPURenderer extends Renderer {
 		if (effects.length === 0) {
 			return;
 		}
-		// the fast path set customShader — nothing offscreen to composite
-		if (this._usesPostEffectFastPath(renderable, effects)) {
+		// the fast path set customShader — nothing offscreen to composite;
+		// its effect is put back to the space `uv` always was
+		if (this._endEffectSpace(renderable, effects)) {
 			return;
 		}
 
@@ -1922,8 +1972,18 @@ export default class WebGPURenderer extends Renderer {
 			this.captureFrame();
 		}
 
+		// the chain's passes are told where the renderable is
+		this._beginChainSpace(renderable);
+		// a renderable's chain lands at the opacity it is drawn at, by its
+		// last blit only; a camera's composites whole
+		const alpha = isCamera
+			? 1
+			: this.effectAlphaStack[this.effectPassDepth - 1];
 		if (effects.length === 1) {
-			this.blitEffect(rt1, 0, 0, w, h, effects[0], keepBlend);
+			if (!isCamera) {
+				this._resumeSavedClip();
+			}
+			this.blitEffect(rt1, 0, 0, w, h, effects[0], keepBlend, alpha);
 		} else {
 			// multi-pass: ping-pong between the two pool targets
 			let src = rt1;
@@ -1936,12 +1996,25 @@ export default class WebGPURenderer extends Renderer {
 				dst = tmp;
 			}
 			this.setRenderTarget(parentRT);
-			this.blitEffect(src, 0, 0, w, h, effects[effects.length - 1], keepBlend);
+			if (!isCamera) {
+				this._resumeSavedClip();
+			}
+			this.blitEffect(
+				src,
+				0,
+				0,
+				w,
+				h,
+				effects[effects.length - 1],
+				keepBlend,
+				alpha,
+			);
 		}
 
 		if (isCamera && renderable.isDefault === false) {
 			this.disableScissor();
 		}
+		this._clearChainSpace();
 
 		// restore renderer state and the projection saved in beginPostEffect
 		this.restore();
@@ -1965,9 +2038,19 @@ export default class WebGPURenderer extends Renderer {
 	 * @param {number} height - destination height
 	 * @param {ShaderEffect} effect - the effect to composite with
 	 * @param {boolean} [keepBlend=false] - keep the current blend mode
+	 * @param {number} [alpha=1] - the opacity to composite the blit at (0.0 to 1.0)
 	 * @override
 	 */
-	blitEffect(source, x, y, width, height, effect, keepBlend = false) {
+	blitEffect(
+		source,
+		x,
+		y,
+		width,
+		height,
+		effect,
+		keepBlend = false,
+		alpha = 1,
+	) {
 		// A blit is compositing machinery, not a scene draw: it must never
 		// open an advanced-blend bracket of its own. Covers both the
 		// post-effect chain's ping-pong blits (which run under the
@@ -1980,7 +2063,7 @@ export default class WebGPURenderer extends Renderer {
 		blitSavedProjection.copy(this.projectionMatrix);
 		this.projectionMatrix.ortho(0, width, height, 0, -1, 1);
 		this.pushFrameGlobals();
-		batcher.blitTexture(source, x, y, width, height, effect, keepBlend);
+		batcher.blitTexture(source, x, y, width, height, effect, keepBlend, alpha);
 		this.projectionMatrix.copy(blitSavedProjection);
 		this.pushFrameGlobals();
 		this._advancedBlendBusy--;
@@ -1996,12 +2079,7 @@ export default class WebGPURenderer extends Renderer {
 	 * @internal
 	 */
 	_warnAdvancedBlendFallback(what) {
-		const key = `${what}:${this.currentBlendMode}`;
-		if (this._advancedBlendWarned.has(key)) {
-			return;
-		}
-		this._advancedBlendWarned.add(key);
-		console.warn(
+		warnOnce(
 			`WebGPURenderer: blend mode "${this.currentBlendMode}" is not supported for ${what} and falls back to "normal"`,
 		);
 	}
@@ -2670,10 +2748,8 @@ export default class WebGPURenderer extends Renderer {
 		if (
 			this.customShader != null &&
 			customShader === null &&
-			hostedEffect === null &&
-			this.meshEffectWarned !== true
+			hostedEffect === null
 		) {
-			this.meshEffectWarned = true;
 			// Two genuinely different reasons, and saying the wrong one costs
 			// hours: a ShaderEffect IS dual-language, so telling its author it
 			// "carries no wgsl module" sends them looking for a body that is
@@ -2689,7 +2765,7 @@ export default class WebGPURenderer extends Renderer {
 							"wgsl",
 						)
 					: null;
-			console.warn(
+			warnOnce(
 				blocker !== null
 					? `melonJS: this ShaderEffect cannot be hosted on a Mesh — ${blocker}. The mesh draws with the built-in shading.`
 					: "melonJS: this custom shader cannot be hosted on a Mesh by the WebGPU renderer (it carries no `wgsl` module) — the mesh draws with the built-in shading",
@@ -2710,13 +2786,8 @@ export default class WebGPURenderer extends Renderer {
 			mesh.instanceLayout !== undefined &&
 			retained &&
 			this.supportsInstancing === true;
-		if (
-			instanced &&
-			hostedEffect !== null &&
-			this.instancedEffectWarned !== true
-		) {
-			this.instancedEffectWarned = true;
-			console.warn(
+		if (instanced && hostedEffect !== null) {
+			warnOnce(
 				"melonJS: a ShaderEffect cannot be hosted on an InstancedMesh — the instanced shading is a separate shader family. The mesh draws with the built-in shading.",
 			);
 		}
@@ -3470,6 +3541,22 @@ export default class WebGPURenderer extends Renderer {
 	}
 
 	/**
+	 * Put back the clip a renderable's effect pass was begun under, for its
+	 * composite to land inside it: a camera's view on the screen, a
+	 * clipping container. The pass drops it (see `beginPostEffect`) to
+	 * capture the whole canvas, and the `restore()` that ends the pass
+	 * would only put it back once the composite has drawn.
+	 * @ignore
+	 * @internal
+	 */
+	_resumeSavedClip() {
+		const saved = this.renderState.peekScissor();
+		if (saved !== null) {
+			this.setScissorRect(saved[0], saved[1], saved[2], saved[3]);
+		}
+	}
+
+	/**
 	 * Clamp a screen-space scissor box to the canvas and make it the
 	 * active scissor (shared tail of {@link WebGPURenderer#clipRect} and
 	 * {@link WebGPURenderer#enableScissor}).
@@ -3613,12 +3700,7 @@ export default class WebGPURenderer extends Renderer {
 		this.maskLevel++;
 		if (this.maskLevel > 0xff) {
 			this.maskLevel = 0xff;
-			if (this.maskDepthWarned !== true) {
-				this.maskDepthWarned = true;
-				console.warn(
-					"melonJS: setMask nesting deeper than 255 — mask level clamped",
-				);
-			}
+			warnOnce("melonJS: setMask nesting deeper than 255 — mask level clamped");
 		}
 
 		// write phase: every fragment of the mask shape increments the
@@ -4519,13 +4601,8 @@ export default class WebGPURenderer extends Renderer {
 			usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
 		});
 
-		if (wanted && !granted && this._hdrOutputRefusalWarned !== true) {
-			/**
-			 * @ignore
-			 * @internal
-			 */
-			this._hdrOutputRefusalWarned = true;
-			console.warn(
+		if (wanted && !granted) {
+			warnOnce(
 				"hdrOutput: true was requested but hdr is off, so the effect chain has nothing above 1 to present — presenting in SDR",
 			);
 		}

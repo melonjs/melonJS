@@ -643,7 +643,7 @@ const examples: {
 		path: "sprite",
 		sourceDir: "sprite",
 		description:
-			"Displaying and transforming sprites with scaling, rotation, and alpha blending.",
+			"Sprites: transforms, tint and blending, atlas animation, and shader effects alone or chained.",
 	},
 	{
 		component: <ExampleTrail />,

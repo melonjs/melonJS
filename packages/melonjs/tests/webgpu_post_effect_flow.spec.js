@@ -16,6 +16,8 @@ import WebGPURenderer from "../src/video/webgpu/webgpu_renderer.js";
 describe("WebGPU post-effect control flow (recorded primitives)", () => {
 	let renderer;
 	let log;
+	// the alpha each blit composites at, by effect
+	let alphas;
 
 	function fakeTarget(name) {
 		return {
@@ -61,12 +63,25 @@ describe("WebGPU post-effect control flow (recorded primitives)", () => {
 
 	beforeEach(() => {
 		log = [];
+		alphas = [];
 		let targetCount = 0;
 		renderer = Object.create(WebGPURenderer.prototype);
 		Object.assign(renderer, {
 			customShader: undefined,
 			effectProjectionStack: [],
 			effectPassDepth: 0,
+			// the opacity each pass begins under, and the one drawn at now
+			effectAlphaStack: [],
+			alpha: 1,
+			globalAlpha() {
+				return this.alpha;
+			},
+			// where each renderable with a chain is, for its passes
+			// (Renderer#_setEffectSpace)
+			_effectSpaces: new WeakMap(),
+			_effectScales: new WeakMap(),
+			_chainSpace: null,
+			_chainScale: null,
 			projectionMatrix: new Matrix3d(),
 			backgroundColor: new Color(16, 32, 48),
 			currentBatcher: null,
@@ -92,13 +107,24 @@ describe("WebGPU post-effect control flow (recorded primitives)", () => {
 			captureFrame() {
 				log.push(`capture:${this.currentRenderTarget?.name ?? "canvas"}`);
 			},
-			blitEffect(source, x, y, w, h, effect, keepBlend) {
+			blitEffect(source, x, y, w, h, effect, keepBlend, alpha = 1) {
 				log.push(
 					`blit:${source.name}→${effect.name}:keep=${keepBlend === true}`,
 				);
+				alphas.push(`${effect.name}@${alpha}`);
 			},
 			clipRect(x, y, w, h) {
 				log.push(`clip:${x},${y},${w},${h}`);
+			},
+			// the clip saved by the pass's own save(): none by default
+			renderState: {
+				saved: null,
+				peekScissor() {
+					return this.saved;
+				},
+			},
+			setScissorRect(x, y, w, h) {
+				log.push(`scissor:${x},${y},${w},${h}`);
 			},
 			disableScissor() {
 				log.push("descissor");
@@ -171,6 +197,91 @@ describe("WebGPU post-effect control flow (recorded primitives)", () => {
 		// the final blit composites WITH blending (transparent texels must
 		// not overwrite the scene)
 		expect(log.at(-3)).toBe("blit:rt1→fx2:keep=true");
+	});
+
+	it("a sprite chain lands at the opacity it began under, by its last blit only", () => {
+		const sprite = makeRenderable([
+			makeEffect({ name: "a" }),
+			makeEffect({ name: "b" }),
+			makeEffect({ name: "c" }),
+		]);
+		// drawn at 0.3: its content goes into the pass opaque
+		renderer.alpha = 0.3;
+		renderer.beginPostEffect(sprite);
+		renderer.endPostEffect(sprite);
+		// the ping-pong passes stay whole; the composite onto the parent fades
+		expect(alphas).toEqual(["a@1", "b@1", "c@0.3"]);
+	});
+
+	it("a sprite chain composites inside the clip it began under, its passes whole", () => {
+		const sprite = makeRenderable([
+			makeEffect({ name: "a" }),
+			makeEffect({ name: "b" }),
+		]);
+		// drawn inside a clip: a minimap camera's view, a clipping container
+		renderer.renderState.saved = [5, 6, 70, 80];
+		renderer.beginPostEffect(sprite);
+		renderer.endPostEffect(sprite);
+		const clip = log.indexOf("scissor:5,6,70,80");
+		// after the pass between the two effects, right before the composite
+		expect(clip).toBeGreaterThan(log.indexOf("blit:rt0→a:keep=false"));
+		expect(log[clip + 1]).toBe("blit:rt1→b:keep=true");
+	});
+
+	it("so does one effect drawn into a target of its own", () => {
+		const panel = makeRenderable([makeEffect({ name: "solo" })]);
+		panel.postEffectNeedsCapture = true;
+		renderer.renderState.saved = [5, 6, 70, 80];
+		renderer.beginPostEffect(panel);
+		renderer.endPostEffect(panel);
+		const clip = log.indexOf("scissor:5,6,70,80");
+		expect(clip).toBeGreaterThan(-1);
+		expect(log[clip + 1]).toBe("blit:rt0→solo:keep=true");
+	});
+
+	it("a camera's chain clips to its own view, not to what it began under", () => {
+		const camera = makeRenderable(
+			[makeEffect({ name: "c1" }), makeEffect({ name: "c2" })],
+			{ camera: true },
+		);
+		renderer.renderState.saved = [5, 6, 70, 80];
+		renderer.beginPostEffect(camera);
+		renderer.endPostEffect(camera);
+		expect(
+			log.some((entry) => {
+				return entry.startsWith("scissor:");
+			}),
+		).toBe(false);
+	});
+
+	it("a camera's chain composites whole, whatever the alpha it began under", () => {
+		const camera = makeRenderable(
+			[makeEffect({ name: "c1" }), makeEffect({ name: "c2" })],
+			{ camera: true },
+		);
+		renderer.alpha = 0.3;
+		renderer.beginPostEffect(camera);
+		renderer.endPostEffect(camera);
+		expect(alphas).toEqual(["c1@1", "c2@1"]);
+	});
+
+	it("a sprite chain inside another lands at its own opacity", () => {
+		const outer = makeRenderable([
+			makeEffect({ name: "o1" }),
+			makeEffect({ name: "o2" }),
+		]);
+		const inner = makeRenderable([
+			makeEffect({ name: "i1" }),
+			makeEffect({ name: "i2" }),
+		]);
+		renderer.alpha = 0.5;
+		renderer.beginPostEffect(outer);
+		// inside the outer pass: drawn at its own opacity
+		renderer.alpha = 0.25;
+		renderer.beginPostEffect(inner);
+		renderer.endPostEffect(inner);
+		renderer.endPostEffect(outer);
+		expect(alphas).toEqual(["i1@1", "i2@0.25", "o1@1", "o2@0.5"]);
 	});
 
 	it("nesting: a sprite pass inside a camera pass restores the camera's projection slot", () => {

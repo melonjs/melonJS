@@ -5,7 +5,6 @@
  */
 import {
 	type Application,
-	GlowEffect,
 	Light2d,
 	ParticleEmitter,
 	Tween,
@@ -18,8 +17,7 @@ import {
 	PARTICLES,
 } from "../constants";
 import type { Usable } from "../entities/usables";
-
-const GOLD = [1.0, 0.72, 0.18];
+import { dungeonEffects } from "./effects";
 
 let spark: HTMLCanvasElement | undefined;
 // soft white dot, tinted by each emitter
@@ -43,8 +41,6 @@ export function sparkTexture() {
 
 export interface ChestFx {
 	light: Light2d;
-	glow: GlowEffect | undefined;
-	pulse: Tween | undefined;
 	sparkles: ParticleEmitter;
 }
 
@@ -68,33 +64,8 @@ export function highlightChest(
 	// below the sprites, like the torch
 	app.world.addChild(light, z - 0.5);
 
-	// shader effect, WebGL/WebGPU only; its width is in pixels of the chest's art
-	let glow: GlowEffect | undefined;
-	let pulse: Tween | undefined;
-	if (app.renderer.shaderLanguage !== null) {
-		const halo = new GlowEffect(app.renderer, {
-			color: GOLD,
-			width: 4,
-			intensity: 0.8,
-		});
-		chest.sprite.addPostEffect(halo);
-		const level = { value: 0.7 };
-		pulse = new Tween(level)
-			.to(
-				{ value: 1.8 },
-				{
-					duration: 900,
-					easing: Tween.Easing.Sinusoidal.InOut,
-					yoyo: true,
-					repeat: Infinity,
-				},
-			)
-			.onUpdate(() => {
-				halo.setIntensity(level.value);
-			})
-			.start();
-		glow = halo;
-	}
+	// the outline every closed chest shares, pulsed by the stage
+	chest.sprite.addPostEffect(dungeonEffects().chestGlow);
 
 	// emitter position is the top left of the spawn area
 	const sparkles = new ParticleEmitter(at.x - 18, at.y - 28, {
@@ -125,7 +96,7 @@ export function highlightChest(
 	app.world.addChild(sparkles, z);
 	sparkles.streamParticles();
 
-	return { light, glow, pulse, sparkles };
+	return { light, sparkles };
 }
 
 // remove the highlight, burst some gold and flare the chest light
@@ -135,10 +106,8 @@ export function openChest(
 	at: Vector2d,
 	fx: ChestFx,
 ) {
-	fx.pulse?.stop();
-	if (fx.glow) {
-		chest.sprite.removePostEffect(fx.glow);
-	}
+	// the other closed chests still wear it (shared: not destroyed)
+	chest.sprite.removePostEffect(dungeonEffects().chestGlow);
 	fx.sparkles.stopStream();
 
 	const burst = new ParticleEmitter(at.x - 20, at.y - 26, {

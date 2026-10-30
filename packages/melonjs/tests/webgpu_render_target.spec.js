@@ -43,6 +43,11 @@ describe("WebGPURenderTarget (mock device)", () => {
 				},
 			},
 			pipelineCache: { materialLayout: {} },
+			// the game's texture filter
+			filter: "linear",
+			getDefaultTextureFilter() {
+				return this.filter;
+			},
 			textureStore: {
 				getSampler(filter, repeat) {
 					return { filter, repeat };
@@ -100,7 +105,7 @@ describe("WebGPURenderTarget (mock device)", () => {
 		const rt = new WebGPURenderTarget(renderer, 64, 64);
 		const first = rt.getMaterialBindGroup();
 		expect(rt.getMaterialBindGroup()).toBe(first);
-		// the blit source samples linearly, clamped
+		// the blit source samples at the game's texture filter, clamped
 		expect(first.entries[1].resource).toEqual({
 			filter: "linear",
 			repeat: "no-repeat",
@@ -108,6 +113,22 @@ describe("WebGPURenderTarget (mock device)", () => {
 
 		rt.resize(32, 32);
 		expect(rt.getMaterialBindGroup()).not.toBe(first);
+	});
+
+	it("samples at the game's texture filter, as a sprite samples its texture", () => {
+		const rt = new WebGPURenderTarget(renderer, 64, 64);
+		renderer.filter = "nearest";
+		const crisp = rt.getMaterialBindGroup();
+		expect(crisp.entries[1].resource).toEqual({
+			filter: "nearest",
+			repeat: "no-repeat",
+		});
+		expect(rt.getMaterialBindGroup()).toBe(crisp);
+		// the game switches filter: the next blit samples at the new one
+		renderer.filter = "linear";
+		const smooth = rt.getMaterialBindGroup();
+		expect(smooth).not.toBe(crisp);
+		expect(smooth.entries[1].resource.filter).toBe("linear");
 	});
 
 	it("clear() defers to the next retarget (pendingClear flag)", () => {

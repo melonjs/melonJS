@@ -15,6 +15,7 @@
  */
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { Application, Rect, video } from "../src/index.js";
+import { resetWarnOnce } from "../src/lang/console.js";
 import { ADVANCED_BLEND_MODES } from "../src/video/blendmodes.js";
 import BlendEffect, { wgslFragment } from "../src/video/effects/blendEffect.js";
 import ShaderEffect from "../src/video/effects/shadereffect.js";
@@ -785,7 +786,7 @@ describe("advanced blend modes — adversarial mixing (WebGL)", () => {
 			warnings.push(args.join(" "));
 		};
 		try {
-			renderer._advancedBlendWarned.clear();
+			resetWarnOnce();
 			const gradient = new Gradient("linear", [0, 0, SIZE, 0]);
 			gradient.addColorStop(0, "#ff0000");
 			gradient.addColorStop(1, "#0000ff");
@@ -851,7 +852,7 @@ describe("advanced blend modes — adversarial mixing (WebGL)", () => {
 			warnings.push(args.join(" "));
 		};
 		try {
-			renderer._advancedBlendWarned.clear();
+			resetWarnOnce();
 			renderer.setBlendMode("difference");
 			renderer.setBatcher("mesh");
 			// warning AND no bracket: a fallback that warns and then brackets

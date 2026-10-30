@@ -72,7 +72,7 @@ export default class DropShadowEffect extends ShaderEffect {
 	 * @param {number} [options.offsetY=2.0] - shadow y offset in texels
 	 * @param {number[]} [options.color=[0.0, 0.0, 0.0]] - shadow color as [r, g, b] or [r, g, b, a] (0.0–1.0); the alpha scales `opacity`
 	 * @param {number} [options.opacity=0.5] - shadow opacity (0.0–1.0)
-	 * @param {number[]} [options.textureSize] - the size, `[width, height]`, of the texture its offset is measured in; by default the texture it draws (a sprite's own, the screen for a camera's effect)
+	 * @param {number[]} [options.textureSize] - the size, `[width, height]`, of the texture its offset is measured in; by default the texture it draws: a sprite's own, alone or with other effects and at any scale or zoom, the screen for a camera's effect
 	 */
 	constructor(renderer, options = {}) {
 		super(renderer, {

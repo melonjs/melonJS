@@ -1,3 +1,5 @@
+import { warnOnce } from "../../lang/console.js";
+import Light2d from "../../lighting/light2d.ts";
 import { shaderList } from "../../loader/cache.js";
 import { Color, colorPool } from "./../../math/color.ts";
 import { Matrix3d } from "../../math/matrix3d.ts";
@@ -240,6 +242,16 @@ export default class WebGLRenderer extends Renderer {
 		 * @internal
 		 */
 		this._effectProjectionStack = [];
+
+		/**
+		 * The opacity each (possibly nested) post-effect pass was begun
+		 * under, by depth: the pass draws its content opaque, and the last
+		 * blit of a renderable's chain composites it at this.
+		 * @type {number[]}
+		 * @ignore
+		 * @internal
+		 */
+		this._effectAlphaStack = [];
 		/**
 		 * @ignore
 		 * @internal
@@ -291,11 +303,6 @@ export default class WebGLRenderer extends Renderer {
 		 * @internal
 		 */
 		this._advancedBlendStencil = false;
-		/**
-		 * @ignore
-		 * @internal
-		 */
-		this._advancedBlendWarned = new Set();
 
 		/**
 		 * sets or returns the thickness of lines for shape drawing
@@ -425,6 +432,9 @@ export default class WebGLRenderer extends Renderer {
 		 * @type {Matrix3d}
 		 */
 		this.currentTransform = this.renderState.currentTransform;
+
+		// an effect pass's capture is a framebuffer, read bottom-up
+		this._captureFlipsY = true;
 
 		/**
 		 * The current batcher used by the renderer
@@ -588,7 +598,6 @@ export default class WebGLRenderer extends Renderer {
 				// Clearing the memo alone is not enough — the flags were
 				// captured at construction and nothing else recomputes them.
 				this._extensions.clear();
-				this._hdrRefusalWarned = false;
 				this._deriveCapabilities();
 				// and the format derived from them: a restored context is a
 				// NEW context and need not offer what the old one did. Left
@@ -786,21 +795,12 @@ export default class WebGLRenderer extends Renderer {
 			this._renderTargetPool.destroy();
 		}
 
-		if (wanted && granted !== true && this._hdrRefusalWarned !== true) {
-			// Once. `setHDR` is meant to be driven from a settings toggle,
-			// and a refusal repeated on every press is noise that teaches
-			// people to ignore the console. Cleared on context restore,
-			// where a NEW context may refuse for a new reason.
-			//
-			// `warning()` is the deprecation helper and would format this as
-			// one, so this uses the plain console form the other capability
-			// notices take. A game that never asked is never nagged.
-			/**
-			 * @ignore
-			 * @internal
-			 */
-			this._hdrRefusalWarned = true;
-			console.warn(
+		if (wanted && granted !== true) {
+			// once per page: `setHDR` is meant to be driven from a settings
+			// toggle, and a refusal repeated on every press is noise that
+			// teaches people to ignore the console. A game that never asked
+			// is never nagged.
+			warnOnce(
 				"hdr: true was requested but this WebGL2 driver cannot render into a half-float color buffer (neither EXT_color_buffer_float nor EXT_color_buffer_half_float is available) — falling back to 8 bits per channel",
 			);
 		}
@@ -961,6 +961,42 @@ export default class WebGLRenderer extends Renderer {
 			});
 		}
 		return this._prewarmed;
+	}
+
+	/**
+	 * Warm the renderable's own draw. A program is linked when it is made on
+	 * this backend, so what is left is what the renderer makes the first
+	 * time a frame needs it: the effects a light draws with.
+	 * @param {Renderable} renderable - the renderable to warm for
+	 * @override
+	 * @ignore
+	 * @internal
+	 */
+	_warmDraw(renderable) {
+		if (renderable instanceof Light2d) {
+			this._warmLight(renderable);
+		}
+	}
+
+	/**
+	 * Link, off the frame, the effects a light draws with: its glow, through
+	 * the radial-gradient effect, and for a light with a soft edge the
+	 * stage's darkness, through the ambient-light effect (see `drawLight`,
+	 * `drawAmbientLight`). The renderer made both the first time a frame drew
+	 * a light, so they were linked inside that frame.
+	 * @param {Light2d} light - the light to warm for
+	 * @ignore
+	 * @internal
+	 */
+	_warmLight(light) {
+		const gl = this.gl;
+		if (gl === null || gl.isContextLost?.() === true) {
+			return;
+		}
+		this._lightShader ??= new RadialGradientEffect(this);
+		if (light.softness > 0) {
+			this._ambientShader ??= new AmbientLightEffect(this);
+		}
 	}
 
 	/**
@@ -2104,6 +2140,9 @@ export default class WebGLRenderer extends Renderer {
 				new Matrix3d();
 		}
 		savedProjection.copy(this.projectionMatrix);
+		// the opacity the renderable is drawn at: its content goes into the
+		// target opaque, and the chain's last blit composites it at this
+		this._effectAlphaStack[this._effectPassDepth] = this.globalAlpha();
 		this._effectPassDepth++;
 
 		const rt = this._renderTargetPool.begin(
@@ -2144,8 +2183,9 @@ export default class WebGLRenderer extends Renderer {
 		if (effects.length === 0) {
 			return;
 		}
-		// single effect on non-managed renderable used customShader — no FBO to unbind
-		if (this._usesPostEffectFastPath(renderable, effects)) {
+		// single effect on non-managed renderable used customShader — no FBO
+		// to unbind; its effect is put back to the space `uv` always was
+		if (this._endEffectSpace(renderable, effects)) {
 			return;
 		}
 
@@ -2209,8 +2249,18 @@ export default class WebGLRenderer extends Renderer {
 			this.toFrameTexture();
 		}
 
+		// the chain's passes are told where the renderable is
+		this._beginChainSpace(renderable);
+		// a renderable's chain lands at the opacity it is drawn at, by its
+		// last blit only; a camera's composites whole
+		const alpha = isCamera
+			? 1
+			: this._effectAlphaStack[this._effectPassDepth - 1];
 		if (effects.length === 1) {
-			this.blitEffect(rt1.texture, 0, 0, w, h, effects[0], keepBlend);
+			if (!isCamera) {
+				this._resumeSavedClip();
+			}
+			this.blitEffect(rt1.texture, 0, 0, w, h, effects[0], keepBlend, alpha);
 		} else {
 			// multi-pass: ping-pong between two render targets
 			let src = rt1;
@@ -2232,6 +2282,9 @@ export default class WebGLRenderer extends Renderer {
 				parentRT.bind();
 			}
 			this.setViewport(0, 0, w, h);
+			if (!isCamera) {
+				this._resumeSavedClip();
+			}
 
 			this.blitEffect(
 				src.texture,
@@ -2241,12 +2294,14 @@ export default class WebGLRenderer extends Renderer {
 				h,
 				effects[effects.length - 1],
 				keepBlend,
+				alpha,
 			);
 		}
 
 		if (isCamera && renderable.isDefault === false) {
 			this.disableScissor();
 		}
+		this._clearChainSpace();
 
 		// restore renderer state and projection saved in beginPostEffect
 		this.restore();
@@ -2267,12 +2322,7 @@ export default class WebGLRenderer extends Renderer {
 	 * @internal
 	 */
 	_warnAdvancedBlendFallback(what) {
-		const key = `${what}:${this.currentBlendMode}`;
-		if (this._advancedBlendWarned.has(key)) {
-			return;
-		}
-		this._advancedBlendWarned.add(key);
-		console.warn(
+		warnOnce(
 			`WebGLRenderer: blend mode "${this.currentBlendMode}" is not supported for ${what} and falls back to "normal"`,
 		);
 	}
@@ -2443,8 +2493,18 @@ export default class WebGLRenderer extends Renderer {
 	 * @param {number} height - destination height
 	 * @param {ShaderEffect} shader - the shader effect to apply
 	 * @param {boolean} [keepBlend=false] - if true, keep current blend mode (for sprite compositing)
+	 * @param {number} [alpha=1] - the opacity to composite the blit at (0.0 to 1.0)
 	 */
-	blitEffect(source, x, y, width, height, shader, keepBlend = false) {
+	blitEffect(
+		source,
+		x,
+		y,
+		width,
+		height,
+		shader,
+		keepBlend = false,
+		alpha = 1,
+	) {
 		// A blit is compositing machinery, not a scene draw: it must never
 		// open an advanced-blend bracket of its own. That covers both the
 		// post-effect chain's ping-pong blits (which run under the
@@ -2468,7 +2528,7 @@ export default class WebGLRenderer extends Renderer {
 		if (!keepBlend) {
 			this.setBlendEnabled(false);
 		}
-		batcher.blitTexture(source, x, y, width, height, shader);
+		batcher.blitTexture(source, x, y, width, height, shader, alpha);
 		if (!keepBlend) {
 			this.setBlendEnabled(true);
 		}
@@ -2554,6 +2614,35 @@ export default class WebGLRenderer extends Renderer {
 		this.currentScissor[1] = sy;
 		this.currentScissor[2] = sw;
 		this.currentScissor[3] = sh;
+	}
+
+	/**
+	 * Put back the clip a renderable's effect pass was begun under, for its
+	 * composite to land inside it: a camera's view on the screen, a
+	 * clipping container. The pass drops it (see `beginPostEffect`) to
+	 * capture the whole canvas, and the `restore()` that ends the pass
+	 * would only put it back once the composite has drawn.
+	 * @ignore
+	 * @internal
+	 */
+	_resumeSavedClip() {
+		const saved = this.renderState.peekScissor();
+		if (saved === null) {
+			return;
+		}
+		const gl = this.gl;
+		const canvas = this.getCanvas();
+		this.flush();
+		gl.enable(gl.SCISSOR_TEST);
+		this._scissorActive = true;
+		this.currentScissor.set(saved);
+		// screen-space coords (see `clipRect`), with GL's bottom-left y-flip
+		gl.scissor(
+			saved[0],
+			canvas.height - saved[3] - saved[1],
+			saved[2],
+			saved[3],
+		);
 	}
 
 	/**
@@ -2998,15 +3087,9 @@ export default class WebGLRenderer extends Renderer {
 			this.currentBatcher.useShader(this.customShader);
 		} else if (
 			this.customShader != null &&
-			this.customShader.isWebGL !== true &&
-			this._meshShaderWarned !== true
+			this.customShader.isWebGL !== true
 		) {
-			/**
-			 * @ignore
-			 * @internal
-			 */
-			this._meshShaderWarned = true;
-			console.warn(
+			warnOnce(
 				"melonJS: this custom shader cannot be hosted on a Mesh by the WebGL renderer (no compiled GLSL program) — the mesh draws with the built-in shading",
 			);
 		}
@@ -3545,13 +3628,8 @@ export default class WebGLRenderer extends Renderer {
 	setHDROutput(enable = false) {
 		super.setHDROutput(enable);
 		this.supportsHDROutput = false;
-		if (enable === true && this._hdrOutputRefusalWarned !== true) {
-			/**
-			 * @ignore
-			 * @internal
-			 */
-			this._hdrOutputRefusalWarned = true;
-			console.warn(
+		if (enable === true) {
+			warnOnce(
 				"hdrOutput: true was requested but the WebGL2 backend cannot present in extended range (no browser implements the drawing-buffer tone mapping that would allow it) — presenting in SDR",
 			);
 		}
@@ -4445,16 +4523,7 @@ export default class WebGLRenderer extends Renderer {
 			// reserved as #gradientMask's temporary marker, and an 8-bit
 			// stencil couldn't represent deeper nesting anyway
 			this.maskLevel = 0x7f;
-			if (this._maskDepthWarned !== true) {
-				/**
-				 * @ignore
-				 * @internal
-				 */
-				this._maskDepthWarned = true;
-				console.warn(
-					"melonJS: setMask nesting deeper than 127 — mask level clamped",
-				);
-			}
+			warnOnce("melonJS: setMask nesting deeper than 127 — mask level clamped");
 		}
 
 		// Write phase: increment stencil for the drawn shape's pixels so each

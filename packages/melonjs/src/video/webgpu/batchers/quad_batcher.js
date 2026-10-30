@@ -1,3 +1,4 @@
+import { Color } from "../../../math/color.ts";
 import IndexBuffer from "../../buffer/index.js";
 import { FRAME_UNBOUNDED, isFramed } from "../../gpu/frame.js";
 import { scaleQuad, transformQuadCorners } from "../../gpu/quadcorners.ts";
@@ -5,6 +6,12 @@ import { TextureSlotTable } from "../../gpu/textureslots.js";
 import { prepareEffectBinding } from "../effect_binding.js";
 import { MAX_QUAD_TEXTURES } from "../pipeline/cache.js";
 import WebGPUBatcher from "./webgpu_batcher.js";
+
+/**
+ * the blit's tint: white, at the opacity the blit composites at
+ * @ignore
+ */
+const blitTint = new Color(255, 255, 255);
 
 /**
  * The WebGPU quad batcher — textured-quad accumulation with the same
@@ -555,10 +562,11 @@ export default class WebGPUQuadBatcher extends WebGPUBatcher {
 	 * @param {number} h - destination height
 	 * @param {ShaderEffect} [effect] - the effect to composite with
 	 * @param {boolean} [keepBlend=false] - keep the current blend mode (else replace)
+	 * @param {number} [alpha=1] - the opacity to composite at (0.0 to 1.0)
 	 * @ignore
 	 * @internal
 	 */
-	blitTexture(source, x, y, w, h, effect, keepBlend = false) {
+	blitTexture(source, x, y, w, h, effect, keepBlend = false, alpha = 1) {
 		// drain pending quads under their own material first
 		this.flush();
 		const renderer = this.renderer;
@@ -567,8 +575,16 @@ export default class WebGPUQuadBatcher extends WebGPUBatcher {
 		// the uniform snapshot below
 		effect?._setNoiseUVRect?.(w, h, w, h, 0, 0);
 		// and the whole texture is the frame: sampling stays unbounded. The
-		// texture is the pass's render target, the size of the quad
-		effect?._clearFrameRect?.(source.width ?? w, source.height ?? h);
+		// texture is the pass's render target, the size of the quad, and a
+		// renderable's chain measures in the renderable's own pixels
+		effect?._clearFrameRect?.(
+			source.width ?? w,
+			source.height ?? h,
+			renderer._chainScale,
+		);
+		// a pass of a renderable's chain: where the renderable is, for the
+		// effects that place a pattern on it (local_space.js)
+		effect?._setLocalSpace?.(renderer._chainSpace);
 		const binding = effect ? prepareEffectBinding(renderer, effect) : null;
 
 		const pass = renderer.ensurePass();
@@ -600,7 +616,7 @@ export default class WebGPUQuadBatcher extends WebGPUBatcher {
 		// whole target drawn: no frame
 		const vertexData = this.vertexData;
 		const open = FRAME_UNBOUNDED;
-		const tint = 0xffffffff;
+		const tint = blitTint.toUint32(alpha);
 		vertexData.pushSprite(x, y, 0, 0, 0, tint, 0, open, open);
 		vertexData.pushSprite(x + w, y, 0, 1, 0, tint, 0, open, open);
 		vertexData.pushSprite(x, y + h, 0, 0, 1, tint, 0, open, open);
@@ -618,6 +634,8 @@ export default class WebGPUQuadBatcher extends WebGPUBatcher {
 		pass.setIndexBuffer(this.indexBuffer, "uint32");
 		pass.drawIndexed(6);
 		vertexData.clear();
+		// drawn, its values uploaded: back to the space `uv` always was
+		effect?._setLocalSpace?.(null);
 	}
 
 	/**

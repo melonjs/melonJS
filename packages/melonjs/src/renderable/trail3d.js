@@ -1,4 +1,5 @@
 import Camera3d from "../camera/camera3d.ts";
+import { warnOnce } from "../lang/console.js";
 import { colorPool } from "../math/color.ts";
 import { lerpArray } from "../math/math.ts";
 import { Vector3d } from "../math/vector3d.ts";
@@ -19,14 +20,6 @@ import Mesh from "./mesh.js";
  * @ignore
  */
 const WORLD_UP = { x: 0, y: -1, z: 0 };
-
-/**
- * Said once per page, not once per trail: the message is about the scene's
- * setup, not about one ribbon, and a game that got this wrong has usually got
- * it wrong for every trail it owns.
- * @ignore
- */
-let _warnedNo3dCameraOnce = false;
 
 /** scratch, so a draw allocates nothing @ignore */
 const _eye = { x: 0, y: 0, z: 0 };
@@ -516,12 +509,9 @@ export default class Trail3d extends Mesh {
 			// already holds world coordinates projects them a second time and
 			// draws nonsense. Nothing is better than nonsense, and one line
 			// in the console is better than nothing.
-			if (_warnedNo3dCameraOnce === false) {
-				_warnedNo3dCameraOnce = true;
-				console.warn(
-					"melonJS: a Trail3d needs a Camera3d to draw — it builds a camera-facing strip in world space, which a 2D camera has no way to project. Use `Trail` for a 2D scene, or set the application's `cameraClass` to `Camera3d`.",
-				);
-			}
+			warnOnce(
+				"melonJS: a Trail3d needs a Camera3d to draw — it builds a camera-facing strip in world space, which a 2D camera has no way to project. Use `Trail` for a 2D scene, or set the application's `cameraClass` to `Camera3d`.",
+			);
 			return;
 		}
 

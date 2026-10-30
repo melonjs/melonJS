@@ -1,3 +1,4 @@
+import { warnOnce } from "../../lang/console.js";
 import { Bounds } from "../bounds.ts";
 import ResponseObject from "../response.js";
 import { raycastQuery } from "./raycast.ts";
@@ -74,14 +75,6 @@ const SAT_LOOKUP = {
 	SphereEllipse: testSphereEllipse,
 	EllipseSphere: testEllipseSphere,
 };
-
-/**
- * Shape-type pairs already reported as unsupported, so a mismatched pair
- * warns once instead of once per frame per pair.
- * @ignore
- * @internal
- */
-const reportedMissingPairs = new Set();
 
 /**
  * How many separation sweeps a pair of bodies gets when at least one of them
@@ -946,13 +939,9 @@ class Detector {
 				// recoverable, a thrown physics step is not.
 				const test = SAT_LOOKUP[shapeA.type + shapeB.type];
 				if (test === undefined) {
-					const pair = `${shapeA.type} / ${shapeB.type}`;
-					if (!reportedMissingPairs.has(pair)) {
-						reportedMissingPairs.add(pair);
-						console.warn(
-							`melonJS: no collision test for shape pair ${pair}; treating as no collision`,
-						);
-					}
+					warnOnce(
+						`melonJS: no collision test for shape pair ${shapeA.type} / ${shapeB.type}; treating as no collision`,
+					);
 					continue;
 				}
 				// full SAT collision check

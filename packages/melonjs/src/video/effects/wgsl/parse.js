@@ -1,3 +1,4 @@
+import { LOCAL_SPACE_IDENTIFIER } from "../local_space.js";
 import { computeUniformLayout } from "./layout.js";
 
 /**
@@ -265,6 +266,8 @@ export function parseWGSLBody(body) {
 		// the interpolated tint (the GLSL `vColor` varying) — bodies that
 		// re-sample the source texture reference it to re-apply the tint
 		vColor: /\bvColor\b/.test(source) && !hasOwnDeclaration(source, "vColor"),
+		// where the body is on the renderable it draws (local_space.js)
+		local: LOCAL_SPACE_IDENTIFIER.test(source),
 	};
 	if (
 		builtins.screenTexture &&

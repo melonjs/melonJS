@@ -3,6 +3,7 @@
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
+import type { GamepadPlugin } from "@melonjs/gamepad-plugin";
 import {
 	type Application,
 	audio,
@@ -12,7 +13,6 @@ import {
 	Stage,
 	VignetteEffect,
 } from "melonjs";
-import { VirtualJoypad } from "./entities/controls";
 import UIContainer from "./entities/HUD";
 import { MinimapCamera } from "./entities/minimap";
 import { gameState } from "./gameState";
@@ -21,7 +21,6 @@ import { gameState } from "./gameState";
 const HUD_Z = 100;
 
 export class PlayScreen extends Stage {
-	private virtualJoypad?: VirtualJoypad;
 	private HUD?: UIContainer;
 
 	/**
@@ -46,12 +45,11 @@ export class PlayScreen extends Stage {
 		// explicit z: the HUD draws over the level
 		app.world.addChild(this.HUD, HUD_Z);
 
-		// display if debugPanel is enabled or on mobile
-		if (plugin.cache.debugPanel?.panel.visible || device.touch) {
-			if (typeof this.virtualJoypad === "undefined") {
-				this.virtualJoypad = new VirtualJoypad();
-			}
-			app.world.addChild(this.virtualJoypad, HUD_Z);
+		// the touch controls, also shown on a desktop with the debug panel open
+		const gamepad = plugin.cache.gamepad as GamepadPlugin | undefined;
+		if (gamepad) {
+			gamepad.enabled =
+				device.touch || plugin.cache.debugPanel?.panel.visible === true;
 		}
 
 		// vignette post-effect + built-in color grading (always applied last).
@@ -72,11 +70,6 @@ export class PlayScreen extends Stage {
 		// remove the HUD from the game world
 		if (this.HUD) {
 			app.world.removeChild(this.HUD);
-		}
-
-		// remove the joypad if initially added
-		if (this.virtualJoypad && app.world.hasChild(this.virtualJoypad)) {
-			app.world.removeChild(this.virtualJoypad);
 		}
 
 		// stop some music

@@ -34,11 +34,17 @@ uniform vec2 ME_size_obj;
 uniform vec2 ME_size_img;
 uniform vec2 ME_offset;
 varying vec2 noise_uv;
+uniform float ME_mode;
+uniform float ME_ydir;
+uniform vec3 ME_local_x;
+uniform vec3 ME_local_y;
 void main(void) {
     vec4 ME_clip = uProjectionMatrix * vec4(aVertex, 1.0);
     gl_Position = ME_clip;
     screen_uv = ME_clip.xy / ME_clip.w * 0.5 + 0.5;
-    noise_uv = aRegion * (ME_size_img / ME_size_obj) - ME_offset / ME_size_obj;
+    vec3 ME_v = vec3(aVertex.xy, 1.0);
+    vec2 ME_px = vec2(dot(ME_local_x, ME_v), dot(ME_local_y, ME_v));
+    noise_uv = ME_mode > 1.5 ? ME_px : aRegion * (ME_size_img / ME_size_obj) - ME_offset / ME_size_obj;
     vColor = vec4(aColor.bgr * aColor.a, aColor.a);
     vRegion = aRegion;
 }"
@@ -48,11 +54,30 @@ exports[`ShaderEffect generated-GLSL golden > a built-in effect class assembles 
 "uniform sampler2D uSampler;
 varying vec4 vColor;
 varying vec2 vRegion;
+uniform float ME_mode;
+uniform float ME_ydir;
+uniform vec4 ME_to_uv;
+uniform vec4 ME_art_rect;
+varying vec2 ME_local;
+varying vec2 ME_art;
+vec2 ME_localToUV(vec2 d) {
+    if (ME_mode > 0.5) {
+        return mat2(ME_to_uv.xy, ME_to_uv.zw) * d;
+    }
+    return vec2(d.x, ME_ydir < 0.0 ? -d.y : d.y);
+}
+vec2 ME_artToUV(vec2 d) {
+    return ME_mode > 1.5 ? mat2(ME_to_uv.xy, ME_to_uv.zw) * (d / ME_art_rect.zw) : d;
+}
+vec2 ME_localToArt(vec2 d) {
+    return ME_mode > 1.5 ? d * ME_art_rect.zw : ME_localToUV(d);
+}
 
 			uniform float uStrength;
 			uniform float uSize;
 			vec4 apply(vec4 color, vec2 uv) {
-				vec2 vig = uv * (1.0 - uv);
+				// across the sprite, wherever it sits in its texture
+				vec2 vig = ME_local * (1.0 - ME_local);
 				float v = clamp(pow(vig.x * vig.y * uSize, uStrength), 0.0, 1.0);
 				return vec4(color.rgb * v, color.a);
 			}

@@ -737,36 +737,6 @@ export class TextureAtlas extends Texture2d {
 	}
 
 	/**
-	 * Create an animation object using the first region found using all specified names
-	 * @param {string[]|number[]} [names] - list of names for each sprite (if not specified all defined names/entries in the atlas will be added)
-	 * (when manually creating a Texture out of a spritesheet, only numeric values are authorized)
-	 * @param {object} [settings] - Additional settings passed to the {@link Sprite} contructor
-	 * @returns {Sprite}
-	 * @example
-	 * // create a new texture object under the `game` namespace
-	 * game.texture = new me.TextureAtlas(
-	 *     me.loader.getJSON("texture"),
-	 *     me.loader.getImage("texture")
-	 * );
-	 *
-	 * // create a new Animated Sprite
-	 * let sprite = game.texture.createAnimationFromName([
-	 *     "walk0001.png", "walk0002.png", "walk0003.png",
-	 *     "walk0004.png", "walk0005.png", "walk0006.png",
-	 *     "walk0007.png", "walk0008.png", "walk0009.png",
-	 *     "walk0010.png", "walk0011.png"
-	 * ]);
-	 *
-	 * // define an additional basic walking animation
-	 * sprite.addAnimation ("simple_walk", [0,2,1]);
-	 * // you can also use frame name to define your animation
-	 * sprite.addAnimation ("speed_walk", ["walk0007.png", "walk0008.png", "walk0009.png", "walk0010.png"]);
-	 * // set the default animation
-	 * sprite.setCurrentAnimation("simple_walk");
-	 * // set the renderable position to bottom center
-	 * sprite.anchorPoint.set(0.5, 1.0);
-	 */
-	/**
 	 * Return the Sprite settings object (framewidth, frameheight, atlas, atlasIndices, etc.)
 	 * for the given set of atlas frame names. This is useful when extending {@link Sprite}
 	 * and you need to pass atlas animation data to the parent constructor.
@@ -857,6 +827,36 @@ export class TextureAtlas extends Texture2d {
 		};
 	}
 
+	/**
+	 * Create an animation object using the first region found using all specified names
+	 * @param {string[]|number[]} [names] - list of names for each sprite (if not specified all defined names/entries in the atlas will be added)
+	 * (when manually creating a Texture out of a spritesheet, only numeric values are authorized)
+	 * @param {object} [settings] - Additional settings passed to the {@link Sprite} constructor
+	 * @returns {Sprite}
+	 * @example
+	 * // create a new texture object under the `game` namespace
+	 * game.texture = new me.TextureAtlas(
+	 *     me.loader.getJSON("texture"),
+	 *     me.loader.getImage("texture")
+	 * );
+	 *
+	 * // create a new Animated Sprite
+	 * let sprite = game.texture.createAnimationFromName([
+	 *     "walk0001.png", "walk0002.png", "walk0003.png",
+	 *     "walk0004.png", "walk0005.png", "walk0006.png",
+	 *     "walk0007.png", "walk0008.png", "walk0009.png",
+	 *     "walk0010.png", "walk0011.png"
+	 * ]);
+	 *
+	 * // define an additional basic walking animation
+	 * sprite.addAnimation ("simple_walk", [0,2,1]);
+	 * // you can also use frame name to define your animation
+	 * sprite.addAnimation ("speed_walk", ["walk0007.png", "walk0008.png", "walk0009.png", "walk0010.png"]);
+	 * // set the default animation
+	 * sprite.setCurrentAnimation("simple_walk");
+	 * // set the renderable position to bottom center
+	 * sprite.anchorPoint.set(0.5, 1.0);
+	 */
 	createAnimationFromName(names, settings) {
 		const tpAtlas = [];
 		const indices = {};

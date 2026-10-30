@@ -6,6 +6,7 @@ import {
 	Matrix3d,
 	Mesh,
 } from "../src/index.js";
+import { resetWarnOnce } from "../src/lang/console.js";
 import {
 	getWebGLRenderer,
 	releaseWebGLRenderer,
@@ -904,8 +905,7 @@ describe("Mesh instancing — reviewed regressions", () => {
 		// transform rows to nothing — a singular matrix collapses the mesh
 		const gl = renderer.gl;
 		const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-		const batcher = renderer.batchers.get("mesh");
-		batcher._instancedShaderWarned = false;
+		resetWarnOnce();
 		const mesh = make(4);
 		mesh.shader = renderer.batchers.get("quad").defaultShader;
 		drawOnce(mesh);

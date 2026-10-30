@@ -1,3 +1,4 @@
+import { warnOnce } from "../../lang/console.js";
 import {
 	ONCONTEXT_LOST,
 	ONCONTEXT_RESTORED,
@@ -7,6 +8,7 @@ import {
 import Texture2d from "../texture/texture2d.ts";
 import GLShader from "../webgl/glshader.js";
 import { buildGLSLProgram } from "./glsl_realization.js";
+import { LOCAL_MODE, ME_LAYOUT } from "./local_space.js";
 import WGSLEffectRealization from "./wgsl_realization.js";
 
 /**
@@ -136,7 +138,8 @@ const UNBOUNDED_FRAME = [-1e6, -1e6, 1e6, 1e6];
  * // `: screen_texture` keeps the sampler filled with everything drawn so
  * // far (a back-buffer copy; one screen copy per draw of the effect),
  * // `screen_uv` is this fragment's 0..1 screen position, and `noise_uv`
- * // runs 0..1 across the sprite regardless of its atlas frame.
+ * // runs 0..1 across the sprite regardless of its atlas frame (and
+ * // across the renderable when it has several effects).
  * const water = new ShaderEffect(renderer, `
  *     uniform sampler2D uNoise;
  *     uniform sampler2D screenTex : screen_texture;
@@ -149,6 +152,21 @@ const UNBOUNDED_FRAME = [-1e6, -1e6, 1e6, 1e6];
  * `);
  * water.setTexture("uNoise", noiseTexture.getTexture(), "repeat");
  */
+/**
+ * whether `values` already sit in the float mirror at `at`, as the mirror
+ * holds them (32-bit floats)
+ * @ignore
+ * @internal
+ */
+function sameFloats(mirror, at, values) {
+	for (let i = 0; i < values.length; i++) {
+		if (mirror[at + i] !== Math.fround(values[i])) {
+			return false;
+		}
+	}
+	return true;
+}
+
 /**
  * monotonic id, so a mesh batcher can key its spliced program on the effect
  * that produced it without holding a reference in the cache key (#1658)
@@ -258,8 +276,10 @@ export default class ShaderEffect {
 
 		if (typeof source !== "string") {
 			// no body this backend can compile — same inert-stub contract as
-			// the Canvas renderer: warn, stay disabled, every method no-ops
-			console.warn(
+			// the Canvas renderer: warn, stay disabled, every method no-ops.
+			// Once per page: the message names no effect, so a repeat adds
+			// nothing
+			warnOnce(
 				language === null
 					? "ShaderEffect requires a GPU backend and is disabled on this renderer (no programmable pipeline)"
 					: `ShaderEffect has no ${language} body and is disabled on this renderer (provide a { ${language}: ... } source)`,
@@ -311,6 +331,13 @@ export default class ShaderEffect {
 			 * @internal
 			 */
 			this._hasNoiseUV = program.noiseUV;
+			/**
+			 * whether the body reads where it is on the renderable it draws:
+			 * `noise_uv`, or the local space (local_space.js)
+			 * @ignore
+			 * @internal
+			 */
+			this._hasLocalSpace = program.noiseUV || program.builtins.local;
 			/**
 			 * the annotation-stripped body and its builtin usage, kept so the
 			 * mesh batchers can splice this effect into the engine's own mesh
@@ -377,6 +404,8 @@ export default class ShaderEffect {
 					]
 				: [];
 			this._hasNoiseUV = realization.builtins.noiseUV;
+			this._hasLocalSpace =
+				realization.builtins.noiseUV || realization.builtins.local;
 			this.enabled = true;
 		}
 
@@ -606,7 +635,30 @@ export default class ShaderEffect {
 	 * @internal
 	 */
 	_setUVYDir(dir) {
-		if (this._uvYDir === dir || this.destroyed === true) {
+		if (this.destroyed === true) {
+			return;
+		}
+		// the local space's own copy, which `ME_local` runs top to bottom by
+		// (local_space.js)
+		if (this._hasLocalSpace === true && this._meYDir !== dir) {
+			/**
+			 * @ignore
+			 * @internal
+			 */
+			this._meYDir = dir;
+			if (typeof this.wgslRealization !== "undefined") {
+				const me = this.wgslRealization.meMirror;
+				this.wgslRealization.onUniformChange?.();
+				me[ME_LAYOUT.ydir] = dir;
+			} else if (
+				typeof this._shader !== "undefined" &&
+				!this._shader.suspended &&
+				typeof this._shader.uniforms.ME_ydir !== "undefined"
+			) {
+				this._shader.setUniform("ME_ydir", dir);
+			}
+		}
+		if (this._uvYDir === dir) {
 			return;
 		}
 		if (
@@ -626,6 +678,81 @@ export default class ShaderEffect {
 		) {
 			this._uvYDir = dir;
 			this.wgslRealization.setUniform("uUVYDir", dir);
+		}
+	}
+
+	/**
+	 * Tell a body reading where it is on the renderable it draws (`noise_uv`,
+	 * or the local space: see local_space.js) which renderable that is, for
+	 * the draws about to happen. `null` puts it back to what `uv` always
+	 * was. Called by the renderer around a renderable drawn with its one
+	 * effect, and by the batchers around each pass of a renderable's chain;
+	 * a no-op for any other body. Only a change is written, so draws with
+	 * the same space keep sharing a draw.
+	 * @param {{mode: number, localX: number[], localY: number[], toUV: number[], art: number[]}|null} space - the mode (see LOCAL_MODE), the target-pixel to 0..1 rows, the local to `uv` displacement (two columns) and the renderable's frame in its texture (origin, size); `null` for none
+	 * @ignore
+	 * @internal
+	 */
+	_setLocalSpace(space) {
+		if (this._hasLocalSpace !== true || this.destroyed === true) {
+			return;
+		}
+		const mode = space === null ? LOCAL_MODE.uv : space.mode;
+		if (typeof this.wgslRealization !== "undefined") {
+			const realization = this.wgslRealization;
+			const me = realization.meMirror;
+			if (space === null) {
+				if (me[ME_LAYOUT.mode] !== mode) {
+					realization.onUniformChange?.();
+					me[ME_LAYOUT.mode] = mode;
+				}
+				return;
+			}
+			const L = ME_LAYOUT;
+			const same =
+				me[L.mode] === mode &&
+				sameFloats(me, L.localX, space.localX) &&
+				sameFloats(me, L.localY, space.localY) &&
+				sameFloats(me, L.toUV, space.toUV) &&
+				sameFloats(me, L.art, space.art);
+			if (same) {
+				return;
+			}
+			// the quads queued under the old space draw first (the mirror is
+			// uploaded when they draw)
+			realization.onUniformChange?.();
+			me[L.mode] = mode;
+			me.set(space.localX, L.localX);
+			me.set(space.localY, L.localY);
+			me.set(space.toUV, L.toUV);
+			me.set(space.art, L.art);
+			return;
+		}
+		const shader = this._shader;
+		if (typeof shader === "undefined" || shader.suspended) {
+			return;
+		}
+		// guarded on the ACTIVE uniforms: the compiler drops what the body
+		// ends up not reading, and setUniform throws on those. GLShader only
+		// draws the queued quads first when a value changes
+		const uniforms = shader.uniforms;
+		if (typeof uniforms.ME_mode !== "undefined") {
+			shader.setUniform("ME_mode", mode);
+		}
+		if (space === null) {
+			return;
+		}
+		if (typeof uniforms.ME_local_x !== "undefined") {
+			shader.setUniform("ME_local_x", space.localX);
+		}
+		if (typeof uniforms.ME_local_y !== "undefined") {
+			shader.setUniform("ME_local_y", space.localY);
+		}
+		if (typeof uniforms.ME_to_uv !== "undefined") {
+			shader.setUniform("ME_to_uv", space.toUV);
+		}
+		if (typeof uniforms.ME_art_rect !== "undefined") {
+			shader.setUniform("ME_art_rect", space.art);
 		}
 	}
 
@@ -654,15 +781,23 @@ export default class ShaderEffect {
 	/**
 	 * For a pass over a whole texture (a render target blit), which draws
 	 * its quad with no frame: `frameTexel()` then samples as it always did,
-	 * clamped by the texture's own wrap mode.
+	 * clamped by the texture's own wrap mode. An effect measuring in texels
+	 * (see `_initTextureSize`) measures in the texture's pixels, or, on a
+	 * pass of a renderable's chain, in the renderable's own (a sprite's
+	 * texels), as it does on the renderable drawn with it alone.
 	 * @param {number} [width] - the texture's width, in pixels
 	 * @param {number} [height] - the texture's height, in pixels
+	 * @param {number[]|null} [scale=null] - on a pass of a renderable's chain, how many of the texture's pixels each pixel of the renderable covers, across and down (see `Renderer#_effectScaleOf`)
 	 * @ignore
 	 * @internal
 	 */
-	_clearFrameRect(width, height) {
+	_clearFrameRect(width, height, scale = null) {
 		this._writeFrameHalf(0, 0);
 		if (width !== undefined && height !== undefined) {
+			if (scale !== null) {
+				width /= scale[0];
+				height /= scale[1];
+			}
 			this._setSourceSize(width, height);
 		}
 	}
@@ -1039,16 +1174,9 @@ export default class ShaderEffect {
 				if (nextUnit < 1) {
 					// more extra textures than the batcher can hold beside
 					// uSampler — bind what fits, warn once, skip the rest
-					if (!this._textureOverflowWarned) {
-						/**
-						 * @ignore
-						 * @internal
-						 */
-						this._textureOverflowWarned = true;
-						console.warn(
-							`ShaderEffect.setTexture: too many extra textures for ${batcher.maxBatchTextures} texture units — "${name}" and any later ones were not bound`,
-						);
-					}
+					warnOnce(
+						`ShaderEffect.setTexture: too many extra textures for ${batcher.maxBatchTextures} texture units — "${name}" and any later ones were not bound`,
+					);
 					break;
 				}
 				entry.unit = nextUnit;

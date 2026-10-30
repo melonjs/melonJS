@@ -1,6 +1,6 @@
 ---
 name: melonjs-input
-description: "Use this skill for keyboard, pointer, mouse, touch and gamepad input in melonJS. Covers the bindKey action indirection, registerPointerEvent on regions, the isKinematic requirement that silently blocks pointer events, which of several overlapping objects receives an event and how to consume it, world vs screen pointer coordinates, and gamepad mapping onto the same actions. Triggers on: input, bindKey, isKeyPressed, KEY, registerPointerEvent, releasePointerEvent, pointerdown, pointerup, pointermove, POINTERMOVE, gamepad, bindGamepad, triggerKeyEvent, KEYDOWN, KEYUP, press any key, splash screen, click, touch, drag, hit test, event propagation, stop propagating, overlapping, which object gets the click."
+description: "Use this skill for keyboard, pointer, mouse, touch and gamepad input in melonJS. Covers the bindKey action indirection, registerPointerEvent on regions, the isKinematic requirement that silently blocks pointer events, which of several overlapping objects receives an event and how to consume it, world vs screen pointer coordinates, and gamepad mapping onto the same actions. Triggers on: input, bindKey, isKeyPressed, KEY, registerPointerEvent, releasePointerEvent, pointerdown, pointerup, pointermove, POINTERMOVE, gamepad, bindGamepad, triggerKeyEvent, virtual gamepad, touch controls, joystick, gamepad-plugin, KEYDOWN, KEYUP, press any key, splash screen, click, touch, drag, hit test, event propagation, stop propagating, overlapping, which object gets the click."
 license: MIT
 ---
 
@@ -273,7 +273,27 @@ device, so a pad unplugged and plugged back into the same slot keeps working.
 
 ## Virtual controls
 
-On-screen buttons synthesise key events, again reaching the same actions:
+For on-screen touch controls, use `@melonjs/gamepad-plugin` rather than
+writing them: sticks and buttons drawn over the game and reported as a pad in
+a gamepad slot, so the `bindGamepad` bindings above answer to them unchanged.
+
+```js
+import { GamepadPlugin } from "@melonjs/gamepad-plugin";
+
+// once the application is created: a stick and two buttons, on touch screens
+plugin.register(GamepadPlugin, "gamepad", {
+    buttons: [{ label: "A" }, { label: "B" }],
+});
+```
+
+The left stick presses the D-pad buttons (`GAMEPAD.BUTTONS.UP` ...) in 8
+directions and reports `AXES.LX`/`LY`; the buttons press `FACE_1`, `FACE_2`...
+in turn, or a key with `{ key: input.KEY.SPACE }`. Each finger is followed on
+its own, a touch starting on the controls does not reach the game, and they
+hide while a real pad is in use. `plugin.cache.gamepad.visible` says whether
+they show, to word a prompt ("tap" or a key name).
+
+A single key can also be pressed directly, reaching the same actions:
 
 ```js
 input.triggerKeyEvent(input.KEY.LEFT, true);    // press
@@ -299,6 +319,8 @@ input.triggerKeyEvent(input.KEY.LEFT, false);   // release
 | a widget stays highlighted after the pointer moves onto a panel over it | the panel consumes no `pointermove`, so nothing takes the pointer off the widget |
 | a child's big `z` does not put it in front of another container | `pos.z` is container-local — use `ancestor.moveToTop()` on the container |
 | every click in the game stops working | a handler on `app.viewport` returning `false`, which is asked first |
+| touch controls do nothing | nothing bound to their slot — `bindGamepad` on the plugin's `index` (0 by default), or give the buttons a `key` |
+| touch controls never show on a desktop | the gamepad plugin's `enabled` defaults to `device.touch` — pass `enabled: true` to try them there |
 
 ## Related skills
 

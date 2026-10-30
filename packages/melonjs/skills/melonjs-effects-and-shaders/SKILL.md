@@ -138,17 +138,43 @@ as transparent, as if the sprite were drawn on its own, so they never show
 along its edges and the atlas needs no padding for them. Past the texture's own
 edge (a standalone image, or the outside of an atlas) nothing changes.
 
+**The effects that place a pattern place it on the renderable they draw.**
+`SwayEffect`'s planted row, `WaveEffect`'s `anchor`, the centre of
+`VignetteEffect`, `RadialGradientEffect` and `ScanlineEffect`'s curvature all
+land on the sprite itself: cut from an atlas, flipped, rotated, or with other
+effects after it, the pattern sits where it sits on a sprite with a texture of
+its own and that one effect. What is measured in the texture stays measured in
+it: `ShineEffect`'s sweep, bands and width, `WaveEffect`'s amplitude and
+frequency, `DissolveEffect`'s grain, the lines of `HologramEffect` and
+`ScanlineEffect` (on an atlas sprite, fractions of the atlas, so a single shine
+crosses an atlas sprite only part of the time). With other effects after them
+they all stay on the sprite. `SwayEffect` measures everything across the
+sprite.
+
 **Their widths, offsets and sizes are in pixels of the texture they draw, with
 nothing to pass.** Each of those effects takes the size of what it draws: the
 sprite's whole texture (the atlas image, not the frame), the screen for a
-camera's effect, a mesh's texture. Do not pass `textureSize` to get this: a
+camera's effect, a mesh's texture. With other effects after it, it still
+measures in the sprite's own pixels, at any scale and under a camera's zoom
+(on a container, in the container's own), so adding a second effect never
+changes how wide the first comes out. Do not pass `textureSize` to get this: a
 `textureSize` (or `setTextureSize()`) fixes the size instead, for a width
 meant in some other texture's pixels.
 
 ```js
-// 2 pixels of the sprite's art, whatever the size of its atlas
+// 2 pixels of the sprite's art, whatever the size of its atlas, its scale,
+// the camera's zoom, or the effects after it
 sprite.addPostEffect(new OutlineEffect(app.renderer, { width: 2 }));
+sprite.addPostEffect(new GlowEffect(app.renderer, { width: 6 }));
 ```
+
+With two or more effects, the sprite is drawn into a capture and each effect
+reads that, at the game's texture filter, as a sprite reads its own texture:
+under `"nearest"` (or `antiAlias` off) a width that lands between two screen
+pixels, such as 2 pixels of a sprite drawn at 0.3, stays crisp, and under
+`"linear"` it blends, on WebGL and WebGPU alike. The result lands inside the
+clip the sprite is drawn under, a minimap camera's view or a clipping
+container, as with one effect.
 
 `SwayEffect` leans a sprite or a layer from side to side, as if in a breeze: the
 top sways most and everything from its `anchor` row down stays put, so a tree's
@@ -166,17 +192,18 @@ tree.addPostEffect(sway);
 sway.setTime(timer.getTime() / 1000);
 ```
 
-Rows are measured across the texture the effect samples, so on a sprite cut from
-an atlas the anchor is a row of the atlas: it suits a standalone image or a
-layer best.
+Its strength (a fraction of the sprite's width), its `anchor` and how it bends
+are all measured across the sprite, so a sprite cut from an atlas sways exactly
+like the same art with a texture of its own. `WaveEffect`'s `anchor` is a row of
+the sprite too, but its amplitude and frequency are measured across the texture,
+so on an atlas sprite they are fractions of the atlas.
 
-`RadialGradientEffect` is a procedural soft spot: solid at the centre of its
-host quad, fading linearly to transparent at the edge, and elliptical for free
-on a non-square quad. It is the one to reach for instead of baking a disc into
-a canvas, for a pickup highlight, a trigger marker or a damage flash. Its
-falloff assumes the quad samples a FULL texture rect, so pair it with a
-standalone image or `Renderer.getWhitePixel()` rather than a sprite that draws
-a sub-region of an atlas, where the centre would land off-quad.
+`RadialGradientEffect` is a procedural soft spot: solid at the centre of the
+renderable it draws, fading linearly to transparent at the edge, and elliptical
+for free on a non-square one. It is the one to reach for instead of baking a
+disc into a canvas, for a pickup highlight, a trigger marker or a damage flash,
+on a standalone image, `Renderer.getWhitePixel()` or a sprite cut from an atlas
+alike.
 
 `SquishEffect` bulges a sprite's middle out (`setBulge(0.3)`) or pinches it in
 (`setBulge(-0.3)`), its top and bottom rows staying put. Bulging out widens the
@@ -524,6 +551,10 @@ has changes nothing). What splits the batch:
 - a different effect instance, or a sprite without the effect in between;
 - a `noise_uv` effect on sprites of different frames or sizes (its rect is
   per sprite);
+- one of the effects that place a pattern on the sprite (`SwayEffect`,
+  `WaveEffect`, `ShineEffect`, `VignetteEffect`, `RadialGradientEffect`,
+  `ScanlineEffect`, `DissolveEffect`, `HologramEffect`): each sprite is told
+  where it is, so each draws on its own;
 - a `screen_texture` effect, which draws each sprite on its own, as each one
   samples a capture of everything drawn before it.
 
@@ -603,7 +634,9 @@ For refraction, distortion and anything that samples what is already drawn:
 - **`screen_texture`** — a sampler kept filled with everything drawn so far
   (GLSL: annotate the sampler `uniform sampler2D tex : screen_texture;`)
 - **`screen_uv`** — this fragment's 0..1 position in that capture
-- **`noise_uv`** — 0..1 across the sprite regardless of its atlas frame
+- **`noise_uv`** — 0..1 across the sprite regardless of its atlas frame, and
+  across the renderable when it has several effects (it does not slide with
+  the camera)
 
 In WGSL the capture is sampled through `screen_sampler` (clamped) or
 `screen_sampler_repeat` (wrapping) instead of GLSL's `: screen_texture`
@@ -698,11 +731,13 @@ that against your request detects the fallback.
 
 ## The Canvas fallback
 
-`ShaderEffect` on a Canvas renderer logs a warning, leaves `enabled = false`, and
-turns every method into a no-op. Nothing throws. The same happens on a GPU
-backend when no body matches its language — a GLSL-only effect under WebGPU.
+`ShaderEffect` on a Canvas renderer leaves `enabled = false` and turns every
+method into a no-op. Nothing throws, and the console gets one warning, from the
+first such effect; the rest stay quiet. The same happens on a GPU backend when
+no body matches its language — a GLSL-only effect under WebGPU.
 
-That is fine for decoration. It is **not** fine when the shader draws your
+That is fine for decoration, which needs no guard: create and add the effect as
+on any renderer. It is **not** fine when the shader draws your
 content — the carrier renderable then shows through raw. A 1×1 white texture
 stretched to 280×156 renders as a white box where the effect should be.
 

@@ -1,3 +1,4 @@
+import { Color } from "../../../math/color.ts";
 import { off, on, TEXTURE2D_DESTROYED } from "../../../system/event.ts";
 import { FRAME_UNBOUNDED, isFramed } from "../../gpu/frame.js";
 import { scaleQuad, transformQuadCorners } from "../../gpu/quadcorners.ts";
@@ -12,6 +13,12 @@ import { buildLitMultiTextureFragment } from "./../shaders/multitexture-lit.js";
 import quadMultiLitVertex from "./../shaders/quad-multi-lit.vert";
 import { WebGLTextureStore } from "../texture/store.js";
 import QuadBatcher from "./quad_batcher.js";
+
+/**
+ * the blit's tint: white, at the opacity the blit composites at
+ * @ignore
+ */
+const blitTint = new Color(255, 255, 255);
 
 /**
  * additional import for TypeScript
@@ -697,8 +704,9 @@ export default class LitQuadBatcher extends QuadBatcher {
 	 * @param {number} width - destination width
 	 * @param {number} height - destination height
 	 * @param {GLShader|ShaderEffect} shader - the shader effect to apply
+	 * @param {number} [alpha=1] - the opacity to composite at (0.0 to 1.0)
 	 */
-	blitTexture(source, x, y, width, height, shader) {
+	blitTexture(source, x, y, width, height, shader, alpha = 1) {
 		const gl = this.gl;
 
 		this.useShader(shader);
@@ -709,17 +717,25 @@ export default class LitQuadBatcher extends QuadBatcher {
 		gl.bindTexture(gl.TEXTURE_2D, source);
 		this.currentTextureUnit = 0;
 		this.boundTextures[0] = source;
+		// read at the game's texture filter, as a sprite reads its own
+		// texture, not through the sampler the last draw left on the unit
+		const samplers = this.renderer.samplerCache;
+		samplers.bind(0, samplers.get(this.renderer._glTextureFilter()));
 		shader.setUniform("uSampler", 0);
 
 		// `noise_uv` builtin: a blit is a full-frame quad — identity rect
 		shader._setNoiseUVRect?.(width, height, width, height, 0, 0);
 		// and the whole texture is the frame: sampling stays unbounded. The
-		// texture is the pass's render target, the size of the quad
-		shader._clearFrameRect?.(width, height);
+		// texture is the pass's render target, the size of the quad, and a
+		// renderable's chain measures in the renderable's own pixels
+		shader._clearFrameRect?.(width, height, this.renderer._chainScale);
 
 		// bottom-up capture FBO: uv.y grows upward inside apply() — see
 		// QuadBatcher.blitTexture
 		shader._setUVYDir?.(-1);
+		// a pass of a renderable's chain: where the renderable is, for the
+		// effects that place a pattern on it (local_space.js)
+		shader._setLocalSpace?.(this.renderer._chainSpace);
 
 		// transform corners through the renderer transform — see
 		// `QuadBatcher.blitTexture` for the rationale. Only caller today
@@ -738,7 +754,7 @@ export default class LitQuadBatcher extends QuadBatcher {
 		// blits are always rendered at z = 0 (screen-space, ortho), carry no
 		// normal map (-1) and no material (shininess 0), and draw the whole
 		// target: no frame
-		const tint = 0xffffffff;
+		const tint = blitTint.toUint32(alpha);
 		const open = FRAME_UNBOUNDED;
 		const vertexData = this.vertexData;
 		vertexData.pushSprite(vec0.x, vec0.y, 0, 0, 1, tint, 0, open, open, -1, 0);
@@ -747,6 +763,8 @@ export default class LitQuadBatcher extends QuadBatcher {
 		vertexData.pushSprite(vec3.x, vec3.y, 0, 1, 0, tint, 0, open, open, -1, 0);
 
 		this.flush();
+		// and back to the space `uv` always was, for whatever draws next
+		shader._setLocalSpace?.(null);
 
 		// see QuadBatcher.blitTexture — unit 0 is nulled renderer-wide
 		gl.activeTexture(gl.TEXTURE0);

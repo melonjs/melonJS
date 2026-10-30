@@ -174,9 +174,10 @@ Use `addPostEffect()` / `getPostEffect()` / `removePostEffect()`. Assigning
 `renderable.shader = …` is deprecated since 19.2.0.
 
 Post effects need a programmable pipeline. A `ShaderEffect` constructed against
-the Canvas renderer (`renderer.shaderLanguage === null`) logs a warning, stays
-at `enabled === false` and no-ops every method rather than throwing — and
-`beginPostEffect` filters disabled effects out. Since `video.AUTO` picks the
+the Canvas renderer (`renderer.shaderLanguage === null`) stays at
+`enabled === false` and no-ops every method rather than throwing — and
+`beginPostEffect` filters disabled effects out. The first one logs a warning,
+the rest stay quiet, so a decorative effect needs no renderer check. Since `video.AUTO` picks the
 backend at runtime, an effect that works on your machine may do nothing on
 another.
 

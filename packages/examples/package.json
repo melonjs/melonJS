@@ -12,6 +12,7 @@
 	},
 	"dependencies": {
 		"@melonjs/debug-plugin": "workspace:*",
+		"@melonjs/gamepad-plugin": "workspace:*",
 		"@melonjs/matter-adapter": "workspace:*",
 		"@melonjs/planck-adapter": "workspace:*",
 		"@melonjs/spine-plugin": "workspace:*",

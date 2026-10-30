@@ -250,6 +250,7 @@ const lines: string[] = [
 	"- [@melonjs/spine-plugin](https://melonjs.github.io/melonJS/classes/SpinePlugin.html): Spine 4.3 skeletal animation, on both the WebGL and Canvas renderers.",
 	"- [@melonjs/debug-plugin](https://melonjs.github.io/melonJS/classes/DebugPanelPlugin.html): on-screen debug panel — hitboxes, draw counts, frame timings, quadtree.",
 	"- [@melonjs/tiled-inflate-plugin](https://melonjs.github.io/melonJS/classes/TiledInflatePlugin.html): gzip, zlib and zstd compressed Tiled map layers.",
+	"- [@melonjs/gamepad-plugin](https://melonjs.github.io/melonJS/classes/GamepadPlugin.html): on-screen touch controls, sticks and buttons, reported as a gamepad so `bindGamepad` bindings work with them.",
 	"- [@melonjs/capacitor-plugin](https://melonjs.github.io/melonJS/classes/CapacitorPlugin.html): native app integration — back button, orientation lock, splash screen.",
 	"",
 ];
