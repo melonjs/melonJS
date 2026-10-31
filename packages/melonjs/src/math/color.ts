@@ -703,11 +703,7 @@ export class Color {
 				parseInt(match[!argb ? 1 : 2], 16), // r
 				parseInt(match[!argb ? 2 : 3], 16), // g
 				parseInt(match[!argb ? 3 : 4], 16), // b
-				Number(
-					(clamp(parseInt(match[!argb ? 4 : 1], 16), 0, 255) / 255.0).toFixed(
-						1,
-					),
-				), // a
+				clamp(parseInt(match[!argb ? 4 : 1], 16), 0, 255) / 255.0, // a
 			);
 		}
 
@@ -730,7 +726,7 @@ export class Color {
 				parseInt(r + r, 16), // r
 				parseInt(g + g, 16), // g
 				parseInt(b + b, 16), // b
-				Number((clamp(parseInt(a + a, 16), 0, 255) / 255.0).toFixed(1)), // a
+				clamp(parseInt(a + a, 16), 0, 255) / 255.0, // a
 			);
 		}
 
@@ -791,7 +787,7 @@ export class Color {
 	 */
 	toHex8(alpha = this.normalizedRGBA[3]) {
 		const a = this.normalizedRGBA;
-		return `#${toHex((a[0] * 255) >> 0)}${toHex((a[1] * 255) >> 0)}${toHex((a[2] * 255) >> 0)}${toHex((alpha * 255) >> 0)}`;
+		return `#${toHex((a[0] * 255) >> 0)}${toHex((a[1] * 255) >> 0)}${toHex((a[2] * 255) >> 0)}${toHex(Math.round(alpha * 255))}`;
 	}
 
 	/**

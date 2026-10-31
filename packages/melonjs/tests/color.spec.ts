@@ -78,10 +78,8 @@ describe("Color", () => {
 			expect(blue_color.parseHex("#0000FF").toRGB()).toEqual("rgb(0,0,255)");
 		});
 		// #RGBA
-		it("#0F08 value is rgba(0, 255, 0, 0.5)", () => {
-			expect(blue_color.parseHex("#0F08").toRGBA()).toEqual(
-				"rgba(0,255,0,0.5)",
-			);
+		it("#0F08 preserves its 4-bit alpha", () => {
+			expect(blue_color.parseHex("#0F08").alpha).toBeCloseTo(8 / 15);
 		});
 		// #RRGGBB
 		it("#FF00FF value is rgba(255, 0, 255, 1)", () => {
@@ -91,9 +89,11 @@ describe("Color", () => {
 		});
 		// #RRGGBBAA (finish with the blue color so that the test below passes)
 		it("#0000FF80 value is rgba(0, 0, 255, 0.5)", () => {
-			expect(blue_color.parseHex("#0000FF80").toRGBA()).toEqual(
-				"rgba(0,0,255,0.5)",
-			);
+			expect(blue_color.parseHex("#0000FF80").alpha).toBeCloseTo(128 / 255);
+		});
+
+		it("preserves low alpha values", () => {
+			expect(blue_color.parseHex("#0000FF01").alpha).toBeCloseTo(1 / 255);
 		});
 
 		// override the alpha with a specific value
@@ -291,8 +291,8 @@ describe("Color", () => {
 			expect(red_color.toHex()).toEqual("#FF0000");
 		});
 
-		it("red_color RGBA hex value is #FF0000FF", () => {
-			expect(red_color.toHex8()).toEqual("#FF00007F");
+		it("red_color RGBA hex value is #FF000080", () => {
+			expect(red_color.toHex8()).toEqual("#FF000080");
 		});
 
 		it("red_color rgba value is rgba(255,0,0,0.5)", () => {
@@ -344,8 +344,8 @@ describe("Color", () => {
 			expect(blue_color.toRGB()).toEqual("rgb(0,0,255)");
 		});
 
-		it("blue_color rgba value is rgba(0, 0, 255, 0.5)", () => {
-			expect(blue_color.toRGBA()).toEqual("rgba(0,0,255,0.5)");
+		it("blue_color preserves its 8-bit alpha", () => {
+			expect(blue_color.alpha).toBeCloseTo(128 / 255);
 		});
 
 		it("lighten blue_color hex by 0.5 value is #7F7FFF", () => {
@@ -521,11 +521,11 @@ describe("Color", () => {
 		});
 
 		it("converts half alpha", () => {
-			expect(new Color(0, 255, 0, 0.5).toHex8()).toEqual("#00FF007F");
+			expect(new Color(0, 255, 0, 0.5).toHex8()).toEqual("#00FF0080");
 		});
 
 		it("converts quarter alpha", () => {
-			expect(new Color(0, 0, 255, 0.25).toHex8()).toEqual("#0000FF3F");
+			expect(new Color(0, 0, 255, 0.25).toHex8()).toEqual("#0000FF40");
 		});
 
 		it("converts black with full alpha", () => {
@@ -539,16 +539,29 @@ describe("Color", () => {
 		it("accepts alpha override parameter", () => {
 			expect(new Color(0, 0, 255, 1).toHex8(0)).toEqual("#0000FF00");
 			expect(new Color(0, 0, 255, 0).toHex8(1)).toEqual("#0000FFFF");
-			expect(new Color(0, 0, 255, 0).toHex8(0.5)).toEqual("#0000FF7F");
+			expect(new Color(0, 0, 255, 0).toHex8(0.5)).toEqual("#0000FF80");
 		});
 
-		it("is consistent with parseHex round-trip for 8-digit hex", () => {
-			// alpha 0xFF round-trips cleanly (1.0 float)
-			const c = new Color().parseHex("#3A7BCDFF");
-			expect(c.toHex8()).toEqual("#3A7BCDFF");
-			// alpha 0x00 round-trips cleanly (0.0 float)
-			const c2 = new Color().parseHex("#3A7BCD00");
-			expect(c2.toHex8()).toEqual("#3A7BCD00");
+		it("round-trips every 8-bit hex alpha", () => {
+			for (let alpha = 0; alpha <= 255; alpha++) {
+				const hexAlpha = alpha.toString(16).padStart(2, "0").toUpperCase();
+				const hexColor = `#3A7BCD${hexAlpha}` as const;
+				expect(new Color().parseHex(hexColor).toHex8()).toEqual(hexColor);
+			}
+		});
+
+		it("round-trips every 4-bit hex alpha", () => {
+			for (const hexAlpha of "0123456789ABCDEF") {
+				expect(new Color().parseHex(`#ABC${hexAlpha}`).toHex8()).toEqual(
+					`#AABBCC${hexAlpha}${hexAlpha}`,
+				);
+			}
+		});
+
+		it("uses the same rounding for rgba() alpha", () => {
+			expect(new Color().parseRGB("rgba(0, 0, 255, 0.5)").toHex8()).toEqual(
+				"#0000FF80",
+			);
 		});
 
 		it("alpha override does not modify instance alpha", () => {
