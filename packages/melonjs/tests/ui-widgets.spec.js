@@ -5,6 +5,7 @@ import {
 	Container,
 	event,
 	input,
+	ProgressBar,
 	Renderable,
 	TextureAtlas,
 	UICheckbox,
@@ -1101,6 +1102,61 @@ describe("UI widgets", () => {
 			drag(150, 140, 200, 190);
 			expect([panel.pos.x, panel.pos.y]).toEqual([100, 100]);
 			expect(onClick).not.toHaveBeenCalled();
+		});
+	});
+
+	describe("drop shadow", () => {
+		it("draws under a panel, and hands the skin the full alpha", () => {
+			const atlas = makeAtlas();
+			const renderer = app.renderer;
+			const fills = [];
+			const rect = vi.spyOn(renderer, "fillRect").mockImplementation((...a) => {
+				fills.push(a);
+			});
+			let alphaAtSkin;
+			vi.spyOn(SkinDrawer.prototype, "draw").mockImplementation(() => {
+				alphaAtSkin = renderer.globalAlpha();
+			});
+			const panel = new UIPanel(10, 20, {
+				width: 100,
+				height: 50,
+				skin: { atlas, region: "up" },
+				shadowColor: "#00000080",
+				shadowOffsetX: 2,
+				shadowOffsetY: 6,
+				shadowBlur: 0,
+			});
+			renderer.setGlobalAlpha(1);
+			panel.draw(renderer);
+			// one sharp layer, offset, before the skin
+			expect(fills[0]).toEqual([12, 26, 100, 50]);
+			expect(alphaAtSkin).toBe(1);
+			rect.mockRestore();
+		});
+
+		it("softens its edge over several layers with a blur", () => {
+			const renderer = app.renderer;
+			const rounded = [];
+			vi.spyOn(renderer, "fill").mockImplementation((shape) => {
+				rounded.push([shape.pos.x, shape.pos.y, shape.width, shape.height]);
+			});
+			const sharp = [];
+			vi.spyOn(renderer, "fillRect").mockImplementation((...a) => {
+				sharp.push(a);
+			});
+			const bar = new ProgressBar(0, 0, {
+				width: 100,
+				height: 10,
+				trackColor: null,
+				shadowColor: "#000000",
+				shadowOffsetY: 0,
+				shadowBlur: 8,
+			});
+			bar.draw(renderer);
+			// rounded layers from 8 pixels out, then the bar's own outline
+			expect(rounded[0]).toEqual([-8, -8, 116, 26]);
+			expect(rounded.length).toBeGreaterThan(1);
+			expect(sharp[0]).toEqual([0, 0, 100, 10]);
 		});
 	});
 

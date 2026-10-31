@@ -78,8 +78,28 @@ export interface UIPanelSettings {
 	borderColor?: Paint | null;
 	/** how thick that border is */
 	borderWidth?: number;
-	/** corner radius; `0` is square */
+	/** corner radius; `0` is square; the shadow follows it, under a skin too */
 	radius?: number;
+	/**
+	 * A drop shadow under the panel, behind its skin or fill; `null`, the default, for none. Its alpha
+	 * is how dark the shadow gets, e.g. `"#00000066"`.
+	 */
+	shadowColor?: Paint | null;
+	/**
+	 * how far right the shadow falls, in pixels
+	 * @default 0
+	 */
+	shadowOffsetX?: number;
+	/**
+	 * how far down the shadow falls, in pixels
+	 * @default 4
+	 */
+	shadowOffsetY?: number;
+	/**
+	 * how far the shadow's soft edge spreads, in pixels; `0` is sharp
+	 * @default 8
+	 */
+	shadowBlur?: number;
 	/**
 	 * How far the panel drifts up and down, in pixels. `0`, the default,
 	 * leaves it still.
@@ -248,6 +268,14 @@ export default class UIPanel extends UIBaseElement {
 	borderWidth: number;
 	/** corner radius; `0` is square */
 	radius: number;
+	/** a drop shadow under the panel; `null` for none */
+	shadowColor: Paint | null;
+	/** how far right the shadow falls, in pixels */
+	shadowOffsetX: number;
+	/** how far down the shadow falls, in pixels */
+	shadowOffsetY: number;
+	/** how far the shadow's soft edge spreads, in pixels */
+	shadowBlur: number;
 	/** whether it swallows pointer events aimed at what is behind it */
 	blocking: boolean;
 	/**
@@ -391,6 +419,10 @@ export default class UIPanel extends UIBaseElement {
 		this.borderColor = settings.borderColor ?? null;
 		this.borderWidth = settings.borderWidth ?? 1;
 		this.radius = settings.radius ?? 0;
+		this.shadowColor = settings.shadowColor ?? null;
+		this.shadowOffsetX = settings.shadowOffsetX ?? 0;
+		this.shadowOffsetY = settings.shadowOffsetY ?? 4;
+		this.shadowBlur = settings.shadowBlur ?? 8;
 		this.blocking = settings.blocking ?? true;
 		this.bobAmplitude = settings.bobAmplitude ?? 0;
 		this.bobPeriod = settings.bobPeriod ?? 2000;
@@ -557,6 +589,22 @@ export default class UIPanel extends UIBaseElement {
 		}
 
 		const alpha = renderer.globalAlpha();
+		// drawn outside the panel's bounds, so it never takes the pointer
+		if (this.shadowColor !== null) {
+			this._painter.shadow(
+				renderer,
+				this.shadowColor,
+				alpha,
+				this.pos.x,
+				this.pos.y,
+				this.width,
+				this.height,
+				this.radius,
+				this.shadowOffsetX,
+				this.shadowOffsetY,
+				this.shadowBlur,
+			);
+		}
 		if (this._skin !== undefined) {
 			this._skin.draw(
 				renderer,

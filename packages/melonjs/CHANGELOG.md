@@ -9,6 +9,7 @@
 - UI: `UIPanel` lays its children out (`layout`: `"column"`, `"row"` or `"grid"`, with `padding`, `gap`, `align` and `autoSize`), scrolls them (`scroll`, with the wheel, dragging, momentum and a scrollbar; `scrollTo`, `scrollToChild`), and takes a nine-slice `skin`, a `title` and `draggable`; a draggable panel comes to the front when grabbed
 - UI: `UITextButton` takes an `onClick` setting, called on a completed click; a `skin` of atlas regions, with pressed art drawn lowered; `pressedColor`; and the names the other widgets use: `width` / `height` for its size, `fontSize` (pixels, also with a bitmap font), `labelFillStyle` and `borderColor`. `resize()` keeps its background and label in step. A font that is not a loaded bitmap font is drawn as a CSS font, where the button used to throw
 - UI: `enabled` on every `UIBaseElement`, to turn a widget off; `cancelPress()` and `onCancel()`, to call off a press without a release, as a scrolling `UIPanel` does when a drag on a button turns into a scroll; and `keepsDrag`, for a widget of your own that is dragged inside a scrolling panel
+- UI: a drop shadow under a `UIPanel` or a `ProgressBar`: `shadowColor`, `shadowOffsetX`, `shadowOffsetY` and `shadowBlur`, softened the same on Canvas, WebGL and WebGPU, rounded with the corners, and under a skin too
 - UI: `ProgressBar`'s `onChange` also gets the bar
 - UI: the `UISkin`, `UILabel`, `Paint` and settings and skin types of every widget are exported; `Container#clipContains(x, y)` tells whether a container shows its children at a point
 

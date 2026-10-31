@@ -175,6 +175,11 @@ const framed = (
 				insetx: 10,
 				insety: 10,
 			},
+			// a soft drop shadow, rounded like the art's corners
+			shadowColor: "#00000059",
+			shadowOffsetY: 6,
+			shadowBlur: 10,
+			radius: 6,
 			draggable: true,
 		},
 	};
@@ -377,7 +382,11 @@ class PlayScreen extends Stage {
 				height: 24,
 				value: 0.45,
 				radius: 12,
-				trackColor: "#0000001a",
+				// with a shadow, a solid track: a see-through one shows it
+				shadowColor: "#00000040",
+				shadowOffsetY: 3,
+				shadowBlur: 4,
+				trackColor: "#dcdcdc",
 				fillColor: "#59b25b",
 				borderColor: "black",
 				borderWidth: 2,

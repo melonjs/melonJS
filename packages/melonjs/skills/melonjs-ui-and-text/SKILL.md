@@ -453,6 +453,13 @@ const options = new UIPanel(20, 20, {
 });
 ```
 
+**A drop shadow**, here or on a `ProgressBar`, takes a colour whose alpha is
+how dark it gets: `shadowColor: "#00000059"`, with `shadowOffsetX` (0),
+`shadowOffsetY` (4) and `shadowBlur` (8 pixels of soft edge, `0` for sharp).
+It follows `radius`, which a skinned panel can set to match its art's
+corners, and it is drawn outside the bounds, so it never takes the pointer.
+Under a see-through fill or track it shows through; give that a solid colour.
+
 The title sits at the top and the content starts below it. `insetx` /
 `insety` are the unscaled corners of the art, and also where the frame ends:
 layout `padding` is measured from there.
