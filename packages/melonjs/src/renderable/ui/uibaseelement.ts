@@ -300,51 +300,18 @@ export default class UIBaseElement extends Container {
 	 */
 	focusable = false;
 
-	/**
-	 * Where the focus goes from here, for a direction the nearest widget is
-	 * not the right answer to. A neighbour that cannot take the focus now is
-	 * skipped for the search.
-	 */
-	focusNeighbors:
-		| Partial<Record<"up" | "down" | "left" | "right", UIBaseElement>>
-		| undefined;
-
-	/** whether this element has the focus */
+	/** whether this element has the keyboard and gamepad focus */
 	get focused(): boolean {
 		return UIFocus.focused === this;
 	}
 
 	/**
-	 * Give this element the focus. See {@link UIFocus.focus}.
-	 */
-	focus(): void {
-		UIFocus.focus(this);
-	}
-
-	/**
-	 * Called when this element gets the focus. To be extended.
-	 */
-	onFocus(): void {
-		// to be extended
-	}
-
-	/**
-	 * Called when this element loses the focus. To be extended.
-	 */
-	onBlur(): void {
-		// to be extended
-	}
-
-	/**
-	 * Answer a navigation action while this element, or one inside it, has
-	 * the focus: return `true` to say it was handled.
-	 *
-	 * A slider handles left and right by stepping, so the focus stays on it;
-	 * a panel can handle `"cancel"` to close. Unhandled, a direction moves
-	 * the focus to the nearest widget that way. Accept is not passed here:
-	 * it presses and releases the widget, as a click does, through
+	 * An arrow key or a D-pad direction while this element has the focus:
+	 * return `true` to say it was handled, as a slider does to step, and the
+	 * focus stays. Unhandled, it moves the focus to the nearest widget that
+	 * way. Enter or A presses the widget instead, as a click does, through
 	 * {@link UIBaseElement#focusPress} and {@link UIBaseElement#focusRelease}.
-	 * @param _action - what the player asked for
+	 * @param _action - which way
 	 * @returns true when handled
 	 */
 	onNavigate(_action: UINavAction): boolean {
@@ -418,7 +385,8 @@ export default class UIBaseElement extends Container {
 			renderer.translate(-cx, -cy);
 		}
 		if (UIFocus.ringVisible && UIFocus.focused === this) {
-			const pad = UIFocus.ringPadding + UIFocus.ringWidth;
+			// 3 pixels wide, 3 pixels out from the widget
+			const pad = 6;
 			const alpha = renderer.globalAlpha();
 			ringPainter.paint(renderer, UIFocus.ringColor, alpha);
 			ringPainter.border(
@@ -427,8 +395,8 @@ export default class UIBaseElement extends Container {
 				this.pos.y - pad,
 				this.width + pad * 2,
 				this.height + pad * 2,
-				UIFocus.ringRadius,
-				UIFocus.ringWidth,
+				6,
+				3,
 			);
 			renderer.setGlobalAlpha(alpha);
 		}
@@ -534,9 +502,6 @@ export default class UIBaseElement extends Container {
 	 */
 	enter(event: Pointer): boolean | void {
 		this.hover = true;
-		if (this.focusable) {
-			UIFocus._hovered(this);
-		}
 		this.isDirty = true;
 		if (this.isDraggable) {
 			this.listenForDrag();

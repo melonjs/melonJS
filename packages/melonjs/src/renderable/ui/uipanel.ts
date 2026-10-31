@@ -15,8 +15,6 @@ import type { Paint } from "./panelpaint.ts";
 import { PanelPainter } from "./panelpaint.ts";
 import type { UIJuiceSettings } from "./uibaseelement.ts";
 import UIBaseElement, { END_EVENTS, endsPointer } from "./uibaseelement.ts";
-import type { UINavAction } from "./uifocus.ts";
-import UIFocus from "./uifocus.ts";
 import type { UILabel } from "./uilabel.ts";
 import { createLabel } from "./uilabel.ts";
 import type { UISkin } from "./uiskin.ts";
@@ -195,18 +193,6 @@ export interface UIPanelSettings extends UIJuiceSettings {
 	/** called when the content scrolls, with the new offsets */
 	onScroll?: (scrollX: number, scrollY: number, panel: UIPanel) => void;
 	/**
-	 * Keep the keyboard and gamepad focus inside the panel while it is in
-	 * the scene, as a dialog should, and give it back where it was when the
-	 * panel goes. See {@link UIFocus}.
-	 * @default false
-	 */
-	trapFocus?: boolean;
-	/**
-	 * Called when the player cancels (Escape, or the pad's B) with the focus
-	 * inside the panel: close a dialog, go back a menu.
-	 */
-	onBack?: (panel: UIPanel) => void;
-	/**
 	 * the scrollbar, shown while the content does not fit
 	 * @default "#00000059"
 	 */
@@ -349,10 +335,6 @@ export default class UIPanel extends UIBaseElement {
 	autoSize: boolean;
 	/** which ways the content scrolls */
 	scroll: UIPanelScroll;
-	/** keep the focus inside the panel while it is up */
-	readonly trapFocus: boolean;
-	/** called when the player cancels with the focus inside the panel */
-	onBack: ((panel: UIPanel) => void) | undefined;
 	/** called when the content scrolls, with the new offsets */
 	onScroll:
 		| ((scrollX: number, scrollY: number, panel: UIPanel) => void)
@@ -445,8 +427,6 @@ export default class UIPanel extends UIBaseElement {
 		this.blocking = settings.blocking ?? true;
 		this.bobAmplitude = settings.bobAmplitude ?? 0;
 		this.bobPeriod = settings.bobPeriod ?? 2000;
-		this.trapFocus = settings.trapFocus ?? false;
-		this.onBack = settings.onBack;
 		this.hoverScale = settings.hoverScale ?? 1;
 		this.pressScale = settings.pressScale ?? 1;
 
@@ -1432,19 +1412,6 @@ export default class UIPanel extends UIBaseElement {
 	}
 
 	/**
-	 * Answer cancel with `onBack`, when there is one.
-	 * @param action - what the player asked for
-	 * @returns true when cancel was handled
-	 */
-	override onNavigate(action: UINavAction): boolean {
-		if (action === "cancel" && this.onBack !== undefined) {
-			this.onBack(this);
-			return true;
-		}
-		return false;
-	}
-
-	/**
 	 * Move a draggable panel, unless the press began on the content of a
 	 * scrolling one.
 	 * @ignore
@@ -1556,9 +1523,6 @@ export default class UIPanel extends UIBaseElement {
 	 */
 	override onActivateEvent(): void {
 		super.onActivateEvent();
-		if (this.trapFocus) {
-			UIFocus._pushScope(this);
-		}
 		registerPointerEvent("wheel", this, this._onWheel);
 		// `onOver` only fires on the frame the pointer crosses in; this keeps
 		// a blocking panel opaque to hover for as long as the pointer is on it
@@ -1572,9 +1536,6 @@ export default class UIPanel extends UIBaseElement {
 	 * @ignore
 	 */
 	override onDeactivateEvent(): void {
-		if (this.trapFocus) {
-			UIFocus._popScope(this);
-		}
 		releasePointerEvent("wheel", this);
 		releasePointerEvent("pointermove", this);
 		this.endPress();
