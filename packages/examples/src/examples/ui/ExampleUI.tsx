@@ -288,7 +288,7 @@ class PlayScreen extends Stage {
 	 * @param app - the application
 	 */
 	private addLevels(app: Application) {
-		const frame = framed(420, 435, 340, 150, "LEVELS");
+		const frame = framed(420, 375, 340, 215, "LEVELS");
 		const panel = new UIPanel(frame.x, frame.y, {
 			...frame.settings,
 			layout: "grid",
@@ -330,7 +330,7 @@ class PlayScreen extends Stage {
 	 * @param app - the application
 	 */
 	private addBars(app: Application) {
-		const frame = framed(420, 20, 340, 400, "PROGRESS");
+		const frame = framed(420, 20, 340, 340, "PROGRESS");
 		const panel = new UIPanel(frame.x, frame.y, frame.settings);
 
 		/**
@@ -388,14 +388,14 @@ class PlayScreen extends Stage {
 
 		// 3. vertical, filling upward, with a gradient down its length
 		panel.addChild(caption(24, 232, "vertical"));
-		const ramp = app.renderer.createLinearGradient(0, 372, 0, 252);
+		const ramp = app.renderer.createLinearGradient(0, 322, 0, 252);
 		ramp.addColorStop(0, "#d4553a");
 		ramp.addColorStop(0.5, "#e8c84a");
 		ramp.addColorStop(1, "#59b25b");
 		panel.addChild(
 			new ProgressBar(24, 252, {
 				width: 30,
-				height: 120,
+				height: 70,
 				value: 0.8,
 				direction: "bottom-to-top",
 				trackColor: "#0000001a",
@@ -416,7 +416,7 @@ class PlayScreen extends Stage {
 		const mixed = new Color().copy(cool);
 		const pulse = new ProgressBar(150, 252, {
 			width: 30,
-			height: 120,
+			height: 70,
 			value: 1,
 			direction: "bottom-to-top",
 			trackColor: "#0000001a",
