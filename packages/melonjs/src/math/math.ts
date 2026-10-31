@@ -34,7 +34,11 @@ export const EPSILON = 0.000001;
  * @returns true if number is a power of two
  */
 export function isPowerOfTwo(val: number) {
-	return (val & (val - 1)) === 0;
+	if (!Number.isInteger(val) || val <= 0) {
+		return false;
+	}
+	const exponent = Math.log2(val);
+	return Number.isInteger(exponent) && val === 2 ** exponent;
 }
 
 /**

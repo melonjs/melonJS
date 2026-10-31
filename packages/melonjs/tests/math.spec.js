@@ -328,6 +328,27 @@ describe("Math", () => {
 		it("32 is a Power of 2", () => {
 			expect(math.isPowerOfTwo(32)).toEqual(true);
 		});
+		it("0 and negative values are not Powers of 2", () => {
+			expect(math.isPowerOfTwo(0)).toEqual(false);
+			expect(math.isPowerOfTwo(-2)).toEqual(false);
+		});
+		it("fractional values are not Powers of 2", () => {
+			expect(math.isPowerOfTwo(2.5)).toEqual(false);
+		});
+		it("supports Powers of 2 outside the 32-bit range", () => {
+			expect(math.isPowerOfTwo(2 ** 40)).toEqual(true);
+			expect(math.isPowerOfTwo(3 * 2 ** 32)).toEqual(false);
+		});
+		it("rejects large non-Powers whose logarithms round to integers", () => {
+			for (const value of [
+				Number.MAX_SAFE_INTEGER,
+				2 ** 53 + 2,
+				2 ** 53 + 4,
+				2 ** 54 - 2,
+			]) {
+				expect(math.isPowerOfTwo(value)).toEqual(false);
+			}
+		});
 		it("1027 is not a Power of 2", () => {
 			expect(math.isPowerOfTwo(1027)).toEqual(false);
 		});

@@ -23,6 +23,7 @@
 - UI: `UITextButton#bitmapText`, for `label`
 
 ### Fixed
+- Math: `isPowerOfTwo()` rejects zero, negative and fractional values instead of accepting them after 32-bit coercion, and handles powers and non-powers beyond the 32-bit range (thanks @mmporong)
 - Input: a child cropped out of view by a container with `clipping`, or scrolled out of a `UIPanel`, no longer gets pointer events where it is not drawn
 - UI: a `UITextButton` moved after it was built draws its background where it is, not where it was first put
 - UI: a blocking `UIPanel` stays opaque to hover for as long as the pointer is on it, not only on the frame the pointer enters
