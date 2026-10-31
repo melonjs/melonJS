@@ -24,6 +24,7 @@
 
 ### Fixed
 - Input: a child cropped out of view by a container with `clipping`, or scrolled out of a `UIPanel`, no longer gets pointer events where it is not drawn
+- Geometry: `Line#contains()` checks the segment endpoints as well as collinearity; a point on the line beyond either endpoint was reported as contained (thanks @mmporong)
 - UI: a `UITextButton` moved after it was built draws its background where it is, not where it was first put
 - UI: a blocking `UIPanel` stays opaque to hover for as long as the pointer is on it, not only on the frame the pointer enters
 - UI: a draggable `UIBaseElement` pressed with no hover first, as a touch tap is, no longer throws, and drags by touch; in the world, rather than floating, it no longer jumps by the camera position when dragged
