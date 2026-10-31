@@ -1,6 +1,6 @@
 {
 	"name": "@melonjs/gamepad-plugin",
-	"version": "1.0.1",
+	"version": "1.0.2",
 	"description": "melonJS virtual gamepad plugin",
 	"homepage": "https://www.npmjs.com/package/@melonjs/gamepad-plugin",
 	"type": "module",
