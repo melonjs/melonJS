@@ -60,6 +60,11 @@ describe("Shape : Line", () => {
 			expect(line.contains(29, 61)).toEqual(false);
 		});
 
+		it("does not contain collinear points beyond its endpoints", () => {
+			expect(line.contains(56, 120)).toEqual(false);
+			expect(line.contains(-28, -60)).toEqual(false);
+		});
+
 		it("Line Bounding Rect width is 28", () => {
 			expect(bounds.width).toEqual(28);
 		});
