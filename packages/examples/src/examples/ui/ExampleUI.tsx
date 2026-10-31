@@ -99,7 +99,7 @@ const volume = (
 		...FONT,
 		label,
 		showValue: true,
-		valueFormat: (v, ratio) => {
+		valueFormat: (_value, ratio) => {
 			return `${Math.round(ratio * 100)}%`;
 		},
 		length: 320,
