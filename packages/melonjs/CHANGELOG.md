@@ -18,7 +18,7 @@
 ### Changed
 - UI: `UITextButton` no longer writes the size and alignment it worked out back into the settings object, so one object can make several buttons
 - UI: `UITextButton#label` is the button's text, a `BitmapText` or, with a CSS font, a `Text`
-- UI: `UISpriteElement` lets a press and a release through to what is under it by default, like every other UI element: its `onClick()` and `onRelease()` now return `true`. A subclass that relied on the old default to stop the event returns `false` from them
+- UI: a press stops at a UI element by default: `UIBaseElement`'s `onClick()` and `onRelease()` now return `false`, as `UISpriteElement`'s already did, so a click on a button, checkbox or widget of your own no longer also reaches the game behind it. A subclass that relied on presses passing through returns `true` from them. Hover is unchanged, and a non-blocking `UIPanel` still lets presses on its background through
 
 ### Deprecated
 - UI: `UITextButton#bitmapText`, for `label`

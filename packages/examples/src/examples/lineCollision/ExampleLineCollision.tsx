@@ -173,7 +173,7 @@ class BackendButton extends UIBaseElement {
 
 	override onClick() {
 		globalThis.location.search = `?physics=${this.target}`;
-		return true;
+		return false;
 	}
 
 	override draw(renderer: WebGLRenderer | CanvasRenderer) {

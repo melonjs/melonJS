@@ -134,14 +134,14 @@ describe("UI", () => {
 				expect(el.released).toBe(true);
 			});
 
-			it("onClick() should return true by default", () => {
+			it("onClick() should return false by default, stopping the press", () => {
 				const el = new UIBaseElement(0, 0, 100, 50);
-				expect(el.onClick()).toBe(true);
+				expect(el.onClick()).toBe(false);
 			});
 
-			it("onRelease() should return true by default", () => {
+			it("onRelease() should return false by default, stopping the release", () => {
 				const el = new UIBaseElement(0, 0, 100, 50);
-				expect(el.onRelease()).toBe(true);
+				expect(el.onRelease()).toBe(false);
 			});
 		});
 	});
@@ -228,24 +228,24 @@ describe("UI", () => {
 		});
 
 		describe("click callbacks", () => {
-			it("onClick() should return true by default, letting the event through", () => {
+			it("onClick() should return false by default", () => {
 				const canvas = Renderer.createCanvas(32, 32);
 				const el = new UISpriteElement(0, 0, {
 					image: canvas,
 					framewidth: 32,
 					frameheight: 32,
 				});
-				expect(el.onClick()).toBe(true);
+				expect(el.onClick()).toBe(false);
 			});
 
-			it("onRelease() should return true by default, letting the event through", () => {
+			it("onRelease() should return false by default", () => {
 				const canvas = Renderer.createCanvas(32, 32);
 				const el = new UISpriteElement(0, 0, {
 					image: canvas,
 					framewidth: 32,
 					frameheight: 32,
 				});
-				expect(el.onRelease()).toBe(true);
+				expect(el.onRelease()).toBe(false);
 			});
 		});
 	});

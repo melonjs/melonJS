@@ -658,9 +658,13 @@ class MuteButton extends UISpriteElement {
 }
 ```
 
-Like every UI element, the event carries on to whatever is under the button
-unless a handler returns `false`; the defaults let it through. (Before 20.13
-a `UISpriteElement` stopped presses and releases by default.)
+**A press stops at a UI element by default.** `onClick` and `onRelease`
+return `false` unless you override them, on `UISpriteElement` and on every
+`UIBaseElement` (buttons, checkboxes, sliders, your own widgets): a click on
+a HUD button does not also click the world behind it. Return `true` from
+them to let the press through as well. Hover is different: `onOver` lets it
+through unless it returns `false`. A non-blocking `UIPanel` lets a press on
+its background through, as a frame that only decorates should.
 
 The pointer still has to reach it: a renderable with `isKinematic = true` — the
 default on a plain `Renderable` — is skipped by the broadphase and receives
@@ -1075,14 +1079,16 @@ sprite.
 ### An opaque panel has to say so
 
 The hit test asks the topmost renderable first and then keeps walking down, so
-consuming is what stops a widget underneath answering too. A panel that can
-overlap another one therefore wants both:
+consuming is what stops a widget underneath answering too. A press is consumed
+by default on a UI element, but hover is not, so a panel of your own that can
+overlap another one also stops hover (`UIPanel` does all of this with
+`blocking`):
 
 ```js
 class Panel extends UIBaseElement {
     onClick() {
         this.ancestor.moveToTop(this);  // and bring it to the front
-        return false;                   // consumed
+        return false;                   // consumed (the default)
     }
     onOver() {
         return false;                   // the frame the pointer crosses in
@@ -1138,6 +1144,8 @@ City and Instanced Forest examples park a floating sky at `-10000` or `100000`.
 | loading saved settings plays the music, saves again or fires game logic | the game called its own change handler while restoring | set `checkbox.checked` / `slider.value`, which never call `onChange`, then apply the setting once yourself |
 | `onChange` never fires when settings are restored | by design: only user input calls it | apply the restored value yourself |
 | a button in a scrolling list fires when the user only meant to scroll | the work is in the `onClick()` METHOD, which runs on the press | use the `onClick` SETTING, called on a completed click; a scroll cancels the press |
+| clicking a HUD button also clicks the world behind it (before 20.13) | a `UIBaseElement` let presses through by default | update: presses now stop at UI elements; a handler that returns `true` still lets them through |
+| a custom widget no longer lets clicks reach what is behind it (since 20.13) | presses stop at UI elements by default | return `true` from its `onClick` / `onRelease` |
 | a button scrolled out of a hand-made list still gets clicks | its container does not clip, so the pointer still finds it where it moved to | use `UIPanel`'s `scroll`, or set `clipping` on the container: since 20.13 the pointer skips children outside a clipping container |
 | a layout ignores a label that changed size | layout runs on add, remove and resize only | call `panel.relayout()` |
 | the arrow keys or the pad do nothing in a menu | no widget has the focus: nothing listens until one does | call `firstWidget.focus()` when the menu opens |

@@ -19,10 +19,10 @@ import Sprite from "./../sprite.js";
  * the pointer goes down on it, {@link UISpriteElement#onRelease} when the
  * press ends, {@link UISpriteElement#onOver} / {@link UISpriteElement#onOut}
  * for hover (`hover` is `true` in between), and
- * {@link UISpriteElement#onHold} with `isHoldable`. As with
- * {@link UIBaseElement}, the event carries on to the elements below unless
- * a handler returns `false`: return `false` from `onClick` or `onRelease`
- * to stop it there.
+ * {@link UISpriteElement#onHold} with `isHoldable`. As with every UI
+ * element, `onClick` and `onRelease` return `false` by default, so a press
+ * stops here and an element below does not get it too; return `true` from
+ * them to let it through.
  *
  * It is a lighter element than {@link UIBaseElement}: it has no `enabled`,
  * no keyboard and gamepad focus, no bounce and no dragging. For those, use
@@ -193,12 +193,12 @@ export default class UISpriteElement extends Sprite {
 	 * Called when the pointer goes down on the element. Override it in a
 	 * subclass. This is the press, not a completed click.
 	 * @param _event - the pointer event
-	 * @returns `false` to stop the event here; `true`, the default, to let
+	 * @returns `false`, the default, to stop the event here; `true` to let
 	 * elements below get it too
 	 */
 
 	onClick(_event?: Pointer): boolean {
-		return true;
+		return false;
 	}
 
 	/**
@@ -280,12 +280,12 @@ export default class UISpriteElement extends Sprite {
 	 * element while held, or the browser cancels the press: it is the end
 	 * of a press, not proof of a completed click.
 	 * @param _event - the pointer event
-	 * @returns `false` to stop the event here; `true`, the default, to let
+	 * @returns `false`, the default, to stop the event here; `true` to let
 	 * elements below get it too
 	 */
 
 	onRelease(_event?: Pointer): boolean {
-		return true;
+		return false;
 	}
 
 	/**

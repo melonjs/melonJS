@@ -242,7 +242,7 @@ class BackendButton extends UIBaseElement {
 		// the adapter is chosen when the Application is constructed, so
 		// switching one means booting the example again
 		globalThis.location.search = `?physics=${this.target}`;
-		return true;
+		return false;
 	}
 
 	override draw(renderer: WebGLRenderer | CanvasRenderer) {

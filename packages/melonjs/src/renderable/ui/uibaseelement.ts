@@ -158,9 +158,11 @@ function offerPressToScroller(element: UIBaseElement, event: Pointer) {
  *   release (see {@link UIBaseElement#cancelPress}).
  *
  * Elements under the pointer are asked topmost first, and the event carries
- * on to the ones below until a handler returns `false`. So an element is NOT
- * opaque by default: a widget it covers still gets clicks and hover. Return
- * `false` from `onClick`, `onRelease` or `onOver` to stop the event there.
+ * on to the ones below until a handler returns `false`. `onClick` and
+ * `onRelease` return `false` by default, so a press on a UI element stops
+ * there: a button over the game does not also click the world behind it.
+ * Return `true` from them to let the press through as well. Hover is not
+ * stopped by default: return `false` from `onOver` for that.
  *
  * ## Turning it off
  * Set {@link UIBaseElement#enabled} to `false`: it stops answering the
@@ -213,7 +215,7 @@ function offerPressToScroller(element: UIBaseElement, event: Pointer) {
  *     }
  *     onRelease() {
  *         console.log("card picked");
- *         return false; // the element below does not get it too
+ *         return false; // stop the event here (the default)
  *     }
  * }
  *
@@ -256,7 +258,7 @@ function offerPressToScroller(element: UIBaseElement, event: Pointer) {
  * // the mouse still works as before
  * play.focus();
  * @example
- * // a panel that is opaque to the pointer and comes to the front when picked
+ * // a panel that is opaque to hover too, and comes to the front when picked
  * // (UIPanel does this with its `blocking` setting)
  * import { UIBaseElement, input } from "melonjs";
  *
@@ -769,12 +771,12 @@ export default class UIBaseElement extends Container {
 	 * {@link UIBaseElement#onRelease} for the end of it.
 	 * @param _event - the pointer event, or `undefined` from the keyboard or
 	 * the pad
-	 * @returns `false` to stop the event here, so elements below do not get
-	 * it too
+	 * @returns `false`, the default, to stop the event here; `true` to let
+	 * elements below get it too
 	 */
 
 	onClick(_event?: Pointer): boolean {
-		return true;
+		return false;
 	}
 
 	/**
@@ -898,12 +900,12 @@ export default class UIBaseElement extends Container {
 	 * not come here.
 	 * @param _event - the pointer event, or `undefined` from the keyboard or
 	 * the pad
-	 * @returns `false` to stop the event here, so elements below do not get
-	 * it too
+	 * @returns `false`, the default, to stop the event here; `true` to let
+	 * elements below get it too
 	 */
 
 	onRelease(_event?: Pointer): boolean {
-		return true;
+		return false;
 	}
 
 	/**

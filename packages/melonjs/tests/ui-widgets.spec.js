@@ -2075,33 +2075,87 @@ describe("UI widgets", () => {
 			});
 		});
 
-		describe("UISpriteElement", () => {
-			it("lets a press through like the other UI elements, unless onClick returns false", () => {
+		describe("a press stops at a UI element", () => {
+			/** a wide renderable under everything, listening for presses */
+			const listenBehind = () => {
 				const behind = vi.fn();
 				const under = box(800, 600);
 				under.isKinematic = false;
 				under.depth = -10;
 				place(under);
 				input.registerPointerEvent("pointerdown", under, behind);
+				input.registerPointerEvent("pointerup", under, behind);
+				return { behind, under };
+			};
+			const release = (under) => {
+				input.releasePointerEvent("pointerdown", under);
+				input.releasePointerEvent("pointerup", under);
+			};
+			const tap = (x, y) => {
+				pointer("pointermove", x, y);
+				pointer("pointerdown", x, y);
+				pointer("pointerup", x, y);
+			};
+
+			it("a button, a checkbox and a UISpriteElement keep the press from what is behind", () => {
+				const { behind, under } = listenBehind();
 				try {
-					const atlas = makeAtlas();
-					const icon = new UISpriteElement(110, 110, {
-						image: atlas,
-						region: "up",
-					});
-					place(icon);
-					pointer("pointermove", 110, 110);
-					pointer("pointerdown", 110, 110);
-					pointer("pointerup", 110, 110);
-					expect(behind).toHaveBeenCalledTimes(1);
-					icon.onClick = () => {
-						return false;
-					};
-					pointer("pointerdown", 110, 110);
-					pointer("pointerup", 110, 110);
-					expect(behind).toHaveBeenCalledTimes(1);
+					const onClick = vi.fn();
+					place(
+						new UITextButton(100, 100, {
+							text: "OK",
+							width: 80,
+							height: 40,
+							onClick,
+						}),
+					);
+					const cb = place(new UICheckbox(300, 100, { label: "x" }));
+					place(
+						new UISpriteElement(510, 110, { image: makeAtlas(), region: "up" }),
+					);
+					tap(140, 120);
+					tap(310, 110);
+					tap(510, 110);
+					expect(onClick).toHaveBeenCalledTimes(1);
+					expect(cb.checked).toBe(true);
+					expect(behind).not.toHaveBeenCalled();
+					// with no element over it, the game gets the press
+					tap(700, 500);
+					expect(behind).toHaveBeenCalledTimes(2);
 				} finally {
-					input.releasePointerEvent("pointerdown", under, behind);
+					release(under);
+				}
+			});
+
+			it("a handler returning true lets the press through", () => {
+				const { behind, under } = listenBehind();
+				try {
+					const icon = place(
+						new UISpriteElement(110, 110, { image: makeAtlas(), region: "up" }),
+					);
+					icon.onClick = () => {
+						return true;
+					};
+					icon.onRelease = () => {
+						return true;
+					};
+					tap(110, 110);
+					expect(behind).toHaveBeenCalledTimes(2);
+				} finally {
+					release(under);
+				}
+			});
+
+			it("a non-blocking panel lets a press on its background through", () => {
+				const { behind, under } = listenBehind();
+				try {
+					place(
+						new UIPanel(100, 100, { width: 200, height: 100, blocking: false }),
+					);
+					tap(150, 150);
+					expect(behind).toHaveBeenCalledTimes(2);
+				} finally {
+					release(under);
 				}
 			});
 		});
