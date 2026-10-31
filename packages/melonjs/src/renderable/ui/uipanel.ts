@@ -23,42 +23,57 @@ import UITextButton from "./uitextbutton.ts";
 
 /**
  * The art of a skinned {@link UIPanel}: one atlas region, drawn as a
- * nine-slice over the whole panel and resized with it.
+ * nine-slice over the whole panel and stretched with it.
  * @category UI
+ * @example
+ * const panel = new UIPanel(100, 80, {
+ *     width: 320,
+ *     height: 240,
+ *     skin: { atlas, region: "panel_blue", insetx: 16, insety: 16 },
+ * });
  */
 export interface UIPanelSkin extends UISkin {
-	/** the background */
+	/** the name of the atlas region drawn as the background */
 	region: string;
 }
 
 /**
  * How a {@link UIPanel} places its children.
  *
- * - `"none"`: where they are put
- * - `"column"`: one above the other
- * - `"row"`: side by side
- * - `"grid"`: in rows of {@link UIPanelSettings.columns} equal cells
+ * - `"none"`: each child stays where you put it
+ * - `"column"`: one above the other, top to bottom
+ * - `"row"`: side by side, left to right
+ * - `"grid"`: in rows of {@link UIPanelSettings.columns} equal-width cells
+ *
+ * Children are placed in the order they were added.
  * @category UI
  */
 export type UIPanelLayout = "none" | "column" | "row" | "grid";
 
 /**
- * Where a {@link UIPanel} lines its children up across the layout: the
- * left, middle or right of a column, the top, middle or bottom of a row.
- * `"stretch"` resizes each child to the full width of a column, the full
- * height of a row, or the width of a grid cell.
+ * Where a {@link UIPanel} lines its children up across the layout.
+ *
+ * - `"start"`: the left of a column, the top of a row, the top left of a grid cell
+ * - `"center"`: the middle
+ * - `"end"`: the right of a column, the bottom of a row
+ * - `"stretch"`: resize each child to the full width of a column, the full
+ *   height of a row, or the width of a grid cell. Only a {@link UITextButton}
+ *   or a {@link UIPanel} is resized; any other child keeps its size and lines
+ *   up at the start.
  * @category UI
  */
 export type UIPanelAlign = "start" | "center" | "end" | "stretch";
 
 /**
- * Which ways a {@link UIPanel} scrolls.
+ * Which ways a {@link UIPanel} scrolls when its content does not fit.
  * @category UI
  */
 export type UIPanelScroll = "none" | "vertical" | "horizontal" | "both";
 
 /**
- * Everything {@link UIPanel} takes.
+ * The settings a {@link UIPanel} takes. Only `width` and `height` are
+ * required; with nothing else the panel is an invisible, blocking box that
+ * holds children.
  * @category UI
  */
 export interface UIPanelSettings extends UIJuiceSettings {
@@ -67,68 +82,78 @@ export interface UIPanelSettings extends UIJuiceSettings {
 	/** the panel's height, in pixels */
 	height: number;
 	/**
-	 * The fill behind the children; `null` leaves it transparent.
+	 * The background colour; `null` leaves it transparent.
 	 *
-	 * NOT `backgroundColor`, which a `Container` already has and which does
-	 * something else entirely: that one is handed to `clearColor` and wipes
-	 * the whole render target, so a panel setting it would repaint the
-	 * screen. The name here matches {@link ProgressBarSettings} instead.
+	 * Use this, not `backgroundColor`: a `Container`'s `backgroundColor`
+	 * clears the whole screen to that colour.
+	 * @default null
 	 */
 	fillColor?: Paint | null;
-	/** drawn around the edge; `null` for none */
+	/**
+	 * the colour of the border drawn around the edge; `null` for none
+	 * @default null
+	 */
 	borderColor?: Paint | null;
-	/** how thick that border is */
+	/**
+	 * the border's thickness, in pixels, drawn inside the edge
+	 * @default 1
+	 */
 	borderWidth?: number;
-	/** corner radius; `0` is square; the shadow follows it, under a skin too */
+	/**
+	 * the corner radius, in pixels; `0` is square. The fill, the border and
+	 * the shadow all follow it.
+	 * @default 0
+	 */
 	radius?: number;
 	/**
-	 * A drop shadow under the panel, behind its skin or fill; `null`, the default, for none. Its alpha
-	 * is how dark the shadow gets, e.g. `"#00000066"`.
+	 * The colour of a drop shadow under the panel; `null` for none. Its
+	 * alpha sets how dark the shadow is, e.g. `"#00000066"`.
+	 * @default null
 	 */
 	shadowColor?: Paint | null;
 	/**
-	 * how far right the shadow falls, in pixels
+	 * how far right the shadow falls, in pixels; negative goes left
 	 * @default 0
 	 */
 	shadowOffsetX?: number;
 	/**
-	 * how far down the shadow falls, in pixels
+	 * how far down the shadow falls, in pixels; negative goes up
 	 * @default 4
 	 */
 	shadowOffsetY?: number;
 	/**
-	 * how far the shadow's soft edge spreads, in pixels; `0` is sharp
+	 * how far the shadow's soft edge spreads, in pixels; `0` is a sharp edge
 	 * @default 8
 	 */
 	shadowBlur?: number;
 	/**
-	 * How far the panel drifts up and down, in pixels. `0`, the default,
-	 * leaves it still.
-	 *
+	 * How far the panel floats up and down, in pixels; `0` leaves it still.
 	 * See {@link UIPanel#bobAmplitude}.
+	 * @default 0
 	 */
 	bobAmplitude?: number;
 	/**
-	 * How long one full up and down cycle takes, in milliseconds.
-	 *
+	 * How long one full up and down float takes, in milliseconds.
 	 * See {@link UIPanel#bobPeriod}.
+	 * @default 2000
 	 */
 	bobPeriod?: number;
 	/**
-	 * Whether the panel swallows pointer events aimed at what is behind it.
+	 * Whether the panel stops pointer events from reaching what is behind
+	 * it: clicks, releases and hover on the panel itself, and the wheel over a
+	 * scrolling panel. Widgets inside the panel still get their events.
 	 *
-	 * `true` by default, which is what a dialog wants: a click on the panel,
-	 * or on the dimmed scene it covers, must not reach the game underneath.
-	 * Children are unaffected either way, because the dispatcher asks a child
-	 * before the container holding it.
-	 *
-	 * Set `false` for a panel that is only a backdrop, such as a HUD frame
-	 * drawn over a playfield that still has to receive clicks.
+	 * Keep it `true` for a dialog. Set it `false` for a frame that only
+	 * decorates, such as a HUD box over a playfield that still takes clicks.
+	 * @default true
 	 */
 	blocking?: boolean;
-	/** draw the background from an atlas region, as a nine-slice */
+	/**
+	 * draw the background from an atlas region, as a nine-slice; a
+	 * `fillColor` set as well is drawn over it
+	 */
 	skin?: UIPanelSkin;
-	/** a title, centred at the top; the content starts below it */
+	/** a title, centred in a band at the top; the content starts below it */
 	title?: string;
 	/**
 	 * the title's font: a CSS font family, or the name of a loaded bitmap font
@@ -136,7 +161,7 @@ export interface UIPanelSettings extends UIJuiceSettings {
 	 */
 	titleFont?: string;
 	/**
-	 * the title's height, in pixels
+	 * the title's text height, in pixels; the title band is 1.6 times this
 	 * @default 20
 	 */
 	titleFontSize?: number;
@@ -146,8 +171,10 @@ export interface UIPanelSettings extends UIJuiceSettings {
 	 */
 	titleFillStyle?: string;
 	/**
-	 * Let the user move the panel by dragging it. A scrolling panel is moved
-	 * by its title and its frame, as a drag on the content scrolls it.
+	 * Let the player move the panel by dragging it. It is moved by its title
+	 * or its background, never through a widget on it; a scrolling panel is
+	 * moved by its title and frame only, as a drag on its content scrolls.
+	 * The panel comes to the front of its container when pressed.
 	 * @default false
 	 */
 	draggable?: boolean;
@@ -157,13 +184,13 @@ export interface UIPanelSettings extends UIJuiceSettings {
 	 */
 	layout?: UIPanelLayout;
 	/**
-	 * the number of cells in a row of a `"grid"` layout
+	 * the number of cells in each row of a `"grid"` layout
 	 * @default 2
 	 */
 	columns?: number;
 	/**
 	 * The space between the content and the panel's frame, in pixels: inside
-	 * the border, or inside the skin's insets, and below the title.
+	 * the border or the skin's insets, and below the title.
 	 * @default 0
 	 */
 	padding?: number;
@@ -178,22 +205,22 @@ export interface UIPanelSettings extends UIJuiceSettings {
 	 */
 	align?: UIPanelAlign;
 	/**
-	 * Resize the panel to its laid out content: the height of a column or a
-	 * grid, the width of a row, and across a column or a row too unless the
-	 * children are stretched. Ignored by a scrolling panel.
+	 * Resize the panel to fit its laid out content: the height of a column or
+	 * a grid, the width of a row, and the other side of a column or a row too
+	 * unless `align` is `"stretch"`. Ignored by a scrolling panel.
 	 * @default false
 	 */
 	autoSize?: boolean;
 	/**
-	 * Which ways the content scrolls when it does not fit: with the wheel
-	 * over the panel, and by dragging it, with momentum.
+	 * Which ways the content scrolls when it does not fit: with the mouse
+	 * wheel over the panel, and by dragging the content, with momentum.
 	 * @default "none"
 	 */
 	scroll?: UIPanelScroll;
-	/** called when the content scrolls, with the new offsets */
+	/** called each time the content scrolls, with the new offsets in pixels */
 	onScroll?: (scrollX: number, scrollY: number, panel: UIPanel) => void;
 	/**
-	 * the scrollbar, shown while the content does not fit
+	 * the colour of the scrollbar, shown while the content does not fit
 	 * @default "#00000059"
 	 */
 	scrollbarColor?: Paint;
@@ -223,31 +250,89 @@ const FRICTION = 0.95;
 const MIN_SPEED = 0.02;
 
 /**
- * A rectangular surface with a background, an optional border and children.
+ * A rectangular frame that holds other widgets: the base of a menu, a
+ * dialog, a pause screen or a HUD box. Add children to it with `addChild`;
+ * they are positioned relative to the panel's top left corner, drawn over its
+ * background, and move with it.
  *
- * The thing every menu, dialog and HUD frame starts by writing: a rounded
- * rectangle, a fill, an outline, and some labels on top. One example in this
- * repository had three of them, each repeating the same half dozen renderer
- * calls, and each repeating the same correction for the way `setColor` folds
- * the global alpha in. That correction is the reason this is a widget rather
- * than a snippet: it is easy to leave out, and leaving it out does not fail,
- * it just renders a panel at the wrong opacity.
+ * ## Background
+ * Draw one with no assets: `fillColor`, `borderColor`, `borderWidth` and
+ * `radius` for rounded corners. Or give a nine-slice `skin` from an atlas,
+ * which stretches to any size with its corners kept sharp. With neither, the
+ * panel is invisible but still holds and lays out its children.
  *
- * It is a {@link UIBaseElement}, so it is a container that carries pointer
- * events, and children added to it are drawn over its background and are
- * asked about a click before it is.
+ * ## Title
+ * `title` draws a line of text centred in a band at the top, styled with
+ * `titleFont`, `titleFontSize` and `titleFillStyle`. The content area starts
+ * below the band.
  *
- * It is floating, as every UI element is, and where it lands in the paint
- * order is the depth it is added at. In a world sorted on `"depth"`, which
- * is every `Camera3d` scene, that depth is read the other way round from
- * the 2D habit: a floating child is ranked by `|pos.z|` there and the
- * SMALLER magnitude draws on top, so a panel added at 9000 to sit above
- * everything sits behind everything instead, and a dialog there wants a
- * small depth, 0 or 1.
+ * ## Dragging
+ * With `draggable`, the player moves the panel by dragging its title or its
+ * background, never through a widget on it (a drag on the content of a
+ * scrolling panel scrolls it instead). A pressed panel comes to the front of
+ * its container, so the window last touched is on top.
+ *
+ * ## Blocking
+ * By default (`blocking: true`) the panel stops clicks, releases and hover
+ * on it from reaching whatever is behind it, and so does the wheel over a
+ * scrolling panel. Widgets inside it still get their events. Set
+ * `blocking: false` for a frame that only decorates.
+ *
+ * ## Layout
+ * `layout` places the children for you, in the order they were added:
+ * `"column"`, `"row"` or `"grid"` (with `columns` per row). `padding` is the
+ * space inside the frame, `gap` the space between children, and `align`
+ * lines them up across the layout (`"start"`, `"center"`, `"end"`, or
+ * `"stretch"`, which resizes buttons and panels to fill the width of a column
+ * or a cell, or the height of a row; other children keep their size).
+ * `autoSize` resizes the panel to fit what it holds. The layout runs again
+ * when a child is added or removed and when the panel is resized; call
+ * {@link UIPanel#relayout} after changing a child's size.
+ *
+ * ## Scrolling
+ * `scroll` (`"vertical"`, `"horizontal"` or `"both"`) crops the children to
+ * the content area and lets the player scroll whatever does not fit: with
+ * the mouse wheel, or by dragging the content, which carries on with
+ * momentum. A scrollbar shows how far along the content is.
+ * - From code: {@link UIPanel#scrollTo}, {@link UIPanel#scrollToChild}, or
+ *   set {@link UIPanel#scrollX} and {@link UIPanel#scrollY}.
+ *   {@link UIPanel#maxScrollX} and {@link UIPanel#maxScrollY} say how far it
+ *   goes, and `onScroll` is called on every change.
+ * - A drag that starts on a button scrolls the panel and calls off the
+ *   button's press, so it is not clicked on release. A slider keeps its own
+ *   drag. A scrolling panel inside another scrolls on its own.
+ * - A widget given the keyboard or gamepad focus is scrolled into view.
+ * - {@link UIPanel#clearChildren} empties the panel and scrolls back to the
+ *   start, ready to be filled again.
+ *
+ * With `layout: "none"`, place children at their position in the content, as
+ * if it were not scrolled, and call `relayout()` after moving one by hand.
+ *
+ * ## Drop shadow
+ * `shadowColor` draws a soft shadow under the panel; its alpha sets how dark
+ * it is. `shadowOffsetX` and `shadowOffsetY` move it, `shadowBlur` softens
+ * its edge, and it follows `radius`. The shadow is drawn outside the panel's
+ * bounds and never takes the pointer.
+ *
+ * ## Idle float
+ * `bobAmplitude` and `bobPeriod` make the panel drift slowly up and down,
+ * so a screen waiting for input does not look frozen. Its widgets stay
+ * clickable where they are drawn.
+ *
+ * ## Things to know
+ * - Like every UI element, a panel is floating: it is drawn in screen
+ *   coordinates, over the scene. With a `Camera3d`, floating children are
+ *   sorted the other way round: the SMALLER depth draws on top, so add a
+ *   dialog at a depth of 0 or 1, not 9000.
+ * - On WebGL and WebGPU, a scrolling panel inside another clipping container
+ *   (such as another scrolling panel) is cropped to its own area only, not
+ *   to the outer container's.
+ * @category UI
  * @example
+ * // a drawn dialog, with no assets
  * import { UIPanel, Text } from "melonjs";
  *
- * const panel = new UIPanel(cx - 200, cy - 120, {
+ * const dialog = new UIPanel(220, 140, {
  *     width: 400,
  *     height: 240,
  *     fillColor: "#0a1526",
@@ -255,21 +340,122 @@ const MIN_SPEED = 0.02;
  *     borderWidth: 2,
  *     radius: 14,
  * });
- * // positioned relative to the panel, not to the screen
- * panel.addChild(new Text(200, 24, { text: "PAUSED", textAlign: "center" }));
- * app.world.addChild(panel);
- * @category UI
+ * // relative to the panel's top left corner, not to the screen
+ * dialog.addChild(new Text(200, 24, {
+ *     font: "sans-serif",
+ *     size: 32,
+ *     text: "PAUSED",
+ *     textAlign: "center",
+ * }));
+ * app.world.addChild(dialog);
+ * @example
+ * // a skinned options menu: a column of widgets, sized to fit
+ * import { UIPanel, UISlider, UICheckbox, UITextButton } from "melonjs";
+ *
+ * const menu = new UIPanel(240, 100, {
+ *     width: 320,
+ *     height: 100, // autoSize sets the height
+ *     skin: { atlas, region: "panel_brown" },
+ *     title: "Options",
+ *     layout: "column",
+ *     padding: 16,
+ *     gap: 12,
+ *     align: "stretch",
+ *     autoSize: true,
+ * });
+ * menu.addChild(new UISlider(0, 0, {
+ *     label: "Music",
+ *     value: 0.8,
+ *     onChange: (value) => { musicVolume = value; },
+ * }));
+ * menu.addChild(new UICheckbox(0, 0, {
+ *     label: "Show hints",
+ *     checked: true,
+ *     onChange: (checked) => { showHints = checked; },
+ * }));
+ * // stretched to the full width of the column
+ * menu.addChild(new UITextButton(0, 0, {
+ *     text: "Back",
+ *     skin: { atlas, normal: "button", pressed: "button_pressed" },
+ *     onClick: () => { app.world.removeChild(menu); },
+ * }));
+ * app.world.addChild(menu);
+ * @example
+ * // a scrolling grid of level buttons
+ * const levels = new UIPanel(160, 60, {
+ *     width: 480,
+ *     height: 360,
+ *     fillColor: "#1b2333",
+ *     radius: 10,
+ *     title: "Select a level",
+ *     layout: "grid",
+ *     columns: 4,
+ *     padding: 12,
+ *     gap: 10,
+ *     align: "stretch",
+ *     scroll: "vertical",
+ * });
+ * const buttons = [];
+ * for (let i = 1; i <= 40; i++) {
+ *     const button = new UITextButton(0, 0, {
+ *         text: String(i),
+ *         height: 64,
+ *         onClick: () => { startLevel(i); },
+ *     });
+ *     buttons.push(button);
+ *     levels.addChild(button);
+ * }
+ * app.world.addChild(levels);
+ * // open on the last level unlocked, with 8 pixels to spare around it
+ * levels.scrollToChild(buttons[lastUnlocked - 1], 8);
+ * @example
+ * // a draggable window with a title
+ * const inventory = new UIPanel(40, 40, {
+ *     width: 260,
+ *     height: 180,
+ *     fillColor: "#2b2f3a",
+ *     borderColor: "#8899aa",
+ *     radius: 6,
+ *     title: "Inventory",
+ *     titleFontSize: 18,
+ *     layout: "column",
+ *     padding: 10,
+ *     draggable: true,
+ * });
+ * inventory.addChild(new Text(0, 0, { font: "sans-serif", size: 16, text: "3 potions" }));
+ * app.world.addChild(inventory);
+ * @example
+ * // a drop shadow, soft and a little below
+ * const card = new UIPanel(300, 200, {
+ *     width: 200,
+ *     height: 120,
+ *     fillColor: "#ffffff",
+ *     radius: 12,
+ *     shadowColor: "#00000066", // the alpha sets how dark
+ *     shadowOffsetX: 2,
+ *     shadowOffsetY: 6,
+ *     shadowBlur: 12,
+ * });
+ * @example
+ * // a HUD frame that lets clicks through to the game behind it
+ * const hud = new UIPanel(8, 8, {
+ *     width: 220,
+ *     height: 48,
+ *     fillColor: "#00000080",
+ *     radius: 8,
+ *     blocking: false,
+ * });
  */
 export default class UIPanel extends UIBaseElement {
-	/** the fill behind the children; `null` leaves it transparent */
+	/** the background colour; `null` leaves it transparent */
 	fillColor: Paint | null;
-	/** drawn around the edge; `null` for none */
+	/** the colour of the border around the edge; `null` for none */
 	borderColor: Paint | null;
-	/** how thick that border is */
+	/** the border's thickness, in pixels */
 	borderWidth: number;
-	/** corner radius; `0` is square */
+	/** the corner radius, in pixels; `0` is square */
 	radius: number;
-	/** a drop shadow under the panel; `null` for none */
+	/** the colour of the drop shadow, its alpha setting how dark; `null` for none */
 	shadowColor: Paint | null;
 	/** how far right the shadow falls, in pixels */
 	shadowOffsetX: number;
@@ -277,69 +463,63 @@ export default class UIPanel extends UIBaseElement {
 	shadowOffsetY: number;
 	/** how far the shadow's soft edge spreads, in pixels */
 	shadowBlur: number;
-	/** whether it swallows pointer events aimed at what is behind it */
+	/**
+	 * Whether the panel stops pointer events on it from reaching what is
+	 * behind it. Widgets inside still get theirs.
+	 * @default true
+	 */
 	blocking: boolean;
 	/**
-	 * How far the panel drifts up and down, in pixels. `0`, the default,
-	 * leaves it still.
+	 * How far the panel floats up and down, in pixels; `0` leaves it still.
 	 *
-	 * The slow float an idle dialogue or pause panel has in a lot of games,
-	 * which is there so a screen waiting for input does not look frozen. It
-	 * is a sine, so this is the distance to either extreme and the panel
-	 * covers twice it over a cycle; 2 to 4 is the usual range, and it starts
-	 * by rising rather than sinking.
-	 *
-	 * Do not go much below 2. The offset is a whole number of pixels, so an
-	 * amplitude of 1 has three positions to move between and the panel
-	 * twitches rather than drifts.
-	 *
-	 * The panel is CLICKABLE where it is drawn: the offset goes into
-	 * {@link UIPanel#getAbsolutePosition}, which is what the bounds pipeline
-	 * reads, so the hit area of the panel and of every widget inside it
-	 * follows the float at any depth. `pos` is deliberately left alone, so a
-	 * caller still reads and writes the resting place rather than a value
-	 * that moves under them.
-	 *
-	 * The bounds are rebuilt only on the frames the offset actually changes,
-	 * so a panel with no bob costs nothing.
+	 * A slow float keeps a dialog waiting for input from looking frozen. The
+	 * panel rises this far above its position and sinks this far below it;
+	 * 2 to 4 works well, as smaller values step a pixel at a time and look
+	 * jerky. The panel, and every widget in it, is clickable where it is
+	 * drawn, while `pos` keeps its resting place.
 	 * @default 0
+	 * @example
+	 * dialog.bobAmplitude = 3;
+	 * dialog.bobPeriod = 2500;
 	 */
 	bobAmplitude: number;
 	/**
-	 * How long one full up and down cycle takes, in milliseconds.
-	 *
-	 * Anything at or below zero turns the bob off rather than dividing by it.
-	 * That is not politeness: the offset would be `NaN`, and one `translate`
-	 * by `NaN` writes it into the transform, where every batched vertex under
-	 * it inherits the poison and the GPU clips the lot away. A panel that
-	 * silently vanished would be a long way from an obviously bad period.
+	 * How long one full up and down float takes, in milliseconds. `0` or
+	 * less turns the float off.
 	 * @default 2000
 	 */
 	bobPeriod: number;
 
 	/** the background art, when the panel is skinned */
 	readonly skin: UIPanelSkin | undefined;
-	/** the title, drawn at the top, when there is one */
+	/** the title's text object, when the panel has a title */
 	readonly title: UILabel | undefined;
-	/** how the children are placed; see {@link UIPanelLayout} */
+	/** how the children are placed; see {@link UIPanelLayout}. Call {@link UIPanel#relayout} after changing it. */
 	layout: UIPanelLayout;
-	/** the number of cells in a row of a `"grid"` layout */
+	/** the number of cells in each row of a `"grid"` layout */
 	columns: number;
 	/** the space between the content and the frame, in pixels */
 	padding: number;
 	/** the space between children in a layout, in pixels */
 	gap: number;
-	/** where children line up across the layout */
+	/** where children line up across the layout; see {@link UIPanelAlign} */
 	align: UIPanelAlign;
-	/** resize the panel to its laid out content */
+	/** whether the panel resizes to fit its laid out content */
 	autoSize: boolean;
-	/** which ways the content scrolls */
+	/** which ways the content scrolls; see {@link UIPanelScroll} */
 	scroll: UIPanelScroll;
-	/** called when the content scrolls, with the new offsets */
+	/**
+	 * Called each time the content scrolls, with the new offsets in pixels.
+	 * @example
+	 * // fade an arrow out once the list is scrolled to the bottom
+	 * list.onScroll = (scrollX, scrollY, panel) => {
+	 *     moreArrow.setOpacity(scrollY < panel.maxScrollY ? 1 : 0);
+	 * };
+	 */
 	onScroll:
 		| ((scrollX: number, scrollY: number, panel: UIPanel) => void)
 		| undefined;
-	/** the scrollbar, shown while the content does not fit */
+	/** the colour of the scrollbar, shown while the content does not fit */
 	scrollbarColor: Paint;
 
 	/** @ignore */
@@ -706,23 +886,9 @@ export default class UIPanel extends UIBaseElement {
 	}
 
 	/**
-	 * Where the panel IS, bob included.
-	 *
-	 * THE hook that makes a floating panel honest. Both bounds paths funnel
-	 * through this one method, and a child's absolute position is the sum of
-	 * the chain above it, so adding the offset here reaches the panel's own
-	 * hit area and every descendant's, at any depth, without any of them
-	 * knowing a bob exists.
-	 *
-	 * Not `currentTransform`, which was the obvious guess: that reaches a
-	 * renderable's OWN bounds and not its children's, so a bobbing panel's
-	 * swallow rectangle would drift off the widgets sitting in it. And not a
-	 * write to `pos`, which would reach everything correctly but silently
-	 * overwrite a caller's own write on the very next frame.
-	 *
-	 * {@link Particle} overrides this method for the same reason, its
-	 * placement not being in its `pos` chain either.
-	 * @returns the absolute position, offset by the bob
+	 * The panel's absolute position, including the idle float, so the hit
+	 * areas of the panel and of every widget in it follow the float.
+	 * @returns the absolute position, offset by the float
 	 */
 	override getAbsolutePosition(): Vector3d {
 		const absolute = super.getAbsolutePosition();
@@ -731,11 +897,8 @@ export default class UIPanel extends UIBaseElement {
 	}
 
 	/**
-	 * The matrix form of the same offset.
-	 *
-	 * Without it `getWorldTransform()` and `getAbsolutePosition()` disagree
-	 * about a bobbing panel, and the contract on those two says that for a
-	 * `Container` they coincide.
+	 * The panel's local transform, including the idle float, so it agrees
+	 * with {@link UIPanel#getAbsolutePosition}.
 	 * @param out - matrix to write into
 	 * @returns `out`, for chaining
 	 */
@@ -749,21 +912,9 @@ export default class UIPanel extends UIBaseElement {
 	}
 
 	/**
-	 * Resize this panel's bounds, and refresh its children's.
-	 *
-	 * `Container` does those two jobs in ONE loop, both gated on
-	 * `enableChildBoundsUpdate`, and a panel wants exactly one of them. The
-	 * flag is off here so that a label overhanging the edge cannot grow the
-	 * rectangle a blocking panel swallows clicks inside, and turning it off
-	 * took the other job with it: a child's bounds are absolute, worked out
-	 * once through `getAbsolutePosition()` and then cached, so moving the
-	 * panel left every child's HIT AREA behind at the old place while the
-	 * whole panel drew at the new one. A dialog slid or snapped into position
-	 * after it was built had buttons that only answered where they used to
-	 * be.
-	 *
-	 * This costs nothing per frame: `pos` calls `updateBounds` when it is
-	 * written, so the walk happens when the panel actually moves.
+	 * Update this panel's bounds, and its children's, so their hit areas
+	 * follow the panel when it moves. The panel's own bounds are its size,
+	 * never grown by a child hanging over the edge.
 	 * @param absolute - update in world absolute coordinates
 	 * @returns this panel's bounds
 	 */
@@ -877,10 +1028,14 @@ export default class UIPanel extends UIBaseElement {
 	/**
 	 * Place the children again, and work out how far the content scrolls.
 	 *
-	 * Runs by itself when a child is added or removed and when the panel is
-	 * resized, not every frame. Call it when a child changes size, or after
+	 * It runs by itself when a child is added or removed and when the panel
+	 * is resized, not every frame. Call it after a child changes size, after
+	 * changing `layout`, `columns`, `padding`, `gap` or `align`, or after
 	 * moving children by hand in a scrolling panel.
 	 * @returns this panel
+	 * @example
+	 * menu.gap = 4;
+	 * menu.relayout();
 	 */
 	relayout(): this {
 		if (this._layingOut) {
@@ -1070,7 +1225,8 @@ export default class UIPanel extends UIBaseElement {
 	}
 
 	/**
-	 * How far the content is scrolled to the right, in pixels.
+	 * How far the content is scrolled to the right, in pixels, from `0` to
+	 * {@link UIPanel#maxScrollX}. Setting it scrolls, clamped to that range.
 	 * @default 0
 	 */
 	get scrollX(): number {
@@ -1082,8 +1238,12 @@ export default class UIPanel extends UIBaseElement {
 	}
 
 	/**
-	 * How far the content is scrolled down, in pixels.
+	 * How far the content is scrolled down, in pixels, from `0` to
+	 * {@link UIPanel#maxScrollY}. Setting it scrolls, clamped to that range.
 	 * @default 0
+	 * @example
+	 * // back to the top
+	 * list.scrollY = 0;
 	 */
 	get scrollY(): number {
 		return this._scrollY;
@@ -1094,26 +1254,33 @@ export default class UIPanel extends UIBaseElement {
 	}
 
 	/**
-	 * How far the content can scroll to the right, in pixels; 0 when it fits.
+	 * How far the content can scroll to the right, in pixels; `0` when it
+	 * fits or the panel does not scroll that way. Read only.
 	 */
 	get maxScrollX(): number {
 		return this._maxScrollX;
 	}
 
 	/**
-	 * How far the content can scroll down, in pixels; 0 when it fits.
+	 * How far the content can scroll down, in pixels; `0` when it fits or
+	 * the panel does not scroll that way. Read only.
 	 */
 	get maxScrollY(): number {
 		return this._maxScrollY;
 	}
 
 	/**
-	 * Scroll the content to an offset, clamped to how far it goes.
+	 * Scroll the content to an offset, clamped to `0` up to
+	 * {@link UIPanel#maxScrollX} and {@link UIPanel#maxScrollY}, with no
+	 * animation.
 	 *
-	 * Scrolling moves the children: their positions are where they are drawn.
+	 * Scrolling moves the children, so a child's `pos` is where it is drawn.
 	 * @param x - the horizontal offset, in pixels
 	 * @param y - the vertical offset, in pixels
 	 * @returns this panel
+	 * @example
+	 * // jump to the end of a chat log
+	 * log.scrollTo(0, log.maxScrollY);
 	 */
 	scrollTo(x: number, y: number): this {
 		const nx = clamp(Number.isFinite(x) ? x : 0, 0, this._maxScrollX);
@@ -1134,11 +1301,16 @@ export default class UIPanel extends UIBaseElement {
 	}
 
 	/**
-	 * Scroll just enough to bring a child fully into view.
+	 * Scroll just enough to bring a child fully into view; nothing moves if
+	 * it already is. A widget that is not a direct child of this panel is
+	 * ignored.
 	 * @param child - one of this panel's children
 	 * @param margin - room to leave around it, in pixels, such as for a
 	 * focus ring
 	 * @returns this panel
+	 * @example
+	 * // show the selected save slot, with 8 pixels to spare
+	 * slots.scrollToChild(selectedSlot, 8);
 	 */
 	scrollToChild(child: Renderable, margin = 0): this {
 		if (child.ancestor !== this) {
@@ -1426,8 +1598,14 @@ export default class UIPanel extends UIBaseElement {
 	private _clearing = false;
 
 	/**
-	 * Remove every child, without laying out after each one.
-	 * @ignore
+	 * Remove every child and scroll back to the start, ready to fill the
+	 * panel again.
+	 * @example
+	 * // refill a scrolling list
+	 * list.clearChildren();
+	 * for (const name of names) {
+	 *     list.addChild(new Text(0, 0, { font: "sans-serif", size: 16, text: name }));
+	 * }
 	 */
 	override clearChildren(): void {
 		this._clearing = true;
