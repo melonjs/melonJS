@@ -17,6 +17,14 @@ import type UIBaseElement from "./uibaseelement.ts";
  */
 export type UINavAction = "up" | "down" | "left" | "right";
 
+/*
+ * The keyboard and gamepad focus of UI elements, behind
+ * `UIBaseElement#focus()`. Internal: a game only ever sees the methods on
+ * the elements. Nothing listens until an element takes the focus, and the
+ * listeners go when none has it, so a game that never calls `focus()` pays
+ * nothing and finds its arrow keys untouched.
+ */
+
 /** the directions, as unit steps */
 const DIRECTIONS: Record<UINavAction, [number, number]> = {
 	up: [0, -1],
@@ -33,438 +41,398 @@ const KEYS: Record<UINavAction, number> = {
 	right: KEY.RIGHT,
 };
 
-/** the keys that press the focused widget */
+/** the keys that press the focused element */
 const ACCEPT_KEYS: readonly number[] = [KEY.ENTER, KEY.SPACE];
 
+/** the elements in the scene */
+const elements = new Set<UIBaseElement>();
+/** the element with the focus */
+let owner: UIBaseElement | undefined;
+/** whether the ring shows: after a key, the pad or `focus()`, until the mouse */
+let ringShown = false;
+/** whether the listeners are on */
+let listening = false;
+/** the input holding accept down, if any, and the element it pressed */
+let accepting: "key" | "pad" | undefined;
+let pressed: UIBaseElement | undefined;
+/** the pads' D-pad direction and A button on the last frame */
+const pad = { held: "", accept: false };
+
 /**
- * Keyboard and gamepad navigation for UI elements, for a game played
- * without a mouse or a touch screen.
- *
- * One widget has the focus. The arrow keys or a pad's D-pad move it to the
- * nearest widget in that direction, Enter, Space or the pad's A button press
- * it as a click does, and a slider steps on left and right. A ring shows
- * which widget has the focus once a key or the pad is used, and the mouse
- * moving hides it. A focused widget in a scrolling panel is scrolled into
- * view.
- *
- * Off until {@link UIFocus.enable} is called, so a game that steers with the
- * arrow keys is not surprised. Buttons, checkboxes and sliders take part; a
- * widget of your own sets `focusable`.
- * @category UI
- * @example
- * UIFocus.enable();        // in the stage's onResetEvent
- * UIFocus.disable();       // and in its onDestroyEvent
+ * The element with the focus, if any.
+ * @returns the focus owner
+ * @ignore
+ * @internal
  */
-// one focus per page: a class of statics, documented as one API like `state`
-// eslint-disable-next-line @typescript-eslint/no-extraneous-class
-export default class UIFocus {
-	/** the colour of the ring around the focused widget */
-	static ringColor = "#ffcc33";
+export function focusOwner(): UIBaseElement | undefined {
+	return owner;
+}
 
-	/** whether navigation is on */
-	private static _enabled = false;
-	/** the focusable elements in the scene */
-	private static readonly _elements = new Set<UIBaseElement>();
-	/** the focused element */
-	private static _focused: UIBaseElement | undefined;
-	/** whether the ring shows: after keyboard or pad input, until the mouse */
-	private static _ringVisible = false;
-	/** the input holding accept down, if any, and the element it pressed */
-	private static _accept: "key" | "pad" | undefined;
-	private static _pressed: UIBaseElement | undefined;
-	/** the pad's state on the last frame */
-	private static readonly _pad = { held: "", accept: false };
+/**
+ * Whether the focus ring shows.
+ * @returns true after keyboard or pad input, until the mouse moves
+ * @ignore
+ * @internal
+ */
+export function ringVisible(): boolean {
+	return ringShown;
+}
 
-	/**
-	 * Turn keyboard and gamepad navigation on.
-	 */
-	static enable(): void {
-		if (UIFocus._enabled) {
-			return;
+/**
+ * Whether a key presses the focused element.
+ * @param keyCode - the key
+ * @returns true for Enter and Space
+ * @ignore
+ * @internal
+ */
+export function isAcceptKey(keyCode: number): boolean {
+	return ACCEPT_KEYS.includes(keyCode);
+}
+
+/**
+ * Give an element the focus, or take it away with `undefined`. The ring
+ * shows, and a scrolling panel holding the element scrolls it into view.
+ * @param element - the element
+ * @ignore
+ * @internal
+ */
+export function setFocus(element: UIBaseElement | undefined): void {
+	if (element === owner) {
+		ringShown = element !== undefined;
+		return;
+	}
+	if (owner !== undefined) {
+		owner.isDirty = true;
+	}
+	// a press held on the element losing the focus is called off, or it
+	// stays down with nothing to let it go
+	cancelAccept();
+	owner = element;
+	if (element !== undefined) {
+		element.isDirty = true;
+		ringShown = true;
+		scrollIntoView(element);
+		listen(true);
+	} else {
+		ringShown = false;
+		listen(false);
+	}
+}
+
+/**
+ * Track an element joining the scene.
+ * @param element - the element
+ * @ignore
+ * @internal
+ */
+export function trackElement(element: UIBaseElement): void {
+	elements.add(element);
+}
+
+/**
+ * Track an element leaving the scene; it loses the focus.
+ * @param element - the element
+ * @ignore
+ * @internal
+ */
+export function untrackElement(element: UIBaseElement): void {
+	elements.delete(element);
+	if (pressed === element) {
+		cancelAccept();
+	}
+	if (owner === element) {
+		setFocus(undefined);
+	}
+}
+
+/**
+ * Move the focus as an arrow key would. The focused element is asked
+ * first, through `onNavigate`, so a slider steps instead.
+ * @param action - which way
+ * @ignore
+ * @internal
+ */
+export function navigate(action: UINavAction): void {
+	const from = owner;
+	if (from === undefined) {
+		return;
+	}
+	ringShown = true;
+	if (!isCandidate(from)) {
+		// disabled or hidden since: move on from where it is
+		setFocus(next(from, action) ?? first());
+		return;
+	}
+	if (!from.onNavigate(action)) {
+		const to = next(from, action);
+		if (to !== undefined) {
+			setFocus(to);
 		}
-		UIFocus._enabled = true;
+	}
+}
+
+/**
+ * turn the key, pointer and pad listeners on or off
+ * @param value - on or off
+ */
+function listen(value: boolean): void {
+	if (value === listening) {
+		return;
+	}
+	listening = value;
+	if (value) {
 		// a button already held, the A that opened this menu say, is not a
 		// fresh press
-		UIFocus._pad.held = "";
-		UIFocus._pad.accept = false;
-		UIFocus.readPad();
-		on(KEYDOWN, UIFocus._onKeyDown);
-		on(KEYUP, UIFocus._onKeyUp);
-		on(POINTERMOVE, UIFocus._onPointer);
-		on(GAME_BEFORE_UPDATE, UIFocus._onFrame);
+		readPad();
+		on(KEYDOWN, onKeyDown);
+		on(KEYUP, onKeyUp);
+		on(POINTERMOVE, onPointer);
+		on(GAME_BEFORE_UPDATE, onFrame);
+	} else {
+		off(KEYDOWN, onKeyDown);
+		off(KEYUP, onKeyUp);
+		off(POINTERMOVE, onPointer);
+		off(GAME_BEFORE_UPDATE, onFrame);
 	}
+}
 
-	/**
-	 * Turn it off again, dropping the focus.
-	 */
-	static disable(): void {
-		if (!UIFocus._enabled) {
-			return;
-		}
-		UIFocus._enabled = false;
-		off(KEYDOWN, UIFocus._onKeyDown);
-		off(KEYUP, UIFocus._onKeyUp);
-		off(POINTERMOVE, UIFocus._onPointer);
-		off(GAME_BEFORE_UPDATE, UIFocus._onFrame);
-		UIFocus.focus(undefined);
-		UIFocus._ringVisible = false;
+/** call off a press held by accept, without a click */
+function cancelAccept(): void {
+	const element = pressed;
+	accepting = undefined;
+	pressed = undefined;
+	element?.cancelPress();
+}
+
+/**
+ * whether an element can take the focus now
+ * @param element - the element
+ * @returns true when focusable, enabled, in the scene, and shown along with
+ * everything holding it
+ */
+function isCandidate(element: UIBaseElement): boolean {
+	if (!element.focusable || !element.enabled || !elements.has(element)) {
+		return false;
 	}
-
-	/** whether navigation is on */
-	static get enabled(): boolean {
-		return UIFocus._enabled;
-	}
-
-	/** the element with the focus, if any */
-	static get focused(): UIBaseElement | undefined {
-		return UIFocus._focused;
-	}
-
-	/** whether the focus ring is showing */
-	static get ringVisible(): boolean {
-		return UIFocus._ringVisible;
-	}
-
-	/**
-	 * Give an element the focus, or take it away with `undefined`: to choose
-	 * where navigation starts, say. A scrolling panel holding the element
-	 * scrolls it into view.
-	 * @param element - the element to focus
-	 */
-	static focus(element: UIBaseElement | undefined): void {
-		if (UIFocus._focused === element) {
-			return;
-		}
-		if (UIFocus._focused !== undefined) {
-			UIFocus._focused.isDirty = true;
-		}
-		// a press held on the element losing the focus is called off, or it
-		// stays down with nothing to let it go
-		UIFocus.cancelAccept();
-		UIFocus._focused = element;
-		if (element !== undefined) {
-			element.isDirty = true;
-			UIFocus.scrollIntoView(element);
-		}
-	}
-
-	/**
-	 * Move the focus as an arrow key would, for input of the game's own. The
-	 * focused widget is asked first, through `onNavigate`, so a slider steps
-	 * instead. With nothing focused, the first widget takes the focus.
-	 * @param action - which way
-	 */
-	static navigate(action: UINavAction): void {
-		UIFocus._ringVisible = true;
-		const focused = UIFocus._focused;
-		if (focused === undefined) {
-			UIFocus.focus(UIFocus.first());
-			return;
-		}
-		if (!UIFocus.isCandidate(focused)) {
-			// disabled or hidden since: move on from where it is
-			UIFocus.focus(UIFocus.next(focused, action) ?? UIFocus.first());
-			return;
-		}
-		if (!focused.onNavigate(action)) {
-			const next = UIFocus.next(focused, action);
-			if (next !== undefined) {
-				UIFocus.focus(next);
-			}
-		}
-	}
-
-	/**
-	 * Track an element joining the scene.
-	 * @param element - the element
-	 * @ignore
-	 * @internal
-	 */
-	static _add(element: UIBaseElement): void {
-		UIFocus._elements.add(element);
-	}
-
-	/**
-	 * Track an element leaving the scene; it loses the focus.
-	 * @param element - the element
-	 * @ignore
-	 * @internal
-	 */
-	static _remove(element: UIBaseElement): void {
-		UIFocus._elements.delete(element);
-		if (UIFocus._pressed === element) {
-			UIFocus.cancelAccept();
-		}
-		if (UIFocus._focused === element) {
-			UIFocus.focus(undefined);
-		}
-	}
-
-	/**
-	 * Whether a key is one that presses the focused element.
-	 * @param keyCode - the key
-	 * @returns true for Enter and Space
-	 * @ignore
-	 * @internal
-	 */
-	static _isAcceptKey(keyCode: number): boolean {
-		return ACCEPT_KEYS.includes(keyCode);
-	}
-
-	/**
-	 * Call off a press held by accept, without a click.
-	 * @ignore
-	 * @internal
-	 */
-	private static cancelAccept(): void {
-		const pressed = UIFocus._pressed;
-		UIFocus._accept = undefined;
-		UIFocus._pressed = undefined;
-		pressed?.cancelPress();
-	}
-
-	/**
-	 * whether an element can take the focus now
-	 * @param element - the element
-	 * @returns true when it is focusable, enabled, shown and in the scene
-	 */
-	private static isCandidate(element: UIBaseElement): boolean {
-		if (
-			!element.focusable ||
-			!element.enabled ||
-			!UIFocus._elements.has(element)
-		) {
+	for (
+		let node: Renderable | undefined = element;
+		node !== undefined && node !== null;
+		node = node.ancestor as Renderable | undefined
+	) {
+		if (!node.isRenderable || node.alpha <= 0) {
 			return false;
 		}
-		// shown, and so is everything holding it: not inside a hidden panel
-		for (
-			let node: Renderable | undefined = element;
-			node !== undefined && node !== null;
-			node = node.ancestor as Renderable | undefined
-		) {
-			if (!node.isRenderable || node.alpha <= 0) {
-				return false;
-			}
+	}
+	return true;
+}
+
+/**
+ * the elements that can take the focus now
+ * @returns them, in no particular order
+ */
+function candidates(): UIBaseElement[] {
+	return [...elements].filter((element) => {
+		return isCandidate(element);
+	});
+}
+
+/**
+ * The first candidate in reading order, row by row, left to right; two
+ * whose tops are within half a height are on the same row.
+ * @returns the element, or undefined when there is none
+ */
+function first(): UIBaseElement | undefined {
+	let best: UIBaseElement | undefined;
+	for (const candidate of candidates()) {
+		if (best === undefined) {
+			best = candidate;
+			continue;
 		}
-		return true;
-	}
-
-	/**
-	 * the elements that can take the focus now
-	 * @returns them, in no particular order
-	 */
-	private static candidates(): UIBaseElement[] {
-		return [...UIFocus._elements].filter((element) => {
-			return UIFocus.isCandidate(element);
-		});
-	}
-
-	/**
-	 * Where the focus starts: the first in reading order, row by row, left
-	 * to right. Two widgets whose tops are within half a height are on the
-	 * same row, so one a few pixels higher on the right does not come first.
-	 * @returns the element, or undefined when there is none
-	 */
-	private static first(): UIBaseElement | undefined {
-		let first: UIBaseElement | undefined;
-		for (const candidate of UIFocus.candidates()) {
-			if (first === undefined) {
-				first = candidate;
-				continue;
-			}
-			const a = candidate.getBounds();
-			const b = first.getBounds();
-			const sameRow =
-				Math.abs(a.top - b.top) < Math.min(a.height, b.height) / 2;
-			if (sameRow ? a.left < b.left : a.top < b.top) {
-				first = candidate;
-			}
-		}
-		return first;
-	}
-
-	/**
-	 * The nearest candidate in a direction, edge to edge, a step sideways
-	 * counting double, so a narrow widget right below a wide one beats a
-	 * wide one further down.
-	 * @param from - the focused element
-	 * @param direction - which way
-	 * @returns the next element, or undefined when there is none that way
-	 */
-	private static next(
-		from: UIBaseElement,
-		direction: UINavAction,
-	): UIBaseElement | undefined {
-		const [dx, dy] = DIRECTIONS[direction];
-		const origin = from.getBounds();
-		let best: UIBaseElement | undefined;
-		let bestScore = Infinity;
-		for (const candidate of UIFocus.candidates()) {
-			if (candidate === from) {
-				continue;
-			}
-			const bounds = candidate.getBounds();
-			// past the focused one, centre to centre, that way
-			const ahead =
-				(bounds.centerX - origin.centerX) * dx +
-				(bounds.centerY - origin.centerY) * dy;
-			if (ahead <= 1) {
-				continue;
-			}
-			const gap =
-				dx !== 0
-					? Math.max(
-							0,
-							dx > 0 ? bounds.left - origin.right : origin.left - bounds.right,
-						)
-					: Math.max(
-							0,
-							dy > 0 ? bounds.top - origin.bottom : origin.top - bounds.bottom,
-						);
-			const side =
-				dx !== 0
-					? Math.max(0, bounds.top - origin.bottom, origin.top - bounds.bottom)
-					: Math.max(0, bounds.left - origin.right, origin.left - bounds.right);
-			// the centres break a tie
-			const score = gap + side * 2 + ahead * 0.01;
-			if (score < bestScore) {
-				bestScore = score;
-				best = candidate;
-			}
-		}
-		return best;
-	}
-
-	/**
-	 * scroll each scrolling panel holding an element to show it, with room
-	 * for the ring
-	 * @param element - the element
-	 */
-	private static scrollIntoView(element: UIBaseElement): void {
-		let child: Renderable = element;
-		for (
-			let node = element.ancestor as Renderable | undefined;
-			node !== undefined && node !== null;
-			node = node.ancestor as Renderable | undefined
-		) {
-			const panel = node as Renderable & {
-				scroll?: string;
-				scrollToChild?: (child: Renderable, margin?: number) => unknown;
-			};
-			if (
-				panel.scroll !== undefined &&
-				panel.scroll !== "none" &&
-				typeof panel.scrollToChild === "function"
-			) {
-				panel.scrollToChild(child, 10);
-			}
-			child = node;
+		const a = candidate.getBounds();
+		const b = best.getBounds();
+		const sameRow = Math.abs(a.top - b.top) < Math.min(a.height, b.height) / 2;
+		if (sameRow ? a.left < b.left : a.top < b.top) {
+			best = candidate;
 		}
 	}
+	return best;
+}
 
-	/**
-	 * press accept on the focused element: it goes down, as under a pointer
-	 * @param source - the input pressing it, so only that one releases it
-	 */
-	private static acceptDown(source: "key" | "pad"): void {
-		UIFocus._ringVisible = true;
-		const focused = UIFocus._focused;
+/**
+ * The nearest candidate in a direction, edge to edge, a step sideways
+ * counting double, so a narrow widget right below a wide one beats a wide
+ * one further down.
+ * @param from - the focused element
+ * @param direction - which way
+ * @returns the next element, or undefined when there is none that way
+ */
+function next(
+	from: UIBaseElement,
+	direction: UINavAction,
+): UIBaseElement | undefined {
+	const [dx, dy] = DIRECTIONS[direction];
+	const origin = from.getBounds();
+	let best: UIBaseElement | undefined;
+	let bestScore = Infinity;
+	for (const candidate of candidates()) {
+		if (candidate === from) {
+			continue;
+		}
+		const bounds = candidate.getBounds();
+		// past the focused one, centre to centre, that way
+		const ahead =
+			(bounds.centerX - origin.centerX) * dx +
+			(bounds.centerY - origin.centerY) * dy;
+		if (ahead <= 1) {
+			continue;
+		}
+		const gap =
+			dx !== 0
+				? Math.max(
+						0,
+						dx > 0 ? bounds.left - origin.right : origin.left - bounds.right,
+					)
+				: Math.max(
+						0,
+						dy > 0 ? bounds.top - origin.bottom : origin.top - bounds.bottom,
+					);
+		const side =
+			dx !== 0
+				? Math.max(0, bounds.top - origin.bottom, origin.top - bounds.bottom)
+				: Math.max(0, bounds.left - origin.right, origin.left - bounds.right);
+		// the centres break a tie
+		const score = gap + side * 2 + ahead * 0.01;
+		if (score < bestScore) {
+			bestScore = score;
+			best = candidate;
+		}
+	}
+	return best;
+}
+
+/**
+ * scroll each scrolling panel holding an element to show it, with room for
+ * the ring
+ * @param element - the element
+ */
+function scrollIntoView(element: UIBaseElement): void {
+	let child: Renderable = element;
+	for (
+		let node = element.ancestor as Renderable | undefined;
+		node !== undefined && node !== null;
+		node = node.ancestor as Renderable | undefined
+	) {
+		const panel = node as Renderable & {
+			scroll?: string;
+			scrollToChild?: (child: Renderable, margin?: number) => unknown;
+		};
 		if (
-			UIFocus._accept === undefined &&
-			focused !== undefined &&
-			UIFocus.isCandidate(focused)
+			panel.scroll !== undefined &&
+			panel.scroll !== "none" &&
+			typeof panel.scrollToChild === "function"
 		) {
-			UIFocus._accept = source;
-			UIFocus._pressed = focused;
-			focused.focusPress();
+			panel.scrollToChild(child, 10);
+		}
+		child = node;
+	}
+}
+
+/**
+ * press accept on the focused element: it goes down, as under a pointer
+ * @param source - the input pressing it, so only that one releases it
+ */
+function acceptDown(source: "key" | "pad"): void {
+	ringShown = true;
+	if (accepting === undefined && owner !== undefined && isCandidate(owner)) {
+		accepting = source;
+		pressed = owner;
+		owner.focusPress();
+	}
+}
+
+/**
+ * release accept: the element comes up and acts, as on a click
+ * @param source - the input letting it go
+ */
+function acceptUp(source: "key" | "pad"): void {
+	if (accepting === source) {
+		const element = pressed;
+		accepting = undefined;
+		pressed = undefined;
+		element?.focusRelease();
+	}
+}
+
+/**
+ * a key down
+ * @param _action - the action bound to it, unused
+ * @param keyCode - the key
+ */
+function onKeyDown(_action: string | undefined, keyCode: number): void {
+	if (isAcceptKey(keyCode)) {
+		acceptDown("key");
+		return;
+	}
+	for (const action of Object.keys(KEYS) as UINavAction[]) {
+		if (KEYS[action] === keyCode) {
+			navigate(action);
 		}
 	}
+}
 
-	/**
-	 * release accept: the widget comes up and acts, as on a click
-	 * @param source - the input letting it go
-	 */
-	private static acceptUp(source: "key" | "pad"): void {
-		if (UIFocus._accept === source) {
-			const pressed = UIFocus._pressed;
-			UIFocus._accept = undefined;
-			UIFocus._pressed = undefined;
-			pressed?.focusRelease();
-		}
+/**
+ * a key up
+ * @param _action - the action bound to it, unused
+ * @param keyCode - the key
+ */
+function onKeyUp(_action: string | undefined, keyCode: number): void {
+	if (isAcceptKey(keyCode)) {
+		acceptUp("key");
 	}
+}
 
-	private static readonly _onKeyDown = (
-		_action: string | undefined,
-		keyCode: number,
-	): void => {
-		if (ACCEPT_KEYS.includes(keyCode)) {
-			UIFocus.acceptDown("key");
-			return;
-		}
-		for (const action of Object.keys(KEYS) as UINavAction[]) {
-			if (KEYS[action] === keyCode) {
-				UIFocus.navigate(action);
-			}
-		}
-	};
+/** the mouse moved: the ring hides until the next key */
+function onPointer(): void {
+	ringShown = false;
+}
 
-	private static readonly _onKeyUp = (
-		_action: string | undefined,
-		keyCode: number,
-	): void => {
-		if (ACCEPT_KEYS.includes(keyCode)) {
-			UIFocus.acceptUp("key");
+/** read the D-pad direction and the A button, across every pad */
+function readPad(): void {
+	const B = GAMEPAD.BUTTONS;
+	let held = "";
+	let accept = false;
+	for (const gamepad of readGamepads()) {
+		if (gamepad === null) {
+			continue;
 		}
-	};
-
-	private static readonly _onPointer = (): void => {
-		UIFocus._ringVisible = false;
-	};
-
-	/**
-	 * Read the D-pad direction and the A button across every pad into
-	 * `_pad`.
-	 */
-	private static readPad(): void {
-		const B = GAMEPAD.BUTTONS;
-		let held = "";
-		let accept = false;
-		for (const pad of readGamepads()) {
-			if (pad === null) {
-				continue;
-			}
-			const pressed = (code: number) => {
-				return pad.buttons[code]?.pressed ?? false;
-			};
-			if (pressed(B.UP)) {
-				held = "up";
-			} else if (pressed(B.DOWN)) {
-				held = "down";
-			} else if (pressed(B.LEFT)) {
-				held = "left";
-			} else if (pressed(B.RIGHT)) {
-				held = "right";
-			}
-			accept ||= pressed(B.FACE_1);
+		const down = (code: number) => {
+			return gamepad.buttons[code]?.pressed ?? false;
+		};
+		if (down(B.UP)) {
+			held = "up";
+		} else if (down(B.DOWN)) {
+			held = "down";
+		} else if (down(B.LEFT)) {
+			held = "left";
+		} else if (down(B.RIGHT)) {
+			held = "right";
 		}
-		UIFocus._pad.held = held;
-		UIFocus._pad.accept = accept;
+		accept ||= down(B.FACE_1);
 	}
+	pad.held = held;
+	pad.accept = accept;
+}
 
-	/**
-	 * read the pads once a frame: a D-pad press moves once, A presses
-	 */
-	private static readonly _onFrame = (): void => {
-		const before = { ...UIFocus._pad };
-		UIFocus.readPad();
-		const now = UIFocus._pad;
-		if (now.held !== "" && now.held !== before.held) {
-			UIFocus.navigate(now.held as UINavAction);
-		}
-		if (now.accept && !before.accept) {
-			UIFocus.acceptDown("pad");
-		} else if (!now.accept && before.accept) {
-			UIFocus.acceptUp("pad");
-		}
-	};
+/** once a frame: a D-pad press moves once, A presses and releases */
+function onFrame(): void {
+	const before = { held: pad.held, accept: pad.accept };
+	readPad();
+	if (pad.held !== "" && pad.held !== before.held) {
+		navigate(pad.held as UINavAction);
+	}
+	if (pad.accept && !before.accept) {
+		acceptDown("pad");
+	} else if (!pad.accept && before.accept) {
+		acceptUp("pad");
+	}
 }

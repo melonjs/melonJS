@@ -12,7 +12,13 @@ import type Renderer from "../../video/renderer.js";
 import Container from "../container.js";
 import { PanelPainter } from "./panelpaint.ts";
 import type { UINavAction } from "./uifocus.ts";
-import UIFocus from "./uifocus.ts";
+import {
+	focusOwner,
+	ringVisible,
+	setFocus,
+	trackElement,
+	untrackElement,
+} from "./uifocus.ts";
 
 /** draws the focus ring of whichever element has the focus */
 const ringPainter = new PanelPainter();
@@ -294,15 +300,61 @@ export default class UIBaseElement extends Container {
 	private _juice = 1;
 
 	/**
-	 * Whether keyboard and gamepad navigation can stop on this element: see
-	 * {@link UIFocus}. Buttons, checkboxes and sliders set it.
+	 * Whether this element can take the keyboard and gamepad focus: see
+	 * {@link UIBaseElement#focus}. Buttons, checkboxes and sliders set it.
 	 * @default false
 	 */
 	focusable = false;
 
+	/**
+	 * The colour of the ring drawn around the element with the focus.
+	 * @default "#ffcc33"
+	 */
+	static focusRingColor = "#ffcc33";
+
+	/**
+	 * The element with the keyboard and gamepad focus, if any.
+	 */
+	static get focusOwner(): UIBaseElement | undefined {
+		return focusOwner();
+	}
+
 	/** whether this element has the keyboard and gamepad focus */
 	get focused(): boolean {
-		return UIFocus.focused === this;
+		return focusOwner() === this;
+	}
+
+	/**
+	 * Take the keyboard and gamepad focus, for a game played without a mouse
+	 * or a touch screen.
+	 *
+	 * Nothing has the focus until a game gives it to an element, and until
+	 * then the arrow keys and the pad are left alone. From then on the arrows
+	 * or a pad's D-pad move the focus to the nearest focusable element that
+	 * way, and Enter, Space or the pad's A press the focused one as a click
+	 * does; a slider steps on left and right instead. A ring shows the focus,
+	 * and hides while the mouse is used. A focused element in a scrolling
+	 * panel is scrolled into view.
+	 *
+	 * Does nothing on an element that is not `focusable`.
+	 * @example
+	 * // a menu played with the keyboard or a pad: start on Play
+	 * playButton.focus();
+	 */
+	focus(): void {
+		if (this.focusable) {
+			setFocus(this);
+		}
+	}
+
+	/**
+	 * Give up the focus, if this element has it. With nothing focused, the
+	 * arrow keys and the pad are left to the game again.
+	 */
+	blur(): void {
+		if (this.focused) {
+			setFocus(undefined);
+		}
 	}
 
 	/**
@@ -354,7 +406,7 @@ export default class UIBaseElement extends Container {
 		if (!this.released && this.pressScale !== 1) {
 			target = this.pressScale;
 		} else if (
-			(this.hover || (this.focused && UIFocus.ringVisible)) &&
+			(this.hover || (this.focused && ringVisible())) &&
 			this._enabled
 		) {
 			target = this.hoverScale;
@@ -387,11 +439,11 @@ export default class UIBaseElement extends Container {
 			renderer.scale(this._juice, this._juice);
 			renderer.translate(-cx, -cy);
 		}
-		if (UIFocus.ringVisible && UIFocus.focused === this) {
+		if (ringVisible() && focusOwner() === this) {
 			// 3 pixels wide, 3 pixels out from the widget
 			const pad = 6;
 			const alpha = renderer.globalAlpha();
-			ringPainter.paint(renderer, UIFocus.ringColor, alpha);
+			ringPainter.paint(renderer, UIBaseElement.focusRingColor, alpha);
 			ringPainter.border(
 				renderer,
 				this.pos.x - pad,
@@ -660,7 +712,7 @@ export default class UIBaseElement extends Container {
 		});
 
 		// every element, so one made focusable later takes part too
-		UIFocus._add(this);
+		trackElement(this);
 
 		// call the parent function
 		super.onActivateEvent();
@@ -686,7 +738,7 @@ export default class UIBaseElement extends Container {
 		// the object is being remove from his parent
 		// container before the leave function is called
 		this.stopListeningForDrag();
-		UIFocus._remove(this);
+		untrackElement(this);
 
 		// call the parent function
 		super.onDeactivateEvent();

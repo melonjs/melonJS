@@ -16,7 +16,6 @@ import {
 	Text,
 	TextureAtlas,
 	UICheckbox,
-	UIFocus,
 	UIPanel,
 	UISlider,
 	UITextButton,
@@ -195,13 +194,13 @@ class PlayScreen extends Stage {
 		const background = new ColorLayer("background", "rgba(248, 194, 40, 1.0)");
 		app.world.addChild(background, 0);
 
-		this.addOptions(app, background);
+		const first = this.addOptions(app, background);
 		this.addBars(app);
 		this.addLevels(app);
 
-		// the arrow keys or a pad's D-pad move between the widgets, Enter or
-		// the pad's A button acts on the one with the focus
-		UIFocus.enable();
+		// keyboard and gamepad play: with the focus on a widget, the arrows or
+		// a pad's D-pad move between them, Enter or the pad's A press one
+		first.focus();
 		app.world.addChild(
 			new Text(20, 575, {
 				font: "kenpixel",
@@ -220,6 +219,7 @@ class PlayScreen extends Stage {
 	 * out as a column by the panel itself.
 	 * @param app - the application
 	 * @param background - the backdrop the video button recolours
+	 * @returns the first widget, where the keyboard focus starts
 	 */
 	private addOptions(app: Application, background: ColorLayer) {
 		const frame = framed(20, 20, 380, 100, "OPTIONS");
@@ -303,6 +303,7 @@ class PlayScreen extends Stage {
 		panel.addChild(video);
 		panel.addChild(actions);
 		app.world.addChild(panel, 1);
+		return music;
 	}
 
 	/**
@@ -501,7 +502,6 @@ class PlayScreen extends Stage {
 	 */
 	override onDestroyEvent() {
 		audio.stopTrack();
-		UIFocus.disable();
 	}
 }
 

@@ -1,12 +1,4 @@
-import {
-	afterAll,
-	afterEach,
-	beforeAll,
-	describe,
-	expect,
-	it,
-	vi,
-} from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import {
 	Application,
 	boot,
@@ -16,13 +8,14 @@ import {
 	ProgressBar,
 	Renderable,
 	TextureAtlas,
+	UIBaseElement,
 	UICheckbox,
-	UIFocus,
 	UIPanel,
 	UISlider,
 	UITextButton,
 	video,
 } from "../src/index.js";
+import { ringVisible } from "../src/renderable/ui/uifocus.ts";
 import { SkinDrawer } from "../src/renderable/ui/uiskin.ts";
 
 // The widgets of #1722: the skinned button, the checkbox, the slider, and
@@ -1238,7 +1231,7 @@ describe("UI widgets", () => {
 		});
 	});
 
-	describe("UIFocus", () => {
+	describe("keyboard and gamepad focus", () => {
 		const key = (code, up = false) => {
 			event.emit(up ? event.KEYUP : event.KEYDOWN, undefined, code);
 		};
@@ -1268,30 +1261,30 @@ describe("UI widgets", () => {
 			return { panel, a, b, c, d };
 		};
 
-		beforeAll(() => {
-			UIFocus.enable();
-		});
-		afterAll(() => {
-			UIFocus.disable();
-		});
 		afterEach(() => {
-			UIFocus.focus(undefined);
+			UIBaseElement.focusOwner?.blur();
 		});
 
-		it("the first arrow focuses the first widget, the next ones move", () => {
-			const { a, b, c } = column();
+		it("leaves the arrows alone until a widget takes the focus", () => {
+			column();
 			press(input.KEY.DOWN);
-			expect(UIFocus.focused).toBe(a);
+			expect(UIBaseElement.focusOwner).toBeUndefined();
+		});
+
+		it("the arrows move the focus once a widget has it", () => {
+			const { a, b, c } = column();
+			a.focus();
+			expect(UIBaseElement.focusOwner).toBe(a);
 			expect(a.focused).toBe(true);
 			press(input.KEY.DOWN);
-			expect(UIFocus.focused).toBe(b);
+			expect(UIBaseElement.focusOwner).toBe(b);
 			press(input.KEY.DOWN);
-			expect(UIFocus.focused).toBe(c);
+			expect(UIBaseElement.focusOwner).toBe(c);
 			press(input.KEY.UP);
-			expect(UIFocus.focused).toBe(b);
+			expect(UIBaseElement.focusOwner).toBe(b);
 			// nothing to the right: the focus stays
 			press(input.KEY.RIGHT);
-			expect(UIFocus.focused).toBe(b);
+			expect(UIBaseElement.focusOwner).toBe(b);
 		});
 
 		it("accept clicks a button and toggles a checkbox", () => {
@@ -1300,14 +1293,14 @@ describe("UI widgets", () => {
 			a.onClickCallback = onClick;
 			const onChange = vi.fn();
 			c.onChange = onChange;
-			UIFocus.focus(a);
+			a.focus();
 			key(input.KEY.ENTER);
 			// down while held, as under a pointer
 			expect(a.released).toBe(false);
 			expect(onClick).not.toHaveBeenCalled();
 			key(input.KEY.ENTER, true);
 			expect(onClick).toHaveBeenCalledTimes(1);
-			UIFocus.focus(c);
+			c.focus();
 			press(input.KEY.SPACE);
 			expect(c.checked).toBe(true);
 			expect(onChange).toHaveBeenCalledWith(true, c);
@@ -1319,13 +1312,13 @@ describe("UI widgets", () => {
 			const onChangeEnd = vi.fn();
 			d.onChange = onChange;
 			d.onChangeEnd = onChangeEnd;
-			UIFocus.focus(d);
+			d.focus();
 			press(input.KEY.RIGHT);
 			press(input.KEY.RIGHT);
 			expect(d.value).toBe(2);
 			press(input.KEY.LEFT);
 			expect(d.value).toBe(1);
-			expect(UIFocus.focused).toBe(d);
+			expect(UIBaseElement.focusOwner).toBe(d);
 			expect(onChange).toHaveBeenCalledTimes(3);
 			expect(onChangeEnd).toHaveBeenCalledTimes(3);
 		});
@@ -1333,18 +1326,18 @@ describe("UI widgets", () => {
 		it("skips disabled widgets", () => {
 			const { a, b, c } = column();
 			b.enabled = false;
-			UIFocus.focus(a);
+			a.focus();
 			press(input.KEY.DOWN);
-			expect(UIFocus.focused).toBe(c);
+			expect(UIBaseElement.focusOwner).toBe(c);
 		});
 
 		it("shows the ring after a key, and hides it when the mouse moves", () => {
 			const { a } = column();
-			UIFocus.focus(a);
+			a.focus();
 			press(input.KEY.DOWN);
-			expect(UIFocus.ringVisible).toBe(true);
+			expect(ringVisible()).toBe(true);
 			pointer("pointermove", 700, 500);
-			expect(UIFocus.ringVisible).toBe(false);
+			expect(ringVisible()).toBe(false);
 		});
 
 		it("scrolls a focused widget into view", () => {
@@ -1365,11 +1358,11 @@ describe("UI widgets", () => {
 					),
 				);
 			}
-			UIFocus.focus(buttons[0]);
+			buttons[0].focus();
 			for (let i = 0; i < 5; i++) {
 				press(input.KEY.DOWN);
 			}
-			expect(UIFocus.focused).toBe(buttons[5]);
+			expect(UIBaseElement.focusOwner).toBe(buttons[5]);
 			// its bottom, plus room for the ring, at the bottom of the view
 			expect(panel.scrollY).toBe(150);
 		});
@@ -1385,7 +1378,7 @@ describe("UI widgets", () => {
 			const pad = { id: "test pad", buttons, axes: [0, 0, 0, 0] };
 			input.addVirtualGamepad(pad, 0);
 			try {
-				UIFocus.focus(a);
+				a.focus();
 				let t = 1000;
 				const frame = () => {
 					t += 16;
@@ -1395,7 +1388,7 @@ describe("UI widgets", () => {
 				frame();
 				buttons[input.GAMEPAD.BUTTONS.DOWN].pressed = false;
 				frame();
-				expect(UIFocus.focused).toBe(b);
+				expect(UIBaseElement.focusOwner).toBe(b);
 				buttons[input.GAMEPAD.BUTTONS.FACE_1].pressed = true;
 				frame();
 				buttons[input.GAMEPAD.BUTTONS.FACE_1].pressed = false;
@@ -1406,23 +1399,15 @@ describe("UI widgets", () => {
 			}
 		});
 
-		it("starts on the left of a row, even if a widget on the right sits higher", () => {
-			const left = place(new UITextButton(20, 110, { text: "L" }));
-			const right = place(new UITextButton(500, 100, { text: "R" }));
-			press(input.KEY.DOWN);
-			expect(UIFocus.focused).toBe(left);
-			void right;
-		});
-
 		it("a press held while the focus moves is called off, not left down", () => {
 			const { a, b } = column();
 			const onClick = vi.fn();
 			a.onClickCallback = onClick;
-			UIFocus.focus(a);
+			a.focus();
 			key(input.KEY.ENTER);
 			press(input.KEY.DOWN);
 			key(input.KEY.ENTER, true);
-			expect(UIFocus.focused).toBe(b);
+			expect(UIBaseElement.focusOwner).toBe(b);
 			expect(a.released).toBe(true);
 			expect(onClick).not.toHaveBeenCalled();
 		});
@@ -1431,7 +1416,7 @@ describe("UI widgets", () => {
 			const { a } = column();
 			a.hoverScale = 1.2;
 			const scale = vi.spyOn(app.renderer, "scale");
-			UIFocus.focus(a);
+			a.focus();
 			pointer("pointermove", 700, 500);
 			for (let i = 0; i < 30; i++) {
 				a.update(16);
@@ -1448,7 +1433,7 @@ describe("UI widgets", () => {
 			a.bindKey = input.KEY.ENTER;
 			a.onClickCallback = ok;
 			b.onClickCallback = cancel;
-			UIFocus.focus(b);
+			b.focus();
 			press(input.KEY.UP);
 			press(input.KEY.DOWN);
 			press(input.KEY.ENTER);
@@ -1456,7 +1441,7 @@ describe("UI widgets", () => {
 			expect(ok).not.toHaveBeenCalled();
 		});
 
-		it("a pad's A already down when enabled is not a press", () => {
+		it("a pad's A already down when the focus is given is not a press", () => {
 			const { a } = column();
 			const onClick = vi.fn();
 			a.onClickCallback = onClick;
@@ -1467,10 +1452,8 @@ describe("UI widgets", () => {
 			const pad = { id: "held pad", buttons, axes: [0, 0, 0, 0] };
 			input.addVirtualGamepad(pad, 0);
 			try {
-				UIFocus.disable();
 				buttons[input.GAMEPAD.BUTTONS.FACE_1].pressed = true;
-				UIFocus.enable();
-				UIFocus.focus(a);
+				a.focus();
 				event.emit(event.GAME_BEFORE_UPDATE, 1);
 				buttons[input.GAMEPAD.BUTTONS.FACE_1].pressed = false;
 				event.emit(event.GAME_BEFORE_UPDATE, 2);
@@ -1486,8 +1469,8 @@ describe("UI widgets", () => {
 				new UIPanel(10, 10, { width: 50, height: 30 }),
 			);
 			own.focusable = true;
-			press(input.KEY.DOWN);
-			expect(UIFocus.focused).toBe(own);
+			own.focus();
+			expect(UIBaseElement.focusOwner).toBe(own);
 		});
 
 		it("does not go into a hidden panel", () => {
@@ -1495,30 +1478,35 @@ describe("UI widgets", () => {
 			const hidden = place(new UIPanel(100, 450, { width: 200, height: 60 }));
 			hidden.addChild(new UITextButton(0, 0, { text: "x" }));
 			hidden.isRenderable = false;
-			UIFocus.focus(a);
+			a.focus();
 			for (let i = 0; i < 5; i++) {
 				press(input.KEY.DOWN);
 			}
-			expect(UIFocus.focused?.ancestor).not.toBe(hidden);
+			expect(UIBaseElement.focusOwner?.ancestor).not.toBe(hidden);
 		});
 
 		it("moves on from a focused widget that was disabled since", () => {
 			const { a, b, c } = column();
-			UIFocus.focus(b);
+			b.focus();
 			b.enabled = false;
 			press(input.KEY.DOWN);
-			expect(UIFocus.focused).toBe(c);
+			expect(UIBaseElement.focusOwner).toBe(c);
 			void a;
 		});
 
-		it("is off until enabled, and drops the focus when disabled", () => {
+		it("blur() gives the keys back to the game", () => {
 			const { a } = column();
-			UIFocus.focus(a);
-			UIFocus.disable();
-			expect(UIFocus.focused).toBeUndefined();
+			a.focus();
+			a.blur();
+			expect(UIBaseElement.focusOwner).toBeUndefined();
 			press(input.KEY.DOWN);
-			expect(UIFocus.focused).toBeUndefined();
-			UIFocus.enable();
+			expect(UIBaseElement.focusOwner).toBeUndefined();
+		});
+
+		it("does nothing on an element that is not focusable", () => {
+			const panel = place(new UIPanel(0, 0, { width: 10, height: 10 }));
+			panel.focus();
+			expect(UIBaseElement.focusOwner).toBeUndefined();
 		});
 	});
 

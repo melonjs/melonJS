@@ -643,26 +643,28 @@ Both default to 1, which is still. The scale eases there and back by itself.
 Only the drawing scales, about the centre: the hit area and the layout stay
 put, so nothing jitters and the widgets around it do not move.
 
-### Keyboard and gamepad navigation: `UIFocus`
+### Keyboard and gamepad navigation: `focus()`
 
-For a game played without a mouse or a touch screen:
+For a game played without a mouse or a touch screen, give a widget the focus:
 
 ```js
-UIFocus.enable();              // in the stage's onResetEvent
-// ...and UIFocus.disable() in its onDestroyEvent
-UIFocus.focus(playButton);     // optional: where to start
+playButton.focus();     // where keyboard or gamepad play starts
 ```
 
-The arrow keys or a pad's D-pad move the focus to the nearest widget that
-way. Enter, Space or the pad's A press the focused widget as a click does: a
-button calls its `onClick` setting, a checkbox toggles. Left and right step a
-slider (up and down on a vertical one). A ring (`UIFocus.ringColor`) shows the
-focused widget once a key or the pad is used, and the mouse moving hides it.
-A focused widget in a scrolling panel is scrolled into view.
+From then on the arrow keys or a pad's D-pad move the focus to the nearest
+focusable widget that way. Enter, Space or the pad's A press the focused
+widget as a click does: a button calls its `onClick` setting, a checkbox
+toggles. Left and right step a slider (up and down on a vertical one). A ring
+(`UIBaseElement.focusRingColor`) shows the focus, and hides while the mouse
+is used. A focused widget in a scrolling panel is scrolled into view.
 
-It is off until enabled, so a game steering with the arrows is not surprised,
-and it reads the pad directly, so the game's own pad bindings are untouched.
-Buttons, checkboxes and sliders take part; a widget of your own sets
+There is nothing to turn on. Until a widget has the focus the arrow keys and
+the pad are left to the game, and `widget.blur()`, or the focused widget
+leaving the scene, gives them back. `UIBaseElement.focusOwner` is the widget
+with the focus. The pad is read directly, so the game's own pad bindings
+are untouched.
+
+Buttons, checkboxes and sliders are `focusable`. A widget of your own sets
 `focusable = true`, and overrides `onNavigate(direction)` (return `true` for
 what it handles) and `focusRelease()` for what Enter does.
 

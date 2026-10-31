@@ -56,7 +56,6 @@ import Trigger from "./renderable/trigger.js";
 import ProgressBar from "./renderable/ui/progressbar.ts";
 import UIBaseElement from "./renderable/ui/uibaseelement.ts";
 import UICheckbox from "./renderable/ui/uicheckbox.ts";
-import UIFocus from "./renderable/ui/uifocus.ts";
 import UIPanel from "./renderable/ui/uipanel.ts";
 import UISlider from "./renderable/ui/uislider.ts";
 import UISpriteElement from "./renderable/ui/uispriteelement.ts";
@@ -338,7 +337,6 @@ export {
 	timer,
 	UIBaseElement,
 	UICheckbox,
-	UIFocus,
 	UIPanel,
 	UISlider,
 	UISpriteElement,
