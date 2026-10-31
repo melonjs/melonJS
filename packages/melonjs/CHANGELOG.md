@@ -23,6 +23,7 @@
 - UI: `UITextButton#bitmapText`, for `label`
 
 ### Fixed
+- Color: `parseHex()` keeps all 8 bits of alpha instead of rounding to one decimal, and `toHex8()` rounds float alpha to the nearest byte instead of truncating it. Low alpha values no longer become fully transparent, and 4- or 8-digit hex colors round-trip without changing alpha (thanks @mmporong)
 - Input: a child cropped out of view by a container with `clipping`, or scrolled out of a `UIPanel`, no longer gets pointer events where it is not drawn
 - UI: a `UITextButton` moved after it was built draws its background where it is, not where it was first put
 - UI: a blocking `UIPanel` stays opaque to hover for as long as the pointer is on it, not only on the frame the pointer enters
