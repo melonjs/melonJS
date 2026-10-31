@@ -48,7 +48,12 @@ export class Line extends Polygon {
 
 		//(Cy - Ay) * (Bx - Ax) = (By - Ay) * (Cx - Ax)
 		return (
-			(_y - start.y) * (end.x - start.x) === (end.y - start.y) * (_x - start.x)
+			(_y - start.y) * (end.x - start.x) ===
+				(end.y - start.y) * (_x - start.x) &&
+			_x >= Math.min(start.x, end.x) &&
+			_x <= Math.max(start.x, end.x) &&
+			_y >= Math.min(start.y, end.y) &&
+			_y <= Math.max(start.y, end.y)
 		);
 	}
 
