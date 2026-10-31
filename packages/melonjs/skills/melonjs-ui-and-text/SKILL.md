@@ -638,7 +638,7 @@ events, so a button is made by overriding methods rather than by wiring
 | handler | fires | returns |
 |---|---|---|
 | `onClick(event)` | pressed | `false` to stop the event propagating |
-| `onRelease(event)` | pressed and released | `false` to stop propagating |
+| `onRelease(event)` | the press ends (up, left while held, or cancelled) | `false` to stop propagating |
 | `onOver(event)` | pointer enters | `false` to stop propagating |
 | `onOut(event)` | pointer leaves | — |
 | `onHold()` | pressed and held | — |
@@ -657,6 +657,10 @@ class MuteButton extends UISpriteElement {
     }
 }
 ```
+
+Like every UI element, the event carries on to whatever is under the button
+unless a handler returns `false`; the defaults let it through. (Before 20.13
+a `UISpriteElement` stopped presses and releases by default.)
 
 The pointer still has to reach it: a renderable with `isKinematic = true` — the
 default on a plain `Renderable` — is skipped by the broadphase and receives

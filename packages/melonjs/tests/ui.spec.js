@@ -228,24 +228,24 @@ describe("UI", () => {
 		});
 
 		describe("click callbacks", () => {
-			it("onClick() should return false by default", () => {
+			it("onClick() should return true by default, letting the event through", () => {
 				const canvas = Renderer.createCanvas(32, 32);
 				const el = new UISpriteElement(0, 0, {
 					image: canvas,
 					framewidth: 32,
 					frameheight: 32,
 				});
-				expect(el.onClick()).toBe(false);
+				expect(el.onClick()).toBe(true);
 			});
 
-			it("onRelease() should return false by default", () => {
+			it("onRelease() should return true by default, letting the event through", () => {
 				const canvas = Renderer.createCanvas(32, 32);
 				const el = new UISpriteElement(0, 0, {
 					image: canvas,
 					framewidth: 32,
 					frameheight: 32,
 				});
-				expect(el.onRelease()).toBe(false);
+				expect(el.onRelease()).toBe(true);
 			});
 		});
 	});

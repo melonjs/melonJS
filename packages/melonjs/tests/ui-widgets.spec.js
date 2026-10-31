@@ -14,6 +14,7 @@ import {
 	UICheckbox,
 	UIPanel,
 	UISlider,
+	UISpriteElement,
 	UITextButton,
 	video,
 } from "../src/index.js";
@@ -2071,6 +2072,37 @@ describe("UI widgets", () => {
 				panel.scrollTo(0, 100);
 				panel.clearChildren();
 				expect([panel.scrollY, panel.maxScrollY]).toEqual([0, 0]);
+			});
+		});
+
+		describe("UISpriteElement", () => {
+			it("lets a press through like the other UI elements, unless onClick returns false", () => {
+				const behind = vi.fn();
+				const under = box(800, 600);
+				under.isKinematic = false;
+				under.depth = -10;
+				place(under);
+				input.registerPointerEvent("pointerdown", under, behind);
+				try {
+					const atlas = makeAtlas();
+					const icon = new UISpriteElement(110, 110, {
+						image: atlas,
+						region: "up",
+					});
+					place(icon);
+					pointer("pointermove", 110, 110);
+					pointer("pointerdown", 110, 110);
+					pointer("pointerup", 110, 110);
+					expect(behind).toHaveBeenCalledTimes(1);
+					icon.onClick = () => {
+						return false;
+					};
+					pointer("pointerdown", 110, 110);
+					pointer("pointerup", 110, 110);
+					expect(behind).toHaveBeenCalledTimes(1);
+				} finally {
+					input.releasePointerEvent("pointerdown", under, behind);
+				}
 			});
 		});
 

@@ -18,6 +18,7 @@
 ### Changed
 - UI: `UITextButton` no longer writes the size and alignment it worked out back into the settings object, so one object can make several buttons
 - UI: `UITextButton#label` is the button's text, a `BitmapText` or, with a CSS font, a `Text`
+- UI: `UISpriteElement` lets a press and a release through to what is under it by default, like every other UI element: its `onClick()` and `onRelease()` now return `true`. A subclass that relied on the old default to stop the event returns `false` from them
 
 ### Deprecated
 - UI: `UITextButton#bitmapText`, for `label`
