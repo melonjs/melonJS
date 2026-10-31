@@ -373,13 +373,18 @@ export default class UIBaseElement extends Container {
 	/**
 	 * Accept was pressed with the focus here: the widget goes down, as under
 	 * a pointer, and `onClick` runs with no event.
+	 * @returns whether it went down: not when disabled, or already held
 	 */
-	focusPress(): void {
+	focusPress(): boolean {
+		// not while the pointer already holds it: its release is the
+		// pointer's, and accept letting go must not complete that press
 		if (this._enabled && this.released) {
 			this.released = false;
 			this.isDirty = true;
 			this.onClick();
+			return true;
 		}
+		return false;
 	}
 
 	/**

@@ -1,10 +1,12 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import {
 	Application,
+	BitmapText,
 	boot,
 	Container,
 	event,
 	input,
+	loader,
 	ProgressBar,
 	Renderable,
 	TextureAtlas,
@@ -37,11 +39,11 @@ const at = (gameX, gameY) => {
 	};
 };
 
-const pointer = (type, gameX, gameY) => {
+const pointer = (type, gameX, gameY, pointerId = 1) => {
 	app.renderer.getCanvas().dispatchEvent(
 		new PointerEvent(type, {
 			...at(gameX, gameY),
-			pointerId: 1,
+			pointerId,
 			width: 1,
 			height: 1,
 			isPrimary: true,
@@ -152,6 +154,16 @@ describe("UI widgets", () => {
 			renderer: video.CANVAS,
 		});
 		await app.init();
+		await new Promise((resolve) => {
+			loader.preload(
+				[
+					{ name: "xolo12", type: "image", src: "/data/fnt/xolo12.png" },
+					{ name: "xolo12", type: "binary", src: "/data/fnt/xolo12.fnt" },
+				],
+				resolve,
+				false,
+			);
+		});
 	});
 
 	afterEach(() => {
@@ -832,18 +844,35 @@ describe("UI widgets", () => {
 
 		it("a clipping container hides its cropped children from the pointer", () => {
 			const box = place(new Container(100, 100, 100, 100));
+			box.floating = true;
 			box.clipping = true;
-			const b = new UITextButton(0, 150, {
-				text: "x",
-				borderWidth: 100,
-				borderHeight: 40,
+			const inside = new UITextButton(0, 10, {
+				text: "in",
+				width: 100,
+				height: 30,
 			});
-			const onClick = vi.fn();
-			b.onClickCallback = onClick;
-			box.addChild(b);
+			const cropped = new UITextButton(0, 150, {
+				text: "out",
+				width: 100,
+				height: 40,
+			});
+			const inClick = vi.fn();
+			const outClick = vi.fn();
+			inside.onClickCallback = inClick;
+			cropped.onClickCallback = outClick;
+			box.addChild(inside);
+			box.addChild(cropped);
 			syncBroadphase();
+			// shown: answers
+			click(150, 125);
+			expect(inClick).toHaveBeenCalledTimes(1);
+			// cropped away: does not
 			click(150, 270);
-			expect(onClick).not.toHaveBeenCalled();
+			expect(outClick).not.toHaveBeenCalled();
+			// and without the clipping it would have
+			box.clipping = false;
+			click(150, 270);
+			expect(outClick).toHaveBeenCalledTimes(1);
 		});
 	});
 
@@ -995,9 +1024,29 @@ describe("UI widgets", () => {
 		});
 
 		it("a held button keeps its hover colour unless given a pressed one", () => {
-			const b = new UITextButton(0, 0, { text: "x", hoverOnColor: "#123456" });
-			// left undefined, so the held button follows hoverOnColor
+			const b = place(
+				new UITextButton(100, 100, {
+					text: "x",
+					width: 100,
+					height: 40,
+					hoverOnColor: "#123456",
+				}),
+			);
+			const colors = [];
+			vi.spyOn(app.renderer, "setColor").mockImplementation((c) => {
+				colors.push(typeof c === "string" ? c : c);
+			});
+			pointer("pointermove", 150, 120);
+			pointer("pointerdown", 150, 120);
+			// left undefined, so the held button draws its hover colour
 			expect(b.pressedColor).toBeUndefined();
+			b.draw(app.renderer);
+			expect(colors[0]).toBe("#123456");
+			b.pressedColor = "#ff0000";
+			colors.length = 0;
+			b.draw(app.renderer);
+			expect(colors[0]).toBe("#ff0000");
+			pointer("pointerup", 150, 120);
 			const label = b.label;
 			b.bitmapText = label;
 			expect(b.label).toBe(label);
@@ -1510,6 +1559,563 @@ describe("UI widgets", () => {
 		});
 	});
 
+	describe("coverage", () => {
+		/** a plain 40x20 renderable, placed by its top left corner */
+		const box = (w = 40, h = 20) => {
+			const r = new Renderable(0, 0, w, h);
+			r.anchorPoint.set(0, 0);
+			return r;
+		};
+		const key = (code, up = false) => {
+			event.emit(up ? event.KEYUP : event.KEYDOWN, undefined, code);
+		};
+		afterEach(() => {
+			UIBaseElement.focusOwner?.blur();
+		});
+
+		describe("drop shadow under a faded parent", () => {
+			it("fades with the parent, and hands the skin the parent's alpha", () => {
+				const atlas = makeAtlas();
+				const renderer = app.renderer;
+				const alphas = [];
+				vi.spyOn(renderer, "fillRect").mockImplementation(() => {
+					alphas.push(renderer.globalAlpha());
+				});
+				let atSkin;
+				vi.spyOn(SkinDrawer.prototype, "draw").mockImplementation(() => {
+					atSkin = renderer.globalAlpha();
+				});
+				const panel = new UIPanel(0, 0, {
+					width: 100,
+					height: 50,
+					skin: { atlas, region: "up" },
+					shadowColor: "#00000080",
+					shadowBlur: 0,
+				});
+				renderer.setGlobalAlpha(0.5);
+				panel.draw(renderer);
+				renderer.setGlobalAlpha(1);
+				// one sharp layer: the colour's alpha times the parent's
+				expect(alphas[0]).toBeCloseTo(0.5 * (128 / 255), 2);
+				expect(atSkin).toBeCloseTo(0.5, 5);
+			});
+		});
+
+		describe("scrollbar", () => {
+			it("runs from the top of the view to its bottom as the content scrolls", () => {
+				const panel = place(
+					new UIPanel(0, 0, {
+						width: 200,
+						height: 100,
+						layout: "column",
+						gap: 0,
+						scroll: "vertical",
+					}),
+				);
+				for (let i = 0; i < 10; i++) {
+					panel.addChild(box(100, 40));
+				}
+				const bars = [];
+				vi.spyOn(app.renderer, "fill").mockImplementation((shape) => {
+					if (shape.width === 4) {
+						bars.push([shape.pos.x, shape.pos.y, shape.height]);
+					}
+				});
+				panel.draw(app.renderer);
+				// 100 / (100 + 300) of the view, at the top, 3 in from the edge
+				expect(bars.at(-1)).toEqual([193, 0, 25]);
+				panel.scrollTo(0, panel.maxScrollY);
+				panel.draw(app.renderer);
+				expect(bars.at(-1)).toEqual([193, 75, 25]);
+			});
+		});
+
+		describe("UISlider", () => {
+			it("the default value text follows a new step", () => {
+				const s = new UISlider(0, 0, {
+					showValue: true,
+					min: 0,
+					max: 10,
+					value: 5,
+				});
+				expect(textOf(s.valueText)).toBe("5.00");
+				s.step = 1;
+				expect(textOf(s.valueText)).toBe("5");
+				// a format of one's own is kept
+				s.valueFormat = (v) => {
+					return `${v}!`;
+				};
+				s.step = 0.5;
+				expect(textOf(s.valueText)).toBe("5!");
+			});
+
+			it("snaps inside a range that is not a whole number of steps, swaps min and max, ignores NaN", () => {
+				const s = new UISlider(0, 0, { min: 0, max: 10, step: 3, value: 10 });
+				expect(s.value).toBe(9);
+				const swapped = new UISlider(0, 0, { min: 10, max: 0 });
+				expect([swapped.min, swapped.max]).toEqual([0, 10]);
+				s.value = 6;
+				s.value = Number.NaN;
+				expect(s.value).toBe(6);
+			});
+
+			it("a vertical skinned slider draws its track, fill and thumb along it", () => {
+				const atlas = makeAtlas();
+				const spy = vi.spyOn(SkinDrawer.prototype, "draw");
+				const s = new UISlider(0, 0, {
+					orientation: "vertical",
+					length: 100,
+					value: 0.25,
+					// the thumb art is 16 wide and 12 tall
+					skin: {
+						atlas,
+						track: "up",
+						fill: "on",
+						thumb: "down",
+						thumbHover: "off",
+					},
+				});
+				s.draw(app.renderer);
+				const calls = spy.mock.calls.map((c) => {
+					return c.slice(1);
+				});
+				const [track, fill, thumb] = calls;
+				expect(track[0]).toBe("up");
+				// from the thumb's centre (6 + 0.75 * 88 = 72) down to the end
+				expect(fill.slice(0, 1).concat(fill.slice(2))).toEqual([
+					"on",
+					72,
+					16,
+					28,
+				]);
+				// across the slider at its own width, along it at its height
+				expect(thumb[0]).toBe("down");
+				expect(thumb.slice(3)).toEqual([16, 12]);
+				s.hover = true;
+				s.draw(app.renderer);
+				expect(spy.mock.calls.at(-1)[1]).toBe("off");
+			});
+
+			it("a cancelled drag ends, with onChangeEnd for what moved", () => {
+				const onChangeEnd = vi.fn();
+				const s = place(new UISlider(100, 100, { onChangeEnd }));
+				pointer("pointermove", 110, 110);
+				pointer("pointerdown", 110, 110);
+				pointer("pointermove", 200, 110);
+				window.dispatchEvent(
+					new PointerEvent("pointercancel", { pointerId: 1, bubbles: true }),
+				);
+				expect(s.dragging).toBe(false);
+				expect(onChangeEnd).toHaveBeenCalledTimes(1);
+			});
+
+			it("a second finger does not move the thumb another one drags", () => {
+				const s = place(new UISlider(100, 100, {}));
+				pointer("pointermove", 110, 110);
+				pointer("pointerdown", 110, 110);
+				const before = s.value;
+				pointer("pointermove", 290, 110, 2);
+				expect(s.value).toBe(before);
+				pointer("pointerup", 110, 110);
+			});
+
+			it("removed mid-drag, it stops listening to the window", () => {
+				const s = place(new UISlider(100, 100, {}));
+				const remove = vi.spyOn(window, "removeEventListener");
+				pointer("pointermove", 110, 110);
+				pointer("pointerdown", 110, 110);
+				app.world.removeChildNow(s);
+				expect(
+					remove.mock.calls.some((c) => {
+						return c[0] === "pointerup";
+					}),
+				).toBe(true);
+			});
+
+			it("a vertical slider steps on up and down, by a twentieth with no step", () => {
+				const s = place(new UISlider(100, 100, { orientation: "vertical" }));
+				s.focus();
+				key(input.KEY.UP);
+				key(input.KEY.UP, true);
+				expect(s.value).toBeCloseTo(0.05);
+				key(input.KEY.DOWN);
+				key(input.KEY.DOWN, true);
+				expect(s.value).toBe(0);
+				expect(UIBaseElement.focusOwner).toBe(s);
+			});
+		});
+
+		describe("UITextButton", () => {
+			it("draws its hover and disabled skin regions, or half alpha without one", () => {
+				const atlas = makeAtlas();
+				const renderer = app.renderer;
+				const regions = [];
+				vi.spyOn(SkinDrawer.prototype, "draw").mockImplementation(
+					(_r, region) => {
+						regions.push([region, renderer.globalAlpha()]);
+					},
+				);
+				const b = new UITextButton(0, 0, {
+					text: "x",
+					skin: { atlas, normal: "up", hover: "on", disabled: "off" },
+				});
+				b.hover = true;
+				b.draw(renderer);
+				expect(regions.at(-1)[0]).toBe("on");
+				b.enabled = false;
+				b.draw(renderer);
+				expect(regions.at(-1)).toEqual(["off", 1]);
+				const plain = new UITextButton(0, 0, {
+					text: "x",
+					skin: { atlas, normal: "up" },
+					enabled: false,
+				});
+				plain.draw(renderer);
+				expect(regions.at(-1)).toEqual(["up", 0.5]);
+			});
+
+			it("scales a bitmap font to fontSize, in pixels", () => {
+				const b = new UITextButton(0, 0, {
+					font: "xolo12",
+					text: "OK",
+					fontSize: 24,
+				});
+				expect(b.label).toBeInstanceOf(BitmapText);
+				expect(b.label.measureText("Ag").height).toBeCloseTo(24, 0);
+			});
+
+			it("Enter while the pointer holds the focused button does not click it", () => {
+				const onClick = vi.fn();
+				const b = place(
+					new UITextButton(100, 100, {
+						text: "x",
+						width: 100,
+						height: 40,
+						onClick,
+					}),
+				);
+				b.focus();
+				pointer("pointermove", 150, 120);
+				pointer("pointerdown", 150, 120);
+				key(input.KEY.ENTER);
+				key(input.KEY.ENTER, true);
+				pointer("pointermove", 500, 500);
+				pointer("pointerup", 500, 500);
+				expect(onClick).not.toHaveBeenCalled();
+			});
+		});
+
+		describe("UICheckbox", () => {
+			it("draws a box with a tick, and a radio button as a circle and a dot", () => {
+				const renderer = app.renderer;
+				const lines = vi.spyOn(renderer, "strokeLine");
+				const ellipses = vi.spyOn(renderer, "fillEllipse");
+				new UICheckbox(0, 0, { checked: true }).draw(renderer);
+				expect(lines).toHaveBeenCalledTimes(2);
+				new UICheckbox(0, 0, { group: "drawn-radio" }).draw(renderer);
+				expect(ellipses).toHaveBeenCalledTimes(1);
+				new UICheckbox(0, 0, { group: "drawn-radio", checked: true }).draw(
+					renderer,
+				);
+				expect(ellipses).toHaveBeenCalledTimes(3);
+			});
+
+			it("draws its hover skin regions", () => {
+				const atlas = makeAtlas();
+				const spy = vi.spyOn(SkinDrawer.prototype, "draw");
+				const cb = new UICheckbox(0, 0, {
+					skin: {
+						atlas,
+						on: "on",
+						off: "off",
+						hoverOn: "up",
+						hoverOff: "down",
+					},
+				});
+				cb.hover = true;
+				cb.draw(app.renderer);
+				expect(spy.mock.calls.at(-1)[1]).toBe("down");
+				cb.checked = true;
+				cb.draw(app.renderer);
+				expect(spy.mock.calls.at(-1)[1]).toBe("up");
+			});
+
+			it("drops its label when both texts are emptied, and makes one again", () => {
+				const cb = new UICheckbox(0, 0, { label: "Music" });
+				expect(cb.width).toBeGreaterThan(cb.boxSize);
+				cb.labelOn = "";
+				cb.labelOff = "";
+				expect(cb.label).toBeUndefined();
+				expect(cb.width).toBe(cb.boxSize);
+				cb.labelOff = "Back";
+				expect(textOf(cb.label)).toBe("Back");
+			});
+
+			it("a bitmap font label is scaled to fontSize", () => {
+				const cb = new UICheckbox(0, 0, {
+					font: "xolo12",
+					label: "x",
+					fontSize: 24,
+				});
+				expect(cb.label).toBeInstanceOf(BitmapText);
+				expect(cb.label.measureText("Ag").height).toBeCloseTo(24, 0);
+			});
+
+			it("radio groups: a checked newcomer wins, undefined leaves, Enter keeps it checked", () => {
+				const a = place(new UICheckbox(0, 0, { group: "g3", checked: true }));
+				const b = place(new UICheckbox(0, 40, { group: "g3", checked: true }));
+				expect([a.checked, b.checked]).toEqual([false, true]);
+				const onChange = vi.fn();
+				b.onChange = onChange;
+				b.focus();
+				key(input.KEY.ENTER);
+				key(input.KEY.ENTER, true);
+				expect(b.checked).toBe(true);
+				expect(onChange).not.toHaveBeenCalled();
+				b.group = undefined;
+				expect(UICheckbox.checkedIn("g3")).toBeUndefined();
+			});
+		});
+
+		describe("UIPanel", () => {
+			it("scrolls sideways, and a plain wheel scrolls a sideways-only panel", () => {
+				const panel = place(
+					new UIPanel(100, 100, {
+						width: 200,
+						height: 60,
+						layout: "row",
+						scroll: "horizontal",
+					}),
+				);
+				for (let i = 0; i < 6; i++) {
+					panel.addChild(box(60, 40));
+				}
+				syncBroadphase();
+				// 6 x 60 + 5 gaps of 8 = 400, in a 200 view
+				expect(panel.maxScrollX).toBe(200);
+				expect(panel.maxScrollY).toBe(0);
+				pointer("pointermove", 150, 130);
+				wheel(150, 130, 50);
+				expect(panel.scrollX).toBe(50);
+			});
+
+			it("scrolls both ways, and counts lines in a line-mode wheel", () => {
+				const panel = place(
+					new UIPanel(100, 100, {
+						width: 100,
+						height: 100,
+						layout: "grid",
+						columns: 2,
+						scroll: "both",
+					}),
+				);
+				for (let i = 0; i < 6; i++) {
+					panel.addChild(box(80, 80));
+				}
+				syncBroadphase();
+				expect(panel.maxScrollY).toBeGreaterThan(0);
+				pointer("pointermove", 150, 150);
+				app.renderer.getCanvas().dispatchEvent(
+					new WheelEvent("wheel", {
+						...at(150, 150),
+						deltaY: 3,
+						deltaMode: 1,
+						bubbles: true,
+						cancelable: true,
+					}),
+				);
+				// 3 lines of 16 pixels
+				expect(panel.scrollY).toBe(48);
+			});
+
+			it("at its end, a blocking panel keeps the wheel, a non-blocking one lets it through", () => {
+				const behind = vi.fn();
+				// a wide renderable under the panel, listening for the wheel
+				const under = box(800, 600);
+				// a kinematic renderable is left out of hit detection
+				under.isKinematic = false;
+				under.depth = -10;
+				place(under);
+				input.registerPointerEvent("wheel", under, behind);
+				// with nothing over it, it hears the wheel
+				wheel(150, 150, 50);
+				expect(behind).toHaveBeenCalledTimes(1);
+				behind.mockClear();
+				try {
+					const make = (blocking) => {
+						const panel = place(
+							new UIPanel(100, 100, {
+								width: 200,
+								height: 100,
+								layout: "column",
+								scroll: "vertical",
+								blocking,
+							}),
+						);
+						for (let i = 0; i < 6; i++) {
+							panel.addChild(box(100, 40));
+						}
+						panel.scrollTo(0, panel.maxScrollY);
+						syncBroadphase();
+						return panel;
+					};
+					const blocking = make(true);
+					pointer("pointermove", 150, 150);
+					wheel(150, 150, 50);
+					expect(behind).not.toHaveBeenCalled();
+					app.world.removeChildNow(blocking);
+					make(false);
+					syncBroadphase();
+					wheel(150, 150, 50);
+					expect(behind).toHaveBeenCalled();
+				} finally {
+					input.releasePointerEvent("wheel", under, behind);
+				}
+			});
+
+			it("a fling stops at the end of the content", () => {
+				const panel = place(
+					new UIPanel(100, 100, {
+						width: 200,
+						height: 100,
+						layout: "column",
+						gap: 0,
+						scroll: "vertical",
+					}),
+				);
+				for (let i = 0; i < 10; i++) {
+					panel.addChild(box(100, 40));
+				}
+				syncBroadphase();
+				const now = vi.spyOn(performance, "now");
+				let t = 1000;
+				now.mockImplementation(() => {
+					return t;
+				});
+				pointer("pointermove", 150, 190);
+				pointer("pointerdown", 150, 190);
+				for (let i = 1; i <= 4; i++) {
+					t += 8;
+					pointer("pointermove", 150, 190 - i * 20);
+				}
+				pointer("pointerup", 150, 110);
+				for (let i = 0; i < 300; i++) {
+					panel.update(16);
+				}
+				expect(panel.scrollY).toBe(panel.maxScrollY);
+			});
+
+			it("grid stretch fills the cells, and a row grows to fit with autoSize", () => {
+				const grid = place(
+					new UIPanel(0, 0, {
+						width: 220,
+						height: 200,
+						layout: "grid",
+						columns: 2,
+						padding: 10,
+						gap: 0,
+						align: "stretch",
+					}),
+				);
+				const b = grid.addChild(new UITextButton(0, 0, { text: "x" }));
+				expect(b.width).toBe(100);
+				const row = place(
+					new UIPanel(0, 0, {
+						width: 10,
+						height: 10,
+						layout: "row",
+						gap: 10,
+						autoSize: true,
+					}),
+				);
+				row.addChild(box(40, 20));
+				row.addChild(box(40, 30));
+				expect([row.width, row.height]).toEqual([90, 30]);
+			});
+
+			it("clearChildren puts the scroll back to the start", () => {
+				const panel = place(
+					new UIPanel(0, 0, {
+						width: 200,
+						height: 100,
+						layout: "column",
+						scroll: "vertical",
+					}),
+				);
+				for (let i = 0; i < 6; i++) {
+					panel.addChild(box(100, 40));
+				}
+				panel.scrollTo(0, 100);
+				panel.clearChildren();
+				expect([panel.scrollY, panel.maxScrollY]).toEqual([0, 0]);
+			});
+		});
+
+		describe("focus", () => {
+			it("draws the ring while it shows, not once the mouse moves", () => {
+				const b = place(
+					new UITextButton(100, 100, { text: "x", width: 100, height: 40 }),
+				);
+				const stroke = vi.spyOn(app.renderer, "stroke");
+				b.focus();
+				b.preDraw(app.renderer);
+				b.postDraw(app.renderer);
+				const ring = stroke.mock.calls.length;
+				expect(ring).toBeGreaterThan(0);
+				pointer("pointermove", 700, 500);
+				b.preDraw(app.renderer);
+				b.postDraw(app.renderer);
+				expect(stroke.mock.calls.length).toBe(ring);
+			});
+
+			it("the focused widget leaving the scene gives the keys back", () => {
+				const panel = place(
+					new UIPanel(0, 0, { width: 200, height: 200, layout: "column" }),
+				);
+				const a = panel.addChild(new UITextButton(0, 0, { text: "a" }));
+				panel.addChild(new UITextButton(0, 0, { text: "b" }));
+				a.focus();
+				key(input.KEY.ENTER);
+				app.world.removeChildNow(panel);
+				expect(UIBaseElement.focusOwner).toBeUndefined();
+				key(input.KEY.ENTER, true);
+				key(input.KEY.DOWN);
+				expect(UIBaseElement.focusOwner).toBeUndefined();
+			});
+
+			it("hears a virtual pad sharing a slot with a real one", () => {
+				const panel = place(
+					new UIPanel(0, 0, { width: 200, height: 200, layout: "column" }),
+				);
+				const a = panel.addChild(new UITextButton(0, 0, { text: "a" }));
+				const b = panel.addChild(new UITextButton(0, 0, { text: "b" }));
+				const idle = () => {
+					const buttons = [];
+					for (let i = 0; i < 17; i++) {
+						buttons.push({ pressed: false, value: 0 });
+					}
+					return buttons;
+				};
+				const real = { id: "real", buttons: idle(), axes: [0, 0, 0, 0] };
+				const virtual = { id: "virtual", buttons: idle(), axes: [0, 0, 0, 0] };
+				const original = navigator.getGamepads;
+				navigator.getGamepads = () => {
+					return [real, null, null, null];
+				};
+				input.addVirtualGamepad(virtual, 0);
+				try {
+					a.focus();
+					virtual.buttons[input.GAMEPAD.BUTTONS.DOWN].pressed = true;
+					event.emit(event.GAME_BEFORE_UPDATE, 1);
+					expect(UIBaseElement.focusOwner).toBe(b);
+				} finally {
+					input.removeVirtualGamepad(virtual);
+					navigator.getGamepads = original;
+				}
+			});
+		});
+	});
+
 	describe("API", () => {
 		it("enabled is shared by every widget, the panel included", () => {
 			const panel = new UIPanel(0, 0, { width: 10, height: 10 });
@@ -1531,7 +2137,8 @@ describe("UI widgets", () => {
 			};
 			const b = new UITextButton(0, 0, settings);
 			expect([b.width, b.height]).toEqual([120, 30]);
-			expect(b.label.fontSize ?? b.label.font).toBeDefined();
+			expect(b.label.fontSize).toBe(20);
+			expect(b.label.fillStyle.toHex().toLowerCase()).toBe("#ff0000");
 			// the settings are read, not written back
 			expect(Object.keys(settings)).toEqual([
 				"text",

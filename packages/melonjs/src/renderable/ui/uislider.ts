@@ -230,6 +230,8 @@ export default class UISlider extends UIBaseElement {
 
 	/** @ignore */
 	private _valueFormat: (value: number, ratio: number) => string;
+	/** whether the format is the default one, which follows the step */
+	private _defaultFormat: boolean;
 	/** @ignore */
 	private _min: number;
 	/** @ignore */
@@ -317,6 +319,7 @@ export default class UISlider extends UIBaseElement {
 		this.onChange = settings.onChange;
 		this.onChangeEnd = settings.onChangeEnd;
 		this._valueFormat = settings.valueFormat ?? defaultFormat(this._step);
+		this._defaultFormat = settings.valueFormat === undefined;
 
 		this.trackColor = settings.trackColor ?? "#00000033";
 		this.fillColor = settings.fillColor ?? "#2a7de1";
@@ -460,6 +463,10 @@ export default class UISlider extends UIBaseElement {
 
 	set step(v: number) {
 		this._step = Math.max(0, v);
+		if (this._defaultFormat) {
+			// the default shows as many decimals as the step has
+			this._valueFormat = defaultFormat(this._step);
+		}
 		this.resnap();
 	}
 
@@ -482,6 +489,7 @@ export default class UISlider extends UIBaseElement {
 
 	set valueFormat(format: (value: number, ratio: number) => string) {
 		this._valueFormat = format;
+		this._defaultFormat = false;
 		this.refreshValueText();
 	}
 

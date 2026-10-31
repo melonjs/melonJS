@@ -343,10 +343,14 @@ function scrollIntoView(element: UIBaseElement): void {
  */
 function acceptDown(source: "key" | "pad"): void {
 	ringShown = true;
-	if (accepting === undefined && owner !== undefined && isCandidate(owner)) {
+	if (
+		accepting === undefined &&
+		owner !== undefined &&
+		isCandidate(owner) &&
+		owner.focusPress()
+	) {
 		accepting = source;
 		pressed = owner;
-		owner.focusPress();
 	}
 }
 

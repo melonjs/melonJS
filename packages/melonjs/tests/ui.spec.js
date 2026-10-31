@@ -273,121 +273,50 @@ describe("UI", () => {
 			});
 		});
 
-		describe("property-wiring via stub subclass", () => {
-			// A subclass that captures and exposes the settings before BitmapText
-			// is constructed, letting us verify the property assignments that
-			// UITextButton performs before reaching the BitmapText call.
-			class UITextButtonStub extends UIBaseElement {
-				constructor(x, y, settings) {
-					super(x, y);
+		describe("property wiring", () => {
+			// the real class: it builds without a bitmap font, as a CSS one
+			const make = (settings = {}) => {
+				return new UITextButton(0, 0, { text: "OK", ...settings });
+			};
 
-					// Mirror the exact property-wiring from UITextButton constructor,
-					// stopping just before `new BitmapText(...)`.
-					this.bindKey = settings.bindKey || -1;
-
-					this.hoverOffColor =
-						settings.hoverOffColor || settings.backgroundColor || "#00aa0080";
-					this.hoverOnColor =
-						settings.hoverOnColor || settings.hoverColor || "#00ff00ff";
-
-					this.borderStrokeColor = settings.borderStrokeColor || "#000000";
-					this.textAlign = settings.textAlign || "center";
-					this.textBaseline = settings.textBaseline || "middle";
-				}
-			}
-
-			it("hoverOffColor should default to #00aa0080", () => {
-				const btn = new UITextButtonStub(0, 0, { font: "Arial", text: "OK" });
+			it("has its documented defaults", () => {
+				const btn = make();
 				expect(btn.hoverOffColor).toBe("#00aa0080");
-			});
-
-			it("hoverOnColor should default to #00ff00ff", () => {
-				const btn = new UITextButtonStub(0, 0, { font: "Arial", text: "OK" });
 				expect(btn.hoverOnColor).toBe("#00ff00ff");
-			});
-
-			it("borderStrokeColor should default to #000000", () => {
-				const btn = new UITextButtonStub(0, 0, { font: "Arial", text: "OK" });
 				expect(btn.borderStrokeColor).toBe("#000000");
-			});
-
-			it("textAlign should default to center", () => {
-				const btn = new UITextButtonStub(0, 0, { font: "Arial", text: "OK" });
 				expect(btn.textAlign).toBe("center");
-			});
-
-			it("textBaseline should default to middle", () => {
-				const btn = new UITextButtonStub(0, 0, { font: "Arial", text: "OK" });
 				expect(btn.textBaseline).toBe("middle");
-			});
-
-			it("bindKey should default to -1 when not provided", () => {
-				const btn = new UITextButtonStub(0, 0, { font: "Arial", text: "OK" });
 				expect(btn.bindKey).toBe(-1);
-			});
-
-			it("should apply custom hoverOffColor", () => {
-				const btn = new UITextButtonStub(0, 0, {
-					font: "Arial",
-					text: "Hi",
-					hoverOffColor: "#ff000080",
-				});
-				expect(btn.hoverOffColor).toBe("#ff000080");
-			});
-
-			it("should apply custom hoverOnColor", () => {
-				const btn = new UITextButtonStub(0, 0, {
-					font: "Arial",
-					text: "Hi",
-					hoverOnColor: "#0000ffff",
-				});
-				expect(btn.hoverOnColor).toBe("#0000ffff");
-			});
-
-			it("should apply custom borderStrokeColor", () => {
-				const btn = new UITextButtonStub(0, 0, {
-					font: "Arial",
-					text: "Hi",
-					borderStrokeColor: "#ffffff",
-				});
-				expect(btn.borderStrokeColor).toBe("#ffffff");
-			});
-
-			it("should apply a custom bindKey", () => {
-				const btn = new UITextButtonStub(0, 0, {
-					font: "Arial",
-					text: "Hi",
-					bindKey: "ENTER",
-				});
-				expect(btn.bindKey).toBe("ENTER");
-			});
-
-			it("should accept deprecated backgroundColor as hoverOffColor fallback", () => {
-				const btn = new UITextButtonStub(0, 0, {
-					font: "Arial",
-					text: "Hi",
-					backgroundColor: "#abcdef80",
-				});
-				expect(btn.hoverOffColor).toBe("#abcdef80");
-			});
-
-			it("should accept deprecated hoverColor as hoverOnColor fallback", () => {
-				const btn = new UITextButtonStub(0, 0, {
-					font: "Arial",
-					text: "Hi",
-					hoverColor: "#11223344",
-				});
-				expect(btn.hoverOnColor).toBe("#11223344");
-			});
-
-			it("floating should be true (inherited from UIBaseElement)", () => {
-				const btn = new UITextButtonStub(0, 0, { font: "Arial", text: "OK" });
+				expect(btn.pressedColor).toBeUndefined();
 				expect(btn.floating).toBe(true);
+				expect(btn.isKinematic).toBe(false);
+				expect(btn.focusable).toBe(true);
 			});
 
-			it("isKinematic should be false", () => {
-				const btn = new UITextButtonStub(0, 0, { font: "Arial", text: "OK" });
-				expect(btn.isKinematic).toBe(false);
+			it("applies custom colours", () => {
+				const btn = make({
+					hoverOffColor: "#11111180",
+					hoverOnColor: "#222222ff",
+					borderStrokeColor: "#333333",
+					pressedColor: "#444444",
+				});
+				expect(btn.hoverOffColor).toBe("#11111180");
+				expect(btn.hoverOnColor).toBe("#222222ff");
+				expect(btn.borderStrokeColor).toBe("#333333");
+				expect(btn.pressedColor).toBe("#444444");
+			});
+
+			it("takes borderColor over the older borderStrokeColor", () => {
+				const btn = make({
+					borderColor: "#aa0000",
+					borderStrokeColor: "#00aa00",
+				});
+				expect(btn.borderStrokeColor).toBe("#aa0000");
+			});
+
+			it("keeps a bindKey of 0, a valid key code", () => {
+				expect(make({ bindKey: 0 }).bindKey).toBe(0);
+				expect(make({ bindKey: "jump" }).bindKey).toBe("jump");
 			});
 		});
 
