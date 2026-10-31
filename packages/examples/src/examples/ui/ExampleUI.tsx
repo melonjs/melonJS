@@ -16,6 +16,7 @@ import {
 	Text,
 	TextureAtlas,
 	UICheckbox,
+	UIFocus,
 	UIPanel,
 	UISlider,
 	UITextButton,
@@ -72,6 +73,9 @@ const button = (
 		fontSize: 12,
 		text,
 		width,
+		// a little bounce under the pointer or the focus, and when pressed
+		hoverScale: 1.04,
+		pressScale: 0.96,
 		skin: {
 			atlas: texture,
 			normal: `${color}_button04`,
@@ -134,6 +138,7 @@ const checkbox = (
 		labelOn,
 		labelOff,
 		checked,
+		hoverScale: 1.04,
 		skin: {
 			atlas: texture,
 			on: "green_boxCheckmark",
@@ -193,6 +198,21 @@ class PlayScreen extends Stage {
 		this.addOptions(app, background);
 		this.addBars(app);
 		this.addLevels(app);
+
+		// the arrow keys or a pad's D-pad move between the widgets, Enter or
+		// the pad's A button acts on the one with the focus
+		UIFocus.enable();
+		app.world.addChild(
+			new Text(20, 575, {
+				font: "kenpixel",
+				size: 13,
+				fillStyle: "black",
+				textAlign: "left",
+				textBaseline: "bottom",
+				text: "Keyboard: arrows and Enter   Gamepad: D-pad and A",
+			}),
+			1,
+		);
 	}
 
 	/**
@@ -307,6 +327,8 @@ class PlayScreen extends Stage {
 			const pick = new UITextButton(0, 0, {
 				...FONT,
 				fontSize: 16,
+				hoverScale: 1.12,
+				pressScale: 0.9,
 				text: String(level),
 				skin: {
 					atlas: texture,
@@ -479,6 +501,7 @@ class PlayScreen extends Stage {
 	 */
 	override onDestroyEvent() {
 		audio.stopTrack();
+		UIFocus.disable();
 	}
 }
 

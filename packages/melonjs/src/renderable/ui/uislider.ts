@@ -9,11 +9,13 @@ import { off, on, POINTERMOVE } from "../../system/event.ts";
 import type Renderer from "../../video/renderer.js";
 import type { Paint } from "./panelpaint.ts";
 import { PanelPainter } from "./panelpaint.ts";
+import type { UIJuiceSettings } from "./uibaseelement.ts";
 import UIBaseElement, {
 	END_EVENTS,
 	endsPointer,
 	isPointerUp,
 } from "./uibaseelement.ts";
+import type { UINavAction } from "./uifocus.ts";
 import type { UILabel } from "./uilabel.ts";
 import { createLabel } from "./uilabel.ts";
 import type { UISkin } from "./uiskin.ts";
@@ -41,7 +43,7 @@ export interface UISliderSkin extends UISkin {
  * Everything {@link UISlider} takes.
  * @category UI
  */
-export interface UISliderSettings {
+export interface UISliderSettings extends UIJuiceSettings {
 	/**
 	 * the lowest value
 	 * @default 0
@@ -414,6 +416,9 @@ export default class UISlider extends UIBaseElement {
 
 		this._value = this.snap(settings.value ?? this._min);
 		this.refreshValueText();
+		this.focusable = true;
+		this.hoverScale = settings.hoverScale ?? 1;
+		this.pressScale = settings.pressScale ?? 1;
 		this.enabled = settings.enabled ?? true;
 	}
 
@@ -519,6 +524,33 @@ export default class UISlider extends UIBaseElement {
 			this.refreshValueText();
 			this.isDirty = true;
 		}
+	}
+
+	/**
+	 * Step with the keyboard or a pad while it has the focus: left and
+	 * right on a horizontal slider, up and down on a vertical one. A step
+	 * is `step`, or a twentieth of the range without one.
+	 * @param action - what the player asked for
+	 * @returns true for the directions along the slider
+	 */
+	override onNavigate(action: UINavAction): boolean {
+		const horizontal = this.orientation === "horizontal";
+		const sign =
+			action === (horizontal ? "right" : "up")
+				? 1
+				: action === (horizontal ? "left" : "down")
+					? -1
+					: 0;
+		if (sign === 0) {
+			return false;
+		}
+		if (this._enabled) {
+			const step = this._step > 0 ? this._step : (this._max - this._min) / 20;
+			if (this.setFromUser(this._value + sign * step)) {
+				this.onChangeEnd?.(this._value, this);
+			}
+		}
+		return true;
 	}
 
 	/**

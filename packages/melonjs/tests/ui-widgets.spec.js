@@ -1,4 +1,13 @@
-import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import {
+	afterAll,
+	afterEach,
+	beforeAll,
+	beforeEach,
+	describe,
+	expect,
+	it,
+	vi,
+} from "vitest";
 import {
 	Application,
 	boot,
@@ -9,6 +18,7 @@ import {
 	Renderable,
 	TextureAtlas,
 	UICheckbox,
+	UIFocus,
 	UIPanel,
 	UISlider,
 	UITextButton,
@@ -1157,6 +1167,286 @@ describe("UI widgets", () => {
 			expect(rounded[0]).toEqual([-8, -8, 116, 26]);
 			expect(rounded.length).toBeGreaterThan(1);
 			expect(sharp[0]).toEqual([0, 0, 100, 10]);
+		});
+	});
+
+	describe("juice", () => {
+		it("eases to hoverScale under the pointer and pressScale held", () => {
+			const b = place(
+				new UITextButton(100, 100, {
+					text: "OK",
+					width: 100,
+					height: 40,
+					hoverScale: 1.1,
+					pressScale: 0.9,
+				}),
+			);
+			const scale = vi.spyOn(app.renderer, "scale");
+			b.preDraw(app.renderer);
+			b.postDraw(app.renderer);
+			expect(scale).not.toHaveBeenCalled();
+			pointer("pointermove", 150, 120);
+			for (let i = 0; i < 60; i++) {
+				b.update(16);
+			}
+			b.preDraw(app.renderer);
+			b.postDraw(app.renderer);
+			expect(scale.mock.calls.at(-1)[0]).toBeCloseTo(1.1, 2);
+			pointer("pointerdown", 150, 120);
+			for (let i = 0; i < 60; i++) {
+				b.update(16);
+			}
+			b.preDraw(app.renderer);
+			b.postDraw(app.renderer);
+			expect(scale.mock.calls.at(-1)[0]).toBeCloseTo(0.9, 2);
+			pointer("pointerup", 150, 120);
+		});
+
+		it("scales only the drawing: the hit area stays", () => {
+			const b = place(
+				new UITextButton(100, 100, {
+					text: "OK",
+					width: 100,
+					height: 40,
+					hoverScale: 1.5,
+				}),
+			);
+			const before = b.getBounds().width;
+			pointer("pointermove", 150, 120);
+			for (let i = 0; i < 60; i++) {
+				b.update(16);
+			}
+			expect(b.getBounds().width).toBe(before);
+		});
+	});
+
+	describe("UIFocus", () => {
+		const key = (code, up = false) => {
+			event.emit(up ? event.KEYUP : event.KEYDOWN, undefined, code);
+		};
+		const press = (code) => {
+			key(code);
+			key(code, true);
+		};
+		const column = () => {
+			const panel = place(
+				new UIPanel(100, 100, {
+					width: 220,
+					height: 300,
+					layout: "column",
+					padding: 10,
+				}),
+			);
+			const a = panel.addChild(
+				new UITextButton(0, 0, { text: "A", width: 200 }),
+			);
+			const b = panel.addChild(
+				new UITextButton(0, 0, { text: "B", width: 200 }),
+			);
+			const c = panel.addChild(new UICheckbox(0, 0, { label: "C" }));
+			const d = panel.addChild(
+				new UISlider(0, 0, { min: 0, max: 10, step: 1 }),
+			);
+			return { panel, a, b, c, d };
+		};
+
+		beforeAll(() => {
+			UIFocus.enable();
+		});
+		afterAll(() => {
+			UIFocus.disable();
+		});
+		beforeEach(() => {
+			// as after a key press: the ring shows, so the next one moves
+			UIFocus.navigate("accept");
+		});
+		afterEach(() => {
+			UIFocus.focus(undefined);
+		});
+
+		it("the first arrow focuses the first widget, the next ones move", () => {
+			const { a, b, c } = column();
+			press(input.KEY.DOWN);
+			expect(UIFocus.focused).toBe(a);
+			expect(a.focused).toBe(true);
+			press(input.KEY.DOWN);
+			expect(UIFocus.focused).toBe(b);
+			press(input.KEY.DOWN);
+			expect(UIFocus.focused).toBe(c);
+			press(input.KEY.UP);
+			expect(UIFocus.focused).toBe(b);
+			// nothing to the right: the focus stays
+			press(input.KEY.RIGHT);
+			expect(UIFocus.focused).toBe(b);
+		});
+
+		it("accept clicks a button and toggles a checkbox", () => {
+			const { a, c } = column();
+			const onClick = vi.fn();
+			a.onClickCallback = onClick;
+			const onChange = vi.fn();
+			c.onChange = onChange;
+			a.focus();
+			key(input.KEY.ENTER);
+			// down while held, as under a pointer
+			expect(a.released).toBe(false);
+			expect(onClick).not.toHaveBeenCalled();
+			key(input.KEY.ENTER, true);
+			expect(onClick).toHaveBeenCalledTimes(1);
+			c.focus();
+			press(input.KEY.SPACE);
+			expect(c.checked).toBe(true);
+			expect(onChange).toHaveBeenCalledWith(true, c);
+		});
+
+		it("left and right step a slider, which keeps the focus", () => {
+			const { d } = column();
+			const onChange = vi.fn();
+			const onChangeEnd = vi.fn();
+			d.onChange = onChange;
+			d.onChangeEnd = onChangeEnd;
+			d.focus();
+			press(input.KEY.RIGHT);
+			press(input.KEY.RIGHT);
+			expect(d.value).toBe(2);
+			press(input.KEY.LEFT);
+			expect(d.value).toBe(1);
+			expect(UIFocus.focused).toBe(d);
+			expect(onChange).toHaveBeenCalledTimes(3);
+			expect(onChangeEnd).toHaveBeenCalledTimes(3);
+		});
+
+		it("skips disabled widgets, and follows focusNeighbors", () => {
+			const { a, b, c, d } = column();
+			b.enabled = false;
+			a.focus();
+			press(input.KEY.DOWN);
+			expect(UIFocus.focused).toBe(c);
+			c.focusNeighbors = { down: a };
+			press(input.KEY.DOWN);
+			expect(UIFocus.focused).toBe(a);
+			void d;
+		});
+
+		it("shows the ring after a key, and hides it when the mouse moves", () => {
+			const { a } = column();
+			a.focus();
+			press(input.KEY.DOWN);
+			expect(UIFocus.ringVisible).toBe(true);
+			pointer("pointermove", 700, 500);
+			expect(UIFocus.ringVisible).toBe(false);
+		});
+
+		it("a trapFocus panel keeps the focus in, and gives it back", () => {
+			const { a } = column();
+			a.focus();
+			const onBack = vi.fn();
+			const dialog = place(
+				new UIPanel(400, 100, {
+					width: 200,
+					height: 120,
+					layout: "column",
+					trapFocus: true,
+					onBack,
+				}),
+			);
+			const yes = dialog.addChild(new UITextButton(0, 0, { text: "Yes" }));
+			const no = dialog.addChild(new UITextButton(0, 0, { text: "No" }));
+			press(input.KEY.DOWN);
+			expect([yes, no]).toContain(UIFocus.focused);
+			// left would reach the column outside: it stays inside
+			press(input.KEY.LEFT);
+			expect([yes, no]).toContain(UIFocus.focused);
+			press(input.KEY.ESC);
+			expect(onBack).toHaveBeenCalledWith(dialog);
+			app.world.removeChildNow(dialog);
+			expect(UIFocus.focused).toBe(a);
+		});
+
+		it("scrolls a focused widget into view", () => {
+			const panel = place(
+				new UIPanel(100, 100, {
+					width: 200,
+					height: 100,
+					layout: "column",
+					gap: 0,
+					scroll: "vertical",
+				}),
+			);
+			const buttons = [];
+			for (let i = 0; i < 8; i++) {
+				buttons.push(
+					panel.addChild(
+						new UITextButton(0, 0, { text: `${i}`, width: 200, height: 40 }),
+					),
+				);
+			}
+			buttons[0].focus();
+			for (let i = 0; i < 5; i++) {
+				press(input.KEY.DOWN);
+			}
+			expect(UIFocus.focused).toBe(buttons[5]);
+			// its bottom, plus room for the ring, at the bottom of the view
+			expect(panel.scrollY).toBe(150);
+		});
+
+		it("a gamepad's D-pad moves the focus and A clicks", () => {
+			const { a, b } = column();
+			const onClick = vi.fn();
+			b.onClickCallback = onClick;
+			const buttons = [];
+			for (let i = 0; i < 17; i++) {
+				buttons.push({ pressed: false, value: 0 });
+			}
+			const pad = { id: "test pad", buttons, axes: [0, 0, 0, 0] };
+			input.addVirtualGamepad(pad, 0);
+			try {
+				a.focus();
+				let t = 1000;
+				const frame = () => {
+					t += 16;
+					event.emit(event.GAME_BEFORE_UPDATE, t);
+				};
+				buttons[input.GAMEPAD.BUTTONS.DOWN].pressed = true;
+				frame();
+				buttons[input.GAMEPAD.BUTTONS.DOWN].pressed = false;
+				frame();
+				expect(UIFocus.focused).toBe(b);
+				buttons[input.GAMEPAD.BUTTONS.FACE_1].pressed = true;
+				frame();
+				buttons[input.GAMEPAD.BUTTONS.FACE_1].pressed = false;
+				frame();
+				expect(onClick).toHaveBeenCalledTimes(1);
+			} finally {
+				input.removeVirtualGamepad(pad);
+			}
+		});
+
+		it("the first key after the mouse shows the ring without moving", () => {
+			const { a } = column();
+			a.focus();
+			pointer("pointermove", 700, 500);
+			press(input.KEY.DOWN);
+			expect(UIFocus.focused).toBe(a);
+			expect(UIFocus.ringVisible).toBe(true);
+		});
+
+		it("starts on the left of a row, even if a widget on the right sits higher", () => {
+			const left = place(new UITextButton(20, 110, { text: "L" }));
+			const right = place(new UITextButton(500, 100, { text: "R" }));
+			press(input.KEY.DOWN);
+			expect(UIFocus.focused).toBe(left);
+			void right;
+		});
+
+		it("is off until enabled, and drops the focus when disabled", () => {
+			const { a } = column();
+			a.focus();
+			UIFocus.disable();
+			expect(UIFocus.focused).toBeUndefined();
+			press(input.KEY.DOWN);
+			expect(UIFocus.focused).toBeUndefined();
+			UIFocus.enable();
 		});
 	});
 

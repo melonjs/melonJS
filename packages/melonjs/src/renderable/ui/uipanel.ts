@@ -13,7 +13,10 @@ import Container from "../container.js";
 import type Renderable from "../renderable.js";
 import type { Paint } from "./panelpaint.ts";
 import { PanelPainter } from "./panelpaint.ts";
+import type { UIJuiceSettings } from "./uibaseelement.ts";
 import UIBaseElement, { END_EVENTS, endsPointer } from "./uibaseelement.ts";
+import type { UINavAction } from "./uifocus.ts";
+import UIFocus from "./uifocus.ts";
 import type { UILabel } from "./uilabel.ts";
 import { createLabel } from "./uilabel.ts";
 import type { UISkin } from "./uiskin.ts";
@@ -60,7 +63,7 @@ export type UIPanelScroll = "none" | "vertical" | "horizontal" | "both";
  * Everything {@link UIPanel} takes.
  * @category UI
  */
-export interface UIPanelSettings {
+export interface UIPanelSettings extends UIJuiceSettings {
 	/** the panel's width, in pixels */
 	width: number;
 	/** the panel's height, in pixels */
@@ -191,6 +194,18 @@ export interface UIPanelSettings {
 	scroll?: UIPanelScroll;
 	/** called when the content scrolls, with the new offsets */
 	onScroll?: (scrollX: number, scrollY: number, panel: UIPanel) => void;
+	/**
+	 * Keep the keyboard and gamepad focus inside the panel while it is in
+	 * the scene, as a dialog should, and give it back where it was when the
+	 * panel goes. See {@link UIFocus}.
+	 * @default false
+	 */
+	trapFocus?: boolean;
+	/**
+	 * Called when the player cancels (Escape, or the pad's B) with the focus
+	 * inside the panel: close a dialog, go back a menu.
+	 */
+	onBack?: (panel: UIPanel) => void;
 	/**
 	 * the scrollbar, shown while the content does not fit
 	 * @default "#00000059"
@@ -334,6 +349,10 @@ export default class UIPanel extends UIBaseElement {
 	autoSize: boolean;
 	/** which ways the content scrolls */
 	scroll: UIPanelScroll;
+	/** keep the focus inside the panel while it is up */
+	readonly trapFocus: boolean;
+	/** called when the player cancels with the focus inside the panel */
+	onBack: ((panel: UIPanel) => void) | undefined;
 	/** called when the content scrolls, with the new offsets */
 	onScroll:
 		| ((scrollX: number, scrollY: number, panel: UIPanel) => void)
@@ -426,6 +445,11 @@ export default class UIPanel extends UIBaseElement {
 		this.blocking = settings.blocking ?? true;
 		this.bobAmplitude = settings.bobAmplitude ?? 0;
 		this.bobPeriod = settings.bobPeriod ?? 2000;
+		this.trapFocus = settings.trapFocus ?? false;
+		this.onBack = settings.onBack;
+		this.hoverScale = settings.hoverScale ?? 1;
+		this.pressScale = settings.pressScale ?? 1;
+
 		this.layout = settings.layout ?? "none";
 		this.columns = Math.max(1, Math.floor(settings.columns ?? 2));
 		this.padding = settings.padding ?? 0;
@@ -1132,27 +1156,31 @@ export default class UIPanel extends UIBaseElement {
 	/**
 	 * Scroll just enough to bring a child fully into view.
 	 * @param child - one of this panel's children
+	 * @param margin - room to leave around it, in pixels, such as for a
+	 * focus ring
 	 * @returns this panel
 	 */
-	scrollToChild(child: Renderable): this {
+	scrollToChild(child: Renderable, margin = 0): this {
 		if (child.ancestor !== this) {
 			return this;
 		}
 		const [vx, vy, vw, vh] = this.viewRect();
 		const box = this.measure(child);
-		const left = child.pos.x + box.ox;
-		const top = child.pos.y + box.oy;
+		const left = child.pos.x + box.ox - margin;
+		const top = child.pos.y + box.oy - margin;
+		const w = box.w + margin * 2;
+		const h = box.h + margin * 2;
 		let x = this._scrollX;
 		let y = this._scrollY;
 		if (left < vx) {
 			x -= vx - left;
-		} else if (left + box.w > vx + vw) {
-			x += Math.min(left - vx, left + box.w - (vx + vw));
+		} else if (left + w > vx + vw) {
+			x += Math.min(left - vx, left + w - (vx + vw));
 		}
 		if (top < vy) {
 			y -= vy - top;
-		} else if (top + box.h > vy + vh) {
-			y += Math.min(top - vy, top + box.h - (vy + vh));
+		} else if (top + h > vy + vh) {
+			y += Math.min(top - vy, top + h - (vy + vh));
 		}
 		return this.scrollTo(x, y);
 	}
@@ -1404,6 +1432,19 @@ export default class UIPanel extends UIBaseElement {
 	}
 
 	/**
+	 * Answer cancel with `onBack`, when there is one.
+	 * @param action - what the player asked for
+	 * @returns true when cancel was handled
+	 */
+	override onNavigate(action: UINavAction): boolean {
+		if (action === "cancel" && this.onBack !== undefined) {
+			this.onBack(this);
+			return true;
+		}
+		return false;
+	}
+
+	/**
 	 * Move a draggable panel, unless the press began on the content of a
 	 * scrolling one.
 	 * @ignore
@@ -1515,6 +1556,9 @@ export default class UIPanel extends UIBaseElement {
 	 */
 	override onActivateEvent(): void {
 		super.onActivateEvent();
+		if (this.trapFocus) {
+			UIFocus._pushScope(this);
+		}
 		registerPointerEvent("wheel", this, this._onWheel);
 		// `onOver` only fires on the frame the pointer crosses in; this keeps
 		// a blocking panel opaque to hover for as long as the pointer is on it
@@ -1528,6 +1572,9 @@ export default class UIPanel extends UIBaseElement {
 	 * @ignore
 	 */
 	override onDeactivateEvent(): void {
+		if (this.trapFocus) {
+			UIFocus._popScope(this);
+		}
 		releasePointerEvent("wheel", this);
 		releasePointerEvent("pointermove", this);
 		this.endPress();

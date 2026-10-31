@@ -8,6 +8,7 @@ import type Renderer from "../../video/renderer.js";
 import BitmapText from "../text/bitmaptext.js";
 import Text from "../text/text.js";
 import type { Paint } from "./panelpaint.ts";
+import type { UIJuiceSettings } from "./uibaseelement.ts";
 import UIBaseElement, { isPointerUp } from "./uibaseelement.ts";
 import type { UILabel } from "./uilabel.ts";
 import type { UISkin } from "./uiskin.ts";
@@ -38,7 +39,7 @@ export interface UITextButtonSkin extends UISkin {
  * Everything {@link UITextButton} takes.
  * @category UI
  */
-export interface UITextButtonSettings {
+export interface UITextButtonSettings extends UIJuiceSettings {
 	/**
 	 * The font: the name of a loaded bitmap font, or a CSS font family. A
 	 * name with a font image in the loader, or a `fontData` setting, is
@@ -407,6 +408,9 @@ export default class UITextButton extends UIBaseElement {
 		// add the label to the UI container
 		this.addChild(this.label);
 
+		this.focusable = true;
+		this.hoverScale = settings.hoverScale ?? 1;
+		this.pressScale = settings.pressScale ?? 1;
 		this.enabled = settings.enabled ?? true;
 	}
 
@@ -422,6 +426,17 @@ export default class UITextButton extends UIBaseElement {
 
 	set bitmapText(value: BitmapText) {
 		this.label = value;
+	}
+
+	/**
+	 * Accept let go with the focus here: a completed click.
+	 */
+	override focusRelease(): void {
+		const pressed = !this.released;
+		super.focusRelease();
+		if (pressed) {
+			this.completeClick();
+		}
 	}
 
 	/**

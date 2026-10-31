@@ -3,6 +3,7 @@ import type Pointer from "../../input/pointer.ts";
 import type Renderer from "../../video/renderer.js";
 import type { Paint } from "./panelpaint.ts";
 import { PanelPainter } from "./panelpaint.ts";
+import type { UIJuiceSettings } from "./uibaseelement.ts";
 import UIBaseElement, { isPointerUp } from "./uibaseelement.ts";
 import type { UILabel } from "./uilabel.ts";
 import { createLabel } from "./uilabel.ts";
@@ -32,7 +33,7 @@ export interface UICheckboxSkin extends UISkin {
  * Everything {@link UICheckbox} takes.
  * @category UI
  */
-export interface UICheckboxSettings {
+export interface UICheckboxSettings extends UIJuiceSettings {
 	/**
 	 * whether it starts checked
 	 * @default false
@@ -289,6 +290,9 @@ export default class UICheckbox extends UIBaseElement {
 		};
 		this.fitLabel();
 
+		this.focusable = true;
+		this.hoverScale = settings.hoverScale ?? 1;
+		this.pressScale = settings.pressScale ?? 1;
 		this.enabled = settings.enabled ?? true;
 	}
 
@@ -434,14 +438,35 @@ export default class UICheckbox extends UIBaseElement {
 	override release(event: Pointer): boolean | void {
 		const completed = !this.released && isPointerUp(event);
 		const result = super.release(event);
-		if (completed && this._enabled) {
-			// a radio button that is already checked stays checked
-			if (!(this._checked && this._joined !== undefined)) {
-				this.checked = !this._checked;
-				this.onChange?.(this._checked, this);
-			}
+		if (completed) {
+			this.userToggle();
 		}
 		return result;
+	}
+
+	/**
+	 * Accept let go with the focus here: toggle, as a click does.
+	 */
+	override focusRelease(): void {
+		const pressed = !this.released;
+		super.focusRelease();
+		if (pressed) {
+			this.userToggle();
+		}
+	}
+
+	/**
+	 * Toggle as the user, telling `onChange`; a checked radio button stays
+	 * checked.
+	 * @ignore
+	 * @internal
+	 */
+	private userToggle() {
+		if (!this._enabled || (this._checked && this._joined !== undefined)) {
+			return;
+		}
+		this.checked = !this._checked;
+		this.onChange?.(this._checked, this);
 	}
 
 	/**

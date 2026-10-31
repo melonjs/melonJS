@@ -8,7 +8,32 @@ import { vector2dPool } from "../../math/vector2d.ts";
 import * as device from "../../system/device.ts";
 import { off, on, POINTERMOVE } from "../../system/event.ts";
 import timer from "../../system/timer.ts";
+import type Renderer from "../../video/renderer.js";
 import Container from "../container.js";
+import { PanelPainter } from "./panelpaint.ts";
+import type { UINavAction } from "./uifocus.ts";
+import UIFocus from "./uifocus.ts";
+
+/** draws the focus ring of whichever element has the focus */
+const ringPainter = new PanelPainter();
+
+/**
+ * The bounce settings every UI widget takes: see
+ * {@link UIBaseElement#hoverScale}.
+ * @category UI
+ */
+export interface UIJuiceSettings {
+	/**
+	 * the scale the widget grows to under the pointer or with the focus;
+	 * `1`, the default, is still
+	 */
+	hoverScale?: number;
+	/** the scale it shrinks to while held down; `1`, the default, is still */
+	pressScale?: number;
+}
+
+/** how fast the bounce scale closes on its target, per millisecond */
+const JUICE_RATE = 1 / 60;
 
 /**
  * Whether a pointer event is the pointer coming up, rather than leaving or
@@ -248,6 +273,168 @@ export default class UIBaseElement extends Container {
 	protected _enabled = true;
 
 	/**
+	 * The scale the widget is drawn at under the pointer, or with the focus:
+	 * a little bounce, such as `1.05`. `1` leaves it still.
+	 *
+	 * Only the drawing scales, about the widget's centre: its hit area and
+	 * its place in a layout stay as they are, so nothing jitters or moves
+	 * the widgets around it. The scale eases there and back by itself.
+	 * @default 1
+	 */
+	hoverScale = 1;
+
+	/**
+	 * The scale the widget is drawn at while held down, such as `0.92`.
+	 * `1` leaves it still. See {@link UIBaseElement#hoverScale}.
+	 * @default 1
+	 */
+	pressScale = 1;
+
+	/** the scale drawn now, easing toward the one wanted */
+	private _juice = 1;
+
+	/**
+	 * Whether keyboard and gamepad navigation can stop on this element: see
+	 * {@link UIFocus}. Buttons, checkboxes and sliders set it.
+	 * @default false
+	 */
+	focusable = false;
+
+	/**
+	 * Where the focus goes from here, for a direction the nearest widget is
+	 * not the right answer to. A neighbour that cannot take the focus now is
+	 * skipped for the search.
+	 */
+	focusNeighbors:
+		| Partial<Record<"up" | "down" | "left" | "right", UIBaseElement>>
+		| undefined;
+
+	/** whether this element has the focus */
+	get focused(): boolean {
+		return UIFocus.focused === this;
+	}
+
+	/**
+	 * Give this element the focus. See {@link UIFocus.focus}.
+	 */
+	focus(): void {
+		UIFocus.focus(this);
+	}
+
+	/**
+	 * Called when this element gets the focus. To be extended.
+	 */
+	onFocus(): void {
+		// to be extended
+	}
+
+	/**
+	 * Called when this element loses the focus. To be extended.
+	 */
+	onBlur(): void {
+		// to be extended
+	}
+
+	/**
+	 * Answer a navigation action while this element, or one inside it, has
+	 * the focus: return `true` to say it was handled.
+	 *
+	 * A slider handles left and right by stepping, so the focus stays on it;
+	 * a panel can handle `"cancel"` to close. Unhandled, a direction moves
+	 * the focus to the nearest widget that way. Accept is not passed here:
+	 * it presses and releases the widget, as a click does, through
+	 * {@link UIBaseElement#focusPress} and {@link UIBaseElement#focusRelease}.
+	 * @param _action - what the player asked for
+	 * @returns true when handled
+	 */
+	onNavigate(_action: UINavAction): boolean {
+		return false;
+	}
+
+	/**
+	 * Accept was pressed with the focus here: the widget goes down, as under
+	 * a pointer, and `onClick` runs with no event.
+	 */
+	focusPress(): void {
+		if (this._enabled && this.released) {
+			this.released = false;
+			this.isDirty = true;
+			this.onClick();
+		}
+	}
+
+	/**
+	 * Accept was let go: the widget comes back up and `onRelease` runs. A
+	 * widget completes its action here, as on a click: a button calls its
+	 * `onClick` setting, a checkbox toggles.
+	 */
+	focusRelease(): void {
+		if (!this.released) {
+			this.released = true;
+			this.isDirty = true;
+			this.onRelease();
+		}
+	}
+
+	/**
+	 * Ease the bounce.
+	 * @param dt - time since the last frame, in milliseconds
+	 * @returns whether it needs redrawing
+	 */
+	override update(dt: number): boolean {
+		const dirty = super.update(dt);
+		let target = 1;
+		if (!this.released && this.pressScale !== 1) {
+			target = this.pressScale;
+		} else if ((this.hover || this.focused) && this._enabled) {
+			target = this.hoverScale;
+		}
+		if (this._juice === target) {
+			return dirty;
+		}
+		const step = 1 - Math.exp(-dt * JUICE_RATE * 12);
+		this._juice += (target - this._juice) * step;
+		if (Math.abs(target - this._juice) < 0.001) {
+			this._juice = target;
+		}
+		return true;
+	}
+
+	/**
+	 * Apply the bounce, and draw the focus ring, behind the widget.
+	 *
+	 * Here and not in `draw`: a container translates to its own position in
+	 * `draw`, so from `preDraw` on, the widget and the ring share the
+	 * parent's coordinates, whatever the widget does in its own `draw`.
+	 * @param renderer - the renderer to draw with
+	 */
+	override preDraw(renderer: Renderer): void {
+		super.preDraw(renderer);
+		if (this._juice !== 1) {
+			const cx = this.pos.x + this.width / 2;
+			const cy = this.pos.y + this.height / 2;
+			renderer.translate(cx, cy);
+			renderer.scale(this._juice, this._juice);
+			renderer.translate(-cx, -cy);
+		}
+		if (UIFocus.ringVisible && UIFocus.focused === this) {
+			const pad = UIFocus.ringPadding + UIFocus.ringWidth;
+			const alpha = renderer.globalAlpha();
+			ringPainter.paint(renderer, UIFocus.ringColor, alpha);
+			ringPainter.border(
+				renderer,
+				this.pos.x - pad,
+				this.pos.y - pad,
+				this.width + pad * 2,
+				this.height + pad * 2,
+				UIFocus.ringRadius,
+				UIFocus.ringWidth,
+			);
+			renderer.setGlobalAlpha(alpha);
+		}
+	}
+
+	/**
 	 * Whether the widget answers input: the switch to turn a widget off.
 	 *
 	 * Turning it off sets `isClickable`, calls off a press in progress
@@ -347,6 +534,9 @@ export default class UIBaseElement extends Container {
 	 */
 	enter(event: Pointer): boolean | void {
 		this.hover = true;
+		if (this.focusable) {
+			UIFocus._hovered(this);
+		}
 		this.isDirty = true;
 		if (this.isDraggable) {
 			this.listenForDrag();
@@ -501,6 +691,10 @@ export default class UIBaseElement extends Container {
 			this.leave(e);
 		});
 
+		if (this.focusable) {
+			UIFocus._add(this);
+		}
+
 		// call the parent function
 		super.onActivateEvent();
 	}
@@ -525,6 +719,7 @@ export default class UIBaseElement extends Container {
 		// the object is being remove from his parent
 		// container before the leave function is called
 		this.stopListeningForDrag();
+		UIFocus._remove(this);
 
 		// call the parent function
 		super.onDeactivateEvent();

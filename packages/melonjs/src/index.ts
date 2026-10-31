@@ -56,6 +56,7 @@ import Trigger from "./renderable/trigger.js";
 import ProgressBar from "./renderable/ui/progressbar.ts";
 import UIBaseElement from "./renderable/ui/uibaseelement.ts";
 import UICheckbox from "./renderable/ui/uicheckbox.ts";
+import UIFocus from "./renderable/ui/uifocus.ts";
 import UIPanel from "./renderable/ui/uipanel.ts";
 import UISlider from "./renderable/ui/uislider.ts";
 import UISpriteElement from "./renderable/ui/uispriteelement.ts";
@@ -203,10 +204,12 @@ export type {
 	ProgressBarDirection,
 	ProgressBarSettings,
 } from "./renderable/ui/progressbar.js";
+export type { UIJuiceSettings } from "./renderable/ui/uibaseelement.js";
 export type {
 	UICheckboxSettings,
 	UICheckboxSkin,
 } from "./renderable/ui/uicheckbox.js";
+export type { UINavAction } from "./renderable/ui/uifocus.js";
 export type { UILabel } from "./renderable/ui/uilabel.js";
 export type {
 	UIPanelAlign,
@@ -335,6 +338,7 @@ export {
 	timer,
 	UIBaseElement,
 	UICheckbox,
+	UIFocus,
 	UIPanel,
 	UISlider,
 	UISpriteElement,

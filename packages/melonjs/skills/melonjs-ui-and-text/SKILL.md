@@ -628,6 +628,53 @@ every UI element, turns a widget off: `enabled = false`
 draws the `disabled` region, or the button at half opacity, and ignores the
 pointer and the key.
 
+### A little bounce: `hoverScale` and `pressScale`
+
+Every UI element, buttons, checkboxes, sliders, panels and your own, can
+grow a little under the pointer or with the focus, and shrink while held:
+
+```js
+new UITextButton(0, 0, { text: "Play", hoverScale: 1.05, pressScale: 0.92 });
+levelButton.hoverScale = 1.12;   // or set it later
+```
+
+Both default to 1, which is still. The scale eases there and back by itself.
+Only the drawing scales, about the centre: the hit area and the layout stay
+put, so nothing jitters and the widgets around it do not move.
+
+### Keyboard and gamepad navigation: `UIFocus`
+
+```js
+UIFocus.enable();              // in the stage's onResetEvent
+// ...and UIFocus.disable() in its onDestroyEvent
+```
+
+The arrow keys or a pad's D-pad and left stick move the focus to the nearest
+widget that way. Enter, Space or the pad's A press the focused widget as a
+click does: a button calls its `onClick` setting, a checkbox toggles. Left
+and right step a slider (up and down on a vertical one). Escape or the pad's
+B cancels. Nothing is set up per screen.
+
+- **Off until enabled**, so a game steering with the arrows is not surprised.
+  `UIFocus.keys` changes the keys. The pad is read directly, so the game's
+  own pad bindings stay as they are; `UIFocus.gamepad = false` turns it off.
+- **Which widgets:** anything with `focusable` set, as buttons, checkboxes
+  and sliders are, that is enabled and in the scene. A wrong guess for a
+  direction is fixed with `focusNeighbors: { down: other }`.
+- **A dialog:** a `UIPanel` with `trapFocus: true` keeps the focus inside
+  itself while it is up, and gives it back when it goes. Its `onBack(panel)`
+  runs on cancel.
+- **The ring** shows only once the keyboard or a pad is used, and the mouse
+  moving hides it again. `UIFocus.ringColor`, `ringWidth`, `ringPadding` and
+  `ringRadius` style it. Hovering moves the focus too, so the keyboard picks
+  up where the mouse was.
+- **Scrolling lists** scroll the focused widget into view.
+- **A widget of your own** sets `focusable = true`, overrides
+  `onNavigate(action)` (return `true` for what it handles) and
+  `focusRelease()` for accept. `onFocus()` and `onBlur()` tell it when it
+  gains and loses the focus. `UIFocus.focus(widget)` picks where to start,
+  and `UIFocus.navigate("down")` drives it from input of your own.
+
 ### Keyboard shortcuts on a button: `bindKey`
 
 A `UITextButton` can be activated from the keyboard as well as the pointer:
