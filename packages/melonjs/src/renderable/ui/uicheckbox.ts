@@ -18,8 +18,14 @@ export interface UICheckboxSkin extends UISkin {
 	on: string;
 	/** the box when not checked */
 	off: string;
-	/** the box while disabled; the current one at half opacity if left out */
-	disabled?: string;
+	/** the checked box under the pointer; `on` if left out */
+	hoverOn?: string;
+	/** the unchecked box under the pointer; `off` if left out */
+	hoverOff?: string;
+	/** the checked box while disabled; `on` at half opacity if left out */
+	disabledOn?: string;
+	/** the unchecked box while disabled; `off` at half opacity if left out */
+	disabledOff?: string;
 }
 
 /**
@@ -52,7 +58,7 @@ export interface UICheckboxSettings {
 	 * the side of the box, in pixels; 24, or the height of the skin's `off`
 	 * region
 	 */
-	size?: number;
+	boxSize?: number;
 	/**
 	 * Make it one of a set of radio buttons: checkboxes sharing a group name
 	 * have exactly one checked. See {@link UICheckbox#group}.
@@ -63,7 +69,7 @@ export interface UICheckboxSettings {
 	 * @default "sans-serif"
 	 */
 	font?: string;
-	/** the label's height, in pixels; two thirds of `size` by default */
+	/** the label's height, in pixels; two thirds of `boxSize` by default */
 	fontSize?: number;
 	/**
 	 * the label's colour
@@ -84,7 +90,7 @@ export interface UICheckboxSettings {
 	 * the box's fill under the pointer (drawn look)
 	 * @default "#e4eefb"
 	 */
-	hoverOnColor?: Paint;
+	boxHoverColor?: Paint;
 	/**
 	 * the box's fill when checked, and the radio dot (drawn look)
 	 * @default "#2a7de1"
@@ -164,14 +170,32 @@ export default class UICheckbox extends UIBaseElement {
 	 * Checkboxes sharing a group have exactly one checked: checking one
 	 * unchecks the others, and clicking the checked one leaves it checked. A
 	 * checkbox is in its group while it is in the scene; removing it takes it
-	 * out. Changing this property takes effect the next time it is added.
+	 * out. Changing it moves the checkbox to the new group straight away;
+	 * a checked one then unchecks the others there.
 	 */
-	group: string | undefined;
+	get group(): string | undefined {
+		return this._group;
+	}
+
+	set group(value: string | undefined) {
+		if (value === this._group) {
+			return;
+		}
+		const active = this._active;
+		if (active) {
+			this.leaveGroup();
+		}
+		this._group = value;
+		if (active) {
+			this.joinGroup();
+		}
+		this.isDirty = true;
+	}
 
 	/** the box's fill (drawn look) */
 	boxColor: Paint;
 	/** the box's fill under the pointer (drawn look) */
-	hoverOnColor: Paint;
+	boxHoverColor: Paint;
 	/** the box's fill when checked, and the radio dot (drawn look) */
 	checkColor: Paint;
 	/** the box's outline (drawn look) */
@@ -186,18 +210,26 @@ export default class UICheckbox extends UIBaseElement {
 	/** the space between the box and the label, in pixels */
 	readonly labelGap: number;
 	/** the label, absent when there is no text */
-	readonly label: UILabel | undefined;
+	label: UILabel | undefined;
 	/** the art, when it is skinned */
 	readonly skin: UICheckboxSkin | undefined;
 
 	/** @ignore */
 	private _checked: boolean;
 	/** @ignore */
-	private _enabled = true;
+	private _labelOn: string;
 	/** @ignore */
-	private readonly _labelOn: string;
+	private _labelOff: string;
+	/** how a label is made, for one added after construction */
+	private readonly _labelStyle: {
+		font: string;
+		fontSize: number;
+		fillStyle: string;
+	};
 	/** @ignore */
-	private readonly _labelOff: string;
+	private _group: string | undefined;
+	/** whether it is in the scene */
+	private _active = false;
 	/** @ignore */
 	private readonly _painter = new PanelPainter();
 	/** @ignore */
@@ -214,13 +246,22 @@ export default class UICheckbox extends UIBaseElement {
 		super(x, y, 1, 1);
 
 		this.skin = settings.skin;
-		let size = settings.size;
+		let size = settings.boxSize;
 		if (this.skin !== undefined) {
 			this._skin = new SkinDrawer(this.skin);
 			const off = this._skin.size(this.skin.off);
-			this._skin.size(this.skin.on);
-			if (this.skin.disabled !== undefined) {
-				this._skin.size(this.skin.disabled);
+			// every region named is checked now, so a typo fails here
+			for (const state of [
+				"on",
+				"hoverOn",
+				"hoverOff",
+				"disabledOn",
+				"disabledOff",
+			] as const) {
+				const region = this.skin[state];
+				if (region !== undefined) {
+					this._skin.size(region);
+				}
 			}
 			size ??= off.height;
 		}
@@ -229,10 +270,10 @@ export default class UICheckbox extends UIBaseElement {
 
 		this._checked = settings.checked ?? false;
 		this.onChange = settings.onChange;
-		this.group = settings.group;
+		this._group = settings.group;
 
 		this.boxColor = settings.boxColor ?? "#ffffff";
-		this.hoverOnColor = settings.hoverOnColor ?? "#e4eefb";
+		this.boxHoverColor = settings.boxHoverColor ?? "#e4eefb";
 		this.checkColor = settings.checkColor ?? "#2a7de1";
 		this.borderColor = settings.borderColor ?? "#3a3a3a";
 		this.borderWidth = settings.borderWidth ?? 2;
@@ -240,32 +281,13 @@ export default class UICheckbox extends UIBaseElement {
 
 		this._labelOn = settings.labelOn ?? settings.label ?? "";
 		this._labelOff = settings.labelOff ?? settings.label ?? "";
-
-		let width = this.boxSize;
-		let height = this.boxSize;
-		if (this._labelOn !== "" || this._labelOff !== "") {
-			const label = createLabel({
-				text: this._checked ? this._labelOn : this._labelOff,
-				font: settings.font ?? "sans-serif",
-				fontSize:
-					settings.fontSize ?? Math.round(Math.max(12, this.boxSize * 0.66)),
-				fillStyle: settings.labelFillStyle ?? "#000000",
-				textAlign: "left",
-				textBaseline: "middle",
-			});
-			// as wide as the longer of the two texts, so the widget does not
-			// change size, and move what is laid out after it, as it toggles
-			// read straight away: `measureText` hands back the same object
-			// each time, so a second call overwrites the first
-			let metrics = label.measureText(this._labelOn);
-			const onWidth = metrics.width;
-			const onHeight = metrics.height;
-			metrics = label.measureText(this._labelOff);
-			width += this.labelGap + Math.max(onWidth, metrics.width);
-			height = Math.max(height, onHeight, metrics.height);
-			this.label = label;
-		}
-		this.resize(Math.ceil(width), Math.ceil(height));
+		this._labelStyle = {
+			font: settings.font ?? "sans-serif",
+			fontSize:
+				settings.fontSize ?? Math.round(Math.max(12, this.boxSize * 0.66)),
+			fillStyle: settings.labelFillStyle ?? "#000000",
+		};
+		this.fitLabel();
 
 		this.enabled = settings.enabled ?? true;
 	}
@@ -294,6 +316,68 @@ export default class UICheckbox extends UIBaseElement {
 	}
 
 	/**
+	 * The text while checked. Setting it resizes the widget to fit.
+	 */
+	get labelOn(): string {
+		return this._labelOn;
+	}
+
+	set labelOn(value: string) {
+		this._labelOn = value;
+		this.fitLabel();
+	}
+
+	/**
+	 * The text while not checked. Setting it resizes the widget to fit.
+	 */
+	get labelOff(): string {
+		return this._labelOff;
+	}
+
+	set labelOff(value: string) {
+		this._labelOff = value;
+		this.fitLabel();
+	}
+
+	/**
+	 * Show the current text, and size the widget to the box and the longer
+	 * of the two texts, so it keeps its size, and does not move what is laid
+	 * out after it, as it toggles.
+	 * @ignore
+	 * @internal
+	 */
+	private fitLabel() {
+		let width = this.boxSize;
+		let height = this.boxSize;
+		if (this._labelOn !== "" || this._labelOff !== "") {
+			const text = this._checked ? this._labelOn : this._labelOff;
+			if (this.label === undefined) {
+				this.label = createLabel({
+					...this._labelStyle,
+					text,
+					textAlign: "left",
+					textBaseline: "middle",
+				});
+			} else {
+				this.label.setText(text);
+			}
+			// read straight away: `measureText` hands back the same object
+			// each time, so a second call overwrites the first
+			let metrics = this.label.measureText(this._labelOn);
+			const onWidth = metrics.width;
+			const onHeight = metrics.height;
+			metrics = this.label.measureText(this._labelOff);
+			width += this.labelGap + Math.max(onWidth, metrics.width);
+			height = Math.max(height, onHeight, metrics.height);
+		} else if (this.label !== undefined) {
+			this.label.destroy();
+			this.label = undefined;
+		}
+		this.resize(Math.ceil(width), Math.ceil(height));
+		this.isDirty = true;
+	}
+
+	/**
 	 * Flip it, from code. Like setting {@link UICheckbox#checked}, this does
 	 * not call `onChange`.
 	 * @returns the new state
@@ -301,26 +385,6 @@ export default class UICheckbox extends UIBaseElement {
 	toggle(): boolean {
 		this.checked = !this._checked;
 		return this._checked;
-	}
-
-	/**
-	 * Whether it answers input.
-	 *
-	 * A disabled checkbox is drawn with its `disabled` skin region, or at
-	 * half opacity, and ignores the pointer.
-	 * @default true
-	 */
-	get enabled(): boolean {
-		return this._enabled;
-	}
-
-	set enabled(value: boolean) {
-		this._enabled = value;
-		this.isClickable = value;
-		if (!value) {
-			this.cancelPress();
-		}
-		this.isDirty = true;
 	}
 
 	/**
@@ -386,19 +450,8 @@ export default class UICheckbox extends UIBaseElement {
 	 */
 	override onActivateEvent(): void {
 		super.onActivateEvent();
-		if (this.group !== undefined) {
-			let members = groups.get(this.group);
-			if (members === undefined) {
-				members = new Set();
-				groups.set(this.group, members);
-			}
-			members.add(this);
-			this._joined = this.group;
-			// the newest checked member wins
-			if (this._checked) {
-				this.uncheckOthers();
-			}
-		}
+		this._active = true;
+		this.joinGroup();
 	}
 
 	/**
@@ -406,15 +459,47 @@ export default class UICheckbox extends UIBaseElement {
 	 * @ignore
 	 */
 	override onDeactivateEvent(): void {
-		if (this._joined !== undefined) {
-			const members = groups.get(this._joined);
-			members?.delete(this);
-			if (members?.size === 0) {
-				groups.delete(this._joined);
-			}
-			this._joined = undefined;
-		}
+		this._active = false;
+		this.leaveGroup();
 		super.onDeactivateEvent();
+	}
+
+	/**
+	 * Join the group it names, if any; the newest checked member wins.
+	 * @ignore
+	 * @internal
+	 */
+	private joinGroup() {
+		if (this._group === undefined) {
+			return;
+		}
+		let members = groups.get(this._group);
+		if (members === undefined) {
+			members = new Set();
+			groups.set(this._group, members);
+		}
+		members.add(this);
+		this._joined = this._group;
+		if (this._checked) {
+			this.uncheckOthers();
+		}
+	}
+
+	/**
+	 * Leave the group it is in, if any.
+	 * @ignore
+	 * @internal
+	 */
+	private leaveGroup() {
+		if (this._joined === undefined) {
+			return;
+		}
+		const members = groups.get(this._joined);
+		members?.delete(this);
+		if (members?.size === 0) {
+			groups.delete(this._joined);
+		}
+		this._joined = undefined;
 	}
 
 	/**
@@ -431,13 +516,17 @@ export default class UICheckbox extends UIBaseElement {
 
 		if (this._skin !== undefined) {
 			const skin = this.skin!;
-			let region = this._checked ? skin.on : skin.off;
+			const on = this._checked;
+			let region = on ? skin.on : skin.off;
 			if (!this._enabled) {
-				if (skin.disabled !== undefined) {
-					region = skin.disabled;
+				const disabled = on ? skin.disabledOn : skin.disabledOff;
+				if (disabled !== undefined) {
+					region = disabled;
 				} else {
 					renderer.setGlobalAlpha(faded);
 				}
+			} else if (this.hover) {
+				region = (on ? skin.hoverOn : skin.hoverOff) ?? region;
 			}
 			this._skin.draw(renderer, region, x, y, size, size);
 		} else {
@@ -477,7 +566,7 @@ export default class UICheckbox extends UIBaseElement {
 			this._checked && this.group === undefined
 				? this.checkColor
 				: this.hover && this._enabled
-					? this.hoverOnColor
+					? this.boxHoverColor
 					: this.boxColor;
 		const half = size / 2;
 

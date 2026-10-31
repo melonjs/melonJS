@@ -18,6 +18,7 @@ import type { UILabel } from "./uilabel.ts";
 import { createLabel } from "./uilabel.ts";
 import type { UISkin } from "./uiskin.ts";
 import { SkinDrawer } from "./uiskin.ts";
+import UITextButton from "./uitextbutton.ts";
 
 /**
  * The art of a skinned {@link UIPanel}: one atlas region, drawn as a
@@ -57,6 +58,7 @@ export type UIPanelScroll = "none" | "vertical" | "horizontal" | "both";
 
 /**
  * Everything {@link UIPanel} takes.
+ * @category UI
  */
 export interface UIPanelSettings {
 	/** the panel's width, in pixels */
@@ -185,6 +187,12 @@ interface ChildBox {
 	w: number;
 	h: number;
 }
+
+/**
+ * The pointer-downs a scrolling panel has taken, so a panel around it does
+ * not take the same one and scroll with it.
+ */
+const takenPresses = new WeakSet<Event>();
 
 /** how far a press has to move before it scrolls instead, in pixels */
 const SCROLL_THRESHOLD = 8;
@@ -320,6 +328,7 @@ export default class UIPanel extends UIBaseElement {
 	/** a press on the content that may become a scroll */
 	private _press:
 		| {
+				dom: Event | undefined;
 				pointerId: number | undefined;
 				x: number;
 				y: number;
@@ -725,8 +734,10 @@ export default class UIPanel extends UIBaseElement {
 		if (this.skin !== undefined) {
 			const region = this._skin!.size(this.skin.region);
 			return [
-				this.skin.insetx ?? region.width / 4,
-				this.skin.insety ?? region.height / 4,
+				// `||` as `NineSliceSprite` reads them, so a 0 means the
+				// default for the art and the layout alike
+				this.skin.insetx || region.width / 4,
+				this.skin.insety || region.height / 4,
 			];
 		}
 		const border = this.borderColor !== null ? this.borderWidth : 0;
@@ -800,11 +811,14 @@ export default class UIPanel extends UIBaseElement {
 	 * @internal
 	 */
 	private stretch(child: Renderable, w: number, h: number) {
+		// only what lays itself out again at a new size: a `BitmapText`'s
+		// `resize` takes a SCALE, and a checkbox or a slider would only widen
+		// its hit area
 		if (
-			typeof (child as any).resize === "function" &&
+			(child instanceof UITextButton || child instanceof UIPanel) &&
 			(child.width !== w || child.height !== h)
 		) {
-			(child as any).resize(w, h);
+			child.resize(w, h);
 		}
 	}
 
@@ -1158,13 +1172,29 @@ export default class UIPanel extends UIBaseElement {
 		if (this.scroll === "none") {
 			return false;
 		}
+		const dom = event.event;
 		if (this._press !== undefined) {
-			// the same press, offered again by the panel's own handler
+			if (
+				this._press.pointerId === event.pointerId &&
+				this._press.dom === dom
+			) {
+				// the same press, offered again by the panel's own handler
+				return true;
+			}
+			// a press whose release was never heard: drop it
+			this.endPress();
+		}
+		if (dom !== undefined && takenPresses.has(dom)) {
+			// a scrolling panel inside this one has it
 			return true;
+		}
+		if (dom !== undefined) {
+			takenPresses.add(dom);
 		}
 		const [x, y] = this.localPoint(event);
 		this._velocityX = this._velocityY = 0;
 		this._press = {
+			dom,
 			pointerId: event.pointerId,
 			x,
 			y,
@@ -1281,10 +1311,7 @@ export default class UIPanel extends UIBaseElement {
 		// Grabbed by its title or its frame, not through a widget on it: a
 		// button pressed to drag the panel would move with it, stay under
 		// the pointer, and be clicked on the release.
-		this._moving =
-			this.isDraggable &&
-			!onContent &&
-			!this.onWidget(event.gameX, event.gameY);
+		this._moving = this.isDraggable && !onContent && !this.widgetPressed();
 		if (this.isDraggable && this.ancestor instanceof Container) {
 			this.ancestor.moveToTop(this);
 		}
@@ -1304,27 +1331,28 @@ export default class UIPanel extends UIBaseElement {
 	}
 
 	/**
-	 * Whether a point is on one of the panel's clickable widgets.
-	 * @param x - the point, in the coordinates of the panel's bounds
-	 * @param y - the point
-	 * @returns true when a child that takes the pointer is under it
+	 * Whether this press is on a widget inside the panel, at any depth.
+	 *
+	 * Children are asked about a press before the container holding them, so
+	 * a widget it landed on is already pressed by the time the panel hears
+	 * of it.
+	 * @returns true when a widget inside is held down
 	 * @ignore
 	 * @internal
 	 */
-	private onWidget(x: number, y: number): boolean {
-		if (!this.clipContains(x, y)) {
-			return false;
-		}
-		for (const child of this.getChildren()) {
-			if (
-				child instanceof UIBaseElement &&
-				child.isClickable &&
-				child.getBounds().contains(x, y)
-			) {
-				return true;
+	private widgetPressed(): boolean {
+		const pressed = (container: Container): boolean => {
+			for (const child of container.getChildren()) {
+				if (child instanceof UIBaseElement && !child.released) {
+					return true;
+				}
+				if (child instanceof Container && pressed(child)) {
+					return true;
+				}
 			}
-		}
-		return false;
+			return false;
+		};
+		return pressed(this);
 	}
 
 	/**

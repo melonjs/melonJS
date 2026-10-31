@@ -4,7 +4,11 @@ import { Color, colorPool } from "../../math/color.ts";
 import type { Gradient } from "../../video/gradient.js";
 import type Renderer from "../../video/renderer.js";
 
-/** anything {@link Renderer#setColor} will take */
+/**
+ * A colour a widget is painted with: a CSS string, a {@link Color} (kept
+ * and read every frame, so changing it animates the widget), or a gradient.
+ * @category UI
+ */
 export type Paint = Color | string | Gradient;
 
 /**

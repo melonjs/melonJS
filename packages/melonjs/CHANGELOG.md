@@ -5,15 +5,25 @@
 ### Added
 - Particles: a `depth` setting, the spawn area's size along Z, with `width` and `height`. Under a `Camera3d`, particles are born through a volume instead of on a flat sheet
 - UI: `UICheckbox`, a checkbox with its label, drawn or from atlas art, that becomes a radio button with a `group` ([#1722](https://github.com/melonjs/melonJS/issues/1722)). `onChange` only fires on user input, not when `checked` is set from code
-- UI: `UISlider`, a horizontal or vertical slider with `min`, `max`, `step`, drag, track clicks and the mouse wheel, an optional caption and value text, drawn or from atlas art. `onChange` fires while it moves, `onChangeEnd` once on release, neither when `value` is set from code
-- UI: `UIPanel` lays its children out (`layout`: `"column"`, `"row"` or `"grid"`, with `padding`, `gap`, `align` and `autoSize`), scrolls them (`scroll`, with the wheel, dragging, momentum and a scrollbar; `scrollTo`, `scrollToChild`), and takes a nine-slice `skin`, a `title` and `draggable`
-- UI: `UITextButton` takes an `onClick` setting, called on a completed click; a `skin` of atlas regions, with pressed art drawn lowered; `enabled`; and `pressedColor`. A font that is not a loaded bitmap font is drawn as a CSS font, where the button used to throw
-- UI: `UIBaseElement#cancelPress()` and `onCancel()`, to call off a press without a release; a scrolling `UIPanel` uses them when a drag on a button turns into a scroll
+- UI: `UISlider`, a horizontal or vertical slider with `min`, `max`, `step`, drag, track clicks and the mouse wheel, an optional caption and value text (`valueFormat`), drawn or from atlas art. `onChange` fires while it moves, `onChangeEnd` once on release, neither when `value` is set from code
+- UI: `UIPanel` lays its children out (`layout`: `"column"`, `"row"` or `"grid"`, with `padding`, `gap`, `align` and `autoSize`), scrolls them (`scroll`, with the wheel, dragging, momentum and a scrollbar; `scrollTo`, `scrollToChild`), and takes a nine-slice `skin`, a `title` and `draggable`; a draggable panel comes to the front when grabbed
+- UI: `UITextButton` takes an `onClick` setting, called on a completed click; a `skin` of atlas regions, with pressed art drawn lowered; `pressedColor`; and the names the other widgets use: `width` / `height` for its size, `fontSize` (pixels, also with a bitmap font), `labelFillStyle` and `borderColor`. `resize()` keeps its background and label in step. A font that is not a loaded bitmap font is drawn as a CSS font, where the button used to throw
+- UI: `enabled` on every `UIBaseElement`, to turn a widget off; `cancelPress()` and `onCancel()`, to call off a press without a release, as a scrolling `UIPanel` does when a drag on a button turns into a scroll; and `keepsDrag`, for a widget of your own that is dragged inside a scrolling panel
+- UI: `ProgressBar`'s `onChange` also gets the bar
+- UI: the `UISkin`, `UILabel`, `Paint` and settings and skin types of every widget are exported; `Container#clipContains(x, y)` tells whether a container shows its children at a point
+
+### Changed
+- UI: `UITextButton` no longer writes the size and alignment it worked out back into the settings object, so one object can make several buttons
+- UI: `UITextButton#label` is the button's text, a `BitmapText` or, with a CSS font, a `Text`
+
+### Deprecated
+- UI: `UITextButton#bitmapText`, for `label`
 
 ### Fixed
 - Input: a child cropped out of view by a container with `clipping`, or scrolled out of a `UIPanel`, no longer gets pointer events where it is not drawn
 - UI: a `UITextButton` moved after it was built draws its background where it is, not where it was first put
 - UI: a blocking `UIPanel` stays opaque to hover for as long as the pointer is on it, not only on the frame the pointer enters
+- UI: a draggable `UIBaseElement` pressed with no hover first, as a touch tap is, no longer throws, and drags by touch; in the world, rather than floating, it no longer jumps by the camera position when dragged
 
 ## [20.12.0] (melonJS 2) - _2026-10-30_
 

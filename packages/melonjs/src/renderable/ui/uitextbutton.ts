@@ -7,6 +7,7 @@ import { BLUR, KEYDOWN, KEYUP, off, on } from "../../system/event.ts";
 import type Renderer from "../../video/renderer.js";
 import BitmapText from "../text/bitmaptext.js";
 import Text from "../text/text.js";
+import type { Paint } from "./panelpaint.ts";
 import UIBaseElement, { isPointerUp } from "./uibaseelement.ts";
 import type { UILabel } from "./uilabel.ts";
 import type { UISkin } from "./uiskin.ts";
@@ -46,14 +47,23 @@ export interface UITextButtonSettings {
 	 * @default "sans-serif"
 	 */
 	font?: string;
+	/** the bitmap font data, when it is loaded under another name than `font` */
+	fontData?: string;
 	/**
-	 * With a bitmap font, a scale of its authored size; with a CSS font, the
-	 * height in pixels.
+	 * The label's height in pixels, for a bitmap font as for a CSS font: the
+	 * same setting as on the other widgets. Takes over from `size`.
+	 */
+	fontSize?: number;
+	/**
+	 * The older form of `fontSize`: with a bitmap font, a scale of its
+	 * authored size; with a CSS font, the height in pixels.
 	 */
 	size?: number;
 	/** the label */
 	text?: string;
-	/** the label's colour; a bitmap font is tinted with it */
+	/** the label's colour, as on the other widgets; a bitmap font is tinted with it */
+	labelFillStyle?: string;
+	/** the older name of `labelFillStyle` */
 	fillStyle?: string;
 	/** see {@link UITextButton.bindKey} */
 	bindKey?: string | number;
@@ -71,20 +81,53 @@ export interface UITextButtonSettings {
 	enabled?: boolean;
 	/** draw the button from atlas regions instead of a rounded rectangle */
 	skin?: UITextButtonSkin;
-	/** background colour at rest (drawn look) */
-	hoverOffColor?: string;
-	/** background colour under the pointer (drawn look) */
-	hoverOnColor?: string;
+	/**
+	 * background colour at rest (drawn look)
+	 * @default "#00aa0080"
+	 */
+	hoverOffColor?: Paint;
+	/**
+	 * background colour under the pointer (drawn look)
+	 * @default "#00ff00ff"
+	 */
+	hoverOnColor?: Paint;
 	/** background colour while held down (drawn look); `hoverOnColor` by default */
-	pressedColor?: string;
-	/** outline colour (drawn look) */
-	borderStrokeColor?: string;
+	pressedColor?: Paint;
+	/**
+	 * outline colour (drawn look), the name the other widgets use
+	 * @default "#000000"
+	 */
+	borderColor?: Paint;
+	/** the older name of `borderColor` */
+	borderStrokeColor?: Paint;
+	/**
+	 * the label's alignment about the middle of the button
+	 * @default "center"
+	 */
 	textAlign?: string;
+	/**
+	 * the label's baseline about the middle of the button
+	 * @default "middle"
+	 */
 	textBaseline?: string;
-	/** the button's width; the label's width plus 16 by default, or the skin's */
+	/**
+	 * the button's width: the label's width plus 16 by default, or the skin's
+	 * `normal` region's
+	 */
+	width?: number;
+	/**
+	 * the button's height: the label's height plus 16 by default, or the
+	 * skin's `normal` region's
+	 */
+	height?: number;
+	/**
+	 * The older name of `width`. Not an outline thickness, as `borderWidth`
+	 * is on the other widgets.
+	 */
 	borderWidth?: number;
-	/** the button's height; the label's height plus 16 by default, or the skin's */
+	/** the older name of `height` */
 	borderHeight?: number;
+	/** passed on to the {@link BitmapText} of a bitmap font label */
 	[key: string]: any;
 }
 
@@ -105,16 +148,16 @@ export interface UITextButtonSettings {
  * // drawn, with no assets
  * const play = new UITextButton(100, 200, {
  *     text: "Play",
- *     size: 24,
+ *     fontSize: 24,
  *     onClick: () => state.change(state.PLAY),
  * });
  *
  * // skinned from an atlas, any width
  * const accept = new UITextButton(30, 250, {
  *     font: "kenpixel",
- *     size: 12,
+ *     fontSize: 12,
  *     text: "Accept",
- *     borderWidth: 160,
+ *     width: 160,
  *     skin: { atlas, normal: "green_button04", pressed: "green_button05" },
  *     onClick: () => saveSettings(),
  * });
@@ -145,7 +188,7 @@ export default class UITextButton extends UIBaseElement {
 	/**
 	 * What the button does: see {@link UITextButtonSettings.onClick}.
 	 */
-	clickCallback: ((button: UITextButton) => void) | undefined;
+	onClickCallback: ((button: UITextButton) => void) | undefined;
 
 	private keyboardKey: number | undefined;
 	private keyboardActive = false;
@@ -192,24 +235,23 @@ export default class UITextButton extends UIBaseElement {
 	/**
 	 * The css value of a color to be used if the pointer is not hovering over the button
 	 */
-	hoverOffColor: string;
+	hoverOffColor: Paint;
 
 	/**
 	 * The css value of a color to be used if the pointer hovers over the button
 	 */
-	hoverOnColor: string;
+	hoverOnColor: Paint;
 
 	/**
-	 * The css value of the background while the button is held down; the
-	 * hover colour by default
-	 * @default hoverOnColor
+	 * The background while the button is held down. Left undefined, the
+	 * button shows {@link UITextButton#hoverOnColor}, whatever it is then.
 	 */
-	pressedColor: string;
+	pressedColor: Paint | undefined;
 
 	/**
 	 * The css value of a color to be used to draw the border
 	 */
-	borderStrokeColor: string;
+	borderStrokeColor: Paint;
 
 	/**
 	 * Set the default text alignment (or justification),<br>
@@ -246,8 +288,6 @@ export default class UITextButton extends UIBaseElement {
 
 	/** @ignore */
 	private _skin: SkinDrawer | undefined;
-	/** @ignore */
-	private _enabled = true;
 	/** how far the label is lowered right now, for the pressed art */
 	private _labelDrop = 0;
 
@@ -281,24 +321,26 @@ export default class UITextButton extends UIBaseElement {
 	 *
 	 * world.addChild(new PlayButton(15,200));
 	 */
-	constructor(x: number, y: number, settings: UITextButtonSettings) {
+	constructor(x: number, y: number, settings: UITextButtonSettings = {}) {
 		super(x, y);
 
+		// the settings are read, never written back: one object can make
+		// several buttons
 		this.bindKey = settings.bindKey ?? -1;
-		this.clickCallback = settings.onClick;
+		this.onClickCallback = settings.onClick;
 
 		this.hoverOffColor = settings.hoverOffColor || "#00aa0080";
 		this.hoverOnColor = settings.hoverOnColor || "#00ff00ff";
-		// the hover colour by default, which is what a held button showed
-		// before it had a colour of its own
-		this.pressedColor = settings.pressedColor || this.hoverOnColor;
+		// left undefined, a held button shows the hover colour as it did
+		// before it had a colour of its own, and follows it if it changes
+		this.pressedColor = settings.pressedColor;
 
-		this.borderStrokeColor = settings.borderStrokeColor || "#000000";
+		this.borderStrokeColor =
+			settings.borderColor || settings.borderStrokeColor || "#000000";
 
-		this.textAlign = settings.textAlign = settings.textAlign || "center";
-
-		this.textBaseline = settings.textBaseline =
-			settings.textBaseline || "middle";
+		this.textAlign = settings.textAlign || "center";
+		this.textBaseline = settings.textBaseline || "middle";
+		const fillStyle = settings.labelFillStyle ?? settings.fillStyle;
 
 		const font = settings.font ?? "sans-serif";
 		// a bitmap font as before: by name, by data given under another
@@ -308,12 +350,26 @@ export default class UITextButton extends UIBaseElement {
 			typeof font !== "string" ||
 			getImage(font) != null
 		) {
-			this.label = new BitmapText(0, 0, settings as any);
+			const label = new BitmapText(0, 0, {
+				...settings,
+				...(fillStyle !== undefined ? { fillStyle } : {}),
+				textAlign: this.textAlign,
+				textBaseline: this.textBaseline,
+			} as any);
+			if (settings.fontSize !== undefined) {
+				// at its authored scale, one line measures its line height
+				label.resize(1);
+				const lineHeight = label.measureText("Ag").height;
+				if (lineHeight > 0) {
+					label.resize(settings.fontSize / lineHeight);
+				}
+			}
+			this.label = label;
 		} else {
 			this.label = new Text(0, 0, {
 				font,
-				size: settings.size ?? 16,
-				fillStyle: settings.fillStyle ?? "#000000",
+				size: settings.fontSize ?? settings.size ?? 16,
+				fillStyle: fillStyle ?? "#000000",
 				textAlign: this.textAlign,
 				textBaseline: this.textBaseline,
 				text: settings.text ?? "",
@@ -321,8 +377,8 @@ export default class UITextButton extends UIBaseElement {
 		}
 
 		this.skin = settings.skin;
-		let width = settings.borderWidth;
-		let height = settings.borderHeight;
+		let width = settings.width ?? settings.borderWidth;
+		let height = settings.height ?? settings.borderHeight;
 		if (this.skin !== undefined) {
 			this._skin = new SkinDrawer(this.skin);
 			// every region named is checked now, so a typo fails here
@@ -341,8 +397,6 @@ export default class UITextButton extends UIBaseElement {
 		this.dimensions = this.label.measureText();
 		width ||= this.dimensions.width + 16;
 		height ||= this.dimensions.height + 16;
-		settings.borderWidth = width;
-		settings.borderHeight = height;
 
 		// create the round rect button
 		this.border = new RoundRect(x, y, width, height);
@@ -357,38 +411,25 @@ export default class UITextButton extends UIBaseElement {
 	}
 
 	/**
-	 * the label, under its original name
-	 * @deprecated since 20.13.0, use {@link UITextButton#label}, which is a
-	 * {@link Text} when the font is not a bitmap font
+	 * The label, under its original name and type, for code written when it
+	 * was always a {@link BitmapText}. With a CSS font it is a {@link Text}
+	 * all the same.
+	 * @deprecated since 20.13.0, use {@link UITextButton#label}
 	 */
-	get bitmapText(): UILabel {
-		return this.label;
+	get bitmapText(): BitmapText {
+		return this.label as BitmapText;
 	}
 
-	set bitmapText(value: UILabel) {
+	set bitmapText(value: BitmapText) {
 		this.label = value;
 	}
 
 	/**
-	 * Whether the button answers input.
-	 *
-	 * A disabled button is drawn with its `disabled` skin region, or at half
-	 * opacity, ignores the pointer and its key, and never calls `onClick`.
-	 * Disabling it while it is held lets the press go without a click.
-	 * @default true
+	 * Call off a press, from the pointer or from the key.
 	 */
-	get enabled(): boolean {
-		return this._enabled;
-	}
-
-	set enabled(value: boolean) {
-		this._enabled = value;
-		this.isClickable = value;
-		if (!value) {
-			this.cancelPress();
-			this.cancelKeyboardPress();
-		}
-		this.isDirty = true;
+	override cancelPress(): void {
+		this.cancelKeyboardPress();
+		super.cancelPress();
 	}
 
 	/**
@@ -432,8 +473,8 @@ export default class UITextButton extends UIBaseElement {
 	 * @internal
 	 */
 	private completeClick() {
-		if (this._enabled && this.clickCallback !== undefined) {
-			this.clickCallback(this);
+		if (this._enabled && this.onClickCallback !== undefined) {
+			this.onClickCallback(this);
 		}
 	}
 
@@ -544,7 +585,7 @@ export default class UITextButton extends UIBaseElement {
 				this.border.pos.set(this.pos.x, this.pos.y);
 			}
 			if (!this.released) {
-				r.setColor(this.pressedColor);
+				r.setColor(this.pressedColor ?? this.hoverOnColor);
 			} else if (this.hover && this._enabled) {
 				r.setColor(this.hoverOnColor);
 			} else {

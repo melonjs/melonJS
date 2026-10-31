@@ -5,6 +5,7 @@ import {
 import type Pointer from "./../../input/pointer.ts";
 import type { Vector2d } from "../../math/vector2d.ts";
 import { vector2dPool } from "../../math/vector2d.ts";
+import * as device from "../../system/device.ts";
 import { off, on, POINTERMOVE } from "../../system/event.ts";
 import timer from "../../system/timer.ts";
 import Container from "../container.js";
@@ -24,32 +25,45 @@ export function isPointerUp(event: Pointer | undefined): boolean {
 }
 
 /**
- * The DOM events that can end a drag, listened for on the window so a drag
- * ends wherever the pointer is let go. The mouse and touch ones cover a
- * browser without pointer events.
+ * The DOM events that end a drag, listened for on the window so a drag ends
+ * wherever the pointer is let go: the same family the engine itself listens
+ * to, pointer events where the browser has them, mouse and touch otherwise.
+ * Listening to both would let a second finger, which also fires touch
+ * events, end a drag it has nothing to do with.
  * @ignore
  * @internal
  */
-export const END_EVENTS = [
-	"pointerup",
-	"pointercancel",
-	"mouseup",
-	"touchend",
-	"touchcancel",
-] as const;
+export const END_EVENTS: readonly string[] = device.pointerEvent
+	? ["pointerup", "pointercancel"]
+	: ["mouseup", "touchend", "touchcancel"];
 
 /**
  * Whether a DOM event ends the drag of a given pointer.
  * @param event - one of {@link END_EVENTS}
- * @param pointerId - the pointer the drag follows
- * @returns true for that pointer's release; for a mouse or touch event,
- * which has no pointer id, any release
+ * @param pointerId - the pointer the drag follows: a pointer id, a touch
+ * identifier, or 1 for the mouse
+ * @returns true for that pointer's release only
  * @ignore
  * @internal
  */
 export function endsPointer(event: Event, pointerId: number | undefined) {
-	const id = (event as PointerEvent).pointerId;
-	return typeof id !== "number" || id === pointerId;
+	if (
+		typeof globalThis.PointerEvent !== "undefined" &&
+		event instanceof globalThis.PointerEvent
+	) {
+		return event.pointerId === pointerId;
+	}
+	const touches = (event as TouchEvent).changedTouches as TouchList | undefined;
+	if (touches !== undefined) {
+		for (let i = 0; i < touches.length; i++) {
+			if (touches[i].identifier === pointerId) {
+				return true;
+			}
+		}
+		return false;
+	}
+	// a mouse: its main button
+	return (event as MouseEvent).button === 0;
 }
 
 /**
@@ -223,13 +237,37 @@ export default class UIBaseElement extends Container {
 	 * Whether a drag that starts on this element belongs to it.
 	 *
 	 * `false` by default: inside a scrolling {@link UIPanel}, a drag that
-	 * starts on a button scrolls the panel and cancels the press. A widget
-	 * that is dragged itself, such as a {@link UISlider}, sets it, and so does
-	 * anything `isDraggable`.
-	 * @ignore
-	 * @internal
+	 * starts on a button scrolls the panel and cancels the press. Set it on a
+	 * widget that is dragged itself, such as a knob or a colour picker, as
+	 * {@link UISlider} does. Anything `isDraggable` keeps its drags anyway.
+	 * @default false
 	 */
 	keepsDrag = false;
+
+	/** @ignore */
+	protected _enabled = true;
+
+	/**
+	 * Whether the widget answers input: the switch to turn a widget off.
+	 *
+	 * Turning it off sets `isClickable`, calls off a press in progress
+	 * without a release, and draws the widget disabled: its `disabled` skin
+	 * region, or at half opacity. `isClickable` is the low-level flag
+	 * underneath, and setting it alone changes neither the look nor this.
+	 * @default true
+	 */
+	get enabled(): boolean {
+		return this._enabled;
+	}
+
+	set enabled(value: boolean) {
+		this._enabled = value;
+		this.isClickable = value;
+		if (!value) {
+			this.cancelPress();
+		}
+		this.isDirty = true;
+	}
 
 	/** whether the drag listener is on */
 	private _dragListening = false;
@@ -326,7 +364,11 @@ export default class UIBaseElement extends Container {
 		if (!this.released) {
 			// follow the pointer
 			// pos is ObservableVector3d at runtime but typed as Vector2d in Renderable
-			(this.pos as any).set(event.gameX, event.gameY, (this.pos as any).z);
+			// the global move carries screen coordinates; a press on an
+			// element in the world was measured in world ones
+			const x = this.isFloating ? event.gameScreenX : event.gameWorldX;
+			const y = this.isFloating ? event.gameScreenY : event.gameWorldY;
+			(this.pos as any).set(x, y, (this.pos as any).z);
 			(this.pos as any).sub(this.grabOffset!);
 			// mark the container for redraw
 			this.isDirty = true;

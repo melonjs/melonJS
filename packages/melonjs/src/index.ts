@@ -198,6 +198,7 @@ export type {
 	InstancedMeshSettings,
 } from "./renderable/instanced_mesh.js";
 export type { MeshSettings } from "./renderable/mesh.js";
+export type { Paint } from "./renderable/ui/panelpaint.js";
 export type {
 	ProgressBarDirection,
 	ProgressBarSettings,

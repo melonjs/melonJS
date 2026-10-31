@@ -478,8 +478,8 @@ menu.addChild(new UITextButton(0, 0, { text: "Options", onClick: openOptions }))
 Children are laid out in the order they were added. It runs when a child is
 added or removed and when the panel is resized, **not every frame**: a child
 that changes size afterwards, a label whose text grew, needs
-`menu.relayout()`. `"stretch"` resizes children that have a `resize` method,
-which `UITextButton` and other containers do; a `Text` keeps its size.
+`menu.relayout()`. `"stretch"` resizes buttons and panels, which lay
+themselves out again at a new size; anything else keeps its size.
 
 A row inside a column is a second panel that draws nothing and lets clicks
 through: `new UIPanel(0, 0, { width, height, layout: "row", blocking: false })`.
@@ -509,11 +509,12 @@ What to know:
   The button gets `onCancel()` instead of `onRelease()`, and its `onClick`
   SETTING is not called. The `onClick()` METHOD already ran on the press, so
   a button in a list does its work in the setting: see the next section.
-- **A slider in a scrolling panel is dragged, not the panel.** Any widget
-  that sets `keepsDrag` keeps its drags.
-- Children scrolled out of view do not get pointer events. Nested scrolling
-  panels are not supported yet, and on WebGL a scrolling panel inside another
-  clipping container is cropped to its own area only, not to the outer one.
+- **A slider in a scrolling panel is dragged, not the panel.** A widget of
+  your own that is dragged too, a knob or a colour picker, sets
+  `keepsDrag = true` to keep its drags.
+- Children scrolled out of view do not get pointer events. A scrolling panel
+  inside another scrolls alone, but nesting is not supported beyond that: on
+  WebGL the inner one is cropped to its own area only, not to the outer one.
 - A draggable panel is moved by its title or its frame. A press on a widget
   on it is the widget's.
 
@@ -575,7 +576,7 @@ No subclass needed for a single action:
 ```js
 const play = new UITextButton(100, 200, {
     text: "Play",              // a CSS font by default ("sans-serif")
-    size: 24,                  // pixels with a CSS font, a SCALE with a bitmap font
+    fontSize: 24,              // pixels, with a CSS font or a bitmap font
     onClick: () => state.change(state.PLAY),
 });
 ```
@@ -590,19 +591,33 @@ as before, for subclasses.
 any other name, drawn as a CSS font with `Text`. The label is
 `button.label` (`bitmapText` is the old name for it).
 
+The button takes the same names as the other widgets: `width` and `height`
+for its size, `fontSize` (pixels) and `labelFillStyle` for its text,
+`borderColor` for its outline. The older `borderWidth` / `borderHeight`
+(its SIZE, not an outline thickness), `size` (a scale with a bitmap font)
+and `fillStyle` still work. One style object can then go to every widget:
+
+```js
+const FONT = { font: "kenpixel", fontSize: 14, labelFillStyle: "black" };
+new UITextButton(0, 0, { ...FONT, text: "OK", width: 160 });
+new UICheckbox(0, 0, { ...FONT, label: "Music" });
+new UISlider(0, 0, { ...FONT, label: "Volume" });
+```
+
 **Skinned** from an atlas, drawn as a nine-slice so one image makes a button
 of any width:
 
 ```js
 new UITextButton(0, 0, {
-    font: "kenpixel", size: 12, text: "Accept", borderWidth: 160,
+    font: "kenpixel", fontSize: 12, text: "Accept", width: 160,
     skin: { atlas, normal: "green_button04", pressed: "green_button05" },
 });
 ```
 
 Pressed art is usually shorter than the normal art. The button draws it
 lowered by the difference and moves the label down with it, so it looks
-pushed in. `hover` and `disabled` regions are optional. `enabled = false`
+pushed in. `hover` and `disabled` regions are optional. `enabled`, shared by
+every UI element, turns a widget off: `enabled = false`
 draws the `disabled` region, or the button at half opacity, and ignores the
 pointer and the key.
 
@@ -659,7 +674,9 @@ const music = new UICheckbox(40, 60, {
 
 The label is part of the widget: clicking it toggles the box, and removing
 the checkbox takes the label with it. Drawn with primitives by default, or
-`skin: { atlas, on, off, disabled? }`.
+`skin: { atlas, on, off, hoverOn?, hoverOff?, disabledOn?, disabledOff? }`.
+`boxSize`, `boxColor`, `boxHoverColor` and `checkColor` style the drawn box,
+and `labelOn` / `labelOff` can be changed later: the widget refits.
 
 **Setting `checked` from code does NOT call `onChange`**, nor does
 `toggle()`. Only the user does. Restoring saved settings into the widgets
@@ -682,7 +699,7 @@ the scene.
 ```js
 const volume = new UISlider(40, 120, {
     label: "Music", showValue: true,
-    format: (v) => Math.round(v * 100) + "%",
+    valueFormat: (v, ratio) => Math.round(ratio * 100) + "%",
     min: 0, max: 1, step: 0.01, value: audio.getVolume(),
     length: 300,                           // orientation: "vertical" too
     onChange: (v) => audio.setVolume(v),   // every step of the drag
@@ -694,7 +711,10 @@ Drag the thumb, or click the track to jump there. The drag follows the
 pointer after it leaves the track, until it is released. The mouse wheel over
 the slider moves it one `step`. `value` snaps to `step` and clamps to the
 range, and setting it does not call `onChange` or `onChangeEnd`: the same rule
-as the checkbox. `skin: { atlas, track, fill?, thumb, thumbHover? }` draws it
+as the checkbox, and neither does changing `min`, `max` or `step`, which
+re-clamp it. `ratio` reads where it is from 0 to 1, and `valueFormat` gets
+both. `thumbColor`, `thumbHoverColor`, `thumbBorderColor` and
+`thumbBorderWidth` style the drawn thumb. `skin: { atlas, track, fill?, thumb, thumbHover? }` draws it
 from art: the track and fill as nine-slices along its length, the thumb at its
 own size.
 

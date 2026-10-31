@@ -31,7 +31,7 @@ const SFX_PATH = `${import.meta.env.BASE_URL}assets/isometricDungeon/sfx/`;
 
 let texture: TextureAtlas;
 
-/** the text style every widget here shares */
+/** the text style every widget here shares: the same names on each */
 const FONT = { font: "kenpixel", fontSize: 14, labelFillStyle: "black" };
 
 /** the options as last accepted */
@@ -68,11 +68,10 @@ const button = (
 	onClick: () => void,
 ) => {
 	return new UITextButton(0, 0, {
-		font: "kenpixel",
-		size: 12,
-		fillStyle: "black",
+		...FONT,
+		fontSize: 12,
 		text,
-		borderWidth: width,
+		width,
 		skin: {
 			atlas: texture,
 			normal: `${color}_button04`,
@@ -100,8 +99,8 @@ const volume = (
 		...FONT,
 		label,
 		showValue: true,
-		format: (v) => {
-			return `${Math.round(v * 100)}%`;
+		valueFormat: (v, ratio) => {
+			return `${Math.round(ratio * 100)}%`;
 		},
 		length: 320,
 		value,
@@ -301,9 +300,8 @@ class PlayScreen extends Stage {
 		});
 		for (let level = 1; level <= 30; level++) {
 			const pick = new UITextButton(0, 0, {
-				font: "kenpixel",
-				size: 16,
-				fillStyle: "black",
+				...FONT,
+				fontSize: 16,
 				text: String(level),
 				skin: {
 					atlas: texture,

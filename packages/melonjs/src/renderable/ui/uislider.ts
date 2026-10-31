@@ -98,8 +98,12 @@ export interface UISliderSettings {
 	 * @default false
 	 */
 	showValue?: boolean;
-	/** how the value is written, e.g. `(v) => Math.round(v * 100) + "%"` */
-	format?: (value: number) => string;
+	/**
+	 * How the value is written, given the value and where it is between
+	 * `min` and `max` (0 to 1), as `ProgressBar`'s `labelFormat` is: e.g.
+	 * `(v, ratio) => Math.round(ratio * 100) + "%"`
+	 */
+	valueFormat?: (value: number, ratio: number) => string;
 	/**
 	 * a CSS font family, or the name of a loaded bitmap font
 	 * @default "sans-serif"
@@ -134,12 +138,17 @@ export interface UISliderSettings {
 	 * the thumb under the pointer or while dragged (drawn look)
 	 * @default "#e4eefb"
 	 */
-	hoverOnColor?: Paint;
+	thumbHoverColor?: Paint;
 	/**
 	 * the thumb's outline (drawn look)
 	 * @default "#2a7de1"
 	 */
-	borderColor?: Paint;
+	thumbBorderColor?: Paint;
+	/**
+	 * the thickness of the thumb's outline (drawn look); `0` for none
+	 * @default 2
+	 */
+	thumbBorderWidth?: number;
 	/** draw it from atlas regions instead */
 	skin?: UISliderSkin;
 }
@@ -173,7 +182,7 @@ interface Box {
  * const volume = new UISlider(40, 80, {
  *     label: "Music",
  *     showValue: true,
- *     format: (v) => Math.round(v * 100) + "%",
+ *     valueFormat: (v, ratio) => Math.round(ratio * 100) + "%",
  *     value: audio.getVolume(),
  *     onChange: (v) => audio.setVolume(v),
  *     onChangeEnd: () => saveSettings(),
@@ -195,9 +204,6 @@ export default class UISlider extends UIBaseElement {
 	 */
 	onChangeEnd: ((value: number, slider: UISlider) => void) | undefined;
 
-	/** how the value is written */
-	format: (value: number) => string;
-
 	/** the track (drawn look) */
 	trackColor: Paint;
 	/** the track up to the thumb (drawn look) */
@@ -205,9 +211,11 @@ export default class UISlider extends UIBaseElement {
 	/** the thumb (drawn look) */
 	thumbColor: Paint;
 	/** the thumb under the pointer or while dragged (drawn look) */
-	hoverOnColor: Paint;
+	thumbHoverColor: Paint;
 	/** the thumb's outline (drawn look) */
-	borderColor: Paint;
+	thumbBorderColor: Paint;
+	/** the thickness of the thumb's outline (drawn look) */
+	thumbBorderWidth: number;
 
 	/** which way it slides */
 	readonly orientation: "horizontal" | "vertical";
@@ -219,6 +227,8 @@ export default class UISlider extends UIBaseElement {
 	readonly valueText: UILabel | undefined;
 
 	/** @ignore */
+	private _valueFormat: (value: number, ratio: number) => string;
+	/** @ignore */
 	private _min: number;
 	/** @ignore */
 	private _max: number;
@@ -226,8 +236,6 @@ export default class UISlider extends UIBaseElement {
 	private _step: number;
 	/** @ignore */
 	private _value: number;
-	/** @ignore */
-	private _enabled = true;
 	/** @ignore */
 	private readonly _painter = new PanelPainter();
 	/** @ignore */
@@ -306,13 +314,14 @@ export default class UISlider extends UIBaseElement {
 		this.orientation = settings.orientation ?? "horizontal";
 		this.onChange = settings.onChange;
 		this.onChangeEnd = settings.onChangeEnd;
-		this.format = settings.format ?? defaultFormat(this._step);
+		this._valueFormat = settings.valueFormat ?? defaultFormat(this._step);
 
 		this.trackColor = settings.trackColor ?? "#00000033";
 		this.fillColor = settings.fillColor ?? "#2a7de1";
 		this.thumbColor = settings.thumbColor ?? "#ffffff";
-		this.hoverOnColor = settings.hoverOnColor ?? "#e4eefb";
-		this.borderColor = settings.borderColor ?? "#2a7de1";
+		this.thumbHoverColor = settings.thumbHoverColor ?? "#e4eefb";
+		this.thumbBorderColor = settings.thumbBorderColor ?? "#2a7de1";
+		this.thumbBorderWidth = settings.thumbBorderWidth ?? 2;
 
 		const horizontal = this.orientation === "horizontal";
 		const length = settings.length ?? 200;
@@ -357,7 +366,7 @@ export default class UISlider extends UIBaseElement {
 		if (settings.showValue === true) {
 			this.valueText = createLabel({
 				...textStyle,
-				text: this.format(this._max),
+				text: this._valueFormat(this._max, 1),
 				textAlign: horizontal ? "right" : "center",
 			});
 		}
@@ -404,23 +413,91 @@ export default class UISlider extends UIBaseElement {
 		this._travelLength = Math.max(0, length - thumbW);
 
 		this._value = this.snap(settings.value ?? this._min);
-		this.valueText?.setText(this.format(this._value));
+		this.refreshValueText();
 		this.enabled = settings.enabled ?? true;
 	}
 
-	/** the lowest value */
+	/**
+	 * The lowest value. Setting it clamps the value into the new range,
+	 * without calling `onChange`.
+	 */
 	get min(): number {
 		return this._min;
 	}
 
-	/** the highest value */
+	set min(v: number) {
+		this._min = v;
+		this._max = Math.max(this._max, v);
+		this.resnap();
+	}
+
+	/**
+	 * The highest value. Setting it clamps the value into the new range,
+	 * without calling `onChange`.
+	 */
 	get max(): number {
 		return this._max;
 	}
 
-	/** the step values snap to; `0` for none */
+	set max(v: number) {
+		this._max = v;
+		this._min = Math.min(this._min, v);
+		this.resnap();
+	}
+
+	/**
+	 * The step values snap to; `0` for none. Setting it snaps the value to
+	 * it, without calling `onChange`.
+	 */
 	get step(): number {
 		return this._step;
+	}
+
+	set step(v: number) {
+		this._step = Math.max(0, v);
+		this.resnap();
+	}
+
+	/**
+	 * Where the value is between {@link UISlider#min} and
+	 * {@link UISlider#max}, from 0 to 1.
+	 */
+	get ratio(): number {
+		const span = this._max - this._min;
+		return span > 0 ? (this._value - this._min) / span : 0;
+	}
+
+	/**
+	 * How the value is written, given the value and the ratio. Setting it
+	 * rewrites the value text.
+	 */
+	get valueFormat(): (value: number, ratio: number) => string {
+		return this._valueFormat;
+	}
+
+	set valueFormat(format: (value: number, ratio: number) => string) {
+		this._valueFormat = format;
+		this.refreshValueText();
+	}
+
+	/**
+	 * Snap and clamp the value again after the range or the step changed.
+	 * @ignore
+	 * @internal
+	 */
+	private resnap() {
+		this._value = this.snap(this._value);
+		this.refreshValueText();
+		this.isDirty = true;
+	}
+
+	/**
+	 * Write the current value into the value text.
+	 * @ignore
+	 * @internal
+	 */
+	private refreshValueText() {
+		this.valueText?.setText(this._valueFormat(this._value, this.ratio));
 	}
 
 	/**
@@ -439,30 +516,17 @@ export default class UISlider extends UIBaseElement {
 		const next = this.snap(v);
 		if (next !== this._value) {
 			this._value = next;
-			this.valueText?.setText(this.format(next));
+			this.refreshValueText();
 			this.isDirty = true;
 		}
 	}
 
 	/**
-	 * Whether it answers input.
-	 *
-	 * A disabled slider is drawn at half opacity and ignores the pointer and
-	 * the wheel; disabling it mid-drag ends the drag.
-	 * @default true
+	 * Call off a press, and a drag in progress, without `onChangeEnd`.
 	 */
-	get enabled(): boolean {
-		return this._enabled;
-	}
-
-	set enabled(value: boolean) {
-		this._enabled = value;
-		this.isClickable = value;
-		if (!value) {
-			this.endDrag(false);
-			this.cancelPress();
-		}
-		this.isDirty = true;
+	override cancelPress(): void {
+		this.endDrag(false);
+		super.cancelPress();
 	}
 
 	/**
@@ -486,8 +550,15 @@ export default class UISlider extends UIBaseElement {
 		let out = v;
 		if (this._step > 0) {
 			out = this._min + Math.round((out - this._min) / this._step) * this._step;
+			// a range that is not a whole number of steps: past the end,
+			// take the last step inside rather than clamping off the grid
+			if (out > this._max) {
+				out -= this._step;
+			}
 			// 0.1 + 0.2: keep the digits the step has, and no stray ones
-			out = Number(out.toFixed(decimals(this._step)));
+			out = Number(
+				out.toFixed(Math.max(decimals(this._step), decimals(this._min))),
+			);
 		}
 		return clamp(out, this._min, this._max);
 	}
@@ -511,8 +582,7 @@ export default class UISlider extends UIBaseElement {
 
 	/** where the thumb's centre is, along the slider, in its coordinates */
 	private thumbCenter(): number {
-		const span = this._max - this._min;
-		const ratio = span > 0 ? (this._value - this._min) / span : 0;
+		const ratio = this.ratio;
 		return this.orientation === "horizontal"
 			? this._travelStart + ratio * this._travelLength
 			: this._travelStart + (1 - ratio) * this._travelLength;
@@ -700,13 +770,22 @@ export default class UISlider extends UIBaseElement {
 			painter.paint(renderer, this.fillColor, a);
 			painter.rect(renderer, fx, fy, fw, fh, radius);
 			const r = this._thumbW / 2;
-			painter.paint(renderer, lit ? this.hoverOnColor : this.thumbColor, a);
+			painter.paint(renderer, lit ? this.thumbHoverColor : this.thumbColor, a);
 			renderer.fillEllipse(tx + tw / 2, ty + th / 2, r, r);
-			const previous = renderer.lineWidth;
-			renderer.lineWidth = 2;
-			painter.paint(renderer, this.borderColor, a);
-			renderer.strokeEllipse(tx + tw / 2, ty + th / 2, r - 1, r - 1);
-			renderer.lineWidth = previous;
+			const bw = Math.min(this.thumbBorderWidth, r);
+			if (bw > 0) {
+				const previous = renderer.lineWidth;
+				renderer.lineWidth = bw;
+				painter.paint(renderer, this.thumbBorderColor, a);
+				// inset by half the width, so the outline lands inside the thumb
+				renderer.strokeEllipse(
+					tx + tw / 2,
+					ty + th / 2,
+					r - bw / 2,
+					r - bw / 2,
+				);
+				renderer.lineWidth = previous;
+			}
 		}
 
 		renderer.setGlobalAlpha(a);
@@ -764,9 +843,11 @@ function drawText(renderer: Renderer, text: UILabel, x: number, y: number) {
  * @internal
  */
 function decimals(step: number): number {
-	const text = String(step);
-	const dot = text.indexOf(".");
-	return dot === -1 ? 0 : text.length - dot - 1;
+	// `String(1e-7)` is "1e-7": count the exponent too
+	const [mantissa, exponent] = String(step).split("e");
+	const dot = mantissa.indexOf(".");
+	const digits = dot === -1 ? 0 : mantissa.length - dot - 1;
+	return Math.min(20, Math.max(0, digits - Number(exponent ?? 0)));
 }
 
 /**
@@ -775,7 +856,7 @@ function decimals(step: number): number {
  * @ignore
  * @internal
  */
-function defaultFormat(step: number): (value: number) => string {
+function defaultFormat(step: number): (value: number, ratio: number) => string {
 	const digits = step > 0 ? decimals(step) : 2;
 	return (value: number) => value.toFixed(digits);
 }

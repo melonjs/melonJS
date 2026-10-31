@@ -14,7 +14,10 @@ import { PanelPainter } from "./panelpaint.ts";
  */
 type EventName = Parameters<typeof on>[0];
 
-/** which way the fill grows */
+/**
+ * which way the fill grows
+ * @category UI
+ */
 export type ProgressBarDirection =
 	| "left-to-right"
 	| "right-to-left"
@@ -23,6 +26,7 @@ export type ProgressBarDirection =
 
 /**
  * Everything {@link ProgressBar} takes.
+ * @category UI
  */
 export interface ProgressBarSettings {
 	/** the bar's full width, in pixels */
@@ -53,7 +57,7 @@ export interface ProgressBarSettings {
 	/** corner radius; `0` is square */
 	radius?: number;
 	/** called whenever the value actually moves */
-	onChange?: (value: number, ratio: number) => void;
+	onChange?: (value: number, ratio: number, bar: ProgressBar) => void;
 	/** draw a label over the bar */
 	showLabel?: boolean;
 	/** the label's font family */
@@ -153,7 +157,9 @@ export default class ProgressBar extends Renderable {
 	/** corner radius; `0` is square */
 	radius: number;
 	/** called whenever the value actually moves */
-	onChange?: ((value: number, ratio: number) => void) | undefined;
+	onChange?:
+		| ((value: number, ratio: number, bar: ProgressBar) => void)
+		| undefined;
 	/** what the label says */
 	labelFormat: (value: number, ratio: number) => string;
 	/** the label, when `showLabel` was asked for */
@@ -258,7 +264,7 @@ export default class ProgressBar extends Renderable {
 		if (this.label !== undefined) {
 			this.label.setText(this.labelFormat(next, this.ratio));
 		}
-		this.onChange?.(next, this.ratio);
+		this.onChange?.(next, this.ratio, this);
 	}
 
 	/**

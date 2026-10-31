@@ -157,7 +157,7 @@ describe("ProgressBar", () => {
 			});
 			bar.value = 50;
 			expect(onChange).toHaveBeenCalledTimes(1);
-			expect(onChange).toHaveBeenCalledWith(50, 0.25);
+			expect(onChange).toHaveBeenCalledWith(50, 0.25, bar);
 		});
 
 		it("does NOT fire when the value is written but does not move", () => {
@@ -729,7 +729,7 @@ describe("ProgressBar", () => {
 				onChange,
 			});
 			event.emit(event.LOADER_PROGRESS, 0.25, null);
-			expect(onChange).toHaveBeenCalledWith(0.25, 0.25);
+			expect(onChange).toHaveBeenCalledWith(0.25, 0.25, bar);
 			bar.destroy();
 		});
 	});

@@ -193,7 +193,7 @@ describe("UI widgets", () => {
 
 		it("clicking the label toggles it too", () => {
 			const cb = place(
-				new UICheckbox(100, 100, { label: "A long label", size: 20 }),
+				new UICheckbox(100, 100, { label: "A long label", boxSize: 20 }),
 			);
 			expect(cb.width).toBeGreaterThan(60);
 			click(100 + cb.width - 4, 110);
@@ -401,7 +401,7 @@ describe("UI widgets", () => {
 		it("writes its value with format", () => {
 			const s = make({
 				showValue: true,
-				format: (v) => {
+				valueFormat: (v) => {
 					return Math.round(v * 100) + "%";
 				},
 				value: 0.25,
@@ -736,7 +736,7 @@ describe("UI widgets", () => {
 			const { panel, buttons } = makeList();
 			const below = vi.fn();
 			const hidden = vi.fn();
-			buttons[3].clickCallback = hidden;
+			buttons[3].onClickCallback = hidden;
 			// button 3 sits at 120..160, under the panel's bottom edge at 200
 			// in screen terms: 100 + 120 = 220
 			const under = place(
@@ -759,7 +759,7 @@ describe("UI widgets", () => {
 			const { panel, buttons } = makeList();
 			const onClick = vi.fn();
 			// the third button, 80..120 in the panel: 180..220 on screen
-			buttons[2].clickCallback = onClick;
+			buttons[2].onClickCallback = onClick;
 			const onCancel = vi.spyOn(buttons[2], "onCancel");
 			drag(150, 190, 150, 130);
 			expect(panel.scrollY).toBe(60);
@@ -770,7 +770,7 @@ describe("UI widgets", () => {
 		it("a short press on a button in the list still clicks it", () => {
 			const { buttons } = makeList();
 			const onClick = vi.fn();
-			buttons[1].clickCallback = onClick;
+			buttons[1].onClickCallback = onClick;
 			drag(150, 160, 150, 157, 1);
 			expect(onClick).toHaveBeenCalledTimes(1);
 		});
@@ -836,7 +836,7 @@ describe("UI widgets", () => {
 				borderHeight: 40,
 			});
 			const onClick = vi.fn();
-			b.clickCallback = onClick;
+			b.onClickCallback = onClick;
 			box.addChild(b);
 			syncBroadphase();
 			click(150, 270);
@@ -993,7 +993,8 @@ describe("UI widgets", () => {
 
 		it("a held button keeps its hover colour unless given a pressed one", () => {
 			const b = new UITextButton(0, 0, { text: "x", hoverOnColor: "#123456" });
-			expect(b.pressedColor).toBe("#123456");
+			// left undefined, so the held button follows hoverOnColor
+			expect(b.pressedColor).toBeUndefined();
 			const label = b.label;
 			b.bitmapText = label;
 			expect(b.label).toBe(label);
@@ -1006,15 +1007,213 @@ describe("UI widgets", () => {
 			expect(s.value).toBeCloseTo(0.6);
 		});
 
-		it("a drag ends on a mouseup, without pointer events", () => {
+		it("a drag ends on a release outside the canvas", () => {
 			const onChangeEnd = vi.fn();
 			const s = place(new UISlider(100, 100, { onChangeEnd }));
 			pointer("pointermove", 110, 110);
 			pointer("pointerdown", 110, 110);
 			pointer("pointermove", 200, 110);
-			window.dispatchEvent(new MouseEvent("mouseup"));
+			window.dispatchEvent(
+				new PointerEvent("pointerup", { pointerId: 1, bubbles: true }),
+			);
 			expect(s.dragging).toBe(false);
 			expect(onChangeEnd).toHaveBeenCalledTimes(1);
+		});
+
+		it("another pointer, or another finger, lifting does not end a drag", () => {
+			const s = place(new UISlider(100, 100, {}));
+			pointer("pointermove", 110, 110);
+			pointer("pointerdown", 110, 110);
+			window.dispatchEvent(
+				new PointerEvent("pointerup", { pointerId: 2, bubbles: true }),
+			);
+			window.dispatchEvent(new Event("touchend"));
+			window.dispatchEvent(new MouseEvent("mouseup", { button: 2 }));
+			expect(s.dragging).toBe(true);
+			pointer("pointerup", 110, 110);
+			expect(s.dragging).toBe(false);
+		});
+
+		it("stretch resizes buttons and panels, and leaves other widgets alone", () => {
+			const panel = place(
+				new UIPanel(0, 0, {
+					width: 300,
+					height: 300,
+					layout: "column",
+					align: "stretch",
+				}),
+			);
+			const cb = panel.addChild(new UICheckbox(0, 0, { label: "x" }));
+			const width = cb.width;
+			const inner = panel.addChild(
+				new UIPanel(0, 0, { width: 10, height: 20 }),
+			);
+			expect(cb.width).toBe(width);
+			expect(inner.width).toBe(300);
+		});
+
+		it("a non-blocking scrolling panel inside another still scrolls alone", () => {
+			const outer = place(
+				new UIPanel(100, 100, {
+					width: 300,
+					height: 200,
+					layout: "column",
+					scroll: "vertical",
+				}),
+			);
+			const inner = outer.addChild(
+				new UIPanel(0, 0, {
+					width: 280,
+					height: 100,
+					layout: "column",
+					scroll: "vertical",
+					blocking: false,
+				}),
+			);
+			for (let i = 0; i < 6; i++) {
+				for (const p of [inner, outer]) {
+					const r = new Renderable(0, 0, 100, 40);
+					r.anchorPoint.set(0, 0);
+					p.addChild(r);
+				}
+			}
+			syncBroadphase();
+			drag(150, 180, 150, 140);
+			expect(inner.scrollY).toBe(40);
+			expect(outer.scrollY).toBe(0);
+		});
+
+		it("a draggable panel is not moved through a widget inside a container", () => {
+			const panel = place(
+				new UIPanel(100, 100, { width: 300, height: 200, draggable: true }),
+			);
+			const group = panel.addChild(new Container(20, 20, 200, 100));
+			const onClick = vi.fn();
+			group.addChild(
+				new UITextButton(0, 0, {
+					text: "x",
+					width: 100,
+					height: 40,
+					onClick,
+				}),
+			);
+			syncBroadphase();
+			drag(150, 140, 200, 190);
+			expect([panel.pos.x, panel.pos.y]).toEqual([100, 100]);
+			expect(onClick).not.toHaveBeenCalled();
+		});
+	});
+
+	describe("API", () => {
+		it("enabled is shared by every widget, the panel included", () => {
+			const panel = new UIPanel(0, 0, { width: 10, height: 10 });
+			expect(panel.enabled).toBe(true);
+			panel.enabled = false;
+			expect(panel.isClickable).toBe(false);
+			const s = new UISlider(0, 0, {});
+			s.enabled = false;
+			expect(s.isClickable).toBe(false);
+		});
+
+		it("a button takes width, height, fontSize and labelFillStyle", () => {
+			const settings = {
+				text: "OK",
+				width: 120,
+				height: 30,
+				fontSize: 20,
+				labelFillStyle: "#ff0000",
+			};
+			const b = new UITextButton(0, 0, settings);
+			expect([b.width, b.height]).toEqual([120, 30]);
+			expect(b.label.fontSize ?? b.label.font).toBeDefined();
+			// the settings are read, not written back
+			expect(Object.keys(settings)).toEqual([
+				"text",
+				"width",
+				"height",
+				"fontSize",
+				"labelFillStyle",
+			]);
+			// one object, two buttons of their own sizes
+			const shared = { text: "A" };
+			const one = new UITextButton(0, 0, shared);
+			const two = new UITextButton(0, 0, {
+				...shared,
+				text: "A much longer one",
+			});
+			expect(two.width).toBeGreaterThan(one.width);
+			expect(shared).toEqual({ text: "A" });
+		});
+
+		it("slider min, max and step can change, silently re-clamping", () => {
+			const onChange = vi.fn();
+			const s = new UISlider(0, 0, { min: 0, max: 10, value: 8, onChange });
+			expect(s.ratio).toBeCloseTo(0.8);
+			s.max = 5;
+			expect(s.value).toBe(5);
+			s.step = 2;
+			expect(s.value).toBe(4);
+			s.min = 4.5;
+			expect(s.value).toBe(4.5);
+			expect(onChange).not.toHaveBeenCalled();
+		});
+
+		it("valueFormat gets the ratio, and setting it rewrites the text", () => {
+			const s = new UISlider(0, 0, {
+				showValue: true,
+				min: 0,
+				max: 200,
+				value: 50,
+			});
+			s.valueFormat = (v, ratio) => {
+				return `${v}/${Math.round(ratio * 100)}%`;
+			};
+			expect(textOf(s.valueText)).toBe("50/25%");
+		});
+
+		it("a tiny step keeps its decimals", () => {
+			const s = new UISlider(0, 0, { min: 0, max: 1e-6, step: 1e-7 });
+			s.value = 3e-7;
+			expect(s.value).toBeCloseTo(3e-7, 12);
+		});
+
+		it("checkbox labels can change, and the widget refits", () => {
+			const cb = new UICheckbox(0, 0, { label: "x" });
+			const narrow = cb.width;
+			cb.labelOff = "A much longer label";
+			expect(cb.width).toBeGreaterThan(narrow);
+			expect(textOf(cb.label)).toBe("A much longer label");
+		});
+
+		it("changing a checkbox's group moves it there at once", () => {
+			const a = place(new UICheckbox(0, 0, { group: "ga", checked: true }));
+			const b = place(new UICheckbox(0, 40, { group: "gb", checked: true }));
+			a.group = "gb";
+			expect(UICheckbox.checkedIn("ga")).toBeUndefined();
+			// a joined checked, so it is the one left checked in gb
+			expect(a.checked).toBe(true);
+			expect(b.checked).toBe(false);
+		});
+
+		it("a disabled skinned checkbox shows whether it is checked", () => {
+			const atlas = makeAtlas();
+			const spy = vi.spyOn(SkinDrawer.prototype, "draw");
+			const cb = new UICheckbox(0, 0, {
+				skin: {
+					atlas,
+					on: "on",
+					off: "off",
+					disabledOn: "up",
+					disabledOff: "down",
+				},
+				checked: true,
+				enabled: false,
+			});
+			cb.draw(app.renderer);
+			expect(spy.mock.calls.at(-1)[1]).toBe("up");
+			cb.checked = false;
+			cb.draw(app.renderer);
+			expect(spy.mock.calls.at(-1)[1]).toBe("down");
 		});
 	});
 
