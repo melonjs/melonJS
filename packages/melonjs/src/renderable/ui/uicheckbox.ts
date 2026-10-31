@@ -255,10 +255,14 @@ export default class UICheckbox extends UIBaseElement {
 			});
 			// as wide as the longer of the two texts, so the widget does not
 			// change size, and move what is laid out after it, as it toggles
-			const on = label.measureText(this._labelOn);
-			const off = label.measureText(this._labelOff);
-			width += this.labelGap + Math.max(on.width, off.width);
-			height = Math.max(height, on.height, off.height);
+			// read straight away: `measureText` hands back the same object
+			// each time, so a second call overwrites the first
+			let metrics = label.measureText(this._labelOn);
+			const onWidth = metrics.width;
+			const onHeight = metrics.height;
+			metrics = label.measureText(this._labelOff);
+			width += this.labelGap + Math.max(onWidth, metrics.width);
+			height = Math.max(height, onHeight, metrics.height);
 			this.label = label;
 		}
 		this.resize(Math.ceil(width), Math.ceil(height));

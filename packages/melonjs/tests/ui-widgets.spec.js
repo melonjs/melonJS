@@ -844,6 +844,180 @@ describe("UI widgets", () => {
 		});
 	});
 
+	describe("edge cases", () => {
+		it("a draggable panel tapped with no hover first moves by touch", () => {
+			const panel = place(
+				new UIPanel(100, 100, { width: 200, height: 150, draggable: true }),
+			);
+			expect(() => {
+				pointer("pointerdown", 150, 110);
+			}).not.toThrow();
+			pointer("pointermove", 170, 130);
+			pointer("pointerup", 170, 130);
+			expect(panel.pos.x).toBeCloseTo(120, 6);
+			expect(panel.pos.y).toBeCloseTo(120, 6);
+		});
+
+		it("dragging a draggable panel by a button neither moves it nor clicks", () => {
+			const panel = place(
+				new UIPanel(100, 100, { width: 300, height: 200, draggable: true }),
+			);
+			const onClick = vi.fn();
+			panel.addChild(
+				new UITextButton(20, 20, {
+					text: "x",
+					borderWidth: 100,
+					borderHeight: 40,
+					onClick,
+				}),
+			);
+			syncBroadphase();
+			drag(150, 140, 200, 190);
+			expect([panel.pos.x, panel.pos.y]).toEqual([100, 100]);
+			expect(onClick).not.toHaveBeenCalled();
+		});
+
+		it("does not fling while the pointer is still down", () => {
+			const panel = place(
+				new UIPanel(100, 100, {
+					width: 200,
+					height: 100,
+					layout: "column",
+					scroll: "vertical",
+				}),
+			);
+			for (let i = 0; i < 10; i++) {
+				const r = new Renderable(0, 0, 100, 40);
+				r.anchorPoint.set(0, 0);
+				panel.addChild(r);
+			}
+			syncBroadphase();
+			pointer("pointermove", 150, 190);
+			pointer("pointerdown", 150, 190);
+			for (let i = 1; i <= 4; i++) {
+				pointer("pointermove", 150, 190 - i * 15);
+			}
+			const held = panel.scrollY;
+			for (let i = 0; i < 30; i++) {
+				panel.update(16);
+			}
+			expect(panel.scrollY).toBe(held);
+			pointer("pointerup", 150, 130);
+		});
+
+		it("autoSize counts the title and frame from a zero height", () => {
+			const panel = place(
+				new UIPanel(0, 0, {
+					width: 200,
+					height: 0,
+					title: "T",
+					titleFontSize: 20,
+					layout: "column",
+					autoSize: true,
+					align: "stretch",
+				}),
+			);
+			const r = new Renderable(0, 0, 100, 40);
+			r.anchorPoint.set(0, 0);
+			panel.addChild(r);
+			expect(panel.height).toBe(32 + 40);
+		});
+
+		it("a checkbox is as wide as its longer label, whichever it is", () => {
+			const a = new UICheckbox(0, 0, {
+				labelOn: "A much much longer label",
+				labelOff: "Off",
+			});
+			const b = new UICheckbox(0, 0, {
+				labelOn: "Off",
+				labelOff: "A much much longer label",
+			});
+			expect(a.width).toBe(b.width);
+			expect(a.width).toBeGreaterThan(100);
+		});
+
+		it("a scrolling panel inside another scrolls alone", () => {
+			const outer = place(
+				new UIPanel(100, 100, {
+					width: 300,
+					height: 200,
+					layout: "column",
+					scroll: "vertical",
+				}),
+			);
+			const inner = outer.addChild(
+				new UIPanel(0, 0, {
+					width: 280,
+					height: 100,
+					layout: "column",
+					scroll: "vertical",
+				}),
+			);
+			for (let i = 0; i < 6; i++) {
+				const r = new Renderable(0, 0, 100, 40);
+				r.anchorPoint.set(0, 0);
+				inner.addChild(r);
+				const s = new Renderable(0, 0, 100, 40);
+				s.anchorPoint.set(0, 0);
+				outer.addChild(s);
+			}
+			outer.relayout();
+			syncBroadphase();
+			drag(150, 180, 150, 140);
+			expect(inner.scrollY).toBe(40);
+			expect(outer.scrollY).toBe(0);
+		});
+
+		it("emptying a scrolled panel does not report scrolls", () => {
+			const onScroll = vi.fn();
+			const panel = place(
+				new UIPanel(0, 0, {
+					width: 200,
+					height: 100,
+					layout: "column",
+					scroll: "vertical",
+					onScroll,
+				}),
+			);
+			for (let i = 0; i < 10; i++) {
+				const r = new Renderable(0, 0, 100, 40);
+				r.anchorPoint.set(0, 0);
+				panel.addChild(r);
+			}
+			panel.scrollTo(0, 250);
+			onScroll.mockClear();
+			// removed without keepalive: destroyed, which empties it
+			app.world.removeChildNow(panel);
+			expect(onScroll).not.toHaveBeenCalled();
+		});
+
+		it("a held button keeps its hover colour unless given a pressed one", () => {
+			const b = new UITextButton(0, 0, { text: "x", hoverOnColor: "#123456" });
+			expect(b.pressedColor).toBe("#123456");
+			const label = b.label;
+			b.bitmapText = label;
+			expect(b.label).toBe(label);
+		});
+
+		it("the wheel to the right raises a slider", () => {
+			const s = place(new UISlider(100, 100, { value: 0.5, step: 0.1 }));
+			pointer("pointermove", 150, 110);
+			wheel(150, 110, 0, 100);
+			expect(s.value).toBeCloseTo(0.6);
+		});
+
+		it("a drag ends on a mouseup, without pointer events", () => {
+			const onChangeEnd = vi.fn();
+			const s = place(new UISlider(100, 100, { onChangeEnd }));
+			pointer("pointermove", 110, 110);
+			pointer("pointerdown", 110, 110);
+			pointer("pointermove", 200, 110);
+			window.dispatchEvent(new MouseEvent("mouseup"));
+			expect(s.dragging).toBe(false);
+			expect(onChangeEnd).toHaveBeenCalledTimes(1);
+		});
+	});
+
 	describe("UIPanel dragging", () => {
 		it("moves by its title, and comes to the front", () => {
 			const back = place(

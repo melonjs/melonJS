@@ -9,7 +9,11 @@ import { off, on, POINTERMOVE } from "../../system/event.ts";
 import type Renderer from "../../video/renderer.js";
 import type { Paint } from "./panelpaint.ts";
 import { PanelPainter } from "./panelpaint.ts";
-import UIBaseElement from "./uibaseelement.ts";
+import UIBaseElement, {
+	END_EVENTS,
+	endsPointer,
+	isPointerUp,
+} from "./uibaseelement.ts";
 import type { UILabel } from "./uilabel.ts";
 import { createLabel } from "./uilabel.ts";
 import type { UISkin } from "./uiskin.ts";
@@ -255,8 +259,8 @@ export default class UISlider extends UIBaseElement {
 		}
 	};
 
-	private readonly _onDragEnd = (event: PointerEvent) => {
-		if (this._dragging && event.pointerId === this._dragPointer) {
+	private readonly _onDragEnd = (event: Event) => {
+		if (this._dragging && endsPointer(event, this._dragPointer)) {
 			this.endDrag(true);
 		}
 	};
@@ -265,16 +269,17 @@ export default class UISlider extends UIBaseElement {
 		if (!this._enabled) {
 			return;
 		}
-		const delta =
+		// wheel up, or to the right, raises the value: up is a NEGATIVE
+		// deltaY, right a positive deltaX
+		const direction =
 			Math.abs(pointer.deltaY) >= Math.abs(pointer.deltaX)
-				? pointer.deltaY
-				: pointer.deltaX;
-		if (delta === 0) {
+				? -Math.sign(pointer.deltaY)
+				: Math.sign(pointer.deltaX);
+		if (direction === 0) {
 			return;
 		}
 		const step = this._step > 0 ? this._step : (this._max - this._min) / 100;
-		// wheel up, or to the right, raises the value
-		if (this.setFromUser(this._value - Math.sign(delta) * step)) {
+		if (this.setFromUser(this._value + direction * step)) {
 			this.onChangeEnd?.(this._value, this);
 		}
 		// consumed, so a scrolling panel under it does not scroll too
@@ -577,8 +582,9 @@ export default class UISlider extends UIBaseElement {
 		this.released = false;
 		this.isDirty = true;
 		on(POINTERMOVE, this._onDragMove);
-		globalThis.addEventListener?.("pointerup", this._onDragEnd);
-		globalThis.addEventListener?.("pointercancel", this._onDragEnd);
+		for (const type of END_EVENTS) {
+			globalThis.addEventListener?.(type, this._onDragEnd);
+		}
 
 		if (onThumb) {
 			// grabbed where it was: the thumb does not jump under the pointer
@@ -607,8 +613,9 @@ export default class UISlider extends UIBaseElement {
 		this.released = true;
 		this.isDirty = true;
 		off(POINTERMOVE, this._onDragMove);
-		globalThis.removeEventListener?.("pointerup", this._onDragEnd);
-		globalThis.removeEventListener?.("pointercancel", this._onDragEnd);
+		for (const type of END_EVENTS) {
+			globalThis.removeEventListener?.(type, this._onDragEnd);
+		}
 		if (notify && this._value !== this._dragFrom) {
 			this.onChangeEnd?.(this._value, this);
 		}
@@ -620,6 +627,11 @@ export default class UISlider extends UIBaseElement {
 	 */
 	override release(event: Pointer): boolean | void {
 		if (this._dragging) {
+			// let go over the slider: the window may not have heard it, in a
+			// frame whose pointer-up the page never sees
+			if (isPointerUp(event)) {
+				this.endDrag(true);
+			}
 			return false;
 		}
 		return super.release(event);

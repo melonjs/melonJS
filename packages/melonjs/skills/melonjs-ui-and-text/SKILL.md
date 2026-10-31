@@ -512,7 +512,10 @@ What to know:
 - **A slider in a scrolling panel is dragged, not the panel.** Any widget
   that sets `keepsDrag` keeps its drags.
 - Children scrolled out of view do not get pointer events. Nested scrolling
-  panels are not supported yet.
+  panels are not supported yet, and on WebGL a scrolling panel inside another
+  clipping container is cropped to its own area only, not to the outer one.
+- A draggable panel is moved by its title or its frame. A press on a widget
+  on it is the widget's.
 
 ### A pause overlay: `updateWhenPaused` cascades
 

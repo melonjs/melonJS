@@ -13,7 +13,7 @@ import Container from "../container.js";
 import type Renderable from "../renderable.js";
 import type { Paint } from "./panelpaint.ts";
 import { PanelPainter } from "./panelpaint.ts";
-import UIBaseElement from "./uibaseelement.ts";
+import UIBaseElement, { END_EVENTS, endsPointer } from "./uibaseelement.ts";
 import type { UILabel } from "./uilabel.ts";
 import { createLabel } from "./uilabel.ts";
 import type { UISkin } from "./uiskin.ts";
@@ -502,6 +502,10 @@ export default class UIPanel extends UIBaseElement {
 	 * @internal
 	 */
 	private fling(dt: number): boolean {
+		// the finger is still on it: the drag moves the content, not this
+		if (this._press !== undefined) {
+			return false;
+		}
 		if (this._velocityX === 0 && this._velocityY === 0) {
 			return false;
 		}
@@ -885,9 +889,11 @@ export default class UIPanel extends UIBaseElement {
 		}
 
 		if (this.autoSize && this.scroll === "none") {
-			const [, , vw, vh] = this.viewRect();
-			const frameW = this.width - vw;
-			const frameH = this.height - vh;
+			// from the insets, not from the view: that is clamped at 0, so a
+			// panel started at height 0 would leave the title out
+			const [fx, fy] = this.frameInsets();
+			const frameW = fx * 2;
+			const frameH = fy * 2 + this._titleHeight;
 			const pad = this.padding * 2;
 			let width = this.width;
 			let height = this.height;
@@ -1171,8 +1177,9 @@ export default class UIPanel extends UIBaseElement {
 			lastTime: globalThis.performance?.now() ?? Date.now(),
 		};
 		on(POINTERMOVE, this._onPressMove);
-		globalThis.addEventListener?.("pointerup", this._onPressEnd);
-		globalThis.addEventListener?.("pointercancel", this._onPressEnd);
+		for (const type of END_EVENTS) {
+			globalThis.addEventListener?.(type, this._onPressEnd);
+		}
 		return true;
 	}
 
@@ -1209,9 +1216,9 @@ export default class UIPanel extends UIBaseElement {
 		press.lastTime = now;
 	};
 
-	private readonly _onPressEnd = (event: PointerEvent) => {
+	private readonly _onPressEnd = (event: Event) => {
 		const press = this._press;
-		if (press === undefined || event.pointerId !== press.pointerId) {
+		if (press === undefined || !endsPointer(event, press.pointerId)) {
 			return;
 		}
 		const now = globalThis.performance?.now() ?? Date.now();
@@ -1230,8 +1237,9 @@ export default class UIPanel extends UIBaseElement {
 	private endPress() {
 		this._press = undefined;
 		off(POINTERMOVE, this._onPressMove);
-		globalThis.removeEventListener?.("pointerup", this._onPressEnd);
-		globalThis.removeEventListener?.("pointercancel", this._onPressEnd);
+		for (const type of END_EVENTS) {
+			globalThis.removeEventListener?.(type, this._onPressEnd);
+		}
 	}
 
 	private readonly _onWheel = (pointer: Pointer) => {
@@ -1270,14 +1278,53 @@ export default class UIPanel extends UIBaseElement {
 		}
 		const [x, y] = this.localPoint(event);
 		const onContent = this.scroll !== "none" && this.inView(x, y);
-		this._moving = this.isDraggable && !onContent;
+		// Grabbed by its title or its frame, not through a widget on it: a
+		// button pressed to drag the panel would move with it, stay under
+		// the pointer, and be clicked on the release.
+		this._moving =
+			this.isDraggable &&
+			!onContent &&
+			!this.onWidget(event.gameX, event.gameY);
 		if (this.isDraggable && this.ancestor instanceof Container) {
 			this.ancestor.moveToTop(this);
 		}
+		let captured = false;
 		if (onContent) {
-			this._capturePress(event);
+			captured = this._capturePress(event);
 		}
-		return super.clicked(event);
+		// a press this panel scrolls with is not offered to one around it,
+		// or one drag would scroll both
+		const keeps = this.keepsDrag;
+		this.keepsDrag = keeps || captured;
+		try {
+			return super.clicked(event);
+		} finally {
+			this.keepsDrag = keeps;
+		}
+	}
+
+	/**
+	 * Whether a point is on one of the panel's clickable widgets.
+	 * @param x - the point, in the coordinates of the panel's bounds
+	 * @param y - the point
+	 * @returns true when a child that takes the pointer is under it
+	 * @ignore
+	 * @internal
+	 */
+	private onWidget(x: number, y: number): boolean {
+		if (!this.clipContains(x, y)) {
+			return false;
+		}
+		for (const child of this.getChildren()) {
+			if (
+				child instanceof UIBaseElement &&
+				child.isClickable &&
+				child.getBounds().contains(x, y)
+			) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
@@ -1289,6 +1336,24 @@ export default class UIPanel extends UIBaseElement {
 		if (this._moving) {
 			super.pointerMove(event);
 		}
+	}
+
+	/** set while the panel is emptied, so it does not lay out each step */
+	private _clearing = false;
+
+	/**
+	 * Remove every child, without laying out after each one.
+	 * @ignore
+	 */
+	override clearChildren(): void {
+		this._clearing = true;
+		try {
+			super.clearChildren();
+		} finally {
+			this._clearing = false;
+		}
+		this._scrollX = this._scrollY = 0;
+		this._maxScrollX = this._maxScrollY = 0;
 	}
 
 	/**
@@ -1326,7 +1391,7 @@ export default class UIPanel extends UIBaseElement {
 			);
 		}
 		super.removeChildNow(child, keepalive);
-		if (this.layout !== "none" || this.scroll !== "none") {
+		if (!this._clearing && (this.layout !== "none" || this.scroll !== "none")) {
 			this.relayout();
 		}
 	}

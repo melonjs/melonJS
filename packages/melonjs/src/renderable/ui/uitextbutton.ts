@@ -1,6 +1,7 @@
 import type Camera2d from "../../camera/camera2d.ts";
 import { RoundRect } from "../../geometries/roundrect.ts";
 import type Pointer from "../../input/pointer.ts";
+import { getImage } from "../../loader/loader.js";
 import type { Bounds } from "../../physics/bounds.ts";
 import { BLUR, KEYDOWN, KEYUP, off, on } from "../../system/event.ts";
 import type Renderer from "../../video/renderer.js";
@@ -8,7 +9,6 @@ import BitmapText from "../text/bitmaptext.js";
 import Text from "../text/text.js";
 import UIBaseElement, { isPointerUp } from "./uibaseelement.ts";
 import type { UILabel } from "./uilabel.ts";
-import { isBitmapFont } from "./uilabel.ts";
 import type { UISkin } from "./uiskin.ts";
 import { SkinDrawer } from "./uiskin.ts";
 
@@ -40,8 +40,9 @@ export interface UITextButtonSkin extends UISkin {
 export interface UITextButtonSettings {
 	/**
 	 * The font: the name of a loaded bitmap font, or a CSS font family. A
-	 * name with both a font image and font data in the loader is drawn
-	 * through {@link BitmapText}, anything else through {@link Text}.
+	 * name with a font image in the loader, or a `fontData` setting, is
+	 * drawn through {@link BitmapText}, as before; anything else through
+	 * {@link Text}.
 	 * @default "sans-serif"
 	 */
 	font?: string;
@@ -74,7 +75,7 @@ export interface UITextButtonSettings {
 	hoverOffColor?: string;
 	/** background colour under the pointer (drawn look) */
 	hoverOnColor?: string;
-	/** background colour while held down (drawn look) */
+	/** background colour while held down (drawn look); `hoverOnColor` by default */
 	pressedColor?: string;
 	/** outline colour (drawn look) */
 	borderStrokeColor?: string;
@@ -199,8 +200,9 @@ export default class UITextButton extends UIBaseElement {
 	hoverOnColor: string;
 
 	/**
-	 * The css value of the background while the button is held down
-	 * @default "#008800ff"
+	 * The css value of the background while the button is held down; the
+	 * hover colour by default
+	 * @default hoverOnColor
 	 */
 	pressedColor: string;
 
@@ -287,7 +289,9 @@ export default class UITextButton extends UIBaseElement {
 
 		this.hoverOffColor = settings.hoverOffColor || "#00aa0080";
 		this.hoverOnColor = settings.hoverOnColor || "#00ff00ff";
-		this.pressedColor = settings.pressedColor || "#008800ff";
+		// the hover colour by default, which is what a held button showed
+		// before it had a colour of its own
+		this.pressedColor = settings.pressedColor || this.hoverOnColor;
 
 		this.borderStrokeColor = settings.borderStrokeColor || "#000000";
 
@@ -297,7 +301,13 @@ export default class UITextButton extends UIBaseElement {
 			settings.textBaseline || "middle";
 
 		const font = settings.font ?? "sans-serif";
-		if (isBitmapFont(font)) {
+		// a bitmap font as before: by name, by data given under another
+		// name, or as an image
+		if (
+			settings.fontData !== undefined ||
+			typeof font !== "string" ||
+			getImage(font) != null
+		) {
 			this.label = new BitmapText(0, 0, settings as any);
 		} else {
 			this.label = new Text(0, 0, {
@@ -353,6 +363,10 @@ export default class UITextButton extends UIBaseElement {
 	 */
 	get bitmapText(): UILabel {
 		return this.label;
+	}
+
+	set bitmapText(value: UILabel) {
+		this.label = value;
 	}
 
 	/**

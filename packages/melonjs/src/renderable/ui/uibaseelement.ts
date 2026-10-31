@@ -24,6 +24,35 @@ export function isPointerUp(event: Pointer | undefined): boolean {
 }
 
 /**
+ * The DOM events that can end a drag, listened for on the window so a drag
+ * ends wherever the pointer is let go. The mouse and touch ones cover a
+ * browser without pointer events.
+ * @ignore
+ * @internal
+ */
+export const END_EVENTS = [
+	"pointerup",
+	"pointercancel",
+	"mouseup",
+	"touchend",
+	"touchcancel",
+] as const;
+
+/**
+ * Whether a DOM event ends the drag of a given pointer.
+ * @param event - one of {@link END_EVENTS}
+ * @param pointerId - the pointer the drag follows
+ * @returns true for that pointer's release; for a mouse or touch event,
+ * which has no pointer id, any release
+ * @ignore
+ * @internal
+ */
+export function endsPointer(event: Event, pointerId: number | undefined) {
+	const id = (event as PointerEvent).pointerId;
+	return typeof id !== "number" || id === pointerId;
+}
+
+/**
  * Hand a press to the nearest scrolling panel above an element, if any, so
  * that a drag starting on the element can still scroll the panel.
  *
@@ -178,6 +207,9 @@ export default class UIBaseElement extends Container {
 				this.released = false;
 			}
 			if (this.isDraggable) {
+				// a tap on a touch screen comes with no hover before it, so
+				// `enter` never set the drag up
+				this.listenForDrag();
 				this.grabOffset!.set(event.gameX, event.gameY);
 				this.grabOffset!.sub(this.pos);
 			} else if (!this.keepsDrag) {
@@ -198,6 +230,41 @@ export default class UIBaseElement extends Container {
 	 * @internal
 	 */
 	keepsDrag = false;
+
+	/** whether the drag listener is on */
+	private _dragListening = false;
+
+	/**
+	 * Follow the pointer for a drag: once, however it is reached.
+	 * @ignore
+	 * @internal
+	 */
+	private listenForDrag(): void {
+		if (!this._dragListening) {
+			this._dragListening = true;
+			// eslint-disable-next-line @typescript-eslint/unbound-method
+			on(POINTERMOVE, this.pointerMove, this);
+		}
+		// to memorize where we grab the object
+		this.grabOffset ??= vector2dPool.get(0, 0);
+	}
+
+	/**
+	 * Stop following the pointer, and give the grab offset back.
+	 * @ignore
+	 * @internal
+	 */
+	private stopListeningForDrag(): void {
+		if (this._dragListening) {
+			this._dragListening = false;
+			// eslint-disable-next-line @typescript-eslint/unbound-method
+			off(POINTERMOVE, this.pointerMove, this);
+		}
+		if (this.grabOffset !== undefined) {
+			vector2dPool.release(this.grabOffset);
+			this.grabOffset = undefined;
+		}
+	}
 
 	/**
 	 * Abandon a press in progress, without calling `onRelease`.
@@ -244,10 +311,7 @@ export default class UIBaseElement extends Container {
 		this.hover = true;
 		this.isDirty = true;
 		if (this.isDraggable) {
-			// eslint-disable-next-line @typescript-eslint/unbound-method
-			on(POINTERMOVE, this.pointerMove, this);
-			// to memorize where we grab the object
-			this.grabOffset = vector2dPool.get(0, 0);
+			this.listenForDrag();
 		}
 		return this.onOver(event);
 	}
@@ -258,7 +322,8 @@ export default class UIBaseElement extends Container {
 	 * @internal
 	 */
 	pointerMove(event: Pointer): void {
-		if (this.hover && !this.released) {
+		// not gated on `hover`: a drag by touch never had one
+		if (!this.released) {
 			// follow the pointer
 			// pos is ObservableVector3d at runtime but typed as Vector2d in Renderable
 			(this.pos as any).set(event.gameX, event.gameY, (this.pos as any).z);
@@ -304,13 +369,7 @@ export default class UIBaseElement extends Container {
 	leave(event: Pointer): void {
 		this.hover = false;
 		this.isDirty = true;
-		if (this.isDraggable) {
-			// unregister on the global pointermove event
-			// eslint-disable-next-line @typescript-eslint/unbound-method
-			off(POINTERMOVE, this.pointerMove, this);
-			vector2dPool.release(this.grabOffset!);
-			this.grabOffset = undefined;
-		}
+		this.stopListeningForDrag();
 		this.release(event);
 		this.onOut(event);
 	}
@@ -423,14 +482,7 @@ export default class UIBaseElement extends Container {
 		// note: this is just a precaution, in case
 		// the object is being remove from his parent
 		// container before the leave function is called
-		if (this.isDraggable) {
-			// eslint-disable-next-line @typescript-eslint/unbound-method
-			off(POINTERMOVE, this.pointerMove, this);
-			if (typeof this.grabOffset !== "undefined") {
-				vector2dPool.release(this.grabOffset);
-				this.grabOffset = undefined;
-			}
-		}
+		this.stopListeningForDrag();
 
 		// call the parent function
 		super.onDeactivateEvent();
