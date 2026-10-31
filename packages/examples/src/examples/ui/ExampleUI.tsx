@@ -6,298 +6,349 @@
 import {
 	Application as App,
 	type Application,
+	audio,
 	Color,
 	ColorLayer,
-	Container,
-	input,
 	loader,
 	ProgressBar,
 	Stage,
 	state,
 	Text,
 	TextureAtlas,
-	UIBaseElement,
-	UISpriteElement,
+	UICheckbox,
+	UIPanel,
+	UISlider,
+	UITextButton,
 } from "melonjs";
 import { createExampleComponent } from "../utils";
 
 const base = `${import.meta.env.BASE_URL}assets/ui/`;
+// borrowed from two other examples, so this one ships no audio of its own
+const MUSIC = "ingame-loop";
+const MUSIC_PATH = `${import.meta.env.BASE_URL}assets/afterBurner/bgm/`;
+const SFX = "dungeonCoins";
+const SFX_PATH = `${import.meta.env.BASE_URL}assets/isometricDungeon/sfx/`;
 
 let texture: TextureAtlas;
 
-class ButtonUI extends UISpriteElement {
-	private unclicked_region: object;
-	private clicked_region: object;
-	label: Text;
+/** the text style every widget here shares: the same names on each */
+const FONT = { font: "kenpixel", fontSize: 14, labelFillStyle: "black" };
 
-	constructor(x: number, y: number, color: string, labelText: string) {
-		super(x, y, {
-			image: texture,
-			region: `${color}_button04`,
-		});
+/** the options as last accepted */
+const saved = { music: false, musicVolume: 0.5, sfx: true, sfxVolume: 0.8 };
+/** and as they are on screen */
+const current = { ...saved };
 
-		this.unclicked_region = texture.getRegion(`${color}_button04`);
-		this.clicked_region = texture.getRegion(`${color}_button05`);
-		this.anchorPoint.set(0, 0);
-		this.setOpacity(0.5);
-		this.floating = false;
-
-		// create label as a sibling — added to the parent by the caller
-		this.label = new Text(x + this.width / 2, y + this.height / 2, {
-			font: "kenpixel",
-			size: 12,
-			fillStyle: "black",
-			textAlign: "center",
-			textBaseline: "middle",
-			text: labelText,
-		});
-	}
-
-	override onOver() {
-		this.setOpacity(1.0);
-	}
-
-	override onOut() {
-		this.setOpacity(0.5);
-	}
-
-	override onClick() {
-		this.translate(
-			0,
-			this.height - (this.clicked_region as { height: number }).height,
-		);
-		this.setRegion(this.clicked_region);
-		return false;
-	}
-
-	override onRelease() {
-		this.setRegion(this.unclicked_region);
-		this.translate(
-			0,
-			-(this.height - (this.clicked_region as { height: number }).height),
-		);
-		return false;
-	}
-}
-
-class CheckBoxUI extends UISpriteElement {
-	private on_icon_region: object;
-	private off_icon_region: object;
-	private isSelected: boolean;
-	private label_on: string;
-	private label_off: string;
-	label: Text;
-
-	constructor(
-		x: number,
-		y: number,
-		tex: TextureAtlas,
-		onIcon: string,
-		offIcon: string,
-		onLabel: string,
-		offLabel: string,
-	) {
-		super(x, y, {
-			image: tex,
-			region: onIcon,
-		});
-
-		this.on_icon_region = tex.getRegion(onIcon);
-		this.off_icon_region = tex.getRegion(offIcon);
-		this.setOpacity(0.5);
-		this.isSelected = true;
-		this.label_on = onLabel;
-		this.label_off = offLabel;
-		this.floating = false;
-
-		// create label as a sibling — added to the parent by the caller
-		this.label = new Text(x + this.width, y + this.height / 2, {
-			font: "kenpixel",
-			size: 12,
-			fillStyle: "black",
-			textAlign: "left",
-			textBaseline: "middle",
-			text: onLabel,
-		});
-	}
-
-	override onOver() {
-		this.setOpacity(1.0);
-	}
-
-	override onOut() {
-		this.setOpacity(0.5);
-	}
-
-	setSelected(selected: boolean) {
-		if (selected) {
-			this.setRegion(this.on_icon_region);
-			this.isSelected = true;
-			this.label.setText(this.label_on);
-		} else {
-			this.setRegion(this.off_icon_region);
-			this.isSelected = false;
-			this.label.setText(this.label_off);
+/**
+ * Start or stop the music to match the current options.
+ */
+const applyMusic = () => {
+	if (current.music) {
+		if (audio.getCurrentTrack() !== MUSIC) {
+			audio.playTrack(MUSIC, current.musicVolume);
 		}
+	} else {
+		audio.stopTrack();
 	}
+};
 
-	override onClick() {
-		this.setSelected(!this.isSelected);
-		return false;
-	}
-}
+/**
+ * A skinned button: the Kenney art has a shorter pressed image, which the
+ * button draws lowered so it looks pushed in.
+ * @param color - the art's colour
+ * @param text - the label
+ * @param width - the button's width; the art stretches to it
+ * @param onClick - what it does
+ * @returns the button
+ */
+const button = (
+	color: string,
+	text: string,
+	width: number,
+	onClick: () => void,
+) => {
+	return new UITextButton(0, 0, {
+		...FONT,
+		fontSize: 12,
+		text,
+		width,
+		// a little bounce under the pointer or the focus, and when pressed
+		hoverScale: 1.04,
+		pressScale: 0.96,
+		skin: {
+			atlas: texture,
+			normal: `${color}_button04`,
+			pressed: `${color}_button05`,
+		},
+		onClick,
+	});
+};
 
-class UIContainer extends UIBaseElement {
-	constructor(
-		x: number,
-		y: number,
-		width: number,
-		height: number,
-		label: string,
-	) {
-		super(x, y, width, height);
-		this.anchorPoint.set(0, 0);
-		this.name = "UIPanel";
+/**
+ * A volume slider on the Kenney track and thumb.
+ * @param label - its caption
+ * @param value - where it starts
+ * @param onChange - called while it moves
+ * @param onChangeEnd - called once when it is let go
+ * @returns the slider
+ */
+const volume = (
+	label: string,
+	value: number,
+	onChange: (v: number) => void,
+	onChangeEnd?: (v: number) => void,
+) => {
+	return new UISlider(0, 0, {
+		...FONT,
+		label,
+		showValue: true,
+		valueFormat: (_value, ratio) => {
+			return `${Math.round(ratio * 100)}%`;
+		},
+		length: 320,
+		value,
+		step: 0.01,
+		skin: {
+			atlas: texture,
+			track: "grey_sliderHorizontal",
+			thumb: "blue_sliderDown",
+		},
+		onChange,
+		onChangeEnd,
+	});
+};
 
-		this.addChild(
-			texture.createSpriteFromName(
-				"grey_panel",
-				{
-					width: this.width,
-					height: this.height,
-				},
-				true,
-			),
-		);
+/**
+ * A checkbox on the Kenney boxes.
+ * @param labelOn - its label while checked
+ * @param labelOff - its label while not
+ * @param checked - whether it starts checked
+ * @param onChange - called when the user changes it
+ * @returns the checkbox
+ */
+const checkbox = (
+	labelOn: string,
+	labelOff: string,
+	checked: boolean,
+	onChange: (on: boolean) => void,
+) => {
+	return new UICheckbox(0, 0, {
+		...FONT,
+		labelOn,
+		labelOff,
+		checked,
+		hoverScale: 1.04,
+		skin: {
+			atlas: texture,
+			on: "green_boxCheckmark",
+			off: "grey_boxCheckmark",
+		},
+		onChange,
+	});
+};
 
-		this.addChild(
-			new Text(this.width / 2, 16, {
-				font: "kenpixel",
-				size: 20,
-				fillStyle: "black",
-				textAlign: "center",
-				textBaseline: "top",
-				text: label,
-			}),
-		);
-
-		this.isHoldable = true;
-		this.isDraggable = true;
-	}
-
-	/**
-	 * Bring this panel to the front of whatever holds it.
-	 *
-	 * Two panels that can be dragged will overlap, and without this the one
-	 * you grabbed goes on being drawn under the other: a click would pick up
-	 * the panel on top rather than the one being pointed at.
-	 *
-	 * `moveToTop` is the container's own job, so it is asked of the ancestor
-	 * rather than done by writing `depth` here. It reorders the child list AND
-	 * sets the depth past its new neighbour, which is what the sort then
-	 * reads.
-	 *
-	 * The `instanceof` is not defensiveness: `ancestor` is typed
-	 * `Entity | Container`, and only a container has `moveToTop`. Narrowing is
-	 * what makes that safe without a cast.
-	 * @returns false, which CONSUMES the click. A panel is opaque, so a click
-	 * on it must not also reach whatever it is covering. The sense is the DOM
-	 * one and the opposite of what it looks like: `triggerEvent` stops the
-	 * walk when a handler returns `false`, so `false` means handled and
-	 * anything else lets the event carry on down to whatever is underneath.
-	 */
-	override onClick() {
-		if (this.ancestor instanceof Container) {
-			this.ancestor.moveToTop(this);
-		}
-		return false;
-	}
-
-	/**
-	 * Hovering an opaque panel must not light up a button it covers.
-	 * @returns false, consuming the event in the same sense as
-	 * {@link UIContainer#onClick}
-	 */
-	override onOver() {
-		return false;
-	}
-
-	/**
-	 * `onOver` only runs on the frame the pointer crosses INTO the panel. On
-	 * every frame after that the pointer is already inside, so the dispatcher
-	 * skips the enter callbacks and reaches the plain `pointermove` ones
-	 * instead. Consuming those too is what keeps the panel opaque to hover for
-	 * as long as the pointer stays on it.
-	 */
-	override onActivateEvent() {
-		super.onActivateEvent();
-		input.registerPointerEvent("pointermove", this, () => false);
-	}
-
-	override onDeactivateEvent() {
-		input.releasePointerEvent("pointermove", this);
-		super.onDeactivateEvent();
-	}
-}
+/**
+ * A panel on the Kenney grey frame, with a title, that can be dragged.
+ * @param x - left edge
+ * @param y - top edge
+ * @param width - its width
+ * @param height - its height
+ * @param title - its title
+ * @returns the panel, for more settings to be added to
+ */
+const framed = (
+	x: number,
+	y: number,
+	width: number,
+	height: number,
+	title: string,
+) => {
+	return {
+		x,
+		y,
+		settings: {
+			width,
+			height,
+			title,
+			titleFont: "kenpixel",
+			titleFontSize: 20,
+			titleFillStyle: "black",
+			skin: {
+				atlas: texture,
+				region: "grey_panel",
+				insetx: 10,
+				insety: 10,
+			},
+			// a soft drop shadow, rounded like the art's corners
+			shadowColor: "#00000059",
+			shadowOffsetY: 6,
+			shadowBlur: 10,
+			radius: 6,
+			draggable: true,
+		},
+	};
+};
 
 class PlayScreen extends Stage {
 	override onResetEvent(app: Application) {
-		app.world.addChild(
-			new ColorLayer("background", "rgba(248, 194, 40, 1.0)"),
-			0,
-		);
+		const background = new ColorLayer("background", "rgba(248, 194, 40, 1.0)");
+		app.world.addChild(background, 0);
 
-		const panel = new UIContainer(100, 100, 450, 325, "OPTIONS");
-
-		const cbPanel = new UIBaseElement(125, 75, 100, 100);
-
-		const cb1 = new CheckBoxUI(
-			0,
-			0,
-			texture,
-			"green_boxCheckmark",
-			"grey_boxCheckmark",
-			"Music ON",
-			"Music OFF",
-		);
-		cbPanel.addChild(cb1);
-		cbPanel.addChild(cb1.label);
-
-		const cb2 = new CheckBoxUI(
-			0,
-			50,
-			texture,
-			"green_boxCheckmark",
-			"grey_boxCheckmark",
-			"Sound FX ON",
-			"Sound FX OFF",
-		);
-		cbPanel.addChild(cb2);
-		cbPanel.addChild(cb2.label);
-
-		panel.addChild(cbPanel);
-
-		const btn1 = new ButtonUI(125, 175, "blue", "Video Options");
-		panel.addChild(btn1);
-		panel.addChild(btn1.label);
-
-		const btn2 = new ButtonUI(30, 250, "green", "Accept");
-		panel.addChild(btn2);
-		panel.addChild(btn2.label);
-
-		const btn3 = new ButtonUI(230, 250, "yellow", "Cancel");
-		panel.addChild(btn3);
-		panel.addChild(btn3.label);
-
-		app.world.addChild(panel, 1);
+		const first = this.addOptions(app, background);
 		this.addBars(app);
+		this.addLevels(app);
+
+		// keyboard and gamepad play: with the focus on a widget, the arrows or
+		// a pad's D-pad move between them, Enter or the pad's A press one
+		first.focus();
+		app.world.addChild(
+			new Text(20, 575, {
+				font: "kenpixel",
+				size: 13,
+				fillStyle: "black",
+				textAlign: "left",
+				textBaseline: "bottom",
+				text: "Keyboard: arrows and Enter   Gamepad: D-pad and A",
+			}),
+			1,
+		);
+	}
+
+	/**
+	 * The options: two checkboxes, two volume sliders and three buttons, laid
+	 * out as a column by the panel itself.
+	 * @param app - the application
+	 * @param background - the backdrop the video button recolours
+	 * @returns the first widget, where the keyboard focus starts
+	 */
+	private addOptions(app: Application, background: ColorLayer) {
+		const frame = framed(20, 20, 380, 100, "OPTIONS");
+		const panel = new UIPanel(frame.x, frame.y, {
+			...frame.settings,
+			layout: "column",
+			padding: 16,
+			gap: 12,
+			// grows to fit what is added below
+			autoSize: true,
+		});
+
+		const music = checkbox("Music ON", "Music OFF", current.music, (on) => {
+			current.music = on;
+			applyMusic();
+		});
+		const musicVolume = volume("Music volume", current.musicVolume, (v) => {
+			current.musicVolume = v;
+			if (audio.getCurrentTrack() === MUSIC) {
+				audio.fade(MUSIC, v, v, 1);
+			}
+		});
+		const sfx = checkbox("Sound FX ON", "Sound FX OFF", current.sfx, (on) => {
+			current.sfx = on;
+			if (on) {
+				audio.play(SFX, false, null, current.sfxVolume);
+			}
+		});
+		const sfxVolume = volume(
+			"Sound FX volume",
+			current.sfxVolume,
+			(v) => {
+				current.sfxVolume = v;
+			},
+			// once on release, not on every step of the drag
+			(v) => {
+				if (current.sfx) {
+					audio.play(SFX, false, null, v);
+				}
+			},
+		);
+
+		const backdrops = ["#f8c228", "#5ab0e8", "#8fd16a"];
+		let backdrop = 0;
+		const video = button("blue", "Video Options", 320, () => {
+			backdrop = (backdrop + 1) % backdrops.length;
+			background.color.parseCSS(backdrops[backdrop]);
+		});
+
+		// a row inside the column: a panel that draws nothing and lets clicks
+		// through, laying out its two buttons side by side
+		const actions = new UIPanel(0, 0, {
+			width: 320,
+			height: 49,
+			layout: "row",
+			gap: 12,
+			blocking: false,
+		});
+		actions.addChild(
+			button("green", "Accept", 154, () => {
+				Object.assign(saved, current);
+			}),
+		);
+		actions.addChild(
+			button("yellow", "Cancel", 154, () => {
+				// Restored from code, so no onChange runs: the widgets only
+				// change their look, and the audio is put back here.
+				Object.assign(current, saved);
+				music.checked = saved.music;
+				musicVolume.value = saved.musicVolume;
+				sfx.checked = saved.sfx;
+				sfxVolume.value = saved.sfxVolume;
+				applyMusic();
+			}),
+		);
+
+		panel.addChild(music);
+		panel.addChild(musicVolume);
+		panel.addChild(sfx);
+		panel.addChild(sfxVolume);
+		panel.addChild(video);
+		panel.addChild(actions);
+		app.world.addChild(panel, 1);
+		return music;
+	}
+
+	/**
+	 * A level picker: more levels than fit, in a grid that scrolls with the
+	 * wheel or a drag. A drag that starts on a level scrolls the list rather
+	 * than picking it.
+	 * @param app - the application
+	 */
+	private addLevels(app: Application) {
+		// sized to show the first 16 levels: 4 rows of 49, the title, padding and frame
+		const frame = framed(724, 20, 260, 292, "LEVELS");
+		const panel = new UIPanel(frame.x, frame.y, {
+			...frame.settings,
+			layout: "grid",
+			columns: 4,
+			padding: 10,
+			gap: 8,
+			align: "center",
+			scroll: "vertical",
+		});
+		for (let level = 1; level <= 30; level++) {
+			const pick = new UITextButton(0, 0, {
+				...FONT,
+				fontSize: 16,
+				hoverScale: 1.12,
+				pressScale: 0.9,
+				text: String(level),
+				skin: {
+					atlas: texture,
+					normal: "blue_button07",
+					pressed: "blue_button08",
+				},
+				// the last six are locked
+				enabled: level <= 24,
+				onClick: () => {
+					panel.title?.setText(`LEVEL ${level}`);
+				},
+			});
+			panel.addChild(pick);
+		}
+		app.world.addChild(panel, 1);
 	}
 
 	/**
 	 * `ProgressBar`, in the shapes it tends to be wanted in.
-	 *
-	 * In a panel of its own, like the options on the left: a bar is a UI
-	 * widget, and showing it loose on the background would say otherwise.
 	 *
 	 * All of them are drawn with primitives and no artwork. The track and the
 	 * fill are `fillRect`; a square border is four more rects, so it lands
@@ -306,7 +357,8 @@ class PlayScreen extends Stage {
 	 * @param app - the application
 	 */
 	private addBars(app: Application) {
-		const panel = new UIContainer(600, 100, 340, 400, "PROGRESS");
+		const frame = framed(408, 20, 300, 400, "PROGRESS");
+		const panel = new UIPanel(frame.x, frame.y, frame.settings);
 
 		/**
 		 * one caption, in the panel's own coordinates
@@ -330,7 +382,7 @@ class PlayScreen extends Stage {
 		panel.addChild(caption(24, 52, "squared + label"));
 		panel.addChild(
 			new ProgressBar(24, 72, {
-				width: 290,
+				width: 252,
 				height: 24,
 				value: 0.72,
 				trackColor: "#0000001a",
@@ -349,11 +401,15 @@ class PlayScreen extends Stage {
 		panel.addChild(caption(24, 112, "rounded"));
 		panel.addChild(
 			new ProgressBar(24, 132, {
-				width: 290,
+				width: 252,
 				height: 24,
 				value: 0.45,
 				radius: 12,
-				trackColor: "#0000001a",
+				// with a shadow, a solid track: a see-through one shows it
+				shadowColor: "#00000040",
+				shadowOffsetY: 3,
+				shadowBlur: 4,
+				trackColor: "#dcdcdc",
 				fillColor: "#59b25b",
 				borderColor: "black",
 				borderWidth: 2,
@@ -405,7 +461,7 @@ class PlayScreen extends Stage {
 		// 5. right-to-left, which is the mirrored form a second player gets
 		panel.addChild(caption(24, 172, "right to left"));
 		const mirrored = new ProgressBar(24, 192, {
-			width: 290,
+			width: 252,
 			height: 24,
 			value: 0.6,
 			direction: "right-to-left",
@@ -440,6 +496,13 @@ class PlayScreen extends Stage {
 		this.pulseUpdate?.(dt);
 		return true;
 	}
+
+	/**
+	 * The music belongs to this screen.
+	 */
+	override onDestroyEvent() {
+		audio.stopTrack();
+	}
 }
 
 const createGame = async () => {
@@ -449,6 +512,7 @@ const createGame = async () => {
 		scaleMethod: "flex-width",
 	});
 	await app.init();
+	audio.init("mp3,ogg");
 
 	const resources = [
 		{ name: "UI_Assets-0", type: "image", src: `${base}img/UI_Assets-0.png` },
@@ -462,6 +526,8 @@ const createGame = async () => {
 			type: "fontface",
 			src: `${base}font/kenvector_future.woff2`,
 		},
+		{ name: MUSIC, type: "audio", src: MUSIC_PATH },
+		{ name: SFX, type: "audio", src: SFX_PATH },
 	];
 
 	loader.preload(resources, () => {

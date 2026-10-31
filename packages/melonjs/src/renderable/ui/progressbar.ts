@@ -14,7 +14,10 @@ import { PanelPainter } from "./panelpaint.ts";
  */
 type EventName = Parameters<typeof on>[0];
 
-/** which way the fill grows */
+/**
+ * which way the fill grows
+ * @category UI
+ */
 export type ProgressBarDirection =
 	| "left-to-right"
 	| "right-to-left"
@@ -23,6 +26,7 @@ export type ProgressBarDirection =
 
 /**
  * Everything {@link ProgressBar} takes.
+ * @category UI
  */
 export interface ProgressBarSettings {
 	/** the bar's full width, in pixels */
@@ -52,8 +56,28 @@ export interface ProgressBarSettings {
 	padding?: number;
 	/** corner radius; `0` is square */
 	radius?: number;
+	/**
+	 * A drop shadow under the bar; `null`, the default, for none. Its alpha
+	 * is how dark the shadow gets, e.g. `"#00000066"`.
+	 */
+	shadowColor?: Paint | null;
+	/**
+	 * how far right the shadow falls, in pixels
+	 * @default 0
+	 */
+	shadowOffsetX?: number;
+	/**
+	 * how far down the shadow falls, in pixels
+	 * @default 4
+	 */
+	shadowOffsetY?: number;
+	/**
+	 * how far the shadow's soft edge spreads, in pixels; `0` is sharp
+	 * @default 8
+	 */
+	shadowBlur?: number;
 	/** called whenever the value actually moves */
-	onChange?: (value: number, ratio: number) => void;
+	onChange?: (value: number, ratio: number, bar: ProgressBar) => void;
 	/** draw a label over the bar */
 	showLabel?: boolean;
 	/** the label's font family */
@@ -152,8 +176,18 @@ export default class ProgressBar extends Renderable {
 	padding: number;
 	/** corner radius; `0` is square */
 	radius: number;
+	/** a drop shadow under the bar; `null` for none */
+	shadowColor: Paint | null;
+	/** how far right the shadow falls, in pixels */
+	shadowOffsetX: number;
+	/** how far down the shadow falls, in pixels */
+	shadowOffsetY: number;
+	/** how far the shadow's soft edge spreads, in pixels */
+	shadowBlur: number;
 	/** called whenever the value actually moves */
-	onChange?: ((value: number, ratio: number) => void) | undefined;
+	onChange?:
+		| ((value: number, ratio: number, bar: ProgressBar) => void)
+		| undefined;
 	/** what the label says */
 	labelFormat: (value: number, ratio: number) => string;
 	/** the label, when `showLabel` was asked for */
@@ -190,6 +224,10 @@ export default class ProgressBar extends Renderable {
 		this.borderWidth = settings.borderWidth ?? 1;
 		this.padding = settings.padding ?? 0;
 		this.radius = settings.radius ?? 0;
+		this.shadowColor = settings.shadowColor ?? null;
+		this.shadowOffsetX = settings.shadowOffsetX ?? 0;
+		this.shadowOffsetY = settings.shadowOffsetY ?? 4;
+		this.shadowBlur = settings.shadowBlur ?? 8;
 		this.onChange = settings.onChange;
 		this.labelFormat =
 			settings.labelFormat ?? ((_v, ratio) => `${Math.round(ratio * 100)}%`);
@@ -258,7 +296,7 @@ export default class ProgressBar extends Renderable {
 		if (this.label !== undefined) {
 			this.label.setText(this.labelFormat(next, this.ratio));
 		}
-		this.onChange?.(next, this.ratio);
+		this.onChange?.(next, this.ratio, this);
 	}
 
 	/**
@@ -309,6 +347,21 @@ export default class ProgressBar extends Renderable {
 		// `setColor`, while it still holds what `preDraw` put there.
 		const alpha = renderer.globalAlpha();
 
+		if (this.shadowColor !== null) {
+			this._painter.shadow(
+				renderer,
+				this.shadowColor,
+				alpha,
+				x,
+				y,
+				w,
+				h,
+				this.radius,
+				this.shadowOffsetX,
+				this.shadowOffsetY,
+				this.shadowBlur,
+			);
+		}
 		if (this.trackColor !== null) {
 			this._painter.paint(renderer, this.trackColor, alpha);
 			this._painter.rect(renderer, x, y, w, h, this.radius);

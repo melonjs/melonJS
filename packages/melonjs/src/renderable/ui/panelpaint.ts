@@ -4,7 +4,11 @@ import { Color, colorPool } from "../../math/color.ts";
 import type { Gradient } from "../../video/gradient.js";
 import type Renderer from "../../video/renderer.js";
 
-/** anything {@link Renderer#setColor} will take */
+/**
+ * A colour a widget is painted with: a CSS string, a {@link Color} (kept
+ * and read every frame, so changing it animates the widget), or a gradient.
+ * @category UI
+ */
 export type Paint = Color | string | Gradient;
 
 /**
@@ -205,6 +209,70 @@ export class PanelPainter {
 			renderer.fillRect(x, y + bw, bw, h - bw * 2); // left
 			renderer.fillRect(x + w - bw, y + bw, bw, h - bw * 2); // right
 		}
+	}
+
+	/**
+	 * Draw a drop shadow under a rectangle: offset, and softened by `blur`.
+	 *
+	 * Not a real blur, which primitives cannot do the same on every backend:
+	 * a few translucent rounded rectangles, from `blur` pixels larger down to
+	 * the rectangle itself, stacked so the middle reaches the shadow's own
+	 * alpha and the edge fades out. It costs a handful of fills, and looks
+	 * the same on Canvas, WebGL and WebGPU.
+	 * @param renderer - the renderer to draw with
+	 * @param color - the shadow's colour; its alpha is how dark it gets
+	 * @param cascade - the alpha the owning renderable inherited
+	 * @param x - left edge of the rectangle casting it
+	 * @param y - top edge
+	 * @param w - width
+	 * @param h - height
+	 * @param radius - the rectangle's corner radius
+	 * @param offsetX - how far right the shadow falls
+	 * @param offsetY - how far down the shadow falls
+	 * @param blur - how far the soft edge spreads, in pixels; `0` is sharp
+	 */
+	shadow(
+		renderer: Renderer,
+		color: Paint,
+		cascade: number,
+		x: number,
+		y: number,
+		w: number,
+		h: number,
+		radius: number,
+		offsetX: number,
+		offsetY: number,
+		blur: number,
+	) {
+		if (w <= 0 || h <= 0) {
+			return;
+		}
+		const spread = Math.max(0, blur);
+		// one layer per two pixels of spread, enough for a smooth edge
+		const layers = spread > 0 ? Math.min(8, Math.ceil(spread / 2) + 1) : 1;
+		// layers of alpha `a` stacked n deep reach 1 - (1 - a)^n; solve for
+		// the colour's own alpha in the middle, where they all overlap
+		// the colour's own alpha, a string's included: `paint` parses it and
+		// puts it in the global alpha, which is read straight back
+		this.paint(renderer, color, 1);
+		const target = renderer.globalAlpha();
+		const each = 1 - (1 - Math.min(target, 0.999)) ** (1 / layers);
+		const scale = target > 0 ? each / target : 0;
+		for (let i = 0; i < layers; i++) {
+			const grow = layers > 1 ? spread * (1 - i / (layers - 1)) : 0;
+			this.paint(renderer, color, cascade * scale);
+			this.rect(
+				renderer,
+				x + offsetX - grow,
+				y + offsetY - grow,
+				w + grow * 2,
+				h + grow * 2,
+				radius + grow,
+			);
+		}
+		// put the cascade back: what is drawn next, a skin above all, takes
+		// the global alpha as it finds it
+		renderer.setGlobalAlpha(cascade);
 	}
 
 	/**

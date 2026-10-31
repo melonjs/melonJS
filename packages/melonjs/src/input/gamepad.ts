@@ -296,6 +296,31 @@ function browserGamepads(): readonly (Gamepad | null)[] {
 }
 
 /**
+ * Every pad the game can read: the real ones, and the virtual ones, such as
+ * on-screen controls, each on its own even when it shares a slot with a
+ * real pad, as `updateGamepads` reads both. For a reader that wants the raw
+ * button state, such as the UI focus.
+ * @returns the pads, real first
+ * @ignore
+ * @internal
+ */
+export function readGamepads(): readonly (
+	| Pick<Gamepad, "buttons" | "axes">
+	| VirtualGamepad
+	| null
+)[] {
+	const pads: (Pick<Gamepad, "buttons" | "axes"> | VirtualGamepad | null)[] = [
+		...browserGamepads(),
+	];
+	for (const virtual of virtualGamepads) {
+		if (virtual !== undefined) {
+			pads.push(virtual);
+		}
+	}
+	return pads;
+}
+
+/**
  * Whether the browser has the Gamepad API
  * @ignore
  * @internal

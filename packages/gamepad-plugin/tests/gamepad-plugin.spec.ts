@@ -422,6 +422,38 @@ describe("GamepadPlugin", () => {
 		input.releasePointerEvent("pointerdown", app.viewport, spy);
 	});
 
+	it("keeps a touch's hover from the game too (#1805)", () => {
+		const enter = vi.fn();
+		const leave = vi.fn();
+		input.registerPointerEvent("pointerenter", app.viewport, enter);
+		input.registerPointerEvent("pointerleave", app.viewport, leave);
+
+		// a tap on a button: over and enter before the down, out and leave
+		// after the up, as a touch fires them
+		const at = button.center;
+		const over = pointer("pointerover", 1, at.x, at.y);
+		pointer("pointerenter", 1, at.x, at.y);
+		down(1, at);
+		up(1, at);
+		pointer("pointerout", 1, at.x, at.y);
+		pointer("pointerleave", 1, at.x, at.y);
+		expect(enter).not.toHaveBeenCalled();
+		expect(leave).not.toHaveBeenCalled();
+		expect(over.defaultPrevented).toBe(false);
+
+		// a tap on the game is the game's
+		const game = { x: app.viewport.width / 2, y: 20 };
+		pointer("pointerenter", 2, game.x, game.y);
+		expect(enter).toHaveBeenCalledOnce();
+
+		// and a mouse over a button is left alone, as its moves are
+		pointer("pointerenter", 3, at.x, at.y, "mouse");
+		expect(enter).toHaveBeenCalledTimes(2);
+
+		input.releasePointerEvent("pointerenter", app.viewport, enter);
+		input.releasePointerEvent("pointerleave", app.viewport, leave);
+	});
+
 	it("fires a locked key once per tap, however long it is held", () => {
 		input.bindKey(KEY.X, "jump", true);
 		down(1, button.center);
