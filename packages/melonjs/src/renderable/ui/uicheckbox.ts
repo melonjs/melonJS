@@ -12,25 +12,45 @@ import { SkinDrawer } from "./uiskin.ts";
 
 /**
  * The art of a skinned {@link UICheckbox}: one atlas region per state.
+ *
+ * Only `on` and `off` are needed. Each region is drawn as a square of
+ * {@link UICheckboxSettings#boxSize} pixels (the height of `off` by
+ * default). Every region named is looked up when the checkbox is built, so
+ * a misspelt name throws there.
  * @category UI
+ * @example
+ * // two regions: the rest fall back to them
+ * const skin = { atlas, on: "green_boxCheckmark", off: "grey_boxCheckmark" };
  */
 export interface UICheckboxSkin extends UISkin {
-	/** the box when checked */
+	/** the region drawn when checked */
 	on: string;
-	/** the box when not checked */
+	/** the region drawn when not checked */
 	off: string;
-	/** the checked box under the pointer; `on` if left out */
+	/** the region drawn when checked and under the pointer; `on` if left out */
 	hoverOn?: string;
-	/** the unchecked box under the pointer; `off` if left out */
+	/**
+	 * the region drawn when not checked and under the pointer; `off` if left
+	 * out
+	 */
 	hoverOff?: string;
-	/** the checked box while disabled; `on` at half opacity if left out */
+	/**
+	 * the region drawn when checked and disabled; `on` at half opacity if
+	 * left out
+	 */
 	disabledOn?: string;
-	/** the unchecked box while disabled; `off` at half opacity if left out */
+	/**
+	 * the region drawn when not checked and disabled; `off` at half opacity
+	 * if left out
+	 */
 	disabledOff?: string;
 }
 
 /**
- * Everything {@link UICheckbox} takes.
+ * The settings {@link UICheckbox} takes. All are optional.
+ *
+ * The colour settings are for the drawn look and are ignored when a `skin`
+ * is given.
  * @category UI
  */
 export interface UICheckboxSettings extends UIJuiceSettings {
@@ -39,30 +59,36 @@ export interface UICheckboxSettings extends UIJuiceSettings {
 	 * @default false
 	 */
 	checked?: boolean;
-	/** the text next to the box, whatever the state */
+	/**
+	 * the text next to the box, the same in both states; `labelOn` and
+	 * `labelOff` replace it for one state each
+	 */
 	label?: string;
-	/** the text while checked, in place of `label` */
+	/** the text while checked; `label` if left out */
 	labelOn?: string;
-	/** the text while not checked, in place of `label` */
+	/** the text while not checked; `label` if left out */
 	labelOff?: string;
 	/**
-	 * Called when the user changes it, never when `checked` is set from code.
-	 * See {@link UICheckbox#onChange}.
+	 * Called with the new state when the user checks or unchecks it (click,
+	 * tap, or Enter with the focus). Never called when `checked` is set or
+	 * `toggle()` is called from code. See {@link UICheckbox#onChange}.
 	 */
 	onChange?: (checked: boolean, checkbox: UICheckbox) => void;
 	/**
-	 * whether it answers input
+	 * whether it answers input; a disabled checkbox is drawn faded, or with
+	 * the skin's `disabledOn` / `disabledOff` regions
 	 * @default true
 	 */
 	enabled?: boolean;
 	/**
-	 * the side of the box, in pixels; 24, or the height of the skin's `off`
-	 * region
+	 * the side of the box, in pixels; with a skin, the height of its `off`
+	 * region by default
+	 * @default 24
 	 */
 	boxSize?: number;
 	/**
-	 * Make it one of a set of radio buttons: checkboxes sharing a group name
-	 * have exactly one checked. See {@link UICheckbox#group}.
+	 * a radio group name: checkboxes sharing it have one checked at a time,
+	 * and are drawn round. See {@link UICheckbox#group}.
 	 */
 	group?: string;
 	/**
@@ -70,7 +96,10 @@ export interface UICheckboxSettings extends UIJuiceSettings {
 	 * @default "sans-serif"
 	 */
 	font?: string;
-	/** the label's height, in pixels; two thirds of `boxSize` by default */
+	/**
+	 * the label's text height, in pixels; two thirds of `boxSize`, and at
+	 * least 12, by default
+	 */
 	fontSize?: number;
 	/**
 	 * the label's colour
@@ -83,36 +112,38 @@ export interface UICheckboxSettings extends UIJuiceSettings {
 	 */
 	labelGap?: number;
 	/**
-	 * the box's fill (drawn look)
+	 * the box's fill when not checked (drawn look); also the tick's colour
 	 * @default "#ffffff"
 	 */
 	boxColor?: Paint;
 	/**
-	 * the box's fill under the pointer (drawn look)
+	 * the box's fill when not checked and under the pointer (drawn look)
 	 * @default "#e4eefb"
 	 */
 	boxHoverColor?: Paint;
 	/**
-	 * the box's fill when checked, and the radio dot (drawn look)
+	 * the box's fill and outline when checked, and a radio button's dot
+	 * (drawn look)
 	 * @default "#2a7de1"
 	 */
 	checkColor?: Paint;
 	/**
-	 * the box's outline (drawn look)
+	 * the box's outline when not checked (drawn look)
 	 * @default "#3a3a3a"
 	 */
 	borderColor?: Paint;
 	/**
-	 * the outline's thickness (drawn look)
+	 * the outline's thickness, in pixels (drawn look); `0` for none
 	 * @default 2
 	 */
 	borderWidth?: number;
 	/**
-	 * the box's corner radius (drawn look); a radio button is round
+	 * the box's corner radius, in pixels (drawn look); ignored by a radio
+	 * button, which is round
 	 * @default 4
 	 */
 	radius?: number;
-	/** draw the box from atlas regions instead */
+	/** draw the box from atlas regions instead of the drawn look */
 	skin?: UICheckboxSkin;
 }
 
@@ -120,59 +151,125 @@ export interface UICheckboxSettings extends UIJuiceSettings {
 const groups = new Map<string, Set<UICheckbox>>();
 
 /**
- * A box that can be checked, with a label next to it; with a `group`, a
- * radio button.
+ * A checkbox with a text label, for an on/off option such as music, sound
+ * or full screen. Give several the same `group` and they become radio
+ * buttons: one choice out of a few, such as a difficulty level.
  *
- * Drawn with primitives by default, so it needs no art, or from atlas
- * regions through a {@link UICheckboxSkin}. The label is part of the
- * widget: clicking it toggles the box, and removing the widget takes it
- * along.
+ * ## Look
+ * - Drawn with shapes by default, so it needs no art: a square with a tick,
+ *   or a circle with a dot for a radio button. The colour settings
+ *   (`boxColor`, `checkColor`, `borderColor`...) change it.
+ * - Skinned: pass a {@link UICheckboxSkin} of atlas regions, one per state
+ *   (`on`, `off`, and optionally `hoverOn`, `hoverOff`, `disabledOn`,
+ *   `disabledOff`).
  *
- * Its state is {@link UICheckbox#checked}. The game hears about a change
- * through `onChange`, which only user input calls: restoring saved settings
- * by setting `checked` does not run the game logic attached to it.
+ * ## Label
+ * `label` is the text next to the box. `labelOn` and `labelOff` give it a
+ * different text in each state ("Music ON" / "Music OFF"). The
+ * {@link UICheckbox#labelOn} and {@link UICheckbox#labelOff} properties
+ * change the text later, and the widget resizes to fit. It is as wide as the box
+ * plus the longer of the two texts, so it does not change size as it
+ * toggles. The label is part of the widget: clicking it toggles the box too.
+ *
+ * ## State and onChange
+ * The state is {@link UICheckbox#checked}. `onChange` is called only when
+ * the player changes it. Setting `checked`, or calling `toggle()`, from code
+ * never calls it: restore saved settings by setting `checked`, without
+ * running the code a click would (starting the music twice, saving again).
+ *
+ * ## Radio groups
+ * Checkboxes with the same {@link UICheckbox#group} name have one checked
+ * at a time: checking one unchecks the others, and clicking the checked one
+ * leaves it checked. A checkbox belongs to its group while it is in the
+ * scene, so {@link UICheckbox.checkedIn} only sees checkboxes that have
+ * been added to the world. A checked one added to a group unchecks the
+ * others already there.
+ *
+ * ## Keyboard and gamepad
+ * It can take the focus ({@link UIBaseElement#focus}). With the focus,
+ * Enter, Space or the pad's A button toggles it, as a click does, and calls
+ * `onChange`.
+ *
+ * Set `enabled` to `false` to turn it off: it ignores input and is drawn
+ * faded, or with the skin's disabled regions.
  * @category UI
  * @example
- * const music = new UICheckbox(40, 60, {
+ * // a settings toggle, drawn, with no assets
+ * const subtitles = new UICheckbox(40, 60, {
+ *     label: "Subtitles",
+ *     checked: settings.subtitles,
+ *     onChange: (on) => {
+ *         settings.subtitles = on;
+ *     },
+ * });
+ * panel.addChild(subtitles);
+ * @example
+ * // a label that follows the state
+ * const music = new UICheckbox(40, 100, {
  *     labelOn: "Music ON",
  *     labelOff: "Music OFF",
- *     checked: settings.music,
+ *     checked: true,
  *     onChange: (on) => {
- *         settings.music = on;
  *         on ? audio.playTrack("theme") : audio.stopTrack();
  *     },
  * });
  * panel.addChild(music);
- *
- * // three radio buttons, one checked at a time
- * for (const [i, level] of ["Easy", "Normal", "Hard"].entries()) {
- *     panel.addChild(new UICheckbox(40, 120 + i * 32, {
+ * @example
+ * // a radio group, and reading the choice
+ * const levels = new Map();
+ * for (const [i, level] of ["easy", "normal", "hard"].entries()) {
+ *     const radio = new UICheckbox(40, 140 + i * 32, {
  *         label: level,
  *         group: "difficulty",
- *         checked: level === "Normal",
- *     }));
+ *         checked: level === "normal",
+ *         onChange: () => console.log("picked", level),
+ *     });
+ *     levels.set(radio, level);
+ *     panel.addChild(radio);
  * }
- * const chosen = UICheckbox.checkedIn("difficulty");
+ * // later, once the panel is in the world (e.g. when OK is clicked)
+ * const difficulty = levels.get(UICheckbox.checkedIn("difficulty"));
+ * @example
+ * // skinned from an atlas, with a bitmap font
+ * const sfx = new UICheckbox(40, 260, {
+ *     label: "Sound effects",
+ *     font: "kenpixel",
+ *     fontSize: 14,
+ *     skin: { atlas, on: "green_boxCheckmark", off: "grey_boxCheckmark" },
+ * });
+ * @example
+ * // restoring saved settings without calling onChange
+ * save.add({ music: true });
+ * music.checked = save.music; // the look updates, onChange is not called
+ * save.music ? audio.playTrack("theme") : audio.stopTrack(); // applied once
  */
 export default class UICheckbox extends UIBaseElement {
 	/**
-	 * Called when the user checks or unchecks it, with the new state.
+	 * Called with the new state when the user checks or unchecks it: a
+	 * click or tap on the box or its label, or Enter, Space or the pad's A
+	 * with the focus.
 	 *
 	 * Never called when {@link UICheckbox#checked} is set, or
 	 * {@link UICheckbox#toggle} is called, from code. In a radio group only
-	 * the button the user picked is told; the one that was unchecked to make
-	 * room is not, as with radio buttons in a web page.
+	 * the button the user picked is called; the one unchecked to make room
+	 * is not. Not called while the checkbox is disabled.
+	 * @example
+	 * sfx.onChange = (on) => {
+	 *     settings.sfx = on;
+	 * };
 	 */
 	onChange: ((checked: boolean, checkbox: UICheckbox) => void) | undefined;
 
 	/**
-	 * The radio group this checkbox belongs to, if any.
+	 * The radio group this checkbox belongs to, or `undefined` for a plain
+	 * checkbox.
 	 *
-	 * Checkboxes sharing a group have exactly one checked: checking one
-	 * unchecks the others, and clicking the checked one leaves it checked. A
-	 * checkbox is in its group while it is in the scene; removing it takes it
-	 * out. Changing it moves the checkbox to the new group straight away;
-	 * a checked one then unchecks the others there.
+	 * Checkboxes sharing a group have one checked at a time: checking one
+	 * unchecks the others, and clicking the checked one leaves it checked.
+	 * A radio button is drawn round, with a dot. A checkbox is in its group
+	 * while it is in the scene; removing it takes it out. Changing `group`
+	 * moves it to the new group straight away, and if it is checked it
+	 * unchecks the others there.
 	 */
 	get group(): string | undefined {
 		return this._group;
@@ -193,26 +290,33 @@ export default class UICheckbox extends UIBaseElement {
 		this.isDirty = true;
 	}
 
-	/** the box's fill (drawn look) */
+	/** the box's fill when not checked, and the tick's colour (drawn look) */
 	boxColor: Paint;
-	/** the box's fill under the pointer (drawn look) */
+	/** the box's fill when not checked and under the pointer (drawn look) */
 	boxHoverColor: Paint;
-	/** the box's fill when checked, and the radio dot (drawn look) */
+	/**
+	 * the box's fill and outline when checked, and a radio button's dot
+	 * (drawn look)
+	 */
 	checkColor: Paint;
-	/** the box's outline (drawn look) */
+	/** the box's outline when not checked (drawn look) */
 	borderColor: Paint;
-	/** the outline's thickness (drawn look) */
+	/** the outline's thickness, in pixels (drawn look); `0` for none */
 	borderWidth: number;
-	/** the box's corner radius (drawn look) */
+	/** the box's corner radius, in pixels (drawn look; not for a radio button) */
 	radius: number;
 
 	/** the side of the box, in pixels */
 	readonly boxSize: number;
 	/** the space between the box and the label, in pixels */
 	readonly labelGap: number;
-	/** the label, absent when there is no text */
+	/**
+	 * The text object drawn next to the box, or `undefined` when there is no
+	 * text. Change the text through {@link UICheckbox#labelOn} and
+	 * {@link UICheckbox#labelOff}, which also resize the widget.
+	 */
 	label: UILabel | undefined;
-	/** the art, when it is skinned */
+	/** the atlas regions it is drawn from, or `undefined` for the drawn look */
 	readonly skin: UICheckboxSkin | undefined;
 
 	/** @ignore */
@@ -299,9 +403,13 @@ export default class UICheckbox extends UIBaseElement {
 	/**
 	 * Whether it is checked.
 	 *
-	 * Setting it updates the look WITHOUT calling `onChange`, so restoring
-	 * saved settings does not trigger the game logic that a click would.
-	 * Checking a radio button unchecks the others in its group.
+	 * Setting it updates the look and the label, and does NOT call
+	 * `onChange`: restoring saved settings this way does not run the code a
+	 * click would. Checking a radio button unchecks the others in its group,
+	 * silently too.
+	 * @example
+	 * // show the saved state when the menu opens
+	 * music.checked = save.music;
 	 */
 	get checked(): boolean {
 		return this._checked;
@@ -320,7 +428,12 @@ export default class UICheckbox extends UIBaseElement {
 	}
 
 	/**
-	 * The text while checked. Setting it resizes the widget to fit.
+	 * The text shown while checked. Setting it updates the label and
+	 * resizes the widget to fit; set both this and
+	 * {@link UICheckbox#labelOff} to change a single `label`.
+	 * @example
+	 * music.labelOn = "Music: on";
+	 * music.labelOff = "Music: off";
 	 */
 	get labelOn(): string {
 		return this._labelOn;
@@ -332,7 +445,8 @@ export default class UICheckbox extends UIBaseElement {
 	}
 
 	/**
-	 * The text while not checked. Setting it resizes the widget to fit.
+	 * The text shown while not checked. Setting it updates the label and
+	 * resizes the widget to fit.
 	 */
 	get labelOff(): string {
 		return this._labelOff;
@@ -382,8 +496,9 @@ export default class UICheckbox extends UIBaseElement {
 	}
 
 	/**
-	 * Flip it, from code. Like setting {@link UICheckbox#checked}, this does
-	 * not call `onChange`.
+	 * Flip it from code. Like setting {@link UICheckbox#checked}, this does
+	 * not call `onChange`. On a checked radio button it unchecks it, which
+	 * leaves its group with nothing checked.
 	 * @returns the new state
 	 */
 	toggle(): boolean {
@@ -392,9 +507,16 @@ export default class UICheckbox extends UIBaseElement {
 	}
 
 	/**
-	 * The checked checkbox of a radio group.
+	 * The checked checkbox of a radio group: the player's choice.
+	 *
+	 * Only checkboxes in the scene are in a group, so this returns
+	 * `undefined` until they (or the panel holding them) are added to the
+	 * world.
 	 * @param group - the group name
-	 * @returns the checked member in the scene, or undefined
+	 * @returns the checked member, or `undefined` when none is checked
+	 * @example
+	 * const picked = UICheckbox.checkedIn("difficulty");
+	 * console.log(picked?.labelOn); // the text of the checked radio button
 	 */
 	static checkedIn(group: string): UICheckbox | undefined {
 		const members = groups.get(group);
@@ -445,7 +567,8 @@ export default class UICheckbox extends UIBaseElement {
 	}
 
 	/**
-	 * Accept let go with the focus here: toggle, as a click does.
+	 * Enter, Space or the pad's A let go with the focus here: toggle, and
+	 * call `onChange`, as a click does.
 	 */
 	override focusRelease(): void {
 		const pressed = !this.released;

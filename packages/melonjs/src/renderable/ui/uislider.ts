@@ -22,30 +22,47 @@ import type { UISkin } from "./uiskin.ts";
 import { SkinDrawer } from "./uiskin.ts";
 
 /**
- * The art of a skinned {@link UISlider}.
+ * The art of a skinned {@link UISlider}: atlas regions for the track, the
+ * filled part of the track and the thumb.
  *
- * The track and the fill are drawn as nine-slices along the slider's length;
- * the thumb at its own size.
+ * The track and the fill are stretched as nine-slices along the slider's
+ * {@link UISliderSettings#length}, and keep the region's thickness across
+ * it unless `trackThickness` is set. The thumb is drawn at its region's
+ * size. A disabled slider is drawn at half opacity. Every region named is
+ * looked up when the slider is built, so a misspelt name throws there.
  * @category UI
+ * @example
+ * // a track and a thumb; no fill
+ * const skin = { atlas, track: "grey_sliderHorizontal", thumb: "blue_sliderDown" };
  */
 export interface UISliderSkin extends UISkin {
-	/** the whole track */
+	/** the region for the whole track */
 	track: string;
-	/** the part of the track up to the thumb; left out, it is not drawn */
+	/**
+	 * the region for the part of the track from the low end to the thumb;
+	 * not drawn if left out
+	 */
 	fill?: string;
-	/** the thumb */
+	/** the region for the thumb */
 	thumb: string;
-	/** the thumb under the pointer or while dragged; `thumb` if left out */
+	/**
+	 * the region for the thumb under the pointer or while dragged; `thumb`
+	 * if left out
+	 */
 	thumbHover?: string;
 }
 
 /**
- * Everything {@link UISlider} takes.
+ * The settings {@link UISlider} takes. All are optional.
+ *
+ * The colour settings are for the drawn look and are ignored when a `skin`
+ * is given.
  * @category UI
  */
 export interface UISliderSettings extends UIJuiceSettings {
 	/**
-	 * the lowest value
+	 * the lowest value; `min` and `max` are swapped if given the wrong way
+	 * round
 	 * @default 0
 	 */
 	min?: number;
@@ -55,55 +72,73 @@ export interface UISliderSettings extends UIJuiceSettings {
 	 */
 	max?: number;
 	/**
-	 * The step values snap to; `0` for none.
+	 * the interval values snap to, counted from `min`; `0` for no snapping
 	 * @default 0
 	 */
 	step?: number;
-	/** the starting value; `min` by default */
+	/**
+	 * the starting value, snapped to `step` and clamped to the range; `min`
+	 * by default
+	 */
 	value?: number;
 	/**
-	 * which way it slides; a vertical slider has its highest value at the top
+	 * which way it slides; a vertical slider has its highest value at the
+	 * top. Fixed once built.
 	 * @default "horizontal"
 	 */
 	orientation?: "horizontal" | "vertical";
 	/**
-	 * the length of the track, in pixels
+	 * the length of the track, in pixels: its width on a horizontal slider,
+	 * its height on a vertical one
 	 * @default 200
 	 */
 	length?: number;
 	/**
-	 * the thickness of the track, in pixels (drawn look; a skin uses its
-	 * track region's)
+	 * the thickness of the track, in pixels; with a skin, the track region's
+	 * thickness by default
 	 * @default 6
 	 */
 	trackThickness?: number;
 	/**
-	 * the diameter of the thumb, in pixels (drawn look; a skin uses its
-	 * thumb region's size)
+	 * the diameter of the round thumb, in pixels (drawn look; a skin's thumb
+	 * keeps its region's size)
 	 * @default 20
 	 */
 	thumbSize?: number;
-	/** called on every change the user makes; see {@link UISlider#onChange} */
+	/**
+	 * Called with the new value on every change the user makes, while
+	 * dragging too. Never called when `value` is set from code. See
+	 * {@link UISlider#onChange}.
+	 */
 	onChange?: (value: number, slider: UISlider) => void;
-	/** called once when the user lets go; see {@link UISlider#onChangeEnd} */
+	/**
+	 * Called with the final value once the user lets go, and after each
+	 * wheel or key step. Never called when `value` is set from code. See
+	 * {@link UISlider#onChangeEnd}.
+	 */
 	onChangeEnd?: (value: number, slider: UISlider) => void;
 	/**
-	 * whether it answers input
+	 * whether it answers input; a disabled slider is drawn at half opacity
 	 * @default true
 	 */
 	enabled?: boolean;
-	/** a caption, drawn above the track */
+	/**
+	 * a caption drawn above the track: at the left on a horizontal slider,
+	 * centred on a vertical one
+	 */
 	label?: string;
 	/**
-	 * show the value as text: right of the caption on a horizontal slider,
-	 * below the track on a vertical one
+	 * show the value as text: at the right end of the caption row on a
+	 * horizontal slider, below the track on a vertical one
 	 * @default false
 	 */
 	showValue?: boolean;
 	/**
-	 * How the value is written, given the value and where it is between
-	 * `min` and `max` (0 to 1), as `ProgressBar`'s `labelFormat` is: e.g.
-	 * `(v, ratio) => Math.round(ratio * 100) + "%"`
+	 * How the value text is written, given the value and the ratio (where
+	 * the value is between `min` and `max`, 0 to 1). By default, the value
+	 * with as many decimals as `step` has, or 2 decimals with no step.
+	 * @example
+	 * valueFormat: (value, ratio) => `${Math.round(ratio * 100)}%`
 	 */
 	valueFormat?: (value: number, ratio: number) => string;
 	/**
@@ -112,12 +147,12 @@ export interface UISliderSettings extends UIJuiceSettings {
 	 */
 	font?: string;
 	/**
-	 * the text height, in pixels
+	 * the text height of the caption and the value, in pixels
 	 * @default 16
 	 */
 	fontSize?: number;
 	/**
-	 * the text colour
+	 * the colour of the caption and the value
 	 * @default "#000000"
 	 */
 	labelFillStyle?: string;
@@ -127,7 +162,7 @@ export interface UISliderSettings extends UIJuiceSettings {
 	 */
 	trackColor?: Paint;
 	/**
-	 * the track up to the thumb (drawn look)
+	 * the part of the track from the low end to the thumb (drawn look)
 	 * @default "#2a7de1"
 	 */
 	fillColor?: Paint;
@@ -147,11 +182,12 @@ export interface UISliderSettings extends UIJuiceSettings {
 	 */
 	thumbBorderColor?: Paint;
 	/**
-	 * the thickness of the thumb's outline (drawn look); `0` for none
+	 * the thickness of the thumb's outline, in pixels (drawn look); `0` for
+	 * none
 	 * @default 2
 	 */
 	thumbBorderWidth?: number;
-	/** draw it from atlas regions instead */
+	/** draw it from atlas regions instead of the drawn look */
 	skin?: UISliderSkin;
 }
 
@@ -164,51 +200,138 @@ interface Box {
 }
 
 /**
- * A value picked by sliding a thumb along a track: volume, sensitivity,
+ * A slider: the player picks a number by moving a thumb along a track. Use
+ * it for settings with a range, such as volume, mouse sensitivity or
  * brightness.
  *
- * Drag the thumb, or click or tap the track to jump there. The drag keeps
- * following the pointer once it leaves the track. The mouse wheel over the
- * slider moves it a step. Drawn with primitives by default, or from atlas
- * regions through a {@link UISliderSkin}.
+ * ## Range and value
+ * The value is {@link UISlider#value}, between {@link UISlider#min} and
+ * {@link UISlider#max} (0 and 1 by default). With a {@link UISlider#step}
+ * it snaps to that interval; `step: 1` gives whole numbers. `min`, `max`
+ * and `step` can be changed later: the value is clamped and snapped again,
+ * silently. {@link UISlider#ratio} is where the value is in the range, from
+ * 0 to 1.
  *
- * Its value is {@link UISlider#value}. `onChange` hears every change the
- * user makes, while dragging too, and `onChangeEnd` once when they let go,
- * which is where to save settings or play a test sound. Neither is called
- * when `value` is set from code.
+ * ## Input
+ * - Drag the thumb. The drag keeps following the pointer when it leaves
+ *   the slider, until the button or finger is released.
+ * - Click or tap the track: the thumb jumps there, and can be dragged on.
+ * - The mouse wheel over the slider moves it one step (a hundredth of the
+ *   range with no `step`).
+ * - With the focus ({@link UIBaseElement#focus}), the arrow keys or the
+ *   D-pad step it: left and right on a horizontal slider, up and down on a
+ *   vertical one. A step is `step`, or a twentieth of the range without
+ *   one.
  *
- * Inside a scrolling {@link UIPanel}, dragging the thumb moves the slider,
- * not the panel.
+ * ## onChange and onChangeEnd
+ * `onChange` is called on every change the user makes, many times during a
+ * drag: use it for live feedback, such as setting the volume. `onChangeEnd`
+ * is called once when the user lets go, and after each wheel or key step:
+ * use it for work that should not run on every frame of a drag, such as
+ * saving settings or playing a test sound. Neither is called when `value`
+ * is set from code, so restoring saved settings does not trigger them.
+ *
+ * ## Text
+ * `label` is a caption drawn above the track. `showValue` adds the value as
+ * text, written by `valueFormat(value, ratio)`. The default format shows
+ * as many decimals as `step` has: `step: 1` shows "7", `step: 0.1` shows
+ * "0.7", and no step shows "0.70".
+ *
+ * ## Look
+ * Drawn with shapes by default: a rounded track, a filled part up to the
+ * thumb, and a round thumb, coloured by `trackColor`, `fillColor`,
+ * `thumbColor`, `thumbHoverColor` and `thumbBorderColor`. Or pass a
+ * {@link UISliderSkin} of atlas regions (`track`, `fill`, `thumb`,
+ * `thumbHover`).
+ *
+ * ## In a scrolling panel
+ * Inside a scrolling {@link UIPanel}, a drag that starts on the slider
+ * moves the slider, not the panel.
  * @category UI
  * @example
+ * // a volume slider wired to the audio, saved when the user lets go
+ * save.add({ volume: 1 });
  * const volume = new UISlider(40, 80, {
- *     label: "Music",
- *     showValue: true,
- *     valueFormat: (v, ratio) => Math.round(ratio * 100) + "%",
- *     value: audio.getVolume(),
+ *     label: "Volume",
+ *     value: save.volume,
  *     onChange: (v) => audio.setVolume(v),
- *     onChangeEnd: () => saveSettings(),
+ *     onChangeEnd: (v) => {
+ *         save.volume = v;
+ *     },
  * });
  * panel.addChild(volume);
+ * @example
+ * // a whole number from 1 to 10, shown as "1" ... "10"
+ * const sensitivity = new UISlider(40, 140, {
+ *     label: "Sensitivity",
+ *     min: 1,
+ *     max: 10,
+ *     step: 1,
+ *     value: 5,
+ *     showValue: true,
+ * });
+ * @example
+ * // vertical: highest value at the top
+ * const brightness = new UISlider(300, 40, {
+ *     orientation: "vertical",
+ *     length: 150,
+ *     label: "Light",
+ *     showValue: true,
+ *     value: 0.8,
+ * });
+ * @example
+ * // skinned from an atlas
+ * const music = new UISlider(40, 200, {
+ *     length: 320,
+ *     skin: { atlas, track: "grey_sliderHorizontal", thumb: "blue_sliderDown" },
+ * });
+ * @example
+ * // the value shown as a percentage
+ * const sfx = new UISlider(40, 260, {
+ *     label: "Effects",
+ *     showValue: true,
+ *     valueFormat: (value, ratio) => `${Math.round(ratio * 100)}%`,
+ * });
+ * @example
+ * // in a scrolling panel: dragging the thumb does not scroll the panel
+ * const options = new UIPanel(20, 20, {
+ *     width: 360,
+ *     height: 200,
+ *     layout: "column",
+ *     padding: 12,
+ *     scroll: "vertical",
+ * });
+ * options.addChild(new UISlider(0, 0, { label: "Music", length: 300 }));
+ * options.addChild(new UISlider(0, 0, { label: "Effects", length: 300 }));
  */
 export default class UISlider extends UIBaseElement {
 	/**
-	 * Called with the new value on every change the user makes: each drag
-	 * step, a click on the track, a wheel step. Not when
-	 * {@link UISlider#value} is set from code.
+	 * Called with the new value on every change the user makes: each move
+	 * of a drag, a click on the track, a wheel or key step. Use it for live
+	 * feedback. Not called when {@link UISlider#value} is set from code, nor
+	 * when a move leaves the value unchanged.
+	 * @example
+	 * volume.onChange = (v) => audio.setVolume(v);
 	 */
 	onChange: ((value: number, slider: UISlider) => void) | undefined;
 
 	/**
-	 * Called once when the user lets go after changing the value, and after
-	 * each wheel step. For work that should not run on every drag step:
-	 * saving settings, playing a test sound.
+	 * Called with the final value once the user lets go after changing it,
+	 * and after each wheel or key step. Use it for work that should not run
+	 * on every move of a drag: saving settings, playing a test sound. Not
+	 * called when {@link UISlider#value} is set from code, nor when a drag
+	 * ends where it began.
+	 * @example
+	 * sfx.onChangeEnd = (v) => {
+	 *     save.sfxVolume = v;
+	 *     audio.play("coin", { volume: v });
+	 * };
 	 */
 	onChangeEnd: ((value: number, slider: UISlider) => void) | undefined;
 
 	/** the track (drawn look) */
 	trackColor: Paint;
-	/** the track up to the thumb (drawn look) */
+	/** the part of the track from the low end to the thumb (drawn look) */
 	fillColor: Paint;
 	/** the thumb (drawn look) */
 	thumbColor: Paint;
@@ -216,16 +339,19 @@ export default class UISlider extends UIBaseElement {
 	thumbHoverColor: Paint;
 	/** the thumb's outline (drawn look) */
 	thumbBorderColor: Paint;
-	/** the thickness of the thumb's outline (drawn look) */
+	/** the thickness of the thumb's outline, in pixels (drawn look) */
 	thumbBorderWidth: number;
 
-	/** which way it slides */
+	/** which way it slides; set when it is built */
 	readonly orientation: "horizontal" | "vertical";
-	/** the art, when it is skinned */
+	/** the atlas regions it is drawn from, or `undefined` for the drawn look */
 	readonly skin: UISliderSkin | undefined;
-	/** the caption, if any */
+	/** the caption's text object, or `undefined` without a `label` */
 	readonly label: UILabel | undefined;
-	/** the value text, when `showValue` is set */
+	/**
+	 * the value's text object, or `undefined` without `showValue`; kept up
+	 * to date by the slider
+	 */
 	readonly valueText: UILabel | undefined;
 
 	/** @ignore */
@@ -426,8 +552,9 @@ export default class UISlider extends UIBaseElement {
 	}
 
 	/**
-	 * The lowest value. Setting it clamps the value into the new range,
-	 * without calling `onChange`.
+	 * The lowest value. Setting it clamps and snaps the value into the new
+	 * range without calling `onChange`; a `min` above `max` raises `max` to
+	 * it.
 	 */
 	get min(): number {
 		return this._min;
@@ -440,8 +567,12 @@ export default class UISlider extends UIBaseElement {
 	}
 
 	/**
-	 * The highest value. Setting it clamps the value into the new range,
-	 * without calling `onChange`.
+	 * The highest value. Setting it clamps and snaps the value into the new
+	 * range without calling `onChange`; a `max` below `min` lowers `min` to
+	 * it.
+	 * @example
+	 * // unlock more levels: the value keeps its place
+	 * levelSelect.max = unlockedLevels;
 	 */
 	get max(): number {
 		return this._max;
@@ -454,8 +585,9 @@ export default class UISlider extends UIBaseElement {
 	}
 
 	/**
-	 * The step values snap to; `0` for none. Setting it snaps the value to
-	 * it, without calling `onChange`.
+	 * The interval values snap to, counted from `min`; `0` for none.
+	 * Setting it snaps the value to it without calling `onChange`, and, with
+	 * the default `valueFormat`, changes the decimals shown to match.
 	 */
 	get step(): number {
 		return this._step;
@@ -472,7 +604,11 @@ export default class UISlider extends UIBaseElement {
 
 	/**
 	 * Where the value is between {@link UISlider#min} and
-	 * {@link UISlider#max}, from 0 to 1.
+	 * {@link UISlider#max}, from 0 to 1 (0 when the range is empty).
+	 * Read only.
+	 * @example
+	 * // a 50..150 slider at 125 has a ratio of 0.75
+	 * const percent = Math.round(slider.ratio * 100);
 	 */
 	get ratio(): number {
 		const span = this._max - this._min;
@@ -480,8 +616,12 @@ export default class UISlider extends UIBaseElement {
 	}
 
 	/**
-	 * How the value is written, given the value and the ratio. Setting it
-	 * rewrites the value text.
+	 * How the value text is written, given the value and the ratio (0 to
+	 * 1). Setting it rewrites the value text straight away. The space for
+	 * the text on a vertical slider is measured when it is built, so a much
+	 * longer format set later may not fit.
+	 * @example
+	 * slider.valueFormat = (value) => `${value} px`;
 	 */
 	get valueFormat(): (value: number, ratio: number) => string {
 		return this._valueFormat;
@@ -517,9 +657,13 @@ export default class UISlider extends UIBaseElement {
 	 * The current value, between {@link UISlider#min} and
 	 * {@link UISlider#max}.
 	 *
-	 * Setting it snaps it to the step and clamps it, and does NOT call
-	 * `onChange` or `onChangeEnd`, so restoring saved settings does not
-	 * trigger what a user's change would.
+	 * Setting it snaps it to the step and clamps it to the range, and does
+	 * NOT call `onChange` or `onChangeEnd`: restoring saved settings does not
+	 * run the code a user's change would. A value that is not a finite
+	 * number is ignored.
+	 * @example
+	 * // show the saved volume when the menu opens
+	 * volume.value = save.volume;
 	 */
 	get value(): number {
 		return this._value;
@@ -535,10 +679,11 @@ export default class UISlider extends UIBaseElement {
 	}
 
 	/**
-	 * Step with the keyboard or a pad while it has the focus: left and
-	 * right on a horizontal slider, up and down on a vertical one. A step
-	 * is `step`, or a twentieth of the range without one.
-	 * @param action - what the player asked for
+	 * Step with the arrow keys or the D-pad while it has the focus: left and
+	 * right on a horizontal slider, up and down on a vertical one. A step is
+	 * `step`, or a twentieth of the range without one, and calls `onChange`
+	 * and `onChangeEnd`. The other two directions move the focus away.
+	 * @param action - the direction pressed
 	 * @returns true for the directions along the slider
 	 */
 	override onNavigate(action: UINavAction): boolean {
@@ -562,7 +707,8 @@ export default class UISlider extends UIBaseElement {
 	}
 
 	/**
-	 * Call off a press, and a drag in progress, without `onChangeEnd`.
+	 * Call off a press, and a drag in progress, without calling
+	 * `onChangeEnd`. The value stays where the drag left it.
 	 */
 	override cancelPress(): void {
 		this.endDrag(false);
@@ -570,7 +716,7 @@ export default class UISlider extends UIBaseElement {
 	}
 
 	/**
-	 * Whether the thumb is being dragged.
+	 * Whether the thumb is being dragged right now.
 	 */
 	get dragging(): boolean {
 		return this._dragging;
