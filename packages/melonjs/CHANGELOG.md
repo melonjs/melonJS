@@ -11,7 +11,7 @@
 - UI: `enabled` on every `UIBaseElement`, to turn a widget off; `cancelPress()` and `onCancel()`, to call off a press without a release, as a scrolling `UIPanel` does when a drag on a button turns into a scroll; and `keepsDrag`, for a widget of your own that is dragged inside a scrolling panel
 - UI: a drop shadow under a `UIPanel` or a `ProgressBar`: `shadowColor`, `shadowOffsetX`, `shadowOffsetY` and `shadowBlur`, softened the same on Canvas, WebGL and WebGPU, rounded with the corners, and under a skin too
 - UI: keyboard and gamepad navigation, `UIFocus` (off until `UIFocus.enable()`): the arrows or the D-pad move the focus to the nearest widget, Enter or A press it as a click does, left and right step a slider; a ring shows the focused widget once a key or the pad is used, and a focused widget in a scrolling panel is scrolled into view. A widget of your own takes part through `focusable` and `onNavigate`
-- UI: `hoverScale` and `pressScale` on every UI element: a bounce under the pointer or the focus, and while held, easing by itself and scaling only the drawing, not the hit area or the layout
+- UI: `hoverScale` and `pressScale` on every `UIBaseElement`: a bounce under the pointer or the focus, and while held, easing by itself and scaling only the drawing, not the hit area or the layout
 - UI: `ProgressBar`'s `onChange` also gets the bar
 - UI: the `UISkin`, `UILabel`, `Paint` and settings and skin types of every widget are exported; `Container#clipContains(x, y)` tells whether a container shows its children at a point
 

@@ -630,8 +630,9 @@ pointer and the key.
 
 ### A little bounce: `hoverScale` and `pressScale`
 
-Every UI element, buttons, checkboxes, sliders, panels and your own, can
-grow a little under the pointer or with the focus, and shrink while held:
+Every `UIBaseElement`, buttons, checkboxes, sliders, panels and your own,
+can grow a little under the pointer or with the focus, and shrink while held
+(`UISpriteElement` and `ProgressBar` are not `UIBaseElement`s, and do not):
 
 ```js
 new UITextButton(0, 0, { text: "Play", hoverScale: 1.05, pressScale: 0.92 });
@@ -664,6 +665,11 @@ and it reads the pad directly, so the game's own pad bindings are untouched.
 Buttons, checkboxes and sliders take part; a widget of your own sets
 `focusable = true`, and overrides `onNavigate(direction)` (return `true` for
 what it handles) and `focusRelease()` for what Enter does.
+
+Two things to know. Enter goes to the focused button, so another button
+whose `bindKey` is Enter waits while the focus ring shows elsewhere. And
+accept calls a subclass's `onClick()` METHOD with no pointer event, as
+`bindKey` does: guard `event` there, or act in the `onClick` setting.
 
 ### Keyboard shortcuts on a button: `bindKey`
 

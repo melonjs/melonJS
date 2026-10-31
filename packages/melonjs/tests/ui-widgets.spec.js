@@ -1201,6 +1201,25 @@ describe("UI widgets", () => {
 			pointer("pointerup", 150, 120);
 		});
 
+		it("eases, rather than snapping in a frame", () => {
+			const b = place(
+				new UITextButton(100, 100, {
+					text: "OK",
+					width: 100,
+					height: 40,
+					hoverScale: 1.2,
+				}),
+			);
+			const scale = vi.spyOn(app.renderer, "scale");
+			pointer("pointermove", 150, 120);
+			b.update(16);
+			b.preDraw(app.renderer);
+			b.postDraw(app.renderer);
+			const first = scale.mock.calls.at(-1)[0];
+			expect(first).toBeGreaterThan(1);
+			expect(first).toBeLessThan(1.1);
+		});
+
 		it("scales only the drawing: the hit area stays", () => {
 			const b = place(
 				new UITextButton(100, 100, {
@@ -1393,6 +1412,103 @@ describe("UI widgets", () => {
 			press(input.KEY.DOWN);
 			expect(UIFocus.focused).toBe(left);
 			void right;
+		});
+
+		it("a press held while the focus moves is called off, not left down", () => {
+			const { a, b } = column();
+			const onClick = vi.fn();
+			a.onClickCallback = onClick;
+			UIFocus.focus(a);
+			key(input.KEY.ENTER);
+			press(input.KEY.DOWN);
+			key(input.KEY.ENTER, true);
+			expect(UIFocus.focused).toBe(b);
+			expect(a.released).toBe(true);
+			expect(onClick).not.toHaveBeenCalled();
+		});
+
+		it("a focused widget only bounces while the ring shows", () => {
+			const { a } = column();
+			a.hoverScale = 1.2;
+			const scale = vi.spyOn(app.renderer, "scale");
+			UIFocus.focus(a);
+			pointer("pointermove", 700, 500);
+			for (let i = 0; i < 30; i++) {
+				a.update(16);
+			}
+			a.preDraw(app.renderer);
+			a.postDraw(app.renderer);
+			expect(scale).not.toHaveBeenCalled();
+		});
+
+		it("Enter goes to the focused button, not another bound to Enter", () => {
+			const { a, b } = column();
+			const ok = vi.fn();
+			const cancel = vi.fn();
+			a.bindKey = input.KEY.ENTER;
+			a.onClickCallback = ok;
+			b.onClickCallback = cancel;
+			UIFocus.focus(b);
+			press(input.KEY.UP);
+			press(input.KEY.DOWN);
+			press(input.KEY.ENTER);
+			expect(cancel).toHaveBeenCalledTimes(1);
+			expect(ok).not.toHaveBeenCalled();
+		});
+
+		it("a pad's A already down when enabled is not a press", () => {
+			const { a } = column();
+			const onClick = vi.fn();
+			a.onClickCallback = onClick;
+			const buttons = [];
+			for (let i = 0; i < 17; i++) {
+				buttons.push({ pressed: false, value: 0 });
+			}
+			const pad = { id: "held pad", buttons, axes: [0, 0, 0, 0] };
+			input.addVirtualGamepad(pad, 0);
+			try {
+				UIFocus.disable();
+				buttons[input.GAMEPAD.BUTTONS.FACE_1].pressed = true;
+				UIFocus.enable();
+				UIFocus.focus(a);
+				event.emit(event.GAME_BEFORE_UPDATE, 1);
+				buttons[input.GAMEPAD.BUTTONS.FACE_1].pressed = false;
+				event.emit(event.GAME_BEFORE_UPDATE, 2);
+				expect(onClick).not.toHaveBeenCalled();
+			} finally {
+				input.removeVirtualGamepad(pad);
+			}
+		});
+
+		it("takes a widget made focusable after it was added", () => {
+			const panel = place(new UIPanel(100, 100, { width: 200, height: 100 }));
+			const own = panel.addChild(
+				new UIPanel(10, 10, { width: 50, height: 30 }),
+			);
+			own.focusable = true;
+			press(input.KEY.DOWN);
+			expect(UIFocus.focused).toBe(own);
+		});
+
+		it("does not go into a hidden panel", () => {
+			const { a } = column();
+			const hidden = place(new UIPanel(100, 450, { width: 200, height: 60 }));
+			hidden.addChild(new UITextButton(0, 0, { text: "x" }));
+			hidden.isRenderable = false;
+			UIFocus.focus(a);
+			for (let i = 0; i < 5; i++) {
+				press(input.KEY.DOWN);
+			}
+			expect(UIFocus.focused?.ancestor).not.toBe(hidden);
+		});
+
+		it("moves on from a focused widget that was disabled since", () => {
+			const { a, b, c } = column();
+			UIFocus.focus(b);
+			b.enabled = false;
+			press(input.KEY.DOWN);
+			expect(UIFocus.focused).toBe(c);
+			void a;
 		});
 
 		it("is off until enabled, and drops the focus when disabled", () => {

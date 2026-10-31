@@ -69,8 +69,9 @@ export default class UIFocus {
 	private static _focused: UIBaseElement | undefined;
 	/** whether the ring shows: after keyboard or pad input, until the mouse */
 	private static _ringVisible = false;
-	/** the input holding accept down, if any */
+	/** the input holding accept down, if any, and the element it pressed */
 	private static _accept: "key" | "pad" | undefined;
+	private static _pressed: UIBaseElement | undefined;
 	/** the pad's state on the last frame */
 	private static readonly _pad = { held: "", accept: false };
 
@@ -82,6 +83,11 @@ export default class UIFocus {
 			return;
 		}
 		UIFocus._enabled = true;
+		// a button already held, the A that opened this menu say, is not a
+		// fresh press
+		UIFocus._pad.held = "";
+		UIFocus._pad.accept = false;
+		UIFocus.readPad();
 		on(KEYDOWN, UIFocus._onKeyDown);
 		on(KEYUP, UIFocus._onKeyUp);
 		on(POINTERMOVE, UIFocus._onPointer);
@@ -101,6 +107,7 @@ export default class UIFocus {
 		off(POINTERMOVE, UIFocus._onPointer);
 		off(GAME_BEFORE_UPDATE, UIFocus._onFrame);
 		UIFocus.focus(undefined);
+		UIFocus._ringVisible = false;
 	}
 
 	/** whether navigation is on */
@@ -131,7 +138,9 @@ export default class UIFocus {
 		if (UIFocus._focused !== undefined) {
 			UIFocus._focused.isDirty = true;
 		}
-		UIFocus._accept = undefined;
+		// a press held on the element losing the focus is called off, or it
+		// stays down with nothing to let it go
+		UIFocus.cancelAccept();
 		UIFocus._focused = element;
 		if (element !== undefined) {
 			element.isDirty = true;
@@ -148,8 +157,13 @@ export default class UIFocus {
 	static navigate(action: UINavAction): void {
 		UIFocus._ringVisible = true;
 		const focused = UIFocus._focused;
-		if (focused === undefined || !UIFocus.isCandidate(focused)) {
+		if (focused === undefined) {
 			UIFocus.focus(UIFocus.first());
+			return;
+		}
+		if (!UIFocus.isCandidate(focused)) {
+			// disabled or hidden since: move on from where it is
+			UIFocus.focus(UIFocus.next(focused, action) ?? UIFocus.first());
 			return;
 		}
 		if (!focused.onNavigate(action)) {
@@ -178,9 +192,35 @@ export default class UIFocus {
 	 */
 	static _remove(element: UIBaseElement): void {
 		UIFocus._elements.delete(element);
+		if (UIFocus._pressed === element) {
+			UIFocus.cancelAccept();
+		}
 		if (UIFocus._focused === element) {
 			UIFocus.focus(undefined);
 		}
+	}
+
+	/**
+	 * Whether a key is one that presses the focused element.
+	 * @param keyCode - the key
+	 * @returns true for Enter and Space
+	 * @ignore
+	 * @internal
+	 */
+	static _isAcceptKey(keyCode: number): boolean {
+		return ACCEPT_KEYS.includes(keyCode);
+	}
+
+	/**
+	 * Call off a press held by accept, without a click.
+	 * @ignore
+	 * @internal
+	 */
+	private static cancelAccept(): void {
+		const pressed = UIFocus._pressed;
+		UIFocus._accept = undefined;
+		UIFocus._pressed = undefined;
+		pressed?.cancelPress();
 	}
 
 	/**
@@ -189,12 +229,24 @@ export default class UIFocus {
 	 * @returns true when it is focusable, enabled, shown and in the scene
 	 */
 	private static isCandidate(element: UIBaseElement): boolean {
-		return (
-			element.focusable &&
-			element.enabled &&
-			element.isRenderable &&
-			UIFocus._elements.has(element)
-		);
+		if (
+			!element.focusable ||
+			!element.enabled ||
+			!UIFocus._elements.has(element)
+		) {
+			return false;
+		}
+		// shown, and so is everything holding it: not inside a hidden panel
+		for (
+			let node: Renderable | undefined = element;
+			node !== undefined && node !== null;
+			node = node.ancestor as Renderable | undefined
+		) {
+			if (!node.isRenderable || node.alpha <= 0) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	/**
@@ -323,6 +375,7 @@ export default class UIFocus {
 			UIFocus.isCandidate(focused)
 		) {
 			UIFocus._accept = source;
+			UIFocus._pressed = focused;
 			focused.focusPress();
 		}
 	}
@@ -333,8 +386,10 @@ export default class UIFocus {
 	 */
 	private static acceptUp(source: "key" | "pad"): void {
 		if (UIFocus._accept === source) {
+			const pressed = UIFocus._pressed;
 			UIFocus._accept = undefined;
-			UIFocus._focused?.focusRelease();
+			UIFocus._pressed = undefined;
+			pressed?.focusRelease();
 		}
 	}
 
@@ -367,9 +422,10 @@ export default class UIFocus {
 	};
 
 	/**
-	 * read the pads once a frame: a D-pad press moves once, A presses
+	 * Read the D-pad direction and the A button across every pad into
+	 * `_pad`.
 	 */
-	private static readonly _onFrame = (): void => {
+	private static readPad(): void {
 		const B = GAMEPAD.BUTTONS;
 		let held = "";
 		let accept = false;
@@ -391,16 +447,24 @@ export default class UIFocus {
 			}
 			accept ||= pressed(B.FACE_1);
 		}
-		const pad = UIFocus._pad;
-		if (held !== "" && held !== pad.held) {
-			UIFocus.navigate(held as UINavAction);
+		UIFocus._pad.held = held;
+		UIFocus._pad.accept = accept;
+	}
+
+	/**
+	 * read the pads once a frame: a D-pad press moves once, A presses
+	 */
+	private static readonly _onFrame = (): void => {
+		const before = { ...UIFocus._pad };
+		UIFocus.readPad();
+		const now = UIFocus._pad;
+		if (now.held !== "" && now.held !== before.held) {
+			UIFocus.navigate(now.held as UINavAction);
 		}
-		pad.held = held;
-		if (accept && !pad.accept) {
+		if (now.accept && !before.accept) {
 			UIFocus.acceptDown("pad");
-		} else if (!accept && pad.accept) {
+		} else if (!now.accept && before.accept) {
 			UIFocus.acceptUp("pad");
 		}
-		pad.accept = accept;
 	};
 }

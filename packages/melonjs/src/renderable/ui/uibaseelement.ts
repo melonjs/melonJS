@@ -32,8 +32,8 @@ export interface UIJuiceSettings {
 	pressScale?: number;
 }
 
-/** how fast the bounce scale closes on its target, per millisecond */
-const JUICE_RATE = 1 / 60;
+/** the bounce's time constant, in milliseconds: about 0.2 s there */
+const JUICE_TIME = 60;
 
 /**
  * Whether a pointer event is the pointer coming up, rather than leaving or
@@ -353,13 +353,16 @@ export default class UIBaseElement extends Container {
 		let target = 1;
 		if (!this.released && this.pressScale !== 1) {
 			target = this.pressScale;
-		} else if ((this.hover || this.focused) && this._enabled) {
+		} else if (
+			(this.hover || (this.focused && UIFocus.ringVisible)) &&
+			this._enabled
+		) {
 			target = this.hoverScale;
 		}
 		if (this._juice === target) {
 			return dirty;
 		}
-		const step = 1 - Math.exp(-dt * JUICE_RATE * 12);
+		const step = 1 - Math.exp(-dt / JUICE_TIME);
 		this._juice += (target - this._juice) * step;
 		if (Math.abs(target - this._juice) < 0.001) {
 			this._juice = target;
@@ -656,9 +659,8 @@ export default class UIBaseElement extends Container {
 			this.leave(e);
 		});
 
-		if (this.focusable) {
-			UIFocus._add(this);
-		}
+		// every element, so one made focusable later takes part too
+		UIFocus._add(this);
 
 		// call the parent function
 		super.onActivateEvent();

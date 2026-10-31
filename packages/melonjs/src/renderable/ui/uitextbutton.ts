@@ -10,6 +10,7 @@ import Text from "../text/text.js";
 import type { Paint } from "./panelpaint.ts";
 import type { UIJuiceSettings } from "./uibaseelement.ts";
 import UIBaseElement, { isPointerUp } from "./uibaseelement.ts";
+import UIFocus from "./uifocus.ts";
 import type { UILabel } from "./uilabel.ts";
 import type { UISkin } from "./uiskin.ts";
 import { SkinDrawer } from "./uiskin.ts";
@@ -205,6 +206,16 @@ export default class UITextButton extends UIBaseElement {
 			!this.isClickable ||
 			!this.released ||
 			this.keyboardKey !== undefined
+		) {
+			return;
+		}
+		// Enter on another button that shows the focus is that button's: an
+		// OK bound to Enter does not fire with a focused Cancel
+		if (
+			UIFocus.ringVisible &&
+			UIFocus.focused !== undefined &&
+			UIFocus.focused !== this &&
+			UIFocus._isAcceptKey(keyCode)
 		) {
 			return;
 		}
