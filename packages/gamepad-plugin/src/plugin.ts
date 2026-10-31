@@ -93,6 +93,19 @@ const POINTER_EVENTS = [
 ] as const;
 
 /**
+ * The hover events a touch also fires: over and enter just before its
+ * pointer-down, out and leave just after its pointer-up. The engine listens
+ * to them too, so a touch on the controls has to be kept from it here as
+ * well, or the widget under a button lights up as it is pressed (#1805).
+ */
+const HOVER_EVENTS = [
+	"pointerover",
+	"pointerenter",
+	"pointerout",
+	"pointerleave",
+] as const;
+
+/**
  * On-screen touch controls, reported as a gamepad: sticks and buttons drawn
  * over the game, read by the engine as a pad in a gamepad slot. Everything a
  * game binds with `input.bindGamepad` answers to them, so the same code
@@ -392,6 +405,9 @@ export class GamepadPlugin extends plugin.BasePlugin {
 				passive: false,
 			});
 		}
+		for (const type of HOVER_EVENTS) {
+			this.target.addEventListener(type, this.onHover, { capture: true });
+		}
 		// a finger held on the controls starts a selection, the iOS image
 		// menu or the context menu, none of which a pointer event can cancel
 		this.target.addEventListener("touchstart", this.onTouchStart, {
@@ -418,6 +434,10 @@ export class GamepadPlugin extends plugin.BasePlugin {
 				capture: true,
 			});
 		}
+		for (const type of HOVER_EVENTS) {
+			this.target?.removeEventListener(type, this.onHover, { capture: true });
+		}
+		this.touchesOnControls.clear();
 		this.target?.removeEventListener("touchstart", this.onTouchStart, {
 			capture: true,
 		});
@@ -479,6 +499,7 @@ export class GamepadPlugin extends plugin.BasePlugin {
 				return;
 			}
 			this.pointers.set(e.pointerId, control);
+			this.touchesOnControls.add(e.pointerId);
 			if (control instanceof VirtualStick) {
 				control.grab(e.pointerId, x, y);
 			} else {
@@ -529,6 +550,43 @@ export class GamepadPlugin extends plugin.BasePlugin {
 		}
 		this.consume(e);
 		this.app.repaint();
+	};
+
+	/**
+	 * The pointers whose touch landed on the controls, kept past their
+	 * release for the out and leave that follow it.
+	 */
+	private readonly touchesOnControls = new Set<number>();
+
+	/**
+	 * Keep a touch's hover events from the game when the touch is the
+	 * controls': over and enter when it lands on one, out and leave once it
+	 * lifts from one. A mouse hovering over the controls is left alone, as
+	 * its moves are.
+	 * @param e - the hover event
+	 */
+	private readonly onHover = (e: PointerEvent): void => {
+		if (!this.ready || e.pointerType === "mouse") {
+			return;
+		}
+		if (e.type === "pointerover" || e.type === "pointerenter") {
+			if (!this.visible) {
+				return;
+			}
+			const { x, y } = this.toViewport(e);
+			if (this.touchesOnControls.has(e.pointerId) || this.onControls(x, y)) {
+				this.touchesOnControls.add(e.pointerId);
+				e.stopPropagation();
+			}
+			return;
+		}
+		// pointerout, pointerleave
+		if (this.touchesOnControls.has(e.pointerId)) {
+			e.stopPropagation();
+			if (e.type === "pointerleave") {
+				this.touchesOnControls.delete(e.pointerId);
+			}
+		}
 	};
 
 	/**
