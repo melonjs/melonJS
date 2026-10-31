@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.0.2] - _unreleased_
+## [1.0.2] - _2026-10-31_
 
 ### Fixed
 - A touch on the controls no longer reaches the game as a hover: the `pointerover` / `pointerenter` before it and the `pointerout` / `pointerleave` after it are kept from the engine too, so a widget under a button no longer gets `onOver` as the button is pressed ([#1805](https://github.com/melonjs/melonJS/issues/1805)). A mouse hovering over the controls is unchanged
