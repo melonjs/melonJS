@@ -55,7 +55,9 @@ import Trail3d from "./renderable/trail3d.js";
 import Trigger from "./renderable/trigger.js";
 import ProgressBar from "./renderable/ui/progressbar.ts";
 import UIBaseElement from "./renderable/ui/uibaseelement.ts";
+import UICheckbox from "./renderable/ui/uicheckbox.ts";
 import UIPanel from "./renderable/ui/uipanel.ts";
+import UISlider from "./renderable/ui/uislider.ts";
 import UISpriteElement from "./renderable/ui/uispriteelement.ts";
 import UITextButton from "./renderable/ui/uitextbutton.ts";
 import Stage from "./state/stage.ts";
@@ -200,7 +202,27 @@ export type {
 	ProgressBarDirection,
 	ProgressBarSettings,
 } from "./renderable/ui/progressbar.js";
-export type { UIPanelSettings } from "./renderable/ui/uipanel.js";
+export type {
+	UICheckboxSettings,
+	UICheckboxSkin,
+} from "./renderable/ui/uicheckbox.js";
+export type { UILabel } from "./renderable/ui/uilabel.js";
+export type {
+	UIPanelAlign,
+	UIPanelLayout,
+	UIPanelScroll,
+	UIPanelSettings,
+	UIPanelSkin,
+} from "./renderable/ui/uipanel.js";
+export type { UISkin } from "./renderable/ui/uiskin.js";
+export type {
+	UISliderSettings,
+	UISliderSkin,
+} from "./renderable/ui/uislider.js";
+export type {
+	UITextButtonSettings,
+	UITextButtonSkin,
+} from "./renderable/ui/uitextbutton.js";
 export * as device from "./system/device.js";
 export * as event from "./system/event.ts";
 // and the two types it names, so a game can declare a field holding one
@@ -311,7 +333,9 @@ export {
 	Tween,
 	timer,
 	UIBaseElement,
+	UICheckbox,
 	UIPanel,
+	UISlider,
 	UISpriteElement,
 	UITextButton,
 	VignetteEffect,

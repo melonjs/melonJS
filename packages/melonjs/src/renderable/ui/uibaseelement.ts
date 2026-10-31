@@ -10,6 +10,44 @@ import timer from "../../system/timer.ts";
 import Container from "../container.js";
 
 /**
+ * Whether a pointer event is the pointer coming up, rather than leaving or
+ * being cancelled. The dispatcher only delivers it to a region under the
+ * pointer, so for a widget it means a press completed over it.
+ * @param event - the event a widget's `release` was called with
+ * @returns true for a pointer, mouse or touch up
+ * @ignore
+ * @internal
+ */
+export function isPointerUp(event: Pointer | undefined): boolean {
+	const type = event?.type;
+	return type === "pointerup" || type === "mouseup" || type === "touchend";
+}
+
+/**
+ * Hand a press to the nearest scrolling panel above an element, if any, so
+ * that a drag starting on the element can still scroll the panel.
+ *
+ * Found by the method rather than by class, as `UIPanel` extends this class
+ * and could not be imported here without a cycle.
+ * @param element - the element pressed
+ * @param event - the pointer-down
+ * @ignore
+ * @internal
+ */
+function offerPressToScroller(element: UIBaseElement, event: Pointer) {
+	for (let node: any = element.ancestor; node != null; node = node.ancestor) {
+		// a panel that does not scroll answers false and the search goes on,
+		// so a plain panel inside a scrolling one does not stop it
+		if (
+			typeof node._capturePress === "function" &&
+			node._capturePress(event, element) === true
+		) {
+			return;
+		}
+	}
+}
+
+/**
  * This is a basic clickable and draggable container which you can use in your game UI.
  * Use this for example if you want to display a panel that contains text, images or other UI elements.
  *
@@ -142,9 +180,49 @@ export default class UIBaseElement extends Container {
 			if (this.isDraggable) {
 				this.grabOffset!.set(event.gameX, event.gameY);
 				this.grabOffset!.sub(this.pos);
+			} else if (!this.keepsDrag) {
+				offerPressToScroller(this, event);
 			}
 			return this.onClick(event);
 		}
+	}
+
+	/**
+	 * Whether a drag that starts on this element belongs to it.
+	 *
+	 * `false` by default: inside a scrolling {@link UIPanel}, a drag that
+	 * starts on a button scrolls the panel and cancels the press. A widget
+	 * that is dragged itself, such as a {@link UISlider}, sets it, and so does
+	 * anything `isDraggable`.
+	 * @ignore
+	 * @internal
+	 */
+	keepsDrag = false;
+
+	/**
+	 * Abandon a press in progress, without calling `onRelease`.
+	 *
+	 * The element goes back to its released look, and the pointer-up that
+	 * follows does nothing. A scrolling {@link UIPanel} calls this when a drag
+	 * that started on the element turns out to be a scroll, so a button
+	 * dragged to scroll its list is not clicked.
+	 */
+	cancelPress(): void {
+		if (!this.released) {
+			this.released = true;
+			this.isDirty = true;
+			timer.clearTimer(this.holdTimeout);
+			this.holdTimeout = -1;
+			this.onCancel();
+		}
+	}
+
+	/**
+	 * Called when a press is abandoned rather than completed: see
+	 * {@link UIBaseElement#cancelPress}. To be extended.
+	 */
+	onCancel(): void {
+		// to be extended
 	}
 
 	/**

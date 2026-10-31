@@ -1528,6 +1528,36 @@ export default class Container extends Renderable {
 	}
 
 	/**
+	 * Whether this container shows its children at a point.
+	 *
+	 * Always true unless {@link Container#clipping} is on, in which case only
+	 * its own rectangle is shown. The pointer asks every container above a
+	 * region before letting it answer, so a child cropped out of view cannot
+	 * be clicked where it is not drawn.
+	 * @param {number} x - the point, in the same coordinates as the bounds of
+	 * this container (screen pixels for a floating one)
+	 * @param {number} y - the point
+	 * @returns {boolean} false where the children are clipped away
+	 */
+	clipContains(x, y) {
+		if (
+			this.clipping !== true ||
+			this.root === true ||
+			!Number.isFinite(this.width) ||
+			!Number.isFinite(this.height)
+		) {
+			return true;
+		}
+		const origin = this.getAbsolutePosition();
+		return (
+			x >= origin.x &&
+			x < origin.x + this.width &&
+			y >= origin.y &&
+			y < origin.y + this.height
+		);
+	}
+
+	/**
 	 * draw this renderable (automatically called by melonJS)
 	 * @param {Renderer} renderer - a renderer instance
 	 * @param {Camera2d} [viewport] - the viewport to (re)draw

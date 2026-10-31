@@ -1,6 +1,6 @@
 ---
 name: melonjs-ui-and-text
-description: "Use this skill for HUDs, buttons, menus, dialogue panels, progress bars and on-screen text in melonJS. Covers UIBaseElement/UISpriteElement/UITextButton, ProgressBar, UIPanel, Draggable and DropTarget, the floating screen-space container pattern, which of two overlapping panels gets the pointer, Text and BitmapText, web font loading, and NineSliceSprite panels. Triggers on: UI, HUD, button, UIBaseElement, UISpriteElement, UITextButton, ProgressBar, progress bar, health bar, gauge, Draggable, DropTarget, menu, dialogue, overlapping panels, moveToTop, onOver, onClick, bindKey, keyboard shortcut, button keyboard, Tween, easing, animate a label, wavy text, per-glyph effect, glyphEffect, shake text, rainbow text, Text, BitmapText, fillStyle, fillGradient, gradient text, tint, font, fontface, wordWrapWidth, NineSliceSprite, score display, floating., fullscreen, full screen, requestFullscreen, exitFullscreen, isFullscreen, fullscreen button, fullscreen option"
+description: "Use this skill for HUDs, buttons, menus, options screens, dialogue panels, progress bars and on-screen text in melonJS. Covers UIBaseElement/UISpriteElement/UITextButton, UICheckbox, UISlider, ProgressBar, UIPanel (skins, layout, scrolling), Draggable and DropTarget, the floating screen-space container pattern, which of two overlapping panels gets the pointer, Text and BitmapText, web font loading, and NineSliceSprite panels. Triggers on: UI, HUD, button, checkbox, radio button, UICheckbox, slider, UISlider, volume slider, options menu, settings screen, scrolling list, scroll panel, layout, column, grid, UI skin, UIBaseElement, UISpriteElement, UITextButton, ProgressBar, progress bar, health bar, gauge, Draggable, DropTarget, menu, dialogue, overlapping panels, moveToTop, onOver, onClick, bindKey, keyboard shortcut, button keyboard, Tween, easing, animate a label, wavy text, per-glyph effect, glyphEffect, shake text, rainbow text, Text, BitmapText, fillStyle, fillGradient, gradient text, tint, font, fontface, wordWrapWidth, NineSliceSprite, score display, floating., fullscreen, full screen, requestFullscreen, exitFullscreen, isFullscreen, fullscreen button, fullscreen option"
 license: MIT
 ---
 
@@ -441,6 +441,79 @@ One consequence worth knowing: `getBounds()` on a bobbing panel answers
 differently each frame, so do not cache it or compare two children's bounds
 while a bob is running.
 
+### Panel art, title, dragging: `skin`, `title`, `draggable`
+
+```js
+const options = new UIPanel(20, 20, {
+    width: 380, height: 460,
+    // one atlas region, stretched as a nine-slice to the panel's size
+    skin: { atlas, region: "grey_panel", insetx: 10, insety: 10 },
+    title: "OPTIONS", titleFont: "kenpixel", titleFontSize: 20, titleFillStyle: "black",
+    draggable: true,   // comes to the front when grabbed
+});
+```
+
+The title sits at the top and the content starts below it. `insetx` /
+`insety` are the unscaled corners of the art, and also where the frame ends:
+layout `padding` is measured from there.
+
+### Laying a panel out: `layout`
+
+Leave `layout` at `"none"` and children stay where you put them. Otherwise
+the panel places them, below the title and inside the frame:
+
+```js
+const menu = new UIPanel(x, y, {
+    width: 360, height: 100,
+    layout: "column",      // "row", "grid" (with `columns`), or "none"
+    padding: 16,           // from the frame to the content
+    gap: 12,               // between children
+    align: "stretch",      // "start", "center", "end", or "stretch"
+    autoSize: true,        // grow the panel to fit
+});
+menu.addChild(new UITextButton(0, 0, { text: "Play", onClick: play }));
+menu.addChild(new UITextButton(0, 0, { text: "Options", onClick: openOptions }));
+```
+
+Children are laid out in the order they were added. It runs when a child is
+added or removed and when the panel is resized, **not every frame**: a child
+that changes size afterwards, a label whose text grew, needs
+`menu.relayout()`. `"stretch"` resizes children that have a `resize` method,
+which `UITextButton` and other containers do; a `Text` keeps its size.
+
+A row inside a column is a second panel that draws nothing and lets clicks
+through: `new UIPanel(0, 0, { width, height, layout: "row", blocking: false })`.
+
+### Scrolling lists: `scroll`
+
+```js
+const levels = new UIPanel(420, 435, {
+    width: 340, height: 150,
+    layout: "grid", columns: 5, gap: 8, padding: 10,
+    scroll: "vertical",    // "horizontal", "both", or "none"
+});
+```
+
+The content is cropped to the area inside the frame and below the title, and
+scrolls with the wheel over the panel and by dragging, with momentum when
+flung. A scrollbar shows while it does not fit. `scrollTo(x, y)`,
+`scrollToChild(child)`, `scrollX` / `scrollY`, `maxScrollX` / `maxScrollY` and
+an `onScroll(x, y, panel)` setting are there to drive it from code.
+
+What to know:
+
+- **Scrolling moves the children.** Their `pos` is where they are drawn, so
+  it changes as the list scrolls. A child added to a `"none"` layout while
+  scrolled is placed in content coordinates and moved into view.
+- **A drag that starts on a button scrolls the list and cancels the press.**
+  The button gets `onCancel()` instead of `onRelease()`, and its `onClick`
+  SETTING is not called. The `onClick()` METHOD already ran on the press, so
+  a button in a list does its work in the setting: see the next section.
+- **A slider in a scrolling panel is dragged, not the panel.** Any widget
+  that sets `keepsDrag` keeps its drags.
+- Children scrolled out of view do not get pointer events. Nested scrolling
+  panels are not supported yet.
+
 ### A pause overlay: `updateWhenPaused` cascades
 
 `state.pause()` stops every world child stepping while rendering carries on, so
@@ -492,6 +565,44 @@ default on a plain `Renderable` — is skipped by the broadphase and receives
 nothing. `UISpriteElement` and `UIBaseElement` clear it for you; anything else
 you make clickable has to clear it itself.
 
+### A button that does one thing: `UITextButton`
+
+No subclass needed for a single action:
+
+```js
+const play = new UITextButton(100, 200, {
+    text: "Play",              // a CSS font by default ("sans-serif")
+    size: 24,                  // pixels with a CSS font, a SCALE with a bitmap font
+    onClick: () => state.change(state.PLAY),
+});
+```
+
+**`onClick` is called on a COMPLETED click**: pressed and released over the
+button, or its `bindKey` pressed and released. A press dragged off the button,
+cancelled, or turned into a scroll does not call it, and neither does a
+disabled button. The `onClick()` method is different: it runs on the press,
+as before, for subclasses.
+
+`font` is a loaded bitmap font's name, drawn with `BitmapText` as before, or
+any other name, drawn as a CSS font with `Text`. The label is
+`button.label` (`bitmapText` is the old name for it).
+
+**Skinned** from an atlas, drawn as a nine-slice so one image makes a button
+of any width:
+
+```js
+new UITextButton(0, 0, {
+    font: "kenpixel", size: 12, text: "Accept", borderWidth: 160,
+    skin: { atlas, normal: "green_button04", pressed: "green_button05" },
+});
+```
+
+Pressed art is usually shorter than the normal art. The button draws it
+lowered by the difference and moves the label down with it, so it looks
+pushed in. `hover` and `disabled` regions are optional. `enabled = false`
+draws the `disabled` region, or the button at half opacity, and ignores the
+pointer and the key.
+
 ### Keyboard shortcuts on a button: `bindKey`
 
 A `UITextButton` can be activated from the keyboard as well as the pointer:
@@ -532,6 +643,60 @@ Three more rules, each with a reason you can feel in a game:
 
 Shortcuts live only while the button is activated, and never start dragging or
 tap-and-hold: those stay pointer gestures.
+
+### Checkboxes and radio buttons: `UICheckbox`
+
+```js
+const music = new UICheckbox(40, 60, {
+    labelOn: "Music ON", labelOff: "Music OFF",   // or one `label`
+    checked: settings.music,
+    onChange: (on) => { settings.music = on; on ? audio.playTrack("theme") : audio.stopTrack(); },
+});
+```
+
+The label is part of the widget: clicking it toggles the box, and removing
+the checkbox takes the label with it. Drawn with primitives by default, or
+`skin: { atlas, on, off, disabled? }`.
+
+**Setting `checked` from code does NOT call `onChange`**, nor does
+`toggle()`. Only the user does. Restoring saved settings into the widgets
+therefore does not re-run the game logic attached to them, so apply what
+they stand for yourself after restoring:
+
+```js
+music.checked = saved.music;       // the look only
+applyMusic(saved.music);           // the effect, once
+```
+
+**Radio buttons** are checkboxes sharing a `group`: exactly one is checked,
+clicking the checked one leaves it checked, and they are drawn round. Only
+the one the user picked gets `onChange`, as in a web page; read the group with
+`UICheckbox.checkedIn("difficulty")`. A checkbox is in its group while it is in
+the scene.
+
+### Sliders: `UISlider`
+
+```js
+const volume = new UISlider(40, 120, {
+    label: "Music", showValue: true,
+    format: (v) => Math.round(v * 100) + "%",
+    min: 0, max: 1, step: 0.01, value: audio.getVolume(),
+    length: 300,                           // orientation: "vertical" too
+    onChange: (v) => audio.setVolume(v),   // every step of the drag
+    onChangeEnd: () => saveSettings(),     // once, on release
+});
+```
+
+Drag the thumb, or click the track to jump there. The drag follows the
+pointer after it leaves the track, until it is released. The mouse wheel over
+the slider moves it one `step`. `value` snaps to `step` and clamps to the
+range, and setting it does not call `onChange` or `onChangeEnd`: the same rule
+as the checkbox. `skin: { atlas, track, fill?, thumb, thumbHover? }` draws it
+from art: the track and fill as nine-slices along its length, the thumb at its
+own size.
+
+Put work that should not run 60 times a second, such as saving or playing a
+test sound, in `onChangeEnd`.
 
 ### A fullscreen option
 
@@ -720,6 +885,17 @@ Give a HUD the huge z that would put it on top in 2D and it lands at the far end
 of the level instead, with the scenery drawing over it. Both shipped idioms are
 the same rule: afterBurner's HUD sits at `-150`, and the glTF, Billboard, Night
 City and Instanced Forest examples park a floating sky at `-10000` or `100000`.
+
+## When the UI misbehaves
+
+| symptom | cause | fix |
+|---|---|---|
+| loading saved settings plays the music, saves again or fires game logic | the game called its own change handler while restoring | set `checkbox.checked` / `slider.value`, which never call `onChange`, then apply the setting once yourself |
+| `onChange` never fires when settings are restored | by design: only user input calls it | apply the restored value yourself |
+| a button in a scrolling list fires when the user only meant to scroll | the work is in the `onClick()` METHOD, which runs on the press | use the `onClick` SETTING, called on a completed click; a scroll cancels the press |
+| a button scrolled out of a hand-made list still gets clicks | its container does not clip, so the pointer still finds it where it moved to | use `UIPanel`'s `scroll`, or set `clipping` on the container: since 20.13 the pointer skips children outside a clipping container |
+| a layout ignores a label that changed size | layout runs on add, remove and resize only | call `panel.relayout()` |
+| `new UITextButton` with a font name draws in a plain font | the name is not a loaded bitmap font, so it is drawn as a CSS font | load the bitmap font (image and `.fnt`) under that name, or load the web font |
 
 ## Related skills
 
