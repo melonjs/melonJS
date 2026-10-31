@@ -288,7 +288,8 @@ class PlayScreen extends Stage {
 	 * @param app - the application
 	 */
 	private addLevels(app: Application) {
-		const frame = framed(724, 20, 260, 400, "LEVELS");
+		// sized to show the first 16 levels: 4 rows of 49, the title, padding and frame
+		const frame = framed(724, 20, 260, 292, "LEVELS");
 		const panel = new UIPanel(frame.x, frame.y, {
 			...frame.settings,
 			layout: "grid",
