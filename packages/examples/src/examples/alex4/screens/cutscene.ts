@@ -293,7 +293,11 @@ export abstract class Cutscene extends Stage {
 	 */
 	protected cut(ms: number, next: () => void) {
 		this.at(ms, () => {
-			this.app.viewport.fadeIn(FADE_COLOR, FADE, () => {
+			this.app.viewport.fadeIn(FADE_COLOR, FADE);
+			// on our own clock, not in the fade's callback: that one is
+			// sometimes never called, and the story would stop there
+			// (melonjs/melonJS#1810)
+			this.at(FADE, () => {
 				// the story may have been skipped in the meantime
 				if (!this.running) {
 					return;
