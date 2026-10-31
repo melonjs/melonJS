@@ -24,17 +24,31 @@ import {
 const ringPainter = new PanelPainter();
 
 /**
- * The bounce settings every UI widget takes: see
+ * The bounce settings every built-in widget takes in its settings object:
+ * a small grow under the pointer and a squash while held. Only the drawing
+ * scales; the hit area and the layout stay as they are. See
  * {@link UIBaseElement#hoverScale}.
  * @category UI
+ * @example
+ * // a button that grows 5% under the pointer and squashes while held
+ * const play = new UITextButton(100, 200, {
+ *     text: "Play",
+ *     hoverScale: 1.05,
+ *     pressScale: 0.92,
+ * });
  */
 export interface UIJuiceSettings {
 	/**
-	 * the scale the widget grows to under the pointer or with the focus;
-	 * `1`, the default, is still
+	 * The scale the widget is drawn at under the pointer, or while it has
+	 * the keyboard and gamepad focus, such as `1.05`. `1` turns it off.
+	 * @default 1
 	 */
 	hoverScale?: number;
-	/** the scale it shrinks to while held down; `1`, the default, is still */
+	/**
+	 * The scale the widget is drawn at while held down, such as `0.92`.
+	 * `1` turns it off.
+	 * @default 1
+	 */
 	pressScale?: number;
 }
 
@@ -122,19 +136,131 @@ function offerPressToScroller(element: UIBaseElement, event: Pointer) {
 }
 
 /**
- * This is a basic clickable and draggable container which you can use in your game UI.
- * Use this for example if you want to display a panel that contains text, images or other UI elements.
+ * A clickable, draggable container: the base every UI widget builds on
+ * ({@link UITextButton}, {@link UICheckbox}, {@link UISlider},
+ * {@link UIPanel}). Extend it to make a widget of your own; it can hold
+ * other renderables as children.
  *
- * Regions under the pointer are asked in the order they are drawn, topmost
- * first, and the walk carries on downwards until a handler returns `false`. An
- * element that can overlap another one is therefore not opaque until it says
- * so: by default a widget it covers still answers clicks and still lights up on
- * hover. {@link UIBaseElement#onClick}, {@link UIBaseElement#onRelease} and
- * {@link UIBaseElement#onOver} each consume by returning `false`.
+ * It uses screen coordinates (`floating` is `true`), so it stays put when
+ * the camera moves. Children added to it should keep `floating` at `false`.
+ *
+ * ## Pointer callbacks
+ * Override these in a subclass:
+ * - {@link UIBaseElement#onClick}: the pointer went DOWN on the element
+ *   (or Enter / A with the focus here). It is a press, not a completed click.
+ * - {@link UIBaseElement#onRelease}: the press ended: the pointer came up,
+ *   left the element while held, or the browser cancelled it.
+ * - {@link UIBaseElement#onOver} / {@link UIBaseElement#onOut}: the pointer
+ *   came in / went out. `hover` is `true` in between.
+ * - {@link UIBaseElement#onHold}: held for `holdThreshold` ms, when
+ *   `isHoldable` is set.
+ * - {@link UIBaseElement#onCancel}: the press was called off without a
+ *   release (see {@link UIBaseElement#cancelPress}).
+ *
+ * Elements under the pointer are asked topmost first, and the event carries
+ * on to the ones below until a handler returns `false`. So an element is NOT
+ * opaque by default: a widget it covers still gets clicks and hover. Return
+ * `false` from `onClick`, `onRelease` or `onOver` to stop the event there.
+ *
+ * ## Turning it off
+ * Set {@link UIBaseElement#enabled} to `false`: it stops answering the
+ * pointer, the keys and the pad, and a press in progress is called off.
+ *
+ * ## Dragging
+ * Set {@link UIBaseElement#isDraggable}: the element then follows the
+ * pointer while held. `onClick` is the pick-up, {@link UIBaseElement#onMove}
+ * runs on each move, and `onRelease` is the drop. Inside a scrolling
+ * {@link UIPanel}, a drag that starts on a widget scrolls the panel instead;
+ * set {@link UIBaseElement#keepsDrag} on a widget that is dragged itself.
+ *
+ * ## Bounce
+ * {@link UIBaseElement#hoverScale} and {@link UIBaseElement#pressScale}
+ * scale the drawing under the pointer and while held, easing there and back.
+ * The hit area and the layout do not change.
+ *
+ * ## Keyboard and gamepad focus
+ * For a game played without a mouse or a touch screen. Nothing listens until
+ * a widget takes the focus with {@link UIBaseElement#focus}; until then the
+ * arrow keys and the pad are left to the game. With a widget focused:
+ * - the arrow keys or the D-pad move the focus to the nearest
+ *   {@link UIBaseElement#focusable} widget that way, measured edge to edge;
+ * - Enter, Space or the pad's A button press the focused widget, as a click
+ *   does;
+ * - a ring in {@link UIBaseElement.focusRingColor} shows the focus while the
+ *   keyboard or a pad is used, and hides when the mouse moves;
+ * - a focused widget inside a scrolling {@link UIPanel} is scrolled into view;
+ * - {@link UIBaseElement#blur}, or removing the widget, gives the keys and
+ *   the pad back to the game.
+ *
+ * The built-in widgets are focusable. A widget of your own sets `focusable`
+ * and can override {@link UIBaseElement#onNavigate} to use the arrows itself.
  * @category UI
  * @example
+ * // a widget of your own: draws itself, bounces, and acts on release
+ * import { UIBaseElement } from "melonjs";
+ *
+ * class Card extends UIBaseElement {
+ *     constructor(x, y) {
+ *         super(x, y, 120, 160);
+ *         this.focusable = true; // reachable with the arrow keys and the pad
+ *         this.hoverScale = 1.05;
+ *         this.pressScale = 0.95;
+ *     }
+ *     draw(renderer, viewport) {
+ *         renderer.setColor(this.hover ? "#ffffff" : "#cccccc");
+ *         renderer.fillRect(this.pos.x, this.pos.y, this.width, this.height);
+ *         super.draw(renderer, viewport); // draws the children
+ *     }
+ *     onRelease() {
+ *         console.log("card picked");
+ *         return false; // the element below does not get it too
+ *     }
+ * }
+ *
+ * app.world.addChild(new Card(50, 50));
+ * @example
+ * // a token dragged around and snapped to a 32 pixel grid when dropped
+ * import { UIBaseElement, Sprite } from "melonjs";
+ *
+ * class Token extends UIBaseElement {
+ *     constructor(x, y) {
+ *         super(x, y, 64, 64);
+ *         this.isDraggable = true;
+ *         // a sprite is centred on its position by default
+ *         this.addChild(new Sprite(32, 32, { image: "token" }));
+ *     }
+ *     onMove() {
+ *         // runs on each move while dragged: this.pos follows the pointer
+ *     }
+ *     onRelease() {
+ *         this.pos.x = Math.round(this.pos.x / 32) * 32;
+ *         this.pos.y = Math.round(this.pos.y / 32) * 32;
+ *         return false;
+ *     }
+ * }
+ * @example
+ * // a menu played with the keyboard or a pad: start on the first button
+ * import { UITextButton, state } from "melonjs";
+ *
+ * const play = new UITextButton(100, 200, {
+ *     text: "Play",
+ *     onClick: () => state.change(state.PLAY),
+ * });
+ * const quit = new UITextButton(100, 260, {
+ *     text: "Quit",
+ *     onClick: () => state.change(state.MENU),
+ * });
+ * app.world.addChild(play);
+ * app.world.addChild(quit);
+ * // the arrows / D-pad now move between them, Enter / Space / A press;
+ * // the mouse still works as before
+ * play.focus();
+ * @example
  * // a panel that is opaque to the pointer and comes to the front when picked
- * class Panel extends UIBaseElement {
+ * // (UIPanel does this with its `blocking` setting)
+ * import { UIBaseElement, input } from "melonjs";
+ *
+ * class Dialog extends UIBaseElement {
  *     onClick() {
  *         this.ancestor.moveToTop(this);
  *         return false;
@@ -147,70 +273,86 @@ function offerPressToScroller(element: UIBaseElement, event: Pointer) {
  *     // `onOver` no longer fires
  *     onActivateEvent() {
  *         super.onActivateEvent();
- *         me.input.registerPointerEvent("pointermove", this, () => false);
+ *         input.registerPointerEvent("pointermove", this, () => false);
  *     }
  *     onDeactivateEvent() {
- *         me.input.releasePointerEvent("pointermove", this);
+ *         input.releasePointerEvent("pointermove", this);
  *         super.onDeactivateEvent();
  *     }
  * }
  */
 export default class UIBaseElement extends Container {
 	/**
-	 * UI base elements use screen coordinates by default
-	 * (Note: any child elements added to a UIBaseElement should have their floating property to false)
+	 * UI elements use screen coordinates by default, so they stay put when
+	 * the camera moves. Children added to a UIBaseElement should keep their
+	 * own `floating` at `false`.
 	 * @see Renderable.floating
 	 * @default true
 	 */
 	override floating = true;
 
 	/**
-	 * object can be clicked or not
+	 * Whether the pointer can press the element. The low-level flag under
+	 * {@link UIBaseElement#enabled}: prefer `enabled`, which also calls off a
+	 * press in progress, blocks the keys and the pad, and draws a built-in
+	 * widget disabled.
 	 * @default true
 	 */
 	isClickable: boolean;
 
 	/**
-	 * object can be dragged or not
+	 * Whether the element follows the pointer while held. `onClick` runs on
+	 * the pick-up, {@link UIBaseElement#onMove} on each move and `onRelease`
+	 * on the drop.
 	 * @default false
 	 */
 	isDraggable: boolean;
 
 	/**
-	 * Tap and hold threshold timeout in ms
+	 * How long a press must be held before {@link UIBaseElement#onHold}
+	 * runs, in milliseconds. Needs `isHoldable`.
 	 * @default 250
 	 */
 	holdThreshold: number;
 
 	/**
-	 * object can be tap and hold
+	 * Whether a press held for `holdThreshold` ms calls
+	 * {@link UIBaseElement#onHold}.
 	 * @default false
 	 */
 	isHoldable: boolean;
 
 	/**
-	 * true if the pointer is over the object
+	 * `true` while the pointer is over the element. A tap on a touch screen
+	 * does not set it.
 	 * @default false
 	 */
 	hover: boolean;
 
 	/**
-	 * false if the pointer is down, or true when the pointer status is up
+	 * `false` while the element is held down (by the pointer, or by Enter /
+	 * A with the focus), `true` otherwise.
 	 * @default true
 	 */
 	released: boolean;
 
-	// object has been updated (clicked,etc..)
+	/**
+	 * the tap-and-hold timer of a press in progress, or -1
+	 * @ignore
+	 */
 	holdTimeout: number;
 
-	// grab offset for dragging
+	/**
+	 * While dragged: where the element was grabbed, relative to its
+	 * position. `undefined` otherwise.
+	 */
 	grabOffset: Vector2d | undefined;
 
 	/**
-	 * @param x - The x position of the container
-	 * @param y - The y position of the container
-	 * @param w - width of the container
-	 * @param h - height of the container
+	 * @param x - the x position of the element, in screen pixels
+	 * @param y - the y position of the element, in screen pixels
+	 * @param w - the width of the element, in pixels
+	 * @param h - the height of the element, in pixels
 	 */
 	constructor(x: number, y: number, w?: number, h?: number) {
 		super(x, y, w, h);
@@ -267,11 +409,20 @@ export default class UIBaseElement extends Container {
 	/**
 	 * Whether a drag that starts on this element belongs to it.
 	 *
-	 * `false` by default: inside a scrolling {@link UIPanel}, a drag that
-	 * starts on a button scrolls the panel and cancels the press. Set it on a
-	 * widget that is dragged itself, such as a knob or a colour picker, as
-	 * {@link UISlider} does. Anything `isDraggable` keeps its drags anyway.
+	 * When `false`, a drag that starts on the element inside a scrolling
+	 * {@link UIPanel} scrolls the panel and calls off the press. Set it on a
+	 * widget that handles its own drags, such as a knob or a colour picker,
+	 * as {@link UISlider} does. An `isDraggable` element keeps its drags
+	 * anyway.
 	 * @default false
+	 * @example
+	 * // a colour wheel that reads drags itself, inside a scrolling panel
+	 * class ColourWheel extends UIBaseElement {
+	 *     constructor(x, y) {
+	 *         super(x, y, 128, 128);
+	 *         this.keepsDrag = true;
+	 *     }
+	 * }
 	 */
 	keepsDrag = false;
 
@@ -279,19 +430,23 @@ export default class UIBaseElement extends Container {
 	protected _enabled = true;
 
 	/**
-	 * The scale the widget is drawn at under the pointer, or with the focus:
-	 * a little bounce, such as `1.05`. `1` leaves it still.
+	 * The scale the widget is drawn at under the pointer, or while it shows
+	 * the focus ring: a little bounce, such as `1.05`. `1` turns it off.
 	 *
-	 * Only the drawing scales, about the widget's centre: its hit area and
-	 * its place in a layout stay as they are, so nothing jitters or moves
-	 * the widgets around it. The scale eases there and back by itself.
+	 * Only the drawing scales, about the widget's centre. Its hit area and
+	 * its place in a layout stay the same, so the widgets around it do not
+	 * move. The scale eases there and back by itself (about 0.2 s). A
+	 * disabled widget does not grow.
 	 * @default 1
+	 * @example
+	 * button.hoverScale = 1.05;
+	 * button.pressScale = 0.92;
 	 */
 	hoverScale = 1;
 
 	/**
 	 * The scale the widget is drawn at while held down, such as `0.92`.
-	 * `1` leaves it still. See {@link UIBaseElement#hoverScale}.
+	 * `1` turns it off. Drawing only, as {@link UIBaseElement#hoverScale}.
 	 * @default 1
 	 */
 	pressScale = 1;
@@ -301,45 +456,64 @@ export default class UIBaseElement extends Container {
 
 	/**
 	 * Whether this element can take the keyboard and gamepad focus: see
-	 * {@link UIBaseElement#focus}. Buttons, checkboxes and sliders set it.
+	 * {@link UIBaseElement#focus}. The built-in buttons, checkboxes and
+	 * sliders set it; set it on a widget of your own to make it reachable.
+	 * A disabled or hidden element is skipped.
 	 * @default false
 	 */
 	focusable = false;
 
 	/**
-	 * The colour of the ring drawn around the element with the focus.
+	 * The colour of the ring drawn around the element with the focus, for
+	 * every element. Any CSS colour.
 	 * @default "#ffcc33"
+	 * @example
+	 * UIBaseElement.focusRingColor = "#00e0ff";
 	 */
 	static focusRingColor = "#ffcc33";
 
 	/**
-	 * The element with the keyboard and gamepad focus, if any.
+	 * The element with the keyboard and gamepad focus, or `undefined` when
+	 * none has it.
+	 * @example
+	 * // give the focus back to the menu if nothing has it
+	 * if (UIBaseElement.focusOwner === undefined) {
+	 *     playButton.focus();
+	 * }
 	 */
 	static get focusOwner(): UIBaseElement | undefined {
 		return focusOwner();
 	}
 
-	/** whether this element has the keyboard and gamepad focus */
+	/** `true` while this element has the keyboard and gamepad focus */
 	get focused(): boolean {
 		return focusOwner() === this;
 	}
 
 	/**
 	 * Take the keyboard and gamepad focus, for a game played without a mouse
-	 * or a touch screen.
+	 * or a touch screen. Call it once the element is in the scene.
 	 *
 	 * Nothing has the focus until a game gives it to an element, and until
-	 * then the arrow keys and the pad are left alone. From then on the arrows
-	 * or a pad's D-pad move the focus to the nearest focusable element that
-	 * way, and Enter, Space or the pad's A press the focused one as a click
-	 * does; a slider steps on left and right instead. A ring shows the focus,
-	 * and hides while the mouse is used. A focused element in a scrolling
-	 * panel is scrolled into view.
+	 * then the arrow keys and the pad are left to the game. From then on:
+	 * the arrows or the D-pad move the focus to the nearest focusable element
+	 * that way; Enter, Space or the pad's A button press the focused one as a
+	 * click does (a slider steps on left and right instead). The focus ring
+	 * shows, and hides again while the mouse is used. A focused element in a
+	 * scrolling panel is scrolled into view.
 	 *
 	 * Does nothing on an element that is not `focusable`.
 	 * @example
 	 * // a menu played with the keyboard or a pad: start on Play
+	 * app.world.addChild(playButton);
+	 * app.world.addChild(optionsButton);
 	 * playButton.focus();
+	 * @example
+	 * // a pause menu in a panel: focus its first button when it opens
+	 * panel.addChild(resumeButton);
+	 * panel.addChild(quitButton);
+	 * app.world.addChild(panel);
+	 * resumeButton.focus();
 	 */
 	focus(): void {
 		if (this.focusable) {
@@ -349,7 +523,11 @@ export default class UIBaseElement extends Container {
 
 	/**
 	 * Give up the focus, if this element has it. With nothing focused, the
-	 * arrow keys and the pad are left to the game again.
+	 * arrow keys and the pad go back to the game. Removing the element from
+	 * the scene does the same.
+	 * @example
+	 * // leaving the menu for the game: the arrows move the player again
+	 * UIBaseElement.focusOwner?.blur();
 	 */
 	blur(): void {
 		if (this.focused) {
@@ -358,21 +536,44 @@ export default class UIBaseElement extends Container {
 	}
 
 	/**
-	 * An arrow key or a D-pad direction while this element has the focus:
-	 * return `true` to say it was handled, as a slider does to step, and the
-	 * focus stays. Unhandled, it moves the focus to the nearest widget that
-	 * way. Enter or A presses the widget instead, as a click does, through
+	 * Called for an arrow key or a D-pad direction while this element has
+	 * the focus. Return `true` to handle it yourself (the focus stays here),
+	 * as a slider does to step. Return `false`, the default, to move the
+	 * focus to the nearest widget that way.
+	 *
+	 * Enter, Space and A do not come here: they press the widget through
 	 * {@link UIBaseElement#focusPress} and {@link UIBaseElement#focusRelease}.
-	 * @param _action - which way
-	 * @returns true when handled
+	 * @param _action - which way: `"up"`, `"down"`, `"left"` or `"right"`
+	 * @returns `true` when handled
+	 * @example
+	 * // a picker: left and right change the choice, up and down move on
+	 * class Picker extends UIBaseElement {
+	 *     constructor(x, y, choices) {
+	 *         super(x, y, 160, 32);
+	 *         this.focusable = true;
+	 *         this.choices = choices;
+	 *         this.index = 0;
+	 *     }
+	 *     onNavigate(action) {
+	 *         if (action === "left" || action === "right") {
+	 *             const step = action === "right" ? 1 : -1;
+	 *             const n = this.choices.length;
+	 *             this.index = (this.index + step + n) % n;
+	 *             this.isDirty = true;
+	 *             return true;
+	 *         }
+	 *         return false;
+	 *     }
+	 * }
 	 */
 	onNavigate(_action: UINavAction): boolean {
 		return false;
 	}
 
 	/**
-	 * Accept was pressed with the focus here: the widget goes down, as under
-	 * a pointer, and `onClick` runs with no event.
+	 * Called when Enter, Space or A is pressed with the focus here: the
+	 * widget goes down, as under the pointer, and `onClick` runs with no
+	 * event. Override it only to change what accept does.
 	 * @returns whether it went down: not when disabled, or already held
 	 */
 	focusPress(): boolean {
@@ -388,9 +589,11 @@ export default class UIBaseElement extends Container {
 	}
 
 	/**
-	 * Accept was let go: the widget comes back up and `onRelease` runs. A
-	 * widget completes its action here, as on a click: a button calls its
-	 * `onClick` setting, a checkbox toggles.
+	 * Called when Enter, Space or A is let go after
+	 * {@link UIBaseElement#focusPress}: the widget comes back up and
+	 * `onRelease` runs with no event. The built-in widgets complete their
+	 * action here, as on a click: a button calls its `onClick` setting, a
+	 * checkbox toggles.
 	 */
 	focusRelease(): void {
 		if (!this.released) {
@@ -465,11 +668,20 @@ export default class UIBaseElement extends Container {
 	/**
 	 * Whether the widget answers input: the switch to turn a widget off.
 	 *
-	 * Turning it off sets `isClickable`, calls off a press in progress
-	 * without a release, and draws the widget disabled: its `disabled` skin
-	 * region, or at half opacity. `isClickable` is the low-level flag
-	 * underneath, and setting it alone changes neither the look nor this.
+	 * Turning it off clears `isClickable`, calls off a press in progress
+	 * (see {@link UIBaseElement#cancelPress}), and skips it in keyboard and
+	 * gamepad navigation. The built-in widgets draw themselves disabled:
+	 * their `disabled` skin region, or at half opacity. A widget of your own
+	 * reads `enabled` in its `draw`.
+	 *
+	 * `isClickable` is the low-level flag underneath; setting it alone does
+	 * not change `enabled` or the look.
 	 * @default true
+	 * @example
+	 * // greyed out until a save exists
+	 * continueButton.enabled = false;
+	 * // ... later
+	 * continueButton.enabled = true;
 	 */
 	get enabled(): boolean {
 		return this._enabled;
@@ -520,12 +732,14 @@ export default class UIBaseElement extends Container {
 	}
 
 	/**
-	 * Abandon a press in progress, without calling `onRelease`.
+	 * Call off a press in progress, without calling `onRelease`:
+	 * {@link UIBaseElement#onCancel} runs instead.
 	 *
 	 * The element goes back to its released look, and the pointer-up that
 	 * follows does nothing. A scrolling {@link UIPanel} calls this when a drag
 	 * that started on the element turns out to be a scroll, so a button
-	 * dragged to scroll its list is not clicked.
+	 * dragged to scroll its list is not clicked. Setting `enabled` to `false`
+	 * and losing the focus while Enter or A is held call it too.
 	 */
 	cancelPress(): void {
 		if (!this.released) {
@@ -538,17 +752,25 @@ export default class UIBaseElement extends Container {
 	}
 
 	/**
-	 * Called when a press is abandoned rather than completed: see
-	 * {@link UIBaseElement#cancelPress}. To be extended.
+	 * Called when a press is called off rather than completed: see
+	 * {@link UIBaseElement#cancelPress}. Override it to undo what `onClick`
+	 * started, such as a charge-up effect.
 	 */
 	onCancel(): void {
 		// to be extended
 	}
 
 	/**
-	 * function called when the object is pressed (to be extended)
-	 * @param _event - the event object
-	 * @returns return false if we need to stop propagating the event
+	 * Called when the element is pressed: the pointer went down on it, or
+	 * Enter / Space / A with the focus here (then with no event). Override it
+	 * in a subclass.
+	 *
+	 * This is the press, not a completed click: see
+	 * {@link UIBaseElement#onRelease} for the end of it.
+	 * @param _event - the pointer event, or `undefined` from the keyboard or
+	 * the pad
+	 * @returns `false` to stop the event here, so elements below do not get
+	 * it too
 	 */
 
 	onClick(_event?: Pointer): boolean {
@@ -593,8 +815,10 @@ export default class UIBaseElement extends Container {
 	}
 
 	/**
-	 * function called when the pointer is moved over the object
-	 * @param _event - the event object
+	 * Called on each pointer move while the element is dragged (see
+	 * {@link UIBaseElement#isDraggable}), after `pos` has followed the
+	 * pointer. Override it in a subclass.
+	 * @param _event - the pointer event
 	 */
 
 	onMove(_event?: Pointer): void {
@@ -602,16 +826,16 @@ export default class UIBaseElement extends Container {
 	}
 
 	/**
-	 * function called when the pointer is over the object.
+	 * Called when the pointer comes over the element. Override it in a
+	 * subclass.
 	 *
 	 * Fires once, on the frame the pointer crosses into the element. To stay
-	 * opaque for as long as the pointer rests on it, an element also wants a
-	 * `"pointermove"` callback registered through
-	 * {@link input.registerPointerEvent} returning `false`, since by then the
-	 * pointer is already inside and this no longer runs.
-	 * @param _event - the event object
-	 * @returns return false if we need to stop propagating the event, so that an
-	 * element covered by this one does not also light up on hover
+	 * opaque to hover for as long as the pointer rests on it, also register a
+	 * `"pointermove"` callback through {@link input.registerPointerEvent}
+	 * that returns `false` (see the class example).
+	 * @param _event - the pointer event
+	 * @returns `false` to stop the event here, so an element covered by this
+	 * one does not also light up
 	 */
 
 	onOver(_event?: Pointer): boolean | void {
@@ -632,16 +856,16 @@ export default class UIBaseElement extends Container {
 	}
 
 	/**
-	 * function called when the pointer is leaving the object area.
+	 * Called when the pointer leaves the element. Override it in a subclass.
 	 *
-	 * Fires when the pointer leaves the element's bounds, and also when it is
-	 * still inside them but something drawn above has consumed the move, since
-	 * the pointer is then over that instead.
+	 * Also fires when the pointer is still inside but something drawn above
+	 * has stopped the move, since the pointer is then over that instead. A
+	 * press in progress ends first, through `onRelease`.
 	 *
-	 * Unlike {@link UIBaseElement#onOver} this one cannot consume the event, on
-	 * purpose: an element that suppressed its own leave would stay in its hover
-	 * state after the pointer had gone.
-	 * @param _event - the event object
+	 * Unlike {@link UIBaseElement#onOver} it cannot stop the event: an
+	 * element that skipped its own leave would stay lit after the pointer
+	 * had gone.
+	 * @param _event - the pointer event
 	 */
 
 	onOut(_event?: Pointer): void {
@@ -664,9 +888,18 @@ export default class UIBaseElement extends Container {
 	}
 
 	/**
-	 * function called when the object is pressed and released (to be extended)
-	 * @param _event - the event object
-	 * @returns return false if we need to stop propagating the event
+	 * Called when a press ends. Override it in a subclass.
+	 *
+	 * It runs when the pointer comes up, but also when the pointer leaves the
+	 * element while held, or the browser cancels the press: it is the end
+	 * of a press, not proof of a completed click. (For a click that only
+	 * counts when completed, use a {@link UITextButton} and its `onClick`
+	 * setting.) A press called off by {@link UIBaseElement#cancelPress} does
+	 * not come here.
+	 * @param _event - the pointer event, or `undefined` from the keyboard or
+	 * the pad
+	 * @returns `false` to stop the event here, so elements below do not get
+	 * it too
 	 */
 
 	onRelease(_event?: Pointer): boolean {
@@ -688,8 +921,8 @@ export default class UIBaseElement extends Container {
 	}
 
 	/**
-	 * function called when the object is pressed and held<br>
-	 * to be extended <br>
+	 * Called once a press has been held for `holdThreshold` milliseconds,
+	 * when `isHoldable` is set. Override it in a subclass.
 	 */
 	onHold(): void {}
 

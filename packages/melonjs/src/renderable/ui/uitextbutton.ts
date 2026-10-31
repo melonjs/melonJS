@@ -16,145 +16,214 @@ import type { UISkin } from "./uiskin.ts";
 import { SkinDrawer } from "./uiskin.ts";
 
 /**
- * The art of a skinned {@link UITextButton}: one atlas region per state.
+ * The art of a skinned {@link UITextButton}: one atlas region name per
+ * state, plus the `atlas` and optional nine-slice insets from
+ * {@link UISkin}.
  *
  * Each region is drawn as a nine-slice, so the button can be any size.
+ * Every region named is looked up when the button is built, so a typo
+ * throws there.
  * @category UI
+ * @example
+ * const skin = {
+ *     atlas,
+ *     normal: "green_button04",
+ *     pressed: "green_button05",
+ *     disabled: "grey_button04",
+ * };
  */
 export interface UITextButtonSkin extends UISkin {
-	/** the button at rest */
+	/** the region drawn at rest; also sets the button's default size */
 	normal: string;
 	/**
-	 * The button held down. When it is shorter than `normal`, as pressed art
-	 * usually is, it is drawn lowered by the difference and the label moves
-	 * down with it.
+	 * The region drawn while held down; `normal` if left out. When it is
+	 * shorter than `normal`, as pressed art usually is, it is drawn lowered
+	 * by the difference and the label moves down with it.
 	 */
 	pressed?: string;
-	/** the button under the pointer; `normal` if left out */
+	/** the region drawn under the pointer; `normal` if left out */
 	hover?: string;
-	/** the button while disabled; `normal` at half opacity if left out */
+	/** the region drawn while disabled; `normal` at half opacity if left out */
 	disabled?: string;
 }
 
 /**
- * Everything {@link UITextButton} takes.
+ * Everything {@link UITextButton} takes. Every field is optional. The
+ * object is only read, so one style object can be spread into several
+ * buttons.
  * @category UI
  */
 export interface UITextButtonSettings extends UIJuiceSettings {
 	/**
 	 * The font: the name of a loaded bitmap font, or a CSS font family. A
-	 * name with a font image in the loader, or a `fontData` setting, is
-	 * drawn through {@link BitmapText}, as before; anything else through
-	 * {@link Text}.
+	 * name with a font image in the loader, or a `fontData` setting, is drawn
+	 * as a {@link BitmapText}; anything else as a {@link Text} with that CSS
+	 * font.
 	 * @default "sans-serif"
 	 */
 	font?: string;
-	/** the bitmap font data, when it is loaded under another name than `font` */
+	/**
+	 * the loader name of the bitmap font data, when it differs from `font`
+	 */
 	fontData?: string;
 	/**
-	 * The label's height in pixels, for a bitmap font as for a CSS font: the
-	 * same setting as on the other widgets. Takes over from `size`.
+	 * The label's height in pixels, for a bitmap font as for a CSS font. A
+	 * bitmap font is scaled to it. Left out: 16 for a CSS font, the authored
+	 * size for a bitmap font. Wins over `size`.
 	 */
 	fontSize?: number;
 	/**
-	 * The older form of `fontSize`: with a bitmap font, a scale of its
-	 * authored size; with a CSS font, the height in pixels.
+	 * Older form of `fontSize`, still accepted. With a CSS font it is the
+	 * height in pixels; with a bitmap font it is a scale of the authored
+	 * size (`2` is double), not pixels.
 	 */
 	size?: number;
-	/** the label */
+	/**
+	 * the label's text
+	 * @default ""
+	 */
 	text?: string;
-	/** the label's colour, as on the other widgets; a bitmap font is tinted with it */
+	/**
+	 * The label's colour. A bitmap font is tinted with it; left out, a
+	 * bitmap font keeps its own colours and a CSS font is black.
+	 */
 	labelFillStyle?: string;
-	/** the older name of `labelFillStyle` */
+	/** older name of `labelFillStyle`, still accepted */
 	fillStyle?: string;
-	/** see {@link UITextButton.bindKey} */
+	/**
+	 * A keyboard shortcut that clicks the button: an `input.KEY` key code,
+	 * or the name of an action bound with `input.bindKey`. `-1` for none.
+	 * See {@link UITextButton#bindKey}.
+	 * @default -1
+	 */
 	bindKey?: string | number;
 	/**
-	 * Called once per completed click: pressed and released on the button,
-	 * or its {@link UITextButton.bindKey} pressed and released. A press
-	 * dragged off the button, cancelled, or turned into a scroll by a
+	 * What the button does. Called once per completed click: pressed and
+	 * released on the button, Enter / Space / A pressed and released with
+	 * the focus on it, or its `bindKey` pressed and released. A press dragged
+	 * off the button, called off, or turned into a scroll by a
 	 * {@link UIPanel} does not call it. Nor does a disabled button.
 	 */
 	onClick?: (button: UITextButton) => void;
 	/**
-	 * whether the button answers input
+	 * whether the button answers input; see {@link UIBaseElement#enabled}
 	 * @default true
 	 */
 	enabled?: boolean;
-	/** draw the button from atlas regions instead of a rounded rectangle */
+	/**
+	 * Draw the button from atlas regions instead of a rounded rectangle.
+	 * The colour settings below are then not used.
+	 */
 	skin?: UITextButtonSkin;
 	/**
-	 * background colour at rest (drawn look)
+	 * background colour at rest, drawn look only
 	 * @default "#00aa0080"
 	 */
 	hoverOffColor?: Paint;
 	/**
-	 * background colour under the pointer (drawn look)
+	 * background colour under the pointer, drawn look only
 	 * @default "#00ff00ff"
 	 */
 	hoverOnColor?: Paint;
-	/** background colour while held down (drawn look); `hoverOnColor` by default */
+	/**
+	 * Background colour while held down, drawn look only. Left out, a held
+	 * button shows `hoverOnColor`.
+	 */
 	pressedColor?: Paint;
 	/**
-	 * outline colour (drawn look), the name the other widgets use
+	 * outline colour, drawn look only
 	 * @default "#000000"
 	 */
 	borderColor?: Paint;
-	/** the older name of `borderColor` */
+	/** older name of `borderColor`, still accepted */
 	borderStrokeColor?: Paint;
 	/**
-	 * the label's alignment about the middle of the button
+	 * The label's horizontal alignment about the centre of the button:
+	 * `"left"` starts the text at the centre, `"right"` ends it there.
 	 * @default "center"
 	 */
 	textAlign?: string;
 	/**
-	 * the label's baseline about the middle of the button
+	 * the label's baseline about the vertical middle of the button
 	 * @default "middle"
 	 */
 	textBaseline?: string;
 	/**
-	 * the button's width: the label's width plus 16 by default, or the skin's
-	 * `normal` region's
+	 * The button's width in pixels. Left out: the skin's `normal` region
+	 * width, or else the label's width plus 16.
 	 */
 	width?: number;
 	/**
-	 * the button's height: the label's height plus 16 by default, or the
-	 * skin's `normal` region's
+	 * The button's height in pixels. Left out: the skin's `normal` region
+	 * height, or else the label's height plus 16.
 	 */
 	height?: number;
 	/**
-	 * The older name of `width`. Not an outline thickness, as `borderWidth`
-	 * is on the other widgets.
+	 * Older name of `width`, still accepted. It is the button's width, not an
+	 * outline thickness as `borderWidth` is on the other widgets.
 	 */
 	borderWidth?: number;
-	/** the older name of `height` */
+	/** older name of `height`, still accepted */
 	borderHeight?: number;
-	/** passed on to the {@link BitmapText} of a bitmap font label */
+	/**
+	 * Anything else is passed on to the {@link BitmapText} of a bitmap font
+	 * label, such as `lineHeight`.
+	 */
 	[key: string]: any;
 }
 
 /**
- * A button with a label, drawn as a rounded rectangle, or from atlas art
- * through a {@link UITextButtonSkin}.
+ * A button with a text label. Use it for menu entries, dialog choices and
+ * any action the player clicks, taps, or selects with the keyboard or a pad.
  *
- * Give it an `onClick` for what it does. That is called on a COMPLETED
- * click, so a press can still be taken back by dragging off the button, and
- * a drag that starts on it inside a scrolling {@link UIPanel} scrolls the
- * panel instead.
+ * ## Drawn or skinned
+ * With no assets, it is drawn as a rounded rectangle in `hoverOffColor`,
+ * `hoverOnColor` under the pointer and `pressedColor` while held (which
+ * follows `hoverOnColor` when left out), with a `borderColor` outline. Give
+ * it a `skin` ({@link UITextButtonSkin}) to draw it from atlas regions
+ * instead, stretched as a nine-slice to any `width` and `height`.
  *
- * The {@link UIBaseElement#onClick} and {@link UIBaseElement#onRelease}
- * methods are still there for a subclass, and are called on the press and
- * on the release as before.
+ * ## What it does
+ * Pass an `onClick` setting. It is called on a COMPLETED click only: a press
+ * dragged off the button is taken back, and a drag that starts on it inside
+ * a scrolling {@link UIPanel} scrolls the panel instead. Enter, Space or A
+ * with the focus, and the `bindKey` shortcut, click it too.
+ *
+ * A subclass can still override {@link UIBaseElement#onClick} and
+ * {@link UIBaseElement#onRelease}; they run on the press and on the
+ * release, before the `onClick` setting.
+ *
+ * ## Text
+ * `font` is the name of a loaded bitmap font or, failing that, a CSS font
+ * family (`"sans-serif"` by default). `fontSize` is the label height in
+ * pixels for both kinds. `labelFillStyle` colours it.
+ *
+ * ## Turning it off
+ * `enabled: false` (or setting {@link UIBaseElement#enabled} later) stops
+ * clicks, the shortcut and the focus, and draws it with its `disabled` skin
+ * region or at half opacity.
+ *
+ * ## Older setting names
+ * Still accepted, as aliases: `borderWidth` / `borderHeight` for `width` /
+ * `height`, `size` for `fontSize` (a scale with a bitmap font),
+ * `fillStyle` for `labelFillStyle`, and `borderStrokeColor` for
+ * `borderColor`.
+ *
+ * Focus, bounce (`hoverScale`, `pressScale`) and the rest come from
+ * {@link UIBaseElement}.
  * @category UI
  * @example
  * // drawn, with no assets
+ * import { UITextButton, state } from "melonjs";
+ *
  * const play = new UITextButton(100, 200, {
  *     text: "Play",
  *     fontSize: 24,
  *     onClick: () => state.change(state.PLAY),
  * });
- *
- * // skinned from an atlas, any width
+ * app.world.addChild(play);
+ * @example
+ * // skinned from an atlas, with a bitmap font 12 pixels high
  * const accept = new UITextButton(30, 250, {
  *     font: "kenpixel",
  *     fontSize: 12,
@@ -163,32 +232,82 @@ export interface UITextButtonSettings extends UIJuiceSettings {
  *     skin: { atlas, normal: "green_button04", pressed: "green_button05" },
  *     onClick: () => saveSettings(),
  * });
+ * @example
+ * // a keyboard shortcut: Escape clicks "Back"
+ * import { UITextButton, input } from "melonjs";
+ *
+ * const back = new UITextButton(20, 20, {
+ *     text: "Back",
+ *     bindKey: input.KEY.ESC,
+ *     onClick: () => closeMenu(),
+ * });
+ * @example
+ * // disabled until something happens
+ * const start = new UITextButton(100, 300, {
+ *     text: "Start",
+ *     enabled: false,
+ *     onClick: () => startGame(),
+ * });
+ * // ... once the player has picked a character
+ * start.enabled = true;
+ * @example
+ * // one style shared by several buttons
+ * const style = {
+ *     font: "Arial",
+ *     fontSize: 20,
+ *     width: 200,
+ *     labelFillStyle: "#ffffff",
+ *     hoverOffColor: "#224488",
+ *     hoverOnColor: "#3366cc",
+ *     pressedColor: "#112244",
+ *     borderColor: "#ffffff",
+ *     hoverScale: 1.05,
+ * };
+ * const resume = new UITextButton(100, 150, { ...style, text: "Resume", onClick: resumeGame });
+ * const quit = new UITextButton(100, 210, { ...style, text: "Quit", onClick: quitGame });
  */
 export default class UITextButton extends UIBaseElement {
 	/**
-	 * Keyboard shortcut: an input.KEY keycode or an existing input action name.
-	 * A press calls onClick() and its matching release calls onRelease(), both
-	 * without a pointer event, then the `onClick` setting. Shortcuts are active
-	 * only while the button is activated and never change global key bindings.
-	 * The first input to press owns the button until released; shortcuts do
-	 * not start pointer dragging or tap-and-hold.
+	 * A keyboard shortcut that clicks the button: an `input.KEY` key code, or
+	 * the name of an action bound with `input.bindKey` (so every key bound to
+	 * it works). `-1`, or an empty string, for none.
 	 *
-	 * `isClickable` gates the PRESS, not the release: a button disabled while
-	 * its key is held still releases when that key comes up, so it cannot be
-	 * left stuck down.
+	 * The key going down presses the button (the `onClick` method runs, with
+	 * no event); the same key coming up releases it (`onRelease`), then the
+	 * `onClick` setting runs. The shortcut works only while the button is in
+	 * the scene and enabled, and it does not change any global key binding.
+	 * Whichever input presses first, key or pointer, owns the press until it
+	 * is released.
 	 *
-	 * **Losing focus or being removed cancels a held press WITHOUT calling
-	 * `onRelease()`.** The press was abandoned rather than completed, so the
-	 * button returns to its released state silently. Code that treats the pair
-	 * as press and depress, firing a weapon on click and stopping on release,
-	 * needs to stop on {@link event.BLUR} too or it will still be firing when
-	 * the window comes back.
+	 * When another button shows the focus ring, Enter and Space belong to that
+	 * button: an "OK" bound to Enter does not fire while "Cancel" is focused.
+	 *
+	 * Setting `enabled` to `false` while the key is held calls the press off.
+	 * Clearing only `isClickable` blocks new presses but still lets a held key
+	 * release, so the button is not left stuck down.
+	 *
+	 * The window losing focus, or the button being removed, calls a held key
+	 * press off: `onCancel()` is called instead of `onRelease()`, and there
+	 * is no click. Code that starts something on the press, such as firing a
+	 * weapon, stops it in both `onRelease()` and `onCancel()`.
 	 * @default -1
+	 * @example
+	 * // Escape clicks the button
+	 * backButton.bindKey = input.KEY.ESC;
+	 * @example
+	 * // every key bound to the "pause" action clicks the button
+	 * input.bindKey(input.KEY.P, "pause");
+	 * pauseButton.bindKey = "pause";
 	 */
 	bindKey: string | number;
 
 	/**
-	 * What the button does: see {@link UITextButtonSettings.onClick}.
+	 * What the button does, from the `onClick` setting: called once per
+	 * completed click, with the button. Can be set or replaced later. See
+	 * {@link UITextButtonSettings.onClick}.
+	 * @example
+	 * // switch what the button does once the level is loaded
+	 * startButton.onClickCallback = () => state.change(state.PLAY);
 	 */
 	onClickCallback: ((button: UITextButton) => void) | undefined;
 
@@ -241,40 +360,49 @@ export default class UITextButton extends UIBaseElement {
 			this.keyboardKey = undefined;
 			this.released = true;
 			this.isDirty = true;
+			// called off, as a pointer press can be: no release, no click
+			this.onCancel();
 		}
 	};
 
 	/**
-	 * The css value of a color to be used if the pointer is not hovering over the button
+	 * The background colour at rest, drawn look only.
+	 * @default "#00aa0080"
 	 */
 	hoverOffColor: Paint;
 
 	/**
-	 * The css value of a color to be used if the pointer hovers over the button
+	 * The background colour under the pointer, drawn look only. Also the
+	 * colour while held, when `pressedColor` is undefined.
+	 * @default "#00ff00ff"
 	 */
 	hoverOnColor: Paint;
 
 	/**
-	 * The background while the button is held down. Left undefined, the
-	 * button shows {@link UITextButton#hoverOnColor}, whatever it is then.
+	 * The background colour while held down, drawn look only. Left
+	 * undefined, the button shows {@link UITextButton#hoverOnColor},
+	 * following it if it changes.
 	 */
 	pressedColor: Paint | undefined;
 
 	/**
-	 * The css value of a color to be used to draw the border
+	 * The outline colour, drawn look only: the `borderColor` setting (or its
+	 * older name `borderStrokeColor`).
+	 * @default "#000000"
 	 */
 	borderStrokeColor: Paint;
 
 	/**
-	 * Set the default text alignment (or justification),<br>
-	 * possible values are "left", "right", and "center".
+	 * The label's horizontal alignment about the centre of the button:
+	 * `"left"`, `"right"` or `"center"`. Read when the button is built.
 	 * @default "center"
 	 */
 	textAlign: string;
 
 	/**
-	 * Set the text baseline (e.g. the Y-coordinate for the draw operation), <br>
-	 * possible values are "top", "hanging", "middle", "alphabetic", "ideographic", "bottom"<br>
+	 * The label's baseline about the vertical middle of the button: `"top"`,
+	 * `"hanging"`, `"middle"`, `"alphabetic"`, `"ideographic"` or
+	 * `"bottom"`. Read when the button is built.
 	 * @default "middle"
 	 */
 	textBaseline: string;
@@ -282,20 +410,23 @@ export default class UITextButton extends UIBaseElement {
 	/**
 	 * The label: a {@link BitmapText} for a loaded bitmap font, a
 	 * {@link Text} otherwise.
+	 * @example
+	 * // change the text later (the button keeps its size)
+	 * scoreButton.label.setText("Score: 120");
 	 */
 	label: UILabel;
 
 	/**
-	 * the measured text dimensions
+	 * the label's size as measured when the button was built
 	 */
 	dimensions: Bounds;
 
 	/**
-	 * the round rect border
+	 * the rounded rectangle the drawn look fills and outlines
 	 */
 	border: RoundRect;
 
-	/** the art, when the button is skinned */
+	/** the `skin` setting, or `undefined` for the drawn look */
 	readonly skin: UITextButtonSkin | undefined;
 
 	/** @ignore */
@@ -304,34 +435,27 @@ export default class UITextButton extends UIBaseElement {
 	private _labelDrop = 0;
 
 	/**
-	 * A Bitmap Text Button with an outlined background border, filled with background color.
-	 * It uses a RoundRect as background and changes the background color on hovering over.
-	 * The background will be drawn with 0.5 opacity, so that the background of the button is
-	 * slightly shining through.
-	 * @param x - x pos of the button
-	 * @param y - y pos of the button
+	 * @param x - the x position of the button's top-left corner, in screen pixels
+	 * @param y - the y position of the button's top-left corner, in screen pixels
 	 * @param settings - see {@link UITextButtonSettings}
 	 * @example
-	 * // Create a new Button
-	 * class PlayButton extends UITextButton {
-	 *      constructor(x,y) {
-	 *          super(x,y, {
-	 *              font: 'my-font',
-	 *              text: 'Play',
-	 *              // if you omit the next two, size is calculated by the size of the text
-	 *              borderWidth: 200,
-	 *              borderHeight: 20,
-	 *              hoverOffColor: '#00aa0080',
-	 *              hoverOnColor: '#00ff00ff'
-	 *          });
-	 *      }
-	 *
-	 *      onClick(){
-	 *          state.change(state.PLAY);
-	 *      }
+	 * // as a subclass, acting on the press rather than the completed click
+	 * class FireButton extends UITextButton {
+	 *     constructor(x, y) {
+	 *         super(x, y, { text: "Fire", width: 120, height: 48 });
+	 *     }
+	 *     onClick() {
+	 *         startFiring();
+	 *         return false;
+	 *     }
+	 *     onRelease() {
+	 *         stopFiring();
+	 *         return false;
+	 *     }
+	 *     onCancel() {
+	 *         stopFiring();
+	 *     }
 	 * }
-	 *
-	 * world.addChild(new PlayButton(15,200));
 	 */
 	constructor(x: number, y: number, settings: UITextButtonSettings = {}) {
 		super(x, y);
@@ -440,7 +564,8 @@ export default class UITextButton extends UIBaseElement {
 	}
 
 	/**
-	 * Accept let go with the focus here: a completed click.
+	 * Called when Enter, Space or A is let go with the focus here: a
+	 * completed click, so the `onClick` setting runs.
 	 */
 	override focusRelease(): void {
 		const pressed = !this.released;
@@ -451,7 +576,8 @@ export default class UITextButton extends UIBaseElement {
 	}
 
 	/**
-	 * Call off a press, from the pointer or from the key.
+	 * Call off a press, from the pointer or from the `bindKey`, without a
+	 * click. See {@link UIBaseElement#cancelPress}.
 	 */
 	override cancelPress(): void {
 		this.cancelKeyboardPress();
@@ -459,12 +585,14 @@ export default class UITextButton extends UIBaseElement {
 	}
 
 	/**
-	 * Resize the button, and keep its background and label in step.
+	 * Resize the button; the background and the centred label follow.
 	 *
 	 * A {@link UIPanel} calls this to stretch a button to its column.
-	 * @param w - the new width
-	 * @param h - the new height
+	 * @param w - the new width, in pixels
+	 * @param h - the new height, in pixels
 	 * @returns this button
+	 * @example
+	 * button.resize(240, 48);
 	 */
 	override resize(w: number, h: number) {
 		super.resize(w, h);

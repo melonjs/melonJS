@@ -476,6 +476,29 @@ describe("UI widgets", () => {
 			expect(onClick).toHaveBeenCalledTimes(1);
 		});
 
+		it("a held bindKey press called off calls onCancel, not onRelease or onClick", () => {
+			const onClick = vi.fn();
+			const b = place(
+				new UITextButton(100, 100, {
+					text: "Fire",
+					bindKey: input.KEY.SPACE,
+					onClick,
+				}),
+			);
+			const onRelease = vi.spyOn(b, "onRelease");
+			const onCancel = vi.spyOn(b, "onCancel");
+			// the window losing focus while the key is held
+			event.emit(event.KEYDOWN, undefined, input.KEY.SPACE);
+			event.emit(event.BLUR);
+			// disabled while held
+			event.emit(event.KEYDOWN, undefined, input.KEY.SPACE);
+			b.enabled = false;
+			event.emit(event.KEYUP, undefined, input.KEY.SPACE);
+			expect(onCancel).toHaveBeenCalledTimes(2);
+			expect(onRelease).not.toHaveBeenCalled();
+			expect(onClick).not.toHaveBeenCalled();
+		});
+
 		it("draws the pressed region lowered, and the label with it", () => {
 			const atlas = makeAtlas();
 			const spy = vi.spyOn(SkinDrawer.prototype, "draw");

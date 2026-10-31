@@ -822,11 +822,13 @@ Three more rules, each with a reason you can feel in a game:
 - **The first input to press owns the button.** A pointer cannot release a key
   press and a key cannot release a pointer press, so a button cannot be left
   half pressed by using both at once.
-- **Losing focus cancels a held key WITHOUT calling `onRelease()`.** If you
-  use the pair as press and depress, firing while held, also stop on
-  `event.BLUR` or the gun is still firing when the player alt-tabs back.
-- **`isClickable` gates the press, not the release.** Disabling a button while
-  its key is down still releases it, so it cannot stick.
+- **A held key that is called off goes to `onCancel()`, not `onRelease()`.**
+  That happens when the window loses focus, the button is removed, or it is
+  disabled (`enabled = false`) while the key is down. If you use the pair as
+  press and depress, firing while held, stop in `onCancel()` too, or the gun
+  is still firing when the player alt-tabs back.
+- **`isClickable` alone gates the press, not the release.** Clearing it while
+  the key is down still lets the key release the button, so it cannot stick.
 
 Shortcuts live only while the button is activated, and never start dragging or
 tap-and-hold: those stay pointer gestures.
