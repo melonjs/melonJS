@@ -2075,6 +2075,108 @@ describe("UI widgets", () => {
 			});
 		});
 
+		describe("UISpriteElement", () => {
+			it("is a UIBaseElement holding its sprite, placed where the sprite's anchor goes", () => {
+				const atlas = makeAtlas();
+				const centred = new UISpriteElement(100, 100, {
+					image: atlas,
+					region: "up",
+				});
+				expect(centred).toBeInstanceOf(UIBaseElement);
+				expect(centred.children).toContain(centred.sprite);
+				// 16x16, centred on (100, 100) as a sprite is
+				expect([
+					centred.pos.x,
+					centred.pos.y,
+					centred.width,
+					centred.height,
+				]).toEqual([92, 92, 16, 16]);
+				const corner = new UISpriteElement(10, 20, {
+					image: atlas,
+					region: "up",
+					anchorPoint: { x: 0, y: 0 },
+				});
+				expect([corner.pos.x, corner.pos.y]).toEqual([10, 20]);
+				// the sprite draws over the element in both cases
+				for (const el of [centred, corner]) {
+					const b = el.sprite.getBounds();
+					const e = el.getBounds();
+					expect([b.left, b.top, b.width]).toEqual([e.left, e.top, e.width]);
+				}
+			});
+
+			it("takes clicks where it is drawn, and not while disabled", () => {
+				const onClick = vi.fn();
+				const icon = place(
+					new UISpriteElement(110, 110, { image: makeAtlas(), region: "up" }),
+				);
+				icon.onClick = onClick;
+				pointer("pointermove", 112, 112);
+				pointer("pointerdown", 112, 112);
+				pointer("pointerup", 112, 112);
+				expect(onClick).toHaveBeenCalledTimes(1);
+				icon.enabled = false;
+				pointer("pointerdown", 112, 112);
+				pointer("pointerup", 112, 112);
+				expect(onClick).toHaveBeenCalledTimes(1);
+			});
+
+			it("is drawn at half opacity while disabled", () => {
+				const icon = new UISpriteElement(110, 110, {
+					image: makeAtlas(),
+					region: "up",
+					enabled: false,
+				});
+				const renderer = app.renderer;
+				let seen;
+				vi.spyOn(icon.sprite, "draw").mockImplementation(() => {
+					seen = renderer.globalAlpha();
+				});
+				// as the update before a frame would mark it
+				icon.sprite.inViewport = true;
+				icon.draw(renderer);
+				expect(seen).toBeCloseTo(0.5, 5);
+				expect(renderer.globalAlpha()).toBe(1);
+			});
+
+			it("setRegion swaps the art and resizes the element", () => {
+				const atlas = makeAtlas();
+				const icon = new UISpriteElement(100, 100, {
+					image: atlas,
+					region: "up",
+				});
+				const spy = vi.spyOn(icon.sprite, "setRegion");
+				expect(icon.setRegion(atlas.getRegion("on"))).toBe(icon);
+				expect(spy).toHaveBeenCalledTimes(1);
+				expect([icon.width, icon.height]).toEqual([
+					icon.sprite.width,
+					icon.sprite.height,
+				]);
+			});
+
+			it("bounces, calls a press off, and takes the focus like the other elements", () => {
+				const onCancel = vi.fn();
+				const icon = place(
+					new UISpriteElement(110, 110, {
+						image: makeAtlas(),
+						region: "up",
+						pressScale: 0.9,
+					}),
+				);
+				icon.onCancel = onCancel;
+				expect(icon.pressScale).toBe(0.9);
+				pointer("pointermove", 112, 112);
+				pointer("pointerdown", 112, 112);
+				icon.cancelPress();
+				expect(onCancel).toHaveBeenCalledTimes(1);
+				expect(icon.released).toBe(true);
+				icon.focusable = true;
+				icon.focus();
+				expect(UIBaseElement.focusOwner).toBe(icon);
+				icon.blur();
+			});
+		});
+
 		describe("a press stops at a UI element", () => {
 			/** a wide renderable under everything, listening for presses */
 			const listenBehind = () => {

@@ -25,9 +25,10 @@ class Button extends UISpriteElement {
 		super(x, y, {
 			image: gameState.texture,
 			region: "shadedDark36.png",
+			// placed by its top left corner
+			anchorPoint: new Vector2d(0, 0),
 		});
 		this.setOpacity(0.25);
-		this.anchorPoint.set(0, 0);
 	}
 
 	/**
@@ -64,8 +65,8 @@ class Joypad extends UISpriteElement {
 			anchorPoint: new Vector2d(0, 0),
 		});
 
-		// mobile part of the joypad
-		this.pad = new Sprite(x, y, {
+		// mobile part of the joypad, drawn over the back
+		this.pad = new Sprite(0, 0, {
 			image: gameState.texture,
 			region: "shadedDark01.png",
 			anchorPoint: new Vector2d(0, 0),
@@ -76,6 +77,8 @@ class Joypad extends UISpriteElement {
 			this.width / 2 - this.pad.width / 2,
 			this.height / 2 - this.pad.height / 2,
 		);
+		this.pad.pos.setV(this.relative);
+		this.addChild(this.pad);
 
 		// offset by which the joypad move when pressed/moved
 		this.joypad_offset = new Vector2d();
@@ -96,19 +99,20 @@ class Joypad extends UISpriteElement {
 		input.registerPointerEvent(
 			"pointermove",
 			this,
-			this.pointerMove.bind(this),
+			this.onPointerMove.bind(this),
 		);
 	}
 
 	onDestroyEvent() {
 		// release the registered pointer event
 		input.releasePointerEvent("pointermove", this);
+		super.onDestroyEvent();
 	}
 
 	/**
 	 * pointermove function
 	 */
-	pointerMove(event) {
+	onPointerMove(event) {
 		if (this.released === false) {
 			const x = event.gameScreenX + event.width / 2;
 			const y = event.gameScreenY + event.height / 2;
@@ -188,13 +192,11 @@ class Joypad extends UISpriteElement {
 	}
 
 	/**
-	 * extend the draw function
+	 * move the pad with the joypad offset
 	 */
-	draw(renderer) {
-		// call the super constructor
-		super.draw(renderer);
-		this.pad.pos.setV(this.pos).add(this.relative).add(this.joypad_offset);
-		this.pad.draw(renderer);
+	update(dt) {
+		this.pad.pos.setV(this.relative).add(this.joypad_offset);
+		return super.update(dt);
 	}
 }
 

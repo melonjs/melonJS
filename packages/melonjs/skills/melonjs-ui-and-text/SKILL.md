@@ -295,7 +295,7 @@ There is no `UIContainer` class. Use `Container` for a bare grouping,
 | you want | use | notes |
 |---|---|---|
 | a button with a label | `UITextButton` | drawn, or skinned from an atlas; `onClick` setting |
-| an image-only button or icon | `UISpriteElement` | a `Sprite` that takes clicks; override `onClick` |
+| an image-only button or icon | `UISpriteElement` | a `UIBaseElement` holding a `Sprite` (`sprite`); override `onClick` |
 | an on/off option, or one of several | `UICheckbox` | a radio button with `group` |
 | a value in a range: volume, sensitivity | `UISlider` | horizontal or vertical |
 | health, shield, cooldown, loading | `ProgressBar` | not clickable; `value` redraws |
@@ -631,9 +631,11 @@ it, silently. A panel whose labels never appear while paused is this.
 
 ### Buttons: extend the handlers, do not bind listeners
 
-`UISpriteElement` is a `Sprite` that already registers itself for pointer
-events, so a button is made by overriding methods rather than by wiring
-`registerPointerEvent`:
+Every UI element already registers itself for pointer events, so a button is
+made by overriding methods rather than by wiring `registerPointerEvent`. For
+an image-only button that is `UISpriteElement`: a `UIBaseElement` holding a
+`Sprite`, placed like a sprite (`(x, y)` is where its anchor goes, the centre
+by default):
 
 | handler | fires | returns |
 |---|---|---|
@@ -653,14 +655,23 @@ class MuteButton extends UISpriteElement {
     onOut()  { this.setOpacity(0.5); }
     onClick() {
         audio.muteAll();
-        return false;          // consumed — do not fall through to the world
+        this.setRegion(atlas.getRegion("speaker_off.png"));   // or this.sprite.setRegion
+        return false;          // consumed (the default)
     }
 }
 ```
 
+The image is `button.sprite`: animations, tint and regions live there
+(`setRegion`, `addAnimation`, `setCurrentAnimation` and `isCurrentAnimation`
+are also on the element as shortcuts). As a `UIBaseElement` it has
+`enabled` (drawn at half opacity when off), `cancelPress()` / `onCancel()`,
+the bounce, and focus once `focusable` is set. `pos` is the element's top
+left corner, and a second sprite of your own, such as a joystick's knob, is
+a child added with `addChild`, not drawn by hand in `draw()`.
+
 **A press stops at a UI element by default.** `onClick` and `onRelease`
-return `false` unless you override them, on `UISpriteElement` and on every
-`UIBaseElement` (buttons, checkboxes, sliders, your own widgets): a click on
+return `false` unless you override them, on every `UIBaseElement` (buttons,
+checkboxes, sliders, sprite buttons, your own widgets): a click on
 a HUD button does not also click the world behind it. Return `true` from
 them to let the press through as well. Hover is different: `onOver` lets it
 through unless it returns `false`. A non-blocking `UIPanel` lets a press on
@@ -668,7 +679,7 @@ its background through, as a frame that only decorates should.
 
 The pointer still has to reach it: a renderable with `isKinematic = true` — the
 default on a plain `Renderable` — is skipped by the broadphase and receives
-nothing. `UISpriteElement` and `UIBaseElement` clear it for you; anything else
+nothing. Every `UIBaseElement` clears it for you; anything else
 you make clickable has to clear it itself.
 
 ### A button that does one thing: `UITextButton`
@@ -727,7 +738,7 @@ pointer and the key.
 
 Every `UIBaseElement`, buttons, checkboxes, sliders, panels and your own,
 can grow a little under the pointer or with the focus, and shrink while held
-(`UISpriteElement` and `ProgressBar` are not `UIBaseElement`s, and do not):
+(`ProgressBar` is not a `UIBaseElement`, and does not):
 
 ```js
 new UITextButton(0, 0, { text: "Play", hoverScale: 1.05, pressScale: 0.92 });

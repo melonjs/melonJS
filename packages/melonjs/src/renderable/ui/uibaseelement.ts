@@ -138,7 +138,7 @@ function offerPressToScroller(element: UIBaseElement, event: Pointer) {
 /**
  * A clickable, draggable container: the base every UI widget builds on
  * ({@link UITextButton}, {@link UICheckbox}, {@link UISlider},
- * {@link UIPanel}). Extend it to make a widget of your own; it can hold
+ * {@link UIPanel}, {@link UISpriteElement}). Extend it to make a widget of your own; it can hold
  * other renderables as children.
  *
  * It uses screen coordinates (`floating` is `true`), so it stays put when
