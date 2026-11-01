@@ -256,9 +256,10 @@ released under the **GNU General Public License, version 2 or later**:
 
 The game logic in `src/examples/alex4/` is translated from that C source, the
 levels, sprites, tiles and sound effects in `public/assets/alex4/` are
-converted from its data files (by the scripts in `scripts/alex4/`), and the
-whole example — code, assets and scripts — is therefore distributed under the
-same GPL-2.0-or-later terms. The full license text ships with the assets as
+converted from its data files (by the scripts in `scripts/` of Alex4 Web
+Edition, <https://github.com/mixelstudio/Alex4-WE>), and the whole example —
+code and assets — is therefore distributed under the same GPL-2.0-or-later
+terms. The full license text ships with the assets as
 `public/assets/alex4/LICENSE-GPL.txt`. If you reuse any of it, your work must
 be GPL too; the rest of the examples and melonJS itself stay MIT.
 
