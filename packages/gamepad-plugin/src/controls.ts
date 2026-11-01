@@ -91,6 +91,9 @@ const THUMB = 0.45;
 /** how long the ring a tap leaves on a stick takes to fade, in milliseconds */
 const TAP_RING_MS = 260;
 
+/** how long a floating button hidden at rest takes to fade once let go, in milliseconds */
+const BUTTON_FADE_MS = 180;
+
 /** the look shared by every control */
 export interface Look {
 	color: string;
@@ -438,6 +441,16 @@ export class VirtualButton {
 	private _dimmed = false;
 	/** the pointers on it: pressed while there is one */
 	private readonly pointers = new Set<number>();
+	/** whether it is pressed, as the pad and the keys are told */
+	private down = false;
+	/**
+	 * whether a frame has started since it was pressed. A tap quicker than a
+	 * frame would otherwise press and let go between two updates, and the
+	 * game would never see it: the release waits for the frame to run.
+	 */
+	private seen = true;
+	/** where and when a floating button hidden at rest was let go, to fade it */
+	private readonly fade = { x: 0, y: 0, at: -Infinity };
 
 	constructor(
 		options: ButtonOptions,
@@ -466,9 +479,12 @@ export class VirtualButton {
 		this.hideAtRest = this.floating && options.hideAtRest === true;
 	}
 
-	/** whether a finger is on it */
+	/**
+	 * whether it is pressed: while a finger is on it, and for at least one
+	 * frame however quick the tap
+	 */
 	get pressed(): boolean {
-		return this.pointers.size > 0;
+		return this.down;
 	}
 
 	/** the text shown on it */
@@ -620,14 +636,46 @@ export class VirtualButton {
 		}
 	}
 
+	/** let go at once, without waiting for a frame: hidden, switched off */
 	releaseAll(): void {
 		this.pointers.clear();
+		this.seen = true;
 		this.report();
 	}
 
+	/** a frame starts: the game sees a press made before it */
+	frameStart(): void {
+		if (this.down) {
+			this.seen = true;
+		}
+	}
+
+	/** a frame has run: let go of a press its finger already left */
+	frameEnd(): void {
+		if (this.down && this.pointers.size === 0 && this.seen) {
+			this.set(false);
+		}
+	}
+
 	private report(): void {
-		const pressed = this.pressed;
+		const wanted = this.pointers.size > 0;
+		if (wanted && !this.down) {
+			this.seen = false;
+			this.set(true);
+		} else if (!wanted && this.down && this.seen) {
+			this.set(false);
+		}
+		// else let go once a frame has seen the press (frameEnd)
+	}
+
+	private set(pressed: boolean): void {
+		this.down = pressed;
 		if (!pressed) {
+			if (this.hideAtRest) {
+				this.fade.x = this.center.x;
+				this.fade.y = this.center.y;
+				this.fade.at = performance.now();
+			}
 			// a floating button goes back to rest
 			this.center.x = this.home.x;
 			this.center.y = this.home.y;
@@ -639,11 +687,27 @@ export class VirtualButton {
 	}
 
 	draw(renderer: Renderer, look: Look): void {
-		if (!this._visible || (this.hideAtRest && !this.pressed)) {
+		if (!this._visible) {
+			return;
+		}
+		const r = this.radius;
+		if (this.hideAtRest && !this.pressed) {
+			// let go: fades where it was, so even the quickest tap shows
+			const since = performance.now() - this.fade.at;
+			if (since < BUTTON_FADE_MS) {
+				const k = since / BUTTON_FADE_MS;
+				renderer.setColor(look.color);
+				renderer.setGlobalAlpha(math.clamp(look.opacity * 2 * (1 - k), 0, 1));
+				renderer.strokeEllipse(
+					this.fade.x,
+					this.fade.y,
+					r * (1 + k * 0.3),
+					r * (1 + k * 0.3),
+				);
+			}
 			return;
 		}
 		const { x, y } = this.center;
-		const r = this.radius;
 		const alpha = math.clamp(
 			look.opacity * (this.pressed ? 2 : 1) * (this._dimmed ? 0.4 : 1),
 			0,

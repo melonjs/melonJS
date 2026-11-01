@@ -354,6 +354,7 @@ describe("GamepadPlugin", () => {
 			expect(window.scrollY).toBe(200);
 			down(1, button.center);
 			expect(button.pressed).toBe(true);
+			poll();
 			up(1, button.center);
 			expect(button.pressed).toBe(false);
 		} finally {
@@ -491,12 +492,34 @@ describe("GamepadPlugin", () => {
 		input.bindKey(KEY.X, "jump");
 	});
 
+	it("holds a tap quicker than a frame until a frame has seen it", () => {
+		input.bindKey(KEY.X, "jump", true);
+		// pressed and let go between two frames
+		down(1, button.center);
+		up(1, button.center);
+		expect(button.pressed).toBe(true);
+		poll();
+		expect(input.isKeyPressed("jump")).toBe(true);
+		endFrame();
+		expect(button.pressed).toBe(false);
+		poll();
+		expect(input.keyStatus("jump")).toBe(false);
+		// a press a frame has already seen lets go at once
+		down(2, button.center);
+		poll();
+		up(2, button.center);
+		expect(button.pressed).toBe(false);
+		input.bindKey(KEY.X, "jump");
+	});
+
 	it("presses the next button when a finger slides onto it", () => {
 		const second = gamepad.buttons[1];
 		down(1, button.center);
+		poll();
 		move(1, second.center.x, second.center.y);
 		expect(button.pressed).toBe(false);
 		expect(second.pressed).toBe(true);
+		poll();
 		up(1, second.center);
 		expect(second.pressed).toBe(false);
 	});
@@ -679,6 +702,7 @@ describe("GamepadPlugin", () => {
 			down(1, keyButton.center);
 			// no poll: the key is pressed at once
 			expect(input.keyStatus("jump")).toBe(true);
+			poll();
 			up(1, keyButton.center);
 			expect(input.keyStatus("jump")).toBe(false);
 
@@ -999,6 +1023,7 @@ describe("GamepadPlugin", () => {
 				// a second finger near A's spot presses A: both held at once
 				const nearA = { x: W() - 100, y: app.viewport.height - 90 };
 				down(2, nearA);
+				poll();
 				expect(a.pressed).toBe(true);
 				expect(b.center).toEqual(nearB);
 				expect(a.center).toEqual(nearA);
@@ -1045,6 +1070,7 @@ describe("GamepadPlugin", () => {
 				down(1, top);
 				expect(b.pressed).toBe(true);
 				expect(a.pressed).toBe(false);
+				poll();
 				up(1, top);
 				const bottom = { x: W() / 2 + 10, y: h() - 30 };
 				down(2, bottom);
@@ -1071,8 +1097,16 @@ describe("GamepadPlugin", () => {
 				const at = { x: 120, y: 120 };
 				down(1, at);
 				expect(pixel(at.x, at.y)[0]).toBeGreaterThan(40);
+				poll();
+				const now = vi.spyOn(performance, "now");
+				now.mockReturnValue(1000);
 				up(1, at);
+				// fading where it was let go, then gone
+				expect(pixel(at.x + fire.radius, at.y)[0]).toBeGreaterThan(0);
+				now.mockReturnValue(1000 + 400);
+				expect(pixel(at.x + fire.radius, at.y)[0]).toBe(0);
 				expect(pixel(at.x, at.y)[0]).toBe(0);
+				now.mockRestore();
 				app.world.removeChild(overlay);
 			});
 
@@ -1089,6 +1123,7 @@ describe("GamepadPlugin", () => {
 				app.draw();
 				const [fixed, floating] = gamepad.buttons;
 				down(1, fixed.center);
+				poll();
 				move(1, 60, 60);
 				expect(fixed.pressed).toBe(false);
 				expect(floating.pressed).toBe(false);

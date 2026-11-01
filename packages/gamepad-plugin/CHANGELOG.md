@@ -3,6 +3,7 @@
 ## [1.1.0] - _unreleased_
 
 ### Fixed
+- A tap on a button quicker than a frame was lost: pressed and let go between two updates, the game never saw it and the button never showed. A press now lasts until a frame has run, however quick the tap, and a floating button hidden at rest fades out where it was let go
 - iOS: a second finger sometimes did nothing while the first held a stick, taken by Safari's pinch gesture, which two fingers start even over a canvas with `touch-action: none`. The plugin now cancels Safari's `gesturestart` / `gesturechange` / `gestureend` while the controls show
 
 ### Added
