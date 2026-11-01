@@ -1,7 +1,7 @@
 /**
- * melonJS — Glowpaint: checks that every level can be cleared.
+ * melonJS — Starsweep: checks that every level can be cleared.
  *
- * Run with `npx tsx src/examples/glowpaint/levels.test.ts` from
+ * Run with `npx tsx src/examples/starsweep/levels.test.ts` from
  * `packages/examples`. Exits non-zero on the first broken level.
  *
  * For each map it walks every place the player can come to rest, following

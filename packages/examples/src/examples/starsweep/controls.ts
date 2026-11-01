@@ -1,5 +1,5 @@
 /**
- * melonJS — Glowpaint: keyboard and touch input.
+ * melonJS — Starsweep: keyboard and touch input.
  *
  * Keyboard: arrows / WASD to move, Space / X to fire, P / Esc to pause.
  * Touch (or mouse): press and drag anywhere for a floating joystick,
@@ -34,13 +34,11 @@ export class Controls {
 		this.release(e.pointerId, false);
 
 	/**
-	 * Bind once for the whole game, not per screen: a key unbound while
-	 * it is still held (Enter on the title, say) stays locked after it is
-	 * bound again. Pointers listen on the camera, which the engine offers
-	 * every pointer event, so a press counts wherever it lands.
+	 * Bind keys once for the whole game, not per screen: a key unbound
+	 * while it is still held (Enter on the title, say) stays locked after
+	 * it is bound again.
 	 */
 	bind() {
-		const region = game.viewport;
 		input.bindKey(input.KEY.UP, "up");
 		input.bindKey(input.KEY.W, "up");
 		input.bindKey(input.KEY.RIGHT, "right");
@@ -54,7 +52,19 @@ export class Controls {
 		input.bindKey(input.KEY.P, "pause", true);
 		input.bindKey(input.KEY.ESC, "pause", true);
 		input.bindKey(input.KEY.ENTER, "start", true);
+		// a finger lifted outside the canvas never reaches the engine
+		window.addEventListener("pointerup", this.onWindowUp);
+		window.addEventListener("pointercancel", this.onWindowUp);
+	}
 
+	/**
+	 * Listen for pointers on the current camera. The engine offers it
+	 * every pointer event, so a press counts wherever it lands. Call on
+	 * every screen change: a new screen can bring a new camera.
+	 */
+	attach() {
+		this.detach();
+		const region = game.viewport;
 		this.region = region;
 		input.registerPointerEvent("pointerdown", region, (p: Pointer) => {
 			this.press(p);
@@ -68,9 +78,16 @@ export class Controls {
 			this.release(p.pointerId ?? 0, true, p);
 			return false;
 		});
-		// a finger lifted outside the canvas never reaches the engine
-		window.addEventListener("pointerup", this.onWindowUp);
-		window.addEventListener("pointercancel", this.onWindowUp);
+		this.reset();
+	}
+
+	private detach() {
+		if (this.region) {
+			input.releasePointerEvent("pointerdown", this.region);
+			input.releasePointerEvent("pointermove", this.region);
+			input.releasePointerEvent("pointerup", this.region);
+			this.region = null;
+		}
 	}
 
 	/** undo `bind`, when the example is closed */
@@ -92,12 +109,7 @@ export class Controls {
 		] as const) {
 			input.unbindKey(input.KEY[key]);
 		}
-		if (this.region) {
-			input.releasePointerEvent("pointerdown", this.region);
-			input.releasePointerEvent("pointermove", this.region);
-			input.releasePointerEvent("pointerup", this.region);
-			this.region = null;
-		}
+		this.detach();
 		window.removeEventListener("pointerup", this.onWindowUp);
 		window.removeEventListener("pointercancel", this.onWindowUp);
 	}

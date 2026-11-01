@@ -1,11 +1,11 @@
 /**
- * melonJS — Glowpaint: the levels.
+ * melonJS — Starsweep: the levels.
  *
  * Map legend (15 x 11):
  *   ` ` void (fall in and you lose a life)   `#` wall
- *   `.` floor   `~` ice (you slide across)   `^ > v <` arrow pads
- *   `%` crumbling tile (falls away behind you, grows back lit)
- *   `P` where you start   `E` ink nest (enemies come out of these)
+ *   `.` deck panel   `~` frozen panel (you slide)   `^ > v <` conveyor pads
+ *   `%` damaged panel (drops away behind you, comes back powered)
+ *   `P` where you start   `E` monster portal (enemies come out of these)
  *
  * Every map is checked by `levels.test.ts`: all tiles reachable, no move
  * that never ends, and no resting spot you cannot leave safely.
@@ -14,7 +14,7 @@
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
 
-export type EnemyKind = "blot" | "smudge" | "hunter";
+export type EnemyKind = "wobbler" | "muncher" | "chaser";
 
 export interface Theme {
 	/** lit tile face */
@@ -99,10 +99,10 @@ const THEMES = {
 
 export const LEVELS: readonly LevelDef[] = [
 	{
-		name: "First Light",
-		hint: "Walk over every tile to light it up",
+		name: "Docking Bay",
+		hint: "Walk over every panel to power it up",
 		theme: THEMES.cyan,
-		enemies: ["blot"],
+		enemies: ["wobbler"],
 		maxEnemies: 2,
 		spawnEvery: 6,
 		par: 60,
@@ -121,10 +121,10 @@ export const LEVELS: readonly LevelDef[] = [
 		],
 	},
 	{
-		name: "Cold Feet",
-		hint: "Ice keeps you sliding until you hit something",
+		name: "Cryo Deck",
+		hint: "Frozen panels keep you sliding until you bump into something",
 		theme: THEMES.pink,
-		enemies: ["blot"],
+		enemies: ["wobbler"],
 		maxEnemies: 3,
 		spawnEvery: 5.5,
 		par: 65,
@@ -143,10 +143,10 @@ export const LEVELS: readonly LevelDef[] = [
 		],
 	},
 	{
-		name: "Rush Hour",
-		hint: "Arrow pads push you along. Ink smudges unpaint tiles!",
+		name: "Cargo Belts",
+		hint: "Conveyor pads push you along. Munchers eat the power back up!",
 		theme: THEMES.lime,
-		enemies: ["blot", "smudge"],
+		enemies: ["wobbler", "muncher"],
 		maxEnemies: 3,
 		spawnEvery: 5,
 		par: 70,
@@ -165,10 +165,10 @@ export const LEVELS: readonly LevelDef[] = [
 		],
 	},
 	{
-		name: "Brittle Bridges",
-		hint: "Cracked tiles crumble behind you, then grow back",
+		name: "Rusty Gantries",
+		hint: "Damaged panels drop away behind you, then get repaired",
 		theme: THEMES.amber,
-		enemies: ["blot", "hunter"],
+		enemies: ["wobbler", "chaser"],
 		maxEnemies: 3,
 		spawnEvery: 5,
 		par: 75,
@@ -187,10 +187,10 @@ export const LEVELS: readonly LevelDef[] = [
 		],
 	},
 	{
-		name: "Skating Rink",
-		hint: "Plan your slides. The edge is a long way down",
+		name: "Coolant Leak",
+		hint: "Plan your slides. Space is a long way down",
 		theme: THEMES.violet,
-		enemies: ["blot", "smudge", "hunter"],
+		enemies: ["wobbler", "muncher", "chaser"],
 		maxEnemies: 3,
 		spawnEvery: 5,
 		par: 80,
@@ -209,10 +209,10 @@ export const LEVELS: readonly LevelDef[] = [
 		],
 	},
 	{
-		name: "Clockwork",
-		hint: "The pads spin you round the gears",
+		name: "Reactor Gears",
+		hint: "The pads spin you round the gears. Chasers come for you!",
 		theme: THEMES.coral,
-		enemies: ["smudge", "blot", "hunter"],
+		enemies: ["muncher", "wobbler", "chaser"],
 		maxEnemies: 4,
 		spawnEvery: 4.5,
 		par: 85,
@@ -231,10 +231,10 @@ export const LEVELS: readonly LevelDef[] = [
 		],
 	},
 	{
-		name: "Floating Gardens",
-		hint: "Islands, bridges and a lot of empty sky",
+		name: "Asteroid Hop",
+		hint: "Islands, gantries and a lot of empty space",
 		theme: THEMES.lime,
-		enemies: ["hunter", "smudge", "blot"],
+		enemies: ["chaser", "muncher", "wobbler"],
 		maxEnemies: 4,
 		spawnEvery: 4.5,
 		par: 90,
@@ -253,10 +253,10 @@ export const LEVELS: readonly LevelDef[] = [
 		],
 	},
 	{
-		name: "Last Light",
+		name: "Core Station",
 		hint: "Everything at once. Good luck!",
 		theme: THEMES.cyan,
-		enemies: ["hunter", "smudge", "blot", "smudge"],
+		enemies: ["chaser", "muncher", "wobbler", "muncher"],
 		maxEnemies: 5,
 		spawnEvery: 4,
 		par: 100,

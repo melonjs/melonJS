@@ -1,5 +1,5 @@
 /**
- * melonJS — Glowpaint: sound effects.
+ * melonJS — Starsweep: sound effects.
  *
  * Every sound is synthesised on the fly with `audio.tone` / `audio.noise`,
  * so the example ships no audio files.

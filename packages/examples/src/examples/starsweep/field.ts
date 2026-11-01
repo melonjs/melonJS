@@ -1,9 +1,9 @@
 /**
- * melonJS — Glowpaint: the playing field.
+ * melonJS — Starsweep: the playing field.
  *
- * One `Renderable` owns the whole round: the board, Lumi, the ink
- * creatures, sparks, power-ups and particles. Its `update` runs the game
- * and its `draw` paints it from shapes. Movement is tile-to-tile: an actor
+ * One `Renderable` owns the whole round: the deck, Bolt, the monsters,
+ * sparks, power-ups and particles. Its `update` runs the game and its
+ * `draw` paints it. Movement is tile-to-tile: an actor
  * is always between a `from` tile and a `to` tile, with `t` going 0 → 1.
  *
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
@@ -25,15 +25,15 @@ import {
 	ROWS,
 	Tile,
 } from "./board";
+import { drawBolt, drawMonster } from "./characters";
 import type { Controls } from "./controls";
 import {
 	drawChevron,
 	drawCracks,
-	drawEnemy,
 	drawGlow,
 	drawIceSheen,
-	drawLumi,
 	drawNest,
+	drawPanelDetail,
 	drawPower,
 	drawSky,
 	drawSlab,
@@ -71,17 +71,17 @@ const POWER_TIME: Record<TimedPower, number> = {
 	burst: 9,
 };
 const ENEMY_SPEED: Record<EnemyKind, number> = {
-	blot: 3.1,
-	smudge: 2.7,
-	hunter: 3.3,
+	wobbler: 3.1,
+	muncher: 2.7,
+	chaser: 3.3,
 };
 const ENEMY_SCORE: Record<EnemyKind, number> = {
-	blot: 100,
-	smudge: 150,
-	hunter: 200,
+	wobbler: 100,
+	muncher: 150,
+	chaser: 200,
 };
 
-export const HISCORE_KEY = "glowpaintHiscore";
+export const HISCORE_KEY = "starsweepHiscore";
 
 interface Mover {
 	fx: number;
@@ -98,7 +98,6 @@ interface Player extends Mover {
 	forced: boolean;
 	falling: number; // > 0 while dropping into the void
 	invuln: number;
-	squash: number;
 }
 
 interface Enemy extends Mover {
@@ -189,6 +188,8 @@ export class Field extends Renderable {
 	private chase: Int16Array = new Int16Array(COLS * ROWS);
 	private chaseTimer = 0;
 	private bonus = 0;
+	/** > 0 while Bolt is pleased with itself */
+	private cheer = 0;
 
 	// HUD
 	readonly hud: Text[] = [];
@@ -288,7 +289,6 @@ export class Field extends Renderable {
 			forced: false,
 			falling: 0,
 			invuln: 0,
-			squash: 0,
 		};
 		this.enemies = [];
 		this.sparks = [];
@@ -435,7 +435,7 @@ export class Field extends Renderable {
 					} else {
 						this.setPhase("victory");
 						this.showMessage(
-							"All lit up!",
+							"Station saved!",
 							`Final score ${this.score}  ·  tap or press Enter`,
 						);
 					}
@@ -541,6 +541,7 @@ export class Field extends Renderable {
 		this.shield = Math.max(0, this.shield - dt);
 		this.burst = Math.max(0, this.burst - dt);
 		this.sparkCooldown = Math.max(0, this.sparkCooldown - dt);
+		this.cheer = Math.max(0, this.cheer - dt);
 		this.streakTimer -= dt;
 		if (this.streakTimer <= 0) {
 			this.streak = 0;
@@ -568,7 +569,6 @@ export class Field extends Renderable {
 				this.arrive(p);
 			}
 		}
-		p.squash += ((p.moving ? 1 : 0) - p.squash) * Math.min(1, dt * 12);
 
 		if (this.controls.fire() && this.sparkCooldown <= 0) {
 			if (this.sparks.length < (this.burst > 0 ? 4 : 1)) {
@@ -767,14 +767,14 @@ export class Field extends Renderable {
 		const forward = options.filter((d) => d !== opposite(e.dir));
 		const choices = forward.length > 0 ? forward : options;
 		let d: Dir;
-		if (e.kind === "hunter" && Math.random() > 0.15) {
+		if (e.kind === "chaser" && Math.random() > 0.15) {
 			d = choices.reduce((best, c) =>
 				this.chase[idx(e.tx + DX[c], e.ty + DY[c])] <
 				this.chase[idx(e.tx + DX[best], e.ty + DY[best])]
 					? c
 					: best,
 			);
-		} else if (e.kind === "smudge" && Math.random() < 0.75) {
+		} else if (e.kind === "muncher" && Math.random() < 0.75) {
 			const onLit = choices.filter(
 				(c) => this.lit[idx(e.tx + DX[c], e.ty + DY[c])],
 			);
@@ -801,7 +801,7 @@ export class Field extends Renderable {
 			this.dropEnemy(e);
 			return;
 		}
-		if (e.kind === "smudge") {
+		if (e.kind === "muncher") {
 			this.unpaint(e.tx, e.ty);
 		}
 	}
@@ -816,7 +816,7 @@ export class Field extends Renderable {
 		sfx.sfxFall();
 	}
 
-	/** breadth-first distance from Lumi to every tile, for the hunters */
+	/** breadth-first distance from Bolt to every tile, for the hunters */
 	private buildChaseMap() {
 		this.chase.fill(32767);
 		const p = this.player;
@@ -887,9 +887,9 @@ export class Field extends Renderable {
 		this.addScore(ENEMY_SCORE[e.kind]);
 		sfx.sfxPop();
 		const color =
-			e.kind === "hunter"
+			e.kind === "chaser"
 				? "#ff6a7f"
-				: e.kind === "smudge"
+				: e.kind === "muncher"
 					? "#3cf0c8"
 					: "#9a6bff";
 		this.burstAt(moverX(e), moverY(e), color, 22, 200, 260);
@@ -943,6 +943,7 @@ export class Field extends Renderable {
 	}
 
 	private collect(pw: Power) {
+		this.cheer = 0.8;
 		sfx.sfxPickup();
 		this.burstAt(
 			tileX(pw.x) + TILE / 2,
@@ -1048,7 +1049,7 @@ export class Field extends Renderable {
 
 	override draw(r: Renderer) {
 		const theme = this.level.theme;
-		drawSky(r, theme.sky, this.stars, WIDTH, HEIGHT, this.time);
+		drawSky(r, theme.sky, this.stars, WIDTH, HEIGHT, this.time, theme.litSide);
 		this.drawTopBar(r);
 
 		for (let y = 0; y < ROWS; y++) {
@@ -1127,9 +1128,9 @@ export class Field extends Renderable {
 	}
 
 	private drawTopBar(r: Renderer) {
-		// lives as small Lumis
+		// lives as small Bolts
 		for (let i = 0; i < Math.min(this.lives, MAX_LIVES); i++) {
-			drawLumi(r, OX + 14 + i * 30, 52, 2, this.time + i, { scale: 0.5 });
+			drawBolt(r, OX + 14 + i * 30, 56, 2, this.time + i, { scale: 0.5 });
 		}
 		// paint progress
 		const bw = 260;
@@ -1215,6 +1216,9 @@ export class Field extends Renderable {
 			r.setGlobalAlpha(1);
 			return;
 		}
+		if (!ice) {
+			drawPanelDetail(r, px + shakeX, py, lit);
+		}
 		if (lit) {
 			r.setGlobalAlpha(0.45);
 			r.setColor(theme.litHi);
@@ -1260,9 +1264,18 @@ export class Field extends Renderable {
 		const y = moverY(p);
 		if (this.phase === "dying") {
 			if (p.falling > 0) {
-				drawLumi(r, x, y + (1 - p.falling) * 20, p.facing, this.time * 4, {
+				// tumbling down into space
+				drawBolt(r, x, y + (1 - p.falling) * 20, p.facing, this.time, {
 					scale: p.falling,
 					alpha: p.falling,
+					mood: "ko",
+				});
+			} else {
+				// knocked out: X eyes, then fades away
+				const fade = Math.max(0, 1 - this.phaseTime / 1.3);
+				drawBolt(r, x, y - this.phaseTime * 12, 2, this.time, {
+					alpha: fade,
+					mood: "ko",
 				});
 			}
 			return;
@@ -1270,14 +1283,15 @@ export class Field extends Renderable {
 		if (this.phase === "clear") {
 			// a little victory hop
 			const hop = Math.abs(Math.sin(this.phaseTime * 8)) * 10;
-			drawLumi(r, x, y - hop, 2, this.time);
+			drawBolt(r, x, y - hop, 2, this.time, { mood: "happy" });
 			return;
 		}
 		const blink = p.invuln > 0 && Math.floor(p.invuln * 10) % 2 === 0;
-		drawLumi(r, x, y, p.facing, this.time, {
-			squash: p.squash,
+		drawBolt(r, x, y, p.facing, this.time, {
+			walking: p.moving && !p.forced,
 			alpha: blink ? 0.35 : 1,
 			shield: this.shield > 0,
+			mood: this.cheer > 0 ? "happy" : "normal",
 		});
 	}
 
@@ -1285,7 +1299,7 @@ export class Field extends Renderable {
 		const x = moverX(e);
 		const y = moverY(e);
 		if (e.falling > 0) {
-			drawEnemy(
+			drawMonster(
 				r,
 				e.kind,
 				x,
@@ -1296,20 +1310,23 @@ export class Field extends Renderable {
 				{
 					scale: e.falling,
 					alpha: e.falling,
+					walking: false,
 				},
 			);
 			return;
 		}
 		if (e.spawning > 0) {
 			const grow = 1 - e.spawning;
-			drawEnemy(r, e.kind, x, y, -1, this.time, e.seed, {
+			drawMonster(r, e.kind, x, y, -1, this.time, e.seed, {
 				scale: 0.2 + grow * 0.8,
 				alpha: grow * 0.8,
+				walking: false,
 			});
 			return;
 		}
-		drawEnemy(r, e.kind, x, y, e.dir, this.time, e.seed, {
+		drawMonster(r, e.kind, x, y, e.dir, this.time, e.seed, {
 			frozen: this.freeze > 0,
+			walking: this.freeze <= 0,
 		});
 	}
 }

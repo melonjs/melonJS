@@ -100,6 +100,15 @@ The Water Overworld example (`waterOverworld/`) uses the
 
 <https://gandalfhardcore.itch.io/free-pixel-art-sidescroller-asset-pack-32x32-overworld>
 
+### `starsweep` example
+
+The robot and monsters in the Starsweep example (`starsweep/`) are built
+from parts of the **Monster Builder Pack** by **Kenney**
+(<https://kenney.nl/assets/monster-builder-pack>), released under
+**CC0 1.0** (public domain). The parts used are repacked at half size into
+`public/assets/starsweep/monsters.png`; the pack's own license ships beside
+it as `License.txt`. Everything else in the example is drawn from shapes.
+
 ### `materialTextures` example
 
 The models (`crate.obj`, `panel.obj`), their material files and every

@@ -1,5 +1,5 @@
 /**
- * melonJS — Glowpaint: title and play screens.
+ * melonJS — Starsweep: title and play screens.
  *
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
@@ -12,10 +12,10 @@ import {
 	state,
 	Text,
 } from "melonjs";
+import { drawBolt, drawMonster } from "./characters";
 import { Controls } from "./controls";
 import {
-	drawEnemy,
-	drawLumi,
+	drawPanelDetail,
 	drawSky,
 	drawSlab,
 	makeStars,
@@ -26,10 +26,10 @@ import {
 import { Field, HEIGHT, HISCORE_KEY, WIDTH } from "./field";
 import * as sfx from "./sfx";
 
-/** shared by both screens; bound once in `ExampleGlowpaint` */
+/** shared by both screens; bound once in `ExampleStarsweep` */
 export const controls = new Controls();
 
-/** A strip of tiles lighting up as Lumi runs over it, a blot in pursuit. */
+/** A strip of tiles lighting up as Bolt runs over it, a blot in pursuit. */
 class TitleBackdrop extends Renderable {
 	private time = 0;
 	private stars: Star[] = makeStars(140, WIDTH, HEIGHT);
@@ -52,16 +52,16 @@ class TitleBackdrop extends Renderable {
 	}
 
 	override draw(r: Renderer) {
-		drawSky(r, "#0b0a24", this.stars, WIDTH, HEIGHT, this.time);
+		drawSky(r, "#0b0a24", this.stars, WIDTH, HEIGHT, this.time, "#a12a6f");
 		const cols = 14;
 		const x0 = (WIDTH - cols * TILE) / 2;
-		const y0 = 330;
-		// Lumi loops across the strip; tiles behind it are lit
+		const y0 = 338;
+		// Bolt loops across the deck, powering it up, monsters in pursuit
 		const loop = 7;
 		const u = (this.time % loop) / loop;
-		const lumiX = -1 + u * (cols + 3);
+		const boltX = -1 + u * (cols + 5);
 		for (let i = 0; i < cols; i++) {
-			const lit = i < lumiX;
+			const lit = i < boltX;
 			drawSlab(
 				r,
 				x0 + i * TILE,
@@ -69,11 +69,14 @@ class TitleBackdrop extends Renderable {
 				lit ? "#2ee6d6" : "#2b3052",
 				lit ? "#128a87" : "#161a32",
 			);
+			drawPanelDetail(r, x0 + i * TILE, y0, lit);
 		}
-		const lx = x0 + lumiX * TILE + TILE / 2;
-		const hop = Math.abs(Math.sin(this.time * 10)) * 6;
-		drawLumi(r, lx, y0 + TILE / 2 - 6 - hop, 1, this.time, { squash: 0.6 });
-		drawEnemy(r, "blot", lx - TILE * 2.2, y0 + TILE / 2 - 6, 1, this.time, 1);
+		const lx = x0 + boltX * TILE + TILE / 2;
+		const ly = y0 + TILE / 2 - 4;
+		drawBolt(r, lx, ly, 1, this.time, { walking: true });
+		drawMonster(r, "wobbler", lx - TILE * 1.8, ly, 1, this.time, 1);
+		drawMonster(r, "muncher", lx - TILE * 3.1, ly, 1, this.time, 2);
+		drawMonster(r, "chaser", lx - TILE * 4.4, ly, 1, this.time, 3);
 	}
 }
 
@@ -87,7 +90,7 @@ export class TitleScreen extends Stage {
 			state.change(state.PLAY);
 		});
 		app.world.addChild(this.backdrop, 0);
-		controls.reset();
+		controls.attach();
 
 		const text = (
 			y: number,
@@ -110,9 +113,9 @@ export class TitleScreen extends Stage {
 			return t;
 		};
 		// a drop shadow, then the title over it
-		text(76, 84, "#3b1f8a", "GLOWPAINT").pos.x += 5;
-		text(70, 84, "#fff2a8", "GLOWPAINT");
-		text(172, 22, "#c9c3ff", "Light up every tile. Dodge the ink.");
+		text(76, 84, "#3b1f8a", "STARSWEEP").pos.x += 5;
+		text(70, 84, "#fff2a8", "STARSWEEP");
+		text(172, 22, "#c9c3ff", "Power up every panel. Dodge the monsters!");
 		text(214, 17, "#8f88c9", "Move: arrows / WASD, or drag anywhere", false);
 		text(240, 17, "#8f88c9", "Shoot: Space / X, or tap.   Pause: P", false);
 		const best = (save as unknown as Record<string, number>)[HISCORE_KEY] ?? 0;
@@ -142,6 +145,7 @@ export class PlayScreen extends Stage {
 		const field = new Field(controls);
 		field.onExit = () => state.change(state.MENU);
 		app.world.addChild(field, 0);
+		controls.attach();
 		for (const t of field.hud) {
 			app.world.addChild(t, 10);
 		}

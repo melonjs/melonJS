@@ -1,5 +1,5 @@
 /**
- * melonJS — Glowpaint: tile types and movement rules.
+ * melonJS — Starsweep: tile types and movement rules.
  *
  * Pure logic with no engine import, so `levels.test.ts` can check every
  * level with plain `tsx`.

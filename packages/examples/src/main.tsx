@@ -281,9 +281,9 @@ const ExampleWaterOverworld = lazy(() =>
 		default: m.ExampleWaterOverworld,
 	})),
 );
-const ExampleGlowpaint = lazy(() =>
-	import("./examples/glowpaint/ExampleGlowpaint").then((m) => ({
-		default: m.ExampleGlowpaint,
+const ExampleStarsweep = lazy(() =>
+	import("./examples/starsweep/ExampleStarsweep").then((m) => ({
+		default: m.ExampleStarsweep,
 	})),
 );
 const ExampleWhacAMole = lazy(() =>
@@ -723,12 +723,12 @@ const examples: {
 			"Side-scroller overworld with a refracting pond — the screen_texture / screen_uv / noise_uv shader builtins.",
 	},
 	{
-		component: <ExampleGlowpaint />,
-		label: "Glowpaint",
-		path: "glowpaint",
-		sourceDir: "glowpaint",
+		component: <ExampleStarsweep />,
+		label: "Starsweep",
+		path: "starsweep",
+		sourceDir: "starsweep",
 		description:
-			"Tile-painting maze game: light every tile while dodging ink creatures. Ice, arrow pads, crumbling tiles, power-ups and touch controls, all drawn from shapes.",
+			"Space maze game: guide Bolt the robot to power up every panel while Kenney monsters roam. Ice, conveyor pads, crumbling panels, power-ups and touch controls.",
 	},
 	{
 		component: <ExampleWhacAMole />,

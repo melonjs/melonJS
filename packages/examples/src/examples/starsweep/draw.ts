@@ -1,5 +1,5 @@
 /**
- * melonJS — Glowpaint: drawing helpers.
+ * melonJS — Starsweep: drawing helpers.
  *
  * Everything on screen is drawn from shapes (rects, ellipses, arcs,
  * lines, polygons) through the renderer, so the example has no image
@@ -10,7 +10,6 @@
  */
 import { type CanvasRenderer, Polygon, type WebGLRenderer } from "melonjs";
 import { type Dir, DX, DY } from "./board";
-import type { EnemyKind } from "./levels";
 
 export const TILE = 48;
 
@@ -100,15 +99,39 @@ export const drawSky = (
 	w: number,
 	h: number,
 	time: number,
+	planet = "#ff8fb4",
 ) => {
 	r.setGlobalAlpha(1);
 	r.setColor(sky);
 	r.fillRect(0, 0, w, h);
+	// soft nebula clouds
+	r.setColor(planet);
+	for (const [nx, ny, nr] of [
+		[120, 520, 170],
+		[640, 140, 140],
+	] as const) {
+		r.setGlobalAlpha(0.05);
+		r.fillEllipse(nx, ny, nr, nr * 0.7);
+		r.fillEllipse(nx + 30, ny - 10, nr * 0.6, nr * 0.45);
+	}
 	r.setColor("#ffffff");
 	for (const s of stars) {
 		r.setGlobalAlpha(0.25 + 0.35 * (1 + Math.sin(time * 1.7 + s.phase)));
 		r.fillRect(s.x, s.y, s.size, s.size);
 	}
+	// a ringed planet drifting in the corner
+	const px = w - 70 + Math.sin(time * 0.1) * 6;
+	const py = h - 60;
+	r.setGlobalAlpha(0.9);
+	r.setColor(planet);
+	r.fillEllipse(px, py, 46, 46);
+	r.setGlobalAlpha(0.25);
+	r.setColor("#ffffff");
+	r.fillEllipse(px - 14, py - 16, 18, 12);
+	r.setGlobalAlpha(0.7);
+	r.setColor("#fff2c4");
+	r.lineWidth = 4;
+	r.strokeEllipse(px, py, 78, 14);
 	r.setGlobalAlpha(1);
 };
 
@@ -130,6 +153,29 @@ export const drawSlab = (
 	r.fillRoundRect(ox + 2, oy + 2, s - 4, s - 10, 6);
 };
 
+/** Rivets and a seam, so a slab reads as a metal deck panel. */
+export const drawPanelDetail = (
+	r: Renderer,
+	x: number,
+	y: number,
+	lit: boolean,
+) => {
+	r.setGlobalAlpha(lit ? 0.35 : 0.5);
+	r.setColor(lit ? "#ffffff" : "#0d1024");
+	for (const [rx, ry] of [
+		[8, 8],
+		[TILE - 8, 8],
+		[8, TILE - 16],
+		[TILE - 8, TILE - 16],
+	]) {
+		r.fillEllipse(x + rx, y + ry, 1.8, 1.8);
+	}
+	if (!lit) {
+		r.fillRect(x + 14, y + 19, TILE - 28, 2);
+	}
+	r.setGlobalAlpha(1);
+};
+
 /** A wall block, raised above the floor. */
 export const drawWall = (
 	r: Renderer,
@@ -145,7 +191,15 @@ export const drawWall = (
 	r.setGlobalAlpha(0.18);
 	r.setColor("#ffffff");
 	r.fillRect(x + 4, y - 5, TILE - 8, 3);
+	// an inset hatch with a status light
+	r.setGlobalAlpha(0.35);
+	r.setColor("#000000");
+	r.fillRoundRect(x + 9, y + 2, TILE - 18, TILE - 24, 4);
 	r.setGlobalAlpha(1);
+	r.setColor("#ffcf3d");
+	r.fillRect(x + 1, y + TILE - 12, TILE - 2, 3);
+	r.setColor("#5dff9a");
+	r.fillEllipse(x + TILE / 2, y + 12, 2.5, 2.5);
 };
 
 export const drawIceSheen = (r: Renderer, x: number, y: number) => {
@@ -207,174 +261,6 @@ export const drawGlow = (
 	r.setGlobalAlpha(alpha * 0.07);
 	for (let k = 1; k >= 0.3; k -= 0.14) {
 		r.fillEllipse(cx, cy, radius * k, radius * k);
-	}
-	r.setGlobalAlpha(1);
-};
-
-/** Eyes looking in `dir` (or straight ahead when -1). */
-const drawEyes = (
-	r: Renderer,
-	cx: number,
-	cy: number,
-	dir: Dir | -1,
-	white: string,
-	pupil: string,
-	spread = 6,
-	size = 4.5,
-) => {
-	const lx = dir === -1 ? 0 : DX[dir] * 2.5;
-	const ly = dir === -1 ? 0 : DY[dir] * 2.5;
-	r.setColor(white);
-	r.fillEllipse(cx - spread, cy - 2, size, size + 1);
-	r.fillEllipse(cx + spread, cy - 2, size, size + 1);
-	r.setColor(pupil);
-	r.fillEllipse(cx - spread + lx, cy - 2 + ly, size * 0.5, size * 0.6);
-	r.fillEllipse(cx + spread + lx, cy - 2 + ly, size * 0.5, size * 0.6);
-};
-
-/** Lumi, the little light you play. */
-export const drawLumi = (
-	r: Renderer,
-	cx: number,
-	cy: number,
-	facing: Dir,
-	time: number,
-	opts: {
-		squash?: number;
-		scale?: number;
-		alpha?: number;
-		shield?: boolean;
-	} = {},
-) => {
-	const { squash = 0, scale = 1, alpha = 1, shield = false } = opts;
-	const pulse = 1 + Math.sin(time * 6) * 0.06;
-	drawGlow(r, cx, cy, 30 * scale * pulse, "#fff2a8", alpha);
-	r.setGlobalAlpha(alpha);
-	// squash along the way we move: wider across, shorter along
-	const along = 15 * scale * (1 - squash * 0.18);
-	const across = 15 * scale * (1 + squash * 0.12);
-	const horizontal = facing === 1 || facing === 3;
-	const w = horizontal ? along : across;
-	const h = horizontal ? across : along;
-	r.setColor("#ffd23d");
-	r.fillEllipse(cx, cy + 1.5 * scale, w, h);
-	r.setColor("#fff6c8");
-	r.fillEllipse(cx, cy, w - 2 * scale, h - 2 * scale);
-	r.setColor("#ffffff");
-	r.fillEllipse(cx - 5 * scale, cy - 6 * scale, 4 * scale, 3 * scale);
-	if (scale > 0.4) {
-		drawEyes(
-			r,
-			cx,
-			cy + 1,
-			facing,
-			"#3b2a12",
-			"#3b2a12",
-			5 * scale,
-			2.6 * scale,
-		);
-	}
-	if (shield) {
-		r.setColor("#7ff7ff");
-		r.lineWidth = 3;
-		const a = time * 5;
-		for (let i = 0; i < 3; i++) {
-			const s = a + (i * Math.PI * 2) / 3;
-			r.strokeArc(cx, cy, 22, s, s + 1.2);
-		}
-	}
-	r.setGlobalAlpha(1);
-};
-
-const ENEMY_COLORS: Record<
-	EnemyKind,
-	{ body: string; rim: string; glow: string }
-> = {
-	blot: { body: "#7b3cff", rim: "#4a1fb0", glow: "#9a6bff" },
-	smudge: { body: "#2b2b44", rim: "#16162a", glow: "#3cf0c8" },
-	hunter: { body: "#ff3b5c", rim: "#a3122f", glow: "#ff6a7f" },
-};
-
-export const drawEnemy = (
-	r: Renderer,
-	kind: EnemyKind,
-	cx: number,
-	cy: number,
-	dir: Dir | -1,
-	time: number,
-	seed: number,
-	opts: { scale?: number; alpha?: number; frozen?: boolean } = {},
-) => {
-	const { scale = 1, alpha = 1, frozen = false } = opts;
-	const c = ENEMY_COLORS[kind];
-	const t = frozen ? 0 : time;
-	drawGlow(r, cx, cy, 24 * scale, c.glow, alpha * 0.7);
-	r.setGlobalAlpha(alpha);
-	const wob = Math.sin(t * 8 + seed) * 1.5;
-	if (kind === "hunter") {
-		// spikes spinning round the body
-		r.setColor(c.rim);
-		r.lineWidth = 4;
-		for (let i = 0; i < 6; i++) {
-			const a = t * 2 + (i * Math.PI) / 3;
-			r.strokeLine(
-				cx + Math.cos(a) * 9 * scale,
-				cy + Math.sin(a) * 9 * scale,
-				cx + Math.cos(a) * 19 * scale,
-				cy + Math.sin(a) * 19 * scale,
-			);
-		}
-	}
-	r.setColor(c.rim);
-	r.fillEllipse(cx, cy + 2 * scale, (15 + wob) * scale, (14 - wob) * scale);
-	r.setColor(c.body);
-	r.fillEllipse(cx, cy, (14 + wob) * scale, (13 - wob) * scale);
-	if (kind === "blot") {
-		// little bubbles orbiting the blob
-		for (let i = 0; i < 3; i++) {
-			const a = t * 3 + seed + (i * Math.PI * 2) / 3;
-			r.fillEllipse(
-				cx + Math.cos(a) * 13 * scale,
-				cy + Math.sin(a) * 11 * scale,
-				4.5 * scale,
-				4.5 * scale,
-			);
-		}
-	}
-	if (kind === "smudge") {
-		// ink drips and a teal rim so it reads on dark tiles
-		r.setColor(c.glow);
-		r.lineWidth = 2;
-		r.strokeEllipse(cx, cy, (14 + wob) * scale, (13 - wob) * scale);
-		r.setColor(c.body);
-		for (let i = 0; i < 3; i++) {
-			const drip = 4 + ((t * 1.5 + i * 0.37 + seed) % 1) * 8;
-			r.fillEllipse(
-				cx - 8 * scale + i * 8 * scale,
-				cy + (10 + drip) * scale,
-				3 * scale,
-				3.5 * scale,
-			);
-		}
-	}
-	if (scale > 0.5) {
-		if (kind === "hunter") {
-			drawEyes(r, cx, cy, dir, "#fff3c4", "#2a0008", 5.5, 4);
-			// angry brows
-			r.setColor("#2a0008");
-			r.lineWidth = 3;
-			r.strokeLine(cx - 10, cy - 9, cx - 2, cy - 5);
-			r.strokeLine(cx + 10, cy - 9, cx + 2, cy - 5);
-		} else if (kind === "smudge") {
-			drawEyes(r, cx, cy, dir, "#e8ff6a", "#14140a", 5.5, 4);
-		} else {
-			drawEyes(r, cx, cy, dir, "#ffffff", "#1d0b4a", 6, 4.5);
-		}
-	}
-	if (frozen) {
-		r.setGlobalAlpha(alpha * 0.45);
-		r.setColor("#bff4ff");
-		r.fillEllipse(cx, cy, 17 * scale, 16 * scale);
 	}
 	r.setGlobalAlpha(1);
 };
