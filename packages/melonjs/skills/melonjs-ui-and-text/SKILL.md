@@ -29,6 +29,36 @@ If you have a label carrying a leading `\n` to buy headroom, that workaround is
 now dead weight — drop it, and take the line height back off the position you
 shifted it by.
 
+The outline's corners are set by `lineJoin`, the same property a canvas
+context has, and `miterLimit`:
+
+| setting | corners | use it for |
+|---|---|---|
+| `lineJoin: "round"` (default) | rounded: the outline is the same width all around | almost everything: HUDs, buttons, titles |
+| `lineJoin: "bevel"` | cut flat | a harder edge with no spikes |
+| `lineJoin: "miter"` | pointed, as a plain canvas strokes text | a sharp, angular look |
+| `miterLimit: n` (default 10) | with `"miter"` only: a corner pointing further than `n` half line widths is cut flat instead | taming the spikes `"miter"` grows on "A", "V", "M" |
+
+At the canvas default of 10, a thick `"miter"` outline grows spikes several
+times its width from sharp glyphs; 2 to 4 keeps the corners pointed and the
+spikes short:
+
+```js
+const outline = {
+    font: "sans-serif", size: 48,
+    fillStyle: "#ffffff", strokeStyle: "#000000", lineWidth: 6,
+};
+new Text(x, y, { ...outline, text: "ROUND" });                    // the default
+new Text(x, y, { ...outline, lineJoin: "bevel", text: "BEVEL" });
+new Text(x, y, { ...outline, lineJoin: "miter", text: "MITER" }); // long spikes
+new Text(x, y, { ...outline, lineJoin: "miter", miterLimit: 3, text: "MITER 3" });
+```
+
+Whichever you pick, the bake leaves room for it on all four sides, so no corner
+is cut and the label's position and bounds do not move; pointed corners just
+cost a bigger texture. Changed on a live label, they show from the next
+`setText()`.
+
 ## Gradient text
 
 `fillStyle` takes a `Gradient` as well as a colour — the same object
@@ -142,7 +172,7 @@ label from one class to the other:
 | white | white glyphs | the ABSENCE of a tint |
 | gradient | yes, via `fillGradient` | no: a tint is one colour over a page image |
 | recolour it later | `label.fillStyle.parseCSS("#ff4040")` — the field is a `Color` with no setter, and ASSIGNING a string replaces it, after which the glyphs stop filling entirely and nothing is logged | `label.fillStyle = "#ff4040"` — a real setter that parses the string |
-| stroke | `strokeStyle` + `lineWidth` | none |
+| stroke | `strokeStyle` + `lineWidth`, corners with `lineJoin` / `miterLimit` | none |
 | `size` | pixels | a RATIO of the authored size |
 
 ### Per-glyph wave, shake and colour: `glyphEffect`

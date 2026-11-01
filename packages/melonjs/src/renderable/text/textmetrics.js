@@ -1,6 +1,6 @@
 import { Bounds } from "../../physics/bounds.ts";
 import Text from "./text.js";
-import setContextStyle from "./textstyle.js";
+import setContextStyle, { strokeReach } from "./textstyle.js";
 
 /**
  * additional import for TypeScript
@@ -175,14 +175,21 @@ class TextMetrics extends Bounds {
 		// They describe the outline, though, not the pixels — see `INK_SLACK` —
 		// and where they are unavailable the padding falls back to `INK_GUESS`
 		// rather than to nothing.
+		//
+		// The same goes across: `width` is the advance of the longest line,
+		// and a glyph's ink can start before its line's alignment point (an
+		// "A" whose foot leans out, an italic) or end past its advance, the
+		// stroke adding its reach on both sides. `inkPadLeft` and
+		// `inkPadRight` are that overshoot, kept out of `width` the same way.
 		this.inkPadTop = 0;
 		this.inkPadBottom = 0;
+		this.inkPadLeft = 0;
+		this.inkPadRight = 0;
 		if (!isBitmapText && strings.length > 0 && typeof context !== "undefined") {
 			const style = this.ancestor;
-			const stroke =
-				style.lineWidth > 0 && style.strokeStyle.alpha > 0
-					? style.lineWidth / 2
-					: 0;
+			// half the line width past the outline, or for a "miter" join as
+			// far as its corners can point
+			const stroke = strokeReach(style);
 			const first = context.measureText(strings[0].trimEnd());
 			const last =
 				strings.length === 1
@@ -205,6 +212,37 @@ class TextMetrics extends Bounds {
 				Math.ceil(this.inkPadTop + bottom + stroke - this.lineHeight()) +
 					INK_SLACK,
 			);
+
+			// across, line by line: each sits at its own alignment point in
+			// the box, and its ink box is measured from that point
+			const align = style.textAlign;
+			const anchor =
+				align === "right"
+					? this.width
+					: align === "center"
+						? this.width / 2
+						: 0;
+			let left = 0;
+			let right = 0;
+			for (let i = 0; i < strings.length; i++) {
+				const line =
+					i === 0
+						? first
+						: i === strings.length - 1
+							? last
+							: context.measureText(strings[i].trimEnd());
+				const inkLeft = line.actualBoundingBoxLeft;
+				const inkRight = line.actualBoundingBoxRight;
+				if (Number.isFinite(inkLeft) && Number.isFinite(inkRight)) {
+					left = Math.max(left, inkLeft - anchor);
+					right = Math.max(right, anchor + inkRight - this.width);
+				}
+			}
+			this.inkPadLeft = Math.max(0, Math.ceil(left + stroke) + INK_SLACK);
+			// plus a pixel: the box sits on a whole pixel and the glyphs are
+			// baked at what that leaves over (see `updateOrigin`), so they can
+			// land up to a pixel right of where they were measured
+			this.inkPadRight = Math.max(0, Math.ceil(right + stroke + 1) + INK_SLACK);
 		}
 
 		this.width = Math.ceil(this.width);
