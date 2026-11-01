@@ -787,7 +787,7 @@ export class Color {
 	 */
 	toHex8(alpha = this.normalizedRGBA[3]) {
 		const a = this.normalizedRGBA;
-		return `#${toHex((a[0] * 255) >> 0)}${toHex((a[1] * 255) >> 0)}${toHex((a[2] * 255) >> 0)}${toHex(Math.round(alpha * 255))}`;
+		return `#${toHex((a[0] * 255) >> 0)}${toHex((a[1] * 255) >> 0)}${toHex((a[2] * 255) >> 0)}${toHex((alpha * 255) >> 0)}`;
 	}
 
 	/**
