@@ -511,13 +511,29 @@ function dispatchEvent(normalizedEvents: Pointer[]): boolean {
 					case POINTER_UP[1]:
 					case POINTER_UP[2]:
 					case POINTER_UP[3]:
-						// pointer defined & inside of bounds: trigger the POINTER_UP callback
+						// pointer defined & inside of bounds: trigger the POINTER_UP callback.
+						// The region keeps the pointer: the press is over, but the
+						// pointer is still over it, so moving away still leaves it and
+						// moving on over it does not enter it again.
 						if (handlers.pointerId === pointer.pointerId && eventInBounds) {
 							// trigger the corresponding callback
-							if (triggerEvent(handlers, pointer.type, pointer, null)) {
+							if (
+								triggerEvent(handlers, pointer.type, pointer, pointer.pointerId)
+							) {
 								handled = true;
 								break;
 							}
+						}
+						break;
+
+					case POINTER_LEAVE[0]:
+					case POINTER_LEAVE[1]:
+					case POINTER_LEAVE[2]:
+						// the pointer left the canvas, or a finger lifted: every region
+						// it was over is left, wherever the browser reports the exit
+						// (at the canvas's edge, usually far from the region)
+						if (handlers.pointerId === pointer.pointerId) {
+							triggerEvent(handlers, pointer.type, pointer, null);
 						}
 						break;
 

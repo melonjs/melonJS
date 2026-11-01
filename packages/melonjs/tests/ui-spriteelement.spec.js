@@ -336,17 +336,10 @@ describe("UISpriteElement", () => {
 			expect(t.getOpacity()).toBe(1);
 			pointer("pointerdown", 100, 100);
 			pointer("pointerup", 100, 100);
-			// a mouse moves on from where it was let go, then away
-			pointer("pointermove", 101, 101);
 			pointer("pointermove", 300, 300);
 			expect(t.getOpacity()).toBe(0.5);
 			expect(t.on).toBe(true);
-			expect(
-				log.filter((e) => {
-					return e !== "over";
-				}),
-			).toEqual(["click", "release", "out"]);
-			expect(log[0]).toBe("over");
+			expect(log).toEqual(["over", "click", "release", "out"]);
 		});
 	});
 

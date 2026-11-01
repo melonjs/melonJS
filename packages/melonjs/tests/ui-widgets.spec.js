@@ -2177,6 +2177,101 @@ describe("UI widgets", () => {
 			});
 		});
 
+		describe("hover after a click", () => {
+			const makeButton = () => {
+				const b = place(
+					new UITextButton(100, 100, { text: "OK", width: 100, height: 40 }),
+				);
+				return {
+					b,
+					onOver: vi.spyOn(b, "onOver"),
+					onOut: vi.spyOn(b, "onOut"),
+				};
+			};
+
+			it("leaving straight after a click ends the hover", () => {
+				const { b, onOver, onOut } = makeButton();
+				pointer("pointermove", 150, 120);
+				pointer("pointerdown", 150, 120);
+				pointer("pointerup", 150, 120);
+				expect(b.hover).toBe(true);
+				pointer("pointermove", 500, 400);
+				expect(b.hover).toBe(false);
+				expect(onOver).toHaveBeenCalledTimes(1);
+				expect(onOut).toHaveBeenCalledTimes(1);
+			});
+
+			it("moving on over it after a click does not enter it again", () => {
+				const { onOver, onOut } = makeButton();
+				pointer("pointermove", 150, 120);
+				pointer("pointerdown", 150, 120);
+				pointer("pointerup", 150, 120);
+				pointer("pointermove", 152, 121);
+				pointer("pointermove", 154, 122);
+				expect(onOver).toHaveBeenCalledTimes(1);
+				expect(onOut).not.toHaveBeenCalled();
+			});
+
+			it("a second click after the first still presses and releases it", () => {
+				const onClick = vi.fn();
+				const b = place(
+					new UITextButton(100, 100, {
+						text: "OK",
+						width: 100,
+						height: 40,
+						onClick,
+					}),
+				);
+				pointer("pointermove", 150, 120);
+				for (let i = 0; i < 2; i++) {
+					pointer("pointerdown", 150, 120);
+					pointer("pointerup", 150, 120);
+				}
+				expect(onClick).toHaveBeenCalledTimes(2);
+				expect(b.released).toBe(true);
+			});
+
+			it("a tap hovers the button while the finger is down, and not after", () => {
+				const onClick = vi.fn();
+				const b = place(
+					new UITextButton(100, 100, {
+						text: "OK",
+						width: 100,
+						height: 40,
+						onClick,
+					}),
+				);
+				const onOver = vi.spyOn(b, "onOver");
+				const onOut = vi.spyOn(b, "onOut");
+				// a touch: the browser sends enter before the press and leave
+				// after the release, at the finger; each touch has a new id
+				for (const id of [2, 3]) {
+					pointer("pointerenter", 150, 120, id);
+					expect(b.hover).toBe(true);
+					pointer("pointerdown", 150, 120, id);
+					pointer("pointerup", 150, 120, id);
+					pointer("pointerleave", 150, 120, id);
+					expect(b.hover).toBe(false);
+				}
+				expect(onClick).toHaveBeenCalledTimes(2);
+				expect(onOver).toHaveBeenCalledTimes(2);
+				expect(onOut).toHaveBeenCalledTimes(2);
+			});
+
+			it("the pointer leaving the canvas ends the hover, wherever it was", () => {
+				const { b, onOut } = makeButton();
+				pointer("pointermove", 150, 120);
+				expect(b.hover).toBe(true);
+				// the browser reports the exit at the canvas's edge, far from the button
+				pointer("pointerleave", 0, 300);
+				expect(b.hover).toBe(false);
+				expect(onOut).toHaveBeenCalledTimes(1);
+				// and coming back over it enters it again
+				pointer("pointermove", 150, 120);
+				expect(b.hover).toBe(true);
+			});
+		});
+
 		describe("a press stops at a UI element", () => {
 			/** a wide renderable under everything, listening for presses */
 			const listenBehind = () => {
