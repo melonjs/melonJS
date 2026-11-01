@@ -2,8 +2,8 @@ import { input, math, type Renderer, Text } from "melonjs";
 import type { VirtualPad } from "./pad.ts";
 import type {
 	ButtonOptions,
+	ControlArea,
 	Placement,
-	StickArea,
 	StickKeys,
 	StickOptions,
 	StickTap,
@@ -54,6 +54,37 @@ function resolve(
 	};
 }
 
+/**
+ * whether a point is inside a floating control's area
+ * @param area - the area option
+ * @param x - in viewport pixels
+ * @param y - in viewport pixels
+ * @param width - the viewport width, in pixels
+ * @param height - the viewport height, in pixels
+ * @param left - for `"half"`: whether the control's half is the left one
+ */
+function inArea(
+	area: ControlArea,
+	x: number,
+	y: number,
+	width: number,
+	height: number,
+	left: boolean,
+): boolean {
+	if (area === "screen") {
+		return x >= 0 && y >= 0 && x < width && y < height;
+	}
+	if (typeof area === "object") {
+		return (
+			x >= area.x &&
+			y >= area.y &&
+			x < area.x + area.width &&
+			y < area.y + area.height
+		);
+	}
+	return left ? x < width / 2 : x >= width / 2;
+}
+
 /** a stick's thumb, as a fraction of its base's radius */
 const THUMB = 0.45;
 
@@ -77,7 +108,7 @@ export class VirtualStick {
 	/** whether it is centered where the thumb lands */
 	readonly floating: boolean;
 	/** where a floating stick can be picked up */
-	readonly area: StickArea;
+	readonly area: ControlArea;
 	/** whether a floating stick is drawn only while held */
 	readonly hideAtRest: boolean;
 	/** the radius of its base, in viewport pixels */
@@ -190,20 +221,7 @@ export class VirtualStick {
 	 */
 	hits(x: number, y: number, width: number, height: number): boolean {
 		if (this.floating) {
-			const area = this.area;
-			if (area === "screen") {
-				return x >= 0 && y >= 0 && x < width && y < height;
-			}
-			if (typeof area === "object") {
-				return (
-					x >= area.x &&
-					y >= area.y &&
-					x < area.x + area.width &&
-					y < area.y + area.height
-				);
-			}
-			// its half of the screen
-			return this.side === "left" ? x < width / 2 : x >= width / 2;
+			return inArea(this.area, x, y, width, height, this.side === "left");
 		}
 		// a little past its base, for a thumb
 		return (
@@ -400,10 +418,18 @@ export class VirtualButton {
 	readonly button: number | null;
 	/** its radius, in viewport pixels */
 	radius = 0;
-	/** where its center is, in viewport pixels */
+	/** where its center is, in viewport pixels: under the finger while a floating button is held */
 	readonly center = { x: 0, y: 0 };
+	/** whether it is pressed wherever a finger lands in its area */
+	readonly floating: boolean;
+	/** where a floating button can be pressed */
+	readonly area: ControlArea;
+	/** whether a floating button is drawn only while held */
+	readonly hideAtRest: boolean;
 
 	private readonly options: ButtonOptions;
+	/** where it rests, set by the layout */
+	private readonly home = { x: 0, y: 0 };
 	private readonly order: number;
 	private readonly key: KeyPress;
 	private text: Text | null = null;
@@ -435,6 +461,9 @@ export class VirtualButton {
 					: (faces[order] ?? null);
 		this.key = new KeyPress(options.key);
 		this._label = options.label ?? "";
+		this.floating = options.floating ?? false;
+		this.area = options.area ?? "half";
+		this.hideAtRest = this.floating && options.hideAtRest === true;
 	}
 
 	/** whether a finger is on it */
@@ -510,12 +539,13 @@ export class VirtualButton {
 			};
 		}
 		const { x, y } = resolve(placement, width, height);
-		this.center.x = x;
-		this.center.y = y;
-		if (this.text) {
-			this.text.pos.set(x, y);
-			this.text.setFont(LABEL_FONT, this.labelSize());
+		this.home.x = x;
+		this.home.y = y;
+		if (!this.pressed || !this.floating) {
+			this.center.x = x;
+			this.center.y = y;
 		}
+		this.text?.setFont(LABEL_FONT, this.labelSize());
 	}
 
 	/** a short label fills the button, a word is set smaller */
@@ -524,21 +554,39 @@ export class VirtualButton {
 	}
 
 	/**
-	 * whether a finger here is on it
+	 * whether a finger landing here presses it
 	 * @param x - in viewport pixels
 	 * @param y - in viewport pixels
+	 * @param width - the viewport width, in pixels, for a floating button
+	 * @param height - the viewport height, in pixels, for a floating button
 	 */
-	hits(x: number, y: number): boolean {
+	hits(x: number, y: number, width = 0, height = 0): boolean {
+		if (!this._visible) {
+			return false;
+		}
+		if (this.floating) {
+			// one finger at a time: a second one falls through to what is under
+			return (
+				!this.pressed &&
+				inArea(this.area, x, y, width, height, this.home.x < width / 2)
+			);
+		}
 		return (
-			this._visible &&
 			Math.hypot(x - this.center.x, y - this.center.y) <= this.radius * 1.15
 		);
 	}
 
 	/**
 	 * @param pointerId - the pointer
+	 * @param x - where it landed, in viewport pixels: a floating button
+	 * moves under it
+	 * @param y - where it landed, in viewport pixels
 	 */
-	press(pointerId: number): void {
+	press(pointerId: number, x?: number, y?: number): void {
+		if (this.floating && x !== undefined && y !== undefined) {
+			this.center.x = x;
+			this.center.y = y;
+		}
 		this.pointers.add(pointerId);
 		this.report();
 	}
@@ -559,6 +607,11 @@ export class VirtualButton {
 
 	private report(): void {
 		const pressed = this.pressed;
+		if (!pressed) {
+			// a floating button goes back to rest
+			this.center.x = this.home.x;
+			this.center.y = this.home.y;
+		}
 		if (this.button !== null) {
 			this.pad.setButton(this.button, pressed);
 		}
@@ -566,7 +619,7 @@ export class VirtualButton {
 	}
 
 	draw(renderer: Renderer, look: Look): void {
-		if (!this._visible) {
+		if (!this._visible || (this.hideAtRest && !this.pressed)) {
 			return;
 		}
 		const { x, y } = this.center;
@@ -594,6 +647,7 @@ export class VirtualButton {
 				});
 			}
 			renderer.setGlobalAlpha(Math.min(1, alpha * 2));
+			this.text.pos.set(x, y);
 			this.text.draw(renderer);
 		}
 	}
