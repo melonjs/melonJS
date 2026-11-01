@@ -2502,6 +2502,29 @@ describe("UI widgets", () => {
 				expect(onOut).toHaveBeenCalledTimes(1);
 			});
 
+			it("a cancelled pointer ends the press and the hover", () => {
+				const { b, onOut } = makeButton();
+				const onRelease = vi.spyOn(b, "onRelease");
+				pointer("pointerenter", 150, 120, 4);
+				pointer("pointerdown", 150, 120, 4);
+				expect(b.hover).toBe(true);
+				app.renderer.getCanvas().dispatchEvent(
+					new PointerEvent("pointercancel", {
+						...at(150, 120),
+						pointerId: 4,
+						isPrimary: true,
+						bubbles: true,
+					}),
+				);
+				expect(b.released).toBe(true);
+				expect(onRelease).toHaveBeenCalledTimes(1);
+				expect(b.hover).toBe(false);
+				expect(onOut).toHaveBeenCalledTimes(1);
+				// the browser's own leave after it changes nothing more
+				pointer("pointerleave", 150, 120, 4);
+				expect(onOut).toHaveBeenCalledTimes(1);
+			});
+
 			it("the pointer leaving the canvas ends the hover, wherever it was", () => {
 				const { b, onOut } = makeButton();
 				pointer("pointermove", 150, 120);

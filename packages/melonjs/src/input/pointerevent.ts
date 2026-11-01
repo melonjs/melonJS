@@ -527,12 +527,27 @@ function dispatchEvent(normalizedEvents: Pointer[]): boolean {
 						// pointer defined & inside of bounds: trigger the POINTER_UP callback.
 						// The region keeps the pointer: the press is over, but the
 						// pointer is still over it, so moving away still leaves it and
-						// moving on over it does not enter it again.
+						// moving on over it does not enter it again. A legacy
+						// `touchend` is the exception: a lifted finger is over nothing,
+						// and touch events send no leave after it, so it leaves here.
 						if (handlers.pointerId === pointer.pointerId && eventInBounds) {
+							const lifted = pointer.type === POINTER_UP[2];
 							// trigger the corresponding callback
-							if (
-								triggerEvent(handlers, pointer.type, pointer, pointer.pointerId)
-							) {
+							const stop = triggerEvent(
+								handlers,
+								pointer.type,
+								pointer,
+								lifted ? null : pointer.pointerId,
+							);
+							if (lifted) {
+								triggerEvent(
+									handlers,
+									findActiveEvent(activeEventList, POINTER_LEAVE),
+									pointer,
+									null,
+								);
+							}
+							if (stop) {
 								handled = true;
 								break;
 							}
@@ -543,10 +558,18 @@ function dispatchEvent(normalizedEvents: Pointer[]): boolean {
 					case POINTER_CANCEL[1]:
 					case POINTER_CANCEL[2]:
 					case POINTER_CANCEL[3]:
-						// pointer defined: trigger the POINTER_CANCEL callback
+						// pointer defined: trigger the POINTER_CANCEL callback, then
+						// leave: a cancelled pointer is gone, and the region forgets it
+						// here, so the browser's own leave after it would not reach it
 						if (handlers.pointerId === pointer.pointerId) {
-							// trigger the corresponding callback
-							if (triggerEvent(handlers, pointer.type, pointer, null)) {
+							const stop = triggerEvent(handlers, pointer.type, pointer, null);
+							triggerEvent(
+								handlers,
+								findActiveEvent(activeEventList, POINTER_LEAVE),
+								pointer,
+								null,
+							);
+							if (stop) {
 								handled = true;
 								break;
 							}
