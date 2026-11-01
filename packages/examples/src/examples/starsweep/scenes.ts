@@ -79,9 +79,9 @@ class TitleBackdrop extends Renderable {
 		if (this.drawnSky) {
 			drawSky(r, "#0b0a24", this.stars, WIDTH, HEIGHT, this.time, "#a12a6f");
 		}
-		const cols = 14;
+		const cols = 11;
 		const x0 = (WIDTH - cols * TILE) / 2;
-		const y0 = 338;
+		const y0 = 500;
 		// Bolt loops across the deck, powering it up, monsters in pursuit
 		const loop = 7;
 		const u = (this.time % loop) / loop;
@@ -121,7 +121,7 @@ export class TitleScreen extends Stage {
 			sky.setTheme("#0b0a24", "#a12a6f", "#2e2766");
 			this.backdrop.drawnSky = false;
 		}
-		controls.attach();
+		controls.attach(false);
 
 		const text = (
 			y: number,
@@ -144,14 +144,21 @@ export class TitleScreen extends Stage {
 			return t;
 		};
 		// a drop shadow, then the title over it
-		text(76, 84, "#3b1f8a", "STARSWEEP").pos.x += 5;
-		text(70, 84, "#fff2a8", "STARSWEEP");
-		text(172, 22, "#c9c3ff", "Power up every panel. Dodge the monsters!");
-		text(214, 17, "#8f88c9", "Move: arrows / WASD, or drag anywhere", false);
-		text(240, 17, "#8f88c9", "Shoot: Space / X, or tap.   Pause: P", false);
+		// the title on two lines, each over its own drop shadow
+		for (const [y, word] of [
+			[110, "STAR"],
+			[220, "SWEEP"],
+		] as const) {
+			text(y + 7, 104, "#3b1f8a", word).pos.x += 6;
+			text(y, 104, "#fff2a8", word);
+		}
+		text(360, 19, "#c9c3ff", "POWER UP EVERY PANEL.");
+		text(390, 19, "#c9c3ff", "DODGE THE MONSTERS!");
+		text(620, 15, "#8f88c9", "MOVE: STICK, ARROWS OR WASD");
+		text(646, 15, "#8f88c9", "ZAP: BUTTON, SPACE OR X");
 		const best = (save as unknown as Record<string, number>)[HISCORE_KEY] ?? 0;
-		text(430, 20, "#ffd23d", `HI ${best.toString().padStart(6, "0")}`);
-		const prompt = text(500, 26, "#ffffff", "Tap or press Enter to start");
+		text(740, 22, "#ffd23d", `HI ${best.toString().padStart(6, "0")}`);
+		const prompt = text(840, 24, "#ffffff", "TAP TO START");
 		prompt.alpha = 1;
 		const blink = new (class extends Renderable {
 			private t = 0;
@@ -177,7 +184,7 @@ export class PlayScreen extends Stage {
 		field.onExit = () => state.change(state.MENU);
 		app.world.addChild(field, 0);
 		field.sky = addSpace(app, { every: [10, 18], sizes: [70, 110], first: 4 });
-		controls.attach();
+		controls.attach(true);
 		for (const t of field.hud) {
 			app.world.addChild(t, 10);
 		}

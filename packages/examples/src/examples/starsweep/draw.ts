@@ -122,19 +122,19 @@ export const drawSky = (
 		r.setGlobalAlpha(0.25 + 0.35 * (1 + Math.sin(time * 1.7 + s.phase)));
 		r.fillRect(s.x, s.y, s.size, s.size);
 	}
-	drawPlanet(r, w, h, time, planet);
+	drawPlanet(r, w - 70, h - 60, time, planet);
 };
 
-/** A ringed planet drifting in the bottom-right corner. */
+/** A ringed planet, drifting a little around (x, y). */
 export const drawPlanet = (
 	r: Renderer,
-	w: number,
-	h: number,
+	x: number,
+	y: number,
 	time: number,
 	planet: string,
 ) => {
-	const px = w - 70 + Math.sin(time * 0.1) * 6;
-	const py = h - 60;
+	const px = x + Math.sin(time * 0.1) * 6;
+	const py = y;
 	r.setGlobalAlpha(0.9);
 	r.setColor(planet);
 	r.fillEllipse(px, py, 46, 46);

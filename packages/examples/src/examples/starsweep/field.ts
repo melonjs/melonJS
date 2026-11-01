@@ -51,10 +51,13 @@ import { aberrationBurst, type NebulaBackdrop } from "./fx";
 import { type EnemyKind, LEVELS, type LevelDef } from "./levels";
 import * as sfx from "./sfx";
 
-export const WIDTH = 768;
-export const HEIGHT = 624;
+// portrait, 9:16, so it fills a phone held upright
+export const WIDTH = 576;
+export const HEIGHT = 1024;
 const OX = (WIDTH - COLS * TILE) / 2;
-const OY = 76;
+const OY = 118;
+/** where the board ends and the touch controls' zone begins */
+export const BOARD_BOTTOM = OY + ROWS * TILE;
 
 const WALK_SPEED = 5.2; // tiles per second
 const SLIDE_SPEED = 9;
@@ -203,6 +206,8 @@ export class Field extends Renderable {
 	private levelText: Text;
 	private bigText: Text;
 	private subText: Text;
+	/** keyboard help in the controls' zone, when no touch controls show */
+	private hintText: Text;
 	private shownScore = -1;
 	private shownHi = -1;
 
@@ -234,11 +239,19 @@ export class Field extends Renderable {
 			this.hud.push(t);
 			return t;
 		};
-		this.scoreText = label(OX, 12, 22, "left");
-		this.hiText = label(WIDTH - OX, 12, 22, "right", "#ffd23d");
-		this.levelText = label(WIDTH / 2, 14, 18, "center", "#c9c3ff");
-		this.bigText = label(WIDTH / 2, OY + 170, 48, "center");
-		this.subText = label(WIDTH / 2, OY + 236, 22, "center", "#e6e1ff");
+		this.scoreText = label(OX, 18, 26, "left");
+		this.hiText = label(WIDTH - OX, 18, 26, "right", "#ffd23d");
+		this.levelText = label(WIDTH / 2, 56, 16, "center", "#c9c3ff");
+		this.bigText = label(WIDTH / 2, OY + 250, 38, "center");
+		this.subText = label(WIDTH / 2, OY + 306, 15, "center", "#e6e1ff");
+		this.hintText = label(
+			WIDTH / 2,
+			BOARD_BOTTOM + 70,
+			15,
+			"center",
+			"#8f88c9",
+		);
+		this.hintText.setText("ARROWS / WASD TO MOVE  -  SPACE TO ZAP");
 	}
 
 	/** start a brand new run */
@@ -305,6 +318,8 @@ export class Field extends Renderable {
 	private setPhase(phase: Phase) {
 		this.phase = phase;
 		this.phaseTime = 0;
+		// a tap from an earlier moment must not skip this one
+		this.controls.reset();
 	}
 
 	private showMessage(big: string, sub = "") {
@@ -476,6 +491,7 @@ export class Field extends Renderable {
 	}
 
 	private updateHud() {
+		this.hintText.alpha = this.controls.onScreen ? 0 : 1;
 		if (this.score !== this.shownScore) {
 			this.shownScore = this.score;
 			this.scoreText.setText(this.score.toString().padStart(6, "0"));
@@ -1056,7 +1072,7 @@ export class Field extends Renderable {
 	override draw(r: Renderer) {
 		const theme = this.level.theme;
 		if (this.sky) {
-			drawPlanet(r, WIDTH, HEIGHT, this.time, theme.litSide);
+			drawPlanet(r, WIDTH - 40, OY + 70, this.time, theme.litSide);
 		} else {
 			drawSky(
 				r,
@@ -1122,25 +1138,14 @@ export class Field extends Renderable {
 					: 1;
 			r.setGlobalAlpha(0.5 * a);
 			r.setColor("#05030f");
-			r.fillRect(0, OY - 8, WIDTH, HEIGHT - OY + 8);
+			r.fillRect(0, OY - 8, WIDTH, ROWS * TILE + 16);
 			// a panel behind the message so it reads over any board
 			r.setGlobalAlpha(0.92 * a);
 			r.setColor("#120a2e");
-			r.fillRoundRect(WIDTH / 2 - 300, OY + 150, 600, 130, 18);
+			r.fillRoundRect(WIDTH / 2 - 258, OY + 225, 516, 120, 18);
 			r.setColor(this.level.theme.lit);
 			r.lineWidth = 3;
-			r.strokeRoundRect(WIDTH / 2 - 300, OY + 150, 600, 130, 18);
-			r.setGlobalAlpha(1);
-		}
-
-		const stick = this.controls.stick;
-		if (stick) {
-			r.setGlobalAlpha(0.25);
-			r.setColor("#ffffff");
-			r.lineWidth = 3;
-			r.strokeArc(stick.x, stick.y, 46, 0, Math.PI * 2);
-			r.setGlobalAlpha(0.45);
-			r.fillEllipse(stick.kx, stick.ky, 20, 20);
+			r.strokeRoundRect(WIDTH / 2 - 258, OY + 225, 516, 120, 18);
 			r.setGlobalAlpha(1);
 		}
 	}
@@ -1148,12 +1153,12 @@ export class Field extends Renderable {
 	private drawTopBar(r: Renderer) {
 		// lives as small Bolts
 		for (let i = 0; i < Math.min(this.lives, MAX_LIVES); i++) {
-			drawBolt(r, OX + 14 + i * 30, 56, 2, this.time + i, { scale: 0.5 });
+			drawBolt(r, OX + 14 + i * 30, 96, 2, this.time + i, { scale: 0.5 });
 		}
 		// paint progress
-		const bw = 260;
-		const bx = WIDTH / 2 - bw / 2;
-		const by = 46;
+		const bx = OX + MAX_LIVES * 30 + 12;
+		const bw = WIDTH - OX - bx;
+		const by = 88;
 		r.setColor("#1b1838");
 		r.fillRoundRect(bx, by, bw, 12, 6);
 		const pct = this.paintTotal > 0 ? this.paintCount / this.paintTotal : 0;
@@ -1165,31 +1170,32 @@ export class Field extends Renderable {
 			r.fillRoundRect(bx + 3, by + 2, Math.max(6, bw * pct - 6), 3, 2);
 			r.setGlobalAlpha(1);
 		}
-		// running power-ups, as icons with a draining ring
-		let ix = WIDTH - OX - 16;
-		const timers: [TimedPower, number][] = [
-			["burst", this.burst],
-			["shield", this.shield],
-			["freeze", this.freeze],
-		];
+		// running power-ups, as icons with a draining ring, centred in the
+		// controls' zone between the stick and the button
+		const timers = (
+			[
+				["burst", this.burst],
+				["shield", this.shield],
+				["freeze", this.freeze],
+			] as [TimedPower, number][]
+		).filter(([, left]) => left > 0);
+		let ix = WIDTH / 2 - ((timers.length - 1) * 40) / 2;
+		const iy = BOARD_BOTTOM + 30;
 		for (const [kind, left] of timers) {
-			if (left <= 0) {
-				continue;
-			}
 			const total = POWER_TIME[kind];
 			r.setColor(POWER_COLORS[kind]);
 			r.lineWidth = 3;
 			r.strokeArc(
 				ix,
-				52,
-				13,
+				iy,
+				15,
 				-Math.PI / 2,
 				-Math.PI / 2 + Math.PI * 2 * (left / total),
 			);
 			r.setGlobalAlpha(0.9);
-			r.fillEllipse(ix, 52, 6, 6);
+			r.fillEllipse(ix, iy, 7, 7);
 			r.setGlobalAlpha(1);
-			ix -= 34;
+			ix += 40;
 		}
 	}
 

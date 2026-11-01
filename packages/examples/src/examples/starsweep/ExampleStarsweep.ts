@@ -7,6 +7,10 @@
  * sliding, conveyor pads push you, damaged panels drop away behind you.
  * Zap the monsters, grab power-ups, and don't fall off into space.
  *
+ * Portrait, for phones held upright. On touch screens the
+ * `@melonjs/gamepad-plugin` virtual gamepad (a stick and a ZAP button)
+ * sits under the board and presses the same keys as the keyboard.
+ *
  * The characters are put together from Kenney's Monster Builder Pack
  * (CC0) and the station is drawn from shapes. On GPU renderers a custom
  * nebula shader animates the sky, bloom, vignette and chromatic

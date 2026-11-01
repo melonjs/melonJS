@@ -28,8 +28,8 @@ export const DX = [0, 1, 0, -1] as const;
 export const DY = [-1, 0, 1, 0] as const;
 export const opposite = (d: Dir) => ((d + 2) % 4) as Dir;
 
-export const COLS = 15;
-export const ROWS = 11;
+export const COLS = 11;
+export const ROWS = 15;
 
 const CHARS: Record<string, Tile> = {
 	" ": Tile.VOID,
