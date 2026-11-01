@@ -4421,16 +4421,10 @@ export default class WebGLRenderer extends Renderer {
 		// `ColorLayer`-style hosts have `Infinity` dimensions + a 0.5
 		// anchor, leaving `currentTransform.tx/ty = -Infinity`. Running
 		// transform math on that produces NaN corners and a broken
-		// `gl.scissor`. Treat a non-finite transform as "no clip".
+		// `gl.scissor`. Treat a non-finite transform as "no further clip":
+		// the clip already active, if any, stays, as a clip can only narrow.
 		const m = this.currentTransform;
 		if (!Number.isFinite(m.tx) || !Number.isFinite(m.ty)) {
-			if (this._scissorActive) {
-				// drain pending vertices under the active scissor first;
-				// otherwise they would flush later under no scissor.
-				this.flush();
-				gl.disable(gl.SCISSOR_TEST);
-				this._scissorActive = false;
-			}
 			return;
 		}
 
@@ -4448,15 +4442,34 @@ export default class WebGLRenderer extends Renderer {
 		// nearest, as any draw is (see _pixelSnapBegin). Otherwise, or turned,
 		// the box covering every pixel the clip touches
 		const snap = this._snapsToPixels();
-		const sx = snap ? Math.round(aabb.min.x) : Math.floor(aabb.min.x);
-		const sy = snap ? Math.round(aabb.min.y) : Math.floor(aabb.min.y);
-		const sw = snap ? Math.round(aabb.max.x) - sx : Math.ceil(aabb.max.x - sx);
-		const sh = snap ? Math.round(aabb.max.y) - sy : Math.ceil(aabb.max.y - sy);
+		let sx = snap ? Math.round(aabb.min.x) : Math.floor(aabb.min.x);
+		let sy = snap ? Math.round(aabb.min.y) : Math.floor(aabb.min.y);
+		let sw = snap ? Math.round(aabb.max.x) - sx : Math.ceil(aabb.max.x - sx);
+		let sh = snap ? Math.round(aabb.max.y) - sy : Math.ceil(aabb.max.y - sy);
+
+		// A clip inside a clip is the overlap of the two, as Canvas's
+		// `context.clip()` is: a clipping container nested in another, or
+		// a scrolling panel in a clipping parent, stays inside both.
+		// `save()` / `restore()` bring the outer clip back.
+		const cs = this.currentScissor;
+		if (this._scissorActive) {
+			const left = Math.max(sx, cs[0]);
+			const top = Math.max(sy, cs[1]);
+			const right = Math.min(sx + sw, cs[0] + cs[2]);
+			const bottom = Math.min(sy + sh, cs[1] + cs[3]);
+			sx = left;
+			sy = top;
+			// no overlap: an empty scissor, so nothing draws
+			sw = Math.max(0, right - left);
+			sh = Math.max(0, bottom - top);
+		}
 
 		// If the resulting screen AABB covers the whole canvas, treat as
 		// no-clip and disable the scissor. Caller intent: "clip to the
 		// full viewport" → no scissor needed. Works regardless of the
-		// transform that produced the AABB.
+		// transform that produced the AABB. (With a clip already active
+		// the overlap is inside it, so this only matches when that clip
+		// covered the canvas too.)
 		if (
 			sx <= 0 &&
 			sy <= 0 &&
@@ -4473,7 +4486,6 @@ export default class WebGLRenderer extends Renderer {
 
 		// `currentScissor` now stores screen-space coords directly so
 		// `restore()` can re-apply without re-running the transform math.
-		const cs = this.currentScissor;
 		if (
 			this._scissorActive &&
 			cs[0] === sx &&

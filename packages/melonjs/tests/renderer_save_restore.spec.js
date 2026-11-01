@@ -231,9 +231,10 @@ describe("Renderer save/restore", () => {
 			const scissorBefore = Array.from(glRenderer.currentScissor);
 
 			glRenderer.save();
+			// partly outside the first clip: the scissor is the overlap,
+			// (50, 60) to (110, 100), as Canvas's clip() would be
 			glRenderer.clipRect(10, 20, 100, 80);
-			expect(glRenderer.currentScissor[0]).toBe(10);
-			expect(glRenderer.currentScissor[1]).toBe(20);
+			expect(Array.from(glRenderer.currentScissor)).toEqual([50, 60, 60, 40]);
 			glRenderer.restore();
 
 			expect(glRenderer.currentScissor[0]).toBe(scissorBefore[0]);

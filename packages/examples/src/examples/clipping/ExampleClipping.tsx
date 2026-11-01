@@ -21,8 +21,10 @@ import { createExampleComponent } from "../utils";
  * `Container` clipping demo over a `ColorLayer` backdrop.
  *
  * Left: three nested clipping containers form concentric color rings.
- * Right: a wrapper with a sinusoidal scale animates a clipping
+ * Middle: a wrapper with a sinusoidal scale animates a clipping
  * container; the overflowing fill stays cropped to the scaled bounds.
+ * Right: an inner clipping container sticks out of the outer one; its
+ * fill shows only where the two clips overlap, on every renderer.
  */
 
 class OverflowingRect extends Renderable {
@@ -88,10 +90,10 @@ class PartialColorLayer extends ColorLayer {
 class ClipOutline extends Renderable {
 	private color = new Color();
 
-	constructor(x: number, y: number, w: number, h: number) {
+	constructor(x: number, y: number, w: number, h: number, color = "#00ff88") {
 		super(x, y, w, h);
 		this.anchorPoint.set(0, 0);
-		this.color.parseCSS("#00ff88");
+		this.color.parseCSS(color);
 	}
 
 	draw(renderer: Parameters<Renderable["draw"]>[0]) {
@@ -192,13 +194,48 @@ class PlayScreen extends Stage {
 			4,
 		);
 
+		// RIGHT — an inner clipping container that sticks out of the outer
+		// one, past its right and bottom edges. A clip inside a clip is the
+		// overlap of the two, so the purple fill shows only where both
+		// cover; the part of the inner clip outside the outer one (inside
+		// the pink outline, outside the green) stays empty.
+		const OUT_X = 500;
+		const OUT_Y = 80;
+		const OUT_W = 160;
+		const OUT_H = 160;
+		const IN_X = 70;
+		const IN_Y = 50;
+		const IN_W = 140;
+		const IN_H = 140;
+		const outer = new Container(OUT_X, OUT_Y, OUT_W, OUT_H);
+		outer.clipping = true;
+		const inner = new Container(IN_X, IN_Y, IN_W, IN_H);
+		inner.clipping = true;
+		inner.addChild(new OverflowingRect("#9b59b6"));
+		outer.addChild(inner);
+		game.world.addChild(outer, 2);
+		game.world.addChild(new ClipOutline(OUT_X, OUT_Y, OUT_W, OUT_H), 3);
+		game.world.addChild(
+			new ClipOutline(OUT_X + IN_X, OUT_Y + IN_Y, IN_W, IN_H, "#ff4d8d"),
+			3,
+		);
+		game.world.addChild(
+			new Text(OUT_X, 60, {
+				font: "monospace",
+				size: 12,
+				fillStyle: "#00ff88",
+				text: "Overlapping nested clips",
+			}),
+			4,
+		);
+
 		game.world.addChild(
 			new Text(game.viewport.width / 2, game.viewport.height - 16, {
 				font: "monospace",
 				size: 11,
 				fillStyle: "#cccccc",
 				textAlign: "center",
-				text: "Green outlines = static clip bounds. Lighter band = partial ColorLayer.",
+				text: "Green = clip bounds. Pink = inner clip sticking out: nothing past green. Band = partial ColorLayer.",
 			}),
 			4,
 		);
