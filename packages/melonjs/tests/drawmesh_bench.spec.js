@@ -233,7 +233,9 @@ describe("drawMesh benchmark (baseline for #1468)", () => {
 		);
 	};
 
-	it("baseline cost across mesh counts", (ctx) => {
+	// Run on demand, and given the time it takes under software GL:
+	// BENCH=1 npx vitest run --config packages/melonjs/vitest.config.ts tests/drawmesh_bench.spec.js
+	it("baseline cost across mesh counts", { timeout: 300000 }, (ctx) => {
 		// `measure()` below logs and returns when there is no WebGL, which
 		// reports as a PASS — a benchmark that never ran then looks exactly
 		// like one that did. Decide it once, visibly, up front.
@@ -241,12 +243,18 @@ describe("drawMesh benchmark (baseline for #1468)", () => {
 			ctx.skip("Canvas renderer — drawMesh benchmark not applicable");
 			return;
 		}
-		// Skipped on CI, visibly rather than by quietly measuring nothing.
-		// The runner is a GPU-less container rasterizing through SwiftShader's
-		// Subzero JIT on four shared vCPUs, so these figures describe that
-		// environment and not the engine. The work is also heavy enough to
-		// starve the shared GPU process for minutes, which is what made the
-		// suite flaky. Run it locally to compare against #1507's numbers.
+		// Skipped unless asked for (`BENCH=1`), visibly rather than by quietly
+		// measuring nothing. On CI, the runner is a GPU-less container
+		// rasterizing through SwiftShader's Subzero JIT on four shared vCPUs,
+		// so these figures describe that environment and not the engine. The
+		// work is also heavy enough to starve the shared GPU process for
+		// minutes: in a full run, on CI or on a machine without a GPU, it
+		// timed out itself and the specs beside it (#1817). Run it on its own
+		// to compare against #1507's numbers.
+		if (import.meta.env.VITE_BENCH === "") {
+			ctx.skip("benchmark — run it with BENCH=1");
+			return;
+		}
 		if (import.meta.env.VITE_CI !== "") {
 			ctx.skip("CI — a software-rasterized benchmark measures the runner");
 			return;
