@@ -736,7 +736,7 @@ export default class UIPanel extends UIBaseElement {
 		}
 		const beforeX = this._scrollX;
 		const beforeY = this._scrollY;
-		this.scrollTo(
+		this.moveContent(
 			this._scrollX - this._velocityX * dt,
 			this._scrollY - this._velocityY * dt,
 		);
@@ -1221,7 +1221,7 @@ export default class UIPanel extends UIBaseElement {
 			? Math.max(0, bottom + this.padding - (vy + vh))
 			: 0;
 		// the content may have shrunk under the current offset
-		this.scrollTo(this._scrollX, this._scrollY);
+		this.moveContent(this._scrollX, this._scrollY);
 	}
 
 	/**
@@ -1272,7 +1272,7 @@ export default class UIPanel extends UIBaseElement {
 	/**
 	 * Scroll the content to an offset, clamped to `0` up to
 	 * {@link UIPanel#maxScrollX} and {@link UIPanel#maxScrollY}, with no
-	 * animation.
+	 * animation. A fling still coasting from a drag stops.
 	 *
 	 * Scrolling moves the children, so a child's `pos` is where it is drawn.
 	 * @param x - the horizontal offset, in pixels
@@ -1283,6 +1283,19 @@ export default class UIPanel extends UIBaseElement {
 	 * log.scrollTo(0, log.maxScrollY);
 	 */
 	scrollTo(x: number, y: number): this {
+		this._velocityX = this._velocityY = 0;
+		return this.moveContent(x, y);
+	}
+
+	/**
+	 * move the content to an offset, clamped, leaving a fling alone: the
+	 * scrolling the panel does itself (fling, drag, wheel, relayout)
+	 * @param x - the horizontal offset, in pixels
+	 * @param y - the vertical offset, in pixels
+	 * @returns this panel
+	 * @ignore
+	 */
+	private moveContent(x: number, y: number): this {
 		const nx = clamp(Number.isFinite(x) ? x : 0, 0, this._maxScrollX);
 		const ny = clamp(Number.isFinite(y) ? y : 0, 0, this._maxScrollY);
 		const dx = nx - this._scrollX;
@@ -1459,7 +1472,7 @@ export default class UIPanel extends UIBaseElement {
 			press.scrolling = true;
 			press.element?.cancelPress();
 		}
-		this.scrollTo(press.scrollX - dx, press.scrollY - dy);
+		this.moveContent(press.scrollX - dx, press.scrollY - dy);
 		const now = globalThis.performance?.now() ?? Date.now();
 		const elapsed = now - press.lastTime;
 		if (elapsed > 0) {
@@ -1518,7 +1531,7 @@ export default class UIPanel extends UIBaseElement {
 		const beforeX = this._scrollX;
 		const beforeY = this._scrollY;
 		this._velocityX = this._velocityY = 0;
-		this.scrollTo(this._scrollX + dx, this._scrollY + dy);
+		this.moveContent(this._scrollX + dx, this._scrollY + dy);
 		if (this._scrollX !== beforeX || this._scrollY !== beforeY) {
 			return false;
 		}

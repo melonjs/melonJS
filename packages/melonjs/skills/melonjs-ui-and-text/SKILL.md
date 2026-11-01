@@ -592,7 +592,8 @@ The content is cropped to the area inside the frame and below the title, and
 scrolls with the wheel over the panel and by dragging, with momentum when
 flung. A scrollbar shows while it does not fit. `scrollTo(x, y)`,
 `scrollToChild(child)`, `scrollX` / `scrollY`, `maxScrollX` / `maxScrollY` and
-an `onScroll(x, y, panel)` setting are there to drive it from code.
+an `onScroll(x, y, panel)` setting are there to drive it from code. Scrolling
+from code stops a fling that is still coasting.
 
 What to know:
 
@@ -879,7 +880,8 @@ applyMusic(saved.music);           // the effect, once
 ```
 
 **Radio buttons** are checkboxes sharing a `group`: exactly one is checked,
-clicking the checked one leaves it checked, and they are drawn round. Only
+clicking the checked one leaves it checked (so does `toggle()`; set
+`checked = false` to clear a group on purpose), and they are drawn round. Only
 the one the user picked gets `onChange`, as in a web page; read the group with
 `UICheckbox.checkedIn("difficulty")`. A checkbox is in its group while it is in
 the scene.
@@ -931,7 +933,10 @@ the slider moves it one `step`. `value` snaps to `step` and clamps to the
 range, and setting it does not call `onChange` or `onChangeEnd`: the same rule
 as the checkbox, and neither does changing `min`, `max` or `step`, which
 re-clamp it. `ratio` reads where it is from 0 to 1, and `valueFormat` gets
-both. `thumbColor`, `thumbHoverColor`, `thumbBorderColor` and
+both. `labelText` changes the caption later. The slider refits to its texts
+(the widest value it can show, at either end of the range), and on a
+horizontal one the value moves below the track when it would run into the
+caption; a `UIPanel` holding it needs `relayout()` if its size changes. `thumbColor`, `thumbHoverColor`, `thumbBorderColor` and
 `thumbBorderWidth` style the drawn thumb. `skin: { atlas, track, fill?, thumb, thumbHover? }` draws it
 from art: the track and fill as nine-slices along its length, the thumb at its
 own size.

@@ -25,6 +25,9 @@
 - UI: `UITextButton#bitmapText`, for `label`
 
 ### Fixed
+- UI: `UICheckbox#toggle()` on a checked radio button leaves it checked, as a click does, instead of leaving its group with nothing checked
+- UI: `UIPanel#scrollTo()` (and `scrollToChild`, `scrollX` / `scrollY`) stops a fling that is still coasting, instead of the fling carrying on from the new offset
+- UI: a `UISlider` lays its texts out again when they change: a vertical one widens for a longer value text (a new `valueFormat`, `min`, `max` or `step`), and on a horizontal one the value moves below the track when it would run into the caption, instead of overlapping it. `labelText` sets the caption later
 - Input: a region stays hovered after a click while the pointer is still on it. A release used to forget the pointer, so leaving straight after a click never called `onOut` (a button stayed lit), and moving on over it called `onOver` again
 - Input: the pointer leaving the canvas ends the hover of whatever it was over, not only of a region at the point where it left
 - Input: a child cropped out of view by a container with `clipping`, or scrolled out of a `UIPanel`, no longer gets pointer events where it is not drawn

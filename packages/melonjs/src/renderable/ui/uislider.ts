@@ -235,7 +235,10 @@ interface Box {
  * `label` is a caption drawn above the track. `showValue` adds the value as
  * text, written by `valueFormat(value, ratio)`. The default format shows
  * as many decimals as `step` has: `step: 1` shows "7", `step: 0.1` shows
- * "0.7", and no step shows "0.70".
+ * "0.7", and no step shows "0.70". On a horizontal slider the caption and
+ * the value share the row above the track, and the value moves below the
+ * track when the two would run into each other. `labelText` changes the
+ * caption later; the slider resizes to fit its texts.
  *
  * ## Look
  * Drawn with shapes by default: a rounded track, a filled part up to the
@@ -346,7 +349,10 @@ export default class UISlider extends UIBaseElement {
 	readonly orientation: "horizontal" | "vertical";
 	/** the atlas regions it is drawn from, or `undefined` for the drawn look */
 	readonly skin: UISliderSkin | undefined;
-	/** the caption's text object, or `undefined` without a `label` */
+	/**
+	 * the caption's text object, or `undefined` without one; change the
+	 * text through {@link UISlider#labelText}
+	 */
 	readonly label: UILabel | undefined;
 	/**
 	 * the value's text object, or `undefined` without `showValue`; kept up
@@ -371,10 +377,23 @@ export default class UISlider extends UIBaseElement {
 	/** @ignore */
 	private readonly _skin: SkinDrawer | undefined;
 	/** the track, in the slider's coordinates */
-	private readonly _track: Box;
+	private readonly _track: Box = { x: 0, y: 0, w: 0, h: 0 };
 	/** where the thumb's centre can go, along the slider */
-	private readonly _travelStart: number;
+	private _travelStart = 0;
 	private readonly _travelLength: number;
+	/** the length along the slider, the track's thickness, and the band the thumb slides in */
+	private readonly _length: number;
+	private readonly _thickness: number;
+	private readonly _band: number;
+	/** the caption's text */
+	private _labelText = "";
+	/** the style of the caption and the value text */
+	private readonly _textStyle: {
+		font: string;
+		fontSize: number;
+		fillStyle: string;
+		textBaseline: string;
+	};
 	/** the thumb's size across and along the slider */
 	private readonly _thumbW: number;
 	private readonly _thumbH: number;
@@ -481,70 +500,31 @@ export default class UISlider extends UIBaseElement {
 		this._thumbW = thumbW;
 		this._thumbH = thumbH;
 
-		const textStyle = {
+		this._textStyle = {
 			font: settings.font ?? "sans-serif",
 			fontSize: settings.fontSize ?? 16,
 			fillStyle: settings.labelFillStyle ?? "#000000",
 			textBaseline: "middle",
 		};
 		if (settings.label !== undefined) {
-			this.label = createLabel({
-				...textStyle,
-				text: settings.label,
-				textAlign: horizontal ? "left" : "center",
-			});
+			this._labelText = settings.label;
+			this.label = this.makeCaption(settings.label);
 		}
 		if (settings.showValue === true) {
 			this.valueText = createLabel({
-				...textStyle,
+				...this._textStyle,
 				text: this._valueFormat(this._max, 1),
 				textAlign: horizontal ? "right" : "center",
 			});
 		}
-		const rowHeight =
-			this.label !== undefined || this.valueText !== undefined
-				? Math.ceil(textStyle.fontSize * 1.4)
-				: 0;
-
+		this._length = length;
+		this._thickness = thickness;
 		// the band the thumb slides in: as thick as the thumb or the track
-		const band = Math.max(thumbH, thickness);
-		if (horizontal) {
-			const top = rowHeight;
-			this._track = {
-				x: 0,
-				y: top + (band - thickness) / 2,
-				w: length,
-				h: thickness,
-			};
-			this._travelStart = thumbW / 2;
-			this._valueAt[0] = length;
-			this._valueAt[1] = rowHeight / 2;
-			this._labelAt[1] = rowHeight / 2;
-			this.resize(length, top + band);
-		} else {
-			const textWidth = Math.max(
-				this.label?.measureText().width ?? 0,
-				this.valueText?.measureText().width ?? 0,
-			);
-			const width = Math.ceil(Math.max(band, textWidth));
-			const top = this.label !== undefined ? rowHeight : 0;
-			this._track = {
-				x: (width - thickness) / 2,
-				y: top,
-				w: thickness,
-				h: length,
-			};
-			this._travelStart = top + thumbW / 2;
-			this._valueAt[0] = width / 2;
-			this._valueAt[1] = top + length + rowHeight / 2;
-			this._labelAt[0] = width / 2;
-			this._labelAt[1] = rowHeight / 2;
-			this.resize(width, top + length + (this.valueText ? rowHeight : 0));
-		}
+		this._band = Math.max(thumbH, thickness);
 		this._travelLength = Math.max(0, length - thumbW);
 
 		this._value = this.snap(settings.value ?? this._min);
-		this.refreshValueText();
+		this.layoutText();
 		this.focusable = true;
 		this.hoverScale = settings.hoverScale ?? 1;
 		this.pressScale = settings.pressScale ?? 1;
@@ -617,9 +597,8 @@ export default class UISlider extends UIBaseElement {
 
 	/**
 	 * How the value text is written, given the value and the ratio (0 to
-	 * 1). Setting it rewrites the value text straight away. The space for
-	 * the text on a vertical slider is measured when it is built, so a much
-	 * longer format set later may not fit.
+	 * 1). Setting it rewrites the value text and lays the slider out again
+	 * for the widest text it can now show.
 	 * @example
 	 * slider.valueFormat = (value) => `${value} px`;
 	 */
@@ -630,7 +609,8 @@ export default class UISlider extends UIBaseElement {
 	set valueFormat(format: (value: number, ratio: number) => string) {
 		this._valueFormat = format;
 		this._defaultFormat = false;
-		this.refreshValueText();
+		this.layoutText();
+		this.isDirty = true;
 	}
 
 	/**
@@ -640,8 +620,112 @@ export default class UISlider extends UIBaseElement {
 	 */
 	private resnap() {
 		this._value = this.snap(this._value);
-		this.refreshValueText();
+		// the widest value text may have changed with the range or the step
+		this.layoutText();
 		this.isDirty = true;
+	}
+
+	/**
+	 * The caption's text, or `""` without one. Setting it makes a caption if
+	 * there was none, and lays the slider out again for its width; a
+	 * {@link UIPanel} holding it needs `relayout()` if the slider's size
+	 * changes.
+	 * @example
+	 * volume.labelText = muted ? "Music (muted)" : "Music";
+	 */
+	get labelText(): string {
+		return this._labelText;
+	}
+
+	set labelText(value: string) {
+		this._labelText = value;
+		if (this.label === undefined) {
+			(this as { label: UILabel | undefined }).label = this.makeCaption(value);
+		} else {
+			this.label.setText(value);
+		}
+		this.layoutText();
+		this.isDirty = true;
+	}
+
+	/**
+	 * build the caption's text object
+	 * @param text - the caption
+	 * @returns the label
+	 * @ignore
+	 */
+	private makeCaption(text: string): UILabel {
+		return createLabel({
+			...this._textStyle,
+			text,
+			textAlign: this.orientation === "horizontal" ? "left" : "center",
+		});
+	}
+
+	/**
+	 * Measure the caption and the widest value text, and place them, the
+	 * track and the thumb's travel; resize the slider to fit. A horizontal
+	 * slider puts the caption and the value on one row above the track, or
+	 * the value below the track when the two do not fit side by side.
+	 * @ignore
+	 */
+	private layoutText() {
+		const horizontal = this.orientation === "horizontal";
+		const length = this._length;
+		const thickness = this._thickness;
+		const band = this._band;
+		const label = this.label;
+		const valueText = this.valueText;
+		const rowHeight =
+			label !== undefined || valueText !== undefined
+				? Math.ceil(this._textStyle.fontSize * 1.4)
+				: 0;
+		const captionW = label?.measureText().width ?? 0;
+		let valueW = 0;
+		if (valueText !== undefined) {
+			// the widest the value text gets, at either end of the range
+			for (const [v, r] of [
+				[this._min, 0],
+				[this._max, 1],
+			]) {
+				valueText.setText(this._valueFormat(v, r));
+				valueW = Math.max(valueW, valueText.measureText().width);
+			}
+			this.refreshValueText();
+		}
+		const t = this._track;
+		if (horizontal) {
+			const top =
+				label !== undefined || valueText !== undefined ? rowHeight : 0;
+			// the value moves below the track when it would run into the caption
+			const below =
+				label !== undefined &&
+				valueText !== undefined &&
+				captionW + 8 + valueW > length;
+			t.x = 0;
+			t.y = top + (band - thickness) / 2;
+			t.w = length;
+			t.h = thickness;
+			this._travelStart = this._thumbW / 2;
+			this._labelAt[0] = 0;
+			this._labelAt[1] = rowHeight / 2;
+			this._valueAt[0] = length;
+			this._valueAt[1] = below ? top + band + rowHeight / 2 : rowHeight / 2;
+			this.resize(length, top + band + (below ? rowHeight : 0));
+		} else {
+			const width = Math.ceil(Math.max(band, captionW, valueW));
+			const top = label !== undefined ? rowHeight : 0;
+			t.x = (width - thickness) / 2;
+			t.y = top;
+			t.w = thickness;
+			t.h = length;
+			this._travelStart = top + this._thumbW / 2;
+			this._labelAt[0] = width / 2;
+			this._labelAt[1] = rowHeight / 2;
+			this._valueAt[0] = width / 2;
+			this._valueAt[1] = top + length + rowHeight / 2;
+			this.resize(width, top + length + (valueText ? rowHeight : 0));
+		}
 	}
 
 	/**

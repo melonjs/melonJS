@@ -496,12 +496,16 @@ export default class UICheckbox extends UIBaseElement {
 	}
 
 	/**
-	 * Flip it from code. Like setting {@link UICheckbox#checked}, this does
-	 * not call `onChange`. On a checked radio button it unchecks it, which
-	 * leaves its group with nothing checked.
+	 * Flip it from code, as a click would. Like setting
+	 * {@link UICheckbox#checked}, this does not call `onChange`. A checked
+	 * radio button stays checked, as it does when clicked; set `checked` to
+	 * `false` to uncheck it on purpose.
 	 * @returns the new state
 	 */
 	toggle(): boolean {
+		if (this._checked && this._group !== undefined) {
+			return true;
+		}
 		this.checked = !this._checked;
 		return this._checked;
 	}

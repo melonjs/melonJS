@@ -2177,6 +2177,152 @@ describe("UI widgets", () => {
 			});
 		});
 
+		describe("fixes from the docs review", () => {
+			it("toggle() keeps a checked radio button checked, as a click does", () => {
+				const a = place(new UICheckbox(0, 0, { group: "t1", checked: true }));
+				const b = place(new UICheckbox(0, 40, { group: "t1" }));
+				expect(a.toggle()).toBe(true);
+				expect(UICheckbox.checkedIn("t1")).toBe(a);
+				// toggling the other one moves the choice
+				expect(b.toggle()).toBe(true);
+				expect([a.checked, b.checked]).toEqual([false, true]);
+				// unchecking on purpose still works
+				b.checked = false;
+				expect(UICheckbox.checkedIn("t1")).toBeUndefined();
+				// a plain checkbox still flips both ways
+				const c = new UICheckbox(0, 0, { checked: true });
+				expect(c.toggle()).toBe(false);
+				expect(c.toggle()).toBe(true);
+			});
+
+			it("scrollTo() from code stops a fling", () => {
+				const panel = place(
+					new UIPanel(100, 100, {
+						width: 200,
+						height: 100,
+						layout: "column",
+						gap: 0,
+						scroll: "vertical",
+					}),
+				);
+				for (let i = 0; i < 10; i++) {
+					panel.addChild(box(100, 40));
+				}
+				syncBroadphase();
+				const now = vi.spyOn(performance, "now");
+				let t = 1000;
+				now.mockImplementation(() => {
+					return t;
+				});
+				pointer("pointermove", 150, 190);
+				pointer("pointerdown", 150, 190);
+				for (let i = 1; i <= 4; i++) {
+					t += 8;
+					pointer("pointermove", 150, 190 - i * 15);
+				}
+				pointer("pointerup", 150, 130);
+				panel.update(16);
+				// still coasting
+				const coasting = panel.scrollY;
+				panel.update(16);
+				expect(panel.scrollY).toBeGreaterThan(coasting);
+				panel.scrollTo(0, 20);
+				for (let i = 0; i < 30; i++) {
+					panel.update(16);
+				}
+				expect(panel.scrollY).toBe(20);
+			});
+
+			it("a slider's caption can be set later, and the slider refits", () => {
+				const s = new UISlider(0, 0, { orientation: "vertical", length: 100 });
+				expect(s.label).toBeUndefined();
+				const bare = [s.width, s.height];
+				s.labelText = "A much longer caption";
+				expect(textOf(s.label)).toBe("A much longer caption");
+				expect(s.labelText).toBe("A much longer caption");
+				expect(s.width).toBeGreaterThan(bare[0]);
+				expect(s.height).toBeGreaterThan(bare[1]);
+				s.labelText = "Hi";
+				expect(textOf(s.label)).toBe("Hi");
+			});
+
+			it("a vertical slider widens for a longer value text set later", () => {
+				const s = new UISlider(0, 0, {
+					orientation: "vertical",
+					showValue: true,
+					min: 0,
+					max: 9,
+					step: 1,
+				});
+				const narrow = s.width;
+				s.max = 100000;
+				expect(s.width).toBeGreaterThan(narrow);
+				const wider = s.width;
+				s.valueFormat = (v) => {
+					return `${v} points scored`;
+				};
+				expect(s.width).toBeGreaterThan(wider);
+				// and the value text still reads the value
+				s.value = 7;
+				expect(textOf(s.valueText)).toBe("7 points scored");
+			});
+
+			it("a horizontal slider moves its value below the track when it would hit the caption", () => {
+				const short = new UISlider(0, 0, {
+					label: "Vol",
+					showValue: true,
+					length: 200,
+				});
+				const crowded = new UISlider(0, 0, {
+					label: "A very long caption for this slider",
+					showValue: true,
+					valueFormat: (v) => {
+						return `${Math.round(v * 100)} percent`;
+					},
+					length: 200,
+				});
+				expect(crowded.width).toBe(200);
+				expect(crowded.height).toBeGreaterThan(short.height);
+				// shortening the caption brings it back up
+				crowded.labelText = "Vol";
+				crowded.valueFormat = (v) => {
+					return `${Math.round(v * 100)}%`;
+				};
+				expect(crowded.height).toBe(short.height);
+			});
+
+			it("the wheel over a slider in a scrolling panel moves the slider, not the panel", () => {
+				const panel = place(
+					new UIPanel(100, 100, {
+						width: 300,
+						height: 120,
+						layout: "column",
+						gap: 0,
+						scroll: "vertical",
+					}),
+				);
+				const slider = panel.addChild(
+					new UISlider(0, 0, { length: 200, step: 0.1, value: 0.5 }),
+				);
+				for (let i = 0; i < 6; i++) {
+					panel.addChild(box(100, 40));
+				}
+				syncBroadphase();
+				expect(panel.maxScrollY).toBeGreaterThan(0);
+				const b = slider.getBounds();
+				const x = b.centerX;
+				const y = b.centerY;
+				pointer("pointermove", x, y);
+				wheel(x, y, 0, 50);
+				expect(slider.value).not.toBe(0.5);
+				expect(panel.scrollY).toBe(0);
+				// off the slider, the wheel scrolls the panel
+				pointer("pointermove", 380, 200);
+				wheel(380, 200, 50);
+				expect(panel.scrollY).toBeGreaterThan(0);
+			});
+		});
+
 		describe("hover after a click", () => {
 			const makeButton = () => {
 				const b = place(
