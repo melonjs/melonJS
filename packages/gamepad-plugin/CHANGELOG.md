@@ -2,6 +2,9 @@
 
 ## [1.1.0] - _unreleased_
 
+### Fixed
+- iOS: a second finger sometimes did nothing while the first held a stick, taken by Safari's pinch gesture, which two fingers start even over a canvas with `touch-action: none`. The plugin now cancels Safari's `gesturestart` / `gesturechange` / `gestureend` while the controls show
+
 ### Added
 - `ControlArea`, the type of the `area` option below
 - Sticks: `area`, where a floating stick can be picked up: `"half"`, its half of the screen, as before and still the default; `"screen"`, anywhere not on a button or a fixed stick; or a rectangle in viewport pixels
