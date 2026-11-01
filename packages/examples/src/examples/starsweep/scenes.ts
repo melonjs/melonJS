@@ -18,22 +18,46 @@ import {
 	drawPanelDetail,
 	drawSky,
 	drawSlab,
+	FONT,
 	makeStars,
 	type Renderer,
 	type Star,
 	TILE,
 } from "./draw";
 import { Field, HEIGHT, HISCORE_KEY, WIDTH } from "./field";
+import { Cruisers, NebulaBackdrop, setupScreenFx } from "./fx";
 import * as sfx from "./sfx";
 
 /** shared by both screens; bound once in `ExampleStarsweep` */
 export const controls = new Controls();
+
+/**
+ * The shader sky and passing 3D ships, on renderers that can do them.
+ * Returns the sky, or null when the drawn fallback should be used.
+ */
+const addSpace = (
+	app: Application,
+	ships: ConstructorParameters<typeof Cruisers>[2],
+): NebulaBackdrop | null => {
+	setupScreenFx(app);
+	const sky = new NebulaBackdrop(WIDTH, HEIGHT);
+	if (!sky.supported) {
+		return null;
+	}
+	app.world.addChild(sky, -10);
+	if (Cruisers.supported()) {
+		app.world.addChild(new Cruisers(WIDTH, HEIGHT, ships), -5);
+	}
+	return sky;
+};
 
 /** A strip of tiles lighting up as Bolt runs over it, a blot in pursuit. */
 class TitleBackdrop extends Renderable {
 	private time = 0;
 	private stars: Star[] = makeStars(140, WIDTH, HEIGHT);
 	private onStart: () => void;
+	/** false when a shader sky is drawn behind instead */
+	drawnSky = true;
 
 	constructor(onStart: () => void) {
 		super(0, 0, WIDTH, HEIGHT);
@@ -52,7 +76,9 @@ class TitleBackdrop extends Renderable {
 	}
 
 	override draw(r: Renderer) {
-		drawSky(r, "#0b0a24", this.stars, WIDTH, HEIGHT, this.time, "#a12a6f");
+		if (this.drawnSky) {
+			drawSky(r, "#0b0a24", this.stars, WIDTH, HEIGHT, this.time, "#a12a6f");
+		}
 		const cols = 14;
 		const x0 = (WIDTH - cols * TILE) / 2;
 		const y0 = 338;
@@ -90,6 +116,11 @@ export class TitleScreen extends Stage {
 			state.change(state.PLAY);
 		});
 		app.world.addChild(this.backdrop, 0);
+		const sky = addSpace(app, { every: [5, 9], sizes: [110, 170], first: 0.5 });
+		if (sky) {
+			sky.setTheme("#0b0a24", "#a12a6f", "#2e2766");
+			this.backdrop.drawnSky = false;
+		}
 		controls.attach();
 
 		const text = (
@@ -97,10 +128,10 @@ export class TitleScreen extends Stage {
 			size: number,
 			color: string,
 			value: string,
-			bold = true,
+			bold = false,
 		) => {
 			const t = new Text(WIDTH / 2, y, {
-				font: "Arial",
+				font: FONT,
 				size,
 				bold,
 				fillStyle: color,
@@ -145,6 +176,7 @@ export class PlayScreen extends Stage {
 		const field = new Field(controls);
 		field.onExit = () => state.change(state.MENU);
 		app.world.addChild(field, 0);
+		field.sky = addSpace(app, { every: [10, 18], sizes: [70, 110], first: 4 });
 		controls.attach();
 		for (const t of field.hud) {
 			app.world.addChild(t, 10);

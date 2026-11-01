@@ -8,8 +8,11 @@
  * Zap the monsters, grab power-ups, and don't fall off into space.
  *
  * The characters are put together from Kenney's Monster Builder Pack
- * (CC0); the station is drawn from shapes, and every sound is synthesised
- * with `audio.tone` / `audio.noise`.
+ * (CC0) and the station is drawn from shapes. On GPU renderers a custom
+ * nebula shader animates the sky, bloom, vignette and chromatic
+ * aberration post-effects polish the frame, and 3D Space Kit ships fly
+ * under the station (see `fx.ts`). Every sound is synthesised with
+ * `audio.tone` / `audio.noise`.
  *
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
@@ -17,7 +20,9 @@
 import { Application, loader, save, state } from "melonjs";
 import { createExampleComponent } from "../utils";
 import { ATLAS } from "./characters";
+import { FONT } from "./draw";
 import { HEIGHT, HISCORE_KEY, WIDTH } from "./field";
+import { CRUISER_BASE, CRUISER_MODELS } from "./fx";
 import { controls, PlayScreen, TitleScreen } from "./scenes";
 
 const createGame = async () => {
@@ -35,13 +40,21 @@ const createGame = async () => {
 	// keep the best score between visits
 	save.add({ [HISCORE_KEY]: 0 });
 
-	const base = `${import.meta.env.BASE_URL}assets/starsweep/`;
-	await new Promise<void>((resolve) => {
-		loader.preload(
-			[{ name: ATLAS, type: "image", src: `${base}monsters.png` }],
-			() => resolve(),
-		);
-	});
+	const base = import.meta.env.BASE_URL;
+	await loader.preload([
+		{ name: ATLAS, type: "image", src: `${base}assets/starsweep/monsters.png` },
+		// Kenney Future (CC0), shared with the UI example
+		{
+			name: FONT,
+			type: "fontface",
+			src: `${base}assets/ui/font/kenvector_future.woff2`,
+		},
+		// Kenney Space Kit ships (CC0), shared with the multi-material mesh example
+		...CRUISER_MODELS.flatMap((name) => [
+			{ name, type: "obj", src: `${base}${CRUISER_BASE}${name}.obj` },
+			{ name, type: "mtl", src: `${base}${CRUISER_BASE}${name}.mtl` },
+		]),
+	]);
 
 	state.set(state.MENU, new TitleScreen());
 	state.set(state.PLAY, new PlayScreen());

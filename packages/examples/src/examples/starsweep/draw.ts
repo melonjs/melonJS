@@ -13,6 +13,9 @@ import { type Dir, DX, DY } from "./board";
 
 export const TILE = 48;
 
+/** Kenney Future, a CC0 sci-fi face, loaded by the bootstrap */
+export const FONT = "starsweepFuture";
+
 /** the renderers that can draw every shape used here */
 export type Renderer = CanvasRenderer | WebGLRenderer;
 
@@ -119,7 +122,17 @@ export const drawSky = (
 		r.setGlobalAlpha(0.25 + 0.35 * (1 + Math.sin(time * 1.7 + s.phase)));
 		r.fillRect(s.x, s.y, s.size, s.size);
 	}
-	// a ringed planet drifting in the corner
+	drawPlanet(r, w, h, time, planet);
+};
+
+/** A ringed planet drifting in the bottom-right corner. */
+export const drawPlanet = (
+	r: Renderer,
+	w: number,
+	h: number,
+	time: number,
+	planet: string,
+) => {
 	const px = w - 70 + Math.sin(time * 0.1) * 6;
 	const py = h - 60;
 	r.setGlobalAlpha(0.9);

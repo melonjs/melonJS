@@ -107,7 +107,13 @@ from parts of the **Monster Builder Pack** by **Kenney**
 (<https://kenney.nl/assets/monster-builder-pack>), released under
 **CC0 1.0** (public domain). The parts used are repacked at half size into
 `public/assets/starsweep/monsters.png`; the pack's own license ships beside
-it as `License.txt`. Everything else in the example is drawn from shapes.
+it as `License.txt`.
+
+It also reuses two CC0 Kenney assets already in this repository: the
+**Space Kit** ships from `public/assets/multiMaterialMesh/` (the 3D cruisers
+flying under the station) and the **Kenney Future** font from
+`public/assets/ui/font/`. The station, the nebula shader and everything else
+are drawn or generated at run time.
 
 ### `materialTextures` example
 

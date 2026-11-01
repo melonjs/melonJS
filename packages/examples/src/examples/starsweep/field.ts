@@ -34,10 +34,12 @@ import {
 	drawIceSheen,
 	drawNest,
 	drawPanelDetail,
+	drawPlanet,
 	drawPower,
 	drawSky,
 	drawSlab,
 	drawWall,
+	FONT,
 	makeStars,
 	POWER_COLORS,
 	type PowerKind,
@@ -45,6 +47,7 @@ import {
 	type Star,
 	TILE,
 } from "./draw";
+import { aberrationBurst, type NebulaBackdrop } from "./fx";
 import { type EnemyKind, LEVELS, type LevelDef } from "./levels";
 import * as sfx from "./sfx";
 
@@ -149,6 +152,8 @@ export class Field extends Renderable {
 
 	private controls: Controls;
 	private stars: Star[];
+	/** the shader sky behind the board, when the renderer can run it */
+	sky: NebulaBackdrop | null = null;
 	private time = 0;
 
 	private levelIndex = 0;
@@ -218,9 +223,8 @@ export class Field extends Renderable {
 			color = "#ffffff",
 		) => {
 			const t = new Text(x, y, {
-				font: "Arial",
+				font: FONT,
 				size,
-				bold: true,
 				fillStyle: color,
 				textAlign: align,
 				textBaseline: "top",
@@ -251,6 +255,7 @@ export class Field extends Renderable {
 	private loadLevel(i: number) {
 		this.levelIndex = i;
 		this.level = LEVELS[i];
+		this.sky?.setLevelTheme(this.level.theme);
 		const parsed = parseMap(this.level.map);
 		this.tiles = parsed.tiles;
 		this.start = parsed.start;
@@ -651,6 +656,7 @@ export class Field extends Renderable {
 			this.burstAt(moverX(p), moverY(p), "#fff2a8", 30, 220, 300);
 			game.viewport.shake(8, 350);
 		}
+		aberrationBurst(fell ? 4 : 9);
 	}
 
 	private updateFall(dt: number) {
@@ -1049,7 +1055,19 @@ export class Field extends Renderable {
 
 	override draw(r: Renderer) {
 		const theme = this.level.theme;
-		drawSky(r, theme.sky, this.stars, WIDTH, HEIGHT, this.time, theme.litSide);
+		if (this.sky) {
+			drawPlanet(r, WIDTH, HEIGHT, this.time, theme.litSide);
+		} else {
+			drawSky(
+				r,
+				theme.sky,
+				this.stars,
+				WIDTH,
+				HEIGHT,
+				this.time,
+				theme.litSide,
+			);
+		}
 		this.drawTopBar(r);
 
 		for (let y = 0; y < ROWS; y++) {
