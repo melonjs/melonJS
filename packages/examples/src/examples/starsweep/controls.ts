@@ -3,15 +3,16 @@
  *
  * Keyboard: arrows / WASD to move, Space / X to zap, P / Esc to pause.
  *
- * Touch: the `@melonjs/gamepad-plugin` virtual gamepad. The stick shows
- * up under the thumb wherever it lands and goes when it lifts
- * (`area: "screen"`, `hideAtRest`); the ZAP button keeps its corner. The
- * plugin presses the same keys the keyboard does, so the game reads one
- * set of actions for both. It only shows on touch screens, and hides
- * itself if a real pad is used.
+ * Touch: the `@melonjs/gamepad-plugin` virtual gamepad, with no button on
+ * the screen. Drag anywhere to steer: the stick shows up under the thumb
+ * and goes when it lifts (`area: "screen"`, `hideAtRest`). Tap anywhere to
+ * zap: a quick touch that does not steer presses Space (`tap`). The plugin
+ * presses the same keys the keyboard does, so the game reads one set of
+ * actions for both. It only shows on touch screens, and hides itself if a
+ * real pad is used.
  *
  * On the title, where the gamepad is off, a tap anywhere stands for
- * Enter; in the game, where every touch is the stick's, ZAP does.
+ * Enter; in the game, a tap zaps, and a zap also moves past a message.
  *
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
@@ -87,10 +88,12 @@ export class Controls {
 			opacity: 0.4,
 			sticks: [
 				{
-					// appears under the thumb wherever it lands, gone when it lifts
+					// appears under the thumb wherever it lands, gone when it
+					// lifts; a quick tap that does not steer zaps
 					floating: true,
 					area: "screen",
 					hideAtRest: true,
+					tap: { key: input.KEY.SPACE },
 					dpadThreshold: 0.35,
 					keys: {
 						up: input.KEY.UP,
@@ -100,9 +103,7 @@ export class Controls {
 					},
 				},
 			],
-			buttons: [
-				{ key: input.KEY.SPACE, button: null, label: "ZAP", radius: 52 },
-			],
+			buttons: 0,
 		});
 		this.pad = plugin.cache.gamepad as GamepadPlugin;
 
@@ -193,7 +194,7 @@ export class Controls {
 		return this.keyDir;
 	}
 
-	/** true once per zap press (Space, X or the ZAP button) */
+	/** true once per zap (Space, X, or a tap on a touch screen) */
 	fire() {
 		return input.isKeyPressed("fire");
 	}

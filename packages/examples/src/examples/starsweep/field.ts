@@ -206,8 +206,9 @@ export class Field extends Renderable {
 	private levelText: Text;
 	private bigText: Text;
 	private subText: Text;
-	/** keyboard help in the controls' zone, when no touch controls show */
+	/** how to play, under the board: keyboard or touch, whichever is in use */
 	private hintText: Text;
+	private hintTouch: boolean | null = null;
 	private shownScore = -1;
 	private shownHi = -1;
 
@@ -251,7 +252,6 @@ export class Field extends Renderable {
 			"center",
 			"#8f88c9",
 		);
-		this.hintText.setText("ARROWS / WASD TO MOVE  -  SPACE TO ZAP");
 	}
 
 	/** start a brand new run */
@@ -331,7 +331,7 @@ export class Field extends Renderable {
 
 	/** how to move on from a message, for the controls in use */
 	private continueHint() {
-		return this.controls.onScreen ? "press ZAP" : "tap or press Enter";
+		return this.controls.onScreen ? "tap to go on" : "tap or press Enter";
 	}
 
 	private addScore(points: number) {
@@ -496,7 +496,15 @@ export class Field extends Renderable {
 	}
 
 	private updateHud() {
-		this.hintText.alpha = this.controls.onScreen ? 0 : 1;
+		const touch = this.controls.onScreen;
+		if (touch !== this.hintTouch) {
+			this.hintTouch = touch;
+			this.hintText.setText(
+				touch
+					? "DRAG TO MOVE  -  TAP TO ZAP"
+					: "ARROWS / WASD TO MOVE  -  SPACE TO ZAP",
+			);
+		}
 		if (this.score !== this.shownScore) {
 			this.shownScore = this.score;
 			this.scoreText.setText(this.score.toString().padStart(6, "0"));
