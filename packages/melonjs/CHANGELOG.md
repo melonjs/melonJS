@@ -25,6 +25,7 @@
 - UI: `UITextButton#bitmapText`, for `label`
 
 ### Fixed
+- UI: a radio group holds one choice from when its checkboxes are made, not only once they are in the scene: before, several could be checked at once until they were added, and `UICheckbox.checkedIn()` answered `undefined`. A checkbox leaves its group when destroyed; groups hold their members weakly, so one dropped without being destroyed can still be collected
 - UI: `UICheckbox#toggle()` on a checked radio button leaves it checked, as a click does, instead of leaving its group with nothing checked
 - UI: `UIPanel#scrollTo()` (and `scrollToChild`, `scrollX` / `scrollY`) stops a fling that is still coasting, instead of the fling carrying on from the new offset
 - UI: a `UISlider` lays its texts out again when they change: a vertical one widens for a longer value text (a new `valueFormat`, `min`, `max` or `step`), and on a horizontal one the value moves below the track when it would run into the caption, instead of overlapping it. `labelText` sets the caption later

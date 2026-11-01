@@ -883,8 +883,9 @@ applyMusic(saved.music);           // the effect, once
 clicking the checked one leaves it checked (so does `toggle()`; set
 `checked = false` to clear a group on purpose), and they are drawn round. Only
 the one the user picked gets `onChange`, as in a web page; read the group with
-`UICheckbox.checkedIn("difficulty")`. A checkbox is in its group while it is in
-the scene.
+`UICheckbox.checkedIn("difficulty")`. A checkbox is in its group from when it is
+made until it is destroyed, so the group holds one choice, and `checkedIn`
+answers, before the panel is ever added to the world.
 
 ```js
 for (const level of ["Easy", "Normal", "Hard"]) {

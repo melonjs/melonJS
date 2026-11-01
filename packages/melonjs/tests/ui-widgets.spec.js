@@ -2195,6 +2195,44 @@ describe("UI widgets", () => {
 				expect(c.toggle()).toBe(true);
 			});
 
+			it("a radio group holds one choice before it is added to the scene", () => {
+				const easy = new UICheckbox(0, 0, {
+					group: "pre1",
+					label: "Easy",
+					checked: true,
+				});
+				const hard = new UICheckbox(0, 40, {
+					group: "pre1",
+					label: "Hard",
+					checked: true,
+				});
+				// the newest checked one wins, as it would in the scene
+				expect([easy.checked, hard.checked]).toEqual([false, true]);
+				expect(UICheckbox.checkedIn("pre1")).toBe(hard);
+				easy.checked = true;
+				expect(hard.checked).toBe(false);
+				expect(UICheckbox.checkedIn("pre1")).toBe(easy);
+			});
+
+			it("a checkbox leaves its group when destroyed, and stays in it while kept alive out of the scene", () => {
+				const panel = place(
+					new UIPanel(0, 0, { width: 200, height: 200, layout: "column" }),
+				);
+				const a = panel.addChild(
+					new UICheckbox(0, 0, { group: "pre2", checked: true }),
+				);
+				// taken out but kept alive: still the group's choice
+				panel.removeChildNow(a, true);
+				expect(UICheckbox.checkedIn("pre2")).toBe(a);
+				panel.addChild(a);
+				// removed for good: destroyed, and out of the group
+				app.world.removeChildNow(panel);
+				expect(UICheckbox.checkedIn("pre2")).toBeUndefined();
+				const b = new UICheckbox(0, 0, { group: "pre2" });
+				b.checked = true;
+				expect(UICheckbox.checkedIn("pre2")).toBe(b);
+			});
+
 			it("scrollTo() from code stops a fling", () => {
 				const panel = place(
 					new UIPanel(100, 100, {

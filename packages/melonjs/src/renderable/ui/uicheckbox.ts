@@ -147,8 +147,35 @@ export interface UICheckboxSettings extends UIJuiceSettings {
 	skin?: UICheckboxSkin;
 }
 
-/** checkboxes by group name, while they are in the scene */
-const groups = new Map<string, Set<UICheckbox>>();
+/**
+ * checkboxes by group name, from when they are made until they are
+ * destroyed; held weakly, so a checkbox dropped without being destroyed can
+ * still be collected
+ */
+const groups = new Map<string, Set<WeakRef<UICheckbox>>>();
+
+/**
+ * the live members of a group, dropping the ones collected since
+ * @param name - the group name
+ * @yields {UICheckbox} each member still alive
+ */
+function* membersOf(name: string): Generator<UICheckbox> {
+	const refs = groups.get(name);
+	if (refs === undefined) {
+		return;
+	}
+	for (const ref of refs) {
+		const member = ref.deref();
+		if (member === undefined) {
+			refs.delete(ref);
+		} else {
+			yield member;
+		}
+	}
+	if (refs.size === 0) {
+		groups.delete(name);
+	}
+}
 
 /**
  * A checkbox with a text label, for an on/off option such as music, sound
@@ -180,10 +207,11 @@ const groups = new Map<string, Set<UICheckbox>>();
  * ## Radio groups
  * Checkboxes with the same {@link UICheckbox#group} name have one checked
  * at a time: checking one unchecks the others, and clicking the checked one
- * leaves it checked. A checkbox belongs to its group while it is in the
- * scene, so {@link UICheckbox.checkedIn} only sees checkboxes that have
- * been added to the world. A checked one added to a group unchecks the
- * others already there.
+ * leaves it checked. A checkbox belongs to its group from the moment it is
+ * made until it is destroyed (removing it from the world for good destroys
+ * it), so the group holds one choice before it is ever shown, and
+ * {@link UICheckbox.checkedIn} answers straight away. A checked one joining
+ * a group unchecks the others already there.
  *
  * ## Keyboard and gamepad
  * It can take the focus ({@link UIBaseElement#focus}). With the focus,
@@ -227,7 +255,7 @@ const groups = new Map<string, Set<UICheckbox>>();
  *     levels.set(radio, level);
  *     panel.addChild(radio);
  * }
- * // later, once the panel is in the world (e.g. when OK is clicked)
+ * // later, e.g. when OK is clicked
  * const difficulty = levels.get(UICheckbox.checkedIn("difficulty"));
  * @example
  * // skinned from an atlas, with a bitmap font
@@ -267,7 +295,7 @@ export default class UICheckbox extends UIBaseElement {
 	 * Checkboxes sharing a group have one checked at a time: checking one
 	 * unchecks the others, and clicking the checked one leaves it checked.
 	 * A radio button is drawn round, with a dot. A checkbox is in its group
-	 * while it is in the scene; removing it takes it out. Changing `group`
+	 * from when it is made until it is destroyed. Changing `group`
 	 * moves it to the new group straight away, and if it is checked it
 	 * unchecks the others there.
 	 */
@@ -279,14 +307,9 @@ export default class UICheckbox extends UIBaseElement {
 		if (value === this._group) {
 			return;
 		}
-		const active = this._active;
-		if (active) {
-			this.leaveGroup();
-		}
+		this.leaveGroup();
 		this._group = value;
-		if (active) {
-			this.joinGroup();
-		}
+		this.joinGroup();
 		this.isDirty = true;
 	}
 
@@ -333,8 +356,8 @@ export default class UICheckbox extends UIBaseElement {
 	};
 	/** @ignore */
 	private _group: string | undefined;
-	/** whether it is in the scene */
-	private _active = false;
+	/** how its group holds it */
+	private readonly _ref = new WeakRef<UICheckbox>(this);
 	/** @ignore */
 	private readonly _painter = new PanelPainter();
 	/** @ignore */
@@ -376,6 +399,9 @@ export default class UICheckbox extends UIBaseElement {
 		this._checked = settings.checked ?? false;
 		this.onChange = settings.onChange;
 		this._group = settings.group;
+		// in its group from now on, so the group holds one choice before
+		// it is ever added to the scene
+		this.joinGroup();
 
 		this.boxColor = settings.boxColor ?? "#ffffff";
 		this.boxHoverColor = settings.boxHoverColor ?? "#e4eefb";
@@ -513,9 +539,8 @@ export default class UICheckbox extends UIBaseElement {
 	/**
 	 * The checked checkbox of a radio group: the player's choice.
 	 *
-	 * Only checkboxes in the scene are in a group, so this returns
-	 * `undefined` until they (or the panel holding them) are added to the
-	 * world.
+	 * It answers as soon as the checkboxes are made, before they are added
+	 * to the world.
 	 * @param group - the group name
 	 * @returns the checked member, or `undefined` when none is checked
 	 * @example
@@ -523,12 +548,9 @@ export default class UICheckbox extends UIBaseElement {
 	 * console.log(picked?.labelOn); // the text of the checked radio button
 	 */
 	static checkedIn(group: string): UICheckbox | undefined {
-		const members = groups.get(group);
-		if (members !== undefined) {
-			for (const member of members) {
-				if (member.checked) {
-					return member;
-				}
+		for (const member of membersOf(group)) {
+			if (member._checked) {
+				return member;
 			}
 		}
 		return undefined;
@@ -543,11 +565,7 @@ export default class UICheckbox extends UIBaseElement {
 		if (this._joined === undefined) {
 			return;
 		}
-		const members = groups.get(this._joined);
-		if (members === undefined) {
-			return;
-		}
-		for (const member of members) {
+		for (const member of membersOf(this._joined)) {
 			if (member !== this && member._checked) {
 				member._checked = false;
 				member.label?.setText(member._labelOff);
@@ -597,26 +615,6 @@ export default class UICheckbox extends UIBaseElement {
 	}
 
 	/**
-	 * Join its group.
-	 * @ignore
-	 */
-	override onActivateEvent(): void {
-		super.onActivateEvent();
-		this._active = true;
-		this.joinGroup();
-	}
-
-	/**
-	 * Leave its group.
-	 * @ignore
-	 */
-	override onDeactivateEvent(): void {
-		this._active = false;
-		this.leaveGroup();
-		super.onDeactivateEvent();
-	}
-
-	/**
 	 * Join the group it names, if any; the newest checked member wins.
 	 * @ignore
 	 * @internal
@@ -630,7 +628,7 @@ export default class UICheckbox extends UIBaseElement {
 			members = new Set();
 			groups.set(this._group, members);
 		}
-		members.add(this);
+		members.add(this._ref);
 		this._joined = this._group;
 		if (this._checked) {
 			this.uncheckOthers();
@@ -647,7 +645,7 @@ export default class UICheckbox extends UIBaseElement {
 			return;
 		}
 		const members = groups.get(this._joined);
-		members?.delete(this);
+		members?.delete(this._ref);
 		if (members?.size === 0) {
 			groups.delete(this._joined);
 		}
@@ -778,6 +776,7 @@ export default class UICheckbox extends UIBaseElement {
 	 * @ignore
 	 */
 	override onDestroyEvent() {
+		this.leaveGroup();
 		this._painter.dispose();
 		this._skin?.dispose();
 		this.label?.destroy();
