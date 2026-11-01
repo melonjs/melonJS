@@ -329,6 +329,11 @@ export class Field extends Renderable {
 		this.subText.alpha = sub ? 1 : 0;
 	}
 
+	/** how to move on from a message, for the controls in use */
+	private continueHint() {
+		return this.controls.onScreen ? "press ZAP" : "tap or press Enter";
+	}
+
 	private addScore(points: number) {
 		this.score += points;
 		if (this.score > this.hiscore) {
@@ -439,7 +444,7 @@ export class Field extends Renderable {
 						sfx.sfxGameOver();
 						this.showMessage(
 							"Game Over",
-							`Score ${this.score}  ·  tap or press Enter`,
+							`Score ${this.score}  ·  ${this.continueHint()}`,
 						);
 					} else {
 						this.resetActors();
@@ -456,7 +461,7 @@ export class Field extends Renderable {
 						this.setPhase("victory");
 						this.showMessage(
 							"Station saved!",
-							`Final score ${this.score}  ·  tap or press Enter`,
+							`Final score ${this.score}  ·  ${this.continueHint()}`,
 						);
 					}
 				}

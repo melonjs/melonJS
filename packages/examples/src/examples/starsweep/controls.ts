@@ -3,13 +3,15 @@
  *
  * Keyboard: arrows / WASD to move, Space / X to zap, P / Esc to pause.
  *
- * Touch: the `@melonjs/gamepad-plugin` virtual gamepad, a stick and a ZAP
- * button in the zone under the board. The plugin presses the same keys
- * the keyboard does, so the game reads one set of actions for both. It
- * only shows on touch screens, and hides itself if a real pad is used.
+ * Touch: the `@melonjs/gamepad-plugin` virtual gamepad. The stick shows
+ * up under the thumb wherever it lands and goes when it lifts
+ * (`area: "screen"`, `hideAtRest`); the ZAP button keeps its corner. The
+ * plugin presses the same keys the keyboard does, so the game reads one
+ * set of actions for both. It only shows on touch screens, and hides
+ * itself if a real pad is used.
  *
- * On screens without the gamepad (title, "level clear", game over) a tap
- * anywhere stands for Enter.
+ * On the title, where the gamepad is off, a tap anywhere stands for
+ * Enter; in the game, where every touch is the stick's, ZAP does.
  *
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
@@ -85,7 +87,10 @@ export class Controls {
 			opacity: 0.4,
 			sticks: [
 				{
+					// appears under the thumb wherever it lands, gone when it lifts
 					floating: true,
+					area: "screen",
+					hideAtRest: true,
 					dpadThreshold: 0.35,
 					keys: {
 						up: input.KEY.UP,
