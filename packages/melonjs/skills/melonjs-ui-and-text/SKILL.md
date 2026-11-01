@@ -29,24 +29,35 @@ If you have a label carrying a leading `\n` to buy headroom, that workaround is
 now dead weight — drop it, and take the line height back off the position you
 shifted it by.
 
-The outline's corners are **round by default** (`lineJoin: "round"`), so it is
-the same width all the way around. A plain canvas strokes with pointed
-`"miter"` corners instead, which on a thick outline grow long spikes from sharp
-glyphs such as "A", "V" or "M". Ask for them only when the look calls for it,
-and cap them with `miterLimit` (in half line widths; the canvas default is 10):
+The outline's corners are set by `lineJoin`, the same property a canvas
+context has, and `miterLimit`:
+
+| setting | corners | use it for |
+|---|---|---|
+| `lineJoin: "round"` (default) | rounded: the outline is the same width all around | almost everything: HUDs, buttons, titles |
+| `lineJoin: "bevel"` | cut flat | a harder edge with no spikes |
+| `lineJoin: "miter"` | pointed, as a plain canvas strokes text | a sharp, angular look |
+| `miterLimit: n` (default 10) | with `"miter"` only: a corner pointing further than `n` half line widths is cut flat instead | taming the spikes `"miter"` grows on "A", "V", "M" |
+
+At the canvas default of 10, a thick `"miter"` outline grows spikes several
+times its width from sharp glyphs; 2 to 4 keeps the corners pointed and the
+spikes short:
 
 ```js
-new Text(x, y, {
+const outline = {
     font: "sans-serif", size: 48,
     fillStyle: "#ffffff", strokeStyle: "#000000", lineWidth: 6,
-    lineJoin: "miter",   // pointed corners ("round" by default, or "bevel")
-    miterLimit: 3,       // no point past 3 half widths: short spikes
-    text: "VICTORY",
-});
+};
+new Text(x, y, { ...outline, text: "ROUND" });                    // the default
+new Text(x, y, { ...outline, lineJoin: "bevel", text: "BEVEL" });
+new Text(x, y, { ...outline, lineJoin: "miter", text: "MITER" }); // long spikes
+new Text(x, y, { ...outline, lineJoin: "miter", miterLimit: 3, text: "MITER 3" });
 ```
 
 Whichever you pick, the bake leaves room for it on all four sides, so no corner
-is cut; pointed corners just cost a bigger texture.
+is cut and the label's position and bounds do not move; pointed corners just
+cost a bigger texture. Changed on a live label, they show from the next
+`setText()`.
 
 ## Gradient text
 

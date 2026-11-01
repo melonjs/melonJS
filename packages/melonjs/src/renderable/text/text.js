@@ -51,7 +51,8 @@ const genericFontFamilies = new Set([
  * a Text object: draws a string using a system or web font.
  *
  * The text is rasterised to a cached texture, so it draws as fast as a sprite
- * while staying fully styleable — `fillStyle`, `strokeStyle` + `lineWidth`, and
+ * while staying fully styleable — `fillStyle`, `strokeStyle` + `lineWidth`
+ * (with the outline's corners set by `lineJoin` / `miterLimit`), and
  * per-object opacity — with multi-line text (embedded `\n`), optional
  * `wordWrapWidth` word-wrapping, and chainable {@link Text#bold} /
  * {@link Text#italic}. `font` accepts any CSS family, including the generic
@@ -73,7 +74,7 @@ export default class Text extends Renderable {
 	 * @param {boolean} [settings.gradientPerLine=true] - restart a gradient fill on every line; `false` spans one ramp across the whole block, as a plain canvas does
 	 * @param {Color|string} [settings.strokeStyle="#000000"] - a CSS color value used for the glyph outline (drawn when `lineWidth` > 0)
 	 * @param {number} [settings.lineWidth=0] - outline width in pixels (0 = no stroke)
-	 * @param {string} [settings.lineJoin="round"] - the shape of the outline's corners: "round", "bevel" or "miter" (pointed, as a plain canvas draws them)
+	 * @param {"round"|"bevel"|"miter"} [settings.lineJoin="round"] - the shape of the outline's corners: "round", "bevel" or "miter" (pointed, as a plain canvas draws them)
 	 * @param {number} [settings.miterLimit=10] - with a "miter" join, how far a corner may point, in half line widths, before it is cut flat
 	 * @param {string} [settings.textAlign="left"] - horizontal text alignment ("left", "center", "right")
 	 * @param {string} [settings.textBaseline="top"] - the text baseline ("top", "hanging", "middle", "alphabetic", "ideographic", "bottom")
@@ -116,6 +117,34 @@ export default class Text extends Renderable {
 	 *     text: "GAME\nOVER",          // every line restarts the ramp by default
 	 *     // gradientPerLine: false,   // ...or span ONE ramp across both lines
 	 * }));
+	 * @example
+	 * // outlined text and its corners: the outline is centred on the glyph
+	 * // edge, drawn on top of the fill, and its corners are set by `lineJoin`
+	 * const outline = {
+	 *     font: "sans-serif",
+	 *     size: 48,
+	 *     fillStyle: "#ffffff",
+	 *     strokeStyle: "#1d3557",
+	 *     lineWidth: 6,
+	 * };
+	 *
+	 * // "round" (the default): the outline is the same width all around
+	 * app.world.addChild(new Text(10, 10, { ...outline, text: "ROUND" }));
+	 *
+	 * // "bevel": corners cut flat
+	 * app.world.addChild(new Text(10, 70, { ...outline, lineJoin: "bevel", text: "BEVEL" }));
+	 *
+	 * // "miter": pointed corners, as a plain canvas strokes text. At the
+	 * // canvas's default limit of 10 a sharp glyph ("A", "V", "M") grows a
+	 * // long spike...
+	 * app.world.addChild(new Text(10, 130, { ...outline, lineJoin: "miter", text: "MITER" }));
+	 *
+	 * // ...which `miterLimit` caps: a corner that would point further than
+	 * // this many half line widths is cut flat instead
+	 * app.world.addChild(new Text(10, 190, { ...outline, lineJoin: "miter", miterLimit: 3, text: "MITER 3" }));
+	 *
+	 * // whichever is set, the whole outline is drawn: the label's texture
+	 * // grows to hold it, while its position and bounds stay the same
 	 * @example
 	 * // a web font (loaded via the fontface loader) is used by its family name
 	 * loader.preload(
@@ -162,8 +191,11 @@ export default class Text extends Renderable {
 		 *
 		 * The text is baked with room for whichever is set, so no corner is
 		 * cut: "miter" takes more, up to {@link Text#miterLimit} half line
-		 * widths above and below the text.
-		 * @type {string}
+		 * widths around the text.
+		 *
+		 * Like the other style properties, a change shows from the next
+		 * {@link Text#setText}.
+		 * @type {"round"|"bevel"|"miter"}
 		 * @default "round"
 		 * @example
 		 * // sharp, pointed corners, as a plain canvas strokes them
@@ -185,9 +217,18 @@ export default class Text extends Renderable {
 		 * outline may point, in half line widths, before it is cut flat
 		 * instead. The canvas's default, 10, lets sharp glyphs grow long
 		 * spikes; 2 to 4 keeps most corners pointed and the spikes short.
-		 * Has no effect with "round" or "bevel" joins.
+		 * Has no effect with "round" or "bevel" joins. A value the canvas
+		 * would refuse (zero, negative, infinite or NaN) draws with 10.
+		 *
+		 * Like the other style properties, a change shows from the next
+		 * {@link Text#setText}.
 		 * @type {number}
 		 * @default 10
+		 * @example
+		 * // pointed corners with short spikes
+		 * label.lineJoin = "miter";
+		 * label.miterLimit = 2;
+		 * label.setText("VICTORY"); // re-bakes with the new corners
 		 */
 		this.miterLimit = 10;
 

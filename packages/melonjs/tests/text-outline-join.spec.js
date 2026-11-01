@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
-import { Application, boot, Text, video } from "../src/index.js";
+import { Application, boot, getPool, Text, video } from "../src/index.js";
 
 /**
  * A Text's outline is drawn whole, whatever its corners.
@@ -131,6 +131,87 @@ describe("Text outline corners: lineJoin and miterLimit", () => {
 				spy.mockRestore();
 			}
 			expect(seen).toEqual([10, 10, 10, 10]);
+		});
+	});
+
+	describe("changing the corners later", () => {
+		it("shows from the next setText, with room for the new corners", () => {
+			const text = outlined();
+			const before = text.canvasTexture.height;
+			text.lineJoin = "miter";
+			text.setText("AVWM");
+			expect(text.canvasTexture.height).toBeGreaterThan(before);
+			expectUncut(text);
+
+			// and back: the canvas only grows, but the outline is round again
+			const seen = [];
+			const spy = vi
+				.spyOn(CanvasRenderingContext2D.prototype, "strokeText")
+				.mockImplementation(function () {
+					seen.push(this.lineJoin);
+				});
+			try {
+				text.lineJoin = "round";
+				text.setText("AVWM");
+			} finally {
+				spy.mockRestore();
+			}
+			expect(seen).toEqual(["round"]);
+		});
+
+		it("a lower miterLimit takes less room", () => {
+			const long = outlined({ lineJoin: "miter" });
+			const short = outlined({ lineJoin: "miter", miterLimit: 2 });
+			expect(short.metrics.inkPadTop).toBeLessThan(long.metrics.inkPadTop);
+			expect(short.metrics.inkPadLeft).toBeLessThan(long.metrics.inkPadLeft);
+			expectUncut(short);
+		});
+
+		it("round and bevel corners take the same room, whatever the miterLimit", () => {
+			const round = outlined({ miterLimit: 50 });
+			const bevel = outlined({ lineJoin: "bevel", miterLimit: 50 });
+			const plain = outlined();
+			for (const text of [round, bevel]) {
+				expect(text.metrics.inkPadTop).toBe(plain.metrics.inkPadTop);
+				expect(text.metrics.inkPadBottom).toBe(plain.metrics.inkPadBottom);
+				expect(text.metrics.inkPadLeft).toBe(plain.metrics.inkPadLeft);
+				expect(text.metrics.inkPadRight).toBe(plain.metrics.inkPadRight);
+			}
+		});
+
+		it("an outline left invisible takes no room for its corners", () => {
+			const plain = outlined({ lineWidth: 0 });
+			const hidden = outlined({ lineJoin: "miter", strokeStyle: "#00000000" });
+			expect(hidden.metrics.inkPadTop).toBe(plain.metrics.inkPadTop);
+			expect(hidden.metrics.inkPadLeft).toBe(plain.metrics.inkPadLeft);
+		});
+	});
+
+	describe("a recycled label", () => {
+		it("does not keep the corners of the one before", () => {
+			const pool = getPool("text");
+			const first = pool.get(0, 0, {
+				font: "sans-serif",
+				size: 24,
+				lineWidth: 4,
+				lineJoin: "miter",
+				miterLimit: 2,
+				text: "A",
+			});
+			pool.release(first);
+			const second = pool.get(0, 0, {
+				font: "sans-serif",
+				size: 24,
+				lineWidth: 4,
+				text: "A",
+			});
+			try {
+				expect(second).toBe(first);
+				expect(second.lineJoin).toBe("round");
+				expect(second.miterLimit).toBe(10);
+			} finally {
+				pool.release(second);
+			}
 		});
 	});
 
