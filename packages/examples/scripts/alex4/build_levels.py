@@ -140,6 +140,9 @@ def write_tmx(path, w, props, tileset, fg, solid, breakables, objects, water=())
         out += object_xml(oid, o)
         oid += 1
     out += [" </objectgroup>", "</map>", ""]
+    # as Tiled writes them: the ids a new layer and object would get. melonJS
+    # numbers the objects it makes from there, past the ones of the map
+    out[1] = out[1][:-1] + f' nextlayerid="8" nextobjectid="{oid}">'
     open(path, "w").write("\n".join(out))
 
 
