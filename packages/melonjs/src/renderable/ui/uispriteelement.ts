@@ -104,6 +104,9 @@ export default class UISpriteElement extends UIBaseElement {
 	 */
 	readonly sprite: Sprite;
 
+	/** the sprite's size and anchor the element was last fitted to */
+	private readonly _fitted = { w: 0, h: 0, ax: 0, ay: 0 };
+
 	/**
 	 * @param x - where the image's anchor point goes (its centre by
 	 * default), in screen pixels
@@ -139,6 +142,7 @@ export default class UISpriteElement extends UIBaseElement {
 		sprite.pos.set(sprite.width * ax, sprite.height * ay);
 		this.sprite = sprite;
 		this.addChild(sprite);
+		this.rememberFit();
 
 		this.hoverScale = settings.hoverScale ?? 1;
 		this.pressScale = settings.pressScale ?? 1;
@@ -149,23 +153,72 @@ export default class UISpriteElement extends UIBaseElement {
 
 	/**
 	 * Show another region of the texture: a shortcut for
-	 * `sprite.setRegion(region)`, that also resizes the element to it.
+	 * `sprite.setRegion(region)`. The element takes the region's size, with
+	 * the image's anchor point staying where it was, as a sprite's does.
 	 * @param region - a region from {@link TextureAtlas#getRegion}
 	 * @returns this element
 	 * @example
 	 * icon.setRegion(atlas.getRegion("sound_off"));
 	 */
 	setRegion(region: object): this {
-		const sprite = this.sprite;
-		sprite.setRegion(region);
-		if (sprite.width !== this.width || sprite.height !== this.height) {
-			const ax = sprite.anchorPoint.x;
-			const ay = sprite.anchorPoint.y;
-			this.resize(sprite.width, sprite.height);
-			sprite.pos.set(sprite.width * ax, sprite.height * ay);
-		}
+		this.sprite.setRegion(region);
+		this.fitToSprite();
 		this.isDirty = true;
 		return this;
+	}
+
+	/**
+	 * Follow the sprite after its frame, region or anchor changed: the
+	 * element takes the image's size, and the image's anchor point stays
+	 * where it was on screen, as a sprite's `pos` does. Runs every update, so
+	 * a `sprite.setRegion()` or an animation with frames of different sizes
+	 * is followed too.
+	 * @ignore
+	 */
+	private fitToSprite() {
+		const sprite = this.sprite;
+		const f = this._fitted;
+		const w = sprite.width;
+		const h = sprite.height;
+		const ax = sprite.anchorPoint.x;
+		const ay = sprite.anchorPoint.y;
+		if (w === f.w && h === f.h && ax === f.ax && ay === f.ay) {
+			return;
+		}
+		// the image's anchor point, on screen, before the change
+		const px = this.pos.x + f.w * f.ax;
+		const py = this.pos.y + f.h * f.ay;
+		sprite.pos.set(w * ax, h * ay);
+		this.pos.x = px - w * ax;
+		this.pos.y = py - h * ay;
+		this.resize(w, h);
+		this.updateBounds();
+		this.rememberFit();
+		this.isDirty = true;
+	}
+
+	/**
+	 * note the sprite's size and anchor the element now fits
+	 * @ignore
+	 */
+	private rememberFit() {
+		const f = this._fitted;
+		f.w = this.sprite.width;
+		f.h = this.sprite.height;
+		f.ax = this.sprite.anchorPoint.x;
+		f.ay = this.sprite.anchorPoint.y;
+	}
+
+	/**
+	 * update the sprite, its animation included, and follow its frame
+	 * @param dt - the time since the last update, in milliseconds
+	 * @returns whether anything changed
+	 * @ignore
+	 */
+	override update(dt: number): boolean {
+		const dirty = super.update(dt);
+		this.fitToSprite();
+		return dirty;
 	}
 
 	/**
@@ -193,6 +246,7 @@ export default class UISpriteElement extends UIBaseElement {
 	 */
 	setCurrentAnimation(name: string, resetAnim?: any): this {
 		this.sprite.setCurrentAnimation(name, resetAnim);
+		this.fitToSprite();
 		this.isDirty = true;
 		return this;
 	}

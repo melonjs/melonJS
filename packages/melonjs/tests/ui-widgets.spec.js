@@ -2139,6 +2139,45 @@ describe("UI widgets", () => {
 				expect(renderer.globalAlpha()).toBe(1);
 			});
 
+			it("a region of another size keeps the image's anchor point in place", () => {
+				const atlas = makeAtlas();
+				const icon = new UISpriteElement(100, 100, {
+					image: atlas,
+					region: "up",
+				});
+				icon.setRegion(atlas.getRegion("down"));
+				// 16x12, still centred on (100, 100), as a sprite would be
+				const b = icon.getBounds();
+				expect([b.left, b.top, b.width, b.height]).toEqual([92, 94, 16, 12]);
+				const sb = icon.sprite.getBounds();
+				expect([sb.left, sb.top, sb.width, sb.height]).toEqual([
+					92, 94, 16, 12,
+				]);
+			});
+
+			it("follows a frame set on the sprite itself, on the next update", () => {
+				const atlas = makeAtlas();
+				const icon = place(
+					new UISpriteElement(100, 100, { image: atlas, region: "up" }),
+				);
+				icon.sprite.setRegion(atlas.getRegion("down"));
+				icon.update(16);
+				const b = icon.getBounds();
+				expect([b.left, b.top, b.width, b.height]).toEqual([92, 94, 16, 12]);
+				// and is hit where the smaller image is, not where the old one was
+				syncBroadphase();
+				const onClick = vi.fn();
+				icon.onClick = onClick;
+				pointer("pointermove", 100, 93);
+				pointer("pointerdown", 100, 93);
+				pointer("pointerup", 100, 93);
+				expect(onClick).not.toHaveBeenCalled();
+				pointer("pointermove", 100, 100);
+				pointer("pointerdown", 100, 100);
+				expect(onClick).toHaveBeenCalledTimes(1);
+				pointer("pointerup", 100, 100);
+			});
+
 			it("setRegion swaps the art and resizes the element", () => {
 				const atlas = makeAtlas();
 				const icon = new UISpriteElement(100, 100, {
@@ -2440,6 +2479,27 @@ describe("UI widgets", () => {
 				expect(onClick).toHaveBeenCalledTimes(2);
 				expect(onOver).toHaveBeenCalledTimes(2);
 				expect(onOut).toHaveBeenCalledTimes(2);
+			});
+
+			it("leaving the canvas ends the hover of a button far from the exit, in a crowded world", () => {
+				// enough renderables for the spatial index to split into quadrants
+				for (let i = 0; i < 40; i++) {
+					const r = box(10, 10);
+					r.pos.set((i % 8) * 100 + 5, Math.floor(i / 8) * 110 + 5);
+					// a kinematic renderable is left out of the index
+					r.isKinematic = false;
+					place(r);
+				}
+				const b = place(
+					new UITextButton(650, 480, { text: "OK", width: 100, height: 40 }),
+				);
+				const onOut = vi.spyOn(b, "onOut");
+				pointer("pointermove", 700, 500);
+				expect(b.hover).toBe(true);
+				// the exit is reported at the far corner of the canvas
+				pointer("pointerleave", 0, 0);
+				expect(b.hover).toBe(false);
+				expect(onOut).toHaveBeenCalledTimes(1);
 			});
 
 			it("the pointer leaving the canvas ends the hover, wherever it was", () => {

@@ -357,6 +357,19 @@ function dispatchEvent(normalizedEvents: Pointer[]): boolean {
 
 		const isPointerMove = POINTER_MOVE.includes(pointer.type);
 
+		// the pointer left the canvas, or a finger lifted: every region it
+		// was over is left, wherever the browser reports the exit (at the
+		// canvas's edge, usually far from the region, so not through the
+		// spatial query below, which only finds regions near that point)
+		if (POINTER_LEAVE.includes(pointer.type)) {
+			for (const handlers of eventHandlers.values()) {
+				if (handlers.pointerId === pointer.pointerId) {
+					triggerEvent(handlers, pointer.type, pointer, null);
+				}
+			}
+			continue;
+		}
+
 		// trigger a global event for pointer move
 		if (isPointerMove) {
 			pointer.gameX = pointer.gameLocalX = pointer.gameScreenX;
@@ -523,17 +536,6 @@ function dispatchEvent(normalizedEvents: Pointer[]): boolean {
 								handled = true;
 								break;
 							}
-						}
-						break;
-
-					case POINTER_LEAVE[0]:
-					case POINTER_LEAVE[1]:
-					case POINTER_LEAVE[2]:
-						// the pointer left the canvas, or a finger lifted: every region
-						// it was over is left, wherever the browser reports the exit
-						// (at the canvas's edge, usually far from the region)
-						if (handlers.pointerId === pointer.pointerId) {
-							triggerEvent(handlers, pointer.type, pointer, null);
 						}
 						break;
 
