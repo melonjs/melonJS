@@ -517,7 +517,7 @@ export class GamepadPlugin extends plugin.BasePlugin {
 			if (control instanceof VirtualStick) {
 				control.grab(e.pointerId, x, y);
 			} else {
-				control.press(e.pointerId);
+				control.press(e.pointerId, x, y);
 				this.pad.tick(this.haptics);
 			}
 			// so moves and the release still come here off the canvas
@@ -540,10 +540,12 @@ export class GamepadPlugin extends plugin.BasePlugin {
 			const { x, y } = this.toViewport(e);
 			if (control instanceof VirtualStick) {
 				control.move(x, y);
+			} else if (control?.floating) {
+				// a floating button stays pressed under its finger, wherever it goes
 			} else {
 				// a finger sliding from one button to the next presses the
 				// next, as on a pad; off every button it presses none
-				const next = this.buttonAt(x, y);
+				const next = this.fixedButtonAt(x, y);
 				if (next !== control) {
 					control?.release(e.pointerId);
 					if (next) {
@@ -640,21 +642,33 @@ export class GamepadPlugin extends plugin.BasePlugin {
 	 */
 	private controlAt(x: number, y: number): VirtualStick | VirtualButton | null {
 		this.ensureLayout();
-		const button = this.buttonAt(x, y);
-		if (button !== null) {
-			return button;
-		}
 		const { width, height } = this.app.viewport;
-		// a fixed stick before a floating one, which takes a whole area
-		const sticks = [...this.sticks].sort((a, b) => {
-			return Number(a.floating) - Number(b.floating);
-		});
-		for (const stick of sticks) {
-			if (stick.pointerId === null && stick.hits(x, y, width, height)) {
-				return stick;
-			}
+		// what sits at a spot before what takes a whole area: fixed buttons,
+		// fixed sticks, then floating buttons and floating sticks
+		const fixedButton = this.fixedButtonAt(x, y);
+		if (fixedButton !== null) {
+			return fixedButton;
 		}
-		return null;
+		const free = (stick: VirtualStick) => {
+			return stick.pointerId === null && stick.hits(x, y, width, height);
+		};
+		const fixedStick = this.sticks.find((stick) => {
+			return !stick.floating && free(stick);
+		});
+		if (fixedStick) {
+			return fixedStick;
+		}
+		const floatingButton = this.buttons.find((button) => {
+			return button.floating && button.hits(x, y, width, height);
+		});
+		if (floatingButton) {
+			return floatingButton;
+		}
+		return (
+			this.sticks.find((stick) => {
+				return stick.floating && free(stick);
+			}) ?? null
+		);
 	}
 
 	/**
@@ -666,16 +680,19 @@ export class GamepadPlugin extends plugin.BasePlugin {
 		this.ensureLayout();
 		const { width, height } = this.app.viewport;
 		return (
-			this.buttonAt(x, y) !== null ||
+			this.buttons.some((button) => {
+				return button.hits(x, y, width, height);
+			}) ||
 			this.sticks.some((stick) => {
 				return stick.hits(x, y, width, height);
 			})
 		);
 	}
 
-	private buttonAt(x: number, y: number): VirtualButton | null {
+	/** the fixed button at a point, for a press or a slide from one to the next */
+	private fixedButtonAt(x: number, y: number): VirtualButton | null {
 		for (const button of this.buttons) {
-			if (button.hits(x, y)) {
+			if (!button.floating && button.hits(x, y)) {
 				return button;
 			}
 		}

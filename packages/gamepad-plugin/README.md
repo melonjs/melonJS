@@ -12,6 +12,7 @@ The sticks and buttons are drawn over the game and read by the engine as a pad i
 
 - one or two sticks, analog, with a deadzone, and pressing the D-pad in 8 directions
 - sticks fixed in a corner, or floating: appearing under the thumb wherever it lands, on its half of the screen, anywhere, or in a zone of your choosing
+- buttons fixed in place, or floating: pressed wherever a finger lands in their area and drawn under it
 - a quick tap on a stick can press a button or a key, so one thumb both steers and acts, with no button on the screen
 - any number of buttons, each pressing a pad button or a key, that a game can relabel, dim or hide
 - each finger followed on its own: hold the stick and press a button at the same time
@@ -105,6 +106,9 @@ Sizes and positions are in viewport pixels, the same units the game is drawn in.
 | `label` | none | the text on it |
 | `position` | gathered in the bottom-right corner | from the edges to its center |
 | `radius` | 7.5% of the shorter side | its radius |
+| `floating` | `false` | pressed wherever a finger lands inside its `area`, and drawn under that finger while held; it rests at its `position` |
+| `area` | `"half"` | where a floating button can be pressed: `"half"`, the half of the screen its `position` is on; `"screen"`; or `{ x, y, width, height }` |
+| `hideAtRest` | `false` | draw a floating button only while a finger holds it |
 
 With a second stick, the buttons gather above it.
 
@@ -126,7 +130,18 @@ plugin.register(GamepadPlugin, "gamepad", {
 });
 ```
 
-`area` can also keep the stick to part of the screen, the lower half under a board say: `area: { x: 0, y: 512, width: 576, height: 512 }`. Buttons are found before sticks, so a finger landing on one presses it even inside a floating stick's area.
+Or both floating, the usual two-thumb layout: the left thumb steers anywhere on the left half, the right thumb fires anywhere on the right half, and neither shows until touched.
+
+```ts
+plugin.register(GamepadPlugin, "gamepad", {
+	sticks: [{ floating: true, hideAtRest: true }],
+	buttons: [{ floating: true, hideAtRest: true, label: "A" }],
+});
+```
+
+`area` can also keep a floating control to part of the screen, the lower half under a board say: `area: { x: 0, y: 512, width: 576, height: 512 }`.
+
+Where controls overlap, a finger landing takes the first that is free there: fixed buttons, then fixed sticks, then floating buttons, then floating sticks. So a fixed button is always a button, and a floating button whose area is inside a floating stick's carves its area out of the stick's. A floating control takes one finger at a time: a second finger in its area falls through to the next one.
 
 ## At run time
 

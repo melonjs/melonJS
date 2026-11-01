@@ -28,12 +28,12 @@ export interface StickKeys {
  * @category Plugins
  */
 /**
- * Where a floating stick can be picked up: `"half"`, its half of the
- * screen; `"screen"`, anywhere not on a button or a fixed stick; or a
+ * Where a floating stick or button can be picked up: `"half"`, its half
+ * of the screen; `"screen"`, anywhere not on a fixed control; or a
  * rectangle, in viewport pixels.
  * @category Plugins
  */
-export type StickArea =
+export type ControlArea =
 	| "half"
 	| "screen"
 	| { x: number; y: number; width: number; height: number };
@@ -79,7 +79,7 @@ export interface StickOptions {
 	 * stick; or a rectangle `{ x, y, width, height }` in viewport pixels.
 	 * Ignored for a fixed stick.
 	 */
-	area?: StickArea;
+	area?: ControlArea;
 	/**
 	 * draw a floating stick only while a finger holds it, so it appears
 	 * under the thumb and is gone when the thumb lifts. Off by default: it
@@ -141,6 +141,25 @@ export interface ButtonOptions {
 	position?: Placement;
 	/** its radius, in viewport pixels */
 	radius?: number;
+	/**
+	 * the button is pressed wherever a finger lands inside its `area`, and
+	 * drawn under that finger while held, rather than at a fixed spot. It
+	 * rests at its `position`. Off by default.
+	 */
+	floating?: boolean;
+	/**
+	 * where a floating button can be pressed: `"half"` (the default), the
+	 * half of the screen its `position` is on; `"screen"`, anywhere not on
+	 * a fixed control; or a rectangle `{ x, y, width, height }` in viewport
+	 * pixels. Ignored for a fixed button.
+	 */
+	area?: ControlArea;
+	/**
+	 * draw a floating button only while a finger holds it. Off by default:
+	 * it rests at its `position`, to show it is there. Ignored for a fixed
+	 * button.
+	 */
+	hideAtRest?: boolean;
 }
 
 /**

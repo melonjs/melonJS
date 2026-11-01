@@ -286,6 +286,13 @@ toggle("anywhere, tap for A", false, (on) => {
 		}),
 	});
 });
+toggle("floating A", false, (on) => {
+	remake({
+		buttons: (options.buttons as object[]).map((button, i) => {
+			return i === 0 ? { ...button, floating: on, hideAtRest: on } : button;
+		}),
+	});
+});
 toggle("hide on pad", true, (on) => {
 	remake({ hideOnGamepad: on });
 });

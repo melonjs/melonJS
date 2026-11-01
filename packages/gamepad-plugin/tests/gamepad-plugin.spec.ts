@@ -871,6 +871,134 @@ describe("GamepadPlugin", () => {
 			});
 		});
 
+		describe("floating button", () => {
+			const W = () => app.viewport.width;
+
+			it("presses where a finger lands on its half, and goes back to rest", () => {
+				gamepad.destroy();
+				gamepad = new GamepadPlugin(
+					{ enabled: true, sticks: 0, buttons: [{ floating: true }] },
+					app,
+				);
+				app.draw();
+				const [fire] = gamepad.buttons;
+				const home = { ...fire.center };
+				const at = { x: W() - 150, y: 80 };
+				down(1, at);
+				poll();
+				expect(fire.pressed).toBe(true);
+				expect(input.keyStatus("jump")).toBe(true);
+				expect(fire.center).toEqual(at);
+				// held wherever the finger goes, even off its half
+				move(1, 40, 80);
+				expect(fire.pressed).toBe(true);
+				up(1, { x: 40, y: 80 });
+				poll();
+				expect(fire.pressed).toBe(false);
+				expect(input.keyStatus("jump")).toBe(false);
+				expect(fire.center).toEqual(home);
+				// the left half is not its own
+				down(2, { x: 40, y: 80 });
+				expect(fire.pressed).toBe(false);
+				up(2, { x: 40, y: 80 });
+			});
+
+			it("shares the screen with a floating stick: steer left, fire right", () => {
+				gamepad.destroy();
+				gamepad = new GamepadPlugin(
+					{
+						enabled: true,
+						sticks: [{ floating: true }],
+						buttons: [{ floating: true }],
+					},
+					app,
+				);
+				app.draw();
+				const [steer] = gamepad.sticks;
+				const [fire] = gamepad.buttons;
+				down(1, { x: 60, y: 160 });
+				down(2, { x: W() - 60, y: 160 });
+				expect(steer.pointerId).toBe(1);
+				expect(fire.pressed).toBe(true);
+				up(2, { x: W() - 60, y: 160 });
+				up(1, { x: 60, y: 160 });
+			});
+
+			it("comes after a fixed button, and before a floating stick, on the same spot", () => {
+				gamepad.destroy();
+				gamepad = new GamepadPlugin(
+					{
+						enabled: true,
+						sticks: [{ floating: true, area: "screen" }],
+						buttons: [{ label: "B" }, { floating: true }],
+					},
+					app,
+				);
+				app.draw();
+				const [steer] = gamepad.sticks;
+				const [fixed, floating] = gamepad.buttons;
+				down(1, fixed.center);
+				expect(fixed.pressed).toBe(true);
+				expect(floating.pressed).toBe(false);
+				up(1, fixed.center);
+				// the right half: the floating button's, though the stick takes the screen
+				down(2, { x: W() - 100, y: 60 });
+				expect(floating.pressed).toBe(true);
+				expect(steer.pointerId).toBe(null);
+				// a second finger there falls through to the stick
+				down(3, { x: W() - 120, y: 90 });
+				expect(steer.pointerId).toBe(3);
+				up(3, { x: W() - 120, y: 90 });
+				up(2, { x: W() - 100, y: 60 });
+				// the left half is the stick's
+				down(4, { x: 60, y: 60 });
+				expect(steer.pointerId).toBe(4);
+				up(4, { x: 60, y: 60 });
+			});
+
+			it("is drawn only while held when hidden at rest", () => {
+				gamepad.destroy();
+				gamepad = new GamepadPlugin(
+					{
+						enabled: true,
+						sticks: 0,
+						buttons: [{ floating: true, area: "screen", hideAtRest: true }],
+					},
+					app,
+				);
+				const overlay = new ColorLayer("overlay", "#000000");
+				app.world.addChild(overlay, 999_999);
+				app.draw();
+				const [fire] = gamepad.buttons;
+				expect(pixel(fire.center.x, fire.center.y)[0]).toBe(0);
+				const at = { x: 120, y: 120 };
+				down(1, at);
+				expect(pixel(at.x, at.y)[0]).toBeGreaterThan(40);
+				up(1, at);
+				expect(pixel(at.x, at.y)[0]).toBe(0);
+				app.world.removeChild(overlay);
+			});
+
+			it("is not pressed by a finger sliding off a fixed button", () => {
+				gamepad.destroy();
+				gamepad = new GamepadPlugin(
+					{
+						enabled: true,
+						sticks: 0,
+						buttons: [{ label: "B" }, { floating: true, area: "screen" }],
+					},
+					app,
+				);
+				app.draw();
+				const [fixed, floating] = gamepad.buttons;
+				down(1, fixed.center);
+				move(1, 60, 60);
+				expect(fixed.pressed).toBe(false);
+				expect(floating.pressed).toBe(false);
+				up(1, { x: 60, y: 60 });
+			});
+		});
+
 		it("reports a second stick on the right axes, with the buttons above it", () => {
 			gamepad.destroy();
 			gamepad = new GamepadPlugin({ enabled: true, sticks: 2 }, app);
