@@ -6,6 +6,7 @@ import type {
 	StickArea,
 	StickKeys,
 	StickOptions,
+	StickTap,
 } from "./types.ts";
 
 const { AXES, BUTTONS } = input.GAMEPAD;
@@ -56,6 +57,9 @@ function resolve(
 /** a stick's thumb, as a fraction of its base's radius */
 const THUMB = 0.45;
 
+/** how long the ring a tap leaves on a stick takes to fade, in milliseconds */
+const TAP_RING_MS = 260;
+
 /** the look shared by every control */
 export interface Look {
 	color: string;
@@ -88,6 +92,8 @@ export class VirtualStick {
 	private lean = 0;
 	/** the pointer holding it, or null */
 	pointerId: number | null = null;
+	/** whether a tap is pressing its button or key, until the frame has run */
+	tapping = false;
 
 	private readonly options: StickOptions;
 	/** where it rests, set by the layout */
@@ -98,6 +104,16 @@ export class VirtualStick {
 	private readonly axisY: number;
 	private readonly dpad: boolean;
 	private readonly keys: Record<keyof StickKeys, KeyPress>;
+	private readonly tap: {
+		key: KeyPress;
+		button: number | null;
+		time: number;
+	} | null;
+	/** when the finger holding it landed, and the most it has leaned since */
+	private grabbedAt = 0;
+	private maxLean = 0;
+	/** where and when the last tap was, for its ring */
+	private readonly tapRing = { x: 0, y: 0, at: -Infinity };
 	private readonly directions = {
 		up: false,
 		down: false,
@@ -120,6 +136,19 @@ export class VirtualStick {
 		this.axisX = this.side === "left" ? AXES.LX : AXES.RX;
 		this.axisY = this.side === "left" ? AXES.LY : AXES.RY;
 		this.dpad = options.dpad ?? this.side === "left";
+		const tap: StickTap | undefined = options.tap;
+		this.tap = tap
+			? {
+					key: new KeyPress(tap.key),
+					button:
+						tap.button !== undefined
+							? tap.button
+							: tap.key !== undefined
+								? null
+								: BUTTONS.FACE_1,
+					time: Math.max(0, tap.time ?? 250),
+				}
+			: null;
 		const keys = options.keys ?? {};
 		this.keys = {
 			up: new KeyPress(keys.up),
@@ -189,6 +218,8 @@ export class VirtualStick {
 	 */
 	grab(pointerId: number, x: number, y: number): void {
 		this.pointerId = pointerId;
+		this.grabbedAt = performance.now();
+		this.maxLean = 0;
 		if (this.floating) {
 			this.center.x = x;
 			this.center.y = y;
@@ -206,6 +237,7 @@ export class VirtualStick {
 		const distance = Math.hypot(dx, dy);
 		const lean = Math.min(distance / this.reach, 1);
 		this.lean = lean;
+		this.maxLean = Math.max(this.maxLean, lean);
 		const shown = distance > 0 ? (lean * this.reach) / distance : 0;
 		this.thumb.x = dx * shown;
 		this.thumb.y = dy * shown;
@@ -229,8 +261,24 @@ export class VirtualStick {
 		return this.radius * (1 - THUMB);
 	}
 
-	/** back to rest */
-	release(): void {
+	/**
+	 * back to rest
+	 * @param cancel - the touch was taken away rather than lifted, so it is
+	 * not a tap
+	 * @returns whether the touch was a tap, which then presses its button
+	 */
+	release(cancel = false): boolean {
+		const tapped =
+			!cancel &&
+			this.tap !== null &&
+			this.pointerId !== null &&
+			performance.now() - this.grabbedAt <= this.tap.time &&
+			this.maxLean < this.dpadThreshold;
+		if (tapped) {
+			this.tapRing.x = this.center.x;
+			this.tapRing.y = this.center.y;
+			this.tapRing.at = performance.now();
+		}
 		this.pointerId = null;
 		this.value.x = 0;
 		this.value.y = 0;
@@ -240,6 +288,29 @@ export class VirtualStick {
 		this.center.x = this.home.x;
 		this.center.y = this.home.y;
 		this.report();
+		if (tapped) {
+			this.setTap(true);
+		}
+		return tapped;
+	}
+
+	/** let go of the tap's press, once the game has had a frame to see it */
+	endTap(): void {
+		if (this.tapping) {
+			this.setTap(false);
+		}
+	}
+
+	private setTap(down: boolean): void {
+		const tap = this.tap;
+		if (!tap) {
+			return;
+		}
+		this.tapping = down;
+		if (tap.button !== null) {
+			this.pad.setButton(tap.button, down);
+		}
+		tap.key.set(down);
 	}
 
 	/** write the stick to the pad and press the keys it leans to */
@@ -279,6 +350,19 @@ export class VirtualStick {
 		const { x, y } = this.center;
 		const r = this.radius;
 		const held = this.pointerId !== null;
+		// a tap leaves a ring, fading out where it landed
+		const since = performance.now() - this.tapRing.at;
+		if (since < TAP_RING_MS) {
+			const k = since / TAP_RING_MS;
+			renderer.setColor(look.color);
+			renderer.setGlobalAlpha(math.clamp(look.opacity * 2 * (1 - k), 0, 1));
+			renderer.strokeEllipse(
+				this.tapRing.x,
+				this.tapRing.y,
+				r * THUMB * (1 + k),
+				r * THUMB * (1 + k),
+			);
+		}
 		if (!held && this.hideAtRest) {
 			return;
 		}

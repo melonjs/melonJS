@@ -12,6 +12,7 @@ The sticks and buttons are drawn over the game and read by the engine as a pad i
 
 - one or two sticks, analog, with a deadzone, and pressing the D-pad in 8 directions
 - sticks fixed in a corner, or floating: appearing under the thumb wherever it lands, on its half of the screen, anywhere, or in a zone of your choosing
+- a quick tap on a stick can press a button or a key, so one thumb both steers and acts, with no button on the screen
 - any number of buttons, each pressing a pad button or a key, that a game can relabel, dim or hide
 - each finger followed on its own: hold the stick and press a button at the same time
 - a touch that starts on the controls does not reach the game
@@ -89,6 +90,7 @@ Sizes and positions are in viewport pixels, the same units the game is drawn in.
 | `floating` | `false` | centered where the thumb lands, inside its `area` |
 | `area` | `"half"` | where a floating stick can be picked up: `"half"`, its half of the screen; `"screen"`, anywhere not on a button or a fixed stick; or `{ x, y, width, height }` in viewport pixels |
 | `hideAtRest` | `false` | draw a floating stick only while a finger holds it, so it appears under the thumb and goes when the thumb lifts |
+| `tap` | none | `{ button, key, time }`: a quick tap that does not steer presses this pad button (`FACE_1` by default) or key for one frame. A tap lifts within `time` ms (250) and never leans to `dpadThreshold`. A ring marks where it landed |
 | `deadzone` | `0.1` | how far it must lean (0 to 1) before it reads anything |
 | `dpad` | on for the left stick | press the D-pad buttons in 8 directions |
 | `dpadThreshold` | `0.5` | how far the thumb must travel (0 to 1) to press the D-pad and its `keys`; lower for a stick that answers sooner |
@@ -112,6 +114,15 @@ A stick that appears wherever the thumb lands, as many mobile games have, with a
 plugin.register(GamepadPlugin, "gamepad", {
 	sticks: [{ floating: true, area: "screen", hideAtRest: true }],
 	buttons: [{ label: "A" }],
+});
+```
+
+Or no button at all: drag anywhere to steer, tap anywhere to act.
+
+```ts
+plugin.register(GamepadPlugin, "gamepad", {
+	sticks: [{ floating: true, area: "screen", hideAtRest: true, tap: { key: input.KEY.SPACE } }],
+	buttons: 0,
 });
 ```
 

@@ -38,6 +38,25 @@ export type StickArea =
 	| "screen"
 	| { x: number; y: number; width: number; height: number };
 
+/**
+ * What a quick tap on a stick presses: see {@link StickOptions.tap}.
+ * @category Plugins
+ */
+export interface StickTap {
+	/**
+	 * the pad button it presses, from `GAMEPAD.BUTTONS`; `FACE_1` by
+	 * default, or none when a `key` is given; `null` for none
+	 */
+	button?: number | null;
+	/** a key to press, instead of a pad button unless `button` is also given */
+	key?: number;
+	/**
+	 * the longest a touch can last and still be a tap, in milliseconds.
+	 * 250 by default.
+	 */
+	time?: number;
+}
+
 export interface StickOptions {
 	/**
 	 * which stick of a pad it is: `"left"` reports `GAMEPAD.AXES.LX`/`LY`,
@@ -67,6 +86,15 @@ export interface StickOptions {
 	 * rests in its corner, to show where it is. Ignored for a fixed stick.
 	 */
 	hideAtRest?: boolean;
+	/**
+	 * make a quick tap on the stick press a button or a key, as a button
+	 * would: a touch that lifts within `time` and never leans far enough to
+	 * press a direction (`dpadThreshold`) is a tap. The press lasts one
+	 * frame, so a locked key fires once. With a floating stick over the
+	 * whole screen (`area: "screen"`), tap anywhere to act, drag to steer,
+	 * and no button is needed. Off by default.
+	 */
+	tap?: StickTap;
 	/**
 	 * how far the stick must lean, from 0 to 1, before it reads anything.
 	 * Past it the reading starts from 0, so it still reaches 1 at full

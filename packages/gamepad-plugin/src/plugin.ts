@@ -237,6 +237,7 @@ export class GamepadPlugin extends plugin.BasePlugin {
 		event.on(event.GAMEPAD_CONNECTED, this.onConnected);
 		event.on(event.GAMEPAD_DISCONNECTED, this.onDisconnected);
 		event.on(event.GAME_BEFORE_UPDATE, this.watchPads);
+		event.on(event.GAME_AFTER_UPDATE, this.endTaps);
 		event.on(event.VIEWPORT_ONRESIZE, this.onResize);
 		this.listen();
 	}
@@ -282,6 +283,7 @@ export class GamepadPlugin extends plugin.BasePlugin {
 		event.off(event.GAMEPAD_CONNECTED, this.onConnected);
 		event.off(event.GAMEPAD_DISCONNECTED, this.onDisconnected);
 		event.off(event.GAME_BEFORE_UPDATE, this.watchPads);
+		event.off(event.GAME_AFTER_UPDATE, this.endTaps);
 		event.off(event.VIEWPORT_ONRESIZE, this.onResize);
 		// another plugin may have wrapped the draw since; then ours stays in
 		// the chain, and does nothing once destroyed
@@ -311,12 +313,24 @@ export class GamepadPlugin extends plugin.BasePlugin {
 		}
 	}
 
+	/**
+	 * A tap presses its button between frames and holds it through the next
+	 * one, so the game sees it once, the gamepad polled before the update
+	 * and a locked key read during it; let go of it after that update.
+	 */
+	private readonly endTaps = (): void => {
+		for (const stick of this.sticks) {
+			stick.endTap();
+		}
+	};
+
 	/** let go of every control */
 	private releaseAll(): void {
 		for (const stick of this.sticks) {
 			if (stick.pointerId !== null) {
-				stick.release();
+				stick.release(true);
 			}
+			stick.endTap();
 		}
 		for (const button of this.buttons) {
 			button.releaseAll();
@@ -542,7 +556,9 @@ export class GamepadPlugin extends plugin.BasePlugin {
 		} else {
 			// pointerup, pointercancel
 			if (control instanceof VirtualStick) {
-				control.release();
+				if (control.release(e.type === "pointercancel")) {
+					this.pad.tick(this.haptics);
+				}
 			} else {
 				control?.release(e.pointerId);
 			}
