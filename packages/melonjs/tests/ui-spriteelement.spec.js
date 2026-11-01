@@ -373,6 +373,11 @@ describe("UISpriteElement", () => {
 			expect(icon.isCurrentAnimation("idle")).toBe(false);
 			icon.setCurrentAnimation("idle");
 			expect(icon.isCurrentAnimation("idle")).toBe(true);
+			// the third argument, preserve_dt, is passed on as a sprite takes it
+			const target = icon.sprite ?? icon;
+			const spy = vi.spyOn(target._frameAnim, "setCurrentAnimation");
+			icon.setCurrentAnimation("blink", undefined, true);
+			expect(spy.mock.calls.at(-1)[2]).toBe(true);
 		});
 
 		it("setOpacity and getOpacity", () => {

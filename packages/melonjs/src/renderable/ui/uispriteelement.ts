@@ -242,10 +242,15 @@ export default class UISpriteElement extends UIBaseElement {
 	 * {@link Sprite#setCurrentAnimation}.
 	 * @param name - the animation to play
 	 * @param resetAnim - what to do at the end, see {@link Sprite#setCurrentAnimation}
+	 * @param preserve_dt - keep the time already spent on the current frame
 	 * @returns this element
 	 */
-	setCurrentAnimation(name: string, resetAnim?: any): this {
-		this.sprite.setCurrentAnimation(name, resetAnim);
+	setCurrentAnimation(
+		name: string,
+		resetAnim?: any,
+		preserve_dt = false,
+	): this {
+		this.sprite.setCurrentAnimation(name, resetAnim, preserve_dt);
 		this.fitToSprite();
 		this.isDirty = true;
 		return this;
