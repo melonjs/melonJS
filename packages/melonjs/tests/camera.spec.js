@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
 	Application,
 	boot,
@@ -1471,6 +1471,57 @@ describe("Camera2d", () => {
 			});
 			camera.update(200);
 			expect(called).toEqual(true);
+		});
+
+		it("a fade calls onComplete before the camera removes it, whatever the float rounding (#1810)", () => {
+			// frame by frame as the game loop runs it: the tween steps, then the
+			// camera updates its effects. The alpha is stored as a 32-bit float,
+			// so on some durations it reads as the target one step before the
+			// tween ends; the effect must still wait for the tween
+			const frame = 1000 / 60;
+			const missed = [];
+			for (const direction of ["in", "out"]) {
+				for (let duration = 100; duration <= 1000; duration += 25) {
+					const { camera } = setup();
+					const onComplete = vi.fn();
+					const fade = new FadeEffect(camera, {
+						color: "#ffffff",
+						duration,
+						direction,
+						onComplete,
+					});
+					camera.addCameraEffect(fade);
+					const tween = fade.tween;
+					for (let i = 0; i < 200 && camera.getCameraEffect(FadeEffect); i++) {
+						tween.update(frame);
+						camera.update(frame);
+					}
+					expect(camera.getCameraEffect(FadeEffect)).toBeUndefined();
+					if (onComplete.mock.calls.length !== 1) {
+						missed.push(`${direction} ${duration}ms`);
+					}
+				}
+			}
+			expect(missed).toEqual([]);
+		});
+
+		it("a fade stays until its tween ends, even once its alpha reads as the target", () => {
+			const { camera } = setup();
+			const onComplete = vi.fn();
+			const fade = camera.addCameraEffect(
+				new FadeEffect(camera, { color: "#000", duration: 300, onComplete }),
+			);
+			// the colour already at the target, the tween not yet over
+			fade.color.alpha = 1;
+			camera.update(16);
+			expect(camera.getCameraEffect(FadeEffect)).toBe(fade);
+			expect(onComplete).not.toHaveBeenCalled();
+			// to its end exactly: a finished tween leaves the game loop, so
+			// it is not stepped again
+			advanceTween(fade.tween, 300);
+			camera.update(16);
+			expect(onComplete).toHaveBeenCalledTimes(1);
+			expect(camera.getCameraEffect(FadeEffect)).toBeUndefined();
 		});
 
 		it("fadeIn() convenience method should add a FadeEffect", () => {

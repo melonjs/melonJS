@@ -41,7 +41,7 @@ export default class FadeEffect extends CameraEffect {
 	direction: "in" | "out";
 
 	/**
-	 * target alpha value for completion check
+	 * the alpha the fade ends on
 	 * @ignore
 	 * @internal
 	 */
@@ -103,10 +103,12 @@ export default class FadeEffect extends CameraEffect {
 	}
 
 	override update(): void {
-		// check if the tween has reached its target
-		if (this.direction === "in" && this.color.alpha >= this._targetAlpha) {
-			this.isComplete = true;
-		} else if (this.direction === "out" && this.color.alpha <= 0.0) {
+		// Over when the tween is: it has run its course and called
+		// `onComplete`. Not when the alpha reads as the target: the colour
+		// stores it as a 32-bit float, so a value one step short of the end
+		// can already round to it, and the camera then destroyed the effect,
+		// stopping the tween before it ever called `onComplete` (#1810).
+		if (this.tween !== undefined && !this.tween._isRunning) {
 			this.isComplete = true;
 		}
 	}
