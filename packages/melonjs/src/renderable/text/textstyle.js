@@ -66,6 +66,52 @@ function resolveFill(context, style) {
 }
 
 /**
+ * The canvas default for `miterLimit`, kept when a Text is given a value the
+ * canvas would refuse (zero, negative, infinite or NaN).
+ * @ignore
+ * @internal
+ */
+const DEFAULT_MITER_LIMIT = 10;
+
+/**
+ * The miter limit a Text's outline is drawn with.
+ * @param {object} style - the Text being drawn
+ * @returns {number} its `miterLimit`, or the canvas default for one the
+ * canvas would refuse
+ * @ignore
+ * @internal
+ */
+function miterLimitOf(style) {
+	const limit = style.miterLimit;
+	return Number.isFinite(limit) && limit > 0 ? limit : DEFAULT_MITER_LIMIT;
+}
+
+/**
+ * How far a Text's outline can reach past the glyph's own outline, in pixels.
+ *
+ * The stroke is centred on the outline, so it reaches half `lineWidth` past it
+ * on curves and edges, and at corners too with "round" or "bevel" joins. A
+ * "miter" join extends a corner to a point instead, and the canvas lets that
+ * point reach up to `miterLimit` half widths past the corner before it cuts it
+ * flat: on a sharp glyph like an "A" or an "M", several times further.
+ * @param {object} style - the Text being drawn
+ * @returns {number} the reach in pixels, 0 when there is no visible outline
+ * @ignore
+ * @internal
+ */
+export function strokeReach(style) {
+	if (!(style.lineWidth > 0) || !(style.strokeStyle?.alpha > 0)) {
+		return 0;
+	}
+	const half = style.lineWidth / 2;
+	if (style.lineJoin !== "miter") {
+		return half;
+	}
+	// below 1 every corner is past the limit and is cut flat: half a width
+	return half * Math.max(1, miterLimitOf(style));
+}
+
+/**
  * apply the current text style to the given context
  * @param {CanvasRenderingContext2D} context - the bake's context
  * @param {object} style - the Text being drawn
@@ -80,6 +126,8 @@ export default function setContextStyle(context, style) {
 	context.fillStyle = fill;
 	context.strokeStyle = style.strokeStyle.toRGBA();
 	context.lineWidth = style.lineWidth;
+	context.lineJoin = style.lineJoin ?? "round";
+	context.miterLimit = miterLimitOf(style);
 	context.textAlign = style.textAlign;
 	context.textBaseline = style.textBaseline;
 	return fill;

@@ -14,11 +14,13 @@
 - UI: `hoverScale` and `pressScale` on every `UIBaseElement`: a bounce under the pointer or the focus, and while held, easing by itself and scaling only the drawing, not the hit area or the layout
 - UI: `ProgressBar`'s `onChange` also gets the bar
 - UI: the `UISkin`, `UILabel`, `Paint` and settings and skin types of every widget are exported; `Container#clipContains(x, y)` tells whether a container shows its children at a point
+- Text: `lineJoin` and `miterLimit` settings, the shape of the outline's corners: `"round"` (the default), `"bevel"`, or `"miter"` for pointed corners as a plain canvas draws them, with `miterLimit` capping how far a point may reach
 
 ### Changed
 - UI: `UITextButton` no longer writes the size and alignment it worked out back into the settings object, so one object can make several buttons
 - UI: `UITextButton#label` is the button's text, a `BitmapText` or, with a CSS font, a `Text`
 - UI: `UISpriteElement` is now a `UIBaseElement` holding a `Sprite` (`sprite`), instead of a `Sprite` with its own copy of the pointer handling, so it has everything the other widgets have: `enabled` (drawn at half opacity when off), `cancelPress()` / `onCancel()`, `hoverScale` / `pressScale`, dragging and keyboard / gamepad focus. `(x, y)` is still where the image's anchor point goes, so existing layouts do not move, and `setRegion`, `addAnimation`, `setCurrentAnimation` and `isCurrentAnimation` are kept on the element. As a sprite does, it follows its image's size, a region or animation frame of another size included, with the image's anchor point staying in place. Other `Sprite` members are now on `element.sprite`; `pos` is the element's top left corner; setting `anchorPoint` after construction no longer moves the image (pass it in the settings); and a second sprite drawn in a `draw()` override becomes a child added with `addChild`
+- Text: an outlined `Text` (`lineWidth` > 0) is drawn with round corners by default, as game text outlines usually are, instead of the canvas's pointed ones, which grew long spikes from sharp glyphs on a thick outline and were cut off at the top of the text. Set `lineJoin: "miter"` to keep pointed corners; they are now drawn whole
 - UI: a press stops at a UI element by default: `UIBaseElement`'s `onClick()` and `onRelease()` now return `false`, as `UISpriteElement`'s already did, so a click on a button, checkbox or widget of your own no longer also reaches the game behind it. A subclass that relied on presses passing through returns `true` from them. Hover is unchanged, and a non-blocking `UIPanel` still lets presses on its background through
 
 ### Deprecated
@@ -37,6 +39,7 @@
 - Color: `parseHex()` keeps all 8 bits of alpha instead of rounding to one decimal. Low alpha values no longer become fully transparent, and 4- or 8-digit hex colors round-trip through `toHex8()` without changing alpha (thanks @mmporong)
 - Math: `isPowerOfTwo()` rejects zero, negative and fractional values instead of accepting them after 32-bit coercion, and handles powers and non-powers beyond the 32-bit range (thanks @mmporong)
 - Input: a child cropped out of view by a container with `clipping`, or scrolled out of a `UIPanel`, no longer gets pointer events where it is not drawn
+- Text: an outline is no longer cut at the edges of the text. A pointed corner can reach several times half the line width past a glyph, and the tips of letters such as "A", "V" or "M" were cut flat at the top; and nothing was left to the sides, so the outline (or an italic's ink) on the left of the first glyph and past the end of the line was cut too. The text is baked with room for the outline on all four sides, for whichever corners are set; its position and bounds are unchanged
 - Geometry: `Line#contains()` checks the segment endpoints as well as collinearity; a point on the line beyond either endpoint was reported as contained (thanks @mmporong)
 - UI: a `UITextButton` moved after it was built draws its background where it is, not where it was first put
 - UI: a blocking `UIPanel` stays opaque to hover for as long as the pointer is on it, not only on the frame the pointer enters

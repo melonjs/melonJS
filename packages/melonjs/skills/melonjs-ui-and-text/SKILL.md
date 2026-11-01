@@ -29,6 +29,25 @@ If you have a label carrying a leading `\n` to buy headroom, that workaround is
 now dead weight — drop it, and take the line height back off the position you
 shifted it by.
 
+The outline's corners are **round by default** (`lineJoin: "round"`), so it is
+the same width all the way around. A plain canvas strokes with pointed
+`"miter"` corners instead, which on a thick outline grow long spikes from sharp
+glyphs such as "A", "V" or "M". Ask for them only when the look calls for it,
+and cap them with `miterLimit` (in half line widths; the canvas default is 10):
+
+```js
+new Text(x, y, {
+    font: "sans-serif", size: 48,
+    fillStyle: "#ffffff", strokeStyle: "#000000", lineWidth: 6,
+    lineJoin: "miter",   // pointed corners ("round" by default, or "bevel")
+    miterLimit: 3,       // no point past 3 half widths: short spikes
+    text: "VICTORY",
+});
+```
+
+Whichever you pick, the bake leaves room for it on all four sides, so no corner
+is cut; pointed corners just cost a bigger texture.
+
 ## Gradient text
 
 `fillStyle` takes a `Gradient` as well as a colour — the same object
@@ -142,7 +161,7 @@ label from one class to the other:
 | white | white glyphs | the ABSENCE of a tint |
 | gradient | yes, via `fillGradient` | no: a tint is one colour over a page image |
 | recolour it later | `label.fillStyle.parseCSS("#ff4040")` — the field is a `Color` with no setter, and ASSIGNING a string replaces it, after which the glyphs stop filling entirely and nothing is logged | `label.fillStyle = "#ff4040"` — a real setter that parses the string |
-| stroke | `strokeStyle` + `lineWidth` | none |
+| stroke | `strokeStyle` + `lineWidth`, corners with `lineJoin` / `miterLimit` | none |
 | `size` | pixels | a RATIO of the authored size |
 
 ### Per-glyph wave, shake and colour: `glyphEffect`

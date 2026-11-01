@@ -73,6 +73,8 @@ export default class Text extends Renderable {
 	 * @param {boolean} [settings.gradientPerLine=true] - restart a gradient fill on every line; `false` spans one ramp across the whole block, as a plain canvas does
 	 * @param {Color|string} [settings.strokeStyle="#000000"] - a CSS color value used for the glyph outline (drawn when `lineWidth` > 0)
 	 * @param {number} [settings.lineWidth=0] - outline width in pixels (0 = no stroke)
+	 * @param {string} [settings.lineJoin="round"] - the shape of the outline's corners: "round", "bevel" or "miter" (pointed, as a plain canvas draws them)
+	 * @param {number} [settings.miterLimit=10] - with a "miter" join, how far a corner may point, in half line widths, before it is cut flat
 	 * @param {string} [settings.textAlign="left"] - horizontal text alignment ("left", "center", "right")
 	 * @param {string} [settings.textBaseline="top"] - the text baseline ("top", "hanging", "middle", "alphabetic", "ideographic", "bottom")
 	 * @param {number} [settings.lineHeight=1.0] - line spacing height
@@ -149,6 +151,45 @@ export default class Text extends Renderable {
 		 * @default 0
 		 */
 		this.lineWidth = 0;
+
+		/**
+		 * The shape of the outline's corners, where the stroke turns on a
+		 * glyph: "round", "bevel" (cut flat) or "miter" (pointed). The
+		 * canvas's own default is "miter", which on a thick outline grows
+		 * long spikes from sharp glyphs such as "A", "V" or "M"; "round"
+		 * keeps the outline the same width all around, as most game text
+		 * outlines are.
+		 *
+		 * The text is baked with room for whichever is set, so no corner is
+		 * cut: "miter" takes more, up to {@link Text#miterLimit} half line
+		 * widths above and below the text.
+		 * @type {string}
+		 * @default "round"
+		 * @example
+		 * // sharp, pointed corners, as a plain canvas strokes them
+		 * const title = new Text(0, 0, {
+		 *     font: "sans-serif",
+		 *     size: 48,
+		 *     fillStyle: "#ffffff",
+		 *     strokeStyle: "#000000",
+		 *     lineWidth: 6,
+		 *     lineJoin: "miter",
+		 *     miterLimit: 3,              // and no spike past 3 half widths
+		 *     text: "VICTORY",
+		 * });
+		 */
+		this.lineJoin = "round";
+
+		/**
+		 * With a "miter" {@link Text#lineJoin}: how far a corner of the
+		 * outline may point, in half line widths, before it is cut flat
+		 * instead. The canvas's default, 10, lets sharp glyphs grow long
+		 * spikes; 2 to 4 keeps most corners pointed and the spikes short.
+		 * Has no effect with "round" or "bevel" joins.
+		 * @type {number}
+		 * @default 10
+		 */
+		this.miterLimit = 10;
 
 		/**
 		 * Set the default text alignment (or justification),<br>
@@ -314,6 +355,9 @@ export default class Text extends Renderable {
 		}
 
 		this.lineWidth = settings.lineWidth || 0;
+		// set every time, for a recycled label not to keep the last one's
+		this.lineJoin = settings.lineJoin ?? "round";
+		this.miterLimit = settings.miterLimit ?? 10;
 		this.textAlign = settings.textAlign || "left";
 		this.textBaseline = settings.textBaseline || "top";
 		this.lineHeight = settings.lineHeight || 1.0;
@@ -505,7 +549,16 @@ export default class Text extends Renderable {
 		// see `TextMetrics#inkPadTop`.
 		// At least one bucket: a blank string measures 0 wide, and a canvas with
 		// a zero side cannot be uploaded (WebGPU throws).
-		const width = Math.max(1, Math.ceil(this.metrics.width / 32)) * 32;
+		const width =
+			Math.max(
+				1,
+				Math.ceil(
+					(this.metrics.width +
+						this.metrics.inkPadLeft +
+						this.metrics.inkPadRight) /
+						32,
+				),
+			) * 32;
 		const height =
 			Math.max(
 				1,
@@ -707,10 +760,11 @@ export default class Text extends Renderable {
 			this.canvasTexture.invalidate(renderer);
 		}
 
-		// adjust x,y position based on the bounding box. The blit rises by the
-		// same padding the glyphs were drawn down by, so they land in exactly
-		// the pixels they always did and only the clipped ink is recovered.
-		const x = this.metrics.x;
+		// adjust x,y position based on the bounding box. The blit moves back
+		// by the same padding the glyphs were drawn in by, so they land in
+		// exactly the pixels they always did and only the clipped ink is
+		// recovered.
+		const x = this.metrics.x - this.metrics.inkPadLeft;
 		const y = this.metrics.y - this.metrics.inkPadTop;
 
 		// draw the text (on whole pixels unless `subPixel` is set, where it
@@ -723,7 +777,8 @@ export default class Text extends Renderable {
 	 * @internal
 	 */
 	_drawFont(context, text, x, y) {
-		// The bake canvas carries `inkPadTop` of headroom above the layout box.
+		// The bake canvas carries `inkPadTop` of headroom above the layout box,
+		// and `inkPadLeft` of room to its left.
 		// Translating INTO that headroom — rather than adding it to every draw
 		// position — keeps bake space equal to METRICS space, which is the
 		// space a caller authored their gradient coordinates in. Add the pad to
@@ -732,7 +787,7 @@ export default class Text extends Renderable {
 		// padding differs per browser. The translate is a whole number of
 		// pixels, so glyph rasterization is untouched.
 		context.save();
-		context.translate(0, this.metrics.inkPadTop);
+		context.translate(this.metrics.inkPadLeft, this.metrics.inkPadTop);
 
 		const fill = setContextStyle(context, this);
 
@@ -815,7 +870,7 @@ export default class Text extends Renderable {
 			context.globalCompositeOperation = "source-in";
 			context.fillStyle = fill;
 			context.fillRect(
-				-1,
+				-this.metrics.inkPadLeft - 1,
 				-this.metrics.inkPadTop - 1,
 				canvas.width + 2,
 				canvas.height + 2,
