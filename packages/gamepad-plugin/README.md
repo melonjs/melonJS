@@ -11,6 +11,7 @@ On-screen touch controls for [melonJS](https://melonjs.org/) games, reported as 
 The sticks and buttons are drawn over the game and read by the engine as a pad in a gamepad slot, so everything a game binds with `input.bindGamepad` answers to them. One set of bindings covers a real pad and the touch controls.
 
 - one or two sticks, analog, with a deadzone, and pressing the D-pad in 8 directions
+- sticks fixed in a corner, or floating: appearing under the thumb wherever it lands, on its half of the screen, anywhere, or in a zone of your choosing
 - any number of buttons, each pressing a pad button or a key, that a game can relabel, dim or hide
 - each finger followed on its own: hold the stick and press a button at the same time
 - a touch that starts on the controls does not reach the game
@@ -85,7 +86,9 @@ Sizes and positions are in viewport pixels, the same units the game is drawn in.
 | `side` | `"left"`, then `"right"` | the left stick reports `LX`/`LY`, the right one `RX`/`RY` |
 | `position` | its bottom corner | `{ left or right, top or bottom }`: from the edges to its center |
 | `radius` | 13% of the shorter side | the radius of its base |
-| `floating` | `false` | centered where the thumb lands on its half of the screen |
+| `floating` | `false` | centered where the thumb lands, inside its `area` |
+| `area` | `"half"` | where a floating stick can be picked up: `"half"`, its half of the screen; `"screen"`, anywhere not on a button or a fixed stick; or `{ x, y, width, height }` in viewport pixels |
+| `hideAtRest` | `false` | draw a floating stick only while a finger holds it, so it appears under the thumb and goes when the thumb lifts |
 | `deadzone` | `0.1` | how far it must lean (0 to 1) before it reads anything |
 | `dpad` | on for the left stick | press the D-pad buttons in 8 directions |
 | `dpadThreshold` | `0.5` | how far the thumb must travel (0 to 1) to press the D-pad and its `keys`; lower for a stick that answers sooner |
@@ -102,6 +105,17 @@ Sizes and positions are in viewport pixels, the same units the game is drawn in.
 | `radius` | 7.5% of the shorter side | its radius |
 
 With a second stick, the buttons gather above it.
+
+A stick that appears wherever the thumb lands, as many mobile games have, with a button that keeps its corner:
+
+```ts
+plugin.register(GamepadPlugin, "gamepad", {
+	sticks: [{ floating: true, area: "screen", hideAtRest: true }],
+	buttons: [{ label: "A" }],
+});
+```
+
+`area` can also keep the stick to part of the screen, the lower half under a board say: `area: { x: 0, y: 512, width: 576, height: 512 }`. Buttons are found before sticks, so a finger landing on one presses it even inside a floating stick's area.
 
 ## At run time
 

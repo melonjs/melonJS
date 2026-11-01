@@ -3,6 +3,7 @@ import type { VirtualPad } from "./pad.ts";
 import type {
 	ButtonOptions,
 	Placement,
+	StickArea,
 	StickKeys,
 	StickOptions,
 } from "./types.ts";
@@ -71,6 +72,10 @@ export class VirtualStick {
 	readonly side: "left" | "right";
 	/** whether it is centered where the thumb lands */
 	readonly floating: boolean;
+	/** where a floating stick can be picked up */
+	readonly area: StickArea;
+	/** whether a floating stick is drawn only while held */
+	readonly hideAtRest: boolean;
 	/** the radius of its base, in viewport pixels */
 	radius = 0;
 	/** where its base is drawn, in viewport pixels */
@@ -108,6 +113,8 @@ export class VirtualStick {
 		this.options = options;
 		this.side = options.side ?? side;
 		this.floating = options.floating ?? false;
+		this.area = options.area ?? "half";
+		this.hideAtRest = this.floating && options.hideAtRest === true;
 		this.deadzone = math.clamp(options.deadzone ?? 0.1, 0, 0.95);
 		this.dpadThreshold = math.clamp(options.dpadThreshold ?? 0.5, 0.05, 1);
 		this.axisX = this.side === "left" ? AXES.LX : AXES.RX;
@@ -150,9 +157,22 @@ export class VirtualStick {
 	 * @param x - in viewport pixels
 	 * @param y - in viewport pixels
 	 * @param width - the viewport width, in pixels
+	 * @param height - the viewport height, in pixels
 	 */
-	hits(x: number, y: number, width: number): boolean {
+	hits(x: number, y: number, width: number, height: number): boolean {
 		if (this.floating) {
+			const area = this.area;
+			if (area === "screen") {
+				return x >= 0 && y >= 0 && x < width && y < height;
+			}
+			if (typeof area === "object") {
+				return (
+					x >= area.x &&
+					y >= area.y &&
+					x < area.x + area.width &&
+					y < area.y + area.height
+				);
+			}
 			// its half of the screen
 			return this.side === "left" ? x < width / 2 : x >= width / 2;
 		}
@@ -259,6 +279,9 @@ export class VirtualStick {
 		const { x, y } = this.center;
 		const r = this.radius;
 		const held = this.pointerId !== null;
+		if (!held && this.hideAtRest) {
+			return;
+		}
 		const alpha = math.clamp(look.opacity * (held ? 2 : 1), 0, 1);
 		renderer.setColor(look.color);
 		renderer.setGlobalAlpha(alpha * 0.5);

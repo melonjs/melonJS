@@ -628,13 +628,13 @@ export class GamepadPlugin extends plugin.BasePlugin {
 		if (button !== null) {
 			return button;
 		}
-		const { width } = this.app.viewport;
-		// a fixed stick before a floating one, which takes a whole half
+		const { width, height } = this.app.viewport;
+		// a fixed stick before a floating one, which takes a whole area
 		const sticks = [...this.sticks].sort((a, b) => {
 			return Number(a.floating) - Number(b.floating);
 		});
 		for (const stick of sticks) {
-			if (stick.pointerId === null && stick.hits(x, y, width)) {
+			if (stick.pointerId === null && stick.hits(x, y, width, height)) {
 				return stick;
 			}
 		}
@@ -648,11 +648,11 @@ export class GamepadPlugin extends plugin.BasePlugin {
 	 */
 	private onControls(x: number, y: number): boolean {
 		this.ensureLayout();
-		const { width } = this.app.viewport;
+		const { width, height } = this.app.viewport;
 		return (
 			this.buttonAt(x, y) !== null ||
 			this.sticks.some((stick) => {
-				return stick.hits(x, y, width);
+				return stick.hits(x, y, width, height);
 			})
 		);
 	}

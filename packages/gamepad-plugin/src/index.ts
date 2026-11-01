@@ -4,6 +4,7 @@ export type {
 	ButtonOptions,
 	GamepadPluginOptions,
 	Placement,
+	StickArea,
 	StickKeys,
 	StickOptions,
 } from "./types.ts";

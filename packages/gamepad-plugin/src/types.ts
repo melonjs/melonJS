@@ -27,6 +27,17 @@ export interface StickKeys {
  * A stick of the virtual gamepad.
  * @category Plugins
  */
+/**
+ * Where a floating stick can be picked up: `"half"`, its half of the
+ * screen; `"screen"`, anywhere not on a button or a fixed stick; or a
+ * rectangle, in viewport pixels.
+ * @category Plugins
+ */
+export type StickArea =
+	| "half"
+	| "screen"
+	| { x: number; y: number; width: number; height: number };
+
 export interface StickOptions {
 	/**
 	 * which stick of a pad it is: `"left"` reports `GAMEPAD.AXES.LX`/`LY`,
@@ -43,6 +54,19 @@ export interface StickOptions {
 	 * rather than at a fixed spot. Off by default.
 	 */
 	floating?: boolean;
+	/**
+	 * where a floating stick can be picked up: `"half"` (the default), its
+	 * half of the screen; `"screen"`, anywhere not on a button or a fixed
+	 * stick; or a rectangle `{ x, y, width, height }` in viewport pixels.
+	 * Ignored for a fixed stick.
+	 */
+	area?: StickArea;
+	/**
+	 * draw a floating stick only while a finger holds it, so it appears
+	 * under the thumb and is gone when the thumb lifts. Off by default: it
+	 * rests in its corner, to show where it is. Ignored for a fixed stick.
+	 */
+	hideAtRest?: boolean;
 	/**
 	 * how far the stick must lean, from 0 to 1, before it reads anything.
 	 * Past it the reading starts from 0, so it still reaches 1 at full
