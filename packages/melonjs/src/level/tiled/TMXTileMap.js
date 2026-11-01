@@ -153,6 +153,33 @@ function refreshAbsoluteBounds(container) {
 }
 
 /**
+ * the highest object id in a map's layers, group layers included
+ * @param {object[]} [layers] - the map's (or a group's) layer data
+ * @returns {number} the highest id, or 0 when there is none
+ * @ignore
+ */
+function highestObjectId(layers) {
+	let highest = 0;
+	if (!Array.isArray(layers)) {
+		return highest;
+	}
+	for (const layer of layers) {
+		if (Array.isArray(layer.objects)) {
+			for (const object of layer.objects) {
+				const id = +object.id;
+				if (id > highest) {
+					highest = id;
+				}
+			}
+		}
+		if (Array.isArray(layer.layers)) {
+			highest = Math.max(highest, highestObjectId(layer.layers));
+		}
+	}
+	return highest;
+}
+
+/**
  * a TMX Tile Map Object
  * Tiled QT +0.7.x format
  * @category Tilemap
@@ -294,8 +321,11 @@ export default class TMXTileMap {
 		// Check if map is from melon editor
 		this.isEditor = data.editor === "melon-editor";
 
-		// object id
-		this.nextobjectid = +data.nextobjectid || undefined;
+		// the first id free for objects added at runtime: what the map says,
+		// or, as Tiled maps may leave it out, one past the highest object id
+		// actually in it, so a GUID made from the counter cannot meet one made
+		// from a map object's id (#1809)
+		this.nextobjectid = +data.nextobjectid || highestObjectId(data.layers) + 1;
 
 		// hex/iso properties
 		this.hexsidelength = +data.hexsidelength;
