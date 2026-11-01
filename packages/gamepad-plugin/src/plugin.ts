@@ -246,6 +246,7 @@ export class GamepadPlugin extends plugin.BasePlugin {
 		event.on(event.GAMEPAD_CONNECTED, this.onConnected);
 		event.on(event.GAMEPAD_DISCONNECTED, this.onDisconnected);
 		event.on(event.GAME_BEFORE_UPDATE, this.watchPads);
+		event.on(event.GAME_BEFORE_UPDATE, this.startFrame);
 		event.on(event.GAME_AFTER_UPDATE, this.endTaps);
 		event.on(event.VIEWPORT_ONRESIZE, this.onResize);
 		this.listen();
@@ -292,6 +293,7 @@ export class GamepadPlugin extends plugin.BasePlugin {
 		event.off(event.GAMEPAD_CONNECTED, this.onConnected);
 		event.off(event.GAMEPAD_DISCONNECTED, this.onDisconnected);
 		event.off(event.GAME_BEFORE_UPDATE, this.watchPads);
+		event.off(event.GAME_BEFORE_UPDATE, this.startFrame);
 		event.off(event.GAME_AFTER_UPDATE, this.endTaps);
 		event.off(event.VIEWPORT_ONRESIZE, this.onResize);
 		// another plugin may have wrapped the draw since; then ours stays in
@@ -330,6 +332,17 @@ export class GamepadPlugin extends plugin.BasePlugin {
 	private readonly endTaps = (): void => {
 		for (const stick of this.sticks) {
 			stick.endTap();
+		}
+		// and let go of buttons tapped quicker than a frame, now one has run
+		for (const button of this.buttons) {
+			button.frameEnd();
+		}
+	};
+
+	/** a frame starts: presses made before it are seen by its update */
+	private readonly startFrame = (): void => {
+		for (const button of this.buttons) {
+			button.frameStart();
 		}
 	};
 
