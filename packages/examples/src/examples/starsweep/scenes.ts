@@ -154,8 +154,8 @@ export class TitleScreen extends Stage {
 		}
 		text(360, 19, "#c9c3ff", "POWER UP EVERY PANEL.");
 		text(390, 19, "#c9c3ff", "DODGE THE MONSTERS!");
-		text(620, 15, "#8f88c9", "MOVE: DRAG, ARROWS OR WASD");
-		text(646, 15, "#8f88c9", "ZAP: TAP, SPACE OR X");
+		text(620, 15, "#8f88c9", "MOVE: DRAG LEFT, ARROWS OR WASD");
+		text(646, 15, "#8f88c9", "ZAP: TOUCH RIGHT, SPACE OR X");
 		const best = (save as unknown as Record<string, number>)[HISCORE_KEY] ?? 0;
 		text(740, 22, "#ffd23d", `HI ${best.toString().padStart(6, "0")}`);
 		const prompt = text(840, 24, "#ffffff", "TAP TO START");

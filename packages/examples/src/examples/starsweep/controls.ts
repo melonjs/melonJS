@@ -3,16 +3,19 @@
  *
  * Keyboard: arrows / WASD to move, Space / X to zap, P / Esc to pause.
  *
- * Touch: the `@melonjs/gamepad-plugin` virtual gamepad, with no button on
- * the screen. Drag anywhere to steer: the stick shows up under the thumb
- * and goes when it lifts (`area: "screen"`, `hideAtRest`). Tap anywhere to
- * zap: a quick touch that does not steer presses Space (`tap`). The plugin
- * presses the same keys the keyboard does, so the game reads one set of
- * actions for both. It only shows on touch screens, and hides itself if a
- * real pad is used.
+ * Touch: the `@melonjs/gamepad-plugin` virtual gamepad, two thumbs and
+ * nothing on the screen until touched. The left thumb steers: the stick
+ * shows up under it wherever it lands and goes when it lifts. The right
+ * thumb zaps: a floating ZAP button shows up under it anywhere on the
+ * right half (`floating`, `hideAtRest`), and floating buttons are found
+ * before floating sticks, so the right half is the button's and the rest
+ * of the screen the stick's. A quick tap on the stick zaps too (`tap`).
+ * The plugin presses the same keys the keyboard does, so the game reads
+ * one set of actions for both. It only shows on touch screens, and hides
+ * itself if a real pad is used.
  *
  * On the title, where the gamepad is off, a tap anywhere stands for
- * Enter; in the game, a tap zaps, and a zap also moves past a message.
+ * Enter; in the game, a zap also moves past a message.
  *
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
@@ -103,7 +106,18 @@ export class Controls {
 					},
 				},
 			],
-			buttons: 0,
+			// two thumbs: a ZAP button that appears under a finger anywhere on
+			// the right half; the stick keeps the rest of the screen
+			buttons: [
+				{
+					key: input.KEY.SPACE,
+					button: null,
+					label: "ZAP",
+					radius: 52,
+					floating: true,
+					hideAtRest: true,
+				},
+			],
 		});
 		this.pad = plugin.cache.gamepad as GamepadPlugin;
 

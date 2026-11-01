@@ -501,7 +501,7 @@ export class Field extends Renderable {
 			this.hintTouch = touch;
 			this.hintText.setText(
 				touch
-					? "DRAG TO MOVE  -  TAP TO ZAP"
+					? "LEFT: DRAG TO MOVE  -  RIGHT: ZAP"
 					: "ARROWS / WASD TO MOVE  -  SPACE TO ZAP",
 			);
 		}
