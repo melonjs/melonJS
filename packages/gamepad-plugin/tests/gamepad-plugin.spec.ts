@@ -956,6 +956,88 @@ describe("GamepadPlugin", () => {
 				up(4, { x: 60, y: 60 });
 			});
 
+			it("splits a shared area between several: the nearest at rest takes the finger", () => {
+				gamepad.destroy();
+				gamepad = new GamepadPlugin(
+					{
+						enabled: true,
+						sticks: [{ floating: true }],
+						buttons: [
+							{
+								floating: true,
+								label: "A",
+								position: { right: 60, bottom: 60 },
+							},
+							{ floating: true, label: "B", position: { right: 60, top: 60 } },
+						],
+					},
+					app,
+				);
+				app.draw();
+				const [steer] = gamepad.sticks;
+				const [a, b] = gamepad.buttons;
+				// nearer B's resting spot, though A comes first in the list
+				const nearB = { x: W() - 100, y: 90 };
+				down(1, nearB);
+				expect(b.pressed).toBe(true);
+				expect(a.pressed).toBe(false);
+				// a second finger near A's spot presses A: both held at once
+				const nearA = { x: W() - 100, y: app.viewport.height - 90 };
+				down(2, nearA);
+				expect(a.pressed).toBe(true);
+				expect(b.center).toEqual(nearB);
+				expect(a.center).toEqual(nearA);
+				up(2, nearA);
+				// another finger near the held B does not press A instead
+				down(3, { x: W() - 110, y: 100 });
+				expect(a.pressed).toBe(false);
+				expect(steer.pointerId).toBe(null);
+				up(3, { x: W() - 110, y: 100 });
+				up(1, nearB);
+			});
+
+			it("keeps to its own area when given one", () => {
+				gamepad.destroy();
+				const h = () => app.viewport.height;
+				gamepad = new GamepadPlugin(
+					{
+						enabled: true,
+						sticks: 0,
+						buttons: [
+							{
+								floating: true,
+								label: "A",
+								area: {
+									x: W() / 2,
+									y: h() / 2,
+									width: W() / 2,
+									height: h() / 2,
+								},
+							},
+							{
+								floating: true,
+								label: "B",
+								area: { x: W() / 2, y: 0, width: W() / 2, height: h() / 2 },
+							},
+						],
+					},
+					app,
+				);
+				app.draw();
+				const [a, b] = gamepad.buttons;
+				// B rests at the bottom too, but the top quarter is its own
+				const top = { x: W() - 40, y: 30 };
+				down(1, top);
+				expect(b.pressed).toBe(true);
+				expect(a.pressed).toBe(false);
+				up(1, top);
+				const bottom = { x: W() / 2 + 10, y: h() - 30 };
+				down(2, bottom);
+				expect(a.pressed).toBe(true);
+				expect(b.pressed).toBe(false);
+				up(2, bottom);
+			});
+
 			it("is drawn only while held when hidden at rest", () => {
 				gamepad.destroy();
 				gamepad = new GamepadPlugin(

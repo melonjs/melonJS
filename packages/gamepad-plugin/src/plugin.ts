@@ -658,11 +658,22 @@ export class GamepadPlugin extends plugin.BasePlugin {
 		if (fixedStick) {
 			return fixedStick;
 		}
-		const floatingButton = this.buttons.find((button) => {
-			return button.floating && button.hits(x, y, width, height);
-		});
-		if (floatingButton) {
-			return floatingButton;
+		// floating buttons sharing an area split it: the finger goes to the
+		// one resting nearest, and if a finger already holds that one, on to
+		// the floating sticks rather than to a button it was not aimed at
+		let nearest: VirtualButton | null = null;
+		for (const button of this.buttons) {
+			if (
+				button.floating &&
+				button.covers(x, y, width, height) &&
+				(nearest === null ||
+					button.restDistance(x, y) < nearest.restDistance(x, y))
+			) {
+				nearest = button;
+			}
+		}
+		if (nearest && !nearest.pressed) {
+			return nearest;
 		}
 		return (
 			this.sticks.find((stick) => {

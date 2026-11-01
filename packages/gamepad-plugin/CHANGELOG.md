@@ -6,7 +6,7 @@
 - `ControlArea`, the type of the `area` option below
 - Sticks: `area`, where a floating stick can be picked up: `"half"`, its half of the screen, as before and still the default; `"screen"`, anywhere not on a button or a fixed stick; or a rectangle in viewport pixels
 - Sticks: `hideAtRest`, to draw a floating stick only while a finger holds it, so it appears under the thumb wherever it lands and is gone once the thumb lifts
-- Buttons: `floating`, `area` and `hideAtRest`, as on a stick: a floating button is pressed wherever a finger lands inside its area and drawn under that finger while held, so the left thumb can steer anywhere on one half and the right thumb fire anywhere on the other. Fixed controls are found before floating ones, and floating buttons before floating sticks
+- Buttons: `floating`, `area` and `hideAtRest`, as on a stick: a floating button is pressed wherever a finger lands inside its area and drawn under that finger while held, so the left thumb can steer anywhere on one half and the right thumb fire anywhere on the other. Fixed controls are found before floating ones, and floating buttons before floating sticks. Floating buttons sharing an area split it: a finger presses the one resting nearest
 - Sticks: `tap`, so a quick tap that does not steer presses a pad button (`FACE_1` by default) or a key for one frame, as a button would; with `area: "screen"` a game needs no button at all. A cancelled touch is not a tap, and a fading ring shows where one landed
 
 ## [1.0.2] - _2026-10-31_
