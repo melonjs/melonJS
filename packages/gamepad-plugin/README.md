@@ -143,6 +143,17 @@ plugin.register(GamepadPlugin, "gamepad", {
 
 Where controls overlap, a finger landing takes the first that is free there: fixed buttons, then fixed sticks, then floating buttons, then floating sticks. So a fixed button is always a button, and a floating button whose area is inside a floating stick's carves its area out of the stick's. A floating control takes one finger at a time: a second finger in its area falls through to the next one.
 
+Several floating buttons can share an area, the right half by default: a finger landing there presses the one that rests nearest to it, so each button owns the part of the area around its `position`, and two fingers can hold two of them at once. A finger nearest to a button already held presses no other button; it falls through to a floating stick, if any. Give each its own `area` for fixed zones instead, top and bottom of the right half say:
+
+```ts
+buttons: [
+	{ floating: true, label: "A", area: { x: 288, y: 512, width: 288, height: 512 } },
+	{ floating: true, label: "B", area: { x: 288, y: 0, width: 288, height: 512 } },
+],
+```
+
+With `hideAtRest` the buttons' resting spots cannot be seen, so give buttons that share an area visible resting spots, or their own areas.
+
 ## At run time
 
 ```ts

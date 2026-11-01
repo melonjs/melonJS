@@ -566,14 +566,34 @@ export class VirtualButton {
 		}
 		if (this.floating) {
 			// one finger at a time: a second one falls through to what is under
-			return (
-				!this.pressed &&
-				inArea(this.area, x, y, width, height, this.home.x < width / 2)
-			);
+			return !this.pressed && this.covers(x, y, width, height);
 		}
 		return (
 			Math.hypot(x - this.center.x, y - this.center.y) <= this.radius * 1.15
 		);
+	}
+
+	/**
+	 * whether a point is in a floating button's area, held or not
+	 * @param x - in viewport pixels
+	 * @param y - in viewport pixels
+	 * @param width - the viewport width, in pixels
+	 * @param height - the viewport height, in pixels
+	 */
+	covers(x: number, y: number, width: number, height: number): boolean {
+		return (
+			this._visible &&
+			inArea(this.area, x, y, width, height, this.home.x < width / 2)
+		);
+	}
+
+	/**
+	 * how far a point is from where the button rests, in viewport pixels
+	 * @param x - in viewport pixels
+	 * @param y - in viewport pixels
+	 */
+	restDistance(x: number, y: number): number {
+		return Math.hypot(x - this.home.x, y - this.home.y);
 	}
 
 	/**
