@@ -222,6 +222,7 @@ export type {
 	UISliderSettings,
 	UISliderSkin,
 } from "./renderable/ui/uislider.js";
+export type { UISpriteElementSettings } from "./renderable/ui/uispriteelement.js";
 export type {
 	UITextButtonSettings,
 	UITextButtonSkin,

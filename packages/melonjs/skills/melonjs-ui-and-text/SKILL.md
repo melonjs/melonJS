@@ -290,6 +290,68 @@ There is no `UIContainer` class. Use `Container` for a bare grouping,
 `UIBaseElement` when you want the pointer handling and nothing drawn — it is a
 `Container` that already sets `floating = true` and `isKinematic = false`.
 
+### Which widget for what
+
+| you want | use | notes |
+|---|---|---|
+| a button with a label | `UITextButton` | drawn, or skinned from an atlas; `onClick` setting |
+| an image-only button or icon | `UISpriteElement` | a `UIBaseElement` holding a `Sprite` (`sprite`); override `onClick` |
+| an on/off option, or one of several | `UICheckbox` | a radio button with `group` |
+| a value in a range: volume, sensitivity | `UISlider` | horizontal or vertical |
+| health, shield, cooldown, loading | `ProgressBar` | not clickable; `value` redraws |
+| a frame, dialog or menu card | `UIPanel` | skin, title, layout, scrolling, drag, shadow |
+| your own clickable widget | extend `UIBaseElement` | pointer handlers, `enabled`, focus, bounce |
+| a group with nothing drawn | `Container` | set `floating` for screen space |
+
+### A whole options menu
+
+Everything below in one place: a skinned panel that lays its widgets out
+as a column, a checkbox, a slider, two buttons, a drop shadow, a little
+bounce, and keyboard / gamepad play. Each piece has its own section after
+this.
+
+```js
+import {
+    UICheckbox, UIPanel, UISlider, UITextButton, audio, state,
+} from "melonjs";
+
+// one style object for every widget's text
+const FONT = { font: "kenpixel", fontSize: 14, labelFillStyle: "black" };
+
+const menu = new UIPanel(40, 40, {
+    width: 360, height: 100,           // autoSize grows the height to fit
+    skin: { atlas, region: "grey_panel", insetx: 10, insety: 10 },
+    title: "OPTIONS", titleFont: "kenpixel", titleFontSize: 20,
+    layout: "column", padding: 16, gap: 12, align: "stretch", autoSize: true,
+    shadowColor: "#00000059", shadowOffsetY: 6, shadowBlur: 10, radius: 6,
+});
+
+const music = menu.addChild(new UICheckbox(0, 0, {
+    ...FONT,
+    labelOn: "Music ON", labelOff: "Music OFF",
+    checked: settings.music,
+    onChange: (on) => { settings.music = on; },   // user input only
+}));
+
+menu.addChild(new UISlider(0, 0, {
+    ...FONT,
+    label: "Volume", showValue: true,
+    valueFormat: (v, ratio) => `${Math.round(ratio * 100)}%`,
+    value: audio.getVolume(),
+    onChange: (v) => audio.setVolume(v),           // while dragging
+    onChangeEnd: () => saveSettings(),             // once, on release
+}));
+
+menu.addChild(new UITextButton(0, 0, {
+    ...FONT, text: "Back", height: 40,
+    hoverScale: 1.04, pressScale: 0.96,            // the bounce
+    onClick: () => state.change(state.MENU),       // a completed click
+}));
+
+app.world.addChild(menu, 10);
+music.focus();   // arrows / D-pad and Enter / A now drive the menu
+```
+
 Three things matter here:
 
 - **`floating = true`** opts the container out of camera transforms, so it stays
@@ -456,6 +518,20 @@ const options = new UIPanel(20, 20, {
 **A drop shadow**, here or on a `ProgressBar`, takes a colour whose alpha is
 how dark it gets: `shadowColor: "#00000059"`, with `shadowOffsetX` (0),
 `shadowOffsetY` (4) and `shadowBlur` (8 pixels of soft edge, `0` for sharp).
+There is none until `shadowColor` is set.
+
+```js
+const card = new UIPanel(100, 80, {
+    width: 300, height: 180, fillColor: "#f0f0f0", radius: 8,
+    shadowColor: "#00000059",   // about 35% black
+    shadowOffsetY: 6,           // drops it below the card
+    shadowBlur: 10,             // pixels of soft edge
+});
+const hp = new ProgressBar(20, 20, {
+    width: 200, height: 16, radius: 8,
+    shadowColor: "#00000080", shadowOffsetY: 2, shadowBlur: 4,
+});
+```
 It follows `radius`, which a skinned panel can set to match its art's
 corners, and it is drawn outside the bounds, so it never takes the pointer.
 Under a see-through fill or track it shows through; give that a solid colour.
@@ -498,14 +574,26 @@ const levels = new UIPanel(420, 435, {
     width: 340, height: 150,
     layout: "grid", columns: 5, gap: 8, padding: 10,
     scroll: "vertical",    // "horizontal", "both", or "none"
+    onScroll: (x, y, panel) => { saved.levelScroll = y; },
 });
+const buttons = [];
+for (let i = 1; i <= 30; i++) {
+    buttons[i] = levels.addChild(new UITextButton(0, 0, {
+        text: String(i), width: 56, height: 40,
+        enabled: i <= unlocked,
+        onClick: () => startLevel(i),
+    }));
+}
+levels.scrollTo(0, saved.levelScroll);                 // restore where it was
+levels.scrollToChild(buttons[unlocked]);               // or show the latest
 ```
 
 The content is cropped to the area inside the frame and below the title, and
 scrolls with the wheel over the panel and by dragging, with momentum when
 flung. A scrollbar shows while it does not fit. `scrollTo(x, y)`,
 `scrollToChild(child)`, `scrollX` / `scrollY`, `maxScrollX` / `maxScrollY` and
-an `onScroll(x, y, panel)` setting are there to drive it from code.
+an `onScroll(x, y, panel)` setting are there to drive it from code. Scrolling
+from code stops a fling that is still coasting.
 
 What to know:
 
@@ -544,14 +632,16 @@ it, silently. A panel whose labels never appear while paused is this.
 
 ### Buttons: extend the handlers, do not bind listeners
 
-`UISpriteElement` is a `Sprite` that already registers itself for pointer
-events, so a button is made by overriding methods rather than by wiring
-`registerPointerEvent`:
+Every UI element already registers itself for pointer events, so a button is
+made by overriding methods rather than by wiring `registerPointerEvent`. For
+an image-only button that is `UISpriteElement`: a `UIBaseElement` holding a
+`Sprite`, placed like a sprite (`(x, y)` is where its anchor goes, the centre
+by default):
 
 | handler | fires | returns |
 |---|---|---|
 | `onClick(event)` | pressed | `false` to stop the event propagating |
-| `onRelease(event)` | pressed and released | `false` to stop propagating |
+| `onRelease(event)` | the press ends (up, left while held, or cancelled) | `false` to stop propagating |
 | `onOver(event)` | pointer enters | `false` to stop propagating |
 | `onOut(event)` | pointer leaves | — |
 | `onHold()` | pressed and held | — |
@@ -566,14 +656,31 @@ class MuteButton extends UISpriteElement {
     onOut()  { this.setOpacity(0.5); }
     onClick() {
         audio.muteAll();
-        return false;          // consumed — do not fall through to the world
+        this.setRegion(atlas.getRegion("speaker_off.png"));   // or this.sprite.setRegion
+        return false;          // consumed (the default)
     }
 }
 ```
 
+The image is `button.sprite`: animations, tint and regions live there
+(`setRegion`, `addAnimation`, `setCurrentAnimation` and `isCurrentAnimation`
+are also on the element as shortcuts). As a `UIBaseElement` it has
+`enabled` (drawn at half opacity when off), `cancelPress()` / `onCancel()`,
+the bounce, and focus once `focusable` is set. `pos` is the element's top
+left corner, and a second sprite of your own, such as a joystick's knob, is
+a child added with `addChild`, not drawn by hand in `draw()`.
+
+**A press stops at a UI element by default.** `onClick` and `onRelease`
+return `false` unless you override them, on every `UIBaseElement` (buttons,
+checkboxes, sliders, sprite buttons, your own widgets): a click on
+a HUD button does not also click the world behind it. Return `true` from
+them to let the press through as well. Hover is different: `onOver` lets it
+through unless it returns `false`. A non-blocking `UIPanel` lets a press on
+its background through, as a frame that only decorates should.
+
 The pointer still has to reach it: a renderable with `isKinematic = true` — the
 default on a plain `Renderable` — is skipped by the broadphase and receives
-nothing. `UISpriteElement` and `UIBaseElement` clear it for you; anything else
+nothing. Every `UIBaseElement` clears it for you; anything else
 you make clickable has to clear it itself.
 
 ### A button that does one thing: `UITextButton`
@@ -632,7 +739,7 @@ pointer and the key.
 
 Every `UIBaseElement`, buttons, checkboxes, sliders, panels and your own,
 can grow a little under the pointer or with the focus, and shrink while held
-(`UISpriteElement` and `ProgressBar` are not `UIBaseElement`s, and do not):
+(`ProgressBar` is not a `UIBaseElement`, and does not):
 
 ```js
 new UITextButton(0, 0, { text: "Play", hoverScale: 1.05, pressScale: 0.92 });
@@ -666,7 +773,37 @@ are untouched.
 
 Buttons, checkboxes and sliders are `focusable`. A widget of your own sets
 `focusable = true`, and overrides `onNavigate(direction)` (return `true` for
-what it handles) and `focusRelease()` for what Enter does.
+what it handles) and `focusRelease()` for what Enter does:
+
+```js
+// a left / right picker: "< Normal >"; Enter confirms the choice
+class Picker extends UIBaseElement {
+    constructor(x, y, options, onPick) {
+        super(x, y, 200, 32);
+        this.focusable = true;
+        this.options = options;
+        this.onPick = onPick;
+        this.index = 0;
+        // draw() left out: render this.options[this.index]
+    }
+    onNavigate(direction) {
+        if (direction === "left" || direction === "right") {
+            const step = direction === "left" ? -1 : 1;
+            this.index = (this.index + step + this.options.length) % this.options.length;
+            this.isDirty = true;
+            return true;    // handled: the focus stays here
+        }
+        return false;       // up and down move the focus on
+    }
+    focusRelease() {
+        super.focusRelease();   // the widget comes back up, as on a click
+        this.onPick(this.options[this.index]);
+    }
+}
+```
+
+Moving the focus from code is `other.focus()`; `UIBaseElement.focusOwner?.blur()`
+hands the keys back to the game, for example when gameplay resumes.
 
 Two things to know. Enter goes to the focused button, so another button
 whose `bindKey` is Enter waits while the focus ring shows elsewhere. And
@@ -705,11 +842,13 @@ Three more rules, each with a reason you can feel in a game:
 - **The first input to press owns the button.** A pointer cannot release a key
   press and a key cannot release a pointer press, so a button cannot be left
   half pressed by using both at once.
-- **Losing focus cancels a held key WITHOUT calling `onRelease()`.** If you
-  use the pair as press and depress, firing while held, also stop on
-  `event.BLUR` or the gun is still firing when the player alt-tabs back.
-- **`isClickable` gates the press, not the release.** Disabling a button while
-  its key is down still releases it, so it cannot stick.
+- **A held key that is called off goes to `onCancel()`, not `onRelease()`.**
+  That happens when the window loses focus, the button is removed, or it is
+  disabled (`enabled = false`) while the key is down. If you use the pair as
+  press and depress, firing while held, stop in `onCancel()` too, or the gun
+  is still firing when the player alt-tabs back.
+- **`isClickable` alone gates the press, not the release.** Clearing it while
+  the key is down still lets the key release the button, so it cannot stick.
 
 Shortcuts live only while the button is activated, and never start dragging or
 tap-and-hold: those stay pointer gestures.
@@ -741,10 +880,40 @@ applyMusic(saved.music);           // the effect, once
 ```
 
 **Radio buttons** are checkboxes sharing a `group`: exactly one is checked,
-clicking the checked one leaves it checked, and they are drawn round. Only
+clicking the checked one leaves it checked (so does `toggle()`; set
+`checked = false` to clear a group on purpose), and they are drawn round. Only
 the one the user picked gets `onChange`, as in a web page; read the group with
-`UICheckbox.checkedIn("difficulty")`. A checkbox is in its group while it is in
-the scene.
+`UICheckbox.checkedIn("difficulty")`. A checkbox is in its group from when it is
+made until it is destroyed, so the group holds one choice, and `checkedIn`
+answers, before the panel is ever added to the world.
+
+```js
+for (const level of ["Easy", "Normal", "Hard"]) {
+    panel.addChild(new UICheckbox(0, 0, {
+        label: level,
+        group: "difficulty",
+        checked: level === saved.difficulty,
+        onChange: (on) => { if (on) { saved.difficulty = level; } },
+    }));
+}
+// later: the checked UICheckbox of the group, or undefined
+const picked = UICheckbox.checkedIn("difficulty");
+```
+
+**Skinned** from an atlas (the region names are your art's; these are the
+UI example's):
+
+```js
+new UICheckbox(0, 0, {
+    label: "Sound FX",
+    skin: {
+        atlas,
+        on: "green_boxCheckmark",
+        off: "grey_boxCheckmark",
+        // optional: hoverOn, hoverOff, disabledOn, disabledOff
+    },
+});
+```
 
 ### Sliders: `UISlider`
 
@@ -765,13 +934,34 @@ the slider moves it one `step`. `value` snaps to `step` and clamps to the
 range, and setting it does not call `onChange` or `onChangeEnd`: the same rule
 as the checkbox, and neither does changing `min`, `max` or `step`, which
 re-clamp it. `ratio` reads where it is from 0 to 1, and `valueFormat` gets
-both. `thumbColor`, `thumbHoverColor`, `thumbBorderColor` and
+both. `labelText` changes the caption later. The slider refits to its texts
+(the widest value it can show, at either end of the range), and on a
+horizontal one the value moves below the track when it would run into the
+caption; a `UIPanel` holding it needs `relayout()` if its size changes. `thumbColor`, `thumbHoverColor`, `thumbBorderColor` and
 `thumbBorderWidth` style the drawn thumb. `skin: { atlas, track, fill?, thumb, thumbHover? }` draws it
 from art: the track and fill as nine-slices along its length, the thumb at its
 own size.
 
 Put work that should not run 60 times a second, such as saving or playing a
 test sound, in `onChangeEnd`.
+
+```js
+// whole numbers: a step of 1 shows "7", not "7.00"
+new UISlider(0, 0, { label: "Difficulty", showValue: true, min: 1, max: 10, step: 1, value: 5 });
+
+// vertical, 160 pixels tall: up raises it
+new UISlider(0, 0, { orientation: "vertical", length: 160, value: 0.5 });
+
+// skinned: the track and fill stretch, the thumb keeps its size
+new UISlider(0, 0, {
+    length: 240,
+    // optional: fill (the part before the thumb), thumbHover
+    skin: { atlas, track: "grey_sliderHorizontal", thumb: "blue_sliderDown" },
+});
+```
+
+With no `valueFormat`, the value text shows as many decimals as `step`
+has, and follows a later change of `step`.
 
 ### A fullscreen option
 
@@ -859,8 +1049,9 @@ keeps the four corners at their own size, and stretches only the edges and the
 middle, so the border stays crisp at any size. Do not hand-roll it from nine
 sprites.
 
-From a texture atlas, the third argument of `createSpriteFromName` asks for the
-9-slice version. This is how the UI example's draggable panel draws itself:
+`UIPanel`'s `skin` and `UITextButton`'s `skin` already do this for you. By
+hand, from a texture atlas, the third argument of `createSpriteFromName` asks
+for the 9-slice version:
 
 ```js
 class Panel extends UIBaseElement {
@@ -905,14 +1096,16 @@ sprite.
 ### An opaque panel has to say so
 
 The hit test asks the topmost renderable first and then keeps walking down, so
-consuming is what stops a widget underneath answering too. A panel that can
-overlap another one therefore wants both:
+consuming is what stops a widget underneath answering too. A press is consumed
+by default on a UI element, but hover is not, so a panel of your own that can
+overlap another one also stops hover (`UIPanel` does all of this with
+`blocking`):
 
 ```js
 class Panel extends UIBaseElement {
     onClick() {
         this.ancestor.moveToTop(this);  // and bring it to the front
-        return false;                   // consumed
+        return false;                   // consumed (the default)
     }
     onOver() {
         return false;                   // the frame the pointer crosses in
@@ -968,8 +1161,14 @@ City and Instanced Forest examples park a floating sky at `-10000` or `100000`.
 | loading saved settings plays the music, saves again or fires game logic | the game called its own change handler while restoring | set `checkbox.checked` / `slider.value`, which never call `onChange`, then apply the setting once yourself |
 | `onChange` never fires when settings are restored | by design: only user input calls it | apply the restored value yourself |
 | a button in a scrolling list fires when the user only meant to scroll | the work is in the `onClick()` METHOD, which runs on the press | use the `onClick` SETTING, called on a completed click; a scroll cancels the press |
+| clicking a HUD button also clicks the world behind it (before 20.13) | a `UIBaseElement` let presses through by default | update: presses now stop at UI elements; a handler that returns `true` still lets them through |
+| a custom widget no longer lets clicks reach what is behind it (since 20.13) | presses stop at UI elements by default | return `true` from its `onClick` / `onRelease` |
 | a button scrolled out of a hand-made list still gets clicks | its container does not clip, so the pointer still finds it where it moved to | use `UIPanel`'s `scroll`, or set `clipping` on the container: since 20.13 the pointer skips children outside a clipping container |
 | a layout ignores a label that changed size | layout runs on add, remove and resize only | call `panel.relayout()` |
+| the arrow keys or the pad do nothing in a menu | no widget has the focus: nothing listens until one does | call `firstWidget.focus()` when the menu opens |
+| the arrow keys stop moving the player after a menu | a widget still has the focus | `UIBaseElement.focusOwner?.blur()`, or remove the menu: a focused widget leaving the scene gives the keys back |
+| a `bindKey: ENTER` button does not fire while another widget is focused | Enter goes to the focused widget while its ring shows | focus that button, or bind another key |
+| a skinned panel's shadow has square corners | the shadow follows `radius`, and a skin does not set it | set `radius` to the art's corner size |
 | `new UITextButton` with a font name draws in a plain font | the name is not a loaded bitmap font, so it is drawn as a CSS font | load the bitmap font (image and `.fnt`) under that name, or load the web font |
 
 ## Related skills

@@ -357,6 +357,19 @@ function dispatchEvent(normalizedEvents: Pointer[]): boolean {
 
 		const isPointerMove = POINTER_MOVE.includes(pointer.type);
 
+		// the pointer left the canvas, or a finger lifted: every region it
+		// was over is left, wherever the browser reports the exit (at the
+		// canvas's edge, usually far from the region, so not through the
+		// spatial query below, which only finds regions near that point)
+		if (POINTER_LEAVE.includes(pointer.type)) {
+			for (const handlers of eventHandlers.values()) {
+				if (handlers.pointerId === pointer.pointerId) {
+					triggerEvent(handlers, pointer.type, pointer, null);
+				}
+			}
+			continue;
+		}
+
 		// trigger a global event for pointer move
 		if (isPointerMove) {
 			pointer.gameX = pointer.gameLocalX = pointer.gameScreenX;
@@ -511,10 +524,30 @@ function dispatchEvent(normalizedEvents: Pointer[]): boolean {
 					case POINTER_UP[1]:
 					case POINTER_UP[2]:
 					case POINTER_UP[3]:
-						// pointer defined & inside of bounds: trigger the POINTER_UP callback
+						// pointer defined & inside of bounds: trigger the POINTER_UP callback.
+						// The region keeps the pointer: the press is over, but the
+						// pointer is still over it, so moving away still leaves it and
+						// moving on over it does not enter it again. A legacy
+						// `touchend` is the exception: a lifted finger is over nothing,
+						// and touch events send no leave after it, so it leaves here.
 						if (handlers.pointerId === pointer.pointerId && eventInBounds) {
+							const lifted = pointer.type === POINTER_UP[2];
 							// trigger the corresponding callback
-							if (triggerEvent(handlers, pointer.type, pointer, null)) {
+							const stop = triggerEvent(
+								handlers,
+								pointer.type,
+								pointer,
+								lifted ? null : pointer.pointerId,
+							);
+							if (lifted) {
+								triggerEvent(
+									handlers,
+									findActiveEvent(activeEventList, POINTER_LEAVE),
+									pointer,
+									null,
+								);
+							}
+							if (stop) {
 								handled = true;
 								break;
 							}
@@ -525,10 +558,18 @@ function dispatchEvent(normalizedEvents: Pointer[]): boolean {
 					case POINTER_CANCEL[1]:
 					case POINTER_CANCEL[2]:
 					case POINTER_CANCEL[3]:
-						// pointer defined: trigger the POINTER_CANCEL callback
+						// pointer defined: trigger the POINTER_CANCEL callback, then
+						// leave: a cancelled pointer is gone, and the region forgets it
+						// here, so the browser's own leave after it would not reach it
 						if (handlers.pointerId === pointer.pointerId) {
-							// trigger the corresponding callback
-							if (triggerEvent(handlers, pointer.type, pointer, null)) {
+							const stop = triggerEvent(handlers, pointer.type, pointer, null);
+							triggerEvent(
+								handlers,
+								findActiveEvent(activeEventList, POINTER_LEAVE),
+								pointer,
+								null,
+							);
+							if (stop) {
 								handled = true;
 								break;
 							}

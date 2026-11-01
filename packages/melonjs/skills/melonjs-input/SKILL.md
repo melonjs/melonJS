@@ -315,7 +315,7 @@ input.triggerKeyEvent(input.KEY.LEFT, false);   // release
 | `no action defined for keycode N` | `bindGamepad` called before `bindKey` for that keycode |
 | stick has to be pushed well past its `threshold` before it registers | `threshold` is ADDED to the deadzone, not used instead of it |
 | one half of a stick does nothing | each half is a separate `bindGamepad`, chosen by the sign of `threshold` |
-| a widget under an overlapping panel still reacts | the panel consumes nothing — return `false` from its `onClick` and `onOver` |
+| a widget under an overlapping panel still lights up | the panel consumes no hover: return `false` from its `onOver` (presses already stop at UI elements; `UIPanel` with `blocking` does both) |
 | a widget stays highlighted after the pointer moves onto a panel over it | the panel consumes no `pointermove`, so nothing takes the pointer off the widget |
 | a child's big `z` does not put it in front of another container | `pos.z` is container-local — use `ancestor.moveToTop()` on the container |
 | every click in the game stops working | a handler on `app.viewport` returning `false`, which is asked first |

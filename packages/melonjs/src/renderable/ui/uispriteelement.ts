@@ -1,274 +1,284 @@
-import {
-	registerPointerEvent,
-	releasePointerEvent,
-} from "./../../input/input.ts";
-import type Pointer from "./../../input/pointer.ts";
-import timer from "./../../system/timer.ts";
+import type Camera2d from "../../camera/camera2d.ts";
+import type Renderer from "../../video/renderer.js";
 import Sprite from "./../sprite.js";
+import type { UIJuiceSettings } from "./uibaseelement.ts";
+import UIBaseElement from "./uibaseelement.ts";
 
 /**
- * This is a basic sprite based button which you can use in your Game UI.
+ * Settings for a {@link UISpriteElement}: the {@link Sprite} settings for its
+ * image, plus the bounce shared by every UI element.
  * @category UI
  */
-export default class UISpriteElement extends Sprite {
+export type UISpriteElementSettings = {
 	/**
-	 * if this UISpriteElement should use screen coordinates or local coordinates
-	 * (Note: any UISpriteElement elements added to a floating parent container should have their floating property to false)
-	 * @see Renderable.floating
+	 * The image: a loader key, an image, or a {@link TextureAtlas} (with
+	 * `region`). Every other {@link Sprite} setting is accepted too:
+	 * `region`, `framewidth`, `frameheight`, `anchorPoint`, `tint`...
+	 */
+	image: any;
+	/**
+	 * Whether the element starts turned on.
 	 * @default true
 	 */
-	override floating = true;
+	enabled?: boolean;
+	[key: string]: any;
+} & UIJuiceSettings;
 
+/**
+ * An image that takes clicks: use it for an image-only button or a clickable
+ * icon, such as a pause or a sound toggle, with no label.
+ *
+ * It is a {@link UIBaseElement} holding a {@link Sprite}, so it behaves like
+ * every other UI element: the same pointer callbacks, `enabled`,
+ * `cancelPress()` / `onCancel()`, dragging, the bounce (`hoverScale`,
+ * `pressScale`), and keyboard and gamepad focus once `focusable` is set. A
+ * press stops here by default, so what is under it does not get it too.
+ *
+ * The image is {@link UISpriteElement#sprite}: change its region, add and
+ * play animations or tint it there. It takes the {@link Sprite} settings, and
+ * as a sprite does, `(x, y)` is where its anchor point goes, the centre by
+ * default (`anchorPoint` 0.5, 0.5). The element covers the image, so
+ * `pos` is its top left corner and `width` / `height` its size.
+ *
+ * A disabled element (`enabled = false`) is drawn at half opacity.
+ * @category UI
+ * @example
+ * // a sound toggle icon from an atlas, swapping its region on each click
+ * import { UISpriteElement, audio } from "melonjs";
+ *
+ * class SoundIcon extends UISpriteElement {
+ *     constructor(x, y) {
+ *         super(x, y, { image: atlas, region: "sound_on", hoverScale: 1.1 });
+ *         this.muted = false;
+ *     }
+ *     onClick() {
+ *         this.muted = !this.muted;
+ *         if (this.muted) {
+ *             audio.muteAll();
+ *         } else {
+ *             audio.unmuteAll();
+ *         }
+ *         this.sprite.setRegion(atlas.getRegion(this.muted ? "sound_off" : "sound_on"));
+ *         return false;
+ *     }
+ * }
+ *
+ * app.world.addChild(new SoundIcon(40, 40));
+ * @example
+ * // a pause button from a spritesheet: frame 0 at rest, frame 1 under the pointer
+ * import { UISpriteElement, state } from "melonjs";
+ *
+ * class PauseButton extends UISpriteElement {
+ *     constructor(x, y) {
+ *         super(x, y, { image: "pause_button", framewidth: 64, frameheight: 64 });
+ *         this.sprite.addAnimation("idle", [0]);
+ *         this.sprite.addAnimation("over", [1]);
+ *         this.sprite.setCurrentAnimation("idle");
+ *     }
+ *     onOver() {
+ *         this.sprite.setCurrentAnimation("over");
+ *     }
+ *     onOut() {
+ *         this.sprite.setCurrentAnimation("idle");
+ *     }
+ *     onRelease() {
+ *         state.pause();
+ *         return false;
+ *     }
+ * }
+ * @example
+ * // placed by its top left corner, and reachable with the arrow keys
+ * const icon = new UISpriteElement(16, 16, {
+ *     image: atlas,
+ *     region: "gear",
+ *     anchorPoint: { x: 0, y: 0 },
+ * });
+ * icon.focusable = true;
+ */
+export default class UISpriteElement extends UIBaseElement {
 	/**
-	 * object can be clicked or not
-	 * @default true
-	 */
-	isClickable: boolean;
-
-	/**
-	 * Tap and hold threshold timeout in ms
-	 * @default 250
-	 */
-	holdThreshold: number;
-
-	/**
-	 * object can be tap and hold
-	 * @default false
-	 */
-	isHoldable: boolean;
-
-	/**
-	 * true if the pointer is over the object
-	 * @default false
-	 */
-	hover: boolean;
-
-	// object has been updated (clicked,etc..)
-	holdTimeout: number;
-	released: boolean;
-
-	/**
-	 * @param x - the x coordinate of the UISpriteElement Object
-	 * @param y - the y coordinate of the UISpriteElement Object
-	 * @param settings - See {@link Sprite}
-	 * @param settings.image - the image to use for the sprite
+	 * The image, drawn to fill the element. Change its region, animations
+	 * or tint here.
 	 * @example
-	 * // create a basic GUI Object
-	 * class myButton extends UISpriteElement {
-	 *    constructor(x, y) {
-	 *       // call the UISpriteElement parent constructor
-	 *       super(x, y, {
-	 *          image: "button",
-	 *          framewidth: 100,
-	 *          frameheight: 50
-	 *       });
-	 *    }
-	 *
-	 *    // output something in the console
-	 *    // when the object is clicked
-	 *    onClick(event) {
-	 *       console.log("clicked!");
-	 *       // don't propagate the event
-	 *       return false;
-	 *    }
-	 * });
-	 *
-	 * // add the object at pos (10,10)
-	 * world.addChild(new myButton(10,10));
+	 * icon.sprite.setRegion(atlas.getRegion("sound_off"));
 	 */
-	constructor(
-		x: number,
-		y: number,
-		settings: { image: any; [key: string]: any },
-	) {
-		// call the parent constructor
-		super(x, y, settings);
+	readonly sprite: Sprite;
 
-		this.isClickable = true;
-		this.holdThreshold = 250;
-		this.isHoldable = false;
-		this.hover = false;
-		this.holdTimeout = -1;
-		this.released = true;
-
-		// enable event detection
-		this.isKinematic = false;
-	}
+	/** the sprite's size and anchor the element was last fitted to */
+	private readonly _fitted = { w: 0, h: 0, ax: 0, ay: 0 };
 
 	/**
-	 * function callback for the pointerdown event
-	 * @ignore
-	 * @internal
+	 * @param x - where the image's anchor point goes (its centre by
+	 * default), in screen pixels
+	 * @param y - where the image's anchor point goes (its centre by
+	 * default), in screen pixels
+	 * @param settings - the {@link Sprite} settings, and the bounce
+	 * @example
+	 * // a button image loaded as "button", logging each press
+	 * class MyButton extends UISpriteElement {
+	 *     constructor(x, y) {
+	 *         super(x, y, { image: "button" });
+	 *     }
+	 *     onClick() {
+	 *         console.log("clicked!");
+	 *         return false;
+	 *     }
+	 * }
+	 *
+	 * app.world.addChild(new MyButton(100, 50));
 	 */
-	clicked(event: Pointer): boolean | void {
-		// Check if left mouse button is pressed
-		if (event.button === 0 && this.isClickable) {
-			this.isDirty = true;
-			this.released = false;
-			if (this.isHoldable) {
-				timer.clearTimer(this.holdTimeout);
-				this.holdTimeout = timer.setTimeout(
-					() => {
-						this.hold();
-					},
-					this.holdThreshold,
-					false,
-				);
-				this.released = false;
-			}
-			return this.onClick(event);
+	constructor(x: number, y: number, settings: UISpriteElementSettings) {
+		// built first, for its size and anchor
+		const sprite = new Sprite(0, 0, settings);
+		const ax = sprite.anchorPoint.x;
+		const ay = sprite.anchorPoint.y;
+		super(
+			x - sprite.width * ax,
+			y - sprite.height * ay,
+			sprite.width,
+			sprite.height,
+		);
+		// the sprite keeps its anchor, placed so it covers the element
+		sprite.pos.set(sprite.width * ax, sprite.height * ay);
+		this.sprite = sprite;
+		this.addChild(sprite);
+		this.rememberFit();
+
+		this.hoverScale = settings.hoverScale ?? 1;
+		this.pressScale = settings.pressScale ?? 1;
+		if (settings.enabled === false) {
+			this.enabled = false;
 		}
 	}
 
 	/**
-	 * function called when the object is pressed (to be extended)
-	 * @param _event - the event object
-	 * @returns return false if we need to stop propagating the event
+	 * Show another region of the texture: a shortcut for
+	 * `sprite.setRegion(region)`. The element takes the region's size, with
+	 * the image's anchor point staying where it was, as a sprite's does.
+	 * @param region - a region from {@link TextureAtlas#getRegion}
+	 * @returns this element
+	 * @example
+	 * icon.setRegion(atlas.getRegion("sound_off"));
 	 */
-
-	onClick(_event?: Pointer): boolean {
-		return false;
-	}
-
-	/**
-	 * function callback for the pointerEnter event
-	 * @ignore
-	 * @internal
-	 */
-	enter(event: Pointer): boolean | void {
-		this.hover = true;
+	setRegion(region: object): this {
+		this.sprite.setRegion(region);
+		this.fitToSprite();
 		this.isDirty = true;
-		return this.onOver(event);
+		return this;
 	}
 
 	/**
-	 * function called when the pointer is over the object.
-	 *
-	 * Fires once, on the frame the pointer crosses into the element. To stay
-	 * opaque for as long as the pointer rests on it, an element also wants a
-	 * `"pointermove"` callback registered through
-	 * {@link input.registerPointerEvent} returning `false`, since by then the
-	 * pointer is already inside and this no longer runs.
-	 * @param _event - the event object
-	 * @returns return false if we need to stop propagating the event, so that an
-	 * element covered by this one does not also light up on hover
-	 */
-
-	onOver(_event?: Pointer): boolean | void {
-		// to be extended
-	}
-
-	/**
-	 * function callback for the pointerLeave event
+	 * Follow the sprite after its frame, region or anchor changed: the
+	 * element takes the image's size, and the image's anchor point stays
+	 * where it was on screen, as a sprite's `pos` does. Runs every update, so
+	 * a `sprite.setRegion()` or an animation with frames of different sizes
+	 * is followed too.
 	 * @ignore
-	 * @internal
 	 */
-	leave(event: Pointer): void {
-		this.hover = false;
-		this.isDirty = true;
-		this.release(event);
-		this.onOut(event);
-	}
-
-	/**
-	 * function called when the pointer is leaving the object area.
-	 *
-	 * Fires when the pointer leaves the element's bounds, and also when it is
-	 * still inside them but something drawn above has consumed the move, since
-	 * the pointer is then over that instead.
-	 *
-	 * Unlike {@link UISpriteElement#onOver} this one cannot consume the event, on
-	 * purpose: an element that suppressed its own leave would stay in its hover
-	 * state after the pointer had gone.
-	 * @param _event - the event object
-	 */
-
-	onOut(_event?: Pointer): void {
-		// to be extended
-	}
-
-	/**
-	 * function callback for the pointerup event
-	 * @ignore
-	 * @internal
-	 */
-	release(event: Pointer): boolean | void {
-		if (!this.released) {
-			this.released = true;
-			this.isDirty = true;
-			timer.clearTimer(this.holdTimeout);
-			this.holdTimeout = -1;
-			return this.onRelease(event);
+	private fitToSprite() {
+		const sprite = this.sprite;
+		const f = this._fitted;
+		const w = sprite.width;
+		const h = sprite.height;
+		const ax = sprite.anchorPoint.x;
+		const ay = sprite.anchorPoint.y;
+		if (w === f.w && h === f.h && ax === f.ax && ay === f.ay) {
+			return;
 		}
-	}
-
-	/**
-	 * function called when the object is pressed and released (to be extended)
-	 * @param _event - the event object
-	 * @returns return false if we need to stop propagating the event
-	 */
-
-	onRelease(_event?: Pointer): boolean {
-		return false;
-	}
-
-	/**
-	 * function callback for the tap and hold timer event
-	 * @ignore
-	 * @internal
-	 */
-	hold(): void {
-		timer.clearTimer(this.holdTimeout);
-		this.holdTimeout = -1;
+		// the image's anchor point, on screen, before the change
+		const px = this.pos.x + f.w * f.ax;
+		const py = this.pos.y + f.h * f.ay;
+		sprite.pos.set(w * ax, h * ay);
+		this.pos.x = px - w * ax;
+		this.pos.y = py - h * ay;
+		this.resize(w, h);
+		this.updateBounds();
+		this.rememberFit();
 		this.isDirty = true;
-		if (!this.released) {
-			this.onHold();
+	}
+
+	/**
+	 * note the sprite's size and anchor the element now fits
+	 * @ignore
+	 */
+	private rememberFit() {
+		const f = this._fitted;
+		f.w = this.sprite.width;
+		f.h = this.sprite.height;
+		f.ax = this.sprite.anchorPoint.x;
+		f.ay = this.sprite.anchorPoint.y;
+	}
+
+	/**
+	 * update the sprite, its animation included, and follow its frame
+	 * @param dt - the time since the last update, in milliseconds
+	 * @returns whether anything changed
+	 * @ignore
+	 */
+	override update(dt: number): boolean {
+		const dirty = super.update(dt);
+		this.fitToSprite();
+		return dirty;
+	}
+
+	/**
+	 * A shortcut for `sprite.addAnimation(...)`: see
+	 * {@link Sprite#addAnimation}.
+	 * @param name - the animation name
+	 * @param index - the frames, by index or region name
+	 * @param animationspeed - the time between frames, in milliseconds
+	 * @returns the number of frames added
+	 */
+	addAnimation(
+		name: string,
+		index: number[] | string[] | object[],
+		animationspeed?: number,
+	): number {
+		return this.sprite.addAnimation(name, index, animationspeed);
+	}
+
+	/**
+	 * A shortcut for `sprite.setCurrentAnimation(...)`: see
+	 * {@link Sprite#setCurrentAnimation}.
+	 * @param name - the animation to play
+	 * @param resetAnim - what to do at the end, see {@link Sprite#setCurrentAnimation}
+	 * @param preserve_dt - keep the time already spent on the current frame
+	 * @returns this element
+	 */
+	setCurrentAnimation(
+		name: string,
+		resetAnim?: any,
+		preserve_dt = false,
+	): this {
+		this.sprite.setCurrentAnimation(name, resetAnim, preserve_dt);
+		this.fitToSprite();
+		this.isDirty = true;
+		return this;
+	}
+
+	/**
+	 * A shortcut for `sprite.isCurrentAnimation(name)`.
+	 * @param name - the animation name
+	 * @returns whether it is the one playing
+	 */
+	isCurrentAnimation(name: string): boolean {
+		return this.sprite.isCurrentAnimation(name);
+	}
+
+	/**
+	 * draw the image, at half opacity while disabled
+	 * @param renderer - the renderer
+	 * @param viewport - the camera being drawn through
+	 * @ignore
+	 */
+	override draw(renderer: Renderer, viewport?: Camera2d): void {
+		if (this.enabled) {
+			super.draw(renderer, viewport);
+			return;
 		}
-	}
-
-	/**
-	 * function called when the object is pressed and held<br>
-	 * to be extended <br>
-	 */
-	onHold(): void {}
-
-	/**
-	 * function called when added to the game world or a container
-	 * @ignore
-	 * @internal
-	 */
-	override onActivateEvent(): void {
-		// register pointer events
-		registerPointerEvent("pointerdown", this, (e) => {
-			return this.clicked(e);
-		});
-		registerPointerEvent("pointerup", this, (e) => {
-			return this.release(e);
-		});
-		registerPointerEvent("pointercancel", this, (e) => {
-			return this.release(e);
-		});
-		registerPointerEvent("pointerenter", this, (e) => {
-			return this.enter(e);
-		});
-		registerPointerEvent("pointerleave", this, (e) => {
-			this.leave(e);
-		});
-	}
-
-	/**
-	 * function called when removed from the game world or a container
-	 * @ignore
-	 * @internal
-	 */
-	override onDeactivateEvent(): void {
-		// release pointer events
-		releasePointerEvent("pointerdown", this);
-		releasePointerEvent("pointerup", this);
-		releasePointerEvent("pointercancel", this);
-		releasePointerEvent("pointerenter", this);
-		releasePointerEvent("pointerleave", this);
-		timer.clearTimer(this.holdTimeout);
-		this.holdTimeout = -1;
+		const alpha = renderer.globalAlpha();
+		renderer.setGlobalAlpha(alpha * 0.5);
+		super.draw(renderer, viewport);
+		renderer.setGlobalAlpha(alpha);
 	}
 }

@@ -14,6 +14,7 @@ import {
 	UICheckbox,
 	UIPanel,
 	UISlider,
+	UISpriteElement,
 	UITextButton,
 	video,
 } from "../src/index.js";
@@ -474,6 +475,29 @@ describe("UI widgets", () => {
 			expect(onClick).not.toHaveBeenCalled();
 			event.emit(event.KEYUP, undefined, input.KEY.ENTER);
 			expect(onClick).toHaveBeenCalledTimes(1);
+		});
+
+		it("a held bindKey press called off calls onCancel, not onRelease or onClick", () => {
+			const onClick = vi.fn();
+			const b = place(
+				new UITextButton(100, 100, {
+					text: "Fire",
+					bindKey: input.KEY.SPACE,
+					onClick,
+				}),
+			);
+			const onRelease = vi.spyOn(b, "onRelease");
+			const onCancel = vi.spyOn(b, "onCancel");
+			// the window losing focus while the key is held
+			event.emit(event.KEYDOWN, undefined, input.KEY.SPACE);
+			event.emit(event.BLUR);
+			// disabled while held
+			event.emit(event.KEYDOWN, undefined, input.KEY.SPACE);
+			b.enabled = false;
+			event.emit(event.KEYUP, undefined, input.KEY.SPACE);
+			expect(onCancel).toHaveBeenCalledTimes(2);
+			expect(onRelease).not.toHaveBeenCalled();
+			expect(onClick).not.toHaveBeenCalled();
 		});
 
 		it("draws the pressed region lowered, and the label with it", () => {
@@ -2048,6 +2072,555 @@ describe("UI widgets", () => {
 				panel.scrollTo(0, 100);
 				panel.clearChildren();
 				expect([panel.scrollY, panel.maxScrollY]).toEqual([0, 0]);
+			});
+		});
+
+		describe("UISpriteElement", () => {
+			it("is a UIBaseElement holding its sprite, placed where the sprite's anchor goes", () => {
+				const atlas = makeAtlas();
+				const centred = new UISpriteElement(100, 100, {
+					image: atlas,
+					region: "up",
+				});
+				expect(centred).toBeInstanceOf(UIBaseElement);
+				expect(centred.children).toContain(centred.sprite);
+				// 16x16, centred on (100, 100) as a sprite is
+				expect([
+					centred.pos.x,
+					centred.pos.y,
+					centred.width,
+					centred.height,
+				]).toEqual([92, 92, 16, 16]);
+				const corner = new UISpriteElement(10, 20, {
+					image: atlas,
+					region: "up",
+					anchorPoint: { x: 0, y: 0 },
+				});
+				expect([corner.pos.x, corner.pos.y]).toEqual([10, 20]);
+				// the sprite draws over the element in both cases
+				for (const el of [centred, corner]) {
+					const b = el.sprite.getBounds();
+					const e = el.getBounds();
+					expect([b.left, b.top, b.width]).toEqual([e.left, e.top, e.width]);
+				}
+			});
+
+			it("takes clicks where it is drawn, and not while disabled", () => {
+				const onClick = vi.fn();
+				const icon = place(
+					new UISpriteElement(110, 110, { image: makeAtlas(), region: "up" }),
+				);
+				icon.onClick = onClick;
+				pointer("pointermove", 112, 112);
+				pointer("pointerdown", 112, 112);
+				pointer("pointerup", 112, 112);
+				expect(onClick).toHaveBeenCalledTimes(1);
+				icon.enabled = false;
+				pointer("pointerdown", 112, 112);
+				pointer("pointerup", 112, 112);
+				expect(onClick).toHaveBeenCalledTimes(1);
+			});
+
+			it("is drawn at half opacity while disabled", () => {
+				const icon = new UISpriteElement(110, 110, {
+					image: makeAtlas(),
+					region: "up",
+					enabled: false,
+				});
+				const renderer = app.renderer;
+				let seen;
+				vi.spyOn(icon.sprite, "draw").mockImplementation(() => {
+					seen = renderer.globalAlpha();
+				});
+				// as the update before a frame would mark it
+				icon.sprite.inViewport = true;
+				icon.draw(renderer);
+				expect(seen).toBeCloseTo(0.5, 5);
+				expect(renderer.globalAlpha()).toBe(1);
+			});
+
+			it("a region of another size keeps the image's anchor point in place", () => {
+				const atlas = makeAtlas();
+				const icon = new UISpriteElement(100, 100, {
+					image: atlas,
+					region: "up",
+				});
+				icon.setRegion(atlas.getRegion("down"));
+				// 16x12, still centred on (100, 100), as a sprite would be
+				const b = icon.getBounds();
+				expect([b.left, b.top, b.width, b.height]).toEqual([92, 94, 16, 12]);
+				const sb = icon.sprite.getBounds();
+				expect([sb.left, sb.top, sb.width, sb.height]).toEqual([
+					92, 94, 16, 12,
+				]);
+			});
+
+			it("follows a frame set on the sprite itself, on the next update", () => {
+				const atlas = makeAtlas();
+				const icon = place(
+					new UISpriteElement(100, 100, { image: atlas, region: "up" }),
+				);
+				icon.sprite.setRegion(atlas.getRegion("down"));
+				icon.update(16);
+				const b = icon.getBounds();
+				expect([b.left, b.top, b.width, b.height]).toEqual([92, 94, 16, 12]);
+				// and is hit where the smaller image is, not where the old one was
+				syncBroadphase();
+				const onClick = vi.fn();
+				icon.onClick = onClick;
+				pointer("pointermove", 100, 93);
+				pointer("pointerdown", 100, 93);
+				pointer("pointerup", 100, 93);
+				expect(onClick).not.toHaveBeenCalled();
+				pointer("pointermove", 100, 100);
+				pointer("pointerdown", 100, 100);
+				expect(onClick).toHaveBeenCalledTimes(1);
+				pointer("pointerup", 100, 100);
+			});
+
+			it("setRegion swaps the art and resizes the element", () => {
+				const atlas = makeAtlas();
+				const icon = new UISpriteElement(100, 100, {
+					image: atlas,
+					region: "up",
+				});
+				const spy = vi.spyOn(icon.sprite, "setRegion");
+				expect(icon.setRegion(atlas.getRegion("on"))).toBe(icon);
+				expect(spy).toHaveBeenCalledTimes(1);
+				expect([icon.width, icon.height]).toEqual([
+					icon.sprite.width,
+					icon.sprite.height,
+				]);
+			});
+
+			it("bounces, calls a press off, and takes the focus like the other elements", () => {
+				const onCancel = vi.fn();
+				const icon = place(
+					new UISpriteElement(110, 110, {
+						image: makeAtlas(),
+						region: "up",
+						pressScale: 0.9,
+					}),
+				);
+				icon.onCancel = onCancel;
+				expect(icon.pressScale).toBe(0.9);
+				pointer("pointermove", 112, 112);
+				pointer("pointerdown", 112, 112);
+				icon.cancelPress();
+				expect(onCancel).toHaveBeenCalledTimes(1);
+				expect(icon.released).toBe(true);
+				icon.focusable = true;
+				icon.focus();
+				expect(UIBaseElement.focusOwner).toBe(icon);
+				icon.blur();
+			});
+		});
+
+		describe("fixes from the docs review", () => {
+			it("toggle() keeps a checked radio button checked, as a click does", () => {
+				const a = place(new UICheckbox(0, 0, { group: "t1", checked: true }));
+				const b = place(new UICheckbox(0, 40, { group: "t1" }));
+				expect(a.toggle()).toBe(true);
+				expect(UICheckbox.checkedIn("t1")).toBe(a);
+				// toggling the other one moves the choice
+				expect(b.toggle()).toBe(true);
+				expect([a.checked, b.checked]).toEqual([false, true]);
+				// unchecking on purpose still works
+				b.checked = false;
+				expect(UICheckbox.checkedIn("t1")).toBeUndefined();
+				// a plain checkbox still flips both ways
+				const c = new UICheckbox(0, 0, { checked: true });
+				expect(c.toggle()).toBe(false);
+				expect(c.toggle()).toBe(true);
+			});
+
+			it("a radio group holds one choice before it is added to the scene", () => {
+				const easy = new UICheckbox(0, 0, {
+					group: "pre1",
+					label: "Easy",
+					checked: true,
+				});
+				const hard = new UICheckbox(0, 40, {
+					group: "pre1",
+					label: "Hard",
+					checked: true,
+				});
+				// the newest checked one wins, as it would in the scene
+				expect([easy.checked, hard.checked]).toEqual([false, true]);
+				expect(UICheckbox.checkedIn("pre1")).toBe(hard);
+				easy.checked = true;
+				expect(hard.checked).toBe(false);
+				expect(UICheckbox.checkedIn("pre1")).toBe(easy);
+			});
+
+			it("a checkbox leaves its group when destroyed, and stays in it while kept alive out of the scene", () => {
+				const panel = place(
+					new UIPanel(0, 0, { width: 200, height: 200, layout: "column" }),
+				);
+				const a = panel.addChild(
+					new UICheckbox(0, 0, { group: "pre2", checked: true }),
+				);
+				// taken out but kept alive: still the group's choice
+				panel.removeChildNow(a, true);
+				expect(UICheckbox.checkedIn("pre2")).toBe(a);
+				panel.addChild(a);
+				// removed for good: destroyed, and out of the group
+				app.world.removeChildNow(panel);
+				expect(UICheckbox.checkedIn("pre2")).toBeUndefined();
+				const b = new UICheckbox(0, 0, { group: "pre2" });
+				b.checked = true;
+				expect(UICheckbox.checkedIn("pre2")).toBe(b);
+			});
+
+			it("scrollTo() from code stops a fling", () => {
+				const panel = place(
+					new UIPanel(100, 100, {
+						width: 200,
+						height: 100,
+						layout: "column",
+						gap: 0,
+						scroll: "vertical",
+					}),
+				);
+				for (let i = 0; i < 10; i++) {
+					panel.addChild(box(100, 40));
+				}
+				syncBroadphase();
+				const now = vi.spyOn(performance, "now");
+				let t = 1000;
+				now.mockImplementation(() => {
+					return t;
+				});
+				pointer("pointermove", 150, 190);
+				pointer("pointerdown", 150, 190);
+				for (let i = 1; i <= 4; i++) {
+					t += 8;
+					pointer("pointermove", 150, 190 - i * 15);
+				}
+				pointer("pointerup", 150, 130);
+				panel.update(16);
+				// still coasting
+				const coasting = panel.scrollY;
+				panel.update(16);
+				expect(panel.scrollY).toBeGreaterThan(coasting);
+				panel.scrollTo(0, 20);
+				for (let i = 0; i < 30; i++) {
+					panel.update(16);
+				}
+				expect(panel.scrollY).toBe(20);
+			});
+
+			it("a slider's caption can be set later, and the slider refits", () => {
+				const s = new UISlider(0, 0, { orientation: "vertical", length: 100 });
+				expect(s.label).toBeUndefined();
+				const bare = [s.width, s.height];
+				s.labelText = "A much longer caption";
+				expect(textOf(s.label)).toBe("A much longer caption");
+				expect(s.labelText).toBe("A much longer caption");
+				expect(s.width).toBeGreaterThan(bare[0]);
+				expect(s.height).toBeGreaterThan(bare[1]);
+				s.labelText = "Hi";
+				expect(textOf(s.label)).toBe("Hi");
+			});
+
+			it("a vertical slider widens for a longer value text set later", () => {
+				const s = new UISlider(0, 0, {
+					orientation: "vertical",
+					showValue: true,
+					min: 0,
+					max: 9,
+					step: 1,
+				});
+				const narrow = s.width;
+				s.max = 100000;
+				expect(s.width).toBeGreaterThan(narrow);
+				const wider = s.width;
+				s.valueFormat = (v) => {
+					return `${v} points scored`;
+				};
+				expect(s.width).toBeGreaterThan(wider);
+				// and the value text still reads the value
+				s.value = 7;
+				expect(textOf(s.valueText)).toBe("7 points scored");
+			});
+
+			it("a horizontal slider moves its value below the track when it would hit the caption", () => {
+				const short = new UISlider(0, 0, {
+					label: "Vol",
+					showValue: true,
+					length: 200,
+				});
+				const crowded = new UISlider(0, 0, {
+					label: "A very long caption for this slider",
+					showValue: true,
+					valueFormat: (v) => {
+						return `${Math.round(v * 100)} percent`;
+					},
+					length: 200,
+				});
+				expect(crowded.width).toBe(200);
+				expect(crowded.height).toBeGreaterThan(short.height);
+				// shortening the caption brings it back up
+				crowded.labelText = "Vol";
+				crowded.valueFormat = (v) => {
+					return `${Math.round(v * 100)}%`;
+				};
+				expect(crowded.height).toBe(short.height);
+			});
+
+			it("the wheel over a slider in a scrolling panel moves the slider, not the panel", () => {
+				const panel = place(
+					new UIPanel(100, 100, {
+						width: 300,
+						height: 120,
+						layout: "column",
+						gap: 0,
+						scroll: "vertical",
+					}),
+				);
+				const slider = panel.addChild(
+					new UISlider(0, 0, { length: 200, step: 0.1, value: 0.5 }),
+				);
+				for (let i = 0; i < 6; i++) {
+					panel.addChild(box(100, 40));
+				}
+				syncBroadphase();
+				expect(panel.maxScrollY).toBeGreaterThan(0);
+				const b = slider.getBounds();
+				const x = b.centerX;
+				const y = b.centerY;
+				pointer("pointermove", x, y);
+				wheel(x, y, 0, 50);
+				expect(slider.value).not.toBe(0.5);
+				expect(panel.scrollY).toBe(0);
+				// off the slider, the wheel scrolls the panel
+				pointer("pointermove", 380, 200);
+				wheel(380, 200, 50);
+				expect(panel.scrollY).toBeGreaterThan(0);
+			});
+		});
+
+		describe("hover after a click", () => {
+			const makeButton = () => {
+				const b = place(
+					new UITextButton(100, 100, { text: "OK", width: 100, height: 40 }),
+				);
+				return {
+					b,
+					onOver: vi.spyOn(b, "onOver"),
+					onOut: vi.spyOn(b, "onOut"),
+				};
+			};
+
+			it("leaving straight after a click ends the hover", () => {
+				const { b, onOver, onOut } = makeButton();
+				pointer("pointermove", 150, 120);
+				pointer("pointerdown", 150, 120);
+				pointer("pointerup", 150, 120);
+				expect(b.hover).toBe(true);
+				pointer("pointermove", 500, 400);
+				expect(b.hover).toBe(false);
+				expect(onOver).toHaveBeenCalledTimes(1);
+				expect(onOut).toHaveBeenCalledTimes(1);
+			});
+
+			it("moving on over it after a click does not enter it again", () => {
+				const { onOver, onOut } = makeButton();
+				pointer("pointermove", 150, 120);
+				pointer("pointerdown", 150, 120);
+				pointer("pointerup", 150, 120);
+				pointer("pointermove", 152, 121);
+				pointer("pointermove", 154, 122);
+				expect(onOver).toHaveBeenCalledTimes(1);
+				expect(onOut).not.toHaveBeenCalled();
+			});
+
+			it("a second click after the first still presses and releases it", () => {
+				const onClick = vi.fn();
+				const b = place(
+					new UITextButton(100, 100, {
+						text: "OK",
+						width: 100,
+						height: 40,
+						onClick,
+					}),
+				);
+				pointer("pointermove", 150, 120);
+				for (let i = 0; i < 2; i++) {
+					pointer("pointerdown", 150, 120);
+					pointer("pointerup", 150, 120);
+				}
+				expect(onClick).toHaveBeenCalledTimes(2);
+				expect(b.released).toBe(true);
+			});
+
+			it("a tap hovers the button while the finger is down, and not after", () => {
+				const onClick = vi.fn();
+				const b = place(
+					new UITextButton(100, 100, {
+						text: "OK",
+						width: 100,
+						height: 40,
+						onClick,
+					}),
+				);
+				const onOver = vi.spyOn(b, "onOver");
+				const onOut = vi.spyOn(b, "onOut");
+				// a touch: the browser sends enter before the press and leave
+				// after the release, at the finger; each touch has a new id
+				for (const id of [2, 3]) {
+					pointer("pointerenter", 150, 120, id);
+					expect(b.hover).toBe(true);
+					pointer("pointerdown", 150, 120, id);
+					pointer("pointerup", 150, 120, id);
+					pointer("pointerleave", 150, 120, id);
+					expect(b.hover).toBe(false);
+				}
+				expect(onClick).toHaveBeenCalledTimes(2);
+				expect(onOver).toHaveBeenCalledTimes(2);
+				expect(onOut).toHaveBeenCalledTimes(2);
+			});
+
+			it("leaving the canvas ends the hover of a button far from the exit, in a crowded world", () => {
+				// enough renderables for the spatial index to split into quadrants
+				for (let i = 0; i < 40; i++) {
+					const r = box(10, 10);
+					r.pos.set((i % 8) * 100 + 5, Math.floor(i / 8) * 110 + 5);
+					// a kinematic renderable is left out of the index
+					r.isKinematic = false;
+					place(r);
+				}
+				const b = place(
+					new UITextButton(650, 480, { text: "OK", width: 100, height: 40 }),
+				);
+				const onOut = vi.spyOn(b, "onOut");
+				pointer("pointermove", 700, 500);
+				expect(b.hover).toBe(true);
+				// the exit is reported at the far corner of the canvas
+				pointer("pointerleave", 0, 0);
+				expect(b.hover).toBe(false);
+				expect(onOut).toHaveBeenCalledTimes(1);
+			});
+
+			it("a cancelled pointer ends the press and the hover", () => {
+				const { b, onOut } = makeButton();
+				const onRelease = vi.spyOn(b, "onRelease");
+				pointer("pointerenter", 150, 120, 4);
+				pointer("pointerdown", 150, 120, 4);
+				expect(b.hover).toBe(true);
+				app.renderer.getCanvas().dispatchEvent(
+					new PointerEvent("pointercancel", {
+						...at(150, 120),
+						pointerId: 4,
+						isPrimary: true,
+						bubbles: true,
+					}),
+				);
+				expect(b.released).toBe(true);
+				expect(onRelease).toHaveBeenCalledTimes(1);
+				expect(b.hover).toBe(false);
+				expect(onOut).toHaveBeenCalledTimes(1);
+				// the browser's own leave after it changes nothing more
+				pointer("pointerleave", 150, 120, 4);
+				expect(onOut).toHaveBeenCalledTimes(1);
+			});
+
+			it("the pointer leaving the canvas ends the hover, wherever it was", () => {
+				const { b, onOut } = makeButton();
+				pointer("pointermove", 150, 120);
+				expect(b.hover).toBe(true);
+				// the browser reports the exit at the canvas's edge, far from the button
+				pointer("pointerleave", 0, 300);
+				expect(b.hover).toBe(false);
+				expect(onOut).toHaveBeenCalledTimes(1);
+				// and coming back over it enters it again
+				pointer("pointermove", 150, 120);
+				expect(b.hover).toBe(true);
+			});
+		});
+
+		describe("a press stops at a UI element", () => {
+			/** a wide renderable under everything, listening for presses */
+			const listenBehind = () => {
+				const behind = vi.fn();
+				const under = box(800, 600);
+				under.isKinematic = false;
+				under.depth = -10;
+				place(under);
+				input.registerPointerEvent("pointerdown", under, behind);
+				input.registerPointerEvent("pointerup", under, behind);
+				return { behind, under };
+			};
+			const release = (under) => {
+				input.releasePointerEvent("pointerdown", under);
+				input.releasePointerEvent("pointerup", under);
+			};
+			const tap = (x, y) => {
+				pointer("pointermove", x, y);
+				pointer("pointerdown", x, y);
+				pointer("pointerup", x, y);
+			};
+
+			it("a button, a checkbox and a UISpriteElement keep the press from what is behind", () => {
+				const { behind, under } = listenBehind();
+				try {
+					const onClick = vi.fn();
+					place(
+						new UITextButton(100, 100, {
+							text: "OK",
+							width: 80,
+							height: 40,
+							onClick,
+						}),
+					);
+					const cb = place(new UICheckbox(300, 100, { label: "x" }));
+					place(
+						new UISpriteElement(510, 110, { image: makeAtlas(), region: "up" }),
+					);
+					tap(140, 120);
+					tap(310, 110);
+					tap(510, 110);
+					expect(onClick).toHaveBeenCalledTimes(1);
+					expect(cb.checked).toBe(true);
+					expect(behind).not.toHaveBeenCalled();
+					// with no element over it, the game gets the press
+					tap(700, 500);
+					expect(behind).toHaveBeenCalledTimes(2);
+				} finally {
+					release(under);
+				}
+			});
+
+			it("a handler returning true lets the press through", () => {
+				const { behind, under } = listenBehind();
+				try {
+					const icon = place(
+						new UISpriteElement(110, 110, { image: makeAtlas(), region: "up" }),
+					);
+					icon.onClick = () => {
+						return true;
+					};
+					icon.onRelease = () => {
+						return true;
+					};
+					tap(110, 110);
+					expect(behind).toHaveBeenCalledTimes(2);
+				} finally {
+					release(under);
+				}
+			});
+
+			it("a non-blocking panel lets a press on its background through", () => {
+				const { behind, under } = listenBehind();
+				try {
+					place(
+						new UIPanel(100, 100, { width: 200, height: 100, blocking: false }),
+					);
+					tap(150, 150);
+					expect(behind).toHaveBeenCalledTimes(2);
+				} finally {
+					release(under);
+				}
 			});
 		});
 

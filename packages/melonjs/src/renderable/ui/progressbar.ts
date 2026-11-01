@@ -15,7 +15,9 @@ import { PanelPainter } from "./panelpaint.ts";
 type EventName = Parameters<typeof on>[0];
 
 /**
- * which way the fill grows
+ * Which edge a {@link ProgressBar}'s fill grows from: `"left-to-right"`
+ * and `"right-to-left"` for a horizontal bar, `"top-to-bottom"` and
+ * `"bottom-to-top"` for a vertical one.
  * @category UI
  */
 export type ProgressBarDirection =
@@ -25,7 +27,8 @@ export type ProgressBarDirection =
 	| "bottom-to-top";
 
 /**
- * Everything {@link ProgressBar} takes.
+ * The settings a {@link ProgressBar} takes. Only `width` and `height` are
+ * required.
  * @category UI
  */
 export interface ProgressBarSettings {
@@ -33,150 +36,261 @@ export interface ProgressBarSettings {
 	width: number;
 	/** the bar's full height, in pixels */
 	height: number;
-	/** the value that reads as empty */
+	/**
+	 * the value that shows as empty
+	 * @default 0
+	 */
 	min?: number;
-	/** the value that reads as full */
+	/**
+	 * the value that shows as full
+	 * @default 1
+	 */
 	max?: number;
-	/** where to start */
+	/**
+	 * the starting value, clamped between `min` and `max`; `min` if not given
+	 */
 	value?: number;
-	/** which edge the fill grows from */
+	/**
+	 * which edge the fill grows from; see {@link ProgressBarDirection}
+	 * @default "left-to-right"
+	 */
 	direction?: ProgressBarDirection;
-	/** behind the fill; `null` leaves it hollow, showing whatever is behind */
+	/**
+	 * the colour behind the fill; `null` leaves it hollow, showing whatever
+	 * is behind the bar
+	 * @default null
+	 */
 	trackColor?: Paint | null;
 	/**
-	 * the fill itself. A {@link Color} is re-read every frame, so mutating the
-	 * one you passed animates the bar
+	 * The colour of the fill. A {@link Color} is read again every frame, so
+	 * changing the one you passed changes the bar.
+	 * @default "#ffffff"
 	 */
 	fillColor?: Paint;
-	/** drawn around the track; `null` for none */
+	/**
+	 * the colour of the border drawn around the bar; `null` for none
+	 * @default null
+	 */
 	borderColor?: Paint | null;
-	/** how thick that border is */
+	/**
+	 * the border's thickness, in pixels, drawn inside the bar's edge
+	 * @default 1
+	 */
 	borderWidth?: number;
-	/** how far the fill sits inside the track, per side */
+	/**
+	 * the gap between the track's edge and the fill on each side, in pixels
+	 * @default 0
+	 */
 	padding?: number;
-	/** corner radius; `0` is square */
+	/**
+	 * the corner radius, in pixels; `0` is square. The fill's corners are
+	 * reduced by `padding`, so they stay parallel to the track's.
+	 * @default 0
+	 */
 	radius?: number;
 	/**
-	 * A drop shadow under the bar; `null`, the default, for none. Its alpha
-	 * is how dark the shadow gets, e.g. `"#00000066"`.
+	 * The colour of a drop shadow under the bar; `null` for none. Its alpha
+	 * sets how dark the shadow is, e.g. `"#00000066"`.
+	 * @default null
 	 */
 	shadowColor?: Paint | null;
 	/**
-	 * how far right the shadow falls, in pixels
+	 * how far right the shadow falls, in pixels; negative goes left
 	 * @default 0
 	 */
 	shadowOffsetX?: number;
 	/**
-	 * how far down the shadow falls, in pixels
+	 * how far down the shadow falls, in pixels; negative goes up
 	 * @default 4
 	 */
 	shadowOffsetY?: number;
 	/**
-	 * how far the shadow's soft edge spreads, in pixels; `0` is sharp
+	 * how far the shadow's soft edge spreads, in pixels; `0` is a sharp edge
 	 * @default 8
 	 */
 	shadowBlur?: number;
-	/** called whenever the value actually moves */
+	/**
+	 * Called each time the value changes, with the new value, the same as a
+	 * `0..1` fraction of the way from `min` to `max`, and the bar. Not called
+	 * when the value is set to what it already is.
+	 */
 	onChange?: (value: number, ratio: number, bar: ProgressBar) => void;
-	/** draw a label over the bar */
+	/**
+	 * draw a text label centred over the bar
+	 * @default false
+	 */
 	showLabel?: boolean;
-	/** the label's font family */
+	/**
+	 * the label's CSS font family
+	 * @default "sans-serif"
+	 */
 	font?: string;
-	/** the label's font size, in pixels */
+	/**
+	 * the label's text height, in pixels; 70% of the bar's height (at least
+	 * 8), rounded, if not given
+	 */
 	fontSize?: number;
-	/** the label's colour */
+	/**
+	 * the label's colour
+	 * @default "#ffffff"
+	 */
 	labelFillStyle?: Paint;
-	/** what the label says; the default is a rounded percentage */
+	/**
+	 * What the label says, given the value and its `0..1` fraction. The
+	 * default shows a rounded percentage, such as `"75%"`.
+	 */
 	labelFormat?: (value: number, ratio: number) => string;
 	/**
-	 * an event to take the value from, instead of setting it by hand.
-	 *
-	 * The bar subscribes for as long as it exists and unsubscribes when it is
-	 * destroyed, which is the point: a subscription that outlives what it
-	 * drives is a listener writing into a freed object.
+	 * An event to take the value from, instead of setting it by hand: each
+	 * time the event fires, its first argument becomes the value. The bar
+	 * stops listening when it is destroyed.
 	 */
 	bindEvent?: EventName;
 }
 
 /**
- * A bar that shows one value between two bounds.
+ * A bar that shows one value between a minimum and a maximum: a health
+ * bar, a shield or stamina gauge, a cooldown, a loading bar. Set
+ * {@link ProgressBar#value} and it redraws. The engine's own loading screen
+ * uses one.
  *
- * A health bar, a shield gauge, a cooldown, a loading bar: all the same
- * object, and the engine's own loading screen is built on this one. Set
- * {@link ProgressBar#value} and it redraws.
+ * It draws its track, fill, border and optional label itself, as one
+ * renderable, so there is nothing to keep in step.
  *
- * It draws the track, the fill, the border and the label itself, in that
- * order, which is the point of it being ONE renderable rather than a track
- * sprite with a fill sprite on top. Two renderables at the same place have to
- * be told which is in front, and that question has to be answered again every
- * time either one moves.
+ * ## Look
+ * `trackColor` is behind the fill (`null` for a hollow frame), `fillColor`
+ * is the fill, `borderColor` and `borderWidth` draw an outline, `padding`
+ * insets the fill, and `radius` rounds the corners. `direction` sets which
+ * edge the fill grows from, horizontal or vertical.
  *
- * ## The colour can follow the value
+ * ## Value
+ * `min` and `max` set the range (`0` to `1` by default). A value outside it
+ * is clamped. {@link ProgressBar#ratio} gives the value as a `0..1`
+ * fraction. `onChange(value, ratio, bar)` is called whenever the value
+ * changes, and `bindEvent` takes the value from an event.
  *
- * `fillColor` is read at draw time rather than copied, so passing a
- * {@link Color} you keep hold of and mutating it is all a value-driven colour
- * takes. That is deliberately not built in, because every game wants a
- * different rule and most want the colour somewhere else too, next to a shader
- * uniform or a glow:
+ * ## Label
+ * `showLabel` draws text over the bar, a percentage by default; `labelFormat`
+ * changes what it says, and `font`, `fontSize` and `labelFillStyle` how it
+ * looks.
  *
- * ```js
- * const full = new Color().parseCSS("#7fe0ff");
- * const empty = new Color().parseCSS("#ff2a1e");
- * const mixed = new Color();
+ * ## Drop shadow
+ * `shadowColor` draws a soft shadow under the bar; its alpha sets how dark
+ * it is. `shadowOffsetX` and `shadowOffsetY` move it and `shadowBlur`
+ * softens its edge.
  *
- * const shield = new ProgressBar(x, y, {
- *     width: 190, height: 13,
- *     trackColor: null,                          // a hollow frame
- *     borderColor: "rgba(122, 190, 235, 0.8)",
- *     padding: 2,
- *     fillColor: mixed,                          // kept, not copied
- * });
- *
- * // each frame
- * mixed.copy(empty).lerp(full, hp);
- * shield.value = hp;
- * ```
- *
- * Blinking is the same story: {@link Renderable#setOpacity} already does it,
- * on whatever clock the game is already keeping.
+ * ## Colour that follows the value
+ * `fillColor` is read every frame, not copied, so pass a {@link Color} you
+ * keep and change it as the value changes. To make the bar blink, use
+ * {@link Renderable#setOpacity}.
  * @category UI
  * @example
- * // a loading bar
- * const bar = new ProgressBar(0, 100, {
- *     width: renderer.width, height: 4,
- *     trackColor: "black", fillColor: "#55aa00",
+ * // a loading bar, fed by the loader
+ * import { ProgressBar, event } from "melonjs";
+ *
+ * const loading = new ProgressBar(0, 300, {
+ *     width: 800,
+ *     height: 4,
+ *     trackColor: "black",
+ *     fillColor: "#55aa00",
+ *     bindEvent: event.LOADER_PROGRESS,
  * });
- * event.on(event.LOADER_PROGRESS, (progress) => { bar.value = progress; });
+ * app.world.addChild(loading);
  * @example
- * // a label, and a value that is not a fraction
+ * // a health bar with a label, and a range that is not 0 to 1
  * const hp = new ProgressBar(20, 20, {
- *     width: 200, height: 24,
- *     min: 0, max: 100, value: 100,
- *     fillColor: "#c0392b", radius: 6,
+ *     width: 200,
+ *     height: 24,
+ *     min: 0,
+ *     max: 100,
+ *     value: 100,
+ *     trackColor: "#3a1010",
+ *     fillColor: "#c0392b",
+ *     radius: 6,
  *     showLabel: true,
- *     labelFormat: (v) => `${Math.round(v)} HP`,
+ *     labelFormat: (value) => `${Math.round(value)} HP`,
+ * });
+ * // when the player is hit
+ * hp.value -= 15;
+ * @example
+ * // a colour that follows the value, from red when empty to blue when full
+ * import { ProgressBar, Color } from "melonjs";
+ *
+ * const full = new Color().parseCSS("#7fe0ff");
+ * const empty = new Color().parseCSS("#ff2a1e");
+ * const mixed = full.clone();
+ * const shield = new ProgressBar(20, 52, {
+ *     width: 190,
+ *     height: 13,
+ *     value: 1,
+ *     trackColor: null, // a hollow frame
+ *     borderColor: "rgba(122, 190, 235, 0.8)",
+ *     padding: 2,
+ *     radius: 4,
+ *     fillColor: mixed, // kept, not copied
+ *     onChange: (value, ratio) => {
+ *         mixed.copy(empty).lerp(full, ratio);
+ *     },
+ * });
+ * @example
+ * // a vertical bar that fills from the bottom
+ * const power = new ProgressBar(740, 200, {
+ *     width: 16,
+ *     height: 120,
+ *     direction: "bottom-to-top",
+ *     trackColor: "#222222",
+ *     fillColor: "#f1c40f",
+ *     borderColor: "#ffffff",
+ *     borderWidth: 2,
+ *     padding: 3,
+ * });
+ * @example
+ * // a drop shadow under the bar
+ * const xp = new ProgressBar(20, 80, {
+ *     width: 240,
+ *     height: 16,
+ *     trackColor: "#1e1e2e",
+ *     fillColor: "#9b59b6",
+ *     radius: 8,
+ *     shadowColor: "#00000080", // the alpha sets how dark
+ *     shadowOffsetY: 3,
+ *     shadowBlur: 6,
+ * });
+ * @example
+ * // react when the bar is emptied
+ * const timer = new ProgressBar(20, 110, {
+ *     width: 200,
+ *     height: 8,
+ *     value: 1,
+ *     fillColor: "#2ecc71",
+ *     onChange: (value, ratio, bar) => {
+ *         if (ratio === 0) {
+ *             bar.setOpacity(0.5);
+ *             onTimeUp();
+ *         }
+ *     },
  * });
  */
 export default class ProgressBar extends Renderable {
-	/** the value that reads as empty */
+	/** the value that shows as empty */
 	min: number;
-	/** the value that reads as full */
+	/** the value that shows as full */
 	max: number;
-	/** which edge the fill grows from */
+	/** which edge the fill grows from; see {@link ProgressBarDirection} */
 	direction: ProgressBarDirection;
-	/** behind the fill; `null` leaves it hollow */
+	/** the colour behind the fill; `null` leaves it hollow */
 	trackColor: Paint | null;
-	/** the fill. A {@link Color} here is re-read every frame */
+	/** the colour of the fill; a {@link Color} here is read every frame */
 	fillColor: Paint;
-	/** drawn around the track; `null` for none */
+	/** the colour of the border; `null` for none */
 	borderColor: Paint | null;
-	/** how thick that border is */
+	/** the border's thickness, in pixels */
 	borderWidth: number;
-	/** how far the fill sits inside the track, per side */
+	/** the gap between the track's edge and the fill on each side, in pixels */
 	padding: number;
-	/** corner radius; `0` is square */
+	/** the corner radius, in pixels; `0` is square */
 	radius: number;
-	/** a drop shadow under the bar; `null` for none */
+	/** the colour of the drop shadow, its alpha setting how dark; `null` for none */
 	shadowColor: Paint | null;
 	/** how far right the shadow falls, in pixels */
 	shadowOffsetX: number;
@@ -184,13 +298,20 @@ export default class ProgressBar extends Renderable {
 	shadowOffsetY: number;
 	/** how far the shadow's soft edge spreads, in pixels */
 	shadowBlur: number;
-	/** called whenever the value actually moves */
+	/**
+	 * Called each time the value changes, with the new value, its `0..1`
+	 * fraction from `min` to `max`, and the bar.
+	 * @example
+	 * bar.onChange = (value, ratio, bar) => {
+	 *     bar.setOpacity(ratio < 0.25 ? 0.6 : 1);
+	 * };
+	 */
 	onChange?:
 		| ((value: number, ratio: number, bar: ProgressBar) => void)
 		| undefined;
-	/** what the label says */
+	/** builds the label's text from the value and its `0..1` fraction */
 	labelFormat: (value: number, ratio: number) => string;
-	/** the label, when `showLabel` was asked for */
+	/** the label's text object, when `showLabel` was set */
 	label?: Text | undefined;
 	/** the event the value is taken from, if any */
 	readonly bindEvent?: EventName | undefined;
@@ -274,13 +395,13 @@ export default class ProgressBar extends Renderable {
 	}
 
 	/**
-	 * Where the bar is now, between {@link ProgressBar#min} and
-	 * {@link ProgressBar#max}.
-	 *
-	 * Writing a value outside that range clamps rather than throwing, since
-	 * the usual source is a health or a timer that has just gone past its own
-	 * limit. Writing the value it already has does nothing at all, so
-	 * `onChange` means the value MOVED.
+	 * The current value, between {@link ProgressBar#min} and
+	 * {@link ProgressBar#max}. Setting it redraws the bar and updates the
+	 * label. A value outside the range is clamped, and setting the value it
+	 * already has does nothing, so `onChange` only fires on a real change.
+	 * @example
+	 * // a cooldown that refills over 3 seconds
+	 * cooldown.value = Math.min(1, elapsed / 3000);
 	 */
 	get value() {
 		return this._value;
@@ -300,11 +421,8 @@ export default class ProgressBar extends Renderable {
 	}
 
 	/**
-	 * The value as a fraction, `0` at `min` and `1` at `max`.
-	 *
-	 * This is what the fill is drawn from, and what a caller usually wants for
-	 * anything else keyed to the same number. Read only; set
-	 * {@link ProgressBar#value}.
+	 * The value as a fraction, `0` at `min` and `1` at `max`; how full the
+	 * bar is drawn. Read only: set {@link ProgressBar#value} instead.
 	 */
 	get ratio() {
 		const span = this.max - this.min;
