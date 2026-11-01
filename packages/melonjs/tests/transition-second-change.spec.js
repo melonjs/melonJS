@@ -1,4 +1,13 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+	afterAll,
+	afterEach,
+	beforeAll,
+	beforeEach,
+	describe,
+	expect,
+	it,
+	vi,
+} from "vitest";
 import {
 	Application,
 	boot,
@@ -24,9 +33,74 @@ import {
  */
 
 const DURATION = 60;
-// Generous: a covering transition advances on animation frames, and under a
-// full parallel run the browser can go seconds without giving this page one.
-const WAIT = { timeout: 15000 };
+const FRAME = 1000 / 60;
+// how long, in real time, to keep running frames for something to happen: a
+// WebGL renderer can hold a switch while its shaders build
+const LIMIT = 20000;
+
+/*
+ * The game loop is run here, one frame at a time, rather than by the
+ * browser: `requestAnimationFrame` only keeps the engine's frame callback,
+ * and `frame()` calls it with a clock moved on by 1/60 s. Under a full
+ * parallel run the browser can go seconds without giving this page an
+ * animation frame, which timed these tests out (#1817); the engine's own
+ * loop, its timers and deferred switches run as they do in a game.
+ */
+let nextFrame = null;
+let clock = 0;
+
+/** run one frame of the game loop, if it is running, then what it deferred */
+const frame = async () => {
+	const callback = nextFrame;
+	nextFrame = null;
+	if (callback !== null) {
+		clock += FRAME;
+		callback(clock);
+	}
+	// a turn of the event loop, for the timers it queued (a state switch)
+	await new Promise((resolve) => {
+		setTimeout(resolve, 0);
+	});
+};
+
+/** run frames for `ms` of game time */
+const runFor = async (ms) => {
+	for (let t = 0; t < ms; t += FRAME) {
+		await frame();
+	}
+};
+
+/** run frames until `check` passes, or fail with its last error */
+const runUntil = async (check) => {
+	const end = globalThis.performance.now() + LIMIT;
+	while (globalThis.performance.now() < end) {
+		try {
+			check();
+			return;
+		} catch {
+			await frame();
+		}
+	}
+	check();
+};
+
+beforeAll(() => {
+	clock = globalThis.performance.now();
+	vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(
+		(callback) => {
+			nextFrame = callback;
+			return 1;
+		},
+	);
+	vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation(() => {
+		nextFrame = null;
+	});
+});
+
+afterAll(() => {
+	vi.restoreAllMocks();
+});
+
 const covers = {
 	fade: FadeEffect,
 	mask: MaskEffect,
@@ -71,15 +145,13 @@ describe.each([
 	 * camera effect at all, the transition's own or any other
 	 */
 	const settlesOn = async (id) => {
-		await vi.waitFor(() => {
+		await runUntil(() => {
 			expect(state.isCurrent(id)).toBe(true);
 			expect(app.viewport.cameraEffects).toHaveLength(0);
-		}, WAIT);
+		});
 		// and stays so: a cover left behind is persistent, and outlives
 		// the reveal that would otherwise be the last effect to go
-		await new Promise((resolve) => {
-			setTimeout(resolve, DURATION * 3);
-		});
+		await runFor(DURATION * 3);
 		expect(state.isCurrent(id)).toBe(true);
 		expect(app.viewport.cameraEffects).toHaveLength(0);
 	};
@@ -92,6 +164,10 @@ describe.each([
 		start = newState("start");
 		state.setTransition(start, false);
 		state.change(start, true);
+		// the loop running, its warm-up over
+		await runUntil(() => {
+			expect(nextFrame).not.toBeNull();
+		});
 		resets.length = 0;
 		state.transition(
 			type,
@@ -122,9 +198,7 @@ describe.each([
 		const a = newState("a");
 		const b = newState("b");
 		state.change(a);
-		await new Promise((resolve) => {
-			setTimeout(resolve, DURATION / 2);
-		});
+		await runFor(DURATION / 2);
 		expect(state.isCurrent(a)).toBe(false);
 		state.change(b);
 		expect(effects()).toHaveLength(1);
@@ -162,9 +236,9 @@ describe.each([
 		const a = newState("a");
 		const b = newState("b");
 		state.change(a);
-		await vi.waitFor(() => {
+		await runUntil(() => {
 			expect(state.isCurrent(a)).toBe(true);
-		}, WAIT);
+		});
 		// during a's reveal: a change of its own, with a cover of its own
 		state.change(b);
 		await settlesOn(b);
@@ -289,9 +363,9 @@ describe("a transition left covering by a destroyed application", () => {
 		try {
 			// not taken by the dead transition: switched, directly
 			state.change(b);
-			await vi.waitFor(() => {
+			await runUntil(() => {
 				expect(state.isCurrent(b)).toBe(true);
-			}, WAIT);
+			});
 			// and with no reveal of the dead transition's added to this one
 			expect(
 				app.viewport.cameraEffects.filter((fx) => {

@@ -102,16 +102,23 @@ describe("Text — the glyph is baked whole, not clipped", () => {
 		return m.actualBoundingBoxAscent + m.actualBoundingBoxDescent + stroke;
 	};
 
-	it("bakes the whole glyph, stroke included", () => {
-		// The oracle is the ink box the browser reports plus the stroke, which
-		// no metric covers. Anything less means the bake cut the glyph off.
-		const text = stroked();
-
+	/**
+	 * The glyph's ink is as tall as the ink box the browser reports, plus the
+	 * stroke, which no metric covers: anything less means the bake cut it
+	 * off. Within a row: the box is measured on the outline, and how the
+	 * face's hinting rasterizes it can paint one row less (#1817: 58 rows for
+	 * a reported 59 on one machine, with nothing cut).
+	 * @param text - a Text whose offscreen canvas has been baked
+	 */
+	const expectFullHeight = (text) => {
 		const { top, bottom } = inkRows(text);
-
 		expect(bottom - top + 1).toBeGreaterThanOrEqual(
-			Math.floor(expectedInk(text)),
+			Math.floor(expectedInk(text)) - 1,
 		);
+	};
+
+	it("bakes the whole glyph, stroke included", () => {
+		expectFullHeight(stroked());
 	});
 
 	it("keeps the ink inside the canvas at the bottom too", () => {
@@ -126,12 +133,12 @@ describe("Text — the glyph is baked whole, not clipped", () => {
 		// the other half of the bug: a face whose glyphs rise above the em box
 		// overshoots with no stroke involved at all
 		const text = stroked({ lineWidth: 0, size: 64 });
-
-		const { top, bottom } = inkRows(text);
-
-		expect(bottom - top + 1).toBeGreaterThanOrEqual(
-			Math.floor(expectedInk(text)),
-		);
+		expectFullHeight(text);
+		// and with nothing on the canvas's first or last row, where a cut
+		// would leave it
+		const { top, bottom, height } = inkRows(text);
+		expect(top).toBeGreaterThan(0);
+		expect(bottom).toBeLessThan(height - 1);
 	});
 
 	describe("the reported layout box is unchanged", () => {

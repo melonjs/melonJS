@@ -100,6 +100,11 @@ export default defineConfig(() =>
 		// contributor's machine that genuinely has no GL).
 		define: {
 			"import.meta.env.VITE_CI": JSON.stringify(process.env.CI ?? ""),
+			// Benchmarks run only when asked for, with `BENCH=1`: they measure
+			// rather than test, and the heavy ones tie up the browser's shared
+			// GPU process long enough to time out the specs running beside
+			// them (#1817).
+			"import.meta.env.VITE_BENCH": JSON.stringify(process.env.BENCH ?? ""),
 		},
 		publicDir: resolve(__dirname, "tests/public"),
 		plugins: [

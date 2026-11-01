@@ -1115,14 +1115,19 @@ describe("audio backend", () => {
 				{ once: true },
 			);
 			document.dispatchEvent(new Event("click"));
-			await tick();
-			// the hardware is running: a generated tone would be heard here
-			expect(ctx.state).toBe("running");
-			// and so must the engine be, with the clip actually started. The
-			// fixture is ten milliseconds long, so `playing()` is already false
-			// again by now: the "play" event is the record that it started
-			expect(audioEngine.state).toBe("running");
-			expect(played).toHaveBeenCalledTimes(1);
+			// waited for rather than given a fixed time, which a full parallel
+			// run can outlast (#1817): an engine wedged as in the bug never
+			// gets there at all
+			await vi.waitFor(() => {
+				// the hardware is running: a generated tone would be heard here
+				expect(ctx.state).toBe("running");
+				// and so must the engine be, with the clip actually started.
+				// The fixture is ten milliseconds long, so `playing()` is
+				// already false again by now: the "play" event is the record
+				// that it started
+				expect(audioEngine.state).toBe("running");
+				expect(played).toHaveBeenCalledTimes(1);
+			});
 			expect(played.mock.calls[0][0]).toBe(id);
 			delete ctx.state;
 			ctx.suspend = savedSuspend;
