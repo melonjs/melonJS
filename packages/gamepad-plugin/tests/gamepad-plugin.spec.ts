@@ -38,6 +38,11 @@ const poll = (): void => {
 	event.emit(event.GAME_BEFORE_UPDATE, performance.now());
 };
 
+/** the end of the frame's update, when a tap lets go */
+const endFrame = (): void => {
+	event.emit(event.GAME_AFTER_UPDATE, performance.now());
+};
+
 /**
  * send a pointer event to the canvas, at a point in viewport pixels
  * @param type - the event type
@@ -773,6 +778,97 @@ describe("GamepadPlugin", () => {
 			down(1, { x: app.viewport.width - 60, y: 60 });
 			expect(fixed.pointerId).toBe(null);
 			up(1, { x: app.viewport.width - 60, y: 60 });
+		});
+
+		describe("tap", () => {
+			let tapper: VirtualStick;
+			const at = { x: 240, y: 160 };
+
+			beforeEach(() => {
+				gamepad.destroy();
+				gamepad = new GamepadPlugin(
+					{
+						enabled: true,
+						buttons: 0,
+						sticks: [{ floating: true, area: "screen", tap: {} }],
+					},
+					app,
+				);
+				app.draw();
+				tapper = gamepad.sticks[0]!;
+			});
+
+			it("presses FACE_1 for one frame on a quick tap", () => {
+				down(1, at);
+				up(1, at);
+				expect(tapper.tapping).toBe(true);
+				// the frame after the tap sees it
+				poll();
+				expect(input.keyStatus("jump")).toBe(true);
+				endFrame();
+				expect(tapper.tapping).toBe(false);
+				poll();
+				expect(input.keyStatus("jump")).toBe(false);
+			});
+
+			it("presses a key instead, a locked one once", () => {
+				gamepad.destroy();
+				gamepad = new GamepadPlugin(
+					{
+						enabled: true,
+						buttons: 0,
+						sticks: [{ floating: true, area: "screen", tap: { key: KEY.X } }],
+					},
+					app,
+				);
+				app.draw();
+				input.bindKey(KEY.X, "jump", true);
+				down(1, at);
+				up(1, at);
+				// no poll: the key is pressed at once
+				expect(input.isKeyPressed("jump")).toBe(true);
+				expect(input.isKeyPressed("jump")).toBe(false);
+				endFrame();
+				expect(input.keyStatus("jump")).toBe(false);
+				input.bindKey(KEY.X, "jump");
+			});
+
+			it("is not a tap once the thumb has steered", () => {
+				down(1, at);
+				const far = lean(tapper, 0.9, 0);
+				move(1, far.x, far.y);
+				// back to the middle before lifting: it still steered
+				move(1, at.x, at.y);
+				up(1, at);
+				expect(tapper.tapping).toBe(false);
+				poll();
+				expect(input.keyStatus("jump")).toBe(false);
+			});
+
+			it("is not a tap when held too long", () => {
+				const now = vi.spyOn(performance, "now");
+				now.mockReturnValue(1000);
+				down(1, at);
+				now.mockReturnValue(1000 + 400);
+				up(1, at);
+				now.mockRestore();
+				expect(tapper.tapping).toBe(false);
+			});
+
+			it("is not a tap when the touch is cancelled", () => {
+				down(1, at);
+				pointer("pointercancel", 1, at.x, at.y);
+				expect(tapper.tapping).toBe(false);
+			});
+
+			it("lets go of a tap when the controls are switched off", () => {
+				down(1, at);
+				up(1, at);
+				expect(tapper.tapping).toBe(true);
+				gamepad.enabled = false;
+				expect(tapper.tapping).toBe(false);
+				gamepad.enabled = true;
+			});
 		});
 
 		it("reports a second stick on the right axes, with the buttons above it", () => {

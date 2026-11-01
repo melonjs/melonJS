@@ -269,7 +269,7 @@ toggle("floating", false, (on) => {
 		}),
 	});
 });
-toggle("anywhere, hidden at rest", false, (on) => {
+toggle("anywhere, tap for A", false, (on) => {
 	remake({
 		sticks: (options.sticks as object[]).map((stick, i) => {
 			// the first stick only: two sticks cannot both take the screen
@@ -279,6 +279,8 @@ toggle("anywhere, hidden at rest", false, (on) => {
 						floating: on,
 						area: on ? "screen" : "half",
 						hideAtRest: on,
+						// and a quick tap presses A
+						...(on ? { tap: {} } : {}),
 					}
 				: stick;
 		}),

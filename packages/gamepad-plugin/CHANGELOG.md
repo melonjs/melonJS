@@ -5,6 +5,7 @@
 ### Added
 - Sticks: `area`, where a floating stick can be picked up: `"half"`, its half of the screen, as before and still the default; `"screen"`, anywhere not on a button or a fixed stick; or a rectangle in viewport pixels
 - Sticks: `hideAtRest`, to draw a floating stick only while a finger holds it, so it appears under the thumb wherever it lands and is gone once the thumb lifts
+- Sticks: `tap`, so a quick tap that does not steer presses a pad button (`FACE_1` by default) or a key for one frame, as a button would; with `area: "screen"` a game needs no button at all. A cancelled touch is not a tap, and a fading ring shows where one landed
 
 ## [1.0.2] - _2026-10-31_
 

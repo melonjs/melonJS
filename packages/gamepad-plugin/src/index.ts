@@ -7,4 +7,5 @@ export type {
 	StickArea,
 	StickKeys,
 	StickOptions,
+	StickTap,
 } from "./types.ts";
