@@ -113,7 +113,10 @@ It also reuses two CC0 Kenney assets already in this repository: the
 **Space Kit** ships from `public/assets/multiMaterialMesh/` (the 3D cruisers
 flying under the station) and the **Kenney Future** font from
 `public/assets/ui/font/`. The station, the nebula shader and everything else
-are drawn or generated at run time.
+are drawn or generated at run time. The levels in
+`public/assets/starsweep/levels/` are Tiled maps made for this example, and
+their tileset image `starsweep-tiles.png` was drawn for it too; both are
+covered by the MIT license above.
 
 ### `materialTextures` example
 

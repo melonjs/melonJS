@@ -7,7 +7,9 @@
  * sliding, conveyor pads push you, damaged panels drop away behind you.
  * Zap the monsters, grab power-ups, and don't fall off into space.
  *
- * Portrait, for phones held upright. On touch screens the
+ * The levels are Tiled maps (`public/assets/starsweep/levels/*.tmj`),
+ * loaded with the engine's Tiled loader: see `levels.ts` for how to edit
+ * them. Portrait, for phones held upright. On touch screens the
  * `@melonjs/gamepad-plugin` virtual gamepad (a stick and a ZAP button)
  * sits under the board and presses the same keys as the keyboard.
  *
@@ -27,6 +29,14 @@ import { ATLAS } from "./characters";
 import { FONT } from "./draw";
 import { HEIGHT, HISCORE_KEY, WIDTH } from "./field";
 import { CRUISER_BASE, CRUISER_MODELS } from "./fx";
+import {
+	LEVEL_FILES,
+	LEVELS,
+	levelFromTiled,
+	TILESET_FILE,
+	type TiledMap,
+	type TiledTileset,
+} from "./levels";
 import { controls, PlayScreen, TitleScreen } from "./scenes";
 
 const createGame = async () => {
@@ -45,6 +55,7 @@ const createGame = async () => {
 	save.add({ [HISCORE_KEY]: 0 });
 
 	const base = import.meta.env.BASE_URL;
+	const levels = `${base}assets/starsweep/levels/`;
 	await loader.preload([
 		{ name: ATLAS, type: "image", src: `${base}assets/starsweep/monsters.png` },
 		// Kenney Future (CC0), shared with the UI example
@@ -58,7 +69,21 @@ const createGame = async () => {
 			{ name, type: "obj", src: `${base}${CRUISER_BASE}${name}.obj` },
 			{ name, type: "mtl", src: `${base}${CRUISER_BASE}${name}.mtl` },
 		]),
+		// the levels, edited in Tiled, and the tileset they share
+		{ name: TILESET_FILE, type: "tsx", src: `${levels}${TILESET_FILE}.tsj` },
+		...LEVEL_FILES.map((name) => ({
+			name,
+			type: "tmx",
+			src: `${levels}${name}.tmj`,
+		})),
 	]);
+
+	// turn each Tiled map into a level the game can play
+	const tileset = loader.getTMX(TILESET_FILE) as TiledTileset;
+	LEVELS.length = 0;
+	for (const name of LEVEL_FILES) {
+		LEVELS.push(levelFromTiled(loader.getTMX(name) as TiledMap, tileset, name));
+	}
 
 	state.set(state.MENU, new TitleScreen());
 	state.set(state.PLAY, new PlayScreen());

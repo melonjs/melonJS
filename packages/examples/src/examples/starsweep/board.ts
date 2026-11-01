@@ -69,6 +69,9 @@ export const parseMap = (rows: readonly string[]): ParsedMap => {
 				throw new Error(`unknown map char "${ch}" at ${x},${y}`);
 			}
 			if (ch === "P") {
+				if (start) {
+					throw new Error(`more than one start tile (P), at ${x},${y}`);
+				}
 				start = { x, y };
 			}
 			if (tile === Tile.NEST) {

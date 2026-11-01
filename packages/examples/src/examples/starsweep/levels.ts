@@ -1,14 +1,25 @@
 /**
- * melonJS — Starsweep: the levels.
+ * melonJS — Starsweep: the levels, made in the Tiled map editor.
  *
- * Map legend (11 wide x 15 tall, portrait):
- *   ` ` void (fall in and you lose a life)   `#` wall
- *   `.` deck panel   `~` frozen panel (you slide)   `^ > v <` conveyor pads
- *   `%` damaged panel (drops away behind you, comes back powered)
- *   `P` where you start   `E` monster portal (enemies come out of these)
+ * Each level is a Tiled map in `public/assets/starsweep/levels/`
+ * (`level01.tmj` …), 11 tiles wide and 15 tall, all sharing the
+ * `starsweep-tiles.tsj` tileset. Open one in Tiled (mapeditor.org),
+ * paint, save, reload the game. Adding a level is adding a map and its
+ * name to {@link LEVEL_FILES}.
  *
- * Every map is checked by `levels.test.ts`: all tiles reachable, no move
- * that never ends, and no resting spot you cannot leave safely.
+ * - The `station` tile layer is the board. Every tile in the tileset has
+ *   a `kind` property: `wall`, `floor`, `ice`, `arrow-up` / `-right` /
+ *   `-down` / `-left`, `crack`, `portal` (monsters come out) and `start`
+ *   (where Bolt begins, exactly one). An empty cell is open space.
+ * - The map's custom properties set the rest: `name`, `hint`, `theme`
+ *   (one of {@link THEMES}), `enemies` (the order monsters come out in,
+ *   comma separated: `wobbler`, `muncher`, `chaser`), `maxEnemies`,
+ *   `spawnEvery` (seconds) and `par` (seconds, for the time bonus).
+ *
+ * The maps are turned into the same text rows the game always used (see
+ * `board.ts` for the characters), so `levels.test.ts` checks the Tiled
+ * files themselves: every panel reachable, no move that never ends, no
+ * resting spot you cannot leave safely.
  *
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
@@ -46,7 +57,7 @@ export interface LevelDef {
 	par: number;
 }
 
-const THEMES = {
+export const THEMES = {
 	cyan: {
 		lit: "#2ee6d6",
 		litHi: "#b8fff6",
@@ -97,213 +108,151 @@ const THEMES = {
 	},
 } satisfies Record<string, Theme>;
 
-export const LEVELS: readonly LevelDef[] = [
-	{
-		name: "Docking Bay",
-		hint: "Walk over every panel to power it up",
-		theme: THEMES.cyan,
-		enemies: ["wobbler"],
-		maxEnemies: 2,
-		spawnEvery: 6,
-		par: 60,
-		map: [
-			"           ",
-			" ......... ",
-			" .#.#.#.#. ",
-			" ......... ",
-			" .#.#.#.#. ",
-			" ......... ",
-			" .#.#.#.#. ",
-			" ....P...E ",
-			" .#.#.#.#. ",
-			" ......... ",
-			" .#.#.#.#. ",
-			" ......... ",
-			" .#.#.#.#. ",
-			" ......... ",
-			"           ",
-		],
-	},
-	{
-		name: "Cryo Deck",
-		hint: "Frozen panels keep you sliding until you bump into something",
-		theme: THEMES.pink,
-		enemies: ["wobbler"],
-		maxEnemies: 3,
-		spawnEvery: 5.5,
-		par: 65,
-		map: [
-			"           ",
-			" ######### ",
-			" #.......# ",
-			" #.~~#~~.# ",
-			" #.~...~.# ",
-			" #.~...~.# ",
-			" #.~.P.~.# ",
-			" #.#...#.# ",
-			" #.~.E.~.# ",
-			" #.~...~.# ",
-			" #.~...~.# ",
-			" #.~~#~~.# ",
-			" #.......# ",
-			" ######### ",
-			"           ",
-		],
-	},
-	{
-		name: "Cargo Belts",
-		hint: "Conveyor pads push you along. Munchers eat the power back up!",
-		theme: THEMES.lime,
-		enemies: ["wobbler", "muncher"],
-		maxEnemies: 3,
-		spawnEvery: 5,
-		par: 70,
-		map: [
-			"           ",
-			" ......... ",
-			" .#<<<<<#. ",
-			" ......... ",
-			" v#.#.#.#^ ",
-			" v#.....#^ ",
-			" v#.#P#.#^ ",
-			" v#.....#^ ",
-			" v#.#E#.#^ ",
-			" v#.....#^ ",
-			" v#.#.#.#^ ",
-			" ......... ",
-			" .#>>>>>#. ",
-			" ......... ",
-			"           ",
-		],
-	},
-	{
-		name: "Rusty Gantries",
-		hint: "Damaged panels drop away behind you, then get repaired",
-		theme: THEMES.amber,
-		enemies: ["wobbler", "chaser"],
-		maxEnemies: 3,
-		spawnEvery: 5,
-		par: 75,
-		map: [
-			"           ",
-			" .... .... ",
-			" .##.%.##. ",
-			" .#..%..#. ",
-			" ....%.... ",
-			"  %  %  %  ",
-			"  %  %  %  ",
-			"  %%%P%%%E ",
-			"  %  %  %  ",
-			"  %  %  %  ",
-			" ....%.... ",
-			" .#..%..#. ",
-			" .##.%.##. ",
-			" .... .... ",
-			"           ",
-		],
-	},
-	{
-		name: "Coolant Leak",
-		hint: "Plan your slides. Space is a long way down",
-		theme: THEMES.violet,
-		enemies: ["wobbler", "muncher", "chaser"],
-		maxEnemies: 3,
-		spawnEvery: 5,
-		par: 80,
-		map: [
-			"           ",
-			" ######### ",
-			" #~~~.~~~# ",
-			" #~#~~~#~# ",
-			" #~~.~.~~# ",
-			" #~~~~~~~# ",
-			" #~~~.~~~# ",
-			" #.~#P#~E# ",
-			" #~~~.~~~# ",
-			" #~~~~~~~# ",
-			" #~~.~.~~# ",
-			" #~#~~~#~# ",
-			" #~~~.~~~# ",
-			" ######### ",
-			"           ",
-		],
-	},
-	{
-		name: "Reactor Gears",
-		hint: "The pads spin you round the gears. Chasers come for you!",
-		theme: THEMES.coral,
-		enemies: ["muncher", "wobbler", "chaser"],
-		maxEnemies: 4,
-		spawnEvery: 4.5,
-		par: 85,
-		map: [
-			"           ",
-			" ......... ",
-			" ..<<..<<. ",
-			" .v#^.v#^. ",
-			" .>>^.>>^. ",
-			" ......... ",
-			" ..#.#.#.. ",
-			" ..#.P.#E. ",
-			" ..#.#.#.. ",
-			" ......... ",
-			" ..<<..<<. ",
-			" .v#^.v#^. ",
-			" .>>^.>>^. ",
-			" ......... ",
-			"           ",
-		],
-	},
-	{
-		name: "Asteroid Hop",
-		hint: "Islands, gantries and a lot of empty space",
-		theme: THEMES.lime,
-		enemies: ["chaser", "muncher", "wobbler"],
-		maxEnemies: 4,
-		spawnEvery: 4.5,
-		par: 90,
-		map: [
-			"           ",
-			" ... ... . ",
-			" .E.%.~.%. ",
-			" ... ... . ",
-			"  %   %  % ",
-			"  %   %  % ",
-			" ... ... . ",
-			" .~.%P..%. ",
-			" ... ... . ",
-			"  %   %  % ",
-			"  %   %  % ",
-			" ... ... . ",
-			" .E.%.~.%. ",
-			" ... ... . ",
-			"           ",
-		],
-	},
-	{
-		name: "Core Station",
-		hint: "Everything at once. Good luck!",
-		theme: THEMES.cyan,
-		enemies: ["chaser", "muncher", "wobbler", "muncher"],
-		maxEnemies: 5,
-		spawnEvery: 4,
-		par: 100,
-		map: [
-			"           ",
-			" ...<<<... ",
-			" .##...##. ",
-			" .#~~.~~#. ",
-			" ..~#.#~.. ",
-			" v.~~%~~.^ ",
-			" v...%...^ ",
-			" v.%%P%%.E ",
-			" v...%...^ ",
-			" v.~~%~~.^ ",
-			" ..~#.#~.. ",
-			" .#~~.~~#. ",
-			" .##...##. ",
-			" ...>>>... ",
-			"           ",
-		],
-	},
-];
+/** the level maps, in play order: `public/assets/starsweep/levels/<name>.tmj` */
+export const LEVEL_FILES = [
+	"level01",
+	"level02",
+	"level03",
+	"level04",
+	"level05",
+	"level06",
+	"level07",
+	"level08",
+] as const;
+
+/** the tileset every map uses: `public/assets/starsweep/levels/<name>.tsj` */
+export const TILESET_FILE = "starsweep-tiles";
+
+/** the subset of Tiled's JSON map format read here */
+export interface TiledProperty {
+	name: string;
+	type?: string;
+	value: unknown;
+}
+
+export interface TiledMap {
+	width: number;
+	height: number;
+	layers: { type: string; name: string; data?: number[] }[];
+	tilesets: { firstgid: number; source?: string }[];
+	properties?: TiledProperty[];
+}
+
+export interface TiledTileset {
+	tiles?: { id: number; properties?: TiledProperty[] }[];
+}
+
+/** tileset `kind` → the board character it stands for */
+const KIND_CHARS: Record<string, string> = {
+	wall: "#",
+	floor: ".",
+	ice: "~",
+	"arrow-up": "^",
+	"arrow-right": ">",
+	"arrow-down": "v",
+	"arrow-left": "<",
+	crack: "%",
+	portal: "E",
+	start: "P",
+};
+
+const ENEMY_KINDS: readonly EnemyKind[] = ["wobbler", "muncher", "chaser"];
+
+// Tiled keeps flip and rotation flags in the top bits of a gid
+const GID_MASK = 0x0fffffff;
+
+/**
+ * Turn a Tiled map (and the tileset it uses) into a level.
+ * @param map - the parsed `.tmj`
+ * @param tileset - the parsed `.tsj`
+ * @param file - the map's name, for error messages
+ */
+export const levelFromTiled = (
+	map: TiledMap,
+	tileset: TiledTileset,
+	file: string,
+): LevelDef => {
+	const fail = (why: string): never => {
+		throw new Error(`${file}: ${why}`);
+	};
+	const prop = (props: TiledProperty[] | undefined, name: string) =>
+		props?.find((p) => p.name === name)?.value;
+
+	const chars = new Map<number, string>();
+	for (const tile of tileset.tiles ?? []) {
+		const kind = prop(tile.properties, "kind");
+		const ch = typeof kind === "string" ? KIND_CHARS[kind] : undefined;
+		if (ch === undefined) {
+			fail(`tileset tile ${tile.id} has no known "kind" (got ${String(kind)})`);
+		} else {
+			chars.set(tile.id, ch);
+		}
+	}
+
+	const layer =
+		map.layers.find((l) => l.type === "tilelayer" && l.name === "station") ??
+		map.layers.find((l) => l.type === "tilelayer");
+	if (!layer?.data) {
+		return fail('no "station" tile layer');
+	}
+	const data = layer.data;
+	const firstgid = map.tilesets[0]?.firstgid ?? 1;
+	const rows: string[] = [];
+	for (let y = 0; y < map.height; y++) {
+		let row = "";
+		for (let x = 0; x < map.width; x++) {
+			const gid = data[y * map.width + x] & GID_MASK;
+			if (gid === 0) {
+				row += " ";
+				continue;
+			}
+			const ch = chars.get(gid - firstgid);
+			if (ch === undefined) {
+				fail(`tile ${x},${y} uses gid ${gid}, which is not in the tileset`);
+			}
+			row += ch;
+		}
+		rows.push(row);
+	}
+
+	const props = map.properties;
+	const text = (name: string, fallback?: string) => {
+		const v = prop(props, name) ?? fallback;
+		return typeof v === "string" ? v : fail(`missing "${name}" property`);
+	};
+	const num = (name: string, fallback: number) => {
+		const v = prop(props, name) ?? fallback;
+		return typeof v === "number" ? v : fail(`"${name}" must be a number`);
+	};
+
+	const themeName = text("theme", "cyan");
+	const theme = (THEMES as Record<string, Theme>)[themeName];
+	if (!theme) {
+		fail(
+			`unknown theme "${themeName}" (try ${Object.keys(THEMES).join(", ")})`,
+		);
+	}
+	const enemies = text("enemies", "wobbler")
+		.split(",")
+		.map((e) => e.trim())
+		.filter(Boolean) as EnemyKind[];
+	for (const e of enemies) {
+		if (!ENEMY_KINDS.includes(e)) {
+			fail(`unknown enemy "${e}" (try ${ENEMY_KINDS.join(", ")})`);
+		}
+	}
+
+	return {
+		name: text("name", file),
+		hint: text("hint", ""),
+		map: rows,
+		theme,
+		enemies: enemies.length > 0 ? enemies : ["wobbler"],
+		maxEnemies: num("maxEnemies", 3),
+		spawnEvery: num("spawnEvery", 5),
+		par: num("par", 80),
+	};
+};
+
+/** the levels in play order, filled from the Tiled maps once they load */
+export const LEVELS: LevelDef[] = [];

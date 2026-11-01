@@ -2,7 +2,8 @@
  * melonJS — Starsweep: checks that every level can be cleared.
  *
  * Run with `npx tsx src/examples/starsweep/levels.test.ts` from
- * `packages/examples`. Exits non-zero on the first broken level.
+ * `packages/examples`, after editing a level in Tiled. It reads the very
+ * `.tmj` files the game loads, and exits non-zero if any level is broken.
  *
  * For each map it walks every place the player can come to rest, following
  * the same ice and arrow rules as the game (`traceMove`), and checks:
@@ -13,6 +14,8 @@
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
+
+import { readFileSync } from "node:fs";
 import {
 	COLS,
 	type Dir,
@@ -21,14 +24,44 @@ import {
 	ROWS,
 	traceMove,
 } from "./board.ts";
-import { LEVELS } from "./levels.ts";
+import {
+	LEVEL_FILES,
+	type LevelDef,
+	levelFromTiled,
+	TILESET_FILE,
+} from "./levels.ts";
 
+const DIR = new URL(
+	"../../../public/assets/starsweep/levels/",
+	import.meta.url,
+);
+const readJson = (name: string) =>
+	JSON.parse(readFileSync(new URL(name, DIR), "utf8"));
+
+const tileset = readJson(`${TILESET_FILE}.tsj`);
 let failed = false;
+const LEVELS: LevelDef[] = [];
+for (const file of LEVEL_FILES) {
+	try {
+		LEVELS.push(levelFromTiled(readJson(`${file}.tmj`), tileset, file));
+	} catch (e) {
+		failed = true;
+		console.error(`FAIL ${(e as Error).message}`);
+	}
+}
 
 for (const [i, level] of LEVELS.entries()) {
 	const label = `level ${i + 1} "${level.name}"`;
 	const errors: string[] = [];
-	const { tiles, start } = parseMap(level.map);
+	let parsed: ReturnType<typeof parseMap>;
+	try {
+		parsed = parseMap(level.map);
+	} catch (e) {
+		failed = true;
+		console.error(`FAIL ${label}: ${(e as Error).message}`);
+		continue;
+	}
+	const { tiles, start } = parsed;
 	const key = (x: number, y: number) => y * COLS + x;
 
 	const touched = new Set<number>([key(start.x, start.y)]);
