@@ -691,6 +691,90 @@ describe("GamepadPlugin", () => {
 			up(2, { x: app.viewport.width - 60, y: 60 });
 		});
 
+		it("picks up a floating stick anywhere on the screen, buttons first", () => {
+			gamepad.destroy();
+			gamepad = new GamepadPlugin(
+				{
+					enabled: true,
+					buttons: 1,
+					sticks: [{ floating: true, area: "screen" }],
+				},
+				app,
+			);
+			app.draw();
+			const [anywhere] = gamepad.sticks;
+			const [onTop] = gamepad.buttons;
+			// the right half too, which a plain floating stick leaves alone
+			const far = { x: app.viewport.width - 60, y: 60 };
+			down(1, far);
+			expect(anywhere.pointerId).toBe(1);
+			expect(anywhere.center).toEqual(far);
+			up(1, far);
+			// a button is still a button
+			down(2, onTop.center);
+			expect(onTop.pressed).toBe(true);
+			expect(anywhere.pointerId).toBe(null);
+			up(2, onTop.center);
+		});
+
+		it("picks up a floating stick only inside its area", () => {
+			gamepad.destroy();
+			const area = { x: 0, y: 200, width: 240, height: 120 };
+			gamepad = new GamepadPlugin(
+				{ enabled: true, buttons: 0, sticks: [{ floating: true, area }] },
+				app,
+			);
+			app.draw();
+			const [zoned] = gamepad.sticks;
+			down(1, { x: 100, y: 100 });
+			expect(zoned.pointerId).toBe(null);
+			up(1, { x: 100, y: 100 });
+			down(2, { x: 100, y: 250 });
+			expect(zoned.pointerId).toBe(2);
+			expect(zoned.center).toEqual({ x: 100, y: 250 });
+			up(2, { x: 100, y: 250 });
+		});
+
+		it("draws a stick hidden at rest only while it is held", () => {
+			gamepad.destroy();
+			gamepad = new GamepadPlugin(
+				{
+					enabled: true,
+					buttons: 0,
+					sticks: [{ floating: true, area: "screen", hideAtRest: true }],
+				},
+				app,
+			);
+			const overlay = new ColorLayer("overlay", "#000000");
+			app.world.addChild(overlay, 999_999);
+			app.draw();
+			const [hidden] = gamepad.sticks;
+			const home = { ...hidden.center };
+			// nothing in its corner at rest
+			expect(pixel(home.x, home.y)[0]).toBe(0);
+			// under the thumb while held
+			const at = { x: 240, y: 120 };
+			down(1, at);
+			expect(pixel(at.x, at.y)[0]).toBeGreaterThan(40);
+			up(1, at);
+			expect(pixel(at.x, at.y)[0]).toBe(0);
+			app.world.removeChild(overlay);
+		});
+
+		it("ignores the floating-only options on a fixed stick", () => {
+			gamepad.destroy();
+			gamepad = new GamepadPlugin(
+				{ enabled: true, sticks: [{ area: "screen", hideAtRest: true }] },
+				app,
+			);
+			app.draw();
+			const [fixed] = gamepad.sticks;
+			expect(fixed.hideAtRest).toBe(false);
+			down(1, { x: app.viewport.width - 60, y: 60 });
+			expect(fixed.pointerId).toBe(null);
+			up(1, { x: app.viewport.width - 60, y: 60 });
+		});
+
 		it("reports a second stick on the right axes, with the buttons above it", () => {
 			gamepad.destroy();
 			gamepad = new GamepadPlugin({ enabled: true, sticks: 2 }, app);

@@ -269,6 +269,21 @@ toggle("floating", false, (on) => {
 		}),
 	});
 });
+toggle("anywhere, hidden at rest", false, (on) => {
+	remake({
+		sticks: (options.sticks as object[]).map((stick, i) => {
+			// the first stick only: two sticks cannot both take the screen
+			return i === 0
+				? {
+						...stick,
+						floating: on,
+						area: on ? "screen" : "half",
+						hideAtRest: on,
+					}
+				: stick;
+		}),
+	});
+});
 toggle("hide on pad", true, (on) => {
 	remake({ hideOnGamepad: on });
 });
