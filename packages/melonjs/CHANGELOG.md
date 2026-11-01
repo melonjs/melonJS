@@ -25,6 +25,7 @@
 - UI: `UITextButton#bitmapText`, for `label`
 
 ### Fixed
+- Rendering: on WebGL and WebGPU, a clip inside a clip is the overlap of the two, as it already was on Canvas. A clipping container nested in another, or a scrolling `UIPanel` in a clipping parent, drew past the outer clip wherever it stuck out of it, because the inner `clipRect` replaced the outer scissor ([#1816](https://github.com/melonjs/melonJS/issues/1816)). The clipping example shows the case
 - UI: a radio group holds one choice from when its checkboxes are made, not only once they are in the scene: before, several could be checked at once until they were added, and `UICheckbox.checkedIn()` answered `undefined`. A checkbox leaves its group when destroyed; groups hold their members weakly, so one dropped without being destroyed can still be collected
 - UI: `UICheckbox#toggle()` on a checked radio button leaves it checked, as a click does, instead of leaving its group with nothing checked
 - UI: `UIPanel#scrollTo()` (and `scrollToChild`, `scrollX` / `scrollY`) stops a fling that is still coasting, instead of the fling carrying on from the new offset

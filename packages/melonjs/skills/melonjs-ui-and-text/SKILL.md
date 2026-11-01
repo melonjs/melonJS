@@ -608,8 +608,8 @@ What to know:
   your own that is dragged too, a knob or a colour picker, sets
   `keepsDrag = true` to keep its drags.
 - Children scrolled out of view do not get pointer events. A scrolling panel
-  inside another scrolls alone, but nesting is not supported beyond that: on
-  WebGL the inner one is cropped to its own area only, not to the outer one.
+  inside another scrolls alone, and is cropped to both: a clip inside a clip
+  is the overlap of the two, on Canvas, WebGL and WebGPU alike.
 - A draggable panel is moved by its title or its frame. A press on a widget
   on it is the widget's.
 

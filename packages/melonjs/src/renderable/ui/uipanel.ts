@@ -324,9 +324,9 @@ const MIN_SPEED = 0.02;
  *   coordinates, over the scene. With a `Camera3d`, floating children are
  *   sorted the other way round: the SMALLER depth draws on top, so add a
  *   dialog at a depth of 0 or 1, not 9000.
- * - On WebGL and WebGPU, a scrolling panel inside another clipping container
- *   (such as another scrolling panel) is cropped to its own area only, not
- *   to the outer container's.
+ * - A scrolling panel inside another clipping container (such as another
+ *   scrolling panel) is cropped to both: its rows show only where the two
+ *   overlap, on every renderer.
  * @category UI
  * @example
  * // a drawn dialog, with no assets

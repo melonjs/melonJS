@@ -3495,15 +3495,10 @@ export default class WebGPURenderer extends Renderer {
 	 */
 	clipRect(x, y, width, height) {
 		const canvas = this.getCanvas();
-		// treat a non-finite transform as "no clip"
+		// treat a non-finite transform as "no further clip": the clip
+		// already active, if any, stays, as a clip can only narrow
 		const m = this.currentTransform;
 		if (!Number.isFinite(m.tx) || !Number.isFinite(m.ty)) {
-			if (this.scissorActive) {
-				// drain pending vertices under the active scissor first
-				this.currentBatcher?.flush();
-				this.scissorActive = false;
-				this.applyScissor();
-			}
 			return;
 		}
 
@@ -3522,7 +3517,23 @@ export default class WebGPURenderer extends Renderer {
 		let sw = snap ? Math.round(aabb.max.x) - sx : Math.ceil(aabb.max.x - sx);
 		let sh = snap ? Math.round(aabb.max.y) - sy : Math.ceil(aabb.max.y - sy);
 
-		// full-canvas coverage → caller intent is "no clip"
+		// a clip inside a clip is the overlap of the two, as Canvas's
+		// `context.clip()` is; `save()` / `restore()` bring the outer back
+		if (this.scissorActive) {
+			const cs = this.currentScissor;
+			const left = Math.max(sx, cs[0]);
+			const top = Math.max(sy, cs[1]);
+			const right = Math.min(sx + sw, cs[0] + cs[2]);
+			const bottom = Math.min(sy + sh, cs[1] + cs[3]);
+			sx = left;
+			sy = top;
+			// no overlap: an empty scissor, so nothing draws
+			sw = Math.max(0, right - left);
+			sh = Math.max(0, bottom - top);
+		}
+
+		// full-canvas coverage → caller intent is "no clip" (with a clip
+		// already active, only when that clip covered the canvas too)
 		if (
 			sx <= 0 &&
 			sy <= 0 &&
