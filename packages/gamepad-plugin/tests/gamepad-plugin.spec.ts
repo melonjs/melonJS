@@ -392,6 +392,21 @@ describe("GamepadPlugin", () => {
 		expect(touchAt(app.viewport.width / 2, 20).defaultPrevented).toBe(false);
 	});
 
+	it("blocks Safari's pinch gesture only while the controls show", () => {
+		const gesture = () => {
+			const e = new Event("gesturestart", { bubbles: true, cancelable: true });
+			canvas.dispatchEvent(e);
+			return e.defaultPrevented;
+		};
+		expect(gesture()).toBe(true);
+		gamepad.enabled = false;
+		expect(gesture()).toBe(false);
+		gamepad.enabled = true;
+		gamepad.destroy();
+		expect(gesture()).toBe(false);
+		gamepad = new GamepadPlugin({ enabled: true, buttons: 2 }, app);
+	});
+
 	it("blocks the context menu only while the controls show", () => {
 		const menu = (): boolean => {
 			const e = new MouseEvent("contextmenu", {

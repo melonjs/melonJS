@@ -85,6 +85,15 @@ const NO_SELECTION: [string, string][] = [
 	["-webkit-tap-highlight-color", "transparent"],
 ];
 
+/**
+ * Safari's own pinch and rotate events, on iOS. Two fingers down start
+ * them even over a canvas with `touch-action: none`, and while one runs it
+ * can take a finger for itself, so a second finger never reaches the
+ * controls: left uncancelled, a stick held by one thumb would only
+ * sometimes let the other thumb press a button.
+ */
+const GESTURE_EVENTS = ["gesturestart", "gesturechange", "gestureend"] as const;
+
 const POINTER_EVENTS = [
 	"pointerdown",
 	"pointermove",
@@ -428,6 +437,12 @@ export class GamepadPlugin extends plugin.BasePlugin {
 			capture: true,
 			passive: false,
 		});
+		for (const type of GESTURE_EVENTS) {
+			this.target.addEventListener(type, this.onGesture, {
+				capture: true,
+				passive: false,
+			});
+		}
 		canvas.addEventListener("contextmenu", this.onContextMenu);
 		this.savedStyles = NO_SELECTION.map(([name, value]) => {
 			const saved: [string, string] = [
@@ -455,6 +470,9 @@ export class GamepadPlugin extends plugin.BasePlugin {
 		this.target?.removeEventListener("touchstart", this.onTouchStart, {
 			capture: true,
 		});
+		for (const type of GESTURE_EVENTS) {
+			this.target?.removeEventListener(type, this.onGesture, { capture: true });
+		}
 		this.target = null;
 		if (this.app.isInitialized) {
 			const canvas = this.app.renderer.getCanvas();
@@ -478,6 +496,13 @@ export class GamepadPlugin extends plugin.BasePlugin {
 				e.preventDefault();
 				return;
 			}
+		}
+	};
+
+	/** keep Safari from pinching or rotating while the controls show */
+	private readonly onGesture = (e: Event): void => {
+		if (this.visible && e.cancelable) {
+			e.preventDefault();
 		}
 	};
 
