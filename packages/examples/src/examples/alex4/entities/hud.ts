@@ -5,7 +5,7 @@
  * game it is ported from — see `packages/examples/LICENSE.md`.
  */
 import { BitmapText, Container, Sprite, Tween, UIPanel } from "melonjs";
-import { HEIGHT, PALETTE, WIDTH } from "../constants";
+import { HEIGHT, PALETTE, rgba, WIDTH } from "../constants";
 import { gameState } from "../gameState";
 import { shaders } from "../shaders";
 import { wave } from "./effects";
@@ -280,7 +280,7 @@ export class PauseMessage extends Container {
 			new UIPanel(0, 0, {
 				width: WIDTH,
 				height: HEIGHT,
-				fillColor: "rgba(12, 68, 0, 0.55)",
+				fillColor: rgba(PALETTE[0], 0.55),
 				borderColor: null,
 			}),
 		);

@@ -11,16 +11,15 @@ import {
 	Rect,
 	Renderable,
 	Sprite,
-	state,
 	type TMXLayer,
 	type TMXObject,
 	Trigger,
 } from "melonjs";
 import { gameState } from "../gameState";
-import type { PlayScreen } from "../screens/play";
+import { playScreen } from "../screens/current";
 import { burst, shake } from "./effects";
 import { nearScreen } from "./enemies";
-import { PlayerEntity, type Touch } from "./player";
+import { type Hazard, PlayerEntity, type Touch } from "./player";
 import { CannonBall } from "./projectiles";
 
 /************************************************************************************/
@@ -28,7 +27,7 @@ import { CannonBall } from "./projectiles";
 /*      spikes: instant death                                                       */
 /*                                                                                  */
 /************************************************************************************/
-export class SpikeEntity extends Renderable {
+export class SpikeEntity extends Renderable implements Hazard {
 	constructor(x: number, y: number, settings: TMXObject) {
 		super(x, y, settings.width, settings.height);
 		this.anchorPoint.set(0, 0);
@@ -199,7 +198,7 @@ export class ExitEntity extends Trigger {
 	override triggerEvent() {
 		if (!this.reached) {
 			this.reached = true;
-			(state.current() as PlayScreen).onLevelComplete();
+			playScreen().onLevelComplete();
 		}
 	}
 }

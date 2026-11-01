@@ -16,17 +16,16 @@ import {
 	Rect,
 	type Renderable,
 	Sprite,
-	state,
 	type TMXObject,
 	Trail,
 	Tween,
 	Vector2d,
 } from "melonjs";
-import { HEIGHT, jumpSpeed, PALETTE, TICK } from "../constants";
+import { HEIGHT, jumpSpeed, PALETTE, SCALE, TICK } from "../constants";
 import { rumble } from "../gamepad";
 import { gameState } from "../gameState";
-import type { PlayScreen } from "../screens/play";
-import { dust, shake } from "./effects";
+import { playScreen } from "../screens/current";
+import { dust, fadeFlash, shake } from "./effects";
 import { Breakable, RollBlock } from "./level";
 import { EggShot } from "./projectiles";
 
@@ -37,6 +36,8 @@ const JUMP_SPEED = jumpSpeed(16);
 // In the jumping pose his legs hang this much lower than his feet do when
 // he stands, from the feet's bottom edge (96) down to the frame's (120).
 const LEGS = 24;
+// the fastest he falls, in pixels per frame
+const MAX_FALL = 24;
 
 // After walking off an edge, Alex can still jump for this many steps (0.1s):
 // not in the original, a modern grace that makes a running jump easier.
@@ -169,7 +170,7 @@ export class PlayerEntity extends Sprite {
 			type: "dynamic",
 			shapes: [feet, hitbox],
 			collisionType: collision.types.PLAYER_OBJECT,
-			maxVelocity: { x: ROLL_SPEED, y: 24 },
+			maxVelocity: { x: ROLL_SPEED, y: MAX_FALL },
 		};
 
 		// keep updating when jumping out of the screen
@@ -238,7 +239,7 @@ export class PlayerEntity extends Sprite {
 			// once out of the screen, let the play screen decide what's next
 			if (!this.gone && this.pos.y > HEIGHT) {
 				this.gone = true;
-				(state.current() as PlayScreen).onPlayerDeath();
+				playScreen().onPlayerDeath();
 			}
 			return super.update(dt);
 		}
@@ -300,7 +301,7 @@ export class PlayerEntity extends Sprite {
 		// and off it; the original lifts him on top of anything his feet sink in
 		if (!this.grounded && vel.y >= 0) {
 			const gravity = this.parentApp.world.gravity.y;
-			const fall = Math.min(vel.y + gravity, 24);
+			const fall = Math.min(vel.y + gravity, MAX_FALL);
 			const floor = this.floorBelow(this.pos.x + vel.x);
 			if (floor < fall) {
 				// half a pixel in, so that the contact is there to stand on
@@ -484,7 +485,7 @@ export class PlayerEntity extends Sprite {
 	 * original, the middle of Alex has to be over it, and the way ahead, just
 	 * above it, has to be free.
 	 */
-	startRoll(spinner: RollBlock) {
+	private startRoll(spinner: RollBlock) {
 		if (this.rolling || !this.grounded || this.dying) {
 			return;
 		}
@@ -496,8 +497,7 @@ export class PlayerEntity extends Sprite {
 		const x =
 			spinner.pos.x + (this.facingLeft ? -spinner.width : spinner.width);
 		const y = spinner.pos.y - spinner.height;
-		// shift, not pos.set: that leaves the bounds behind, and the query
-		// looked at the top left of the level, never finding the wall
+		// shift() moves the bounds too, pos.set() would leave them behind
 		this.ahead.shift(x, y);
 		this.room.setMinMax(
 			x + 1,
@@ -552,11 +552,7 @@ export class PlayerEntity extends Sprite {
 			shake(this.parentApp.viewport, "hurt");
 			rumble(200, 0.6, 0.9);
 			this.flicker(2000);
-			this.hit.setIntensity(1);
-			new Tween(this.hit)
-				.to({ intensity: 0 }, { duration: 400 })
-				.onUpdate(() => this.hit.setIntensity(this.hit.intensity))
-				.start();
+			fadeFlash(this.hit, 400);
 		}
 	}
 
@@ -581,7 +577,7 @@ export class PlayerEntity extends Sprite {
 		audio.play("die");
 		shake(this.parentApp.viewport, "die");
 		rumble(400, 1, 1);
-		(state.current() as PlayScreen).onPlayerDying();
+		playScreen().onPlayerDying();
 	}
 
 	/**
@@ -589,21 +585,24 @@ export class PlayerEntity extends Sprite {
 	 * sprite (`y` up from his feet), in the world
 	 */
 	private box(x: number, y: number, w: number, h: number) {
-		const left = this.pos.x + 64 + x * 4;
-		const top = this.pos.y + 96 + y * 4;
-		this.part.setMinMax(left, top, left + w * 4, top + h * 4);
+		const left = this.pos.x + 64 + x * SCALE;
+		const top = this.pos.y + 96 + y * SCALE;
+		this.part.setMinMax(left, top, left + w * SCALE, top + h * SCALE);
 		return this.part;
 	}
 
 	/** his middle, in the world, where the original checked spikes and exits */
 	middleIn(bounds: Bounds) {
-		return bounds.contains(this.pos.x + 64 + 7 * 4, this.pos.y + 96 - 7 * 4);
+		return bounds.contains(
+			this.pos.x + 64 + 7 * SCALE,
+			this.pos.y + 96 - 7 * SCALE,
+		);
 	}
 
 	/** his mouth, in the world, where the original picked things up */
 	mouthIn(bounds: Bounds) {
-		const x = this.pos.x + 64 + (this.facingLeft ? 6 : 10) * 4;
-		return bounds.contains(x, this.pos.y + 96 - 10 * 4);
+		const x = this.pos.x + 64 + (this.facingLeft ? 6 : 10) * SCALE;
+		return bounds.contains(x, this.pos.y + 96 - 10 * SCALE);
 	}
 
 	/**

@@ -15,14 +15,21 @@ import {
 	Sprite,
 	state,
 	type TMXObject,
-	Tween,
 	timer,
 	Vector2d,
 } from "melonjs";
-import { HEIGHT, jumpSpeed, TICK } from "../constants";
+import {
+	HEIGHT,
+	jumpSpeed,
+	PALETTE,
+	rgb,
+	SCALE,
+	TICK,
+	TICK_MS,
+} from "../constants";
 import { rumble } from "../gamepad";
 import { gameState } from "../gameState";
-import { dust, flash, HIT_STOP, points, shake } from "./effects";
+import { dust, fadeFlash, flash, HIT_STOP, points, shake } from "./effects";
 import type { Hazard, PlayerEntity, Touch } from "./player";
 import type { Shootable } from "./projectiles";
 
@@ -104,7 +111,7 @@ export class GenericEnemyEntity extends Sprite implements Hazard, Shootable {
 
 	/** the original collision box, at the bottom of the frame */
 	protected hitbox({ w, h, ox }: Box) {
-		return new Rect(ox * 4, this.height - h * 4, w * 4, h * 4);
+		return new Rect(ox * SCALE, this.height - h * SCALE, w * SCALE, h * SCALE);
 	}
 
 	override onDeactivateEvent() {
@@ -134,7 +141,7 @@ export class GenericEnemyEntity extends Sprite implements Hazard, Shootable {
 		if (this.wobble > 0) {
 			this.currentTransform
 				.identity()
-				.translate(((this.wobble++ % 3) - 1) * 4, 0);
+				.translate(((this.wobble++ % 3) - 1) * SCALE, 0);
 		}
 
 		// fell out of the map
@@ -249,20 +256,15 @@ export class GenericEnemyEntity extends Sprite implements Hazard, Shootable {
 	}
 
 	/**
-	 * all over in the lightest green of the game (#deeed2), fading back in a
-	 * third of a second
+	 * all over in the lightest green of the game, fading back in a third of a
+	 * second
 	 */
 	private flashLight() {
 		const effect = new FlashEffect(this.parentApp.renderer, {
-			color: [222 / 255, 238 / 255, 210 / 255],
+			color: rgb(PALETTE[3]),
 		});
-		effect.setIntensity(1);
 		this.addPostEffect(effect);
-		const fade = { intensity: 1 };
-		new Tween(fade)
-			.to({ intensity: 0 }, { duration: 300 })
-			.onUpdate(() => effect.setIntensity(fade.intensity))
-			.start();
+		fadeFlash(effect, 300);
 	}
 
 	/** knocked out: flip over and fall out of the screen */
@@ -432,10 +434,10 @@ export class CrusherEntity extends GenericEnemyEntity {
 					});
 				} else {
 					// where the original has it by now (between two of its steps)
-					const t = this.fallTime / (1000 / 50);
+					const t = this.fallTime / TICK_MS;
 					const n = Math.floor(t);
 					const y = fallDrop(n) + (fallDrop(n + 1) - fallDrop(n)) * (t - n);
-					this.body.setVelocity(0, this.fallY + y * 4 - this.pos.y);
+					this.body.setVelocity(0, this.fallY + y * SCALE - this.pos.y);
 				}
 				break;
 			case "rise":

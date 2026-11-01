@@ -16,7 +16,7 @@ import {
 	Tween,
 	timer,
 } from "melonjs";
-import { INSET, LEVELS, WIDTH } from "../constants";
+import { INSET, LEVELS, PALETTE, rgba, WIDTH } from "../constants";
 import { bindPads, NEXT_PAD, unbindPads } from "../gamepad";
 import { gameState } from "../gameState";
 import { go } from "../transition";
@@ -46,7 +46,7 @@ export class LevelCompleteScreen extends Stage {
 
 	override onResetEvent(app: Application) {
 		addParallaxBackground(app);
-		app.world.addChild(new ColorLayer("shade", "rgba(12, 68, 0, 0.6)"), 5);
+		app.world.addChild(new ColorLayer("shade", rgba(PALETTE[0], 0.6)), 5);
 
 		// the title bounces down
 		const title = new Sprite(0, 0, {

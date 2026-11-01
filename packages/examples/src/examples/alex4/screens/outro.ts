@@ -174,7 +174,7 @@ export class OutroScreen extends Cutscene {
 			[`SCORE ${gameState.score}`, 220, "atascii32"],
 			["PRESS JUMP", 290, "atascii32"],
 		] as const;
-		for (const [text, y, font] of lines) {
+		for (const [i, [text, y, font]] of lines.entries()) {
 			const line = new BitmapText(WIDTH / 2, y, {
 				font,
 				text,
@@ -182,7 +182,7 @@ export class OutroScreen extends Cutscene {
 				fillStyle: PALETTE[0],
 			});
 			// the title waves
-			if (text === lines[0][0]) {
+			if (i === 0) {
 				line.glyphEffect = wave;
 			}
 			this.add(line, 30);

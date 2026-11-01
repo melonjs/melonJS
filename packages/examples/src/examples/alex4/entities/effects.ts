@@ -9,6 +9,7 @@ import {
 	BitmapText,
 	type Camera2d,
 	type Container,
+	type FlashEffect,
 	type GlyphEffect,
 	loader,
 	ParticleEmitter,
@@ -16,9 +17,10 @@ import {
 	Tween,
 	Vector2d,
 } from "melonjs";
-import { HEIGHT, PALETTE, WIDTH } from "../constants";
+import { HEIGHT, PALETTE, SCALE, WIDTH } from "../constants";
 import { gameState } from "../gameState";
 import { shaders } from "../shaders";
+import type { HUD } from "./hud";
 
 // draw the effects above the map and the actors
 const EFFECT_Z = 20;
@@ -61,17 +63,11 @@ export function shake(viewport: Camera2d, impact: keyof typeof SHAKE) {
 /**
  * a little firework of pixels, for broken blocks and shot enemies
  */
-export function burst(
-	world: Container,
-	x: number,
-	y: number,
-	count = 16,
-	color = PALETTE[1],
-) {
+export function burst(world: Container, x: number, y: number, count = 16) {
 	const emitter = new ParticleEmitter(x - 16, y - 16, {
 		width: 32,
 		height: 32,
-		tint: color,
+		tint: PALETTE[1],
 		textureSize: 4,
 		totalParticles: count,
 		angle: 0,
@@ -197,7 +193,7 @@ export function points(app: Application, x: number, y: number, value: number) {
 				.onComplete(() => {
 					world.removeChild(text);
 					gameState.flying = Math.max(gameState.flying - value, 0);
-					(world.getChildByName("HUD")[0] as { bump?: () => void })?.bump?.();
+					(world.getChildByName("HUD")[0] as HUD | undefined)?.bump();
 				})
 				.start();
 		})
@@ -244,5 +240,16 @@ export function smoke(world: Container, x: number, y: number) {
  * everything else on the screen.
  */
 export const wave: GlyphEffect = (out, ctx) => {
-	out.offsetY = Math.round(Math.sin(ctx.time * 0.005 + ctx.x * 0.02) * 2) * 4;
+	out.offsetY =
+		Math.round(Math.sin(ctx.time * 0.005 + ctx.x * 0.02) * 2) * SCALE;
 };
+
+/** a flash all over a renderable, fading out in `duration` ms */
+export function fadeFlash(effect: FlashEffect, duration: number) {
+	effect.setIntensity(1);
+	const fade = { intensity: 1 };
+	new Tween(fade)
+		.to({ intensity: 0 }, { duration })
+		.onUpdate(() => effect.setIntensity(fade.intensity))
+		.start();
+}

@@ -19,7 +19,7 @@ import { WIDTH } from "../constants";
 import { bindPads, NEXT_PAD, unbindPads } from "../gamepad";
 import { shaders } from "../shaders";
 import { go } from "../transition";
-import { addParallaxBackground } from "./background";
+import { addParallaxBackground, playMenuSong } from "./background";
 
 /** a heading, a name, or a blank line */
 type Line = [text: string, kind: "head" | "name" | "gap"];
@@ -118,10 +118,7 @@ export class CreditsScreen extends Stage {
 		// a click or a tap goes back too
 		input.bindPointer(input.KEY.ENTER);
 
-		// on from the title or the credits, where it already plays
-		if (audio.getCurrentTrack() !== "menu_song") {
-			audio.playTrack("menu_song");
-		}
+		playMenuSong();
 	}
 
 	override update(dt: number) {

@@ -39,6 +39,26 @@ class Pickup extends Collectable {
 	/** what happens when picked up */
 	collect() {}
 
+	/**
+	 * points for one of a kind counted in the level: the last one shows a
+	 * 100% instead of its points
+	 */
+	protected award(value: number, got: number, total: number) {
+		gameState.score += value;
+		if (got === total) {
+			flash(
+				this.parentApp.world,
+				"all100",
+				this.pos.x + 16,
+				this.pos.y,
+				100,
+				1000,
+			);
+		} else {
+			points(this.parentApp, this.pos.x + 32, this.pos.y, value);
+		}
+	}
+
 	onCollisionActive(_response: CollisionResponse, other: Renderable) {
 		if (
 			!(other instanceof PlayerEntity) ||
@@ -70,21 +90,7 @@ export class CherryEntity extends Pickup {
 
 	override collect() {
 		audio.play("cherry");
-		gameState.score += 10;
-		gameState.cherries++;
-		// all the cherries of the level! (the 100% says it, not the points)
-		if (gameState.cherries === CherryEntity.count) {
-			flash(
-				this.parentApp.world,
-				"all100",
-				this.pos.x + 16,
-				this.pos.y,
-				100,
-				1000,
-			);
-		} else {
-			points(this.parentApp, this.pos.x + 32, this.pos.y, 10);
-		}
+		this.award(10, ++gameState.cherries, CherryEntity.count);
 	}
 }
 
@@ -102,20 +108,7 @@ export class StarEntity extends Pickup {
 
 	override collect() {
 		audio.play("star");
-		gameState.score += 100;
-		gameState.stars++;
-		if (gameState.stars === StarEntity.count) {
-			flash(
-				this.parentApp.world,
-				"all100",
-				this.pos.x + 16,
-				this.pos.y,
-				100,
-				1000,
-			);
-		} else {
-			points(this.parentApp, this.pos.x + 32, this.pos.y, 100);
-		}
+		this.award(100, ++gameState.stars, StarEntity.count);
 	}
 }
 

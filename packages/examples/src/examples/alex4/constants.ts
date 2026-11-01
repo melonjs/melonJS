@@ -11,11 +11,16 @@ export const HEIGHT = 480;
 /** where the menus, laid out for the original 640 pixels, start */
 export const INSET = (WIDTH - 640) / 2;
 
+/** our pixels to one of the original's */
+export const SCALE = 4;
+/** the original moved things 50 times a second: one step, in ms */
+export const TICK_MS = 20;
 /**
- * The original game moved things 50 times a second, at a quarter of our
- * scale: one of its pixels per tick is this many of ours per frame.
+ * one pixel of the original per step is this many of ours per frame
  */
-export const TICK = 4 * (50 / 60);
+export const TICK = SCALE * (50 / 60);
+// the gravity of our world, per frame
+const GRAVITY = 0.98;
 /**
  * The speed up, in our pixels per frame, for a vertical speed of the original
  * (in quarter pixels per tick, with a gravity of 1): the one that reaches the
@@ -30,11 +35,11 @@ export function jumpSpeed(dy: number) {
 	}
 	// our gravity moves a body by its speed after each step: the height of a
 	// jump at v is v * v / 2g - v / 2
-	const g = 0.98;
-	return (g + Math.sqrt(g * g + 8 * g * height * 4)) / 2;
+	const g = GRAVITY;
+	return (g + Math.sqrt(g * g + 8 * g * height * SCALE)) / 2;
 }
 /** its gravity for the bullets, in pixels per tick: 0.1, as a gravity scale */
-export const BULLET_GRAVITY = (0.1 * TICK * (50 / 60)) / 0.98;
+export const BULLET_GRAVITY = (0.1 * TICK * (50 / 60)) / GRAVITY;
 
 /** the level files, in play order */
 export const LEVELS = [
@@ -52,14 +57,24 @@ export const LEVELS = [
 	"a4_level12",
 ];
 
-/** temporary, for testing: every level can be picked from the menu */
-export const ALL_LEVELS_UNLOCKED = true;
-
 /** the level is won by killing its guardian (map `win` property) */
 export const WIN_KILL_GUARDIAN = 2;
 
 /** the four colors of the original palette, darkest first */
 export const PALETTE = ["#0c4400", "#507d44", "#99b689", "#deeed2"];
+
+/** a palette color as the shaders take it: red, green and blue, from 0 to 1 */
+export function rgb(color: string): [number, number, number] {
+	const n = Number.parseInt(color.slice(1), 16);
+	return [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255];
+}
+
+/** a palette color, see-through */
+export function rgba(color: string, alpha: number) {
+	return `rgba(${rgb(color)
+		.map((c) => Math.round(c * 255))
+		.join(", ")}, ${alpha})`;
+}
 
 /** fade color used between screens */
 export const FADE_COLOR = "#dfedd2";

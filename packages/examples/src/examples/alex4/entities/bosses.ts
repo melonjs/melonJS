@@ -8,7 +8,6 @@ import {
 	audio,
 	type CollisionResponse,
 	collision,
-	level,
 	math,
 	type ParticleEmitter,
 	Rect,
@@ -22,13 +21,14 @@ import {
 import {
 	HEIGHT,
 	jumpSpeed,
-	PALETTE,
+	SCALE,
 	TICK,
+	TICK_MS,
 	WIN_KILL_GUARDIAN,
 } from "../constants";
 import { rumble } from "../gamepad";
 import { gameState } from "../gameState";
-import type { LevelMap, PlayScreen } from "../screens/play";
+import { currentMap, playScreen } from "../screens/current";
 import { burst, dust, HIT_STOP, shake, smoke } from "./effects";
 import { enemyShapes, GenericEnemyEntity } from "./enemies";
 import { Breakable } from "./level";
@@ -37,9 +37,9 @@ import { Spark } from "./projectiles";
 
 /** tell the play screen, if this guardian was the one to beat */
 function guardianDefeated() {
-	const map = level.getCurrentLevel() as LevelMap;
+	const map = currentMap();
 	if ((map.win ?? 0) & WIN_KILL_GUARDIAN) {
-		(state.current() as PlayScreen).onLevelComplete();
+		playScreen().onLevelComplete();
 	}
 }
 
@@ -131,14 +131,8 @@ export class SpikeTruckEntity extends GenericEnemyEntity {
 			// as in the original: up at -16, backwards at a pixel per tick
 			this.body.setVelocity(this.walkLeft ? TICK : -TICK, -jumpSpeed(16));
 			rumble(300, 0.8, 0.8);
-			// a puff of smoke, and down it goes
-			burst(
-				this.parentApp.world,
-				this.pos.x + 64,
-				this.pos.y + 32,
-				48,
-				PALETTE[1],
-			);
+			// pieces flying off it, and down it goes, smoking (see update())
+			burst(this.parentApp.world, this.pos.x + 64, this.pos.y + 32, 48);
 		}
 	}
 
@@ -174,9 +168,9 @@ type PounderMode =
 	| "dead";
 
 // the waits of the original, in ticks of 20 ms
-const LONG_WAIT = 61 * 20;
-const SPIKES_WAIT = 51 * 20;
-const SHORT_WAIT = 11 * 20;
+const LONG_WAIT = 61 * TICK_MS;
+const SPIKES_WAIT = 51 * TICK_MS;
+const SHORT_WAIT = 11 * TICK_MS;
 
 export class GroundPounderEntity extends Sprite implements Hazard {
 	mode: PounderMode = "wait";
@@ -312,7 +306,7 @@ export class GroundPounderEntity extends Sprite implements Hazard {
 		const alex = this.parentApp.world.getChildByName("alex")[0];
 		const middle = this.pos.x + this.width / 2;
 		this.targetX = alex ? alex.pos.x + alex.width / 2 : middle;
-		const half = Math.abs(this.targetX - middle) / 4 / 2;
+		const half = Math.abs(this.targetX - middle) / SCALE / 2;
 		const dy = Math.min(Math.max(half, 10), mode === "jump" ? 30 : 40);
 		this.mode = mode;
 		this.setCurrentAnimation(mode);

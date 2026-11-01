@@ -16,12 +16,12 @@ import {
 	Tween,
 	UIBaseElement,
 } from "melonjs";
-import { ALL_LEVELS_UNLOCKED, INSET, LEVELS, WIDTH } from "../constants";
+import { INSET, LEVELS, WIDTH } from "../constants";
 import { bindPads, MENU_PAD, unbindPads } from "../gamepad";
 import { gameState } from "../gameState";
 import { shaders } from "../shaders";
 import { go } from "../transition";
-import { addParallaxBackground } from "./background";
+import { addParallaxBackground, playMenuSong } from "./background";
 
 const SCROLLER =
 	"FREE LUNCH DESIGN PRESENTS ALEX THE ALLEGATOR 4     " +
@@ -31,6 +31,11 @@ const SCROLLER =
 	"JUMP ON ENEMIES TO EAT THEM , AND PICK UP STARS AND CHERRIES ON THE WAY     " +
 	"CODE AND GFX BY JOHAN PEITZ , MUSIC AND SFX BY ANDERS SVENSSON     " +
 	"WEB EDITION BY OLIVIER BIOT , MADE WITH MELONJS     ";
+
+/** the furthest level reached so far: the last one the menu offers */
+function lastReached() {
+	return Math.min(gameState.saved.alex4MaxLevel, LEVELS.length - 1);
+}
 
 /**
  * a line of the menu, that the mouse (or a finger) can point at and pick
@@ -107,10 +112,7 @@ export class TitleScreen extends Stage {
 			this.items.push(item);
 			app.world.addChild(item, 10);
 		}
-		this.startLevel = Math.min(
-			gameState.saved.alex4MaxLevel,
-			LEVELS.length - 1,
-		);
+		this.startLevel = lastReached();
 		this.updateMenu();
 
 		// the selection arrow, moving back and forth
@@ -160,10 +162,7 @@ export class TitleScreen extends Stage {
 		// and the gamepads
 		bindPads(MENU_PAD);
 
-		// the menu song, on from the title or the credits, where it already plays
-		if (audio.getCurrentTrack() !== "menu_song") {
-			audio.playTrack("menu_song");
-		}
+		playMenuSong();
 	}
 
 	private updateMenu() {
@@ -193,9 +192,7 @@ export class TitleScreen extends Stage {
 			if (this.selectedItem !== 1) {
 				return;
 			}
-			const count = ALL_LEVELS_UNLOCKED
-				? LEVELS.length
-				: Math.min(gameState.saved.alex4MaxLevel, LEVELS.length - 1) + 1;
+			const count = lastReached() + 1;
 			this.startLevel = (this.startLevel + step + count) % count;
 			this.updateMenu();
 			audio.play("menu");

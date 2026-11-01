@@ -19,19 +19,22 @@ import {
 	timer,
 	UIPanel,
 } from "melonjs";
-import { FADE_COLOR, HEIGHT, PALETTE, WIDTH } from "../constants";
+import {
+	FADE_COLOR,
+	HEIGHT,
+	PALETTE,
+	SCALE,
+	TICK_MS,
+	WIDTH,
+} from "../constants";
 import { bindPads, NEXT_PAD, unbindPads } from "../gamepad";
 import { gameState } from "../gameState";
 import { shaders } from "../shaders";
 
 // the scripts place things in pixels of the original screen, 4 times smaller
-const SCALE = 4;
 
 /** our screen in those pixels: as tall as the original, and wider */
 export const SCREEN_W = WIDTH / SCALE;
-
-// the scripts move things one step every 20ms
-const STEP = 20;
 
 // and fade in or out of a scene in three steps of 100ms
 const FADE = 300;
@@ -50,7 +53,7 @@ const TYPE_SHARE = 0.4;
 // but a short line is not typed slower than this, a letter every 60ms
 const TYPE_SLOWEST = 60;
 
-export type Facing = "left" | "right";
+type Facing = "left" | "right";
 
 /*---------------------------------------------------------------------
 
@@ -199,7 +202,7 @@ export abstract class Cutscene extends Stage {
 		};
 		const tween = new Tween(actor.pos).to(
 			{ x: by(dx), y: by(dy) },
-			{ duration: steps * STEP },
+			{ duration: steps * TICK_MS },
 		);
 		this.moves.push([actor, tween]);
 		return tween;

@@ -20,8 +20,9 @@ const BIGGEST = 32;
 const HALF = 300;
 
 let app: Application;
-// a level is reloading behind the pixels: a change of screen waits, or the
-// level would land on the next screen (level.load defers it a frame)
+// a level is reloading behind the pixels: a change of screen asked for now is
+// ignored, or the level would land on the next screen (level.load defers it a
+// frame)
 let busy = false;
 
 /**
@@ -57,10 +58,9 @@ export function pixelate(middle: () => void) {
 		onComplete: () => {
 			camera.removeCameraEffect(cover);
 			middle();
-			// Persistent, and taken away by itself: a level reload resets the
+			// persistent, and taken away by itself: a level reload resets the
 			// camera a frame later (level.load defers it), which drops every
-			// other effect. Dropped, it never completed, and `busy` stayed set,
-			// so every change of screen after a death was ignored.
+			// other effect, and `busy` would stay set
 			const reveal = new PixelateTransitionEffect(app.viewport, {
 				...options,
 				direction: "reveal",

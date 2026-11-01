@@ -19,6 +19,7 @@ import {
 	VignetteEffect,
 	WaveEffect,
 } from "melonjs";
+import { PALETTE, rgb } from "./constants";
 
 // how far the water ripples to each side, in pixels, and how many rows of
 // pixels make one ripple
@@ -70,18 +71,18 @@ class Shaders {
 		this.shadow = new DropShadowEffect(app.renderer, {
 			offsetX: 4,
 			offsetY: 4,
-			color: [0.05, 0.27, 0],
+			color: rgb(PALETTE[0]),
 			opacity: 0.85,
 		});
 		this.dark = new FlashEffect(app.renderer, {
-			// the darkest green of the game (#0c4400), all over
-			color: [12 / 255, 68 / 255, 0],
+			// the darkest green of the game, all over
+			color: rgb(PALETTE[0]),
 			intensity: 1,
 		});
 		this.outline = new OutlineEffect(app.renderer, {
 			// the lightest green of the game (#deeed2), a pixel of the 24 pixel
 			// font wide
-			color: [222 / 255, 238 / 255, 210 / 255],
+			color: rgb(PALETTE[3]),
 			width: 3,
 		});
 		for (const effect of [
