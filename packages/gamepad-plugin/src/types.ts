@@ -24,13 +24,13 @@ export interface StickKeys {
 }
 
 /**
- * A stick of the virtual gamepad.
- * @category Plugins
- */
-/**
  * Where a floating stick or button can be picked up: `"half"`, its half
- * of the screen; `"screen"`, anywhere not on a fixed control; or a
- * rectangle, in viewport pixels.
+ * of the screen; `"screen"`, anywhere; or a rectangle, in viewport pixels.
+ *
+ * Where areas overlap, a finger landing takes the first control free
+ * there: fixed buttons, fixed sticks, floating buttons, floating sticks.
+ * Floating buttons sharing an area split it: the finger goes to the one
+ * resting nearest to it.
  * @category Plugins
  */
 export type ControlArea =
@@ -57,6 +57,10 @@ export interface StickTap {
 	time?: number;
 }
 
+/**
+ * A stick of the virtual gamepad.
+ * @category Plugins
+ */
 export interface StickOptions {
 	/**
 	 * which stick of a pad it is: `"left"` reports `GAMEPAD.AXES.LX`/`LY`,
@@ -69,15 +73,17 @@ export interface StickOptions {
 	/** the radius of its base, in viewport pixels */
 	radius?: number;
 	/**
-	 * the stick is centered where the thumb lands on its half of the screen,
-	 * rather than at a fixed spot. Off by default.
+	 * the stick is centered where the thumb lands inside its `area`, rather
+	 * than at a fixed spot, and goes back to its `position` when let go. Off
+	 * by default.
 	 */
 	floating?: boolean;
 	/**
 	 * where a floating stick can be picked up: `"half"` (the default), its
-	 * half of the screen; `"screen"`, anywhere not on a button or a fixed
-	 * stick; or a rectangle `{ x, y, width, height }` in viewport pixels.
-	 * Ignored for a fixed stick.
+	 * half of the screen; `"screen"`, anywhere; or a rectangle
+	 * `{ x, y, width, height }` in viewport pixels. Buttons and fixed sticks
+	 * come first where they overlap it (see {@link ControlArea}). Ignored for
+	 * a fixed stick.
 	 */
 	area?: ControlArea;
 	/**
@@ -89,8 +95,9 @@ export interface StickOptions {
 	/**
 	 * make a quick tap on the stick press a button or a key, as a button
 	 * would: a touch that lifts within `time` and never leans far enough to
-	 * press a direction (`dpadThreshold`) is a tap. The press lasts one
-	 * frame, so a locked key fires once. With a floating stick over the
+	 * press a direction (`dpadThreshold`) is a tap; a cancelled touch is
+	 * not. The press lasts one frame, so a locked key fires once, and a
+	 * fading ring marks where the tap landed. With a floating stick over the
 	 * whole screen (`area: "screen"`), tap anywhere to act, drag to steer,
 	 * and no button is needed. Off by default.
 	 */
@@ -149,15 +156,17 @@ export interface ButtonOptions {
 	floating?: boolean;
 	/**
 	 * where a floating button can be pressed: `"half"` (the default), the
-	 * half of the screen its `position` is on; `"screen"`, anywhere not on
-	 * a fixed control; or a rectangle `{ x, y, width, height }` in viewport
-	 * pixels. Ignored for a fixed button.
+	 * half of the screen its `position` is on; `"screen"`, anywhere; or a
+	 * rectangle `{ x, y, width, height }` in viewport pixels. Fixed controls
+	 * come first where they overlap it, and floating buttons sharing an
+	 * area split it by distance to where each rests (see
+	 * {@link ControlArea}). Ignored for a fixed button.
 	 */
 	area?: ControlArea;
 	/**
-	 * draw a floating button only while a finger holds it. Off by default:
-	 * it rests at its `position`, to show it is there. Ignored for a fixed
-	 * button.
+	 * draw a floating button only while a finger holds it; let go, it fades
+	 * out where it was. Off by default: it rests at its `position`, to show
+	 * it is there. Ignored for a fixed button.
 	 */
 	hideAtRest?: boolean;
 }

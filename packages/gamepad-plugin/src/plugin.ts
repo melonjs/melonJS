@@ -512,7 +512,10 @@ export class GamepadPlugin extends plugin.BasePlugin {
 		}
 	};
 
-	/** keep Safari from pinching or rotating while the controls show */
+	/**
+	 * keep Safari from pinching or rotating while the controls show
+	 * @param e - Safari's gesture event
+	 */
 	private readonly onGesture = (e: Event): void => {
 		if (this.visible && e.cancelable) {
 			e.preventDefault();
@@ -738,7 +741,11 @@ export class GamepadPlugin extends plugin.BasePlugin {
 		);
 	}
 
-	/** the fixed button at a point, for a press or a slide from one to the next */
+	/**
+	 * the fixed button at a point, for a press or a slide from one to the next
+	 * @param x - in viewport pixels
+	 * @param y - in viewport pixels
+	 */
 	private fixedButtonAt(x: number, y: number): VirtualButton | null {
 		for (const button of this.buttons) {
 			if (!button.floating && button.hits(x, y)) {

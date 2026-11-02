@@ -16,6 +16,8 @@ The sticks and buttons are drawn over the game and read by the engine as a pad i
 - a quick tap on a stick can press a button or a key, so one thumb both steers and acts, with no button on the screen
 - any number of buttons, each pressing a pad button or a key, that a game can relabel, dim or hide
 - each finger followed on its own: hold the stick and press a button at the same time
+- every press lasts at least one frame, so even the quickest tap reaches the game
+- two thumbs at once on iOS too: Safari's pinch gesture is kept from taking the second finger
 - a touch that starts on the controls does not reach the game
 - drawn over the whole frame, above every renderable and every camera (a minimap does not show them), and kept across stage changes
 - drawn with the renderer's own shapes: no images to load
@@ -89,9 +91,9 @@ Sizes and positions are in viewport pixels, the same units the game is drawn in.
 | `position` | its bottom corner | `{ left or right, top or bottom }`: from the edges to its center |
 | `radius` | 13% of the shorter side | the radius of its base |
 | `floating` | `false` | centered where the thumb lands, inside its `area` |
-| `area` | `"half"` | where a floating stick can be picked up: `"half"`, its half of the screen; `"screen"`, anywhere not on a button or a fixed stick; or `{ x, y, width, height }` in viewport pixels |
+| `area` | `"half"` | where a floating stick can be picked up: `"half"`, its half of the screen; `"screen"`, anywhere; or `{ x, y, width, height }` in viewport pixels. See [where controls overlap](#where-controls-overlap) |
 | `hideAtRest` | `false` | draw a floating stick only while a finger holds it, so it appears under the thumb and goes when the thumb lifts |
-| `tap` | none | `{ button, key, time }`: a quick tap that does not steer presses this pad button (`FACE_1` by default) or key for one frame. A tap lifts within `time` ms (250) and never leans to `dpadThreshold`. A ring marks where it landed |
+| `tap` | none | `{ button, key, time }`: a quick tap that does not steer presses this pad button (`FACE_1` by default, none when `key` is given) or this key, for one frame. A tap lifts within `time` ms (250) and never leans as far as `dpadThreshold`; a cancelled touch is not one. A fading ring marks where it landed |
 | `deadzone` | `0.1` | how far it must lean (0 to 1) before it reads anything |
 | `dpad` | on for the left stick | press the D-pad buttons in 8 directions |
 | `dpadThreshold` | `0.5` | how far the thumb must travel (0 to 1) to press the D-pad and its `keys`; lower for a stick that answers sooner |
@@ -107,12 +109,25 @@ Sizes and positions are in viewport pixels, the same units the game is drawn in.
 | `position` | gathered in the bottom-right corner | from the edges to its center |
 | `radius` | 7.5% of the shorter side | its radius |
 | `floating` | `false` | pressed wherever a finger lands inside its `area`, and drawn under that finger while held; it rests at its `position` |
-| `area` | `"half"` | where a floating button can be pressed: `"half"`, the half of the screen its `position` is on; `"screen"`; or `{ x, y, width, height }` |
-| `hideAtRest` | `false` | draw a floating button only while a finger holds it |
+| `area` | `"half"` | where a floating button can be pressed: `"half"`, the half of the screen its `position` is on; `"screen"`, anywhere; or `{ x, y, width, height }` in viewport pixels. See [where controls overlap](#where-controls-overlap) |
+| `hideAtRest` | `false` | draw a floating button only while a finger holds it; let go, it fades where it was |
 
 With a second stick, the buttons gather above it.
 
-A stick that appears wherever the thumb lands, as many mobile games have, with a button that keeps its corner:
+### Floating controls
+
+A floating stick or button has no fixed spot: it shows up under the finger wherever that lands inside its `area`, follows it while held, and goes back to its `position` when let go. With `hideAtRest` it is not drawn at all until touched, as in most mobile games.
+
+The two-thumb layout: the left thumb steers anywhere on the left half, the right thumb fires anywhere on the right half, and neither shows until touched.
+
+```ts
+plugin.register(GamepadPlugin, "gamepad", {
+	sticks: [{ floating: true, hideAtRest: true }],
+	buttons: [{ floating: true, hideAtRest: true, label: "A" }],
+});
+```
+
+A stick that appears anywhere, with a button that keeps its corner:
 
 ```ts
 plugin.register(GamepadPlugin, "gamepad", {
@@ -130,20 +145,20 @@ plugin.register(GamepadPlugin, "gamepad", {
 });
 ```
 
-Or both floating, the usual two-thumb layout: the left thumb steers anywhere on the left half, the right thumb fires anywhere on the right half, and neither shows until touched.
-
-```ts
-plugin.register(GamepadPlugin, "gamepad", {
-	sticks: [{ floating: true, hideAtRest: true }],
-	buttons: [{ floating: true, hideAtRest: true, label: "A" }],
-});
-```
-
 `area` can also keep a floating control to part of the screen, the lower half under a board say: `area: { x: 0, y: 512, width: 576, height: 512 }`.
 
-Where controls overlap, a finger landing takes the first that is free there: fixed buttons, then fixed sticks, then floating buttons, then floating sticks. So a fixed button is always a button, and a floating button whose area is inside a floating stick's carves its area out of the stick's. A floating control takes one finger at a time: a second finger in its area falls through to the next one.
+#### Where controls overlap
 
-Several floating buttons can share an area, the right half by default: a finger landing there presses the one that rests nearest to it, so each button owns the part of the area around its `position`, and two fingers can hold two of them at once. A finger nearest to a button already held presses no other button; it falls through to a floating stick, if any. Give each its own `area` for fixed zones instead, top and bottom of the right half say:
+A finger landing takes the first control that is free there, in this order:
+
+1. fixed buttons
+2. fixed sticks
+3. floating buttons
+4. floating sticks
+
+So a fixed button is always a button, and a floating button whose area lies inside a floating stick's carves that part out of the stick's: with the stick on `"screen"` and the button on its `"half"`, the button owns the right half and the stick the rest. A floating control takes one finger at a time: a second finger in its area falls through to the next control in the list.
+
+Several floating buttons can share an area, the right half by default: a finger landing there presses the one that rests nearest to it, so each owns the part of the area around its `position`, and two fingers can hold two of them at once. A finger nearest to a button already held presses no other button; it falls through to a floating stick, if any. For fixed zones instead, give each its own `area`, top and bottom of the right half say:
 
 ```ts
 buttons: [
@@ -152,7 +167,11 @@ buttons: [
 ],
 ```
 
-With `hideAtRest` the buttons' resting spots cannot be seen, so give buttons that share an area visible resting spots, or their own areas.
+With `hideAtRest` the players cannot see where buttons rest, so give buttons that share an area visible resting spots, or their own areas.
+
+#### Quick taps
+
+A press lasts until a frame has seen it, however quick the tap: a thumb tapping in 15 ms, quicker than a frame, still presses the button for that frame, where it would otherwise press and let go between two updates and never reach the game. A press a frame has already seen lets go at once.
 
 ## At run time
 
@@ -173,8 +192,8 @@ const prompt = gamepad.visible ? "Tap A to start" : "Press X to start";
 
 - `enabled`: switches the controls on and off
 - `visible`: whether they are on the screen, which is `enabled` and not hidden for a real pad
-- `sticks[i]`: a stick's `value` (`x`, `y` from -1 to 1), `center` and `radius`
-- `buttons[i]`: a button's `pressed`, and its `label`, `dimmed` and `visible`, which can be set
+- `sticks[i]`: a stick's `value` (`x`, `y` from -1 to 1), `center` (under the thumb while a floating stick is held) and `radius`; `tapping`, true for the frame a tap presses its button; and the options it was made with, `floating`, `area` and `hideAtRest`
+- `buttons[i]`: a button's `pressed` (while a finger is on it, and for at least one frame), `center` (under the finger while a floating button is held), and its `label`, `dimmed` and `visible`, which can be set; and the options it was made with, `floating`, `area` and `hideAtRest`
 - `destroy()`: takes the controls off the screen and out of their slot for good
 
 ## Hidden for a real pad
@@ -182,6 +201,10 @@ const prompt = gamepad.visible ? "Tap A to start" : "Press X to start";
 With `hideOnGamepad` (on by default) the controls hide as soon as the player uses a real pad, a button pressed or a stick pushed, and come back when the screen is touched or the pad is unplugged. Any pad counts, whatever its slot.
 
 A real pad and the touch controls can share a slot: the engine reads both, and either one presses a button.
+
+## On iOS
+
+Two fingers down start Safari's own pinch gesture, even over a canvas with `touch-action: none`, and while it runs it can take the second finger, so a thumb holding a stick would only sometimes let the other press a button. While the controls show, the plugin cancels Safari's `gesturestart`, `gesturechange` and `gestureend`, which keeps both fingers for the game; it lets them through again while the controls are hidden or switched off.
 
 ## Troubleshooting
 
@@ -191,6 +214,9 @@ A real pad and the touch controls can share a slot: the engine reads both, and e
 | Touch controls do nothing | Nothing is bound to their slot: bind with `input.bindGamepad(index, ...)` on the plugin's `index` (0 by default), or use `key` options |
 | The stick moves but nothing walks | Nothing is bound to what the stick reports: its axes (`LX`, `LY`), or the D-pad buttons, which only the left stick presses by default |
 | `gamepad 0 already holds a virtual gamepad` | Two sets of controls in one slot: give the second one another `index` |
+| A floating stick does not answer on the right half | Its `area` is `"half"` by default, its own side: use `area: "screen"` |
+| A floating stick with `area: "screen"` does not answer on the right half | A floating button's area comes first there, the right half by default: that part is the button's, see [where controls overlap](#where-controls-overlap) |
+| A tap on a stick moves the player instead of acting | It leaned past `dpadThreshold` before lifting, or lasted longer than `tap.time`: raise either |
 
 ## Developing
 
