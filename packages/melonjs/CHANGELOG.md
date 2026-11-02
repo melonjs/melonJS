@@ -23,6 +23,7 @@
 - UI: `UITextButton#bitmapText`, for `label`
 
 ### Fixed
+- Camera: a camera with post effects no longer wipes out the cameras drawn before it. A minimap with post effects now shows the view behind wherever it draws nothing, as one without them does, instead of the background colour
 - Container: `reset()`, and so `level.load`, no longer drops the sort pending for the persistent children it keeps, which left them in the order they were added
 - Particles: particles are on their emitter's `visibilityLayer`, and follow a change to it. They stayed on layer 1, so a camera whose `cullMask` drew only the emitter's layer drew none of its particles
 - Loader: assets on the game's own origin are requested with its cookies and HTTP auth, so a game behind a login no longer gets a 403 for every asset ([#1801](https://github.com/melonjs/melonJS/issues/1801))
