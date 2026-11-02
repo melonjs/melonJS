@@ -144,16 +144,31 @@ describe("a camera's post effects, over another camera (WebGL)", () => {
 		expect(pixel(50, 50)).toBe("0,0,255");
 	});
 
+	/** an effect inverting what it is given (premultiplied) */
+	const invert = () => {
+		return new ShaderEffect(app.renderer, {
+			glsl: "vec4 apply(vec4 color, vec2 uv) { return vec4(color.a - color.rgb, color.a); }",
+			wgsl: "fn apply(color : vec4f, uv : vec2f) -> vec4f { return vec4f(color.a - color.rgb, color.a); }",
+		});
+	};
+
 	it("still starts the frame with the first camera's post-effect pass", (ctx) => {
 		requireWebGL(ctx);
-		// nothing on the first camera's layer: its pass is the background colour
-		back.addPostEffect(passThrough());
-		front.cullMask = 0;
-		app.world.visibilityLayer = 1 | BACKGROUND | GAME;
-		back.cullMask = 8;
-		app.world.update(0);
-		app.repaint();
-		app.draw();
-		expect(pixel(5, 5)).toBe("0,0,0");
+		// nothing on the first camera's layer: its pass is the background
+		// colour, red, which the effect inverts to cyan. Started transparent
+		// (as a later camera's is), it would invert to white instead
+		app.renderer.backgroundColor.parseCSS("#ff0000");
+		try {
+			back.addPostEffect(invert());
+			front.cullMask = 0;
+			app.world.visibilityLayer = 1 | BACKGROUND | GAME;
+			back.cullMask = 8;
+			app.world.update(0);
+			app.repaint();
+			app.draw();
+			expect(pixel(5, 5)).toBe("0,255,255");
+		} finally {
+			app.renderer.backgroundColor.parseCSS("#000000");
+		}
 	});
 });

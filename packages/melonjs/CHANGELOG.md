@@ -23,7 +23,7 @@
 - UI: `UITextButton#bitmapText`, for `label`
 
 ### Fixed
-- Camera: a camera with post effects, drawn after another camera, draws over it. Its effect pass started like a frame, cleared to the background colour and copied over the whole screen, so a second full-screen camera with bloom or a vignette wiped out everything the cameras before it drew. A minimap with post effects no longer fills its rectangle with the background colour either: as one without them, it shows the view behind where it draws nothing (give it a `ColorLayer` for a background)
+- Camera: a camera with post effects no longer wipes out the cameras drawn before it. A minimap with post effects now shows the view behind wherever it draws nothing, as one without them does, instead of the background colour
 - Particles: particles are on their emitter's `visibilityLayer`, and follow a change to it. They stayed on layer 1, so a camera whose `cullMask` drew only the emitter's layer drew none of its particles
 - Loader: assets on the game's own origin are requested with its cookies and HTTP auth, so a game behind a login no longer gets a 403 for every asset ([#1801](https://github.com/melonjs/melonJS/issues/1801))
 - Loader: an asset on another origin loads whenever its server allows it (CORS), without `crossOrigin`, and one it does not allow fails at load with an error naming it, instead of later with "Unexpected end of input" or "The source image could not be decoded". `crossOrigin` now only applies to the `<video>`, `<script>` and glTF image elements the loader creates; `"use-credentials"` also sends credentials, as `withCredentials` does
