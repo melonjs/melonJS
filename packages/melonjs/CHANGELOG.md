@@ -23,6 +23,7 @@
 - UI: `UITextButton#bitmapText`, for `label`
 
 ### Fixed
+- Particles: particles are on their emitter's `visibilityLayer`, and follow a change to it. They stayed on layer 1, so a camera whose `cullMask` drew only the emitter's layer drew none of its particles
 - Loader: assets on the game's own origin are requested with its cookies and HTTP auth, so a game behind a login no longer gets a 403 for every asset ([#1801](https://github.com/melonjs/melonJS/issues/1801))
 - Loader: an asset on another origin loads whenever its server allows it (CORS), without `crossOrigin`, and one it does not allow fails at load with an error naming it, instead of later with "Unexpected end of input" or "The source image could not be decoded". `crossOrigin` now only applies to the `<video>`, `<script>` and glTF image elements the loader creates; `"use-credentials"` also sends credentials, as `withCredentials` does
 - Particles: an emitter without an `image` no longer leaks a texture on every `reset()` or for every emitter created, on WebGL and WebGPU, nor tinted copies of one on Canvas: all such emitters draw the renderer's one shared white pixel, stretched to `textureSize` ([#1807](https://github.com/melonjs/melonJS/issues/1807))
