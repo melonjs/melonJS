@@ -9,6 +9,7 @@ import type Container from "../renderable/container.js";
 import Renderable from "../renderable/renderable.js";
 import { createPool, registerPool } from "../system/pool.ts";
 import CanvasRenderer from "../video/canvas/canvas_renderer.js";
+import Renderer from "../video/renderer.js";
 import WebGLRenderer from "../video/webgl/webgl_renderer.js";
 import ParticleEmitter from "./emitter.ts";
 
@@ -19,6 +20,49 @@ import ParticleEmitter from "./emitter.ts";
  * @internal
  */
 const _spawn = new Vector2d();
+
+/**
+ * Scratch for {@link particleLook}, consumed at once by the particle spawning.
+ * @ignore
+ * @internal
+ */
+const _look = {
+	image: undefined as unknown as HTMLCanvasElement | HTMLImageElement,
+	builtin: false,
+	width: 0,
+	height: 0,
+};
+
+/**
+ * What a particle spawned now draws, and at what size, read from the
+ * emitter's settings as they are at this moment, as `settings.image` always
+ * was: a sprite-sheet cell, the image, or for an emitter without an image the
+ * built-in white square of `textureSize`.
+ *
+ * The built-in square is the renderer's shared white pixel
+ * ({@link Renderer.getWhitePixel}), drawn stretched: one texture for every
+ * such emitter, uploaded once per renderer and never freed, so neither a
+ * reset() nor a short-lived emitter leaves one behind (#1807). It is never put
+ * into `settings.image`, which stays as the game gave it.
+ * @param emitter - the emitter spawning the particle
+ * @returns the shared scratch object: the image, whether it is the built-in
+ * square, and the size
+ * @ignore
+ * @internal
+ */
+function particleLook(emitter: ParticleEmitter) {
+	const settings = emitter.settings;
+	const own = settings.image;
+	const builtin = own === undefined;
+	const image = builtin ? (Renderer.getWhitePixel() as HTMLCanvasElement) : own;
+	// a whole number of pixels, as the canvas the square used to be
+	const size = Math.floor(settings.textureSize);
+	_look.image = image;
+	_look.builtin = builtin;
+	_look.width = settings.framewidth ?? (builtin ? size : image.width);
+	_look.height = settings.frameheight ?? (builtin ? size : image.height);
+	return _look;
+}
 
 /**
  * Single Particle Object.
@@ -91,19 +135,22 @@ export default class Particle extends Renderable {
 	private _animateFrames: boolean;
 
 	/**
+	 * whether the image is the emitter's built-in square, the shared white
+	 * pixel: drawn whole, stretched to the particle's size
+	 * @ignore
+	 */
+	private _builtin: boolean;
+
+	/**
 	 * @param emitter - the particle emitter
 	 */
 	constructor(emitter: ParticleEmitter) {
-		// reset() ensures `settings.image` is set to either the user image or a
-		// fallback canvas before any particle is spawned.
-		const image = emitter.settings.image as
-			| HTMLCanvasElement
-			| HTMLImageElement;
+		const look = particleLook(emitter);
 		super(
 			emitter.getRandomPointX(),
 			emitter.getRandomPointY(),
-			emitter.settings.framewidth ?? image.width,
-			emitter.settings.frameheight ?? image.height,
+			look.width,
+			look.height,
 		);
 		// particle velocity
 		this.vel = vector2dPool.get();
@@ -137,10 +184,7 @@ export default class Particle extends Renderable {
 	 * @internal
 	 */
 	onResetEvent(emitter: ParticleEmitter, newInstance: boolean = false) {
-		// reset() guarantees `settings.image` is populated before particles spawn.
-		const image = emitter.settings.image as
-			| HTMLCanvasElement
-			| HTMLImageElement;
+		const look = particleLook(emitter);
 		// Where the particle is BORN. `getRandomPointX/Y` stay emitter-local
 		// (they are public API), so under a non-local reference space the
 		// point is mapped into that frame here — the particle then simulates
@@ -159,14 +203,16 @@ export default class Particle extends Renderable {
 		}
 
 		if (!newInstance) {
-			this.resize(
-				emitter.settings.framewidth ?? image.width,
-				emitter.settings.frameheight ?? image.height,
-			);
+			this.resize(look.width, look.height);
 			this.currentTransform.identity();
 		}
 
-		this.image = image;
+		this.image = look.image;
+		// The built-in square is the shared 1x1 white pixel, drawn whole and
+		// stretched to the particle's size. Its frames, cut from a white
+		// square, would all be the same white: drawn as the whole pixel too,
+		// at the cell's size, rather than as rectangles outside a 1x1 image.
+		this._builtin = look.builtin;
 		this._frames = emitter._particleFrames;
 		this._frameIndex =
 			this._frames && emitter.settings.randomFrame
@@ -666,6 +712,11 @@ export default class Particle extends Renderable {
 		const w = this.width;
 		const h = this.height;
 		// the transform already places (0,0) at the visual top-left corner.
+		if (this._builtin) {
+			const image = this.image as HTMLCanvasElement;
+			renderer.drawImage(image, 0, 0, image.width, image.height, 0, 0, w, h);
+			return;
+		}
 		const frame = this._frames?.[this._frameIndex];
 		renderer.drawImage(
 			this.image,

@@ -28,6 +28,11 @@ emitter.burstParticles();      // one shot
 `duration` setting, which defaults to `Infinity` — a stream runs until
 `stopStream()`. `burstParticles(n)` launches `n`, or `totalParticles`.
 
+Without an `image`, particles are white squares of `textureSize` pixels (8 by
+default), coloured by `tint`. Every such emitter draws the renderer's one
+shared white pixel, stretched, so an emitter per explosion or a `reset()` on
+every tweak costs no texture.
+
 ## Tuning an effect: the Particle Editor
 
 Settings are easier to find by eye than by reasoning. The

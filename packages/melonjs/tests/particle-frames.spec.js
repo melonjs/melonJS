@@ -15,6 +15,7 @@ import {
 	WebGLRenderer,
 } from "../src/index.js";
 import { particlePool } from "../src/particles/particle.ts";
+import Renderer from "../src/video/renderer.js";
 
 for (const backend of [video.CANVAS, video.WEBGL]) {
 	describe(`particle sprite sheets (${backend})`, () => {
@@ -169,17 +170,18 @@ for (const backend of [video.CANVAS, video.WEBGL]) {
 			expect(bounds.centerX).toBeCloseTo(20);
 			expect(bounds.centerY).toBeCloseTo(20);
 		});
-		it("retains the drawable fallback canvas when reset switches to a sheet", () => {
+		it("a live built-in square still draws whole when reset switches to a sheet", () => {
 			const em = make({ image: undefined });
 			const p = em.children[0];
 			const image = p.image;
 			em.reset({ image: sheet, framewidth: 8, frameheight: 8 });
+			// the shared white pixel, untouched, drawn whole at the square's size
 			expect(p.image).toBe(image);
-			expect([image.width, image.height]).toEqual([8, 8]);
+			expect(image).toBe(Renderer.getWhitePixel());
 			expect(
 				Array.from(image.getContext("2d").getImageData(0, 0, 1, 1).data),
 			).toEqual([255, 255, 255, 255]);
-			expect(crop(p).slice(0, 4)).toEqual([0, 0, 8, 8]);
+			expect(crop(p)).toEqual([0, 0, 1, 1, 0, 0, 8, 8]);
 		});
 		it("rejects invalid fallback frames before changing texture, blend or reference space", () => {
 			const em = make({
@@ -187,13 +189,17 @@ for (const backend of [video.CANVAS, video.WEBGL]) {
 				referenceSpace: "world",
 				blendMode: "additive",
 			});
-			const image = em.settings.image;
+			// no image of its own: the particles draw the shared white pixel
+			expect(em.settings.image).toBeUndefined();
+			const image = em.children[0].image;
+			expect(image).toBe(Renderer.getWhitePixel());
 			expect(() => {
 				return em.reset({ framewidth: 9 });
 			}).toThrow(RangeError);
-			expect(em.settings.image).toBe(image);
+			expect(em.settings.image).toBeUndefined();
 			expect(em.referenceSpace).toBe("world");
 			expect(em.blendMode).toBe("additive");
+			expect(em.children[0].image).toBe(image);
 			expect(
 				Array.from(image.getContext("2d").getImageData(0, 0, 1, 1).data),
 			).toEqual([255, 255, 255, 255]);

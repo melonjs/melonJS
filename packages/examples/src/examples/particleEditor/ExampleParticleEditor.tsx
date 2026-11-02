@@ -44,15 +44,14 @@ import {
 	toCode,
 	toJSON,
 } from "./state";
-import { BUILT_IN, builtIn, download, loadFile, square } from "./textures";
+import { BUILT_IN, builtIn, download, loadFile } from "./textures";
 
 const imageOf = (state: EditorState) => {
 	if (state.texture === "sprite") {
 		return state.sprite?.image;
 	}
-	return state.texture === "square"
-		? square(state.effect.textureSize)
-		: builtIn(state.texture).image;
+	// the plain square is the emitter's own: no image
+	return state.texture === "square" ? undefined : builtIn(state.texture).image;
 };
 
 /** where the effect waits while the page reloads on another renderer */
