@@ -2,7 +2,8 @@
  * melonJS — Starsweep: the playing field.
  *
  * One `Renderable` runs the round: Bolt, the monsters, sparks and
- * power-ups. The station itself is the level's Tiled map, drawn by the
+ * power-ups. Bolt and the monsters are `Sprite`s from the cast sheet (see
+ * `cast.ts`), placed here each frame. The station itself is the level's Tiled map, drawn by the
  * engine: lighting a panel sets a tile on its `power` layer, and a panel
  * that crumbles is cleared from its `station` layer (`setTile` /
  * `clearTile`). Bursts come from a `ParticleEmitter`, spark trails are
@@ -14,6 +15,7 @@
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
 import {
+	type Container,
 	event,
 	game,
 	Renderable,
@@ -38,7 +40,7 @@ import {
 	ROWS,
 	Tile,
 } from "./board";
-import { drawBolt, drawMonster } from "./characters";
+import { Actor, boltAnimation, GLOW, monsterAnimation } from "./cast";
 import type { Controls } from "./controls";
 import {
 	drawGlow,
@@ -51,6 +53,7 @@ import {
 } from "./draw";
 import {
 	aberrationBurst,
+	type DeepSpace,
 	type Effects,
 	type NebulaBackdrop,
 	type SpaceBackdrop,
@@ -119,7 +122,6 @@ interface Enemy extends Mover {
 	speed: number;
 	spawning: number; // > 0 while still coming out of the nest
 	falling: number;
-	seed: number;
 }
 
 interface Spark {
@@ -157,8 +159,12 @@ export interface Board {
 export interface FieldHost {
 	controls: Controls;
 	effects: Effects;
+	/** where the characters' sprites go, above the board */
+	actors: Container;
 	backdrop: SpaceBackdrop;
 	sky: NebulaBackdrop | null;
+	/** the 3D space behind the game, when the renderer can draw it */
+	space: DeepSpace | null;
 	/** load a level's Tiled map into the board container */
 	loadBoard: (file: string) => Promise<Board>;
 }
@@ -231,6 +237,14 @@ export class Field extends Renderable {
 	/** > 0 while Bolt is pleased with itself */
 	private cheer = 0;
 
+	// the characters on screen
+	private readonly bolt = new Actor("bolt-idle-down");
+	private readonly shieldRing = new Actor("shield");
+	private readonly lifeIcons: Actor[] = [];
+	private readonly monsters = new Map<Enemy, Actor>();
+	/** sparks and the message panel, drawn over the characters */
+	readonly front: Renderable;
+
 	// HUD
 	readonly hud: Text[] = [];
 	private scoreText: Text;
@@ -253,6 +267,23 @@ export class Field extends Renderable {
 		this.host = host;
 		this.controls = host.controls;
 		this.fx = host.effects;
+		const actors = host.actors;
+		actors.addChild(this.bolt, 1);
+		actors.addChild(this.shieldRing, 2);
+		// lives, as small Bolts in the top bar
+		for (let i = 0; i < MAX_LIVES; i++) {
+			const icon = new Actor("bolt-idle-down").place(
+				OX + 14 + i * 30,
+				96,
+				0.5,
+				0,
+			);
+			// not all bobbing in step
+			icon.setAnimationFrame(i * 3);
+			this.lifeIcons.push(icon);
+			actors.addChild(icon, 0);
+		}
+		this.front = new FieldFront(this);
 		this.hiscore =
 			(save as unknown as Record<string, number>)[HISCORE_KEY] ?? 0;
 
@@ -354,6 +385,7 @@ export class Field extends Renderable {
 		const theme = this.level.theme;
 		this.host.sky?.setLevelTheme(theme);
 		this.host.backdrop.setTheme(theme);
+		this.host.space?.setColors([theme.lit, theme.litHi, "#ffffff"]);
 		const board = await this.host.loadBoard(LEVEL_FILES[i]);
 		board.power.tint.parseCSS(theme.lit);
 		this.readTileset(board.station);
@@ -556,6 +588,7 @@ export class Field extends Renderable {
 	override update(dtMs: number) {
 		const dt = Math.min(dtMs / 1000, 1 / 20);
 		if (this.phase === "loading") {
+			this.placeActors();
 			return false;
 		}
 		this.controls.poll();
@@ -626,6 +659,7 @@ export class Field extends Renderable {
 		}
 
 		this.updateHud();
+		this.placeActors();
 		return true;
 	}
 
@@ -634,6 +668,9 @@ export class Field extends Renderable {
 		sfx.sfxClear();
 		this.bonus = Math.max(0, Math.round(this.level.par - this.levelTime)) * 25;
 		this.addScore(this.bonus);
+		// fireworks far out in space
+		this.host.space?.burst(this.level.theme.lit, 1.2);
+		this.host.space?.burst(this.level.theme.litHi, 0.8);
 		// every enemy pops in celebration
 		for (const e of this.enemies) {
 			this.fx.burst(moverX(e), moverY(e), "#ffffff", 14, 160);
@@ -936,7 +973,6 @@ export class Field extends Renderable {
 			speed: ENEMY_SPEED[kind],
 			spawning: 1,
 			falling: 0,
-			seed: Math.random() * 10,
 		});
 		sfx.sfxSpawn();
 	}
@@ -1082,6 +1118,7 @@ export class Field extends Renderable {
 					? "#3cf0c8"
 					: "#9a6bff";
 		this.fx.burst(moverX(e), moverY(e), color, 22, 200, 260);
+		this.host.space?.burst(color, 0.35);
 		this.enemies = this.enemies.filter((o) => o !== e);
 	}
 
@@ -1134,6 +1171,7 @@ export class Field extends Renderable {
 	private collect(pw: Power) {
 		this.cheer = 0.8;
 		sfx.sfxPickup();
+		this.host.space?.burst(POWER_COLORS[pw.kind], 0.6);
 		this.fx.burst(
 			tileX(pw.x) + TILE / 2,
 			tileY(pw.y) + TILE / 2 - 6,
@@ -1199,7 +1237,8 @@ export class Field extends Renderable {
 	// ---------------------------------------------------------------------
 
 	override draw(r: Renderer) {
-		// the station (the Tiled layers) and the sky are drawn under this
+		// the station (the Tiled layers) and the sky are drawn under this,
+		// the characters' sprites over it
 		if (!this.board) {
 			return;
 		}
@@ -1217,12 +1256,28 @@ export class Field extends Renderable {
 			);
 		}
 
-		for (const e of this.enemies) {
-			this.drawEnemy(r, e);
+		// a soft glow under each character
+		for (const [e, sprite] of this.monsters) {
+			const k = sprite.alpha * (e.falling > 0 ? e.falling : 1);
+			drawGlow(r, sprite.pos.x, sprite.pos.y, 26 * k, GLOW[e.kind], 0.7 * k);
 		}
+		if (this.bolt.alpha > 0) {
+			drawGlow(
+				r,
+				this.bolt.pos.x,
+				this.bolt.pos.y,
+				28,
+				GLOW.bolt,
+				0.8 * this.bolt.alpha,
+			);
+		}
+	}
 
-		this.drawPlayer(r);
-
+	/** over the characters: the sparks, and the panel behind a message */
+	drawFront(r: Renderer) {
+		if (!this.board) {
+			return;
+		}
 		for (const s of this.sparks) {
 			drawGlow(r, s.at.x, s.at.y, 16, "#fff2a8", 1);
 			r.setColor("#ffffff");
@@ -1246,10 +1301,6 @@ export class Field extends Renderable {
 	}
 
 	private drawTopBar(r: Renderer) {
-		// lives as small Bolts
-		for (let i = 0; i < Math.min(this.lives, MAX_LIVES); i++) {
-			drawBolt(r, OX + 14 + i * 30, 96, 2, this.time + i, { scale: 0.5 });
-		}
 		// paint progress
 		const bx = OX + MAX_LIVES * 30 + 12;
 		const bw = WIDTH - OX - bx;
@@ -1294,74 +1345,102 @@ export class Field extends Renderable {
 		}
 	}
 
-	private drawPlayer(r: Renderer) {
-		const p = this.player;
-		const x = moverX(p);
-		const y = moverY(p);
-		if (this.phase === "dying") {
-			if (p.falling > 0) {
-				// tumbling down into space
-				drawBolt(r, x, y + (1 - p.falling) * 20, p.facing, this.time, {
-					scale: p.falling,
-					alpha: p.falling,
-					mood: "ko",
-				});
-			} else if (p.falling === 0) {
-				// knocked out: X eyes, then fades away
-				drawBolt(r, x, y - this.ko.rise, 2, this.time, {
-					alpha: this.ko.alpha,
-					mood: "ko",
-				});
+	/** put each character's sprite where it is, playing what it is doing */
+	private placeActors() {
+		for (let i = 0; i < this.lifeIcons.length; i++) {
+			this.lifeIcons[i].alpha = this.board && i < this.lives ? 1 : 0;
+		}
+		this.placeBolt();
+
+		// a sprite for each monster, gone with it
+		for (const [e, sprite] of this.monsters) {
+			if (!this.enemies.includes(e)) {
+				this.host.actors.removeChild(sprite);
+				this.monsters.delete(e);
 			}
-			return;
 		}
-		if (this.phase === "clear") {
-			// a little victory hop
-			const hop = Math.abs(Math.sin(this.phaseTime * 8)) * 10;
-			drawBolt(r, x, y - hop, 2, this.time, { mood: "happy" });
-			return;
+		for (const e of this.enemies) {
+			let sprite = this.monsters.get(e);
+			if (!sprite) {
+				sprite = new Actor(monsterAnimation(e.kind, -1));
+				// not all stepping in time
+				sprite.setAnimationFrame(Math.floor(Math.random() * 8));
+				this.monsters.set(e, sprite);
+				this.host.actors.addChild(sprite, 3);
+			}
+			this.placeMonster(e, sprite);
 		}
-		const blink = p.invuln > 0 && Math.floor(p.invuln * 10) % 2 === 0;
-		drawBolt(r, x, y, p.facing, this.time, {
-			walking: p.moving && !p.forced,
-			alpha: blink ? 0.35 : 1,
-			shield: this.shield > 0,
-			mood: this.cheer > 0 ? "happy" : "normal",
-		});
 	}
 
-	private drawEnemy(r: Renderer, e: Enemy) {
+	private placeBolt() {
+		const p = this.player;
+		const sprite = this.bolt;
+		let shield = false;
+		if (!this.board || !p) {
+			sprite.alpha = 0;
+		} else {
+			const x = moverX(p);
+			const y = moverY(p);
+			if (this.phase === "dying") {
+				sprite.play("bolt-ko");
+				if (p.falling > 0) {
+					// tumbling down into space
+					sprite.place(x, y + (1 - p.falling) * 20, p.falling, p.falling);
+				} else if (p.falling === 0) {
+					// knocked out: floats up as it fades away
+					sprite.place(x, y - this.ko.rise, 1, this.ko.alpha);
+				} else {
+					sprite.alpha = 0;
+				}
+			} else if (this.phase === "clear") {
+				// a little victory hop
+				const hop = Math.abs(Math.sin(this.phaseTime * 8)) * 10;
+				sprite.play("bolt-cheer");
+				sprite.place(x, y - hop);
+			} else {
+				const blink = p.invuln > 0 && Math.floor(p.invuln * 10) % 2 === 0;
+				sprite.play(
+					this.cheer > 0
+						? "bolt-cheer"
+						: boltAnimation(p.moving && !p.forced, p.facing),
+				);
+				sprite.place(x, y, 1, blink ? 0.35 : 1);
+				shield = this.shield > 0;
+			}
+		}
+		this.shieldRing.place(sprite.pos.x, sprite.pos.y, 1, shield ? 1 : 0);
+	}
+
+	private placeMonster(e: Enemy, sprite: Actor) {
 		const x = moverX(e);
 		const y = moverY(e);
 		if (e.falling > 0) {
-			drawMonster(
-				r,
-				e.kind,
-				x,
-				y + (1 - e.falling) * 20,
-				e.dir,
-				this.time,
-				e.seed,
-				{
-					scale: e.falling,
-					alpha: e.falling,
-					walking: false,
-				},
-			);
-			return;
-		}
-		if (e.spawning > 0) {
+			sprite.play(monsterAnimation(e.kind, -1));
+			sprite.place(x, y + (1 - e.falling) * 20, e.falling, e.falling);
+		} else if (e.spawning > 0) {
+			// coming out of the portal
 			const grow = 1 - e.spawning;
-			drawMonster(r, e.kind, x, y, -1, this.time, e.seed, {
-				scale: 0.2 + grow * 0.8,
-				alpha: grow * 0.8,
-				walking: false,
-			});
-			return;
+			sprite.play(monsterAnimation(e.kind, -1));
+			sprite.place(x, y, 0.2 + grow * 0.8, grow * 0.8);
+		} else if (this.freeze > 0) {
+			sprite.play(`${e.kind}-frozen`);
+			sprite.place(x, y);
+		} else {
+			sprite.play(monsterAnimation(e.kind, e.dir));
+			sprite.place(x, y);
 		}
-		drawMonster(r, e.kind, x, y, e.dir, this.time, e.seed, {
-			frozen: this.freeze > 0,
-			walking: this.freeze <= 0,
-		});
+	}
+}
+
+/** draws the field's front layer, over the characters */
+class FieldFront extends Renderable {
+	constructor(private readonly field: Field) {
+		super(0, 0, WIDTH, HEIGHT);
+		this.anchorPoint.set(0, 0);
+		this.isPersistent = true;
+	}
+
+	override draw(r: Renderer) {
+		this.field.drawFront(r);
 	}
 }

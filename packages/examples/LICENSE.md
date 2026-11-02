@@ -106,14 +106,13 @@ The robot and monsters in the Starsweep example (`starsweep/`) are built
 from parts of the **Monster Builder Pack** by **Kenney**
 (<https://kenney.nl/assets/monster-builder-pack>), released under
 **CC0 1.0** (public domain). The parts used are repacked at half size into
-`public/assets/starsweep/monsters.png`; the pack's own license ships beside
-it as `License.txt`.
+`public/assets/starsweep/monsters.png`, and `scripts/bake-starsweep-cast.mjs`
+poses them into the characters' sprite sheet, `cast.png` / `cast.json`; the
+pack's own license ships beside them as `License.txt`.
 
-It also reuses two CC0 Kenney assets already in this repository: the
-**Space Kit** ships from `public/assets/multiMaterialMesh/` (the 3D cruisers
-flying under the station) and the **Kenney Future** font from
-`public/assets/ui/font/`. The station, the nebula shader and everything else
-are drawn or generated at run time. The levels in
+It also reuses the CC0 **Kenney Future** font already in this repository,
+from `public/assets/ui/font/`. The nebula shader, the particles and
+everything else are drawn or generated at run time. The levels in
 `public/assets/starsweep/levels/` are Tiled maps made for this example, and
 their tileset image `starsweep-tiles.png` was drawn for it too; both are
 covered by the MIT license above.

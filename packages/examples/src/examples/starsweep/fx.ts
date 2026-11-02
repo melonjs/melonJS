@@ -1,14 +1,14 @@
 /**
- * melonJS — Starsweep: shaders, post-processing and the 3D cruiser.
+ * melonJS — Starsweep: shaders, post-processing and 3D space.
  *
  * - **Nebula**: a custom `ShaderEffect` on a blank full-screen quad paints
  *   drifting space clouds and twinkling stars every frame, tinted to the
  *   level. Written in GLSL and WGSL, so it runs on WebGL and WebGPU.
- * - **Camera post-effects**: bloom makes the powered panels, sparks and
- *   characters glow, a vignette frames the board, and a chromatic
+ * - **Post-effects**: bloom makes the powered panels, sparks and
+ *   characters glow, a vignette frames the screen, and a chromatic
  *   aberration burst kicks in when Bolt gets hit.
- * - **Cruiser**: a Kenney Space Kit ship (`Mesh` from OBJ + MTL) that
- *   flies past now and then, under the station, seen through the gaps.
+ * - **Deep space**: star dust streaming past and far-off novas, 3D
+ *   particles drawn by a second, perspective camera under the game's own.
  *
  * All of it needs a GPU renderer. On the Canvas renderer the effects
  * switch themselves off and the game falls back to its drawn sky.
@@ -17,14 +17,13 @@
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
 import {
-	type Application,
 	BloomEffect,
+	Camera3d,
 	ChromaticAberrationEffect,
 	Color,
 	type Container,
 	game,
 	getPool,
-	Mesh,
 	ParticleEmitter,
 	Renderable,
 	ShaderEffect,
@@ -33,7 +32,6 @@ import {
 	Tween,
 	timer,
 	Vector2d,
-	Vector3d,
 	VignetteEffect,
 } from "melonjs";
 import {
@@ -229,26 +227,36 @@ export class NebulaBackdrop extends Sprite {
 // camera post-processing
 // ---------------------------------------------------------------------------
 
-let bloom: BloomEffect | null = null;
-let vignette: VignetteEffect | null = null;
+/** the aberration of the screen on now, for `aberrationBurst` */
 let aberration: ChromaticAberrationEffect | null = null;
 
 /**
- * Bloom, chromatic aberration and a vignette on the camera. Built once and
- * re-added after each screen change (a new screen can bring a new camera).
+ * Bloom and the chromatic aberration of hits, on the container that holds a
+ * screen's game. They go on the container rather than on the camera: a
+ * camera's post-effect pass replaces the whole frame, which would wipe out
+ * the space the 3D camera drew before it, while a renderable's pass is
+ * blended over what is behind it.
+ *
+ * Each screen makes its own: a container destroys its effects with it.
  */
-export const setupScreenFx = (app: Application) => {
-	bloom ??= new BloomEffect(app.renderer, {
-		threshold: 0.72,
-		intensity: 0.55,
-		radius: 3,
-	});
-	aberration ??= new ChromaticAberrationEffect(app.renderer, { offset: 0 });
-	vignette ??= new VignetteEffect(app.renderer, { strength: 0.22, size: 22 });
-	for (const fx of [bloom, aberration, vignette]) {
-		if (!app.viewport.postEffects.includes(fx)) {
-			app.viewport.addPostEffect(fx);
-		}
+export const addLayerFx = (layer: Renderable) => {
+	const renderer = game.renderer;
+	layer.addPostEffect(
+		new BloomEffect(renderer, { threshold: 0.72, intensity: 0.55, radius: 3 }),
+	);
+	aberration = new ChromaticAberrationEffect(renderer, { offset: 0 });
+	layer.addPostEffect(aberration);
+};
+
+/**
+ * A vignette, on the camera that draws first. A stage's own camera lives as
+ * long as the stage, so it is added once.
+ */
+export const addVignette = (target: Renderable) => {
+	if (!target.postEffects.some((fx) => fx instanceof VignetteEffect)) {
+		target.addPostEffect(
+			new VignetteEffect(game.renderer, { strength: 0.22, size: 22 }),
+		);
 	}
 };
 
@@ -269,123 +277,204 @@ export const aberrationBurst = (peak = 7, duration = 450) => {
 };
 
 // ---------------------------------------------------------------------------
-// the 3D cruiser
+// the 3D space behind the station
 // ---------------------------------------------------------------------------
 
-export const CRUISER_MODELS = [
-	"craft_speederA",
-	"craft_racer",
-	"craft_miner",
-] as const;
-export const CRUISER_BASE = "assets/multiMaterialMesh/";
-
-const AXIS_X = new Vector3d(1, 0, 0);
-const AXIS_Z = new Vector3d(0, 0, 1);
-
-interface Flight {
-	mesh: Mesh;
-	x: number;
-	y: number;
-	vx: number;
-	size: number;
-	bank: number;
-}
+/**
+ * The visibility layer of the space behind the game. Only the space camera
+ * draws it, and the game's own camera leaves it out.
+ */
+export const SPACE_LAYER = 2;
+/**
+ * The visibility layer of the container that holds the game, which the
+ * space camera leaves out.
+ *
+ * Particles are on the default layer (1) whatever their emitter is on, and
+ * a camera draws something only if it AND every container above it are on
+ * a layer the camera draws. So the space camera draws layer 1 too, and the
+ * game is kept out of it by its container's layer instead.
+ */
+export const GAME_LAYER = 4;
 
 /**
- * Space Kit ships cruising across the sky now and then. Drawn between the
- * backdrop and the station, so they pass under the board and show through
- * its gaps.
+ * A second camera, a perspective `Camera3d`, that draws only the space
+ * behind the game. Give it to a `Stage` with `super({ cameras: [...] })`: a
+ * stage's own cameras draw before its default one, so space ends up under
+ * everything the game's 2D camera draws.
+ *
+ * Its eye sits at the origin looking down +Z, deeper into the screen.
+ * @returns the camera, or null on a renderer without 3D (Canvas, WebGL 1)
  */
-export class Cruisers extends Renderable {
-	private flights: Flight[] = [];
-	private wait: number;
-	private readonly w: number;
-	private readonly h: number;
-	private readonly every: [number, number];
-	private readonly sizes: [number, number];
+export const makeSpaceCamera = (w: number, h: number) => {
+	if (game.renderer?.supportsDepthBuffer !== true) {
+		return null;
+	}
+	const camera = new Camera3d(0, 0, w, h, {
+		fov: Math.PI / 3,
+		near: 1,
+		far: 6000,
+	});
+	camera.name = "space";
+	camera.cullMask = SPACE_LAYER | 1;
+	return camera;
+};
+
+/** a soft white dot, for the particles to be tinted from */
+const softDot = (size = 64) => {
+	const canvas = document.createElement("canvas");
+	canvas.width = canvas.height = size;
+	const ctx = canvas.getContext("2d");
+	if (ctx) {
+		const r = size / 2;
+		const g = ctx.createRadialGradient(r, r, 0, r, r, r);
+		g.addColorStop(0, "rgba(255,255,255,1)");
+		g.addColorStop(0.25, "rgba(255,255,255,0.75)");
+		g.addColorStop(1, "rgba(255,255,255,0)");
+		ctx.fillStyle = g;
+		ctx.fillRect(0, 0, size, size);
+	}
+	return canvas;
+};
+
+/** where the dust is born, in front of the camera */
+const DUST = { near: 900, far: 4200, halfWidth: 1700, halfHeight: 2800 };
+/** how far away the novas go off */
+const NOVA_DEPTH = 2200;
+
+/**
+ * Space, in 3D: star dust streaming past the camera, and novas, spheres of
+ * sparks, going off far away, in the level's colours. Both are plain
+ * `ParticleEmitter`s placed in depth: `elevation` sends particles along Z,
+ * and the `Camera3d` draws them in perspective, so near dust is big and
+ * fast and far dust small and slow. The camera drifts a little too, which
+ * is what makes the depth read.
+ */
+export class DeepSpace extends Renderable {
+	private readonly dust: ParticleEmitter;
+	/** a few, so one can be aimed elsewhere while the last one fades */
+	private readonly novas: ParticleEmitter[] = [];
+	private colors: string[] = ["#ffffff", "#2ee6d6", "#b8fff6"];
+	private time = Math.random() * 100;
+	private next = 0;
+	private nextNova = 0;
 
 	constructor(
-		w: number,
-		h: number,
-		opts: {
-			every?: [number, number];
-			sizes?: [number, number];
-			first?: number;
-		} = {},
+		private readonly world: Container,
+		private readonly camera: Camera3d,
 	) {
-		super(0, 0, w, h);
-		this.anchorPoint.set(0, 0);
+		super(0, 0, 1, 1);
 		this.alwaysUpdate = true;
-		this.w = w;
-		this.h = h;
-		this.every = opts.every ?? [9, 16];
-		this.sizes = opts.sizes ?? [70, 120];
-		this.wait = opts.first ?? 2;
+		this.isPersistent = true;
+		// drawn by no camera: this only drives the scene
+		this.visibilityLayer = 0;
+		camera.setPosition(0, 0, 0);
+		const image = softDot();
+
+		const depth = DUST.far - DUST.near;
+		// the constructor centres the spawn area on (x, y)
+		this.dust = new ParticleEmitter(0, 0, {
+			image,
+			width: DUST.halfWidth * 2,
+			height: DUST.halfHeight * 2,
+			depth,
+			totalParticles: 500,
+			frequency: 20,
+			// straight at the camera, give or take
+			elevation: -Math.PI / 2,
+			elevationVariation: 0.12,
+			speed: 3.2,
+			speedVariation: 1.6,
+			minLife: 9000,
+			maxLife: 16000,
+			minStartScale: 0.2,
+			maxStartScale: 0.55,
+			minEndScale: 0.45,
+			maxEndScale: 0.9,
+			blendMode: "additive",
+			// measured from the emitter, which is what puts them at its depth
+			referenceSpace: "local",
+			onlyInViewport: false,
+		});
+
+		for (let i = 0; i < 3; i++) {
+			this.novas.push(this.makeNova(image));
+		}
+
+		for (const emitter of [this.dust, ...this.novas]) {
+			emitter.isPersistent = true;
+			emitter.visibilityLayer = SPACE_LAYER;
+		}
+		world.addChild(this.dust, DUST.near + depth / 2);
+		for (const nova of this.novas) {
+			world.addChild(nova, NOVA_DEPTH);
+		}
+		this.dust.streamParticles();
 	}
 
-	/** whether this renderer can draw 3D meshes at a usable speed */
-	static supported() {
-		return game.renderer.supportsDepthBuffer === true;
+	private makeNova(image: HTMLCanvasElement) {
+		return new ParticleEmitter(0, 0, {
+			image,
+			width: 30,
+			height: 30,
+			depth: 30,
+			totalParticles: 220,
+			// every way at once: a sphere
+			maxSpread: Math.PI,
+			speed: 5,
+			speedVariation: 2.5,
+			minLife: 1600,
+			maxLife: 2800,
+			minStartScale: 0.5,
+			maxStartScale: 1.1,
+			minEndScale: 0,
+			maxEndScale: 0.2,
+			blendMode: "additive",
+			referenceSpace: "local",
+			onlyInViewport: false,
+		});
 	}
 
-	private launch() {
-		const model =
-			CRUISER_MODELS[Math.floor(Math.random() * CRUISER_MODELS.length)];
-		const size =
-			this.sizes[0] + Math.random() * (this.sizes[1] - this.sizes[0]);
-		const leftToRight = Math.random() < 0.5;
-		const mesh = new Mesh(0, 0, {
-			model,
-			material: model,
-			width: size,
-			height: size,
-			cullBackFaces: false,
-		});
-		this.flights.push({
-			mesh,
-			x: leftToRight ? -size : this.w + size,
-			y: 90 + Math.random() * (this.h - 180),
-			vx: (leftToRight ? 1 : -1) * (70 + Math.random() * 60),
-			size,
-			bank: Math.random() * Math.PI * 2,
-		});
+	/** take on a level's colours: new dust is born in them */
+	setColors(colors: string[]) {
+		this.colors = colors;
+	}
+
+	/**
+	 * a nova far away, somewhere on screen
+	 * @param size - 1 for a big one
+	 */
+	burst(color: string, size = 1) {
+		const e = this.novas[this.nextNova];
+		this.nextNova = (this.nextNova + 1) % this.novas.length;
+		e.settings.tint = color;
+		e.settings.speed = 5 * size;
+		// somewhere in view at that depth, kept clear of the very edges
+		const halfH = Math.tan(this.camera.fov / 2) * NOVA_DEPTH * 0.6;
+		const halfW = halfH * (this.camera.width / this.camera.height);
+		e.pos.x = (Math.random() * 2 - 1) * halfW - 15;
+		e.pos.y = (Math.random() * 2 - 1) * halfH - 15;
+		e.burstParticles(Math.round(70 + 150 * size));
 	}
 
 	override update(dt: number) {
-		const s = dt / 1000;
-		this.wait -= s;
-		if (this.wait <= 0) {
-			this.wait =
-				this.every[0] + Math.random() * (this.every[1] - this.every[0]);
-			this.launch();
-		}
-		for (const f of this.flights) {
-			f.x += f.vx * s;
-			f.bank += s;
-			// nose along the direction of travel, seen a little from above,
-			// rolling gently as it flies
-			const m = f.mesh;
-			m.currentTransform.identity();
-			// each rotate() applies before the ones already set, so read these
-			// bottom-up: roll along the hull, tilt it to a three-quarter view
-			// from above (the model's nose then points down the screen), then
-			// turn the nose to the direction of travel
-			m.rotate(f.vx > 0 ? Math.PI / 2 : -Math.PI / 2, AXIS_Z);
-			m.rotate(1.15, AXIS_X);
-			m.rotate(Math.sin(f.bank * 1.3) * 0.35, AXIS_Z);
-			m.pos.set(f.x, f.y + Math.sin(f.bank * 0.9) * 10);
-		}
-		this.flights = this.flights.filter(
-			(f) => f.x > -f.size * 2 && f.x < this.w + f.size * 2,
-		);
-		return true;
+		this.time += dt / 1000;
+		// each new particle takes the tint of the moment: cycle through the
+		// colours so the dust is a mix of them
+		this.next = (this.next + 1) % this.colors.length;
+		this.dust.settings.tint = this.colors[this.next];
+		// drift the camera a little, so near and far dust part
+		this.camera.yaw = Math.sin(this.time * 0.11) * 0.16;
+		this.camera.pitch = Math.sin(this.time * 0.07) * 0.12;
+		this.camera.roll = Math.sin(this.time * 0.05) * 0.08;
+		return false;
 	}
 
-	override draw(r: Renderer) {
-		for (const f of this.flights) {
-			f.mesh.preDraw(r);
-			f.mesh.draw(r);
-			f.mesh.postDraw(r);
+	/** take everything off the world, for good */
+	destroy() {
+		for (const r of [this.dust, ...this.novas, this]) {
+			if (r.ancestor) {
+				this.world.removeChild(r);
+			}
 		}
 	}
 }

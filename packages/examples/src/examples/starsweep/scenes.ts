@@ -6,6 +6,7 @@
  */
 import {
 	type Application,
+	type Camera3d,
 	Container,
 	level,
 	Renderable,
@@ -15,9 +16,10 @@ import {
 	Text,
 	type TMXLayer,
 } from "melonjs";
-import { drawBolt, drawMonster } from "./characters";
+import { Actor, GLOW } from "./cast";
 import { Controls } from "./controls";
 import {
+	drawGlow,
 	drawPanelDetail,
 	drawSky,
 	drawSlab,
@@ -29,11 +31,15 @@ import {
 } from "./draw";
 import { Field, HEIGHT, HISCORE_KEY, OX, OY, WIDTH } from "./field";
 import {
-	Cruisers,
+	addLayerFx,
+	addVignette,
+	DeepSpace,
 	Effects,
+	GAME_LAYER,
+	makeSpaceCamera,
 	NebulaBackdrop,
+	SPACE_LAYER,
 	SpaceBackdrop,
-	setupScreenFx,
 } from "./fx";
 import * as sfx from "./sfx";
 
@@ -41,23 +47,53 @@ import * as sfx from "./sfx";
 export const controls = new Controls();
 
 /**
- * The shader sky and passing 3D ships, on renderers that can do them.
- * Returns the sky, or null when the drawn fallback should be used.
+ * Sets a screen up in two layers.
+ *
+ * - **Space**, behind: the shader nebula and, when the renderer can do 3D,
+ *   the star dust and novas. These are on the space visibility layer, which
+ *   only the space camera (a `Camera3d`) draws, and it draws first.
+ * - **The game**, in front: a container for everything else, drawn by the
+ *   stage's ordinary 2D camera, which leaves the space layer out. The bloom
+ *   and the hit aberration are on this container, so the space shows
+ *   through around the game (see `addLayerFx`).
+ * @returns the game's container, the nebula (null when the drawn sky should
+ * be used instead), and the 3D space (null without a 3D camera)
  */
-const addSpace = (
-	app: Application,
-	ships: ConstructorParameters<typeof Cruisers>[2],
-): NebulaBackdrop | null => {
-	setupScreenFx(app);
-	const sky = new NebulaBackdrop(WIDTH, HEIGHT);
+const setUpLayers = (app: Application, camera: Camera3d | null) => {
+	const world = app.world;
+	const game = new Container(0, 0, WIDTH, HEIGHT);
+	game.name = "game";
+	world.addChild(game, 0);
+	addLayerFx(game);
+	addVignette(camera ?? game);
+
+	let deep: DeepSpace | null = null;
+	if (camera) {
+		// the world is on every layer, so each camera walks into it
+		world.visibilityLayer = 1 | SPACE_LAYER | GAME_LAYER;
+		game.visibilityLayer = GAME_LAYER;
+		app.viewport.cullMask = ~SPACE_LAYER;
+		deep = new DeepSpace(world, camera);
+		world.addChild(deep, 0);
+	}
+	let sky: NebulaBackdrop | null = new NebulaBackdrop(WIDTH, HEIGHT);
 	if (!sky.supported) {
-		return null;
+		sky = null;
+	} else if (camera) {
+		// the space camera draws it, as far back as it can see
+		sky.visibilityLayer = SPACE_LAYER;
+		sky.visibleInAllCameras = true;
+		world.addChild(sky, -5000);
+	} else {
+		world.addChild(sky, -10);
 	}
-	app.world.addChild(sky, -10);
-	if (Cruisers.supported()) {
-		app.world.addChild(new Cruisers(WIDTH, HEIGHT, ships), -5);
-	}
-	return sky;
+	return { game, sky, deep };
+};
+
+/** a stage's settings, with the space camera when the renderer can do 3D */
+const withSpaceCamera = () => {
+	const camera = makeSpaceCamera(WIDTH, HEIGHT);
+	return { camera, settings: camera ? { cameras: [camera] } : {} };
 };
 
 /** the play screen loads a level into the world: keep these across it */
@@ -73,6 +109,16 @@ class TitleBackdrop extends Renderable {
 	private onStart: () => void;
 	/** false when a shader sky is drawn behind instead */
 	drawnSky = true;
+	/** the 3D space behind, for a nova now and then */
+	deep: DeepSpace | null = null;
+	private nextNova = 1;
+	/** Bolt, then the monsters after it */
+	readonly runners = [
+		new Actor("bolt-walk-right"),
+		new Actor("wobbler-walk-right"),
+		new Actor("muncher-walk-right"),
+		new Actor("chaser-walk-right"),
+	];
 
 	constructor(onStart: () => void) {
 		super(0, 0, WIDTH, HEIGHT);
@@ -87,7 +133,29 @@ class TitleBackdrop extends Renderable {
 		if (this.time > 0.5 && controls.confirm()) {
 			this.onStart();
 		}
+		this.nextNova -= dt / 1000;
+		if (this.nextNova <= 0) {
+			this.nextNova = 2 + Math.random() * 3;
+			this.deep?.burst(Math.random() < 0.5 ? "#ff5fb8" : "#2ee6d6");
+		}
+		const { x, y } = this.boltAt();
+		const gaps = [0, 1.8, 3.1, 4.4];
+		this.runners.forEach((runner, i) => {
+			runner.place(x - TILE * gaps[i], y);
+		});
 		return true;
+	}
+
+	/** Bolt loops across the deck, powering it up, monsters in pursuit */
+	private boltAt() {
+		const loop = 7;
+		const u = (this.time % loop) / loop;
+		const tile = -1 + u * (11 + 5);
+		return {
+			tile,
+			x: (WIDTH - 11 * TILE) / 2 + tile * TILE + TILE / 2,
+			y: DECK_Y + TILE / 2 - 4,
+		};
 	}
 
 	override draw(r: Renderer) {
@@ -96,11 +164,8 @@ class TitleBackdrop extends Renderable {
 		}
 		const cols = 11;
 		const x0 = (WIDTH - cols * TILE) / 2;
-		const y0 = 500;
-		// Bolt loops across the deck, powering it up, monsters in pursuit
-		const loop = 7;
-		const u = (this.time % loop) / loop;
-		const boltX = -1 + u * (cols + 5);
+		const y0 = DECK_Y;
+		const boltX = this.boltAt().tile;
 		for (let i = 0; i < cols; i++) {
 			const lit = i < boltX;
 			drawSlab(
@@ -112,26 +177,43 @@ class TitleBackdrop extends Renderable {
 			);
 			drawPanelDetail(r, x0 + i * TILE, y0, lit);
 		}
-		const lx = x0 + boltX * TILE + TILE / 2;
-		const ly = y0 + TILE / 2 - 4;
-		drawBolt(r, lx, ly, 1, this.time, { walking: true });
-		drawMonster(r, "wobbler", lx - TILE * 1.8, ly, 1, this.time, 1);
-		drawMonster(r, "muncher", lx - TILE * 3.1, ly, 1, this.time, 2);
-		drawMonster(r, "chaser", lx - TILE * 4.4, ly, 1, this.time, 3);
+		// a glow under each runner; the sprites draw over it
+		const glows = [GLOW.bolt, GLOW.wobbler, GLOW.muncher, GLOW.chaser];
+		this.runners.forEach((runner, i) => {
+			drawGlow(r, runner.pos.x, runner.pos.y, 26, glows[i], 0.75);
+		});
 	}
 }
 
+/** the title screen's strip of deck */
+const DECK_Y = 500;
+
 export class TitleScreen extends Stage {
 	private backdrop?: TitleBackdrop;
+	private deep: DeepSpace | null = null;
+	private readonly space: Camera3d | null;
+
+	constructor() {
+		const { camera, settings } = withSpaceCamera();
+		super(settings);
+		this.space = camera;
+	}
 
 	override onResetEvent(app: Application) {
 		app.reset();
+		const { game, sky, deep } = setUpLayers(app, this.space);
 		this.backdrop = new TitleBackdrop(() => {
 			sfx.sfxStart();
 			state.change(state.PLAY);
 		});
-		app.world.addChild(this.backdrop, 0);
-		const sky = addSpace(app, { every: [5, 9], sizes: [110, 170], first: 0.5 });
+		game.addChild(this.backdrop, 0);
+		for (const runner of this.backdrop.runners) {
+			runner.isPersistent = false;
+			game.addChild(runner, 1);
+		}
+		this.deep = deep;
+		this.backdrop.deep = deep;
+		deep?.setColors(["#ff5fb8", "#2ee6d6", "#ffffff", "#b98bff"]);
 		if (sky) {
 			sky.setTheme("#0b0a24", "#a12a6f", "#2e2766");
 			this.backdrop.drawnSky = false;
@@ -155,7 +237,7 @@ export class TitleScreen extends Stage {
 				text: value,
 			});
 			t.floating = true;
-			app.world.addChild(t, 10);
+			game.addChild(t, 10);
 			return t;
 		};
 		// a drop shadow, then the title over it
@@ -188,7 +270,13 @@ export class TitleScreen extends Stage {
 			}
 			override draw() {}
 		})();
-		app.world.addChild(blink, 0);
+		game.addChild(blink, 0);
+	}
+
+	override onDestroyEvent() {
+		// the dust and novas are persistent, so the next reset keeps them: take them out
+		this.deep?.destroy();
+		this.deep = null;
 	}
 }
 
@@ -197,36 +285,48 @@ export class PlayScreen extends Stage {
 	/** what this screen put in the world and must take out again */
 	private kept: Renderable[] = [];
 	private effects: Effects | null = null;
+	private deep: DeepSpace | null = null;
+	private readonly space: Camera3d | null;
+
+	constructor() {
+		const { camera, settings } = withSpaceCamera();
+		super(settings);
+		this.space = camera;
+	}
 
 	override onResetEvent(app: Application) {
 		app.reset();
 		const world = app.world;
-		const sky = addSpace(app, { every: [10, 18], sizes: [70, 110], first: 4 });
-		// `level.load` empties the world of everything not persistent
+		const { game, sky, deep } = setUpLayers(app, this.space);
+		this.deep = deep;
+		// `level.load` empties the world of everything not persistent: keep
+		// what this screen added, and take it out again when leaving
 		for (const child of world.getChildren()) {
 			keep(child as Renderable);
 			this.kept.push(child as Renderable);
 		}
 		// the planet, and the whole sky when there is no shader for it
-		const backdrop = keep(
-			new SpaceBackdrop(WIDTH, HEIGHT, sky === null, {
-				x: WIDTH - 40,
-				y: OY + 70,
-			}),
-		);
+		const backdrop = new SpaceBackdrop(WIDTH, HEIGHT, sky === null, {
+			x: WIDTH - 40,
+			y: OY + 70,
+		});
 		// each level's Tiled map is loaded into this container, at the board's place
-		const board = keep(new Container(OX, OY, WIDTH, HEIGHT));
+		const board = new Container(OX, OY, WIDTH, HEIGHT);
 		board.name = "board";
-		world.addChild(backdrop, -1);
-		world.addChild(board, 0);
-		this.kept.push(backdrop, board);
-		this.effects = new Effects(world, 3);
+		// Bolt and the monsters, over the board
+		const actors = new Container(0, 0, WIDTH, HEIGHT);
+		game.addChild(backdrop, -1);
+		game.addChild(board, 0);
+		game.addChild(actors, 2);
+		this.effects = new Effects(game, 3);
 
 		const field = new Field({
 			controls,
 			effects: this.effects,
+			actors,
 			backdrop,
 			sky,
+			space: deep,
 			loadBoard: async (file) => {
 				await level.load(file, {
 					container: board,
@@ -242,11 +342,10 @@ export class PlayScreen extends Stage {
 			},
 		});
 		field.onExit = () => state.change(state.MENU);
-		world.addChild(field, 2);
-		this.kept.push(field);
+		game.addChild(field, 1);
+		game.addChild(field.front, 4);
 		for (const t of field.hud) {
-			world.addChild(t, 10);
-			this.kept.push(t);
+			game.addChild(t, 10);
 		}
 		this.field = field;
 		controls.attach(true);
@@ -273,6 +372,8 @@ export class PlayScreen extends Stage {
 			state.resume();
 		}
 		this.effects?.destroy();
+		this.deep?.destroy();
+		this.deep = null;
 		for (const r of this.kept) {
 			if (r.ancestor) {
 				app.world.removeChild(r);

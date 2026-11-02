@@ -1,10 +1,10 @@
 /**
  * melonJS — Starsweep: drawing helpers.
  *
- * The characters, power-ups, sky and HUD are drawn from shapes (rects,
- * ellipses, arcs, lines, polygons) through the renderer, so they run the
- * same on Canvas, WebGL and WebGPU. The station itself is a Tiled map,
- * drawn by the engine.
+ * The power-ups, glows, the drawn sky and the HUD are drawn from shapes
+ * (rects, ellipses, arcs, lines, polygons) through the renderer, so they run
+ * the same on Canvas, WebGL and WebGPU. The station is a Tiled map and the
+ * characters are sprites (see `cast.ts`), both drawn by the engine.
  *
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.

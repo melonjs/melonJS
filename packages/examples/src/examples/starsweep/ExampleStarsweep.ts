@@ -13,22 +13,21 @@
  * `@melonjs/gamepad-plugin` virtual gamepad (a stick and a ZAP button)
  * sits under the board and presses the same keys as the keyboard.
  *
- * The characters are put together from Kenney's Monster Builder Pack
- * (CC0) and the station is drawn from shapes. On GPU renderers a custom
- * nebula shader animates the sky, bloom, vignette and chromatic
- * aberration post-effects polish the frame, and 3D Space Kit ships fly
- * under the station (see `fx.ts`). Every sound is synthesised with
- * `audio.tone` / `audio.noise`.
+ * The characters are sprites from one sheet, `cast.png`, baked from
+ * Kenney's Monster Builder Pack (CC0) with every animation in its JSON (see
+ * `cast.ts`). On GPU renderers a custom nebula shader animates the sky,
+ * bloom, vignette and chromatic aberration post-effects polish the frame,
+ * and a second, 3D camera draws star dust and novas behind the game (see
+ * `fx.ts`). Every sound is synthesised with `audio.tone` / `audio.noise`.
  *
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
 import { Application, loader, save, state } from "melonjs";
 import { createExampleComponent } from "../utils";
-import { ATLAS } from "./characters";
+import { CAST } from "./cast";
 import { FONT } from "./draw";
 import { HEIGHT, HISCORE_KEY, WIDTH } from "./field";
-import { CRUISER_BASE, CRUISER_MODELS } from "./fx";
 import {
 	LEVEL_FILES,
 	LEVELS,
@@ -57,18 +56,15 @@ const createGame = async () => {
 	const base = import.meta.env.BASE_URL;
 	const levels = `${base}assets/starsweep/levels/`;
 	await loader.preload([
-		{ name: ATLAS, type: "image", src: `${base}assets/starsweep/monsters.png` },
+		// the characters, and their animations
+		{ name: CAST, type: "image", src: `${base}assets/starsweep/cast.png` },
+		{ name: CAST, type: "json", src: `${base}assets/starsweep/cast.json` },
 		// Kenney Future (CC0), shared with the UI example
 		{
 			name: FONT,
 			type: "fontface",
 			src: `${base}assets/ui/font/kenvector_future.woff2`,
 		},
-		// Kenney Space Kit ships (CC0), shared with the multi-material mesh example
-		...CRUISER_MODELS.flatMap((name) => [
-			{ name, type: "obj", src: `${base}${CRUISER_BASE}${name}.obj` },
-			{ name, type: "mtl", src: `${base}${CRUISER_BASE}${name}.mtl` },
-		]),
 		// the levels, edited in Tiled, the tileset they share and its image
 		{ name: TILESET_FILE, type: "tsx", src: `${levels}${TILESET_FILE}.tsj` },
 		{ name: TILESET_FILE, type: "image", src: `${levels}${TILESET_FILE}.png` },
