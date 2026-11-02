@@ -37,8 +37,14 @@ export interface ParticleEmitterSettings {
 	depth: number;
 
 	/**
-	 * Image used for particles texture (by default melonJS will create a white
-	 * 8x8 texture image).
+	 * Image used for particles texture. Without one, particles are white
+	 * squares of {@link textureSize} pixels, colored by `tint`.
+	 * <br><br>
+	 * The white square is the renderer's shared white pixel
+	 * ({@link Renderer.getWhitePixel}), drawn stretched, which every emitter
+	 * without an image and everything else drawn without a texture uses: once
+	 * an emitter has no image, `settings.image` holds that pixel, so do not
+	 * draw on it.
 	 * @default undefined
 	 * @see {@link textureSize}
 	 */
@@ -84,8 +90,8 @@ export interface ParticleEmitterSettings {
 	randomFrame?: boolean;
 
 	/**
-	 * Default texture size used for particles if no image is specified
-	 * (by default melonJS will create a white 8x8 texture image).
+	 * Size, in pixels, of the white square particles are drawn as when the
+	 * emitter has no {@link image}.
 	 * @default 8
 	 * @see {@link image}
 	 */

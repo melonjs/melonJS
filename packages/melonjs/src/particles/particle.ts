@@ -91,19 +91,23 @@ export default class Particle extends Renderable {
 	private _animateFrames: boolean;
 
 	/**
+	 * whether the image is the emitter's built-in square, the shared white
+	 * pixel: drawn whole, stretched to the particle's size
+	 * @ignore
+	 */
+	private _builtin = false;
+
+	/**
 	 * @param emitter - the particle emitter
 	 */
 	constructor(emitter: ParticleEmitter) {
-		// reset() ensures `settings.image` is set to either the user image or a
-		// fallback canvas before any particle is spawned.
-		const image = emitter.settings.image as
-			| HTMLCanvasElement
-			| HTMLImageElement;
+		// reset() sizes the particles: a sprite-sheet cell, the image, or
+		// `textureSize` for the built-in square
 		super(
 			emitter.getRandomPointX(),
 			emitter.getRandomPointY(),
-			emitter.settings.framewidth ?? image.width,
-			emitter.settings.frameheight ?? image.height,
+			emitter._particleWidth,
+			emitter._particleHeight,
 		);
 		// particle velocity
 		this.vel = vector2dPool.get();
@@ -159,14 +163,16 @@ export default class Particle extends Renderable {
 		}
 
 		if (!newInstance) {
-			this.resize(
-				emitter.settings.framewidth ?? image.width,
-				emitter.settings.frameheight ?? image.height,
-			);
+			this.resize(emitter._particleWidth, emitter._particleHeight);
 			this.currentTransform.identity();
 		}
 
 		this.image = image;
+		// The built-in square is the shared 1x1 white pixel, drawn whole and
+		// stretched to the particle's size. Its frames, cut from a white
+		// square, would all be the same white: drawn as the whole pixel too,
+		// at the cell's size, rather than as rectangles outside a 1x1 image.
+		this._builtin = emitter._builtinImage;
 		this._frames = emitter._particleFrames;
 		this._frameIndex =
 			this._frames && emitter.settings.randomFrame
@@ -666,6 +672,11 @@ export default class Particle extends Renderable {
 		const w = this.width;
 		const h = this.height;
 		// the transform already places (0,0) at the visual top-left corner.
+		if (this._builtin) {
+			const image = this.image as HTMLCanvasElement;
+			renderer.drawImage(image, 0, 0, image.width, image.height, 0, 0, w, h);
+			return;
+		}
 		const frame = this._frames?.[this._frameIndex];
 		renderer.drawImage(
 			this.image,

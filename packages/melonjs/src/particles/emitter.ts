@@ -5,7 +5,7 @@ import { Vector2d } from "../math/vector2d.ts";
 import Container from "./../renderable/container.js";
 import timer from "../system/timer.ts";
 import type CanvasRenderer from "../video/canvas/canvas_renderer.js";
-import CanvasRenderTarget from "../video/rendertarget/canvasrendertarget.js";
+import Renderer from "../video/renderer.js";
 import type WebGLRenderer from "../video/webgl/webgl_renderer.js";
 import { particlePool } from "./particle.ts";
 import defaultEmitterSettings, {
@@ -37,24 +37,6 @@ const _correction = new Matrix3d();
  * @internal
  */
 const _rebase = new Vector2d();
-
-/**
- * @ignore
- * @internal
- */
-function createDefaultParticleTexture(
-	w: number = 8,
-	h: number = 8,
-): CanvasRenderTarget {
-	const defaultParticleTexture = new CanvasRenderTarget(w, h, {
-		offscreenCanvas: true,
-	});
-
-	defaultParticleTexture.context.fillStyle = "#fff";
-	defaultParticleTexture.context.fillRect(0, 0, w, h);
-
-	return defaultParticleTexture;
-}
 
 /**
  * If `settings[minKey] > settings[maxKey]`, lower `min` to `max`.
@@ -281,10 +263,28 @@ export default class ParticleEmitter extends Container {
 	_dt: number;
 
 	/**
+	 * Whether the particles draw the built-in white square, the emitter
+	 * having no `image` of its own: the renderer's shared white pixel
+	 * ({@link Renderer.getWhitePixel}), stretched to `textureSize`.
 	 * @ignore
 	 * @internal
 	 */
-	_defaultParticle: CanvasRenderTarget | undefined;
+	_builtinImage = false;
+
+	/**
+	 * The size a new particle is drawn at: a sprite-sheet cell, the image,
+	 * or `textureSize` for the built-in square.
+	 * @ignore
+	 * @internal
+	 */
+	_particleWidth = 0;
+
+	/**
+	 * @see ParticleEmitter#_particleWidth
+	 * @ignore
+	 * @internal
+	 */
+	_particleHeight = 0;
 
 	/**
 	 * The blend mode last fanned out to the particles, so a change to
@@ -471,21 +471,24 @@ export default class ParticleEmitter extends Container {
 		// boot but reset() runs after VIDEO_INIT, so this is the safest place.
 		this._deltaInv = timer.maxfps / 1000;
 
-		// dispose any previously-created fallback texture. Switching to a
-		// user-provided image *or* re-creating the default fallback both make
-		// the old CanvasRenderTarget unreachable, so destroy it eagerly to
-		// avoid a leak across repeated reset() calls.
-		if (typeof this._defaultParticle !== "undefined") {
-			this._defaultParticle.destroy();
-			this._defaultParticle = undefined;
+		// Without an image, the particles are white squares: the renderer's
+		// shared white pixel, drawn stretched to `textureSize`. One texture
+		// for every such emitter, uploaded once per renderer and never freed,
+		// so neither a reset() nor a short-lived emitter can leak one. Each
+		// emitter used to paint a square of its own, and none was ever freed
+		// from the renderer: one texture per reset() or emitter on WebGL and
+		// WebGPU, and on Canvas the tinted copies of each (#1807).
+		this._builtinImage = typeof this.settings.image === "undefined";
+		if (this._builtinImage) {
+			this.settings.image = Renderer.getWhitePixel() as HTMLCanvasElement;
 		}
-		if (typeof this.settings.image === "undefined") {
-			this._defaultParticle = createDefaultParticleTexture(
-				this.settings.textureSize,
-				this.settings.textureSize,
-			);
-			this.settings.image = this._defaultParticle.canvas;
-		}
+		const image = this.settings.image as HTMLCanvasElement | HTMLImageElement;
+		this._particleWidth =
+			this.settings.framewidth ??
+			(this._builtinImage ? this.settings.textureSize : image.width);
+		this._particleHeight =
+			this.settings.frameheight ??
+			(this._builtinImage ? this.settings.textureSize : image.height);
 
 		this.floating = this.settings.floating;
 		// keep the property in step with the setting, so constructing (or
@@ -897,10 +900,8 @@ export default class ParticleEmitter extends Container {
 	 */
 	override destroy(): void {
 		super.destroy();
-		if (typeof this._defaultParticle !== "undefined") {
-			this._defaultParticle.destroy();
-			this._defaultParticle = undefined;
-		}
+		// nothing to free for the built-in square: the white pixel is shared
+		// by every emitter, and by everything else drawn without a texture
 		// Clear the image reference so a discarded emitter doesn't pin a
 		// (potentially large) image / canvas alive via `settings.image`.
 		// `this.settings = undefined` was here too but offered no GC win
