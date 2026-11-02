@@ -206,7 +206,11 @@ export function fetchData(url, responseType, settings = {}) {
 					method: "GET",
 					// internally nocache is a string with a generated random number
 					cache: settings.nocache === "" ? "no-cache" : "reload",
-					credentials: settings.withCredentials === true ? "include" : "omit",
+					// the page's own origin gets its cookies and HTTP auth, as
+					// every browser request does by default; `withCredentials`
+					// sends them to other origins too
+					credentials:
+						settings.withCredentials === true ? "include" : "same-origin",
 					// see setting.crossorigin, "anonymous" is used for cross-origin requests
 					mode: settings.crossOrigin === "anonymous" ? "cors" : "no-cors",
 				});
