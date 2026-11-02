@@ -38,6 +38,11 @@ const poll = (): void => {
 	event.emit(event.GAME_BEFORE_UPDATE, performance.now());
 };
 
+/** the end of the frame's update, when a tap lets go */
+const endFrame = (): void => {
+	event.emit(event.GAME_AFTER_UPDATE, performance.now());
+};
+
 /**
  * send a pointer event to the canvas, at a point in viewport pixels
  * @param type - the event type
@@ -349,6 +354,7 @@ describe("GamepadPlugin", () => {
 			expect(window.scrollY).toBe(200);
 			down(1, button.center);
 			expect(button.pressed).toBe(true);
+			poll();
 			up(1, button.center);
 			expect(button.pressed).toBe(false);
 		} finally {
@@ -385,6 +391,21 @@ describe("GamepadPlugin", () => {
 		expect(touchAt(stick.center.x, stick.center.y).defaultPrevented).toBe(true);
 		// elsewhere: the page's and the game's own business
 		expect(touchAt(app.viewport.width / 2, 20).defaultPrevented).toBe(false);
+	});
+
+	it("blocks Safari's pinch gesture only while the controls show", () => {
+		const gesture = () => {
+			const e = new Event("gesturestart", { bubbles: true, cancelable: true });
+			canvas.dispatchEvent(e);
+			return e.defaultPrevented;
+		};
+		expect(gesture()).toBe(true);
+		gamepad.enabled = false;
+		expect(gesture()).toBe(false);
+		gamepad.enabled = true;
+		gamepad.destroy();
+		expect(gesture()).toBe(false);
+		gamepad = new GamepadPlugin({ enabled: true, buttons: 2 }, app);
 	});
 
 	it("blocks the context menu only while the controls show", () => {
@@ -471,12 +492,34 @@ describe("GamepadPlugin", () => {
 		input.bindKey(KEY.X, "jump");
 	});
 
+	it("holds a tap quicker than a frame until a frame has seen it", () => {
+		input.bindKey(KEY.X, "jump", true);
+		// pressed and let go between two frames
+		down(1, button.center);
+		up(1, button.center);
+		expect(button.pressed).toBe(true);
+		poll();
+		expect(input.isKeyPressed("jump")).toBe(true);
+		endFrame();
+		expect(button.pressed).toBe(false);
+		poll();
+		expect(input.keyStatus("jump")).toBe(false);
+		// a press a frame has already seen lets go at once
+		down(2, button.center);
+		poll();
+		up(2, button.center);
+		expect(button.pressed).toBe(false);
+		input.bindKey(KEY.X, "jump");
+	});
+
 	it("presses the next button when a finger slides onto it", () => {
 		const second = gamepad.buttons[1];
 		down(1, button.center);
+		poll();
 		move(1, second.center.x, second.center.y);
 		expect(button.pressed).toBe(false);
 		expect(second.pressed).toBe(true);
+		poll();
 		up(1, second.center);
 		expect(second.pressed).toBe(false);
 	});
@@ -659,6 +702,7 @@ describe("GamepadPlugin", () => {
 			down(1, keyButton.center);
 			// no poll: the key is pressed at once
 			expect(input.keyStatus("jump")).toBe(true);
+			poll();
 			up(1, keyButton.center);
 			expect(input.keyStatus("jump")).toBe(false);
 
@@ -689,6 +733,402 @@ describe("GamepadPlugin", () => {
 			down(2, { x: app.viewport.width - 60, y: 60 });
 			expect(floating.pointerId).toBe(null);
 			up(2, { x: app.viewport.width - 60, y: 60 });
+		});
+
+		it("picks up a floating stick anywhere on the screen, buttons first", () => {
+			gamepad.destroy();
+			gamepad = new GamepadPlugin(
+				{
+					enabled: true,
+					buttons: 1,
+					sticks: [{ floating: true, area: "screen" }],
+				},
+				app,
+			);
+			app.draw();
+			const [anywhere] = gamepad.sticks;
+			const [onTop] = gamepad.buttons;
+			// the right half too, which a plain floating stick leaves alone
+			const far = { x: app.viewport.width - 60, y: 60 };
+			down(1, far);
+			expect(anywhere.pointerId).toBe(1);
+			expect(anywhere.center).toEqual(far);
+			up(1, far);
+			// a button is still a button
+			down(2, onTop.center);
+			expect(onTop.pressed).toBe(true);
+			expect(anywhere.pointerId).toBe(null);
+			up(2, onTop.center);
+		});
+
+		it("picks up a floating stick only inside its area", () => {
+			gamepad.destroy();
+			const area = { x: 0, y: 200, width: 240, height: 120 };
+			gamepad = new GamepadPlugin(
+				{ enabled: true, buttons: 0, sticks: [{ floating: true, area }] },
+				app,
+			);
+			app.draw();
+			const [zoned] = gamepad.sticks;
+			down(1, { x: 100, y: 100 });
+			expect(zoned.pointerId).toBe(null);
+			up(1, { x: 100, y: 100 });
+			down(2, { x: 100, y: 250 });
+			expect(zoned.pointerId).toBe(2);
+			expect(zoned.center).toEqual({ x: 100, y: 250 });
+			up(2, { x: 100, y: 250 });
+		});
+
+		it("draws a stick hidden at rest only while it is held", () => {
+			gamepad.destroy();
+			gamepad = new GamepadPlugin(
+				{
+					enabled: true,
+					buttons: 0,
+					sticks: [{ floating: true, area: "screen", hideAtRest: true }],
+				},
+				app,
+			);
+			const overlay = new ColorLayer("overlay", "#000000");
+			app.world.addChild(overlay, 999_999);
+			app.draw();
+			const [hidden] = gamepad.sticks;
+			const home = { ...hidden.center };
+			// nothing in its corner at rest
+			expect(pixel(home.x, home.y)[0]).toBe(0);
+			// under the thumb while held
+			const at = { x: 240, y: 120 };
+			down(1, at);
+			expect(pixel(at.x, at.y)[0]).toBeGreaterThan(40);
+			up(1, at);
+			expect(pixel(at.x, at.y)[0]).toBe(0);
+			app.world.removeChild(overlay);
+		});
+
+		it("ignores the floating-only options on a fixed stick", () => {
+			gamepad.destroy();
+			gamepad = new GamepadPlugin(
+				{ enabled: true, sticks: [{ area: "screen", hideAtRest: true }] },
+				app,
+			);
+			app.draw();
+			const [fixed] = gamepad.sticks;
+			expect(fixed.hideAtRest).toBe(false);
+			down(1, { x: app.viewport.width - 60, y: 60 });
+			expect(fixed.pointerId).toBe(null);
+			up(1, { x: app.viewport.width - 60, y: 60 });
+		});
+
+		describe("tap", () => {
+			let tapper: VirtualStick;
+			const at = { x: 240, y: 160 };
+
+			beforeEach(() => {
+				gamepad.destroy();
+				gamepad = new GamepadPlugin(
+					{
+						enabled: true,
+						buttons: 0,
+						sticks: [{ floating: true, area: "screen", tap: {} }],
+					},
+					app,
+				);
+				app.draw();
+				tapper = gamepad.sticks[0]!;
+			});
+
+			it("presses FACE_1 for one frame on a quick tap", () => {
+				down(1, at);
+				up(1, at);
+				expect(tapper.tapping).toBe(true);
+				// the frame after the tap sees it
+				poll();
+				expect(input.keyStatus("jump")).toBe(true);
+				endFrame();
+				expect(tapper.tapping).toBe(false);
+				poll();
+				expect(input.keyStatus("jump")).toBe(false);
+			});
+
+			it("presses a key instead, a locked one once", () => {
+				gamepad.destroy();
+				gamepad = new GamepadPlugin(
+					{
+						enabled: true,
+						buttons: 0,
+						sticks: [{ floating: true, area: "screen", tap: { key: KEY.X } }],
+					},
+					app,
+				);
+				app.draw();
+				input.bindKey(KEY.X, "jump", true);
+				down(1, at);
+				up(1, at);
+				// no poll: the key is pressed at once
+				expect(input.isKeyPressed("jump")).toBe(true);
+				expect(input.isKeyPressed("jump")).toBe(false);
+				endFrame();
+				expect(input.keyStatus("jump")).toBe(false);
+				input.bindKey(KEY.X, "jump");
+			});
+
+			it("is not a tap once the thumb has steered", () => {
+				down(1, at);
+				const far = lean(tapper, 0.9, 0);
+				move(1, far.x, far.y);
+				// back to the middle before lifting: it still steered
+				move(1, at.x, at.y);
+				up(1, at);
+				expect(tapper.tapping).toBe(false);
+				poll();
+				expect(input.keyStatus("jump")).toBe(false);
+			});
+
+			it("is not a tap when held too long", () => {
+				const now = vi.spyOn(performance, "now");
+				now.mockReturnValue(1000);
+				down(1, at);
+				now.mockReturnValue(1000 + 400);
+				up(1, at);
+				now.mockRestore();
+				expect(tapper.tapping).toBe(false);
+			});
+
+			it("is not a tap when the touch is cancelled", () => {
+				down(1, at);
+				pointer("pointercancel", 1, at.x, at.y);
+				expect(tapper.tapping).toBe(false);
+			});
+
+			it("lets go of a tap when the controls are switched off", () => {
+				down(1, at);
+				up(1, at);
+				expect(tapper.tapping).toBe(true);
+				gamepad.enabled = false;
+				expect(tapper.tapping).toBe(false);
+				gamepad.enabled = true;
+			});
+		});
+
+		describe("floating button", () => {
+			const W = () => app.viewport.width;
+
+			it("presses where a finger lands on its half, and goes back to rest", () => {
+				gamepad.destroy();
+				gamepad = new GamepadPlugin(
+					{ enabled: true, sticks: 0, buttons: [{ floating: true }] },
+					app,
+				);
+				app.draw();
+				const [fire] = gamepad.buttons;
+				const home = { ...fire.center };
+				const at = { x: W() - 150, y: 80 };
+				down(1, at);
+				poll();
+				expect(fire.pressed).toBe(true);
+				expect(input.keyStatus("jump")).toBe(true);
+				expect(fire.center).toEqual(at);
+				// held wherever the finger goes, even off its half
+				move(1, 40, 80);
+				expect(fire.pressed).toBe(true);
+				up(1, { x: 40, y: 80 });
+				poll();
+				expect(fire.pressed).toBe(false);
+				expect(input.keyStatus("jump")).toBe(false);
+				expect(fire.center).toEqual(home);
+				// the left half is not its own
+				down(2, { x: 40, y: 80 });
+				expect(fire.pressed).toBe(false);
+				up(2, { x: 40, y: 80 });
+			});
+
+			it("shares the screen with a floating stick: steer left, fire right", () => {
+				gamepad.destroy();
+				gamepad = new GamepadPlugin(
+					{
+						enabled: true,
+						sticks: [{ floating: true }],
+						buttons: [{ floating: true }],
+					},
+					app,
+				);
+				app.draw();
+				const [steer] = gamepad.sticks;
+				const [fire] = gamepad.buttons;
+				down(1, { x: 60, y: 160 });
+				down(2, { x: W() - 60, y: 160 });
+				expect(steer.pointerId).toBe(1);
+				expect(fire.pressed).toBe(true);
+				up(2, { x: W() - 60, y: 160 });
+				up(1, { x: 60, y: 160 });
+			});
+
+			it("comes after a fixed button, and before a floating stick, on the same spot", () => {
+				gamepad.destroy();
+				gamepad = new GamepadPlugin(
+					{
+						enabled: true,
+						sticks: [{ floating: true, area: "screen" }],
+						buttons: [{ label: "B" }, { floating: true }],
+					},
+					app,
+				);
+				app.draw();
+				const [steer] = gamepad.sticks;
+				const [fixed, floating] = gamepad.buttons;
+				down(1, fixed.center);
+				expect(fixed.pressed).toBe(true);
+				expect(floating.pressed).toBe(false);
+				up(1, fixed.center);
+				// the right half: the floating button's, though the stick takes the screen
+				down(2, { x: W() - 100, y: 60 });
+				expect(floating.pressed).toBe(true);
+				expect(steer.pointerId).toBe(null);
+				// a second finger there falls through to the stick
+				down(3, { x: W() - 120, y: 90 });
+				expect(steer.pointerId).toBe(3);
+				up(3, { x: W() - 120, y: 90 });
+				up(2, { x: W() - 100, y: 60 });
+				// the left half is the stick's
+				down(4, { x: 60, y: 60 });
+				expect(steer.pointerId).toBe(4);
+				up(4, { x: 60, y: 60 });
+			});
+
+			it("splits a shared area between several: the nearest at rest takes the finger", () => {
+				gamepad.destroy();
+				gamepad = new GamepadPlugin(
+					{
+						enabled: true,
+						sticks: [{ floating: true }],
+						buttons: [
+							{
+								floating: true,
+								label: "A",
+								position: { right: 60, bottom: 60 },
+							},
+							{ floating: true, label: "B", position: { right: 60, top: 60 } },
+						],
+					},
+					app,
+				);
+				app.draw();
+				const [steer] = gamepad.sticks;
+				const [a, b] = gamepad.buttons;
+				// nearer B's resting spot, though A comes first in the list
+				const nearB = { x: W() - 100, y: 90 };
+				down(1, nearB);
+				expect(b.pressed).toBe(true);
+				expect(a.pressed).toBe(false);
+				// a second finger near A's spot presses A: both held at once
+				const nearA = { x: W() - 100, y: app.viewport.height - 90 };
+				down(2, nearA);
+				poll();
+				expect(a.pressed).toBe(true);
+				expect(b.center).toEqual(nearB);
+				expect(a.center).toEqual(nearA);
+				up(2, nearA);
+				// another finger near the held B does not press A instead
+				down(3, { x: W() - 110, y: 100 });
+				expect(a.pressed).toBe(false);
+				expect(steer.pointerId).toBe(null);
+				up(3, { x: W() - 110, y: 100 });
+				up(1, nearB);
+			});
+
+			it("keeps to its own area when given one", () => {
+				gamepad.destroy();
+				const h = () => app.viewport.height;
+				gamepad = new GamepadPlugin(
+					{
+						enabled: true,
+						sticks: 0,
+						buttons: [
+							{
+								floating: true,
+								label: "A",
+								area: {
+									x: W() / 2,
+									y: h() / 2,
+									width: W() / 2,
+									height: h() / 2,
+								},
+							},
+							{
+								floating: true,
+								label: "B",
+								area: { x: W() / 2, y: 0, width: W() / 2, height: h() / 2 },
+							},
+						],
+					},
+					app,
+				);
+				app.draw();
+				const [a, b] = gamepad.buttons;
+				// B rests at the bottom too, but the top quarter is its own
+				const top = { x: W() - 40, y: 30 };
+				down(1, top);
+				expect(b.pressed).toBe(true);
+				expect(a.pressed).toBe(false);
+				poll();
+				up(1, top);
+				const bottom = { x: W() / 2 + 10, y: h() - 30 };
+				down(2, bottom);
+				expect(a.pressed).toBe(true);
+				expect(b.pressed).toBe(false);
+				up(2, bottom);
+			});
+
+			it("is drawn only while held when hidden at rest", () => {
+				gamepad.destroy();
+				gamepad = new GamepadPlugin(
+					{
+						enabled: true,
+						sticks: 0,
+						buttons: [{ floating: true, area: "screen", hideAtRest: true }],
+					},
+					app,
+				);
+				const overlay = new ColorLayer("overlay", "#000000");
+				app.world.addChild(overlay, 999_999);
+				app.draw();
+				const [fire] = gamepad.buttons;
+				expect(pixel(fire.center.x, fire.center.y)[0]).toBe(0);
+				const at = { x: 120, y: 120 };
+				down(1, at);
+				expect(pixel(at.x, at.y)[0]).toBeGreaterThan(40);
+				poll();
+				const now = vi.spyOn(performance, "now");
+				now.mockReturnValue(1000);
+				up(1, at);
+				// fading where it was let go, then gone
+				expect(pixel(at.x + fire.radius, at.y)[0]).toBeGreaterThan(0);
+				now.mockReturnValue(1000 + 400);
+				expect(pixel(at.x + fire.radius, at.y)[0]).toBe(0);
+				expect(pixel(at.x, at.y)[0]).toBe(0);
+				now.mockRestore();
+				app.world.removeChild(overlay);
+			});
+
+			it("is not pressed by a finger sliding off a fixed button", () => {
+				gamepad.destroy();
+				gamepad = new GamepadPlugin(
+					{
+						enabled: true,
+						sticks: 0,
+						buttons: [{ label: "B" }, { floating: true, area: "screen" }],
+					},
+					app,
+				);
+				app.draw();
+				const [fixed, floating] = gamepad.buttons;
+				down(1, fixed.center);
+				poll();
+				move(1, 60, 60);
+				expect(fixed.pressed).toBe(false);
+				expect(floating.pressed).toBe(false);
+				up(1, { x: 60, y: 60 });
+			});
 		});
 
 		it("reports a second stick on the right axes, with the buttons above it", () => {

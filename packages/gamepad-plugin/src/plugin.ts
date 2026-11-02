@@ -85,6 +85,15 @@ const NO_SELECTION: [string, string][] = [
 	["-webkit-tap-highlight-color", "transparent"],
 ];
 
+/**
+ * Safari's own pinch and rotate events, on iOS. Two fingers down start
+ * them even over a canvas with `touch-action: none`, and while one runs it
+ * can take a finger for itself, so a second finger never reaches the
+ * controls: left uncancelled, a stick held by one thumb would only
+ * sometimes let the other thumb press a button.
+ */
+const GESTURE_EVENTS = ["gesturestart", "gesturechange", "gestureend"] as const;
+
 const POINTER_EVENTS = [
 	"pointerdown",
 	"pointermove",
@@ -237,6 +246,8 @@ export class GamepadPlugin extends plugin.BasePlugin {
 		event.on(event.GAMEPAD_CONNECTED, this.onConnected);
 		event.on(event.GAMEPAD_DISCONNECTED, this.onDisconnected);
 		event.on(event.GAME_BEFORE_UPDATE, this.watchPads);
+		event.on(event.GAME_BEFORE_UPDATE, this.startFrame);
+		event.on(event.GAME_AFTER_UPDATE, this.endTaps);
 		event.on(event.VIEWPORT_ONRESIZE, this.onResize);
 		this.listen();
 	}
@@ -282,6 +293,8 @@ export class GamepadPlugin extends plugin.BasePlugin {
 		event.off(event.GAMEPAD_CONNECTED, this.onConnected);
 		event.off(event.GAMEPAD_DISCONNECTED, this.onDisconnected);
 		event.off(event.GAME_BEFORE_UPDATE, this.watchPads);
+		event.off(event.GAME_BEFORE_UPDATE, this.startFrame);
+		event.off(event.GAME_AFTER_UPDATE, this.endTaps);
 		event.off(event.VIEWPORT_ONRESIZE, this.onResize);
 		// another plugin may have wrapped the draw since; then ours stays in
 		// the chain, and does nothing once destroyed
@@ -311,12 +324,35 @@ export class GamepadPlugin extends plugin.BasePlugin {
 		}
 	}
 
+	/**
+	 * A tap presses its button between frames and holds it through the next
+	 * one, so the game sees it once, the gamepad polled before the update
+	 * and a locked key read during it; let go of it after that update.
+	 */
+	private readonly endTaps = (): void => {
+		for (const stick of this.sticks) {
+			stick.endTap();
+		}
+		// and let go of buttons tapped quicker than a frame, now one has run
+		for (const button of this.buttons) {
+			button.frameEnd();
+		}
+	};
+
+	/** a frame starts: presses made before it are seen by its update */
+	private readonly startFrame = (): void => {
+		for (const button of this.buttons) {
+			button.frameStart();
+		}
+	};
+
 	/** let go of every control */
 	private releaseAll(): void {
 		for (const stick of this.sticks) {
 			if (stick.pointerId !== null) {
-				stick.release();
+				stick.release(true);
 			}
+			stick.endTap();
 		}
 		for (const button of this.buttons) {
 			button.releaseAll();
@@ -414,6 +450,12 @@ export class GamepadPlugin extends plugin.BasePlugin {
 			capture: true,
 			passive: false,
 		});
+		for (const type of GESTURE_EVENTS) {
+			this.target.addEventListener(type, this.onGesture, {
+				capture: true,
+				passive: false,
+			});
+		}
 		canvas.addEventListener("contextmenu", this.onContextMenu);
 		this.savedStyles = NO_SELECTION.map(([name, value]) => {
 			const saved: [string, string] = [
@@ -441,6 +483,9 @@ export class GamepadPlugin extends plugin.BasePlugin {
 		this.target?.removeEventListener("touchstart", this.onTouchStart, {
 			capture: true,
 		});
+		for (const type of GESTURE_EVENTS) {
+			this.target?.removeEventListener(type, this.onGesture, { capture: true });
+		}
 		this.target = null;
 		if (this.app.isInitialized) {
 			const canvas = this.app.renderer.getCanvas();
@@ -464,6 +509,16 @@ export class GamepadPlugin extends plugin.BasePlugin {
 				e.preventDefault();
 				return;
 			}
+		}
+	};
+
+	/**
+	 * keep Safari from pinching or rotating while the controls show
+	 * @param e - Safari's gesture event
+	 */
+	private readonly onGesture = (e: Event): void => {
+		if (this.visible && e.cancelable) {
+			e.preventDefault();
 		}
 	};
 
@@ -503,7 +558,7 @@ export class GamepadPlugin extends plugin.BasePlugin {
 			if (control instanceof VirtualStick) {
 				control.grab(e.pointerId, x, y);
 			} else {
-				control.press(e.pointerId);
+				control.press(e.pointerId, x, y);
 				this.pad.tick(this.haptics);
 			}
 			// so moves and the release still come here off the canvas
@@ -526,10 +581,12 @@ export class GamepadPlugin extends plugin.BasePlugin {
 			const { x, y } = this.toViewport(e);
 			if (control instanceof VirtualStick) {
 				control.move(x, y);
+			} else if (control?.floating) {
+				// a floating button stays pressed under its finger, wherever it goes
 			} else {
 				// a finger sliding from one button to the next presses the
 				// next, as on a pad; off every button it presses none
-				const next = this.buttonAt(x, y);
+				const next = this.fixedButtonAt(x, y);
 				if (next !== control) {
 					control?.release(e.pointerId);
 					if (next) {
@@ -542,7 +599,9 @@ export class GamepadPlugin extends plugin.BasePlugin {
 		} else {
 			// pointerup, pointercancel
 			if (control instanceof VirtualStick) {
-				control.release();
+				if (control.release(e.type === "pointercancel")) {
+					this.pad.tick(this.haptics);
+				}
 			} else {
 				control?.release(e.pointerId);
 			}
@@ -624,21 +683,44 @@ export class GamepadPlugin extends plugin.BasePlugin {
 	 */
 	private controlAt(x: number, y: number): VirtualStick | VirtualButton | null {
 		this.ensureLayout();
-		const button = this.buttonAt(x, y);
-		if (button !== null) {
-			return button;
+		const { width, height } = this.app.viewport;
+		// what sits at a spot before what takes a whole area: fixed buttons,
+		// fixed sticks, then floating buttons and floating sticks
+		const fixedButton = this.fixedButtonAt(x, y);
+		if (fixedButton !== null) {
+			return fixedButton;
 		}
-		const { width } = this.app.viewport;
-		// a fixed stick before a floating one, which takes a whole half
-		const sticks = [...this.sticks].sort((a, b) => {
-			return Number(a.floating) - Number(b.floating);
+		const free = (stick: VirtualStick) => {
+			return stick.pointerId === null && stick.hits(x, y, width, height);
+		};
+		const fixedStick = this.sticks.find((stick) => {
+			return !stick.floating && free(stick);
 		});
-		for (const stick of sticks) {
-			if (stick.pointerId === null && stick.hits(x, y, width)) {
-				return stick;
+		if (fixedStick) {
+			return fixedStick;
+		}
+		// floating buttons sharing an area split it: the finger goes to the
+		// one resting nearest, and if a finger already holds that one, on to
+		// the floating sticks rather than to a button it was not aimed at
+		let nearest: VirtualButton | null = null;
+		for (const button of this.buttons) {
+			if (
+				button.floating &&
+				button.covers(x, y, width, height) &&
+				(nearest === null ||
+					button.restDistance(x, y) < nearest.restDistance(x, y))
+			) {
+				nearest = button;
 			}
 		}
-		return null;
+		if (nearest && !nearest.pressed) {
+			return nearest;
+		}
+		return (
+			this.sticks.find((stick) => {
+				return stick.floating && free(stick);
+			}) ?? null
+		);
 	}
 
 	/**
@@ -648,18 +730,25 @@ export class GamepadPlugin extends plugin.BasePlugin {
 	 */
 	private onControls(x: number, y: number): boolean {
 		this.ensureLayout();
-		const { width } = this.app.viewport;
+		const { width, height } = this.app.viewport;
 		return (
-			this.buttonAt(x, y) !== null ||
+			this.buttons.some((button) => {
+				return button.hits(x, y, width, height);
+			}) ||
 			this.sticks.some((stick) => {
-				return stick.hits(x, y, width);
+				return stick.hits(x, y, width, height);
 			})
 		);
 	}
 
-	private buttonAt(x: number, y: number): VirtualButton | null {
+	/**
+	 * the fixed button at a point, for a press or a slide from one to the next
+	 * @param x - in viewport pixels
+	 * @param y - in viewport pixels
+	 */
+	private fixedButtonAt(x: number, y: number): VirtualButton | null {
 		for (const button of this.buttons) {
-			if (button.hits(x, y)) {
+			if (!button.floating && button.hits(x, y)) {
 				return button;
 			}
 		}

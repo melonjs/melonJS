@@ -2,9 +2,11 @@ import { input, math, type Renderer, Text } from "melonjs";
 import type { VirtualPad } from "./pad.ts";
 import type {
 	ButtonOptions,
+	ControlArea,
 	Placement,
 	StickKeys,
 	StickOptions,
+	StickTap,
 } from "./types.ts";
 
 const { AXES, BUTTONS } = input.GAMEPAD;
@@ -52,8 +54,45 @@ function resolve(
 	};
 }
 
+/**
+ * whether a point is inside a floating control's area
+ * @param area - the area option
+ * @param x - in viewport pixels
+ * @param y - in viewport pixels
+ * @param width - the viewport width, in pixels
+ * @param height - the viewport height, in pixels
+ * @param left - for `"half"`: whether the control's half is the left one
+ */
+function inArea(
+	area: ControlArea,
+	x: number,
+	y: number,
+	width: number,
+	height: number,
+	left: boolean,
+): boolean {
+	if (area === "screen") {
+		return x >= 0 && y >= 0 && x < width && y < height;
+	}
+	if (typeof area === "object") {
+		return (
+			x >= area.x &&
+			y >= area.y &&
+			x < area.x + area.width &&
+			y < area.y + area.height
+		);
+	}
+	return left ? x < width / 2 : x >= width / 2;
+}
+
 /** a stick's thumb, as a fraction of its base's radius */
 const THUMB = 0.45;
+
+/** how long the ring a tap leaves on a stick takes to fade, in milliseconds */
+const TAP_RING_MS = 260;
+
+/** how long a floating button hidden at rest takes to fade once let go, in milliseconds */
+const BUTTON_FADE_MS = 180;
 
 /** the look shared by every control */
 export interface Look {
@@ -71,6 +110,10 @@ export class VirtualStick {
 	readonly side: "left" | "right";
 	/** whether it is centered where the thumb lands */
 	readonly floating: boolean;
+	/** where a floating stick can be picked up */
+	readonly area: ControlArea;
+	/** whether a floating stick is drawn only while held */
+	readonly hideAtRest: boolean;
 	/** the radius of its base, in viewport pixels */
 	radius = 0;
 	/** where its base is drawn, in viewport pixels */
@@ -83,6 +126,8 @@ export class VirtualStick {
 	private lean = 0;
 	/** the pointer holding it, or null */
 	pointerId: number | null = null;
+	/** whether a tap is pressing its button or key, until the frame has run */
+	tapping = false;
 
 	private readonly options: StickOptions;
 	/** where it rests, set by the layout */
@@ -93,6 +138,16 @@ export class VirtualStick {
 	private readonly axisY: number;
 	private readonly dpad: boolean;
 	private readonly keys: Record<keyof StickKeys, KeyPress>;
+	private readonly tap: {
+		key: KeyPress;
+		button: number | null;
+		time: number;
+	} | null;
+	/** when the finger holding it landed, and the most it has leaned since */
+	private grabbedAt = 0;
+	private maxLean = 0;
+	/** where and when the last tap was, for its ring */
+	private readonly tapRing = { x: 0, y: 0, at: -Infinity };
 	private readonly directions = {
 		up: false,
 		down: false,
@@ -108,11 +163,26 @@ export class VirtualStick {
 		this.options = options;
 		this.side = options.side ?? side;
 		this.floating = options.floating ?? false;
+		this.area = options.area ?? "half";
+		this.hideAtRest = this.floating && options.hideAtRest === true;
 		this.deadzone = math.clamp(options.deadzone ?? 0.1, 0, 0.95);
 		this.dpadThreshold = math.clamp(options.dpadThreshold ?? 0.5, 0.05, 1);
 		this.axisX = this.side === "left" ? AXES.LX : AXES.RX;
 		this.axisY = this.side === "left" ? AXES.LY : AXES.RY;
 		this.dpad = options.dpad ?? this.side === "left";
+		const tap: StickTap | undefined = options.tap;
+		this.tap = tap
+			? {
+					key: new KeyPress(tap.key),
+					button:
+						tap.button !== undefined
+							? tap.button
+							: tap.key !== undefined
+								? null
+								: BUTTONS.FACE_1,
+					time: Math.max(0, tap.time ?? 250),
+				}
+			: null;
 		const keys = options.keys ?? {};
 		this.keys = {
 			up: new KeyPress(keys.up),
@@ -150,11 +220,11 @@ export class VirtualStick {
 	 * @param x - in viewport pixels
 	 * @param y - in viewport pixels
 	 * @param width - the viewport width, in pixels
+	 * @param height - the viewport height, in pixels
 	 */
-	hits(x: number, y: number, width: number): boolean {
+	hits(x: number, y: number, width: number, height: number): boolean {
 		if (this.floating) {
-			// its half of the screen
-			return this.side === "left" ? x < width / 2 : x >= width / 2;
+			return inArea(this.area, x, y, width, height, this.side === "left");
 		}
 		// a little past its base, for a thumb
 		return (
@@ -169,6 +239,8 @@ export class VirtualStick {
 	 */
 	grab(pointerId: number, x: number, y: number): void {
 		this.pointerId = pointerId;
+		this.grabbedAt = performance.now();
+		this.maxLean = 0;
 		if (this.floating) {
 			this.center.x = x;
 			this.center.y = y;
@@ -186,6 +258,7 @@ export class VirtualStick {
 		const distance = Math.hypot(dx, dy);
 		const lean = Math.min(distance / this.reach, 1);
 		this.lean = lean;
+		this.maxLean = Math.max(this.maxLean, lean);
 		const shown = distance > 0 ? (lean * this.reach) / distance : 0;
 		this.thumb.x = dx * shown;
 		this.thumb.y = dy * shown;
@@ -209,8 +282,24 @@ export class VirtualStick {
 		return this.radius * (1 - THUMB);
 	}
 
-	/** back to rest */
-	release(): void {
+	/**
+	 * back to rest
+	 * @param cancel - the touch was taken away rather than lifted, so it is
+	 * not a tap
+	 * @returns whether the touch was a tap, which then presses its button
+	 */
+	release(cancel = false): boolean {
+		const tapped =
+			!cancel &&
+			this.tap !== null &&
+			this.pointerId !== null &&
+			performance.now() - this.grabbedAt <= this.tap.time &&
+			this.maxLean < this.dpadThreshold;
+		if (tapped) {
+			this.tapRing.x = this.center.x;
+			this.tapRing.y = this.center.y;
+			this.tapRing.at = performance.now();
+		}
 		this.pointerId = null;
 		this.value.x = 0;
 		this.value.y = 0;
@@ -220,6 +309,29 @@ export class VirtualStick {
 		this.center.x = this.home.x;
 		this.center.y = this.home.y;
 		this.report();
+		if (tapped) {
+			this.setTap(true);
+		}
+		return tapped;
+	}
+
+	/** let go of the tap's press, once the game has had a frame to see it */
+	endTap(): void {
+		if (this.tapping) {
+			this.setTap(false);
+		}
+	}
+
+	private setTap(down: boolean): void {
+		const tap = this.tap;
+		if (!tap) {
+			return;
+		}
+		this.tapping = down;
+		if (tap.button !== null) {
+			this.pad.setButton(tap.button, down);
+		}
+		tap.key.set(down);
 	}
 
 	/** write the stick to the pad and press the keys it leans to */
@@ -259,6 +371,22 @@ export class VirtualStick {
 		const { x, y } = this.center;
 		const r = this.radius;
 		const held = this.pointerId !== null;
+		// a tap leaves a ring, fading out where it landed
+		const since = performance.now() - this.tapRing.at;
+		if (since < TAP_RING_MS) {
+			const k = since / TAP_RING_MS;
+			renderer.setColor(look.color);
+			renderer.setGlobalAlpha(math.clamp(look.opacity * 2 * (1 - k), 0, 1));
+			renderer.strokeEllipse(
+				this.tapRing.x,
+				this.tapRing.y,
+				r * THUMB * (1 + k),
+				r * THUMB * (1 + k),
+			);
+		}
+		if (!held && this.hideAtRest) {
+			return;
+		}
 		const alpha = math.clamp(look.opacity * (held ? 2 : 1), 0, 1);
 		renderer.setColor(look.color);
 		renderer.setGlobalAlpha(alpha * 0.5);
@@ -293,10 +421,18 @@ export class VirtualButton {
 	readonly button: number | null;
 	/** its radius, in viewport pixels */
 	radius = 0;
-	/** where its center is, in viewport pixels */
+	/** where its center is, in viewport pixels: under the finger while a floating button is held */
 	readonly center = { x: 0, y: 0 };
+	/** whether it is pressed wherever a finger lands in its area */
+	readonly floating: boolean;
+	/** where a floating button can be pressed */
+	readonly area: ControlArea;
+	/** whether a floating button is drawn only while held */
+	readonly hideAtRest: boolean;
 
 	private readonly options: ButtonOptions;
+	/** where it rests, set by the layout */
+	private readonly home = { x: 0, y: 0 };
 	private readonly order: number;
 	private readonly key: KeyPress;
 	private text: Text | null = null;
@@ -305,6 +441,16 @@ export class VirtualButton {
 	private _dimmed = false;
 	/** the pointers on it: pressed while there is one */
 	private readonly pointers = new Set<number>();
+	/** whether it is pressed, as the pad and the keys are told */
+	private down = false;
+	/**
+	 * whether a frame has started since it was pressed. A tap quicker than a
+	 * frame would otherwise press and let go between two updates, and the
+	 * game would never see it: the release waits for the frame to run.
+	 */
+	private seen = true;
+	/** where and when a floating button hidden at rest was let go, to fade it */
+	private readonly fade = { x: 0, y: 0, at: -Infinity };
 
 	constructor(
 		options: ButtonOptions,
@@ -328,11 +474,17 @@ export class VirtualButton {
 					: (faces[order] ?? null);
 		this.key = new KeyPress(options.key);
 		this._label = options.label ?? "";
+		this.floating = options.floating ?? false;
+		this.area = options.area ?? "half";
+		this.hideAtRest = this.floating && options.hideAtRest === true;
 	}
 
-	/** whether a finger is on it */
+	/**
+	 * whether it is pressed: while a finger is on it, and for at least one
+	 * frame however quick the tap
+	 */
 	get pressed(): boolean {
-		return this.pointers.size > 0;
+		return this.down;
 	}
 
 	/** the text shown on it */
@@ -403,12 +555,13 @@ export class VirtualButton {
 			};
 		}
 		const { x, y } = resolve(placement, width, height);
-		this.center.x = x;
-		this.center.y = y;
-		if (this.text) {
-			this.text.pos.set(x, y);
-			this.text.setFont(LABEL_FONT, this.labelSize());
+		this.home.x = x;
+		this.home.y = y;
+		if (!this.pressed || !this.floating) {
+			this.center.x = x;
+			this.center.y = y;
 		}
+		this.text?.setFont(LABEL_FONT, this.labelSize());
 	}
 
 	/** a short label fills the button, a word is set smaller */
@@ -417,21 +570,59 @@ export class VirtualButton {
 	}
 
 	/**
-	 * whether a finger here is on it
+	 * whether a finger landing here presses it
 	 * @param x - in viewport pixels
 	 * @param y - in viewport pixels
+	 * @param width - the viewport width, in pixels, for a floating button
+	 * @param height - the viewport height, in pixels, for a floating button
 	 */
-	hits(x: number, y: number): boolean {
+	hits(x: number, y: number, width = 0, height = 0): boolean {
+		if (!this._visible) {
+			return false;
+		}
+		if (this.floating) {
+			// one finger at a time: a second one falls through to what is under
+			return !this.pressed && this.covers(x, y, width, height);
+		}
 		return (
-			this._visible &&
 			Math.hypot(x - this.center.x, y - this.center.y) <= this.radius * 1.15
 		);
 	}
 
 	/**
-	 * @param pointerId - the pointer
+	 * whether a point is in a floating button's area, held or not
+	 * @param x - in viewport pixels
+	 * @param y - in viewport pixels
+	 * @param width - the viewport width, in pixels
+	 * @param height - the viewport height, in pixels
 	 */
-	press(pointerId: number): void {
+	covers(x: number, y: number, width: number, height: number): boolean {
+		return (
+			this._visible &&
+			inArea(this.area, x, y, width, height, this.home.x < width / 2)
+		);
+	}
+
+	/**
+	 * how far a point is from where the button rests, in viewport pixels
+	 * @param x - in viewport pixels
+	 * @param y - in viewport pixels
+	 */
+	restDistance(x: number, y: number): number {
+		return Math.hypot(x - this.home.x, y - this.home.y);
+	}
+
+	/**
+	 * @param pointerId - the pointer
+	 * @param x - where it landed, in viewport pixels: a floating button
+	 * moves under it
+	 * @param y - where it landed, in viewport pixels
+	 */
+	press(pointerId: number, x?: number, y?: number): void {
+		if (this.floating && x !== undefined && y !== undefined) {
+			this.center.x = x;
+			this.center.y = y;
+		}
 		this.pointers.add(pointerId);
 		this.report();
 	}
@@ -445,13 +636,50 @@ export class VirtualButton {
 		}
 	}
 
+	/** let go at once, without waiting for a frame: hidden, switched off */
 	releaseAll(): void {
 		this.pointers.clear();
+		this.seen = true;
 		this.report();
 	}
 
+	/** a frame starts: the game sees a press made before it */
+	frameStart(): void {
+		if (this.down) {
+			this.seen = true;
+		}
+	}
+
+	/** a frame has run: let go of a press its finger already left */
+	frameEnd(): void {
+		if (this.down && this.pointers.size === 0 && this.seen) {
+			this.set(false);
+		}
+	}
+
 	private report(): void {
-		const pressed = this.pressed;
+		const wanted = this.pointers.size > 0;
+		if (wanted && !this.down) {
+			this.seen = false;
+			this.set(true);
+		} else if (!wanted && this.down && this.seen) {
+			this.set(false);
+		}
+		// else let go once a frame has seen the press (frameEnd)
+	}
+
+	private set(pressed: boolean): void {
+		this.down = pressed;
+		if (!pressed) {
+			if (this.hideAtRest) {
+				this.fade.x = this.center.x;
+				this.fade.y = this.center.y;
+				this.fade.at = performance.now();
+			}
+			// a floating button goes back to rest
+			this.center.x = this.home.x;
+			this.center.y = this.home.y;
+		}
 		if (this.button !== null) {
 			this.pad.setButton(this.button, pressed);
 		}
@@ -462,8 +690,24 @@ export class VirtualButton {
 		if (!this._visible) {
 			return;
 		}
-		const { x, y } = this.center;
 		const r = this.radius;
+		if (this.hideAtRest && !this.pressed) {
+			// let go: fades where it was, so even the quickest tap shows
+			const since = performance.now() - this.fade.at;
+			if (since < BUTTON_FADE_MS) {
+				const k = since / BUTTON_FADE_MS;
+				renderer.setColor(look.color);
+				renderer.setGlobalAlpha(math.clamp(look.opacity * 2 * (1 - k), 0, 1));
+				renderer.strokeEllipse(
+					this.fade.x,
+					this.fade.y,
+					r * (1 + k * 0.3),
+					r * (1 + k * 0.3),
+				);
+			}
+			return;
+		}
+		const { x, y } = this.center;
 		const alpha = math.clamp(
 			look.opacity * (this.pressed ? 2 : 1) * (this._dimmed ? 0.4 : 1),
 			0,
@@ -487,6 +731,7 @@ export class VirtualButton {
 				});
 			}
 			renderer.setGlobalAlpha(Math.min(1, alpha * 2));
+			this.text.pos.set(x, y);
 			this.text.draw(renderer);
 		}
 	}
