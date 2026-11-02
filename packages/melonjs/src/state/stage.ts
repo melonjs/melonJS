@@ -382,7 +382,16 @@ export default class Stage {
 	 * @param world - the world object to draw
 	 */
 	draw(renderer: Renderer, world: World): void {
+		let first = true;
 		this.cameras.forEach((camera) => {
+			// A camera after the first draws over the ones before it, post
+			// effects or not: a background camera first, the game's camera
+			// over it. Its post-effect pass is then blended over the frame
+			// instead of starting it, cleared to the background colour and
+			// copied over the whole screen, which would wipe out everything
+			// the cameras before it drew.
+			camera._postEffectOver = !first;
+			first = false;
 			camera.draw(renderer, world);
 		});
 	}

@@ -1252,7 +1252,9 @@ export default class Camera2d extends Renderable {
 			this.postEffects.push(colorMatrixEffect);
 		}
 
-		// post-effect: bind FBO if shader effects are set (WebGL only)
+		// post-effect: bind FBO if shader effects are set (WebGL only). On a
+		// camera drawn after another one (`_postEffectOver`, set by
+		// `Stage#draw`) the pass goes OVER what that one drew, see there
 		const usePostEffect = r.beginPostEffect(this);
 
 		// apply the world-to-camera-view transform on the container.

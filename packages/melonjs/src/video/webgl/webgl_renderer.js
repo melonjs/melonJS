@@ -2163,7 +2163,10 @@ export default class WebGLRenderer extends Renderer {
 		this.setGlobalAlpha(1.0);
 		this.setBlendMode("normal");
 
-		if (isCamera) {
+		// a camera that starts the frame starts its pass like one (background
+		// colour, fresh stencil); one drawn over another camera, and any
+		// renderable, starts transparent so what is behind shows through
+		if (isCamera && !renderable._postEffectOver) {
 			this.clear();
 		} else {
 			this.clearRenderTarget();
@@ -2198,7 +2201,10 @@ export default class WebGLRenderer extends Renderer {
 		const isCamera = renderable._postEffectManaged;
 		const rt1 = this._renderTargetPool.getCaptureTarget();
 		const rt2 = this._renderTargetPool.getPingPongTarget();
-		const keepBlend = !isCamera;
+		// a camera that starts the frame replaces it; one drawn over another
+		// camera is blended over what that one drew
+		const over = isCamera && renderable._postEffectOver === true;
+		const keepBlend = !isCamera || over;
 		const canvas = this.getCanvas();
 		const w = canvas.width;
 		const h = canvas.height;
@@ -2251,6 +2257,10 @@ export default class WebGLRenderer extends Renderer {
 
 		// the chain's passes are told where the renderable is
 		this._beginChainSpace(renderable);
+		if (over) {
+			// whatever the camera's last draw left set
+			this.setBlendMode("normal");
+		}
 		// a renderable's chain lands at the opacity it is drawn at, by its
 		// last blit only; a camera's composites whole
 		const alpha = isCamera
