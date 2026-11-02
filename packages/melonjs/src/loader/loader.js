@@ -101,7 +101,9 @@ export let crossOrigin;
 
 /**
  * indicates whether or not cross-site Access-Control requests should be made using credentials such as cookies,
- * authorization headers or TLS client certificates. Setting withCredentials has no effect on same-site requests.
+ * authorization headers or TLS client certificates. Setting withCredentials has no effect on same-site requests:
+ * assets on the game's own origin always carry the browser's credentials, as the page and its scripts do, so a
+ * game behind a login or session cookie loads its own assets without it.
  * @public
  * @type {boolean}
  * @see {@link setOptions}
@@ -133,7 +135,7 @@ export function setNocache(enable = false) {
  * @param {Object} options - The options to set.
  * @param {string} [options.crossOrigin] - The crossOrigin attribute to configure the CORS requests for Image and Video data element.
  * @param {boolean} [options.nocache] - Enable or disable the nocache mechanism.
- * @param {boolean} [options.withCredentials] - Indicates whether or not cross-site Access-Control requests should be made using credentials.
+ * @param {boolean} [options.withCredentials] - Indicates whether or not cross-site Access-Control requests should be made using credentials. Requests to the game's own origin always carry them.
  * @example
  * // Set the crossOrigin attribute to "anonymous"
  * me.loader.setOptions({ crossOrigin: "anonymous" });
