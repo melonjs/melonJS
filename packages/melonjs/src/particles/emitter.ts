@@ -361,11 +361,15 @@ export default class ParticleEmitter extends Container {
 	_spawnMap: Matrix3d | undefined;
 
 	/**
-	 * @param x - x position of the particle emitter
-	 * @param y - y position of the particle emitter
+	 * The spawn area (`settings.width` by `settings.height`) is centred on
+	 * (x, y). After construction `pos` is the area's top left corner, as on
+	 * any renderable: to move the emitter to a new point, offset by half the
+	 * area.
+	 * @param x - x position of the centre of the spawn area
+	 * @param y - y position of the centre of the spawn area
 	 * @param [settings=ParticleEmitterSettings] - the settings for the particle emitter.
 	 * @example
-	 * // Create a particle emitter at position 100, 100
+	 * // Create a particle emitter centred on 100, 100
 	 * let emitter = new ParticleEmitter(100, 100, {
 	 *     width: 16,
 	 *     height : 16,
