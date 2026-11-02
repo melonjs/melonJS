@@ -5,7 +5,6 @@ import { Vector2d } from "../math/vector2d.ts";
 import Container from "./../renderable/container.js";
 import timer from "../system/timer.ts";
 import type CanvasRenderer from "../video/canvas/canvas_renderer.js";
-import Renderer from "../video/renderer.js";
 import type WebGLRenderer from "../video/webgl/webgl_renderer.js";
 import { particlePool } from "./particle.ts";
 import defaultEmitterSettings, {
@@ -263,30 +262,6 @@ export default class ParticleEmitter extends Container {
 	_dt: number;
 
 	/**
-	 * Whether the particles draw the built-in white square, the emitter
-	 * having no `image` of its own: the renderer's shared white pixel
-	 * ({@link Renderer.getWhitePixel}), stretched to `textureSize`.
-	 * @ignore
-	 * @internal
-	 */
-	_builtinImage = false;
-
-	/**
-	 * The size a new particle is drawn at: a sprite-sheet cell, the image,
-	 * or `textureSize` for the built-in square.
-	 * @ignore
-	 * @internal
-	 */
-	_particleWidth = 0;
-
-	/**
-	 * @see ParticleEmitter#_particleWidth
-	 * @ignore
-	 * @internal
-	 */
-	_particleHeight = 0;
-
-	/**
 	 * The blend mode last fanned out to the particles, so a change to
 	 * {@link ParticleEmitter#blendMode} can be detected per frame.
 	 * @ignore
@@ -471,24 +446,12 @@ export default class ParticleEmitter extends Container {
 		// boot but reset() runs after VIDEO_INIT, so this is the safest place.
 		this._deltaInv = timer.maxfps / 1000;
 
-		// Without an image, the particles are white squares: the renderer's
-		// shared white pixel, drawn stretched to `textureSize`. One texture
-		// for every such emitter, uploaded once per renderer and never freed,
-		// so neither a reset() nor a short-lived emitter can leak one. Each
-		// emitter used to paint a square of its own, and none was ever freed
-		// from the renderer: one texture per reset() or emitter on WebGL and
+		// Without an image, the particles draw a white square of their own:
+		// no texture is made here, and `settings.image` stays as it was given
+		// (see `particleLook` in particle.ts). Each emitter used to paint a
+		// square canvas into it, rebuilt on every reset() and never freed from
+		// the renderer: one texture per reset() or emitter on WebGL and
 		// WebGPU, and on Canvas the tinted copies of each (#1807).
-		this._builtinImage = typeof this.settings.image === "undefined";
-		if (this._builtinImage) {
-			this.settings.image = Renderer.getWhitePixel() as HTMLCanvasElement;
-		}
-		const image = this.settings.image as HTMLCanvasElement | HTMLImageElement;
-		this._particleWidth =
-			this.settings.framewidth ??
-			(this._builtinImage ? this.settings.textureSize : image.width);
-		this._particleHeight =
-			this.settings.frameheight ??
-			(this._builtinImage ? this.settings.textureSize : image.height);
 
 		this.floating = this.settings.floating;
 		// keep the property in step with the setting, so constructing (or

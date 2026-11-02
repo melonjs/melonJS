@@ -38,13 +38,9 @@ export interface ParticleEmitterSettings {
 
 	/**
 	 * Image used for particles texture. Without one, particles are white
-	 * squares of {@link textureSize} pixels, colored by `tint`.
-	 * <br><br>
-	 * The white square is the renderer's shared white pixel
-	 * ({@link Renderer.getWhitePixel}), drawn stretched, which every emitter
-	 * without an image and everything else drawn without a texture uses: once
-	 * an emitter has no image, `settings.image` holds that pixel, so do not
-	 * draw on it.
+	 * squares of {@link textureSize} pixels, colored by `tint`: every such
+	 * emitter draws the renderer's one shared white pixel, stretched, so none
+	 * makes a texture of its own.
 	 * @default undefined
 	 * @see {@link textureSize}
 	 */

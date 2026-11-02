@@ -189,13 +189,17 @@ for (const backend of [video.CANVAS, video.WEBGL]) {
 				referenceSpace: "world",
 				blendMode: "additive",
 			});
-			const image = em.settings.image;
+			// no image of its own: the particles draw the shared white pixel
+			expect(em.settings.image).toBeUndefined();
+			const image = em.children[0].image;
+			expect(image).toBe(Renderer.getWhitePixel());
 			expect(() => {
 				return em.reset({ framewidth: 9 });
 			}).toThrow(RangeError);
-			expect(em.settings.image).toBe(image);
+			expect(em.settings.image).toBeUndefined();
 			expect(em.referenceSpace).toBe("world");
 			expect(em.blendMode).toBe("additive");
+			expect(em.children[0].image).toBe(image);
 			expect(
 				Array.from(image.getContext("2d").getImageData(0, 0, 1, 1).data),
 			).toEqual([255, 255, 255, 255]);

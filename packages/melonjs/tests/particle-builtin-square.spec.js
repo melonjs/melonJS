@@ -14,7 +14,6 @@ import {
 	video,
 	WebGLRenderer,
 } from "../src/index.js";
-import { particlePool } from "../src/particles/particle.ts";
 import Renderer from "../src/video/renderer.js";
 
 /**
@@ -379,10 +378,13 @@ for (const backend of [video.CANVAS, video.WEBGL]) {
 		it("uses the shared white pixel, sized by textureSize", () => {
 			const a = make({ textureSize: 8 });
 			const b = make({ textureSize: 20 });
-			expect(a.settings.image).toBe(Renderer.getWhitePixel());
-			expect(b.settings.image).toBe(Renderer.getWhitePixel());
+			// the settings stay as given: no image
+			expect(a.settings.image).toBeUndefined();
+			expect(b.settings.image).toBeUndefined();
 			const pa = particleAt(a, 10, 10);
 			const pb = particleAt(b, 50, 50);
+			expect(pa.image).toBe(Renderer.getWhitePixel());
+			expect(pb.image).toBe(Renderer.getWhitePixel());
 			expect([pa.width, pa.height]).toEqual([8, 8]);
 			expect([pb.width, pb.height]).toEqual([20, 20]);
 			expect([pb.getBounds().width, pb.getBounds().height]).toEqual([20, 20]);
@@ -428,7 +430,6 @@ for (const backend of [video.CANVAS, video.WEBGL]) {
 				for (let i = 0; i < 40; i++) {
 					emitter.reset({
 						...emitter.settings,
-						image: undefined,
 						speed: 0,
 						textureSize: 4 + (i % 5),
 					});
@@ -499,7 +500,7 @@ for (const backend of [video.CANVAS, video.WEBGL]) {
 		it("a new textureSize sizes new particles, and leaves live ones as they are", () => {
 			const emitter = make({ textureSize: 8 });
 			const before = particleAt(emitter, 20, 20);
-			emitter.reset({ ...emitter.settings, image: undefined, textureSize: 16 });
+			emitter.reset({ ...emitter.settings, textureSize: 16 });
 			const after = particleAt(emitter, 60, 60);
 			expect([before.width, after.width]).toEqual([8, 16]);
 			expect(before.image).toBe(after.image);
@@ -551,7 +552,7 @@ for (const backend of [video.CANVAS, video.WEBGL]) {
 			});
 		});
 
-		it("a pooled particle reused across emitters with and without an image draws each right", () => {
+		it("a particle recycled across emitters with and without an image draws each right", () => {
 			const crop = (particle) => {
 				const draw = vi.fn();
 				particle.draw({ drawImage: draw });
@@ -560,20 +561,74 @@ for (const backend of [video.CANVAS, video.WEBGL]) {
 			const builtin = make({ textureSize: 8 });
 			const p = particleAt(builtin, 10, 10);
 			expect(crop(p)).toEqual([0, 0, 1, 1, 0, 0, 8, 8]);
-			app.world.removeChildNow(builtin);
+			// what the particle pool does to an instance it hands back out
+			const withImage = make({ image: whiteSquare(10) });
+			p.onResetEvent(withImage, false);
+			expect([p.width, p.height]).toEqual([10, 10]);
+			expect(crop(p)).toEqual([0, 0, 10, 10, 0, 0, 10, 10]);
+			p.onResetEvent(make({ textureSize: 5 }), false);
+			expect([p.width, p.height]).toEqual([5, 5]);
+			expect(crop(p)).toEqual([0, 0, 1, 1, 0, 0, 5, 5]);
+		});
 
-			const image = whiteSquare(10);
-			const withImage = make({ image });
-			const spy = vi.spyOn(particlePool, "get");
-			const q = particleAt(withImage, 10, 10);
-			// the recycled instance, when the pool gave one back
-			expect(spy).toHaveBeenCalled();
-			expect(crop(q)).toEqual([0, 0, 10, 10, 0, 0, 10, 10]);
-			app.world.removeChildNow(withImage);
+		describe("the settings stay as the game gave them", () => {
+			it("reset() with the emitter's own settings spread back in keeps the square", () => {
+				// as games write a tweak: everything as it was, one thing changed
+				const emitter = make({ textureSize: 8, tint: "#ff0000" });
+				emitter.reset({ ...emitter.settings, tint: "#00ff00" });
+				emitter.reset(emitter.settings);
+				expect(emitter.settings.image).toBeUndefined();
+				const particle = particleAt(emitter, 24, 24);
+				expect([particle.width, particle.height]).toEqual([8, 8]);
+				expect(particle.image).toBe(Renderer.getWhitePixel());
+				const pixels = render();
+				const box = inkBox(pixels);
+				expect(box).toMatchObject({ width: 8, height: 8 });
+				// in the tint of the last reset
+				const i = ((box.top + 4) * W + box.left + 4) * 4;
+				expect(pixels.slice(i, i + 4)).toEqual([0, 255, 0, 255]);
+			});
 
-			const again = make({ textureSize: 5 });
-			const r = particleAt(again, 10, 10);
-			expect(crop(r)).toEqual([0, 0, 1, 1, 0, 0, 5, 5]);
+			it("so spread back in with sprite-sheet cells, it takes them", () => {
+				const emitter = make({ textureSize: 8 });
+				expect(() => {
+					emitter.reset({ ...emitter.settings, framewidth: 4, frameheight: 4 });
+				}).not.toThrow();
+				const particle = particleAt(emitter, 30, 30);
+				expect([particle.width, particle.height]).toEqual([4, 4]);
+			});
+
+			it("an image set on settings directly is drawn from the next particle, at its size", () => {
+				const emitter = make({ textureSize: 8 });
+				const square = particleAt(emitter, 10, 10);
+				const image = whiteSquare(32);
+				image.height = 16;
+				emitter.settings.image = image;
+				const drawn = particleAt(emitter, 50, 50);
+				expect([drawn.width, drawn.height]).toEqual([32, 16]);
+				const draw = vi.fn();
+				drawn.draw({ drawImage: draw });
+				expect(draw.mock.calls[0].slice(1)).toEqual([
+					0, 0, 32, 16, 0, 0, 32, 16,
+				]);
+				// and taken off again, the square
+				emitter.settings.image = undefined;
+				const again = particleAt(emitter, 70, 70);
+				expect([again.width, again.image]).toEqual([
+					8,
+					Renderer.getWhitePixel(),
+				]);
+				// the particle already alive keeps what it was born with
+				expect([square.width, square.image]).toEqual([
+					8,
+					Renderer.getWhitePixel(),
+				]);
+			});
+
+			it("a textureSize that is not a whole number gives whole pixels, as the square canvas did", () => {
+				const particle = particleAt(make({ textureSize: 2.5 }), 30, 30);
+				expect([particle.width, particle.height]).toEqual([2, 2]);
+			});
 		});
 
 		describe("frames of the built-in square", () => {
@@ -582,12 +637,16 @@ for (const backend of [video.CANVAS, video.WEBGL]) {
 				const particle = particleAt(emitter, 32, 32);
 				expect([particle.width, particle.height]).toEqual([4, 4]);
 				expect(inkBox(render())).toMatchObject({ width: 4, height: 4 });
-				// through all four cells of its life, alive throughout
+				// through each of the four cells of its life, alive throughout:
+				// the cell steps as a quarter of its life goes by
 				for (let i = 0; i < 4; i++) {
+					if (i > 0) {
+						particle.update(26000);
+					}
+					expect(particle._frameIndex).toBe(i);
 					const draw = vi.fn();
 					particle.draw({ drawImage: draw });
 					expect(draw.mock.calls[0].slice(1)).toEqual([0, 0, 1, 1, 0, 0, 4, 4]);
-					particle.update(24000);
 				}
 				expect(particle.life).toBeGreaterThan(0);
 			});

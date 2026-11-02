@@ -31,8 +31,7 @@ emitter.burstParticles();      // one shot
 Without an `image`, particles are white squares of `textureSize` pixels (8 by
 default), coloured by `tint`. Every such emitter draws the renderer's one
 shared white pixel, stretched, so an emitter per explosion or a `reset()` on
-every tweak costs no texture. `settings.image` then holds that shared pixel:
-never draw on it, since everything drawn without a texture uses it.
+every tweak costs no texture.
 
 ## Tuning an effect: the Particle Editor
 
