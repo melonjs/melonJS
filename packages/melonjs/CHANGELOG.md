@@ -9,30 +9,27 @@
 - UI: `UICheckbox`, a checkbox with its label, that becomes a radio button with a `group` ([#1722](https://github.com/melonjs/melonJS/issues/1722))
 - UI: `UISlider`, a horizontal or vertical slider with `min`, `max` and `step`, moved by dragging, clicking the track or the mouse wheel
 - UI: `UIPanel` lays out its children (`"column"`, `"row"` or `"grid"`), scrolls them, and takes a nine-slice `skin`, a `title` and `draggable`
-- UI: `UITextButton` takes `onClick`, a `skin` and `pressedColor`, and the size, font and color settings the other widgets use
+- UI: `UITextButton` takes `onClick`, a `skin` and `pressedColor`, and the size, font and color settings the other widgets use; `label` is its text object
 - UI: every `UIBaseElement` has `enabled`, `cancelPress()` / `onCancel()`, and a hover and press bounce (`hoverScale`, `pressScale`)
 - UI: keyboard and gamepad navigation between widgets, once one takes the focus with `focus()`
 - UI: drop shadows on `UIPanel` and `ProgressBar` (`shadowColor`, `shadowOffsetX`, `shadowOffsetY`, `shadowBlur`)
 - UI: the widgets' settings and skin types are exported, `ProgressBar`'s `onChange` also gets the bar, and `Container#clipContains(x, y)` tells whether a container shows its children at a point
 
 ### Changed
-- Loader: every asset is requested with CORS, so an asset on another origin loads whenever its server allows it, without `crossOrigin`. `crossOrigin` now only applies to the `<video>`, `<script>` and glTF image elements the loader creates; `"use-credentials"` also sends credentials, as `withCredentials` does
-- Text: outlines are drawn behind the glyphs and with round corners by default, so a thick outline no longer hides the letters. Only the outer half of the outline shows now: double `lineWidth` to keep its weight, or set `paintOrder: "fill"` and `lineJoin: "miter"` for the old look
 - UI: a press stops at a UI element by default (`onClick()` and `onRelease()` return `false`), so it no longer also reaches the game behind it. Return `true` to let it through
 - UI: `UISpriteElement` is now a `UIBaseElement` holding a `Sprite`, so it has everything the other widgets have. It is placed as before; `Sprite` members other than its region and animation methods are now on `element.sprite`
-- UI: `UITextButton#label` is the button's text object, and the button no longer writes its computed size into the settings object it was given
 
 ### Deprecated
 - UI: `UITextButton#bitmapText`, for `label`
 
 ### Fixed
 - Loader: assets on the game's own origin are requested with its cookies and HTTP auth, so a game behind a login no longer gets a 403 for every asset ([#1801](https://github.com/melonjs/melonJS/issues/1801))
-- Loader: an asset on another origin that its server does not allow fails at load, with an error naming it, instead of later with "Unexpected end of input" or "The source image could not be decoded"
-- Text: an outline is no longer cut off at the edges of the text
+- Loader: an asset on another origin loads whenever its server allows it (CORS), without `crossOrigin`, and one it does not allow fails at load with an error naming it, instead of later with "Unexpected end of input" or "The source image could not be decoded". `crossOrigin` now only applies to the `<video>`, `<script>` and glTF image elements the loader creates; `"use-credentials"` also sends credentials, as `withCredentials` does
+- Text: an outline no longer hides thin or small letters, being drawn behind them, and is no longer cut off at the edges of the text. Its corners are round by default; only its outer half shows now, so double `lineWidth` to keep its weight, or set `paintOrder: "fill"` and `lineJoin: "miter"` for the old look
 - Tiled: a map without `nextobjectid` no longer gives objects added later the GUIDs of its own objects, which made collisions between them drop ([#1809](https://github.com/melonjs/melonJS/issues/1809))
 - Camera: `fadeIn()` and `fadeOut()` always call `onComplete` ([#1810](https://github.com/melonjs/melonJS/issues/1810))
 - Rendering: on WebGL and WebGPU, a clip inside a clip is the overlap of the two, as on Canvas ([#1816](https://github.com/melonjs/melonJS/issues/1816))
-- UI: a `UITextButton` with a CSS font no longer throws, and one moved after it was built draws its background where it is
+- UI: a `UITextButton` with a CSS font no longer throws, one moved after it was built draws its background where it is, and it no longer writes its computed size into the settings object it was given
 - UI: a blocking `UIPanel` stays opaque to hover while the pointer is on it, not only on the frame it enters
 - UI: a draggable element can be dragged by touch, and one in the world no longer jumps by the camera position when dragged
 - UI: a region stays hovered after a click, and its hover ends when the pointer leaves the canvas or is cancelled
