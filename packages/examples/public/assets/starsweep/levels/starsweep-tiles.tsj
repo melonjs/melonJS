@@ -1,12 +1,12 @@
 {
 	"columns": 5,
 	"image": "starsweep-tiles.png",
-	"imageheight": 96,
+	"imageheight": 240,
 	"imagewidth": 240,
 	"margin": 0,
 	"name": "starsweep",
 	"spacing": 0,
-	"tilecount": 10,
+	"tilecount": 25,
 	"tiledversion": "1.11.2",
 	"tileheight": 48,
 	"tiles": [
@@ -98,6 +98,24 @@
 					"type": "string",
 					"value": "portal"
 				}
+			],
+			"animation": [
+				{
+					"tileid": 8,
+					"duration": 140
+				},
+				{
+					"tileid": 10,
+					"duration": 140
+				},
+				{
+					"tileid": 11,
+					"duration": 140
+				},
+				{
+					"tileid": 12,
+					"duration": 140
+				}
 			]
 		},
 		{
@@ -105,6 +123,114 @@
 			"properties": [
 				{
 					"name": "kind",
+					"type": "string",
+					"value": "start"
+				}
+			]
+		},
+		{
+			"id": 13,
+			"properties": [
+				{
+					"name": "lit",
+					"type": "string",
+					"value": "floor"
+				}
+			]
+		},
+		{
+			"id": 14,
+			"properties": [
+				{
+					"name": "lit",
+					"type": "string",
+					"value": "ice"
+				}
+			]
+		},
+		{
+			"id": 15,
+			"properties": [
+				{
+					"name": "lit",
+					"type": "string",
+					"value": "arrow-up"
+				}
+			]
+		},
+		{
+			"id": 16,
+			"properties": [
+				{
+					"name": "lit",
+					"type": "string",
+					"value": "arrow-right"
+				}
+			]
+		},
+		{
+			"id": 17,
+			"properties": [
+				{
+					"name": "lit",
+					"type": "string",
+					"value": "arrow-down"
+				}
+			]
+		},
+		{
+			"id": 18,
+			"properties": [
+				{
+					"name": "lit",
+					"type": "string",
+					"value": "arrow-left"
+				}
+			]
+		},
+		{
+			"id": 19,
+			"properties": [
+				{
+					"name": "lit",
+					"type": "string",
+					"value": "crack"
+				}
+			]
+		},
+		{
+			"id": 20,
+			"properties": [
+				{
+					"name": "lit",
+					"type": "string",
+					"value": "portal"
+				}
+			],
+			"animation": [
+				{
+					"tileid": 20,
+					"duration": 140
+				},
+				{
+					"tileid": 22,
+					"duration": 140
+				},
+				{
+					"tileid": 23,
+					"duration": 140
+				},
+				{
+					"tileid": 24,
+					"duration": 140
+				}
+			]
+		},
+		{
+			"id": 21,
+			"properties": [
+				{
+					"name": "lit",
 					"type": "string",
 					"value": "start"
 				}

@@ -7,19 +7,27 @@
  * paint, save, reload the game. Adding a level is adding a map and its
  * name to {@link LEVEL_FILES}.
  *
- * - The `station` tile layer is the board. Every tile in the tileset has
- *   a `kind` property: `wall`, `floor`, `ice`, `arrow-up` / `-right` /
- *   `-down` / `-left`, `crack`, `portal` (monsters come out) and `start`
- *   (where Bolt begins, exactly one). An empty cell is open space.
- * - The map's custom properties set the rest: `name`, `hint`, `theme`
+ * - The `station` tile layer is the board. Each board tile in the tileset
+ *   has a `kind` property: `wall`, `floor`, `ice`, `arrow-up` / `-right` /
+ *   `-down` / `-left`, `crack`, `portal` (monsters come out, an animated
+ *   tile) and `start` (where Bolt begins, exactly one). An empty cell is
+ *   open space.
+ * - The `power` tile layer starts empty: the game lights a panel by
+ *   setting the tile whose `lit` property names its kind there, and
+ *   tints the layer with the level's colour (see `field.ts`).
+ * - The map's custom properties set the rest: `title`, `hint`, `theme`
  *   (one of {@link THEMES}), `enemies` (the order monsters come out in,
  *   comma separated: `wobbler`, `muncher`, `chaser`), `maxEnemies`,
  *   `spawnEvery` (seconds) and `par` (seconds, for the time bonus).
  *
- * The maps are turned into the same text rows the game always used (see
- * `board.ts` for the characters), so `levels.test.ts` checks the Tiled
- * files themselves: every panel reachable, no move that never ends, no
- * resting spot you cannot leave safely.
+ * The engine draws the maps. Their `station` layer is also turned into the
+ * text rows the game's rules run on (see `board.ts` for the characters),
+ * so `levels.test.ts` checks the Tiled files themselves: every panel
+ * reachable, no move that never ends, no resting spot you cannot leave
+ * safely.
+ *
+ * `title`, not `name`: map properties are set over the map's own fields,
+ * so a `name` property would replace the level's name in the engine.
  *
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
@@ -180,10 +188,14 @@ export const levelFromTiled = (
 
 	const chars = new Map<number, string>();
 	for (const tile of tileset.tiles ?? []) {
+		// only board tiles have a kind: lit overlays and animation frames do not
 		const kind = prop(tile.properties, "kind");
+		if (kind === undefined) {
+			continue;
+		}
 		const ch = typeof kind === "string" ? KIND_CHARS[kind] : undefined;
 		if (ch === undefined) {
-			fail(`tileset tile ${tile.id} has no known "kind" (got ${String(kind)})`);
+			fail(`tileset tile ${tile.id} has an unknown "kind" (${String(kind)})`);
 		} else {
 			chars.set(tile.id, ch);
 		}
@@ -243,7 +255,7 @@ export const levelFromTiled = (
 	}
 
 	return {
-		name: text("name", file),
+		name: text("title", file),
 		hint: text("hint", ""),
 		map: rows,
 		theme,

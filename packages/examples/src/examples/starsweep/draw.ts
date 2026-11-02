@@ -1,15 +1,16 @@
 /**
  * melonJS — Starsweep: drawing helpers.
  *
- * Everything on screen is drawn from shapes (rects, ellipses, arcs,
- * lines, polygons) through the renderer, so the example has no image
- * assets at all and runs the same on Canvas, WebGL and WebGPU.
+ * The characters, power-ups, sky and HUD are drawn from shapes (rects,
+ * ellipses, arcs, lines, polygons) through the renderer, so they run the
+ * same on Canvas, WebGL and WebGPU. The station itself is a Tiled map,
+ * drawn by the engine.
  *
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
 import { type CanvasRenderer, Polygon, type WebGLRenderer } from "melonjs";
-import { type Dir, DX, DY } from "./board";
+import { DX, DY } from "./board";
 
 export const TILE = 48;
 
@@ -38,32 +39,6 @@ const HEART_TIP = poly([
 	[11.5, -1],
 	[0, 12],
 ]);
-// one chevron per direction, pointing that way
-const CHEVRONS = ([0, 1, 2, 3] as Dir[]).map((d) => {
-	const pts: [number, number][] = [
-		[-9, 4],
-		[0, -5],
-		[9, 4],
-		[9, 9],
-		[0, 0],
-		[-9, 9],
-	];
-	// rotate the "up" chevron to face `d`
-	const rot = ([x, y]: [number, number]): [number, number] => {
-		switch (d) {
-			case 1:
-				return [-y, x];
-			case 2:
-				return [-x, -y];
-			case 3:
-				return [y, -x];
-			default:
-				return [x, y];
-		}
-	};
-	return poly(pts.map(rot));
-});
-
 export const fillShape = (
 	r: Renderer,
 	shape: Polygon,
@@ -186,78 +161,6 @@ export const drawPanelDetail = (
 	if (!lit) {
 		r.fillRect(x + 14, y + 19, TILE - 28, 2);
 	}
-	r.setGlobalAlpha(1);
-};
-
-/** A wall block, raised above the floor. */
-export const drawWall = (
-	r: Renderer,
-	x: number,
-	y: number,
-	top: string,
-	side: string,
-) => {
-	r.setColor(side);
-	r.fillRect(x + 1, y + TILE - 18, TILE - 2, 18);
-	r.setColor(top);
-	r.fillRoundRect(x + 1, y - 8, TILE - 2, TILE - 8, 4);
-	r.setGlobalAlpha(0.18);
-	r.setColor("#ffffff");
-	r.fillRect(x + 4, y - 5, TILE - 8, 3);
-	// an inset hatch with a status light
-	r.setGlobalAlpha(0.35);
-	r.setColor("#000000");
-	r.fillRoundRect(x + 9, y + 2, TILE - 18, TILE - 24, 4);
-	r.setGlobalAlpha(1);
-	r.setColor("#ffcf3d");
-	r.fillRect(x + 1, y + TILE - 12, TILE - 2, 3);
-	r.setColor("#5dff9a");
-	r.fillEllipse(x + TILE / 2, y + 12, 2.5, 2.5);
-};
-
-export const drawIceSheen = (r: Renderer, x: number, y: number) => {
-	r.setGlobalAlpha(0.55);
-	r.setColor("#ffffff");
-	r.lineWidth = 2;
-	r.strokeLine(x + 10, y + 26, x + 24, y + 10);
-	r.strokeLine(x + 18, y + 30, x + 34, y + 12);
-	r.setGlobalAlpha(1);
-};
-
-export const drawChevron = (
-	r: Renderer,
-	cx: number,
-	cy: number,
-	dir: Dir,
-	color: string,
-	time: number,
-) => {
-	const nudge = ((time * 2.5) % 1) * 6 - 3;
-	r.setColor(color);
-	fillShape(r, CHEVRONS[dir], cx + DX[dir] * nudge, cy + DY[dir] * nudge);
-};
-
-export const drawCracks = (r: Renderer, x: number, y: number) => {
-	r.setColor("#05050c");
-	r.setGlobalAlpha(0.7);
-	r.lineWidth = 2;
-	r.strokeLine(x + 8, y + 10, x + 20, y + 20);
-	r.strokeLine(x + 20, y + 20, x + 17, y + 32);
-	r.strokeLine(x + 20, y + 20, x + 36, y + 16);
-	r.strokeLine(x + 36, y + 16, x + 40, y + 28);
-	r.setGlobalAlpha(1);
-};
-
-export const drawNest = (r: Renderer, cx: number, cy: number, time: number) => {
-	r.setGlobalAlpha(0.65);
-	r.setColor("#05030f");
-	r.fillEllipse(cx, cy - 4, 15, 12);
-	r.setGlobalAlpha(0.9);
-	r.setColor("#a24dff");
-	r.lineWidth = 3;
-	const a = time * 3;
-	r.strokeArc(cx, cy - 4, 12, a, a + 2.2);
-	r.strokeArc(cx, cy - 4, 12, a + Math.PI, a + Math.PI + 2.2);
 	r.setGlobalAlpha(1);
 };
 

@@ -21,17 +21,28 @@ import {
 	BloomEffect,
 	ChromaticAberrationEffect,
 	Color,
+	type Container,
 	game,
 	getPool,
 	Mesh,
+	ParticleEmitter,
 	Renderable,
 	ShaderEffect,
 	Sprite,
+	Trail,
 	Tween,
+	timer,
+	Vector2d,
 	Vector3d,
 	VignetteEffect,
 } from "melonjs";
-import type { Renderer } from "./draw";
+import {
+	drawPlanet,
+	drawSky,
+	makeStars,
+	type Renderer,
+	type Star,
+} from "./draw";
 import type { Theme } from "./levels";
 
 // ---------------------------------------------------------------------------
@@ -375,6 +386,175 @@ export class Cruisers extends Renderable {
 			f.mesh.preDraw(r);
 			f.mesh.draw(r);
 			f.mesh.postDraw(r);
+		}
+	}
+}
+
+// ---------------------------------------------------------------------------
+// particles and trails
+// ---------------------------------------------------------------------------
+
+/**
+ * Bursts of particles and spark trails, from the engine's `ParticleEmitter`
+ * and `Trail`.
+ *
+ * ONE long-lived emitter serves every burst: it is moved to where the next
+ * one happens and given that burst's colour, speed and life just before
+ * `burstParticles`. A particle copies those settings when it is born, so
+ * changing them never touches the particles already flying, and
+ * `referenceSpace: "world"` keeps them where they were born when the
+ * emitter moves on.
+ */
+export class Effects {
+	private readonly emitter: ParticleEmitter;
+	private readonly trails = new Set<Trail>();
+
+	constructor(
+		private readonly world: Container,
+		private readonly z: number,
+	) {
+		const SPAWN = 10;
+		this.emitter = new ParticleEmitter(0, 0, {
+			width: SPAWN,
+			height: SPAWN,
+			textureSize: 4,
+			totalParticles: 30,
+			angle: 0,
+			angleVariation: Math.PI, // all the way round
+			minStartScale: 0.7,
+			maxStartScale: 1.4,
+			minEndScale: 0,
+			maxEndScale: 0.2,
+			blendMode: "additive",
+			referenceSpace: "world",
+		});
+		// level.load clears the world of everything that is not persistent
+		this.emitter.isPersistent = true;
+		world.addChild(this.emitter, z);
+	}
+
+	/**
+	 * a burst of particles flying out from (x, y)
+	 * @param speed - how fast they leave, in pixels per second
+	 * @param life - how long they last, in milliseconds
+	 */
+	burst(
+		x: number,
+		y: number,
+		color: string,
+		count: number,
+		speed: number,
+		life = 220,
+	) {
+		const e = this.emitter;
+		const s = e.settings;
+		s.tint = color;
+		// the emitter's speed is in pixels per frame at 60 fps
+		s.speed = (speed / 60) * 0.65;
+		s.speedVariation = s.speed * 0.6;
+		s.minLife = life * 0.6;
+		s.maxLife = life * 1.2;
+		// the spawn area hangs from the emitter's top left: centre it
+		e.pos.set(x - 5, y - 5);
+		e.burstParticles(count);
+	}
+
+	/**
+	 * a glowing ribbon behind something that moves: the `Trail` follows
+	 * `target` until `stop` is called
+	 */
+	trail(target: Vector2d) {
+		const trail = new Trail({
+			target,
+			length: 10,
+			width: 9,
+			lifetime: 170,
+			widthCurve: [1, 0],
+			gradient: ["#ffffff", "#fff2a8", "#ffd23d00"],
+		});
+		trail.blendMode = "additive";
+		this.world.addChild(trail, this.z);
+		this.trails.add(trail);
+		return trail;
+	}
+
+	/** let a trail fade out, then take it away */
+	stop(trail: Trail) {
+		trail.target = null;
+		timer.setTimeout(() => this.drop(trail), 200);
+	}
+
+	private drop(trail: Trail) {
+		if (this.trails.delete(trail) && trail.ancestor) {
+			this.world.removeChild(trail);
+		}
+	}
+
+	/** take everything off the world, for good */
+	destroy() {
+		for (const trail of [...this.trails]) {
+			this.drop(trail);
+		}
+		if (this.emitter.ancestor) {
+			this.world.removeChild(this.emitter);
+		}
+	}
+}
+
+/** a point a trail can follow */
+export const trailPoint = (x: number, y: number) => new Vector2d(x, y);
+
+// ---------------------------------------------------------------------------
+// the backdrop behind the station
+// ---------------------------------------------------------------------------
+
+/**
+ * The ringed planet, and the whole sky on a renderer that cannot run the
+ * nebula shader. Drawn under the Tiled board.
+ */
+export class SpaceBackdrop extends Renderable {
+	private time = 0;
+	private readonly stars: Star[];
+	private planet = "#128a87";
+	private sky = "#0b0a24";
+
+	constructor(
+		w: number,
+		h: number,
+		/** draw the sky too: false when the nebula shader paints it */
+		private readonly drawnSky: boolean,
+		private readonly planetAt: { x: number; y: number },
+	) {
+		super(0, 0, w, h);
+		this.anchorPoint.set(0, 0);
+		this.alwaysUpdate = true;
+		this.isPersistent = true;
+		this.stars = makeStars(120, w, h);
+	}
+
+	setTheme(theme: Theme) {
+		this.planet = theme.litSide;
+		this.sky = theme.sky;
+	}
+
+	override update(dt: number) {
+		this.time += dt / 1000;
+		return true;
+	}
+
+	override draw(r: Renderer) {
+		if (this.drawnSky) {
+			drawSky(
+				r,
+				this.sky,
+				this.stars,
+				this.width,
+				this.height,
+				this.time,
+				this.planet,
+			);
+		} else {
+			drawPlanet(r, this.planetAt.x, this.planetAt.y, this.time, this.planet);
 		}
 	}
 }

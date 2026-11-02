@@ -6,11 +6,14 @@
  */
 import {
 	type Application,
+	Container,
+	level,
 	Renderable,
 	Stage,
 	save,
 	state,
 	Text,
+	type TMXLayer,
 } from "melonjs";
 import { drawBolt, drawMonster } from "./characters";
 import { Controls } from "./controls";
@@ -24,8 +27,14 @@ import {
 	type Star,
 	TILE,
 } from "./draw";
-import { Field, HEIGHT, HISCORE_KEY, WIDTH } from "./field";
-import { Cruisers, NebulaBackdrop, setupScreenFx } from "./fx";
+import { Field, HEIGHT, HISCORE_KEY, OX, OY, WIDTH } from "./field";
+import {
+	Cruisers,
+	Effects,
+	NebulaBackdrop,
+	SpaceBackdrop,
+	setupScreenFx,
+} from "./fx";
 import * as sfx from "./sfx";
 
 /** shared by both screens; bound once in `ExampleStarsweep` */
@@ -49,6 +58,12 @@ const addSpace = (
 		app.world.addChild(new Cruisers(WIDTH, HEIGHT, ships), -5);
 	}
 	return sky;
+};
+
+/** the play screen loads a level into the world: keep these across it */
+const keep = <T extends { isPersistent: boolean }>(r: T) => {
+	r.isPersistent = true;
+	return r;
 };
 
 /** A strip of tiles lighting up as Bolt runs over it, a blot in pursuit. */
@@ -178,16 +193,93 @@ export class TitleScreen extends Stage {
 }
 
 export class PlayScreen extends Stage {
+	private field: Field | null = null;
+	/** what this screen put in the world and must take out again */
+	private kept: Renderable[] = [];
+	private effects: Effects | null = null;
+
 	override onResetEvent(app: Application) {
 		app.reset();
-		const field = new Field(controls);
-		field.onExit = () => state.change(state.MENU);
-		app.world.addChild(field, 0);
-		field.sky = addSpace(app, { every: [10, 18], sizes: [70, 110], first: 4 });
-		controls.attach(true);
-		for (const t of field.hud) {
-			app.world.addChild(t, 10);
+		const world = app.world;
+		const sky = addSpace(app, { every: [10, 18], sizes: [70, 110], first: 4 });
+		// `level.load` empties the world of everything not persistent
+		for (const child of world.getChildren()) {
+			keep(child as Renderable);
+			this.kept.push(child as Renderable);
 		}
+		// the planet, and the whole sky when there is no shader for it
+		const backdrop = keep(
+			new SpaceBackdrop(WIDTH, HEIGHT, sky === null, {
+				x: WIDTH - 40,
+				y: OY + 70,
+			}),
+		);
+		// each level's Tiled map is loaded into this container, at the board's place
+		const board = keep(new Container(OX, OY, WIDTH, HEIGHT));
+		board.name = "board";
+		world.addChild(backdrop, -1);
+		world.addChild(board, 0);
+		this.kept.push(backdrop, board);
+		this.effects = new Effects(world, 3);
+
+		const field = new Field({
+			controls,
+			effects: this.effects,
+			backdrop,
+			sky,
+			loadBoard: async (file) => {
+				await level.load(file, {
+					container: board,
+					setViewportBounds: false,
+					async: true,
+				});
+				// the reset inside level.load drops a z-sort still pending
+				// for the objects kept above: sort the world again
+				world.sort();
+				const layer = (name: string) =>
+					board.getChildByName(name)[0] as unknown as TMXLayer;
+				return { station: layer("station"), power: layer("power") };
+			},
+		});
+		field.onExit = () => state.change(state.MENU);
+		world.addChild(field, 2);
+		this.kept.push(field);
+		for (const t of field.hud) {
+			world.addChild(t, 10);
+			this.kept.push(t);
+		}
+		this.field = field;
+		controls.attach(true);
 		field.newGame();
+	}
+
+	/** the world pauses with the game, but a stage keeps updating: pause here */
+	override update(dt: number) {
+		if (
+			controls.pause() &&
+			(state.isPaused() || this.field?.canPause === true)
+		) {
+			if (state.isPaused()) {
+				state.resume();
+			} else {
+				state.pause();
+			}
+		}
+		return super.update(dt);
+	}
+
+	override onDestroyEvent(app: Application) {
+		if (state.isPaused()) {
+			state.resume();
+		}
+		this.effects?.destroy();
+		for (const r of this.kept) {
+			if (r.ancestor) {
+				app.world.removeChild(r);
+			}
+		}
+		this.kept = [];
+		this.effects = null;
+		this.field = null;
 	}
 }

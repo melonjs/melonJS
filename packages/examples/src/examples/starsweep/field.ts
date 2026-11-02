@@ -1,17 +1,30 @@
 /**
  * melonJS — Starsweep: the playing field.
  *
- * One `Renderable` owns the whole round: the deck, Bolt, the monsters,
- * sparks, power-ups and particles. Its `update` runs the game and its
- * `draw` paints it. Movement is tile-to-tile: an actor
- * is always between a `from` tile and a `to` tile, with `t` going 0 → 1.
+ * One `Renderable` runs the round: Bolt, the monsters, sparks and
+ * power-ups. The station itself is the level's Tiled map, drawn by the
+ * engine: lighting a panel sets a tile on its `power` layer, and a panel
+ * that crumbles is cleared from its `station` layer (`setTile` /
+ * `clearTile`). Bursts come from a `ParticleEmitter`, spark trails are
+ * `Trail`s, one-shot animations are `Tween`s, and pausing is the engine's
+ * `state.pause()`. Movement is tile-to-tile: an actor is always between a
+ * `from` tile and a `to` tile, with `t` going 0 → 1.
  *
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
-import { game, Renderable, save, Text } from "melonjs";
 import {
-	arrowDir,
+	event,
+	game,
+	Renderable,
+	save,
+	Text,
+	type TMXLayer,
+	type Trail,
+	Tween,
+	type Vector2d,
+} from "melonjs";
+import {
 	COLS,
 	type Dir,
 	DX,
@@ -28,34 +41,29 @@ import {
 import { drawBolt, drawMonster } from "./characters";
 import type { Controls } from "./controls";
 import {
-	drawChevron,
-	drawCracks,
 	drawGlow,
-	drawIceSheen,
-	drawNest,
-	drawPanelDetail,
-	drawPlanet,
 	drawPower,
-	drawSky,
-	drawSlab,
-	drawWall,
 	FONT,
-	makeStars,
 	POWER_COLORS,
 	type PowerKind,
 	type Renderer,
-	type Star,
 	TILE,
 } from "./draw";
-import { aberrationBurst, type NebulaBackdrop } from "./fx";
-import { type EnemyKind, LEVELS, type LevelDef } from "./levels";
+import {
+	aberrationBurst,
+	type Effects,
+	type NebulaBackdrop,
+	type SpaceBackdrop,
+	trailPoint,
+} from "./fx";
+import { type EnemyKind, LEVEL_FILES, LEVELS, type LevelDef } from "./levels";
 import * as sfx from "./sfx";
 
 // portrait, 9:16, so it fills a phone held upright
 export const WIDTH = 576;
 export const HEIGHT = 1024;
-const OX = (WIDTH - COLS * TILE) / 2;
-const OY = 118;
+export const OX = (WIDTH - COLS * TILE) / 2;
+export const OY = 118;
 /** where the board ends and the touch controls' zone begins */
 export const BOARD_BOTTOM = OY + ROWS * TILE;
 
@@ -115,9 +123,10 @@ interface Enemy extends Mover {
 }
 
 interface Spark {
-	x: number;
-	y: number;
+	/** where it is, which its trail follows */
+	at: Vector2d;
 	dir: Dir;
+	trail: Trail;
 }
 
 interface Power {
@@ -127,18 +136,32 @@ interface Power {
 	life: number;
 }
 
-interface Particle {
-	x: number;
-	y: number;
-	vx: number;
-	vy: number;
-	life: number;
-	max: number;
-	size: number;
-	color: string;
+type Phase =
+	| "loading"
+	| "intro"
+	| "play"
+	| "dying"
+	| "clear"
+	| "gameover"
+	| "victory";
+
+/** the two tile layers of a level, once loaded */
+export interface Board {
+	/** the station: what is there to walk on */
+	station: TMXLayer;
+	/** the lit panels, drawn over it and tinted with the level's colour */
+	power: TMXLayer;
 }
 
-type Phase = "intro" | "play" | "dying" | "clear" | "gameover" | "victory";
+/** what the field needs from the screen that owns it */
+export interface FieldHost {
+	controls: Controls;
+	effects: Effects;
+	backdrop: SpaceBackdrop;
+	sky: NebulaBackdrop | null;
+	/** load a level's Tiled map into the board container */
+	loadBoard: (file: string) => Promise<Board>;
+}
 
 const tileX = (x: number) => OX + x * TILE;
 const tileY = (y: number) => OY + y * TILE;
@@ -153,17 +176,22 @@ export class Field extends Renderable {
 	/** called when the run ends and the player confirms */
 	onExit: () => void = () => {};
 
-	private controls: Controls;
-	private stars: Star[];
-	/** the shader sky behind the board, when the renderer can run it */
-	sky: NebulaBackdrop | null = null;
+	private readonly host: FieldHost;
+	private readonly controls: Controls;
+	private readonly fx: Effects;
 	private time = 0;
+
+	// the Tiled board, and the tiles it is drawn with, found by property
+	private board: Board | null = null;
+	private kindGid = new Map<string, number>();
+	private litGid = new Map<string, number>();
+	/** each cell's tile kind, as the map has it (start, portal, ...) */
+	private kinds: (string | null)[] = [];
 
 	private levelIndex = 0;
 	private level!: LevelDef;
 	private tiles: Tile[] = [];
 	private lit: boolean[] = [];
-	private litAt: number[] = [];
 	private crumble: number[] = []; // > 0: about to fall away
 	private gone: number[] = []; // > 0: fallen, time until it grows back
 	private start = { x: 0, y: 0 };
@@ -175,11 +203,15 @@ export class Field extends Renderable {
 	private enemies: Enemy[] = [];
 	private sparks: Spark[] = [];
 	private powers: Power[] = [];
-	private particles: Particle[] = [];
 
-	private phase: Phase = "intro";
+	private phase: Phase = "loading";
 	private phaseTime = 0;
 	private paused = false;
+	/** the dimming and panel behind a message, 0 to 1 */
+	private overlay = 0;
+	private introFade: Tween | null = null;
+	/** Bolt knocked out: fading and floating up, both tweened */
+	private readonly ko = { alpha: 1, rise: 0 };
 	private score = 0;
 	private hiscore = 0;
 	private lives = START_LIVES;
@@ -212,12 +244,15 @@ export class Field extends Renderable {
 	private shownScore = -1;
 	private shownHi = -1;
 
-	constructor(controls: Controls) {
+	constructor(host: FieldHost) {
 		super(0, 0, WIDTH, HEIGHT);
 		this.anchorPoint.set(0, 0);
 		this.alwaysUpdate = true;
-		this.controls = controls;
-		this.stars = makeStars(120, WIDTH, HEIGHT);
+		// level.load clears the world of everything that is not persistent
+		this.isPersistent = true;
+		this.host = host;
+		this.controls = host.controls;
+		this.fx = host.effects;
 		this.hiscore =
 			(save as unknown as Record<string, number>)[HISCORE_KEY] ?? 0;
 
@@ -237,6 +272,7 @@ export class Field extends Renderable {
 				text: " ",
 			});
 			t.floating = true;
+			t.isPersistent = true;
 			this.hud.push(t);
 			return t;
 		};
@@ -252,6 +288,48 @@ export class Field extends Renderable {
 			"center",
 			"#8f88c9",
 		);
+		// paused by the player or by the page losing focus: say so
+		event.on(event.STATE_PAUSE, this.onPause);
+		event.on(event.STATE_RESUME, this.onResume);
+	}
+
+	override onDestroyEvent() {
+		event.off(event.STATE_PAUSE, this.onPause);
+		event.off(event.STATE_RESUME, this.onResume);
+	}
+
+	/** what was on screen when the game paused, put back on resume */
+	private beforePause: { big: string; sub: string; alpha: number } | null =
+		null;
+
+	private readonly onPause = () => {
+		if (this.paused) {
+			return;
+		}
+		this.paused = true;
+		this.beforePause = {
+			...this.message,
+			alpha: this.bigText.alpha,
+		};
+		this.showMessage(
+			"Paused",
+			this.controls.onScreen ? "" : "Press P or Esc to resume",
+		);
+	};
+
+	private readonly onResume = () => {
+		if (!this.paused) {
+			return;
+		}
+		this.paused = false;
+		const was = this.beforePause;
+		this.showMessage(was?.big ?? "", was?.sub ?? "");
+		this.bigText.alpha = this.subText.alpha = was?.alpha ?? 0;
+	};
+
+	/** whether the player may pause now */
+	get canPause() {
+		return this.phase === "play";
 	}
 
 	/** start a brand new run */
@@ -265,17 +343,28 @@ export class Field extends Renderable {
 	// level flow
 	// ---------------------------------------------------------------------
 
-	private loadLevel(i: number) {
+	private async loadLevel(i: number) {
+		this.setPhase("loading");
 		this.levelIndex = i;
 		this.level = LEVELS[i];
-		this.sky?.setLevelTheme(this.level.theme);
+		this.clearSparks();
+		this.enemies = [];
+		this.powers = [];
+		this.board = null;
+		const theme = this.level.theme;
+		this.host.sky?.setLevelTheme(theme);
+		this.host.backdrop.setTheme(theme);
+		const board = await this.host.loadBoard(LEVEL_FILES[i]);
+		board.power.tint.parseCSS(theme.lit);
+		this.readTileset(board.station);
+		this.board = board;
+
 		const parsed = parseMap(this.level.map);
 		this.tiles = parsed.tiles;
 		this.start = parsed.start;
 		this.nests = parsed.nests;
 		const n = COLS * ROWS;
 		this.lit = new Array(n).fill(false);
-		this.litAt = new Array(n).fill(-10);
 		this.crumble = new Array(n).fill(0);
 		this.gone = new Array(n).fill(0);
 		this.paintTotal = this.tiles.filter(isPaintable).length;
@@ -292,6 +381,67 @@ export class Field extends Renderable {
 		this.paint(this.start.x, this.start.y, true);
 		this.setPhase("intro");
 		this.showMessage(this.level.name, this.level.hint);
+		this.overlay = 1;
+		// the message stays a moment, then fades off the board
+		this.introFade = new Tween(this)
+			.to({ overlay: 0 }, { duration: 400, delay: 1800 })
+			.onUpdate(() => {
+				this.bigText.alpha = this.subText.alpha = this.overlay;
+			})
+			.start();
+	}
+
+	/**
+	 * Find the tiles by their properties, so the tileset can be rearranged
+	 * in Tiled: `kind` on the station tiles, `lit` on their lit versions.
+	 * Also note each cell's kind, which `clearTile` would otherwise lose.
+	 */
+	private readTileset(station: TMXLayer) {
+		this.kindGid.clear();
+		this.litGid.clear();
+		const tileset = station.tilesets.getTilesetByIndex(0);
+		for (let gid = tileset.firstgid; gid <= tileset.lastgid; gid++) {
+			const props = tileset.getTileProperties(gid) as
+				| { kind?: string; lit?: string }
+				| undefined;
+			if (props?.kind !== undefined) {
+				this.kindGid.set(props.kind, gid);
+			}
+			if (props?.lit !== undefined) {
+				this.litGid.set(props.lit, gid);
+			}
+		}
+		this.kinds = [];
+		for (let y = 0; y < ROWS; y++) {
+			for (let x = 0; x < COLS; x++) {
+				const tile = station.cellAt(x, y);
+				const props = tile?.tileset.getTileProperties(tile.tileId) as
+					| { kind?: string }
+					| undefined;
+				this.kinds.push(props?.kind ?? null);
+			}
+		}
+	}
+
+	/** light a panel on the board's power layer */
+	private setLit(x: number, y: number, on: boolean) {
+		const power = this.board?.power;
+		if (!power) {
+			return;
+		}
+		const gid = on ? this.litGid.get(this.kinds[idx(x, y)] ?? "") : undefined;
+		if (gid === undefined) {
+			power.clearTile(x, y);
+		} else {
+			power.setTile(power.getTileById(gid, x, y), x, y);
+		}
+	}
+
+	private clearSparks() {
+		for (const s of this.sparks) {
+			this.fx.stop(s.trail);
+		}
+		this.sparks = [];
 	}
 
 	private resetActors() {
@@ -309,7 +459,9 @@ export class Field extends Renderable {
 			invuln: 0,
 		};
 		this.enemies = [];
-		this.sparks = [];
+		this.clearSparks();
+		this.ko.alpha = 1;
+		this.ko.rise = 0;
 		this.spawnTimer = 1.5;
 		this.streak = 0;
 		this.controls.reset();
@@ -322,7 +474,11 @@ export class Field extends Renderable {
 		this.controls.reset();
 	}
 
+	/** the message on screen */
+	private message = { big: "", sub: "" };
+
 	private showMessage(big: string, sub = "") {
+		this.message = { big, sub };
 		this.bigText.setText(big || " ");
 		this.subText.setText(sub || " ");
 		this.bigText.alpha = big ? 1 : 0;
@@ -361,14 +517,14 @@ export class Field extends Renderable {
 			return;
 		}
 		this.lit[i] = true;
-		this.litAt[i] = this.time;
+		this.setLit(x, y, true);
 		this.paintCount++;
 		if (!silent) {
 			this.addScore(10);
 			sfx.sfxPaint(this.streak);
 			this.streak++;
 			this.streakTimer = 0.5;
-			this.burstAt(
+			this.fx.burst(
 				tileX(x) + TILE / 2,
 				tileY(y) + TILE / 2 - 4,
 				this.level.theme.lit,
@@ -387,9 +543,10 @@ export class Field extends Renderable {
 			return;
 		}
 		this.lit[i] = false;
+		this.setLit(x, y, false);
 		this.paintCount--;
 		sfx.sfxUnpaint();
-		this.burstAt(tileX(x) + TILE / 2, tileY(y) + TILE / 2, "#3a3a66", 4, 50);
+		this.fx.burst(tileX(x) + TILE / 2, tileY(y) + TILE / 2, "#3a3a66", 4, 50);
 	}
 
 	// ---------------------------------------------------------------------
@@ -398,23 +555,12 @@ export class Field extends Renderable {
 
 	override update(dtMs: number) {
 		const dt = Math.min(dtMs / 1000, 1 / 20);
+		if (this.phase === "loading") {
+			return false;
+		}
 		this.controls.poll();
-
-		if (this.controls.pause() && (this.phase === "play" || this.paused)) {
-			this.paused = !this.paused;
-			this.showMessage(
-				this.paused ? "Paused" : "",
-				this.paused ? "Press P or Esc to resume" : "",
-			);
-		}
-		if (this.paused) {
-			this.updateHud();
-			return true;
-		}
-
 		this.time += dt;
 		this.phaseTime += dt;
-		this.updateParticles(dt);
 		this.updateCracks(dt);
 
 		switch (this.phase) {
@@ -423,6 +569,8 @@ export class Field extends Renderable {
 					this.phaseTime > 2.2 ||
 					(this.phaseTime > 0.4 && this.controls.confirm())
 				) {
+					this.introFade?.stop();
+					this.overlay = 0;
 					this.showMessage("");
 					this.controls.reset();
 					this.setPhase("play");
@@ -437,10 +585,12 @@ export class Field extends Renderable {
 				this.checkHits();
 				break;
 			case "dying":
-				this.updateFall(dt);
+				// the ones falling away finish going (their fall is tweened)
+				this.enemies = this.enemies.filter((e) => e.falling !== -1);
 				if (this.phaseTime > 1.6) {
 					if (this.lives <= 0) {
 						this.setPhase("gameover");
+						this.overlay = 1;
 						sfx.sfxGameOver();
 						this.showMessage(
 							"Game Over",
@@ -456,9 +606,10 @@ export class Field extends Renderable {
 			case "clear":
 				if (this.phaseTime > 2.8) {
 					if (this.levelIndex + 1 < LEVELS.length) {
-						this.loadLevel(this.levelIndex + 1);
+						void this.loadLevel(this.levelIndex + 1);
 					} else {
 						this.setPhase("victory");
+						this.overlay = 1;
 						this.showMessage(
 							"Station saved!",
 							`Final score ${this.score}  ·  ${this.continueHint()}`,
@@ -485,10 +636,11 @@ export class Field extends Renderable {
 		this.addScore(this.bonus);
 		// every enemy pops in celebration
 		for (const e of this.enemies) {
-			this.burstAt(moverX(e), moverY(e), "#ffffff", 14, 160);
+			this.fx.burst(moverX(e), moverY(e), "#ffffff", 14, 160);
 		}
 		this.enemies = [];
-		this.sparks = [];
+		this.clearSparks();
+		this.overlay = 1;
 		this.showMessage(
 			"Level clear!",
 			this.bonus > 0 ? `Time bonus +${this.bonus}` : "",
@@ -513,12 +665,6 @@ export class Field extends Renderable {
 			this.shownHi = this.hiscore;
 			this.hiText.setText(`HI ${this.hiscore.toString().padStart(6, "0")}`);
 		}
-		// fade the big message on the clear screen so the board shows through
-		if (this.phase === "intro" && this.phaseTime > 1.8) {
-			const a = Math.max(0, 1 - (this.phaseTime - 1.8) / 0.4);
-			this.bigText.alpha = a;
-			this.subText.alpha = a;
-		}
 	}
 
 	private updateCracks(dt: number) {
@@ -530,8 +676,10 @@ export class Field extends Renderable {
 					this.gone[i] = REGROW_TIME;
 					const x = i % COLS;
 					const y = Math.floor(i / COLS);
+					this.board?.station.clearTile(x, y);
+					this.board?.power.clearTile(x, y);
 					sfx.sfxCrumble();
-					this.burstAt(
+					this.fx.burst(
 						tileX(x) + TILE / 2,
 						tileY(y) + TILE / 2,
 						"#8a7a6a",
@@ -557,9 +705,24 @@ export class Field extends Renderable {
 				this.gone[i] -= dt;
 				if (this.gone[i] <= 0) {
 					this.gone[i] = 0;
+					this.regrow(i);
 				}
 			}
 		}
+	}
+
+	/** a fallen crack grows back, lit if it was */
+	private regrow(i: number) {
+		const station = this.board?.station;
+		const gid = this.kindGid.get("crack");
+		if (!station || gid === undefined) {
+			return;
+		}
+		const x = i % COLS;
+		const y = Math.floor(i / COLS);
+		station.setTile(station.getTileById(gid, x, y), x, y);
+		this.setLit(x, y, this.lit[i]);
+		this.fx.burst(tileX(x) + TILE / 2, tileY(y) + TILE / 2, "#8a7a6a", 6, 40);
 	}
 
 	private nearestTile(m: Mover) {
@@ -665,7 +828,8 @@ export class Field extends Renderable {
 			if (this.sparks.length >= (this.burst > 0 ? 4 : 1)) {
 				break;
 			}
-			this.sparks.push({ x: moverX(p), y: moverY(p), dir: d });
+			const at = trailPoint(moverX(p), moverY(p));
+			this.sparks.push({ at, dir: d, trail: this.fx.trail(at) });
 		}
 	}
 
@@ -678,30 +842,28 @@ export class Field extends Renderable {
 		this.streak = 0;
 		const p = this.player;
 		if (fell) {
-			p.falling = 1;
+			this.fall(p);
 			sfx.sfxFall();
 		} else {
 			sfx.sfxDie();
-			this.burstAt(moverX(p), moverY(p), "#fff2a8", 30, 220, 300);
+			this.fx.burst(moverX(p), moverY(p), "#fff2a8", 30, 220, 300);
 			game.viewport.shake(8, 350);
+			// knocked out: X eyes, floating up as it fades away
+			new Tween(this.ko).to({ alpha: 0, rise: 16 }, { duration: 1300 }).start();
 		}
 		aberrationBurst(fell ? 4 : 9);
 	}
 
-	private updateFall(dt: number) {
-		const p = this.player;
-		if (p.falling > 0) {
-			p.falling = Math.max(0, p.falling - dt * 1.2);
-		}
-		for (const e of this.enemies) {
-			if (e.falling > 0) {
-				e.falling = Math.max(0, e.falling - dt * 1.2);
-				if (e.falling === 0) {
-					e.falling = -1;
-				}
-			}
-		}
-		this.enemies = this.enemies.filter((e) => e.falling !== -1);
+	/** drop into the void: `falling` tweens from 1 down to 0, then it is gone */
+	private fall(m: Player | Enemy) {
+		m.falling = 1;
+		new Tween(m)
+			.to({ falling: 0 }, { duration: 830 })
+			.easing(Tween.Easing.Quadratic.In)
+			.onComplete(() => {
+				m.falling = -1;
+			})
+			.start();
 	}
 
 	// --- enemies ------------------------------------------------------------
@@ -722,12 +884,8 @@ export class Field extends Renderable {
 		}
 
 		for (const e of this.enemies) {
-			if (e.falling > 0) {
-				e.falling = Math.max(0, e.falling - dt * 1.2);
-				if (e.falling === 0) {
-					e.falling = -1; // gone
-				}
-				continue;
+			if (e.falling !== 0) {
+				continue; // falling away, tweened
 			}
 			if (e.spawning > 0) {
 				e.spawning -= dt;
@@ -842,7 +1000,7 @@ export class Field extends Renderable {
 	}
 
 	private dropEnemy(e: Enemy) {
-		e.falling = 1;
+		this.fall(e);
 		e.moving = false;
 		e.fx = e.tx = e.t < 0.5 ? e.fx : e.tx;
 		e.fy = e.ty = e.t < 0.5 ? e.fy : e.ty;
@@ -886,34 +1044,30 @@ export class Field extends Renderable {
 	private updateSparks(dt: number) {
 		const step = SPARK_SPEED * TILE * dt;
 		this.sparks = this.sparks.filter((s) => {
-			s.x += DX[s.dir] * step;
-			s.y += DY[s.dir] * step;
-			this.particles.push({
-				x: s.x,
-				y: s.y,
-				vx: 0,
-				vy: 0,
-				life: 0.15,
-				max: 0.15,
-				size: 4,
-				color: "#fff2a8",
-			});
-			const gx = Math.floor((s.x - OX) / TILE);
-			const gy = Math.floor((s.y + 4 - OY) / TILE);
-			if (!inBounds(gx, gy) || this.tiles[idx(gx, gy)] === Tile.WALL) {
-				this.burstAt(s.x, s.y, "#fff2a8", 5, 80);
-				return false;
-			}
-			for (const e of this.enemies) {
-				if (e.spawning > 0 || e.falling !== 0) {
-					continue;
-				}
-				if (Math.hypot(moverX(e) - s.x, moverY(e) - s.y) < TILE * 0.55) {
+			const at = s.at;
+			at.x += DX[s.dir] * step;
+			at.y += DY[s.dir] * step;
+			const gx = Math.floor((at.x - OX) / TILE);
+			const gy = Math.floor((at.y + 4 - OY) / TILE);
+			let hit = !inBounds(gx, gy) || this.tiles[idx(gx, gy)] === Tile.WALL;
+			if (hit) {
+				this.fx.burst(at.x, at.y, "#fff2a8", 5, 80);
+			} else {
+				const e = this.enemies.find(
+					(e) =>
+						e.spawning <= 0 &&
+						e.falling === 0 &&
+						Math.hypot(moverX(e) - at.x, moverY(e) - at.y) < TILE * 0.55,
+				);
+				if (e) {
 					this.popEnemy(e);
-					return false;
+					hit = true;
 				}
 			}
-			return true;
+			if (hit) {
+				this.fx.stop(s.trail);
+			}
+			return !hit;
 		});
 	}
 
@@ -927,7 +1081,7 @@ export class Field extends Renderable {
 				: e.kind === "muncher"
 					? "#3cf0c8"
 					: "#9a6bff";
-		this.burstAt(moverX(e), moverY(e), color, 22, 200, 260);
+		this.fx.burst(moverX(e), moverY(e), color, 22, 200, 260);
 		this.enemies = this.enemies.filter((o) => o !== e);
 	}
 
@@ -980,7 +1134,7 @@ export class Field extends Renderable {
 	private collect(pw: Power) {
 		this.cheer = 0.8;
 		sfx.sfxPickup();
-		this.burstAt(
+		this.fx.burst(
 			tileX(pw.x) + TILE / 2,
 			tileY(pw.y) + TILE / 2 - 6,
 			POWER_COLORS[pw.kind],
@@ -1040,70 +1194,16 @@ export class Field extends Renderable {
 		}
 	}
 
-	// --- particles ------------------------------------------------------------
-
-	private burstAt(
-		x: number,
-		y: number,
-		color: string,
-		count: number,
-		speed: number,
-		life = 220,
-	) {
-		for (let i = 0; i < count; i++) {
-			const a = Math.random() * Math.PI * 2;
-			const v = speed * (0.3 + Math.random() * 0.7);
-			const l = (life / 1000) * (0.6 + Math.random() * 0.6);
-			this.particles.push({
-				x,
-				y,
-				vx: Math.cos(a) * v,
-				vy: Math.sin(a) * v,
-				life: l,
-				max: l,
-				size: 2 + Math.random() * 3,
-				color,
-			});
-		}
-	}
-
-	private updateParticles(dt: number) {
-		for (const pt of this.particles) {
-			pt.life -= dt;
-			pt.x += pt.vx * dt;
-			pt.y += pt.vy * dt;
-			pt.vx *= 0.92;
-			pt.vy *= 0.92;
-		}
-		this.particles = this.particles.filter((pt) => pt.life > 0);
-	}
-
 	// ---------------------------------------------------------------------
 	// draw
 	// ---------------------------------------------------------------------
 
 	override draw(r: Renderer) {
-		const theme = this.level.theme;
-		if (this.sky) {
-			drawPlanet(r, WIDTH - 40, OY + 70, this.time, theme.litSide);
-		} else {
-			drawSky(
-				r,
-				theme.sky,
-				this.stars,
-				WIDTH,
-				HEIGHT,
-				this.time,
-				theme.litSide,
-			);
+		// the station (the Tiled layers) and the sky are drawn under this
+		if (!this.board) {
+			return;
 		}
 		this.drawTopBar(r);
-
-		for (let y = 0; y < ROWS; y++) {
-			for (let x = 0; x < COLS; x++) {
-				this.drawTile(r, x, y);
-			}
-		}
 
 		for (const pw of this.powers) {
 			const blink = pw.life < 2 && Math.floor(pw.life * 8) % 2 === 0 ? 0.3 : 1;
@@ -1124,31 +1224,13 @@ export class Field extends Renderable {
 		this.drawPlayer(r);
 
 		for (const s of this.sparks) {
-			drawGlow(r, s.x, s.y, 16, "#fff2a8", 1);
+			drawGlow(r, s.at.x, s.at.y, 16, "#fff2a8", 1);
 			r.setColor("#ffffff");
-			r.fillEllipse(s.x, s.y, 5, 5);
+			r.fillEllipse(s.at.x, s.at.y, 5, 5);
 		}
 
-		r.setBlendMode("additive");
-		for (const pt of this.particles) {
-			r.setGlobalAlpha(pt.life / pt.max);
-			r.setColor(pt.color);
-			r.fillRect(pt.x - pt.size / 2, pt.y - pt.size / 2, pt.size, pt.size);
-		}
-		r.setGlobalAlpha(1);
-		r.setBlendMode("normal");
-
-		if (
-			this.phase === "intro" ||
-			this.phase === "clear" ||
-			this.phase === "gameover" ||
-			this.phase === "victory" ||
-			this.paused
-		) {
-			const a =
-				this.phase === "intro"
-					? Math.max(0, 1 - Math.max(0, this.phaseTime - 1.8) / 0.4)
-					: 1;
+		const a = this.paused ? 1 : this.overlay;
+		if (a > 0) {
 			r.setGlobalAlpha(0.5 * a);
 			r.setColor("#05030f");
 			r.fillRect(0, OY - 8, WIDTH, ROWS * TILE + 16);
@@ -1212,89 +1294,6 @@ export class Field extends Renderable {
 		}
 	}
 
-	private drawTile(r: Renderer, x: number, y: number) {
-		const i = idx(x, y);
-		const t = this.tiles[i];
-		const px = tileX(x);
-		const py = tileY(y);
-		if (t === Tile.VOID) {
-			return;
-		}
-		if (t === Tile.WALL) {
-			drawWall(r, px, py, this.level.theme.wall, this.level.theme.wallSide);
-			return;
-		}
-
-		let scale = 1;
-		let alpha = 1;
-		let shakeX = 0;
-		if (t === Tile.CRACK) {
-			if (this.gone[i] > 0) {
-				// grows back over the last 0.6 s
-				const grow = 1 - this.gone[i] / 0.6;
-				if (grow <= 0) {
-					return;
-				}
-				scale = grow;
-				alpha = grow;
-			} else if (this.crumble[i] > 0) {
-				shakeX = Math.sin(this.time * 80) * 2;
-			}
-		}
-
-		const theme = this.level.theme;
-		const lit = this.lit[i];
-		const ice = t === Tile.ICE;
-		const face = lit ? theme.lit : ice ? "#8fc4ec" : "#2b3052";
-		const side = lit ? theme.litSide : ice ? "#3f6f99" : "#161a32";
-		r.setGlobalAlpha(alpha);
-		drawSlab(r, px + shakeX, py, face, side, scale);
-		if (scale < 1) {
-			r.setGlobalAlpha(1);
-			return;
-		}
-		if (!ice) {
-			drawPanelDetail(r, px + shakeX, py, lit);
-		}
-		if (lit) {
-			r.setGlobalAlpha(0.45);
-			r.setColor(theme.litHi);
-			r.fillRoundRect(px + 7 + shakeX, py + 6, TILE - 14, 5, 3);
-			r.setGlobalAlpha(1);
-			// flash when it lights
-			const since = this.time - this.litAt[i];
-			if (since < 0.35) {
-				r.setBlendMode("additive");
-				r.setGlobalAlpha(1 - since / 0.35);
-				r.setColor("#ffffff");
-				r.fillRoundRect(px + 2, py + 2, TILE - 4, TILE - 10, 6);
-				r.setGlobalAlpha(1);
-				r.setBlendMode("normal");
-			}
-		}
-		if (ice) {
-			drawIceSheen(r, px, py);
-		}
-		const arrow = arrowDir(t);
-		if (arrow !== -1) {
-			drawChevron(
-				r,
-				px + TILE / 2,
-				py + TILE / 2 - 4,
-				arrow,
-				lit ? "#ffffff" : "#ffd23d",
-				this.time,
-			);
-		}
-		if (t === Tile.CRACK) {
-			drawCracks(r, px + shakeX, py);
-		}
-		if (t === Tile.NEST) {
-			drawNest(r, px + TILE / 2, py + TILE / 2, this.time);
-		}
-		r.setGlobalAlpha(1);
-	}
-
 	private drawPlayer(r: Renderer) {
 		const p = this.player;
 		const x = moverX(p);
@@ -1307,11 +1306,10 @@ export class Field extends Renderable {
 					alpha: p.falling,
 					mood: "ko",
 				});
-			} else {
+			} else if (p.falling === 0) {
 				// knocked out: X eyes, then fades away
-				const fade = Math.max(0, 1 - this.phaseTime / 1.3);
-				drawBolt(r, x, y - this.phaseTime * 12, 2, this.time, {
-					alpha: fade,
+				drawBolt(r, x, y - this.ko.rise, 2, this.time, {
+					alpha: this.ko.alpha,
 					mood: "ko",
 				});
 			}

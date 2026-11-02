@@ -69,8 +69,9 @@ const createGame = async () => {
 			{ name, type: "obj", src: `${base}${CRUISER_BASE}${name}.obj` },
 			{ name, type: "mtl", src: `${base}${CRUISER_BASE}${name}.mtl` },
 		]),
-		// the levels, edited in Tiled, and the tileset they share
+		// the levels, edited in Tiled, the tileset they share and its image
 		{ name: TILESET_FILE, type: "tsx", src: `${levels}${TILESET_FILE}.tsj` },
+		{ name: TILESET_FILE, type: "image", src: `${levels}${TILESET_FILE}.png` },
 		...LEVEL_FILES.map((name) => ({
 			name,
 			type: "tmx",
