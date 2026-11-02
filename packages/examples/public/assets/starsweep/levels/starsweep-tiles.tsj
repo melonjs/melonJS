@@ -1,0 +1,117 @@
+{
+	"columns": 5,
+	"image": "starsweep-tiles.png",
+	"imageheight": 96,
+	"imagewidth": 240,
+	"margin": 0,
+	"name": "starsweep",
+	"spacing": 0,
+	"tilecount": 10,
+	"tiledversion": "1.11.2",
+	"tileheight": 48,
+	"tiles": [
+		{
+			"id": 0,
+			"properties": [
+				{
+					"name": "kind",
+					"type": "string",
+					"value": "wall"
+				}
+			]
+		},
+		{
+			"id": 1,
+			"properties": [
+				{
+					"name": "kind",
+					"type": "string",
+					"value": "floor"
+				}
+			]
+		},
+		{
+			"id": 2,
+			"properties": [
+				{
+					"name": "kind",
+					"type": "string",
+					"value": "ice"
+				}
+			]
+		},
+		{
+			"id": 3,
+			"properties": [
+				{
+					"name": "kind",
+					"type": "string",
+					"value": "arrow-up"
+				}
+			]
+		},
+		{
+			"id": 4,
+			"properties": [
+				{
+					"name": "kind",
+					"type": "string",
+					"value": "arrow-right"
+				}
+			]
+		},
+		{
+			"id": 5,
+			"properties": [
+				{
+					"name": "kind",
+					"type": "string",
+					"value": "arrow-down"
+				}
+			]
+		},
+		{
+			"id": 6,
+			"properties": [
+				{
+					"name": "kind",
+					"type": "string",
+					"value": "arrow-left"
+				}
+			]
+		},
+		{
+			"id": 7,
+			"properties": [
+				{
+					"name": "kind",
+					"type": "string",
+					"value": "crack"
+				}
+			]
+		},
+		{
+			"id": 8,
+			"properties": [
+				{
+					"name": "kind",
+					"type": "string",
+					"value": "portal"
+				}
+			]
+		},
+		{
+			"id": 9,
+			"properties": [
+				{
+					"name": "kind",
+					"type": "string",
+					"value": "start"
+				}
+			]
+		}
+	],
+	"tilewidth": 48,
+	"type": "tileset",
+	"version": "1.10"
+}

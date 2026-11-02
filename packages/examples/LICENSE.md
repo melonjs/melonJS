@@ -100,6 +100,24 @@ The Water Overworld example (`waterOverworld/`) uses the
 
 <https://gandalfhardcore.itch.io/free-pixel-art-sidescroller-asset-pack-32x32-overworld>
 
+### `starsweep` example
+
+The robot and monsters in the Starsweep example (`starsweep/`) are built
+from parts of the **Monster Builder Pack** by **Kenney**
+(<https://kenney.nl/assets/monster-builder-pack>), released under
+**CC0 1.0** (public domain). The parts used are repacked at half size into
+`public/assets/starsweep/monsters.png`; the pack's own license ships beside
+it as `License.txt`.
+
+It also reuses two CC0 Kenney assets already in this repository: the
+**Space Kit** ships from `public/assets/multiMaterialMesh/` (the 3D cruisers
+flying under the station) and the **Kenney Future** font from
+`public/assets/ui/font/`. The station, the nebula shader and everything else
+are drawn or generated at run time. The levels in
+`public/assets/starsweep/levels/` are Tiled maps made for this example, and
+their tileset image `starsweep-tiles.png` was drawn for it too; both are
+covered by the MIT license above.
+
 ### `materialTextures` example
 
 The models (`crate.obj`, `panel.obj`), their material files and every

@@ -281,6 +281,11 @@ const ExampleWaterOverworld = lazy(() =>
 		default: m.ExampleWaterOverworld,
 	})),
 );
+const ExampleStarsweep = lazy(() =>
+	import("./examples/starsweep/ExampleStarsweep").then((m) => ({
+		default: m.ExampleStarsweep,
+	})),
+);
 const ExampleWhacAMole = lazy(() =>
 	import("./examples/whac-a-mole/ExampleWhacAMole").then((m) => ({
 		default: m.ExampleWhacAMole,
@@ -716,6 +721,14 @@ const examples: {
 		sourceDir: "waterOverworld",
 		description:
 			"Side-scroller overworld with a refracting pond — the screen_texture / screen_uv / noise_uv shader builtins.",
+	},
+	{
+		component: <ExampleStarsweep />,
+		label: "Starsweep",
+		path: "starsweep",
+		sourceDir: "starsweep",
+		description:
+			"Portrait mobile maze game: guide Bolt the robot to power up every panel while Kenney monsters roam. Virtual gamepad plugin, custom nebula shader, bloom and chromatic aberration, and 3D ships flying under the station.",
 	},
 	{
 		component: <ExampleWhacAMole />,
