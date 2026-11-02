@@ -11,7 +11,8 @@ import type ParticleEmitter from "./emitter.ts";
  */
 export interface ParticleEmitterSettings {
 	/**
-	 * Width of the particle spawn area.
+	 * Width of the particle spawn area. The constructor centres the area on
+	 * the point it is given; `pos` is then its top left corner.
 	 * @default 1
 	 */
 	width: number;
