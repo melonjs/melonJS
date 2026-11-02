@@ -441,9 +441,20 @@ export default class Container extends Renderable {
 
 	/**
 	 * reset the container, removing all children, and resetting transforms.
+	 * Persistent children ({@link Renderable#isPersistent}) are kept, and a
+	 * sort still pending for them still happens.
 	 */
 	reset() {
+		// `clearChildren` cancels a pending sort, which is right for the
+		// children it removes and wrong for the persistent ones it keeps:
+		// added just before a reset (a `level.load` straight after setting a
+		// screen up), they would stay in the order they were added, their
+		// depth ignored, until something else sorted the container
+		const sortPending = this.pendingSort !== null;
 		this.clearChildren();
+		if (sortPending && this.getChildren().length > 0) {
+			this.sort();
+		}
 
 		this.currentTransform.identity();
 
