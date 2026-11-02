@@ -1516,9 +1516,12 @@ describe("Camera2d", () => {
 			camera.update(16);
 			expect(camera.getCameraEffect(FadeEffect)).toBe(fade);
 			expect(onComplete).not.toHaveBeenCalled();
-			// to its end exactly: a finished tween leaves the game loop, so
-			// it is not stepped again
-			advanceTween(fade.tween, 300);
+			// past its end on the last step only, as a frame lands: a finished
+			// tween leaves the game loop, so it is not stepped again. Not to
+			// 300 exactly: the tween's clock starts at the game time, and 20
+			// steps of 15ms from some start times add up to a hair under 300
+			// (about 1 in 500), leaving it unfinished
+			advanceTween(fade.tween, 305);
 			camera.update(16);
 			expect(onComplete).toHaveBeenCalledTimes(1);
 			expect(camera.getCameraEffect(FadeEffect)).toBeUndefined();
