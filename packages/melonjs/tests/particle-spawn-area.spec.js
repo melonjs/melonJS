@@ -24,8 +24,12 @@ describe("particle spawn area", () => {
 	const spawned = (emitter) => {
 		app.world.addChild(emitter);
 		emitter.burstParticles(200);
-		const xs = emitter.getChildren().map((p) => p.pos.x);
-		const ys = emitter.getChildren().map((p) => p.pos.y);
+		const xs = emitter.getChildren().map((p) => {
+			return p.pos.x;
+		});
+		const ys = emitter.getChildren().map((p) => {
+			return p.pos.y;
+		});
 		app.world.removeChildNow(emitter);
 		return {
 			minX: Math.min(...xs),
