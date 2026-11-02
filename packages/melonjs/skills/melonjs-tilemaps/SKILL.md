@@ -1,6 +1,6 @@
 ---
 name: melonjs-tilemaps
-description: "Use this skill for Tiled maps in melonJS — loading TMX/TSX levels, spawning entities from Tiled objects, collision shapes authored in Tiled, isometric and hexagonal maps, and image layers. Covers registerTiledObjectClass and the pool.register name contract, camera bounds, compressed maps needing the inflate plugin, and the level director API. Triggers on: Tiled, TMX, TSX, tilemap, level.load, level.load async, await level.load, tileset, ImageLayer, isometric, hexagonal, staggered, pool.register, Collectable, Trigger, object layer, collision layer, parallax, registerTiledObjectClass, registerTiledObjectFactory, TMXObject, resolvedProperty, resolvedProperties, tile class, tile properties."
+description: "Use this skill for Tiled maps in melonJS — loading TMX/TSX levels, spawning entities from Tiled objects, collision shapes authored in Tiled, isometric and hexagonal maps, and image layers, and reading or changing tiles while the game runs. Covers registerTiledObjectClass and the pool.register name contract, camera bounds, compressed maps needing the inflate plugin, and the level director API. Triggers on: Tiled, TMX, TSX, tilemap, setTile, clearTile, cellAt, getTile, getTileById, change a tile, tile at run time, game board, grid, tile properties at run time, getTileProperties, map properties, level.load, level.load async, await level.load, tileset, ImageLayer, isometric, hexagonal, staggered, pool.register, Collectable, Trigger, object layer, collision layer, parallax, registerTiledObjectClass, registerTiledObjectFactory, TMXObject, resolvedProperty, resolvedProperties, tile class, tile properties."
 license: MIT
 ---
 
@@ -185,6 +185,72 @@ knowing before you spend an afternoon on a map that loads at the wrong scale.
 `async` is excluded deliberately — the trigger needs to sequence its own
 transition.
 
+## Reading and changing tiles at run time
+
+A tile layer is a live grid, not just a picture: read it as the game board,
+and change cells while the game runs — a door opening, a floor panel lighting
+up, a wall blown away. A loaded tile layer is a `TMXLayer` in the world, under
+the name it has in Tiled:
+
+```js
+await level.load("map1", { container: this.app.world, async: true });
+const board = this.app.world.getChildByName("ground")[0];   // a TMXLayer
+board.cols; board.rows;              // the grid, in cells
+board.tilewidth; board.tileheight;   // a cell, in pixels
+```
+
+Two coordinate systems, and the methods do not share one:
+
+| method | takes | returns |
+|---|---|---|
+| `cellAt(col, row)` | column and row | the `Tile` there, or `null` for an empty cell or outside the grid |
+| `getTile(x, y)` | **world pixels** | the same `Tile` object `cellAt` gives, or `null` |
+| `setTile(tile, col, row)` | column and row | puts `tile` there, and returns it |
+| `clearTile(col, row)` | column and row | empties the cell: `cellAt` then returns `null` |
+| `getTileById(gid, col, row)` | a global tile id, column and row | a new `Tile`, to pass to `setTile` |
+
+A `Tile` carries `tileId` (its **global** id), `col`, `row` and `tileset`.
+Tiled shows a tile's *local* id in the tileset editor; the global id is
+`tileset.firstgid + localId`, and only the global one works with `setTile`.
+The tile's custom properties and class, set in Tiled's tileset editor, come
+from its tileset by global id:
+
+```js
+const tile = board.cellAt(col, row);
+const props = tile && tile.tileset.getTileProperties(tile.tileId);  // { kind: "floor" } or undefined
+const cls = tile && tile.tileset.getTileClass(tile.tileId);
+```
+
+To swap a cell for another tile of the tileset, build the tile and set it. Look
+global ids up by property once, rather than hard-coding them, so a designer
+can rearrange the tileset:
+
+```js
+const tileset = board.tilesets.getTilesetByIndex(0);   // the layer's first tileset
+const gidByKind = new Map();
+for (let gid = tileset.firstgid; gid <= tileset.lastgid; gid++) {
+    const kind = tileset.getTileProperties(gid)?.kind;
+    if (kind !== undefined) gidByKind.set(kind, gid);
+}
+
+// light a floor panel up
+board.setTile(board.getTileById(gidByKind.get("floor-lit"), col, row), col, row);
+// knock a wall down
+board.clearTile(col, row);
+```
+
+The layer redraws the changed cell by itself. What it does **not** change is
+collision: solid ground comes from collision object layers (below), so a tile
+set or cleared changes what is drawn and what `cellAt` returns, not what a body
+runs into. Keep a layer you edit often off `preRender` (see the symptom table).
+
+The map's own custom properties (Map → Map Properties in Tiled) are set on the
+map object, which `level.getCurrentLevel()` returns once it is loaded: a
+`theme` string property is `level.getCurrentLevel().theme`. They are set
+**over** the map's own fields, so a property named like one replaces it: a
+custom `name` property becomes the level's `name`. Give level settings names of
+their own (`title`, not `name`).
+
 ## Camera bounds
 
 `level.load` sets the viewport bounds to the map size for you —
@@ -362,6 +428,11 @@ unanimated layer into the offscreen-bake path instead.
 | objects placed from a classed tile come out as plain sprites | that class is not registered, it is a built-in name, or the object has a class or a registered name of its own, which come first |
 | missing tiles or a blank map | the `.tsx` or tileset image was not preloaded |
 | a tileset's transparent color (`trans`) still shows (the console says it could not be applied) | the image cannot be read back: an image the game made itself from another origin without CORS (an `<img>` with no `crossOrigin`) cannot be, so load it with the loader, which only loads an image another origin's server allows (its CORS headers) and can always read back; and a compressed texture cannot be changed: export it with an alpha channel instead |
+| `cellAt` returns `null` (or the wrong tile) for a cell that has one | it was given pixels: `cellAt`, `setTile` and `clearTile` take column and row, only `getTile` takes world pixels |
+| `setTile` shows the wrong tile, or nothing | it was given Tiled's local tile id: use the global id, `tileset.firstgid + localId`, through `getTileById` |
+| a layer is `undefined` from `getChildByName(name)[0]` | the level is not in the world yet (await `level.load(id, { async: true })`), or the name differs from the layer's in Tiled |
+| a tile set or cleared at run time does not block or free movement | tile layers carry no collision: collision comes from collision object layers |
+| the level's `name` is not its id after loading | a map custom property named `name` replaced it: map properties are set over the map's own fields |
 | changing tiles at runtime is slow on a pre-rendered layer | outside an orthogonal map whose tiles fit their cells, a changed tile re-bakes the whole layer before it next draws: keep layers you edit often off `preRender` |
 | thin lines between tiles on the Canvas renderer, with smoothing on | filtering blends in the next tile of the tileset or its spacing, which a canvas cannot prevent: set `antiAlias: false`, or `preRender` the layer. WebGL and WebGPU keep each tile to itself |
 | tilemap slow on some machines | layer fell back off the shader path — check the console warning for the reason |
