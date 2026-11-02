@@ -269,6 +269,30 @@ toggle("floating", false, (on) => {
 		}),
 	});
 });
+toggle("anywhere, tap for A", false, (on) => {
+	remake({
+		sticks: (options.sticks as object[]).map((stick, i) => {
+			// the first stick only: two sticks cannot both take the screen
+			return i === 0
+				? {
+						...stick,
+						floating: on,
+						area: on ? "screen" : "half",
+						hideAtRest: on,
+						// and a quick tap presses A
+						...(on ? { tap: {} } : {}),
+					}
+				: stick;
+		}),
+	});
+});
+toggle("floating A", false, (on) => {
+	remake({
+		buttons: (options.buttons as object[]).map((button, i) => {
+			return i === 0 ? { ...button, floating: on, hideAtRest: on } : button;
+		}),
+	});
+});
 toggle("hide on pad", true, (on) => {
 	remake({ hideOnGamepad: on });
 });

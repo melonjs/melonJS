@@ -1,6 +1,6 @@
 ---
 name: melonjs-plugins
-description: "Use this skill when adding a melonJS plugin or adapter — the debug panel, Spine skeletal animation, compressed Tiled map support, on-screen touch controls, Capacitor packaging — or when writing your own plugin. Covers plugin.register and its version gate, plugin.cache, plugin.patch, and why physics adapters are not plugins. Triggers on: plugin, plugin.register, plugin.cache, plugin.get, plugin.patch, BasePlugin, debug-plugin, DebugPanelPlugin, SpinePlugin, TiledInflatePlugin, GamepadPlugin, gamepad-plugin, touch controls, virtual joystick, CapacitorPlugin, adapter, custom plugin, plugin version mismatch, already registered."
+description: "Use this skill when adding a melonJS plugin or adapter — the debug panel, Spine skeletal animation, compressed Tiled map support, on-screen touch controls, Capacitor packaging — or when writing your own plugin. Covers plugin.register and its version gate, plugin.cache, plugin.patch, and why physics adapters are not plugins. Triggers on: plugin, plugin.register, plugin.cache, plugin.get, plugin.patch, BasePlugin, debug-plugin, DebugPanelPlugin, SpinePlugin, TiledInflatePlugin, GamepadPlugin, gamepad-plugin, touch controls, virtual joystick, floating joystick, floating button, CapacitorPlugin, adapter, custom plugin, plugin version mismatch, already registered."
 license: MIT
 ---
 
@@ -105,7 +105,12 @@ plugin.register(GamepadPlugin, "gamepad", {
 
 Shown on touch screens by default (`enabled`), hidden while a real pad is in
 use. The left stick also presses the D-pad; a button can press a key instead
-of a pad button. See `melonjs-input` for the bindings.
+of a pad button. Since 1.1 a stick or button can be `floating` (shows up
+under the finger anywhere in its `area`), `hideAtRest` (drawn only while
+held), and a stick can take a `tap` (a quick touch that does not steer presses
+a key or button) — so the mobile layouts, two thumbs or one thumb with
+tap-to-act, need no code of their own. See `melonjs-input` for the bindings,
+the layouts and the overlap rules.
 
 ### `@melonjs/capacitor-plugin`
 
