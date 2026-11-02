@@ -1,4 +1,4 @@
-import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, describe, expect, inject, it, vi } from "vitest";
 import { boot, loader } from "../src/index.js";
 import { fetchData } from "../src/utils/fetchdata.js";
 
@@ -118,7 +118,11 @@ describe("asset requests are CORS requests", () => {
 		});
 	});
 
-	describe("real requests, through the loader", () => {
+	describe("every scenario, with real requests through the loader", () => {
+		// servers on other origins, started by tests/helpers/cors-servers.js
+		const servers = inject("corsServers");
+		const OWN = "/data/cors/";
+
 		beforeAll(() => {
 			boot();
 		});
@@ -127,53 +131,123 @@ describe("asset requests are CORS requests", () => {
 			loader.setOptions({ crossOrigin: "", withCredentials: false });
 		});
 
-		/** load an asset, resolving with the outcome */
-		const load = (asset) => {
+		const ASSETS = {
+			json: "level.json",
+			image: "dot.png",
+		};
+
+		/** load an asset, resolving with what came of it */
+		let n = 0;
+		const load = (type, base) => {
+			const name = `cors-${type}-${n++}`;
 			return new Promise((resolve) => {
 				loader.load(
-					asset,
+					{ name, type, src: base + ASSETS[type] },
 					() => {
-						resolve({ loaded: true });
+						const data =
+							type === "json" ? loader.getJSON(name) : loader.getImage(name);
+						resolve({ loaded: true, data });
 					},
 					(error) => {
-						resolve({ loaded: false, error });
+						resolve({
+							loaded: false,
+							message: String(error?.message ?? error),
+						});
 					},
 				);
+			}).finally(() => {
+				loader.unload({ name, type });
 			});
 		};
 
-		it("assets on the game's own origin still load, JSON and images", async () => {
-			const json = await load({
-				name: "cors-plain",
-				type: "json",
-				src: "/data/misc/plain.json",
-			});
-			const image = await load({
-				name: "cors-rect",
-				type: "image",
-				src: "/data/img/rect.png",
-			});
-			try {
-				expect(json.loaded).toBe(true);
-				expect(loader.getJSON("cors-plain")).toBeTruthy();
-				expect(image.loaded).toBe(true);
-				expect(loader.getImage("cors-rect").width).toBeGreaterThan(0);
-			} finally {
-				loader.unload({ name: "cors-plain", type: "json" });
-				loader.unload({ name: "cors-rect", type: "image" });
+		/** the asset loaded, with its real content */
+		const expectLoaded = (type, result) => {
+			expect(result.loaded, result.message).toBe(true);
+			if (type === "json") {
+				expect(result.data).toEqual({ ok: 1 });
+			} else {
+				expect(result.data.width).toBe(1);
+				expect(result.data.height).toBe(1);
 			}
+		};
+
+		/** the asset failed at the request, with the error naming it and why */
+		const expectBlocked = (type, base, result) => {
+			expect(result.loaded).toBe(false);
+			expect(result.message).toContain(base + ASSETS[type]);
+			expect(result.message).toContain("Access-Control-Allow-Origin");
+		};
+
+		// one row per scenario: the loader's options, where the asset is,
+		// and what must come of it (the table in the PR)
+		const scenarios = [
+			["default", {}, "own", "loads"],
+			["default", {}, "cors", "loads"],
+			["default", {}, "none", "blocked"],
+			['crossOrigin "anonymous"', { crossOrigin: "anonymous" }, "own", "loads"],
+			[
+				'crossOrigin "anonymous"',
+				{ crossOrigin: "anonymous" },
+				"cors",
+				"loads",
+			],
+			[
+				'crossOrigin "anonymous"',
+				{ crossOrigin: "anonymous" },
+				"none",
+				"blocked",
+			],
+			["withCredentials", { withCredentials: true }, "own", "loads"],
+			["withCredentials", { withCredentials: true }, "credentials", "loads"],
+			["withCredentials", { withCredentials: true }, "cors", "blocked"],
+			["withCredentials", { withCredentials: true }, "none", "blocked"],
+			[
+				'crossOrigin "use-credentials"',
+				{ crossOrigin: "use-credentials" },
+				"credentials",
+				"loads",
+			],
+			[
+				'crossOrigin "use-credentials"',
+				{ crossOrigin: "use-credentials" },
+				"cors",
+				"blocked",
+			],
+		];
+
+		const where = {
+			own: "the game's own origin",
+			cors: "another origin that sends CORS headers",
+			none: "another origin with no CORS headers",
+			credentials: "another origin that allows credentials",
+		};
+
+		describe.each(["json", "image"])("%s", (type) => {
+			it.each(
+				scenarios.map(([label, options, origin, outcome]) => {
+					return [label, where[origin], outcome, options, origin];
+				}),
+			)("%s, from %s: %s", async (_label, _where, outcome, options, origin) => {
+				loader.setOptions({
+					crossOrigin: "",
+					withCredentials: false,
+					...options,
+				});
+				const base = origin === "own" ? OWN : servers[origin];
+				const result = await load(type, base);
+				if (outcome === "loads") {
+					expectLoaded(type, result);
+				} else {
+					expectBlocked(type, base, result);
+				}
+			});
 		});
 
 		it("an asset on an origin that cannot be reached fails at load, naming it", async () => {
 			// nothing listens on port 1
-			const src = "http://127.0.0.1:1/level.json";
-			const result = await load({
-				name: "cors-unreachable",
-				type: "json",
-				src,
-			});
+			const result = await load("json", "http://127.0.0.1:1/");
 			expect(result.loaded).toBe(false);
-			expect(String(result.error?.message ?? result.error)).toContain(src);
+			expect(result.message).toContain("http://127.0.0.1:1/level.json");
 		});
 	});
 });
