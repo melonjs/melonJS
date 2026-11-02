@@ -38,6 +38,8 @@ export default defineConfig(() =>
 		root: __dirname,
 		test: {
 			include: ["tests/**/*.{test,spec}.[jt]s?(x)"],
+			// servers on other origins, for the loader's cross-origin tests
+			globalSetup: ["tests/helpers/cors-servers.js"],
 			// Several specs create a WebGL context in `beforeAll`. On a CI
 			// container with no GPU that runs through a software rasterizer and
 			// can genuinely take tens of seconds under load, so the default hook

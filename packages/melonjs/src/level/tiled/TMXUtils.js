@@ -164,12 +164,13 @@ export function applyTransparentColor(image, color) {
 	let pixels;
 	try {
 		// a compressed texture cannot be drawn on a canvas, and an image
-		// from another origin cannot be read back without CORS
+		// from another origin cannot be read back without CORS (one the
+		// loader fetched always can: it only loads from a CORS response)
 		context.drawImage(image, 0, 0);
 		pixels = context.getImageData(0, 0, width, height);
 	} catch {
 		warnOnce(
-			'melonJS: a Tiled transparent color could not be applied to an image that cannot be read back (a compressed texture, or an image from another origin: load it with `loader.setOptions({ crossOrigin: "anonymous" })` from a server sending CORS headers); it is drawn as it is',
+			"melonJS: a Tiled transparent color could not be applied to an image that cannot be read back (a compressed texture, or an image from another origin made without CORS, such as an <img> with no crossOrigin attribute; load it with the loader instead); it is drawn as it is",
 		);
 		byColor.set(hex, image);
 		return image;

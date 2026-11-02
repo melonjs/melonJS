@@ -79,10 +79,13 @@ export let nocache = "";
 export const baseURL = {};
 
 /**
- * crossOrigin attribute to configure the CORS requests for Image and Video data element.
- * By default (that is, when the attribute is not specified), CORS is not used at all.
- * The "anonymous" keyword means that there will be no exchange of user credentials via cookies,
- * client-side SSL certificates or HTTP authentication as described in the Terminology section of the CORS specification.<br>
+ * crossOrigin attribute to configure the CORS requests made by a `<video>` or `<script>` element, and by the images
+ * of a glTF model. The "anonymous" keyword means that there will be no exchange of user credentials via cookies,
+ * client-side SSL certificates or HTTP authentication as described in the Terminology section of the CORS
+ * specification; "use-credentials" sends them, as `withCredentials` does.<br>
+ * Every other asset (images, JSON, maps, binary files, audio...) is always requested with CORS, whatever this says:
+ * an asset on another origin loads when its server allows it (an `Access-Control-Allow-Origin` header), and fails
+ * to load, with an error naming the asset, when it does not.<br>
  * @type {string}
  * @default undefined
  * @see {@link setOptions}
@@ -91,7 +94,7 @@ export const baseURL = {};
  * {@link setOptions}. This is a module binding, so assigning to it throws a
  * `TypeError`; the example below never worked.
  * @example
- *  // allow for cross-origin texture loading
+ *  // play videos from another origin, without credentials
  * me.loader.setOptions({ crossOrigin: "anonymous" });
  *
  * // set all resources to be loaded
@@ -133,11 +136,11 @@ export function setNocache(enable = false) {
 /**
  * Sets the options for the loader.
  * @param {Object} options - The options to set.
- * @param {string} [options.crossOrigin] - The crossOrigin attribute to configure the CORS requests for Image and Video data element.
+ * @param {string} [options.crossOrigin] - The crossOrigin attribute of the `<video>` and `<script>` elements and glTF images the loader creates ("anonymous" or "use-credentials"). Every other asset is always requested with CORS.
  * @param {boolean} [options.nocache] - Enable or disable the nocache mechanism.
  * @param {boolean} [options.withCredentials] - Indicates whether or not cross-site Access-Control requests should be made using credentials. Requests to the game's own origin always carry them.
  * @example
- * // Set the crossOrigin attribute to "anonymous"
+ * // Set the crossOrigin attribute of the video and script elements to "anonymous"
  * me.loader.setOptions({ crossOrigin: "anonymous" });
  *
  * // Enable the nocache mechanism

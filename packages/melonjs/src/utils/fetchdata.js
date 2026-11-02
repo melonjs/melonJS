@@ -208,16 +208,34 @@ export function fetchData(url, responseType, settings = {}) {
 					cache: settings.nocache === "" ? "no-cache" : "reload",
 					// the page's own origin gets its cookies and HTTP auth, as
 					// every browser request does by default; `withCredentials`
+					// (or `crossOrigin: "use-credentials"`, as on an <img>)
 					// sends them to other origins too
 					credentials:
-						settings.withCredentials === true ? "include" : "same-origin",
-					// see setting.crossorigin, "anonymous" is used for cross-origin requests
-					mode: settings.crossOrigin === "anonymous" ? "cors" : "no-cors",
+						settings.withCredentials === true ||
+						settings.crossOrigin === "use-credentials"
+							? "include"
+							: "same-origin",
+					// Always CORS, whatever `crossOrigin` says: the loader reads
+					// every response, and only a CORS response can be read. A
+					// "no-cors" request to another origin came back opaque (status
+					// 0, an empty body) and was taken for a success, so the asset
+					// broke later, as an empty image or a JSON parse error. Now it
+					// loads when its server allows it, and fails here when not.
+					// Same-origin requests are the same in either mode.
+					mode: "cors",
+				}).catch((error) => {
+					// fetch only says "Failed to fetch": say what and why
+					throw new Error(
+						`Failed to load "${url}" (${error.message}). An asset on another origin loads only if its server allows it, with an Access-Control-Allow-Origin header, and Access-Control-Allow-Credentials when credentials are sent (withCredentials)`,
+						{ cause: error },
+					);
 				});
 
 	return request.then((response) => {
-		// status = 0 when file protocol is used, or cross-domain origin
-		if (!response.ok && response.status !== 0) {
+		// the `file:` and `data:` transports set `ok` themselves (a `file:`
+		// read reports status 0); a fetch is never opaque, being made in CORS
+		// mode, so any other status 0 is not a success either
+		if (!response.ok) {
 			throw new Error(
 				`Network response was not ok: ${response.status} ${response.statusText}`,
 			);

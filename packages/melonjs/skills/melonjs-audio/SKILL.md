@@ -463,10 +463,12 @@ the level starts. The loader calls the same function, so the same rules apply.
 Re-preloading a manifest that already contains a loaded clip is a no-op —
 `audio.unload(name)` first if you genuinely want to reload it.
 
-**Credentials use the same global switch as every other asset type** —
-`loader.setOptions({ withCredentials: true })`, not an audio-specific option.
-Buffered audio fetches through the shared loader path, so it honours it exactly
-as an image or a JSON file does. A streamed clip (`stream: true`, or
+**Credentials work as for every other asset type.** Buffered audio on the
+game's own origin carries its cookies and HTTP auth with no option; a clip on
+another origin behind a login needs `loader.setOptions({ withCredentials: true })`,
+not an audio-specific option, and that server must allow credentials. Buffered
+audio fetches through the shared loader path, so it behaves exactly as an image
+or a JSON file does. A streamed clip (`stream: true`, or
 `preload: false`) does not: it plays
 through an `<audio>` element, which needs a `crossorigin` attribute rather than
 fetch credentials. Preload a clip buffered if it sits behind a login.
@@ -498,7 +500,7 @@ either way — blank screen, empty console.
 | `stereo` / `position` do nothing | the clip was loaded with `stream: true` or `preload: false` — spatial is WebAudio-only |
 | a `preload: false` clip never plays, and `audio.state()` stays `"unloaded"` | melonJS before 20.12.0 never fetched such a clip; preload it, or update |
 | one format works, another does not | that codec is not in the `audio.init()` list |
-| audio behind a login fails, or the preload hangs | `loader.setOptions({ withCredentials: true })` — the same switch every asset type uses |
+| audio on another origin behind a login fails, or the preload hangs | `loader.setOptions({ withCredentials: true })` — the same switch every asset type uses. Audio on the game's own origin needs nothing (before 20.13 it needed it too) |
 | a streamed clip ignores `withCredentials` | `stream: true` plays through an `<audio>` element; preload it buffered instead |
 | `audio.tone(440, {...})` does nothing / errors | `tone` takes a single options object with a required `duration` |
 | `tone` / `noise` are silent with no error | no WebAudio context — `getAudioContext()` returned `null` |
