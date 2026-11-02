@@ -709,11 +709,15 @@ export default class TMXLayer extends Renderable {
 	}
 
 	/**
-	 * return a new the Tile object corresponding to the given tile id
-	 * @param {number} tileId - tileId
-	 * @param {number} x - X coordinate (in world/pixels coordinates)
-	 * @param {number} y - Y coordinate (in world/pixels coordinates)
+	 * return a new Tile object for the given tile id, to place with {@link TMXLayer#setTile}
+	 * @param {number} tileId - global tile id: the tileset's `firstgid` plus the tile's id in the tileset
+	 * @param {number} x - column of the tile (in tile/column coordinates), stored as its `col`
+	 * @param {number} y - row of the tile (in tile/row coordinates), stored as its `row`
 	 * @returns {Tile} the tile object
+	 * @example
+	 * // turn the cell at column 3, row 5 into the tileset's tile 7
+	 * const tileset = layer.tilesets.getTilesetByIndex(0);
+	 * layer.setTile(layer.getTileById(tileset.firstgid + 7, 3, 5), 3, 5);
 	 */
 	getTileById(tileId, x, y) {
 		if (!this.tileset.contains(tileId)) {
