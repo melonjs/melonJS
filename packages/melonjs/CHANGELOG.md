@@ -3,52 +3,43 @@
 ## [20.13.0] (melonJS 2) - _unreleased_
 
 ### Added
-- Particles: a `depth` setting, the spawn area's size along Z, with `width` and `height`. Under a `Camera3d`, particles are born through a volume instead of on a flat sheet
-- UI: `UICheckbox`, a checkbox with its label, drawn or from atlas art, that becomes a radio button with a `group` ([#1722](https://github.com/melonjs/melonJS/issues/1722)). `onChange` only fires on user input, not when `checked` is set from code
-- UI: `UISlider`, a horizontal or vertical slider with `min`, `max`, `step`, drag, track clicks and the mouse wheel, an optional caption and value text (`valueFormat`), drawn or from atlas art. `onChange` fires while it moves, `onChangeEnd` once on release, neither when `value` is set from code
-- UI: `UIPanel` lays its children out (`layout`: `"column"`, `"row"` or `"grid"`, with `padding`, `gap`, `align` and `autoSize`), scrolls them (`scroll`, with the wheel, dragging, momentum and a scrollbar; `scrollTo`, `scrollToChild`), and takes a nine-slice `skin`, a `title` and `draggable`; a draggable panel comes to the front when grabbed
-- UI: `UITextButton` takes an `onClick` setting, called on a completed click; a `skin` of atlas regions, with pressed art drawn lowered; `pressedColor`; and the names the other widgets use: `width` / `height` for its size, `fontSize` (pixels, also with a bitmap font), `labelFillStyle` and `borderColor`. `resize()` keeps its background and label in step. A font that is not a loaded bitmap font is drawn as a CSS font, where the button used to throw
-- UI: `enabled` on every `UIBaseElement`, to turn a widget off; `cancelPress()` and `onCancel()`, to call off a press without a release, as a scrolling `UIPanel` does when a drag on a button turns into a scroll (a `UITextButton`'s held `bindKey` called off by the window losing focus, removal or `enabled = false` calls `onCancel()` too); and `keepsDrag`, for a widget of your own that is dragged inside a scrolling panel
-- UI: a drop shadow under a `UIPanel` or a `ProgressBar`: `shadowColor`, `shadowOffsetX`, `shadowOffsetY` and `shadowBlur`, softened the same on Canvas, WebGL and WebGPU, rounded with the corners, and under a skin too
-- UI: keyboard and gamepad navigation for a game played without a mouse or a touch screen: once a widget takes the focus with `focus()`, the arrows or the D-pad move it to the nearest widget, Enter, Space or A press it as a click does, and left and right step a slider. A ring shows the focus while the keyboard or a pad is used, and a focused widget in a scrolling panel is scrolled into view. Until a widget has the focus the keys and the pad are left to the game; `blur()` gives them back. `focusable`, `focused`, `onNavigate`, `UIBaseElement.focusOwner` and `UIBaseElement.focusRingColor`
-- UI: `hoverScale` and `pressScale` on every `UIBaseElement`: a bounce under the pointer or the focus, and while held, easing by itself and scaling only the drawing, not the hit area or the layout
-- UI: `ProgressBar`'s `onChange` also gets the bar
-- UI: the `UISkin`, `UILabel`, `Paint` and settings and skin types of every widget are exported; `Container#clipContains(x, y)` tells whether a container shows its children at a point
-- Text: a `paintOrder` setting, what is painted first, as the CSS and SVG `paint-order` property says it: `"stroke"` (the default) puts the outline behind the glyphs, `"fill"` over them
-- Text: `lineJoin` and `miterLimit` settings, the shape of the outline's corners: `"round"` (the default), `"bevel"`, or `"miter"` for pointed corners as a plain canvas draws them, with `miterLimit` capping how far a point may reach
+- Particles: a `depth` setting, so particles under a `Camera3d` spawn through a volume instead of on a flat sheet
+- Text: `paintOrder`, to draw the outline behind the glyphs (`"stroke"`, the default) or over them (`"fill"`)
+- Text: `lineJoin` and `miterLimit`, the shape of the outline's corners (`"round"` by default, `"bevel"` or `"miter"`)
+- UI: `UICheckbox`, a checkbox with its label, that becomes a radio button with a `group` ([#1722](https://github.com/melonjs/melonJS/issues/1722))
+- UI: `UISlider`, a horizontal or vertical slider with `min`, `max` and `step`, moved by dragging, clicking the track or the mouse wheel
+- UI: `UIPanel` lays out its children (`"column"`, `"row"` or `"grid"`), scrolls them, and takes a nine-slice `skin`, a `title` and `draggable`
+- UI: `UITextButton` takes `onClick`, a `skin` and `pressedColor`, and the size, font and color settings the other widgets use
+- UI: every `UIBaseElement` has `enabled`, `cancelPress()` / `onCancel()`, and a hover and press bounce (`hoverScale`, `pressScale`)
+- UI: keyboard and gamepad navigation between widgets, once one takes the focus with `focus()`
+- UI: drop shadows on `UIPanel` and `ProgressBar` (`shadowColor`, `shadowOffsetX`, `shadowOffsetY`, `shadowBlur`)
+- UI: the widgets' settings and skin types are exported, `ProgressBar`'s `onChange` also gets the bar, and `Container#clipContains(x, y)` tells whether a container shows its children at a point
 
 ### Changed
-- Loader: every asset is requested with CORS, whatever `crossOrigin` says, so an image, JSON, map, binary file or audio clip on another origin loads when its server allows it (an `Access-Control-Allow-Origin` header), without `crossOrigin: "anonymous"`. `crossOrigin` now only sets the attribute of the `<video>` and `<script>` elements and glTF images the loader creates; `"use-credentials"` also sends credentials with the other requests, as `withCredentials` does
-- UI: `UITextButton` no longer writes the size and alignment it worked out back into the settings object, so one object can make several buttons
-- UI: `UITextButton#label` is the button's text, a `BitmapText` or, with a CSS font, a `Text`
-- UI: `UISpriteElement` is now a `UIBaseElement` holding a `Sprite` (`sprite`), instead of a `Sprite` with its own copy of the pointer handling, so it has everything the other widgets have: `enabled` (drawn at half opacity when off), `cancelPress()` / `onCancel()`, `hoverScale` / `pressScale`, dragging and keyboard / gamepad focus. `(x, y)` is still where the image's anchor point goes, so existing layouts do not move, and `setRegion`, `addAnimation`, `setCurrentAnimation` and `isCurrentAnimation` are kept on the element. As a sprite does, it follows its image's size, a region or animation frame of another size included, with the image's anchor point staying in place. Other `Sprite` members are now on `element.sprite`; `pos` is the element's top left corner; setting `anchorPoint` after construction no longer moves the image (pass it in the settings); and a second sprite drawn in a `draw()` override becomes a child added with `addChild`
-- Text: an outlined `Text` (`lineWidth` > 0) is drawn with its outline behind the glyphs, as game text outlines usually are, instead of over them. The outline is centred on the glyph's edge, so over the fill its inner half covered the letters, and a thick outline, or a thin face, left them solid outline colour. The outline still reaches as far out, but only its outer half shows, so it looks half as thick: double `lineWidth` to keep its weight, or set `paintOrder: "fill"` to keep the outline over the glyphs
-- Text: an outlined `Text` (`lineWidth` > 0) is drawn with round corners by default, as game text outlines usually are, instead of the canvas's pointed ones, which grew long spikes from sharp glyphs on a thick outline and were cut off at the top of the text. Set `lineJoin: "miter"` to keep pointed corners; they are now drawn whole
-- UI: a press stops at a UI element by default: `UIBaseElement`'s `onClick()` and `onRelease()` now return `false`, as `UISpriteElement`'s already did, so a click on a button, checkbox or widget of your own no longer also reaches the game behind it. A subclass that relied on presses passing through returns `true` from them. Hover is unchanged, and a non-blocking `UIPanel` still lets presses on its background through
+- Loader: every asset is requested with CORS, so an asset on another origin loads whenever its server allows it, without `crossOrigin`. `crossOrigin` now only applies to the `<video>`, `<script>` and glTF image elements the loader creates; `"use-credentials"` also sends credentials, as `withCredentials` does
+- Text: outlines are drawn behind the glyphs and with round corners by default, so a thick outline no longer hides the letters. Only the outer half of the outline shows now: double `lineWidth` to keep its weight, or set `paintOrder: "fill"` and `lineJoin: "miter"` for the old look
+- UI: a press stops at a UI element by default (`onClick()` and `onRelease()` return `false`), so it no longer also reaches the game behind it. Return `true` to let it through
+- UI: `UISpriteElement` is now a `UIBaseElement` holding a `Sprite`, so it has everything the other widgets have. It is placed as before; `Sprite` members other than its region and animation methods are now on `element.sprite`
+- UI: `UITextButton#label` is the button's text object, and the button no longer writes its computed size into the settings object it was given
 
 ### Deprecated
 - UI: `UITextButton#bitmapText`, for `label`
 
 ### Fixed
-- Loader: an asset on another origin that could not be read failed later with an unrelated error ("Unexpected end of input" for JSON, "The source image could not be decoded" for an image), even from a server that allows it: requested without CORS, its response was opaque (status 0, an empty body) and taken for a success. It now fails at the request, with an error naming the asset and the CORS header its server needs
-- Loader: requests for assets on the game's own origin carry the browser's credentials (cookies, HTTP auth), as the page and its scripts do. They went out with none unless `withCredentials` was set, so a game behind a login or a session cookie got a 403 for every image, JSON, map, binary file and audio clip. `withCredentials: true` still sends them to other origins too ([#1801](https://github.com/melonjs/melonJS/issues/1801))
-- Tiled: a map without `nextobjectid` (optional in the TMX format, left out by hand-made or generated maps) seeds the GUID counter past the highest object id it holds, group layers included. The counter started at 0, so objects added without an id took the GUIDs of the map's own objects, and the builtin detector, which keys contacts by GUID, dropped the second contact in a step that shared a key with another: a player fell through an enemy it shared a key with ([#1809](https://github.com/melonjs/melonJS/issues/1809))
-- Camera: `fadeIn()` / `fadeOut()` (and a `FadeEffect`, so the fade state transition and a fading level trigger too) always call `onComplete`. The fade counted as done once its colour's alpha read as the target, which a 32-bit float can do one step before the tween ends; the camera then removed the effect, stopping the tween before it called `onComplete`, so code waiting on it stayed stuck. The fade now ends when its tween does ([#1810](https://github.com/melonjs/melonJS/issues/1810))
-- Rendering: on WebGL and WebGPU, a clip inside a clip is the overlap of the two, as it already was on Canvas. A clipping container nested in another, or a scrolling `UIPanel` in a clipping parent, drew past the outer clip wherever it stuck out of it, because the inner `clipRect` replaced the outer scissor ([#1816](https://github.com/melonjs/melonJS/issues/1816)). The clipping example shows the case
-- UI: a radio group holds one choice from when its checkboxes are made, not only once they are in the scene: before, several could be checked at once until they were added, and `UICheckbox.checkedIn()` answered `undefined`. A checkbox leaves its group when destroyed; groups hold their members weakly, so one dropped without being destroyed can still be collected
-- UI: `UICheckbox#toggle()` on a checked radio button leaves it checked, as a click does, instead of leaving its group with nothing checked
-- UI: `UIPanel#scrollTo()` (and `scrollToChild`, `scrollX` / `scrollY`) stops a fling that is still coasting, instead of the fling carrying on from the new offset
-- UI: a `UISlider` lays its texts out again when they change: a vertical one widens for a longer value text (a new `valueFormat`, `min`, `max` or `step`), and on a horizontal one the value moves below the track when it would run into the caption, instead of overlapping it. `labelText` sets the caption later
-- Input: a region stays hovered after a click while the pointer is still on it. A release used to forget the pointer, so leaving straight after a click never called `onOut` (a button stayed lit), and moving on over it called `onOver` again
-- Input: the pointer leaving the canvas ends the hover of whatever it was over, not only of a region at the point where it left; a cancelled pointer, or a finger lifted on the legacy touch-event path, ends it too
-- Color: `parseHex()` keeps all 8 bits of alpha instead of rounding to one decimal. Low alpha values no longer become fully transparent, and 4- or 8-digit hex colors round-trip through `toHex8()` without changing alpha (thanks @mmporong)
-- Math: `isPowerOfTwo()` rejects zero, negative and fractional values instead of accepting them after 32-bit coercion, and handles powers and non-powers beyond the 32-bit range (thanks @mmporong)
-- Input: a child cropped out of view by a container with `clipping`, or scrolled out of a `UIPanel`, no longer gets pointer events where it is not drawn
-- Text: an outline is no longer cut at the edges of the text. A pointed corner can reach several times half the line width past a glyph, and the tips of letters such as "A", "V" or "M" were cut flat at the top; and nothing was left to the sides, so the outline (or an italic's ink) on the left of the first glyph and past the end of the line was cut too. The text is baked with room for the outline on all four sides, for whichever corners are set; its position and bounds are unchanged
-- Geometry: `Line#contains()` checks the segment endpoints as well as collinearity; a point on the line beyond either endpoint was reported as contained (thanks @mmporong)
-- UI: a `UITextButton` moved after it was built draws its background where it is, not where it was first put
-- UI: a blocking `UIPanel` stays opaque to hover for as long as the pointer is on it, not only on the frame the pointer enters
-- UI: a draggable `UIBaseElement` pressed with no hover first, as a touch tap is, no longer throws, and drags by touch; in the world, rather than floating, it no longer jumps by the camera position when dragged
+- Loader: assets on the game's own origin are requested with its cookies and HTTP auth, so a game behind a login no longer gets a 403 for every asset ([#1801](https://github.com/melonjs/melonJS/issues/1801))
+- Loader: an asset on another origin that its server does not allow fails at load, with an error naming it, instead of later with "Unexpected end of input" or "The source image could not be decoded"
+- Text: an outline is no longer cut off at the edges of the text
+- Tiled: a map without `nextobjectid` no longer gives objects added later the GUIDs of its own objects, which made collisions between them drop ([#1809](https://github.com/melonjs/melonJS/issues/1809))
+- Camera: `fadeIn()` and `fadeOut()` always call `onComplete` ([#1810](https://github.com/melonjs/melonJS/issues/1810))
+- Rendering: on WebGL and WebGPU, a clip inside a clip is the overlap of the two, as on Canvas ([#1816](https://github.com/melonjs/melonJS/issues/1816))
+- UI: a `UITextButton` with a CSS font no longer throws, and one moved after it was built draws its background where it is
+- UI: a blocking `UIPanel` stays opaque to hover while the pointer is on it, not only on the frame it enters
+- UI: a draggable element can be dragged by touch, and one in the world no longer jumps by the camera position when dragged
+- UI: a region stays hovered after a click, and its hover ends when the pointer leaves the canvas or is cancelled
+- UI: a child cropped out of view by a clipping container no longer gets pointer events where it is not drawn
+- Color: `parseHex()` keeps the full alpha precision (thanks @mmporong)
+- Math: `isPowerOfTwo()` rejects zero, negative and fractional values (thanks @mmporong)
+- Geometry: `Line#contains()` no longer reports points beyond the segment's ends (thanks @mmporong)
 
 ## [20.12.0] (melonJS 2) - _2026-10-30_
 
