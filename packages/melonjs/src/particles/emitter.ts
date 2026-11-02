@@ -174,6 +174,13 @@ function particleFrames(
  * emitter.blendMode = "overlay";   // live particles AND future ones
  * ```
  *
+ * ### Visibility layers
+ *
+ * Particles are on their emitter's {@link Renderable#visibilityLayer}: they
+ * are born on it, and follow a change to it on the emitter's next `update`.
+ * So a camera whose {@link Camera2d#cullMask} draws only the emitter's layer
+ * draws the emitter's particles as well.
+ *
  * ### Reference space
  *
  * A particle stores a position, and
@@ -268,6 +275,15 @@ export default class ParticleEmitter extends Container {
 	 * @internal
 	 */
 	#appliedBlendMode: string = "normal";
+
+	/**
+	 * The visibility layers last fanned out to the particles, so a change to
+	 * the emitter's {@link Renderable#visibilityLayer} can be detected per
+	 * frame.
+	 * @ignore
+	 * @internal
+	 */
+	#appliedVisibilityLayer = 1;
 
 	/**
 	 * Decide whether this emitter's particles have to be depth sorted.
@@ -762,6 +778,19 @@ export default class ParticleEmitter extends Container {
 			// fading in over a particle lifetime
 			for (const particle of this.children ?? []) {
 				particle.blendMode = this.blendMode;
+			}
+			this.isDirty = true;
+		}
+
+		// The same for the visibility layers. A camera draws a particle only
+		// if the particle AND its emitter are on a layer it draws, and a
+		// particle is born on the emitter's layers (see `Particle`), so the
+		// ones alive have to follow a change too: or a camera that draws
+		// only the emitter's new layer would leave every one of them out.
+		if (this.visibilityLayer !== this.#appliedVisibilityLayer) {
+			this.#appliedVisibilityLayer = this.visibilityLayer;
+			for (const particle of this.children ?? []) {
+				particle.visibilityLayer = this.visibilityLayer;
 			}
 			this.isDirty = true;
 		}

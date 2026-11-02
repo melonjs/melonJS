@@ -262,6 +262,10 @@ export default class Particle extends Renderable {
 			this.tint.parseCSS(emitter.settings.tint);
 		}
 
+		// on the emitter's layers, so a camera that draws the emitter draws
+		// its particles (a pooled particle would otherwise keep the layer of
+		// its last life)
+		this.visibilityLayer = emitter.visibilityLayer;
 		this.blendMode = emitter.settings.textureAdditive ? "additive" : "normal";
 
 		if (emitter.settings.blendMode !== "normal") {
