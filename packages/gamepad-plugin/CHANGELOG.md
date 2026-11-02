@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.1.0] - _unreleased_
+## [1.1.0] - _2026-11-02_
 
 ### Added
 - Floating sticks: `area`, where one can be picked up: `"half"`, its half of the screen, as before and still the default; `"screen"`, anywhere; or a rectangle in viewport pixels. `hideAtRest` draws it only while a finger holds it, so it appears under the thumb wherever it lands and is gone once the thumb lifts
