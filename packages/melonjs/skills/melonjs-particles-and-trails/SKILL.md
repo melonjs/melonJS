@@ -28,6 +28,11 @@ emitter.burstParticles();      // one shot
 `duration` setting, which defaults to `Infinity` — a stream runs until
 `stopStream()`. `burstParticles(n)` launches `n`, or `totalParticles`.
 
+Without an `image`, particles are white squares of `textureSize` pixels (8 by
+default), coloured by `tint`. Every such emitter draws the renderer's one
+shared white pixel, stretched, so an emitter per explosion or a `reset()` on
+every tweak costs no texture.
+
 ## Tuning an effect: the Particle Editor
 
 Settings are easier to find by eye than by reasoning. The
@@ -146,15 +151,21 @@ fountain and wrong for an explosion: additive sprites piled on one point clip
 all three channels there however well they are tinted, so a burst reads as one
 bright flash rather than as debris.
 
-Give it the size of whatever broke. The area is measured from the emitter's own
-position, NOT centred on it, so offset by half or the whole burst sits down and
-to the right of its source:
+Give it the size of whatever broke. The constructor centres the area on the
+point it is given, so pass the centre of the source:
 
 ```js
 const area = radius * 2;
-const emitter = new ParticleEmitter(x - area / 2, y - area / 2, {
-    width: area, height: area,
-});
+const emitter = new ParticleEmitter(x, y, { width: area, height: area });
+```
+
+After that, `pos` is the area's top-left corner, as on any renderable. To move
+the emitter to a new source later, offset by half, or the burst sits down and
+to the right of it:
+
+```js
+emitter.pos.set(x - area / 2, y - area / 2);   // re-aimed at (x, y)
+emitter.burstParticles();
 ```
 
 Under a `Camera3d`, `depth` (20.13) gives the area its third side: each
@@ -372,6 +383,7 @@ answer when you want discrete puffs rather than a continuous ribbon.
 |---|---|
 | trail looks flat under a `Camera3d` | `Trail` is 2D; use `Trail3d` |
 | particles clutter a minimap or a second camera | every camera draws them: set the emitter's `visibilityLayer` to a layer that camera's `cullMask` leaves out (see `melonjs-camera-and-drawing`) |
+| a camera that draws only the emitter's layer shows no particles | before 20.13 particles stayed on layer 1 whatever their emitter was on; update |
 | `Trail3d` draws nothing, with a console warning | it needs a `Camera3d`; the app's `cameraClass` is still the 2D default |
 | `trail.tint` does nothing | `Trail` cannot be tinted at all; `Trail3d` can |
 | assigning `maxPoints` throws | `Trail3d` sizes its geometry once; pass `length` to the constructor |
@@ -386,7 +398,8 @@ answer when you want discrete puffs rather than a continuous ribbon.
 | frame rate drops with many effects | an emitter per event instead of one re-aimed emitter |
 | a 3D burst is invisible under a `Camera3d` | before 20.8 a particle was culled at twice its depth; update |
 | the whole burst launches from one pixel | `width`/`height` are the spawn area and default to `1` |
-| the burst sits down-right of its source | the spawn area starts at the emitter's position; offset by half |
+| the burst sits down-right of its source | the emitter was moved by setting `pos` to the source: `pos` is the area's top-left corner, so offset by half (only the constructor centres it) |
+| the burst sits up-left of its source | the constructor was given the top-left corner: it centres the area on (x, y), so pass the centre |
 | the middle of a burst goes white | additive sprites overlapping — `textureAdditive: false`, or spread them |
 | debris chunks look like squares | the default sprite is a filled square; pass your own `image` |
 | a ring tilts with the camera instead of staying on a surface | the launch axis is in WORLD axes, not the camera basis |

@@ -310,6 +310,68 @@ describe("visibilityLayer and cullMask", () => {
 			emitter.destroy();
 		});
 
+		// an emitter with its particles counted as they are drawn
+		const countedEmitter = (layer) => {
+			const emitter = new ParticleEmitter(0, 0, {
+				width: 10,
+				height: 10,
+				totalParticles: 6,
+			});
+			if (layer !== undefined) {
+				emitter.visibilityLayer = layer;
+			}
+			emitter.burstParticles();
+			emitter.draws = 0;
+			for (const particle of emitter.getChildren()) {
+				particle.inViewport = true;
+				particle.draw = () => {
+					emitter.draws++;
+				};
+			}
+			return emitter;
+		};
+
+		it("draws an emitter's particles in a camera that draws only the emitter's layer", () => {
+			const emitter = countedEmitter(2);
+			const count = emitter.getChildren().length;
+			expect(count).toBeGreaterThan(0);
+			for (const particle of emitter.getChildren()) {
+				expect(particle.visibilityLayer).toBe(2);
+			}
+			const camera = corner();
+			camera.cullMask = 2;
+			drawWith(camera, emitter);
+			expect(emitter.draws).toBe(count);
+			emitter.destroy();
+		});
+
+		it("moves the particles already alive when the emitter's layer changes", () => {
+			const emitter = countedEmitter();
+			const count = emitter.getChildren().length;
+			const camera = corner();
+			camera.cullMask = 2;
+			emitter.visibilityLayer = 2;
+			// picked up on the emitter's next update
+			emitter.update(16);
+			for (const particle of emitter.getChildren()) {
+				expect(particle.visibilityLayer).toBe(2);
+			}
+			drawWith(camera, emitter);
+			expect(emitter.draws).toBe(emitter.getChildren().length);
+			expect(count).toBeGreaterThan(0);
+			emitter.destroy();
+		});
+
+		it("does not let a pooled particle keep the layer of its last life", () => {
+			const first = countedEmitter(4);
+			first.destroy();
+			const second = countedEmitter();
+			for (const particle of second.getChildren()) {
+				expect(particle.visibilityLayer).toBe(1);
+			}
+			second.destroy();
+		});
+
 		it("draws nothing of a world on a layer the camera leaves out", () => {
 			const camera = corner();
 			const world = new Container(0, 0, 100, 100);

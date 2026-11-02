@@ -157,27 +157,6 @@ export const builtIn = (id: string): Texture => {
 	return texture;
 };
 
-const squares = new Map<number, HTMLCanvasElement>();
-
-/**
- * The plain square, as the emitter draws one without an image. The editor
- * hands the emitter its own, kept per size: the emitter would otherwise make
- * a new one on each change of a setting, and drop the old one.
- * @param size - its side, `textureSize`
- * @returns the square
- */
-export const square = (size: number): HTMLCanvasElement => {
-	let image = squares.get(size);
-	if (!image) {
-		image = canvas(size, size, (ctx) => {
-			ctx.fillStyle = "#fff";
-			ctx.fillRect(0, 0, size, size);
-		});
-		squares.set(size, image);
-	}
-	return image;
-};
-
 /**
  * Read an image file from disk. It stays on this device: nothing is uploaded.
  * @param file - the chosen file

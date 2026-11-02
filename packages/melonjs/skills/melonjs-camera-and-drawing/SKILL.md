@@ -236,6 +236,9 @@ minimap.cullMask = ~PARTICLES;         // the minimap draws every layer but 2
   set it on an emitter and none of its particles are drawn. The world itself
   obeys it too, and so does what it contains: a child is drawn only if it and
   every container above it share a bit with the camera.
+- Particles are on their emitter's layers, and follow a change to them on the
+  emitter's next update, so a camera that draws only the emitter's layer draws
+  its particles too.
 - A renderable on layer `0` is drawn by no camera; a `cullMask` of `0` draws
   nothing.
 - It decides drawing only: what a camera leaves out still updates, collides and
