@@ -228,6 +228,136 @@ for (const backend of [video.CANVAS, video.WEBGL]) {
 			);
 		});
 
+		it("many emitters at once, each its own effect and tint, draw what their own squares would", () => {
+			// a fire, smoke, sparks, a screen-blended glow and an additive
+			// sheet of frames, streaming side by side through one frame
+			const EFFECTS = [
+				{
+					x: 20,
+					y: 80,
+					textureSize: 6,
+					tintOverLife: ["#fff3b0", "#ffb04a", "#e45414", "#501408"],
+					blendMode: "additive",
+					speed: 1.5,
+					angleVariation: 0.4,
+				},
+				{
+					x: 50,
+					y: 70,
+					textureSize: 12,
+					tint: "#808080",
+					minRotation: 0,
+					maxRotation: 3,
+					speed: 0.8,
+					angleVariation: 0.8,
+				},
+				{
+					x: 75,
+					y: 40,
+					textureSize: 2,
+					tint: "#ffd23f",
+					speed: 3,
+					angleVariation: Math.PI,
+					gravity: 0.1,
+				},
+				{
+					x: 30,
+					y: 30,
+					textureSize: 8,
+					tint: "#40c0ff",
+					blendMode: "screen",
+					speed: 1,
+					angleVariation: Math.PI,
+				},
+				{
+					x: 70,
+					y: 80,
+					textureSize: 4,
+					tint: "#00ff80",
+					blendMode: "additive",
+					framewidth: 2,
+					frameheight: 2,
+					speed: 1.2,
+					angleVariation: 1,
+				},
+			];
+
+			/** the scene after 30 frames, the same random numbers every run */
+			const scene = (ownSquares) => {
+				let seed = 1807;
+				vi.spyOn(Math, "random").mockImplementation(() => {
+					seed = (seed + 0x6d2b79f5) | 0;
+					let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+					t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+					return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+				});
+				const emitters = EFFECTS.map(({ x, y, ...effect }) => {
+					const emitter = new ParticleEmitter(x, y, {
+						width: 10,
+						height: 4,
+						onlyInViewport: false,
+						totalParticles: 40,
+						maxParticles: 3,
+						frequency: 30,
+						minLife: 600,
+						maxLife: 900,
+						...effect,
+						image: ownSquares ? whiteSquare(effect.textureSize) : undefined,
+					});
+					app.world.addChild(emitter);
+					emitter.streamParticles();
+					return emitter;
+				});
+				for (let i = 0; i < 30; i++) {
+					app.world.update(16);
+				}
+				const pixels = render();
+				vi.mocked(Math.random).mockRestore();
+				for (const emitter of emitters) {
+					app.world.removeChildNow(emitter);
+				}
+				return pixels;
+			};
+
+			// a new particle draws more random numbers than a recycled one
+			// (its constructor picks a spawn point before its reset does):
+			// fill the pool first, so every scene below recycles alike
+			scene(false);
+			const shared = scene(false);
+			// the comparison means something: the same scene, twice, is the
+			// same frame
+			expect(firstDifference(scene(false), shared)).toBeUndefined();
+			const own = scene(true);
+			// a busy frame, and the same one
+			const ink = shared.filter((_, i) => {
+				return i % 4 === 3 && shared[i] !== 0;
+			}).length;
+			expect(ink).toBeGreaterThan(300);
+			if (backend === video.WEBGL) {
+				expect(firstDifference(shared, own)).toBeUndefined();
+				return;
+			}
+			// Canvas draws a stretched 1x1 image through another path than a
+			// same-size one, and where faded particles overlap the two round
+			// a blend a level apart (measured: 3 pixels of the frame, by 1).
+			// A wrong tint, one emitter's tint on another, or a lost blend
+			// mode would be off by far more, on far more of them.
+			let off = 0;
+			let worst = 0;
+			for (let i = 0; i < shared.length; i += 4) {
+				let d = 0;
+				for (let c = 0; c < 4; c++) {
+					d = Math.max(d, Math.abs(shared[i + c] - own[i + c]));
+				}
+				if (d > 0) {
+					off++;
+					worst = Math.max(worst, d);
+				}
+			}
+			expect(worst).toBeLessThanOrEqual(1);
+			expect(off).toBeLessThan(ink * 0.01);
+		});
+
 		it("is a solid square of textureSize pixels, in the tint", () => {
 			for (const size of [1, 8, 13]) {
 				const emitter = make({ textureSize: size, tint: "#ff8000" });
