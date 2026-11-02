@@ -6,12 +6,27 @@ license: MIT
 
 # UI, HUD and text
 
-## Outlined text: the stroke eats into the glyph
+## Outlined text: behind the glyphs, or over them
 
-`Text` draws `fillText` and then `strokeText`, so the outline lands **on top of
-the fill** and is centred on the glyph edge — half of it inward. On a small or
-chunky face a `lineWidth` of 3 leaves the letters solid black. Keep it to 1,
-and raise the font size rather than the stroke.
+An outline is centred on the glyph's edge, so half of it lies inside the
+glyph. `Text` paints it **behind** the glyphs by default (`paintOrder:
+"stroke"`): the letters stay whole and the outline shows only around them, so
+a thick outline works on any face. What shows is half of `lineWidth`: ask for
+twice the width you want to see.
+
+`paintOrder: "fill"` paints the glyphs first and the outline over them, as a
+plain canvas does with `fillText` then `strokeText`, and as melonJS did before
+20.13. Its inner half then covers the letters: on a small or thin face a
+`lineWidth` of 3 already leaves them solid outline colour.
+
+```js
+const style = {
+    font: "sans-serif", size: 32,
+    fillStyle: "#ffd23f", strokeStyle: "#1b1b1b", lineWidth: 6,
+};
+new Text(x, y, { ...style, text: "BEHIND" });                     // the default
+new Text(x, y, { ...style, paintOrder: "fill", text: "OVER" });   // the old look
+```
 
 The stroke used to cost you the top row of pixels as well, and a display face
 whose glyphs overshoot the nominal ascent did the same on its own: the render
@@ -172,7 +187,7 @@ label from one class to the other:
 | white | white glyphs | the ABSENCE of a tint |
 | gradient | yes, via `fillGradient` | no: a tint is one colour over a page image |
 | recolour it later | `label.fillStyle.parseCSS("#ff4040")` — the field is a `Color` with no setter, and ASSIGNING a string replaces it, after which the glyphs stop filling entirely and nothing is logged | `label.fillStyle = "#ff4040"` — a real setter that parses the string |
-| stroke | `strokeStyle` + `lineWidth`, corners with `lineJoin` / `miterLimit` | none |
+| stroke | `strokeStyle` + `lineWidth`, behind or over the glyphs with `paintOrder`, corners with `lineJoin` / `miterLimit` | none |
 | `size` | pixels | a RATIO of the authored size |
 
 ### Per-glyph wave, shake and colour: `glyphEffect`

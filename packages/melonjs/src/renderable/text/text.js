@@ -52,7 +52,8 @@ const genericFontFamilies = new Set([
  *
  * The text is rasterised to a cached texture, so it draws as fast as a sprite
  * while staying fully styleable — `fillStyle`, `strokeStyle` + `lineWidth`
- * (with the outline's corners set by `lineJoin` / `miterLimit`), and
+ * (with the outline behind or over the glyphs by `paintOrder`, and its corners
+ * set by `lineJoin` / `miterLimit`), and
  * per-object opacity — with multi-line text (embedded `\n`), optional
  * `wordWrapWidth` word-wrapping, and chainable {@link Text#bold} /
  * {@link Text#italic}. `font` accepts any CSS family, including the generic
@@ -76,6 +77,7 @@ export default class Text extends Renderable {
 	 * @param {number} [settings.lineWidth=0] - outline width in pixels (0 = no stroke)
 	 * @param {"round"|"bevel"|"miter"} [settings.lineJoin="round"] - the shape of the outline's corners: "round", "bevel" or "miter" (pointed, as a plain canvas draws them)
 	 * @param {number} [settings.miterLimit=10] - with a "miter" join, how far a corner may point, in half line widths, before it is cut flat
+	 * @param {"stroke"|"fill"} [settings.paintOrder="stroke"] - what is painted first: "stroke" puts the outline behind the glyphs, so it shows only around them; "fill" puts it over them, where its inner half covers the glyph
 	 * @param {string} [settings.textAlign="left"] - horizontal text alignment ("left", "center", "right")
 	 * @param {string} [settings.textBaseline="top"] - the text baseline ("top", "hanging", "middle", "alphabetic", "ideographic", "bottom")
 	 * @param {number} [settings.lineHeight=1.0] - line spacing height
@@ -119,7 +121,8 @@ export default class Text extends Renderable {
 	 * }));
 	 * @example
 	 * // outlined text and its corners: the outline is centred on the glyph
-	 * // edge, drawn on top of the fill, and its corners are set by `lineJoin`
+	 * // edge and drawn behind it (see `paintOrder`), and its corners are set
+	 * // by `lineJoin`
 	 * const outline = {
 	 *     font: "sans-serif",
 	 *     size: 48,
@@ -145,6 +148,23 @@ export default class Text extends Renderable {
 	 *
 	 * // whichever is set, the whole outline is drawn: the label's texture
 	 * // grows to hold it, while its position and bounds stay the same
+	 * @example
+	 * // the outline behind the glyphs, or over them, with `paintOrder`
+	 * const label = {
+	 *     font: "sans-serif",
+	 *     size: 48,
+	 *     fillStyle: "#ffd23f",
+	 *     strokeStyle: "#1b1b1b",
+	 *     lineWidth: 6,
+	 * };
+	 *
+	 * // "stroke" (the default): the outline is painted first, behind the
+	 * // glyphs, so they stay whole and it shows only around them
+	 * app.world.addChild(new Text(10, 10, { ...label, text: "BEHIND" }));
+	 *
+	 * // "fill": the glyphs first and the outline over them, centred on their
+	 * // edge, so its inner half covers them: a thick one hides them
+	 * app.world.addChild(new Text(10, 70, { ...label, paintOrder: "fill", text: "OVER" }));
 	 * @example
 	 * // a web font (loaded via the fontface loader) is used by its family name
 	 * loader.preload(
@@ -231,6 +251,38 @@ export default class Text extends Renderable {
 		 * label.setText("VICTORY"); // re-bakes with the new corners
 		 */
 		this.miterLimit = 10;
+
+		/**
+		 * What is painted first, the outline ("stroke") or the glyphs
+		 * ("fill"), as the CSS and SVG `paint-order` property says it.
+		 *
+		 * The outline is centred on the glyph's edge, so half of it lies
+		 * inside the glyph. With "stroke", the default, the outline is
+		 * painted first and the glyphs over it: they stay whole, and the
+		 * outline shows only around them, at half its `lineWidth`. With
+		 * "fill", the glyphs are painted first and the outline over them,
+		 * as a plain canvas does with `fillText` then `strokeText`: its inner
+		 * half covers the glyph, so a thick outline, or a thin face, hides
+		 * the letters.
+		 *
+		 * Either way the outline reaches as far out, and the label's size and
+		 * bounds are the same. Like the other style properties, a change
+		 * shows from the next {@link Text#setText}.
+		 * @type {"stroke"|"fill"}
+		 * @default "stroke"
+		 * @example
+		 * // the outline over the glyphs, as melonJS drew it before 20.13
+		 * const label = new Text(0, 0, {
+		 *     font: "sans-serif",
+		 *     size: 32,
+		 *     fillStyle: "#ffffff",
+		 *     strokeStyle: "#000000",
+		 *     lineWidth: 2,
+		 *     paintOrder: "fill",
+		 *     text: "SCORE",
+		 * });
+		 */
+		this.paintOrder = "stroke";
 
 		/**
 		 * Set the default text alignment (or justification),<br>
@@ -399,6 +451,7 @@ export default class Text extends Renderable {
 		// set every time, for a recycled label not to keep the last one's
 		this.lineJoin = settings.lineJoin ?? "round";
 		this.miterLimit = settings.miterLimit ?? 10;
+		this.paintOrder = settings.paintOrder ?? "stroke";
 		this.textAlign = settings.textAlign || "left";
 		this.textBaseline = settings.textBaseline || "top";
 		this.lineHeight = settings.lineHeight || 1.0;
@@ -922,9 +975,16 @@ export default class Text extends Renderable {
 		}
 
 		if (strokes) {
+			// "stroke" first: painted UNDER the glyphs already there rather
+			// than before them, so it is never re-coloured by the gradient
+			// pass above, and the result is what drawing it first gives
+			if (this.paintOrder !== "fill") {
+				context.globalCompositeOperation = "destination-over";
+			}
 			eachLine((line, lineX, lineY) => {
 				context.strokeText(line, lineX, lineY);
 			});
+			context.globalCompositeOperation = "source-over";
 		}
 
 		context.restore();
