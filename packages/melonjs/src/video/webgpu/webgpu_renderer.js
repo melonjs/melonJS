@@ -1889,7 +1889,9 @@ export default class WebGPURenderer extends Renderer {
 		// retarget with the appropriate clear: a camera's offscreen pass
 		// starts like a frame (background color + fresh stencil), a
 		// sprite's starts transparent so unpainted texels stay see-through
-		if (isCamera) {
+		// (a camera drawn over another camera starts transparent too, so that
+		// one shows through: see `Camera2d#draw`)
+		if (isCamera && !renderable._postEffectOver) {
 			const [r, g, b, a] = this.backgroundColor.toArray();
 			this.setRenderTarget(rt, {
 				clear: true,
@@ -1937,7 +1939,10 @@ export default class WebGPURenderer extends Renderer {
 		const pool = this._renderTargetPool;
 		const rt1 = pool.getCaptureTarget();
 		const rt2 = pool.getPingPongTarget();
-		const keepBlend = !isCamera;
+		// a camera that starts the frame replaces it; one drawn over another
+		// camera is blended over what that one drew
+		const over = isCamera && renderable._postEffectOver === true;
+		const keepBlend = !isCamera || over;
 		const canvas = this.getCanvas();
 		const w = canvas.width;
 		const h = canvas.height;
@@ -1974,6 +1979,10 @@ export default class WebGPURenderer extends Renderer {
 
 		// the chain's passes are told where the renderable is
 		this._beginChainSpace(renderable);
+		if (over) {
+			// whatever the camera's last draw left set
+			this.setBlendMode("normal");
+		}
 		// a renderable's chain lands at the opacity it is drawn at, by its
 		// last blit only; a camera's composites whole
 		const alpha = isCamera

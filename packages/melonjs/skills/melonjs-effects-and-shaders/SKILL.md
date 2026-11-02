@@ -758,6 +758,7 @@ same question after construction.
 
 | symptom | cause |
 |---|---|
+| a camera's post effect hides another camera drawn before it | before 20.13 a later camera's pass replaced the whole frame; update. Since then each camera's effects apply to what it draws, over the cameras before it |
 | effect does nothing, warning in console | Canvas fallback — no programmable pipeline |
 | effect does nothing on some machines only | GLSL-only shader, `video.AUTO` chose WebGPU |
 | a white or solid box where the effect should be | carrier renderable drawn while the effect is disabled |

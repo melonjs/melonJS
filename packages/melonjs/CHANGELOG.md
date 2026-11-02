@@ -23,6 +23,7 @@
 - UI: `UITextButton#bitmapText`, for `label`
 
 ### Fixed
+- Camera: a camera with post effects, drawn after another camera, draws over it. Its effect pass started like a frame, cleared to the background colour and copied over the whole screen, so a second full-screen camera with bloom or a vignette wiped out everything the cameras before it drew. A minimap with post effects no longer fills its rectangle with the background colour either: as one without them, it shows the view behind where it draws nothing (give it a `ColorLayer` for a background)
 - Loader: assets on the game's own origin are requested with its cookies and HTTP auth, so a game behind a login no longer gets a 403 for every asset ([#1801](https://github.com/melonjs/melonJS/issues/1801))
 - Loader: an asset on another origin loads whenever its server allows it (CORS), without `crossOrigin`, and one it does not allow fails at load with an error naming it, instead of later with "Unexpected end of input" or "The source image could not be decoded". `crossOrigin` now only applies to the `<video>`, `<script>` and glTF image elements the loader creates; `"use-credentials"` also sends credentials, as `withCredentials` does
 - Text: an outline no longer hides thin or small letters, being drawn behind them, and is no longer cut off at the edges of the text. Its corners are round by default; only its outer half shows now, so double `lineWidth` to keep its weight, or set `paintOrder: "fill"` and `lineJoin: "miter"` for the old look

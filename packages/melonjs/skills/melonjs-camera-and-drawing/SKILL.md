@@ -205,6 +205,14 @@ and an overridden `postDraw`:
 this.cameras.set("minimap", new MinimapCamera());
 ```
 
+A stage's cameras draw in the order they were added, each over the ones before
+it, so a full-screen second camera is a layer: a `Camera3d` drawing a 3D
+background first, the game's own camera over it, each kept to its part of the
+world with `visibilityLayer` / `cullMask` (below). A camera's post effects
+apply to what that camera draws: the first camera's pass starts the frame, and
+a later camera's is blended over what is already there (20.13 and later;
+before, it wiped out the cameras before it).
+
 View state is per camera, not per scene: a `Camera3d` carries its own distance
 fog (`setFog`), so a minimap or split-screen view fogs independently of the main
 one — and a `Camera2d` never fogs. See `melonjs-3d`.
@@ -383,6 +391,7 @@ const data = await rt.toImageData(0, 0, w, h);
 
 | symptom | cause |
 |---|---|
+| a second camera's post effect wipes out what the first camera drew | before 20.13 a later camera's post-effect pass replaced the whole frame; update, or put the effects on a container instead of the camera |
 | `follow()` set but the view never moves | viewport bounds still at renderer size |
 | `invalid target for me.Camera2d.follow` | passed `player.pos` — pass the renderable, a `Vector2d` or a `Vector3d` |
 | camera drag jumps around | using world (`gameWorldX`) instead of screen (`gameScreenX`) coordinates |

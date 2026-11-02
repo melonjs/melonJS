@@ -440,6 +440,15 @@ export default class Renderable extends Rect {
 		this._postEffectManaged = false;
 
 		/**
+		 * whether this camera's post-effect pass goes OVER what is already
+		 * drawn in the frame (another camera drew first), rather than
+		 * starting the frame (see {@link Camera2d#draw})
+		 * @ignore
+		 * @internal
+		 */
+		this._postEffectOver = false;
+
+		/**
 		 * the blend mode to be applied to this renderable — any of the modes
 		 * listed on {@link CanvasRenderer#setBlendMode}, honoured identically by
 		 * every renderer
