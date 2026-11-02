@@ -47,9 +47,6 @@ export const createGame = async () => {
 	// initialize the sound engine
 	audio.init("mp3,ogg");
 
-	// allow cross-origin for image/texture loading
-	loader.setOptions({ crossOrigin: "anonymous" });
-
 	// preload all resources
 	loader.preload(resources, () => {
 		// set the Play screen

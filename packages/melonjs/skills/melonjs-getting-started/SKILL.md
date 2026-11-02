@@ -137,7 +137,6 @@ with the formats you ship before any audio asset is preloaded.
 ```js
 import { audio, loader } from "melonjs";
 
-loader.setOptions({ crossOrigin: "anonymous" });   // needed for remote assets
 audio.init("mp3,ogg");                             // BEFORE preloading audio
 await loader.preload([
     { name: "tileset", type: "image", src: "data/img/tileset.png" },
@@ -173,7 +172,7 @@ placement.
 | scene content appears once and never resets | scene built in the constructor instead of `onResetEvent` |
 | everything offset by half a sprite | top-left math against the centred `anchorPoint` default |
 | a `Tween` or `ParticleEmitter` does nothing | `.start()` / `streamParticles()` never called |
-| cross-origin textures fail to load | missing `loader.setOptions({ crossOrigin: "anonymous" })` |
+| an asset on another origin fails to load, the error naming it | that server sends no `Access-Control-Allow-Origin` header (see melonjs-loading-assets) |
 
 ## Related skills
 

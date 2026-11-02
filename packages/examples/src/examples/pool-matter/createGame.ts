@@ -65,9 +65,6 @@ export const createGame = async () => {
 	// (collision bodies, FPS, draw-call counts, etc.)
 	plugin.register(DebugPanelPlugin, "debugPanel");
 
-	// allow cross-origin asset loading (same as the matter platformer)
-	loader.setOptions({ crossOrigin: "anonymous" });
-
 	loader.preload(resources, () => {
 		state.set(state.PLAY, new PlayScreen());
 		state.change(state.PLAY);

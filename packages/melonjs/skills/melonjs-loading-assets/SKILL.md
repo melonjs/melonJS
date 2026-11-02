@@ -13,8 +13,6 @@ Every asset is `{ name, type, src }` plus type-specific extras:
 ```js
 import { loader } from "melonjs";
 
-loader.setOptions({ crossOrigin: "anonymous" });   // needed for remote assets
-
 await loader.preload([
     { name: "tiles",   type: "image",    src: "data/img/tiles.png" },
     { name: "map1",    type: "tmx",      src: "data/map/map1.tmx" },
@@ -377,20 +375,45 @@ state.change(state.PLAY, true);
 
 ## Cross-origin and authenticated assets
 
-Two settings, both global and both applying to **every** asset type — there is
-no per-asset or per-type spelling to remember:
+**Nothing to set for the usual cases.** Every fetched asset (image, json,
+binary, tmx, tsx, shader, gltf/glb, obj, mtl, aseprite, buffered audio) is
+requested the same way:
+
+- **On the game's own origin**, it carries the browser's cookies and HTTP
+  auth, as the page and its scripts do. A game behind a login or a session
+  cookie loads its own assets with no option.
+- **On another origin** (a CDN), it is a CORS request: it loads when that
+  server sends `Access-Control-Allow-Origin`, and fails at load when not, with
+  an error naming the asset and the header it needs. No `crossOrigin` needed.
+
+| asset on… | default | `withCredentials: true` |
+|---|---|---|
+| the game's own origin | loads, with its cookies | loads, with its cookies |
+| another origin sending `Access-Control-Allow-Origin` | loads, no cookies | **blocked** if it answers `*`; needs the page's exact origin plus `Access-Control-Allow-Credentials: true` |
+| another origin allowing credentials for the page | loads, no cookies | loads, with that origin's cookies |
+| another origin with no CORS headers | fails at load, naming the asset | fails at load, naming the asset |
+
+Two global settings cover the rest, for every asset type — there is no
+per-asset or per-type spelling to remember:
 
 ```js
 loader.setOptions({
-    crossOrigin: "anonymous",   // CORS mode for remote assets
-    withCredentials: true,      // send cookies / auth with the request
+    withCredentials: true,      // send cookies / auth to OTHER origins too
+    crossOrigin: "anonymous",   // attribute of the <video>, <script> and glTF
+                                // image elements the loader creates
 });
 ```
 
-`withCredentials` is what an asset behind a session cookie or an
-`Authorization`-style login needs. Every fetched asset — image, json, binary,
-tmx, tsx, shader, gltf/glb, obj, mtl, aseprite, video — carries it, and so does
-buffered audio.
+`withCredentials` is for assets on **another** origin behind a session cookie
+or a login; that server must then allow credentials for the page's origin, or
+the browser blocks the request. `crossOrigin: "use-credentials"` does the same
+for fetched assets, and sets the attribute on the elements.
+
+Before 20.13 both were needed far more often: assets on the game's own origin
+went out with no cookies unless `withCredentials` was set (a 401 or 403 behind
+a login), and an asset on another origin without `crossOrigin: "anonymous"`
+was read as an empty response, failing later with "Unexpected end of input" or
+"The source image could not be decoded" even when its server allowed it.
 
 **Set them through `setOptions`.** `loader.crossOrigin` and
 `loader.withCredentials` are read-only module bindings; assigning to them
@@ -408,8 +431,9 @@ throws, the same trap as the removed `loader.onload` / `onProgress`.
 | audio 404s | `src` given as a file instead of a directory |
 | audio fails, `preload()` rejects with "Failed loading resource" | `audio.init()` not called before preloading — the real message is replaced by the loader's |
 | blank level, missing tiles | `.tsx` or tileset image not listed in the resources |
-| cross-origin textures fail | missing `loader.setOptions({ crossOrigin: "anonymous" })` |
-| assets behind a login 401 / audio preload hangs | missing `loader.setOptions({ withCredentials: true })` — one switch, all asset types |
+| `Failed to load "…" (Failed to fetch). An asset on another origin loads only if its server allows it…` | that origin sends no `Access-Control-Allow-Origin` header — or, with `withCredentials`, sends `*` or no `Access-Control-Allow-Credentials: true`. Fix the server's headers, or serve the asset from the game's own origin |
+| an asset on another origin behind a login 401s / audio preload hangs | missing `loader.setOptions({ withCredentials: true })` — one switch, all asset types. Assets on the game's own origin need nothing (before 20.13 they needed it too) |
+| a remote JSON fails with "Unexpected end of input", or an image with "The source image could not be decoded" | melonJS before 20.13, which read assets on another origin without CORS unless `crossOrigin: "anonymous"` was set |
 | `TypeError` assigning `loader.withCredentials` / `crossOrigin` | read-only module bindings; use `loader.setOptions({ … })` |
 | preload never finishes, blank screen, no error | a failing sound with `audio.setStopOnAudioError(false)` before 20.4 — it disabled audio *and* failed the preload |
 | text renders in a fallback font | web font not preloaded as `"fontface"` |
