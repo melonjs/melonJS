@@ -125,6 +125,9 @@ sprite.flipX(true);                   // mirror horizontally
 sprite.flipY(true);
 sprite.blendMode = "additive";        // see the effects skill for the full list
 sprite.scale(2, 2);                   // ← multiplicative, see below
+sprite.flicker(1000, function () {    // blink for a second, then…
+    this.ancestor.removeChild(this);  // …`this` is the sprite; the flicker has ended
+});
 ```
 
 **`scale()` is multiplicative, not absolute.** Calling it every frame compounds.
@@ -185,6 +188,7 @@ Two consequences:
 | event handlers leak on pooled objects | bound in the constructor rather than `onActivateEvent` |
 | animation never advances | no `framewidth`/`frameheight`, so the sheet is one frame |
 | animation plays once and stops | `{ loop: false }`, or a callback that returned `false` |
+| `this` is wrong in a `flicker(ms, callback)` callback, or a flicker started from it stops at once | before 20.13.0 the callback ran on an internal object and the flicker was stopped after it; now `this` is the sprite and the flicker has already ended |
 | sprites do not batch | more distinct textures in one frame than `renderer.maxTextures` |
 | nine-slice corners stretch anyway | `insetX`/`insetY` instead of `insetx`/`insety` |
 

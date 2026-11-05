@@ -87,7 +87,7 @@ right times and there is nothing to unsubscribe:
 | callback | when |
 |---|---|
 | `onActivateEvent()` | `addChild`-ed into a container that is already attached to the world root (a `Container` forwards it to its children) |
-| `onDeactivateEvent()` | removed from its container — including the automatic world clear on a state change |
+| `onDeactivateEvent()` | removed from its container — including the automatic world clear on a state change. Once per `onActivateEvent`: the children of a removed container, at any depth, are told once |
 | `onDestroyEvent()` | `destroy()` ran; called with no arguments from the container-removal path |
 | `onCollisionStart` / `onCollisionActive` / `onCollisionEnd` | contacts |
 
@@ -154,6 +154,8 @@ Use `removeChild()`, or flag the work and drain it from `Stage.update`.
 | crash after a collision | `removeChildNow()` inside a contact callback — use `removeChild()` |
 | progress callbacks never fire | assigned `loader.onProgress` (removed in 20.3) instead of subscribing to `LOADER_PROGRESS` |
 | `onActivateEvent` never runs | the child was added to a container not yet attached to the world |
+| `onDeactivateEvent` runs twice when a group is removed (a count goes negative, a light or listener is released twice) | the group's `onDeactivateEvent` and its `destroy()` both reached the children, before 20.13.0 — now once per `onActivateEvent` |
+| `onDeactivateEvent` never runs on a child of a group built off-world and destroyed | it never had `onActivateEvent` either: the pair is only sent to children that entered the world |
 
 ## Related skills
 

@@ -314,6 +314,14 @@ Four traps:
 - **Stop a tween before destroying its target**, or `onUpdate` fires against a
   dead renderable.
 
+**A target can be an array: a path.** `to({ x: [200, 120, 300] })` runs from
+the current value through each entry in turn, and
+`interpolation: Tween.Interpolation.CatmullRom` smooths the corners. Each
+`start()` builds the path afresh from the current value, so a replay or a chain
+that comes back round runs the same path, and with `yoyo` the return leg plays
+it back the way it came. Before 20.13 a restart ran a longer path each time and
+a `yoyo` path turned the property into `NaN`.
+
 **To animate something that is not a property, tween a holder and push the
 value in `onUpdate`.** A shader uniform and a light's intensity are both set
 through a method, so there is nothing for `to()` to interpolate directly. The
@@ -416,6 +424,7 @@ both.
 | the world freezes on blur but the game keeps advancing | simulation lives in `Stage.update`, which the pause does not gate — only `Container.update` checks `state.isPaused()` |
 | the player character is left behind and scrolls off after a lost window | same cause: the stage advanced the camera while its world children were paused |
 | a tween does nothing | `.start()` never called |
+| an array (path) tween wanders further on each replay, or goes `NaN` with `yoyo` | before 20.13 `start()` re-prepended the start value to the path and `yoyo` swapped the array into the start value; upgrade |
 | effect stops during a hit-stop | tween needs `updateWhenPaused = true` |
 | crash after a stage switch | callback ran during teardown — guard with `state.isCurrent` |
 | HUD scrolls away with the camera | missing `floating = true` |

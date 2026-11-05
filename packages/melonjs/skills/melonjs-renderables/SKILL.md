@@ -291,6 +291,12 @@ other correct ending.
 `obj.alwaysUpdate === true`. An off-screen object with the default
 `alwaysUpdate = false` does not tick at all.
 
+A `Container` is culled by its own bounds, which do not follow its children
+unless it has a size of its own (`resize`) or `enableChildBoundsUpdate` is on.
+With the flag, the bounds are the children's union, re-measured on every update
+and, while the group is off screen, before each culling check — so a squad that
+walks back into view is drawn again.
+
 ## Anchors and floating
 
 - `anchorPoint` defaults to centre `(0.5, 0.5)` on `Renderable`, but `Container`
@@ -322,6 +328,7 @@ Hand-rolled equivalents miss the batching and the multi-backend support.
 | effect silently does nothing | running on the Canvas renderer |
 | object appears frozen while its state changes | `update()` not returning `true` |
 | off-screen object never ticks | `update()` is gated on `inViewport` — set `alwaysUpdate = true` |
+| a group of moving children vanishes once they leave where they started | a sizeless container's bounds did not follow its children: give it a size, or `enableChildBoundsUpdate` (which only followed them from 20.13.0) |
 | custom draw offset by half the size | centred `anchorPoint` default not zeroed |
 | spatial query never finds an object | `isKinematic` left `true` — not in the broadphase |
 | `z` unexpectedly 0 after a `set` | `Vector3d.set(x, y)` defaults `z` to 0 — `setPosition(x, y)` on the renderable leaves the depth alone |

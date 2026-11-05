@@ -23,6 +23,9 @@
 - UI: `UITextButton#bitmapText`, for `label`
 
 ### Fixed
+- Container: `onDeactivateEvent` is called once on each child of a removed container, as `onActivateEvent` is, not twice or more
+- Container: `enableChildBoundsUpdate` follows children that move, so the camera no longer culls a group by where its children started
+- Sprite: a `flicker()` callback is called with the sprite as `this`, after the flicker has ended, so it can start a new one
 - Physics: `body.applyForce(x, y, pointX, pointY)` reads the point in world coordinates, so a body away from the origin, or inside a container, no longer spins the wrong way
 - Tween: a tween through an array of values no longer runs a longer path each time it is restarted, nor turns the value into NaN with `yoyo`
 - Camera: a camera with post effects no longer wipes out the cameras drawn before it. A minimap with post effects now shows the view behind wherever it draws nothing, as one without them does, instead of the background colour
