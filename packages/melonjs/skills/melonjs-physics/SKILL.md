@@ -629,8 +629,9 @@ group.resize(width, height);
 ```
 
 `enableChildBoundsUpdate` also gives it one, but it re-measures the whole child
-list on every update — reach for it only when the extent genuinely IS the
-members' union and moves with them (a flock, a squad), not to give a fixed
+list on every update (after the children have moved, and before each culling
+check while it is off screen) — reach for it only when the extent genuinely IS
+the members' union and moves with them (a flock, a squad), not to give a fixed
 group a size.
 
 ## Built-in world quirks
@@ -656,7 +657,11 @@ real rigid-body engine:
 - **`applyForce(x, y)` is linear only** unless you pass the optional
   `(pointX, pointY)` application point, which generates a torque
   `τ = r × F` into `body.angularVelocity` via `body.pseudoInertia`.
-  `applyTorque(τ)` is the direct form.
+  `applyTorque(τ)` is the direct form. The point is in **world** coordinates,
+  as on matter and planck, and the lever arm is measured from the centre of
+  the shapes where they collide: the renderable's drawn frame (so the anchor
+  counts) plus any parent container's position. `renderable.getBounds()` is
+  in that space, so `b.centerX, b.top` is the top centre.
 - **Force accumulators reset at end-of-step** — for every body, including
   static, paused and off-screen ones — so forces must be applied every frame to
   persist.
@@ -775,6 +780,7 @@ use them. `adapter.capabilities` (`constraints`,
 | a small shape sits at the sprite's corner | a shape's offset is measured from the drawn frame's TOP-LEFT; `new Sphere(0, 0, 0, r)` is the corner, `(width / 2, height / 2)` is the centre |
 | a rotated renderable reports an unrotated bounding box | `autoTransform: false` opts `updateBounds()` out of the transform |
 | a body in a pile sinks into the floor (built-in) | fixed in 20.7 for anything with an immovable side; bodies pinned only by other DYNAMIC bodies still overlap by a pixel or two, which is what planck/matter are for |
+| `applyForce` with a point spins a body pushed through its centre, or tips it the wrong way (built-in) | before 20.13 the point was measured against the body's LOCAL bounds, so only a body at the world origin got the right torque; upgrade, and drop any `pos` you subtracted to compensate |
 | forces do nothing after switching adapter | magnitude units differ — re-tune, don't reuse numbers |
 | `body.position` disagrees with `renderable.pos` on matter | matter stores the centroid, melonJS the top-left — the adapter offsets between them |
 | `bodyDef.shapes: "…"` throws "is not loaded" | the name must match the `name` the JSON was preloaded under, not its filename |

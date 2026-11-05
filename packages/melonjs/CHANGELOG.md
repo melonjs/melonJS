@@ -23,6 +23,8 @@
 - UI: `UITextButton#bitmapText`, for `label`
 
 ### Fixed
+- Physics: `body.applyForce(x, y, pointX, pointY)` reads the point in world coordinates, so a body away from the origin, or inside a container, no longer spins the wrong way
+- Tween: a tween through an array of values no longer runs a longer path each time it is restarted, nor turns the value into NaN with `yoyo`
 - Camera: a camera with post effects no longer wipes out the cameras drawn before it. A minimap with post effects now shows the view behind wherever it draws nothing, as one without them does, instead of the background colour
 - Container: `reset()`, and so `level.load`, no longer drops the sort pending for the persistent children it keeps, which left them in the order they were added
 - Particles: particles are on their emitter's `visibilityLayer`, and follow a change to it. They stayed on layer 1, so a camera whose `cullMask` drew only the emitter's layer drew none of its particles
