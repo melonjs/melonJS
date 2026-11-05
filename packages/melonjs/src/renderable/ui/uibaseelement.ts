@@ -155,7 +155,8 @@ function offerPressToScroller(element: UIBaseElement, event: Pointer) {
  * - {@link UIBaseElement#onHold}: held for `holdThreshold` ms, when
  *   `isHoldable` is set.
  * - {@link UIBaseElement#onCancel}: the press was called off without a
- *   release (see {@link UIBaseElement#cancelPress}).
+ *   release (see {@link UIBaseElement#cancelPress}), as when the element is
+ *   removed while held.
  *
  * Elements under the pointer are asked topmost first, and the event carries
  * on to the ones below until a handler returns `false`. `onClick` and
@@ -326,14 +327,17 @@ export default class UIBaseElement extends Container {
 
 	/**
 	 * `true` while the pointer is over the element. A tap on a touch screen
-	 * does not set it.
+	 * does not set it. Cleared when the element is removed, so one added back
+	 * later is not drawn lit until the pointer comes over it again.
 	 * @default false
 	 */
 	hover: boolean;
 
 	/**
 	 * `false` while the element is held down (by the pointer, or by Enter /
-	 * A with the focus), `true` otherwise.
+	 * A with the focus), `true` otherwise. Removing a held element calls the
+	 * press off (see {@link UIBaseElement#cancelPress}), so it is `true` again
+	 * once out of the scene.
 	 * @default true
 	 */
 	released: boolean;
@@ -740,8 +744,9 @@ export default class UIBaseElement extends Container {
 	 * The element goes back to its released look, and the pointer-up that
 	 * follows does nothing. A scrolling {@link UIPanel} calls this when a drag
 	 * that started on the element turns out to be a scroll, so a button
-	 * dragged to scroll its list is not clicked. Setting `enabled` to `false`
-	 * and losing the focus while Enter or A is held call it too.
+	 * dragged to scroll its list is not clicked. Setting `enabled` to `false`,
+	 * losing the focus or the window losing focus while Enter or A is held,
+	 * and removing the element while it is held call it too.
 	 */
 	cancelPress(): void {
 		if (!this.released) {
@@ -979,6 +984,17 @@ export default class UIBaseElement extends Container {
 		// container before the leave function is called
 		this.stopListeningForDrag();
 		untrackElement(this);
+
+		// Removed, the element hears nothing more from the pointer: the
+		// dispatcher forgets it, so neither the pointer-up of a press nor the
+		// leave of a hover will ever come. A press in progress is called off
+		// (onCancel, once: it does nothing on an element already up), and the
+		// hover is dropped, so an element added back later starts at rest
+		// rather than drawn held or lit, with its shortcut and Enter blocked.
+		this.cancelPress();
+		this.hover = false;
+		this._juice = 1;
+		this.isDirty = true;
 
 		// call the parent function
 		super.onDeactivateEvent();

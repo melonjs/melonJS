@@ -10,7 +10,11 @@ import Text from "../text/text.js";
 import type { Paint } from "./panelpaint.ts";
 import type { UIJuiceSettings } from "./uibaseelement.ts";
 import UIBaseElement, { isPointerUp } from "./uibaseelement.ts";
-import { focusOwner, isAcceptKey, ringVisible } from "./uifocus.ts";
+import {
+	focusTakesAccept,
+	isAcceptKey,
+	shortcutTookAccept,
+} from "./uifocus.ts";
 import type { UILabel } from "./uilabel.ts";
 import type { UISkin } from "./uiskin.ts";
 import { SkinDrawer } from "./uiskin.ts";
@@ -279,8 +283,12 @@ export default class UITextButton extends UIBaseElement {
 	 * Whichever input presses first, key or pointer, owns the press until it
 	 * is released.
 	 *
-	 * When another button shows the focus ring, Enter and Space belong to that
-	 * button: an "OK" bound to Enter does not fire while "Cancel" is focused.
+	 * While another widget has the keyboard and gamepad focus (see
+	 * {@link UIBaseElement#focus}), Enter and Space belong to that widget,
+	 * whether its focus ring shows or not: an "OK" bound to Enter does not
+	 * fire while "Cancel" is focused, and one key press never clicks both. A
+	 * focused widget that is disabled or hidden does not keep them. Call
+	 * `blur()` on the focused widget to give Enter back to the shortcut.
 	 *
 	 * Setting `enabled` to `false` while the key is held calls the press off.
 	 * Clearing only `isClickable` blocks new presses but still lets a held key
@@ -328,15 +336,14 @@ export default class UITextButton extends UIBaseElement {
 		) {
 			return;
 		}
-		// Enter on another button that shows the focus is that button's: an
-		// OK bound to Enter does not fire with a focused Cancel
-		if (
-			ringVisible() &&
-			focusOwner() !== undefined &&
-			focusOwner() !== this &&
-			isAcceptKey(keyCode)
-		) {
-			return;
+		// Enter and Space go to another widget that has the focus, ring shown
+		// or not: an OK bound to Enter does not fire with a focused Cancel,
+		// and one key press never clicks both
+		if (isAcceptKey(keyCode)) {
+			if (focusTakesAccept(this, keyCode)) {
+				return;
+			}
+			shortcutTookAccept(keyCode);
 		}
 		this.keyboardKey = keyCode;
 		this.released = false;

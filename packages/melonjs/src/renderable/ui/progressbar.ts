@@ -42,7 +42,7 @@ export interface ProgressBarSettings {
 	 */
 	min?: number;
 	/**
-	 * the value that shows as full
+	 * the value that shows as full; given below `min`, the two are swapped
 	 * @default 1
 	 */
 	max?: number;
@@ -272,10 +272,6 @@ export interface ProgressBarSettings {
  * });
  */
 export default class ProgressBar extends Renderable {
-	/** the value that shows as empty */
-	min: number;
-	/** the value that shows as full */
-	max: number;
 	/** which edge the fill grows from; see {@link ProgressBarDirection} */
 	direction: ProgressBarDirection;
 	/** the colour behind the fill; `null` leaves it hollow */
@@ -317,6 +313,8 @@ export default class ProgressBar extends Renderable {
 	readonly bindEvent?: EventName | undefined;
 
 	private _value: number;
+	private _min: number;
+	private _max: number;
 	/**
 	 * The shape and colour plumbing, shared with {@link UIPanel}.
 	 *
@@ -336,8 +334,11 @@ export default class ProgressBar extends Renderable {
 	constructor(x: number, y: number, settings: ProgressBarSettings) {
 		super(x, y, settings.width, settings.height);
 
-		this.min = settings.min ?? 0;
-		this.max = settings.max ?? 1;
+		this._min = settings.min ?? 0;
+		this._max = settings.max ?? 1;
+		if (this._max < this._min) {
+			[this._min, this._max] = [this._max, this._min];
+		}
 		this.direction = settings.direction ?? "left-to-right";
 		this.trackColor = settings.trackColor ?? null;
 		this.fillColor = settings.fillColor ?? "#ffffff";
@@ -353,7 +354,7 @@ export default class ProgressBar extends Renderable {
 		this.labelFormat =
 			settings.labelFormat ?? ((_v, ratio) => `${Math.round(ratio * 100)}%`);
 
-		this._value = clamp(settings.value ?? this.min, this.min, this.max);
+		this._value = clamp(settings.value ?? this._min, this._min, this._max);
 
 		// the bar draws itself from `pos`, and `preDraw` applies the anchor
 		// without translating to `pos`, so a centred anchor would offset
@@ -395,6 +396,64 @@ export default class ProgressBar extends Renderable {
 	}
 
 	/**
+	 * The value that shows as empty. Setting it clamps the value into the
+	 * new range, and a `min` above `max` raises `max` to it, so the bar never
+	 * draws past its ends. A value moved by the clamp calls `onChange`, as
+	 * any change of the value does; the label is rewritten either way.
+	 * @example
+	 * // a gauge that starts at 50 rather than 0
+	 * pressure.min = 50;
+	 */
+	get min(): number {
+		return this._min;
+	}
+
+	set min(v: number) {
+		this._min = v;
+		this._max = Math.max(this._max, v);
+		this.rangeChanged();
+	}
+
+	/**
+	 * The value that shows as full. Setting it clamps the value into the
+	 * new range, and a `max` below `min` lowers `min` to it, so the bar never
+	 * draws past its ends. A value moved by the clamp calls `onChange`, as
+	 * any change of the value does; the label is rewritten either way.
+	 * @example
+	 * // a debuff lowers the most health the player can have: a full bar
+	 * // stays full, at the new maximum
+	 * hp.max = 50;
+	 */
+	get max(): number {
+		return this._max;
+	}
+
+	set max(v: number) {
+		this._max = v;
+		this._min = Math.min(this._min, v);
+		this.rangeChanged();
+	}
+
+	/**
+	 * Clamp the value into a new range, and redraw.
+	 * @ignore
+	 * @internal
+	 */
+	private rangeChanged() {
+		this.isDirty = true;
+		const next = clamp(this._value, this._min, this._max);
+		const changed = next !== this._value;
+		this._value = next;
+		// the ratio moves with the range even when the value does not
+		if (this.label !== undefined) {
+			this.label.setText(this.labelFormat(next, this.ratio));
+		}
+		if (changed) {
+			this.onChange?.(next, this.ratio, this);
+		}
+	}
+
+	/**
 	 * The current value, between {@link ProgressBar#min} and
 	 * {@link ProgressBar#max}. Setting it redraws the bar and updates the
 	 * label. A value outside the range is clamped, and setting the value it
@@ -408,7 +467,7 @@ export default class ProgressBar extends Renderable {
 	}
 
 	set value(v: number) {
-		const next = clamp(v, this.min, this.max);
+		const next = clamp(v, this._min, this._max);
 		if (next === this._value) {
 			return;
 		}
@@ -422,11 +481,12 @@ export default class ProgressBar extends Renderable {
 
 	/**
 	 * The value as a fraction, `0` at `min` and `1` at `max`; how full the
-	 * bar is drawn. Read only: set {@link ProgressBar#value} instead.
+	 * bar is drawn. Always within `0..1`, and `0` when `min` equals `max`.
+	 * Read only: set {@link ProgressBar#value} instead.
 	 */
 	get ratio() {
-		const span = this.max - this.min;
-		return span === 0 ? 0 : (this._value - this.min) / span;
+		const span = this._max - this._min;
+		return span > 0 ? clamp((this._value - this._min) / span, 0, 1) : 0;
 	}
 
 	/**

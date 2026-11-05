@@ -176,6 +176,29 @@ Advance widths scale linearly with the point size for one family, so measuring
 on an existing label and scaling the result is exact. For labels you genuinely
 spawn in bulk, `getPool("text")` recycles the bake.
 
+### Multi-line text: the baseline places the whole block
+
+A `\n` in the string (or an array of strings) starts a new line, on `Text` and
+`BitmapText` alike. `textBaseline` then places the block as one piece against
+`pos.y`: its top for `"top"` / `"hanging"`, its middle for `"middle"`, its
+bottom for `"alphabetic"`, `"ideographic"` and `"bottom"`. So a two-line
+`"bottom"` label in a screen corner sits wholly above `pos.y`, and a centred
+`"middle"` label centres every line, not the first. `getBounds()` is that same
+box, which is what culling and the pointer use.
+
+`wordWrapWidth` only ADDS line breaks: each `\n`-separated line is wrapped on
+its own, so explicit breaks and blank lines survive. A line breaks between
+words, never inside one, so a single word wider than `wordWrapWidth` gets a
+line of its own and overflows it:
+
+```js
+const help = new Text(8, 8, {
+    font: "sans-serif", size: 16, wordWrapWidth: 200,
+    text: "CONTROLS\nArrows move, Space jumps, Esc pauses the game.",
+});
+// "CONTROLS" on its own line, then the sentence wrapped under it
+```
+
 ### `fillStyle` means two different things
 
 The name is shared and the behaviour is not, which is the trap when moving a
@@ -428,6 +451,7 @@ const hp = new ProgressBar(20, 20, {
 hud.addChild(hp);
 
 hp.value -= 15;                        // clamps; `ratio` reads back 0..1
+hp.max = 50;                           // re-clamps the value into the new range
 ```
 
 `direction` takes `"left-to-right"` (the default), `"right-to-left"`,
@@ -850,8 +874,12 @@ class Picker extends UIBaseElement {
 Moving the focus from code is `other.focus()`; `UIBaseElement.focusOwner?.blur()`
 hands the keys back to the game, for example when gameplay resumes.
 
-Two things to know. Enter goes to the focused button, so another button
-whose `bindKey` is Enter waits while the focus ring shows elsewhere. And
+Three things to know. Enter and Space go to the focused widget, so another
+button whose `bindKey` is Enter or Space waits while any other widget has the
+focus, ring shown or hidden: one key press never clicks both. `blur()` the
+focused widget to give Enter back to the shortcut (a disabled or hidden
+focused widget does not keep it). Enter or A held while the window loses
+focus is called off (`onCancel()`, no click), as a held `bindKey` is. And
 accept calls a subclass's `onClick()` METHOD with no pointer event, as
 `bindKey` does: guard `event` there, or act in the `onClick` setting.
 
@@ -974,7 +1002,10 @@ const volume = new UISlider(40, 120, {
 ```
 
 Drag the thumb, or click the track to jump there. The drag follows the
-pointer after it leaves the track, until it is released. The mouse wheel over
+pointer after it leaves the track, until it is released. As on any widget, the
+press (`onClick`) ends in exactly one of `onRelease` (let go, before
+`onChangeEnd`) or `onCancel` (called off by `cancelPress()`, `enabled = false`
+or removal, with no `onChangeEnd`). The mouse wheel over
 the slider moves it one `step`. `value` snaps to `step` and clamps to the
 range, and setting it does not call `onChange` or `onChangeEnd`: the same rule
 as the checkbox, and neither does changing `min`, `max` or `step`, which
@@ -1212,8 +1243,12 @@ City and Instanced Forest examples park a floating sky at `-10000` or `100000`.
 | a layout ignores a label that changed size | layout runs on add, remove and resize only | call `panel.relayout()` |
 | the arrow keys or the pad do nothing in a menu | no widget has the focus: nothing listens until one does | call `firstWidget.focus()` when the menu opens |
 | the arrow keys stop moving the player after a menu | a widget still has the focus | `UIBaseElement.focusOwner?.blur()`, or remove the menu: a focused widget leaving the scene gives the keys back |
-| a `bindKey: ENTER` button does not fire while another widget is focused | Enter goes to the focused widget while its ring shows | focus that button, or bind another key |
+| a `bindKey: ENTER` button does not fire while another widget is focused | Enter and Space go to the focused widget, ring shown or not, so one press never clicks both | focus that button, `blur()` the focused one, or bind another key |
+| a widget removed while held gets `onCancel()` and no `onRelease()` | the pointer-up never reaches a removed widget, so the press is called off (and `hover` cleared), leaving it at rest when added back | stop what `onClick()` started in `onCancel()` as well as in `onRelease()` |
+| a `ProgressBar` fill runs past its track after `max` is lowered (before 20.13) | `min` and `max` did not re-clamp the value | update: they re-clamp it now (and call `onChange` if it moved); `ratio` stays within 0..1 |
 | a skinned panel's shadow has square corners | the shadow follows `radius`, and a skin does not set it | set `radius` to the art's corner size |
+| a wrapped label lost its `\n` line breaks, or starts with a blank line (before 20.13) | word wrap joined the lines with spaces, and closed an empty line before an over-wide first word | update: each line is now wrapped on its own and an over-wide word starts the first line |
+| the second line of a multi-line `"bottom"` or `"middle"` `Text` is drawn below where you put it, or outside its bounds (before 20.13) | `Text` placed only the first line by its baseline | update: the whole block is placed by the baseline, as `BitmapText` does |
 | `new UITextButton` with a font name draws in a plain font | the name is not a loaded bitmap font, so it is drawn as a CSS font | load the bitmap font (image and `.fnt`) under that name, or load the web font |
 
 ## Related skills

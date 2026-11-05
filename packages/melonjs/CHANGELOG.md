@@ -23,6 +23,9 @@
 - UI: `UITextButton#bitmapText`, for `label`
 
 ### Fixed
+- Text: word wrap keeps the text's own line breaks, and a first word wider than `wordWrapWidth` no longer adds a blank line above it (Text and BitmapText)
+- Text: multi-line text is placed by `textBaseline` as one block, as BitmapText is, so every line is drawn inside its bounds
+- UI: `ProgressBar` re-clamps its value when `min` or `max` change, so the bar no longer overflows its track
 - Container: `onDeactivateEvent` is called once on each child of a removed container, as `onActivateEvent` is, not twice or more
 - Container: `enableChildBoundsUpdate` follows children that move, so the camera no longer culls a group by where its children started
 - Sprite: a `flicker()` callback is called with the sprite as `this`, after the flicker has ended, so it can start a new one
