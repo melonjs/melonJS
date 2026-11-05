@@ -295,6 +295,8 @@ export default class Text extends Renderable {
 		/**
 		 * Set the text baseline (e.g. the Y-coordinate for the draw operation), <br>
 		 * possible values are "top", "hanging", "middle", "alphabetic", "ideographic", "bottom"<br>
+		 * A multi-line text is placed as one block: its top, middle or bottom is at
+		 * `pos.y` ("alphabetic" and "ideographic" place it like "bottom").
 		 * @type {string}
 		 * @default "top"
 		 */
@@ -311,6 +313,8 @@ export default class Text extends Renderable {
 		/**
 		 * the maximum length in CSS pixel for a single segment of text.
 		 * (use -1 to disable word wrapping)
+		 * Each `\n`-separated line is wrapped on its own, so explicit line breaks
+		 * are kept; a word wider than this gets a line of its own.
 		 * @type {number}
 		 * @default -1
 		 */
@@ -601,8 +605,6 @@ export default class Text extends Renderable {
 	 * @returns {Text} this object for chaining
 	 */
 	setText(value = "") {
-		const bounds = this.getBounds();
-
 		// set the next text
 		if (this._text.toString() !== value.toString()) {
 			if (!Array.isArray(value)) {
@@ -624,11 +626,12 @@ export default class Text extends Renderable {
 			);
 		}
 
-		// calculcate the text size and update the bounds accordingly
-		bounds.addBounds(
-			this.metrics.measureText(this._text, this.canvasTexture.context),
-			true,
-		);
+		// calculcate the text size, and the bounds from it the same way every
+		// later recompute does — taking them straight from `metrics` here
+		// gave a box in the parent's space, not the world's, that the next
+		// `updateBounds()` replaced
+		this.metrics.measureText(this._text, this.canvasTexture.context);
+		this.updateBounds();
 
 		// Quantize the offscreen canvas size to 32-pixel buckets: small
 		// metric changes (a score ticking, typewriter text) land on the
@@ -762,7 +765,7 @@ export default class Text extends Renderable {
 	 * @returns {Bounds} this renderable's bounding box
 	 */
 	updateBounds(absolute = true) {
-		if (typeof this.metrics !== "undefined" && this._text.length > 0) {
+		if (typeof this.metrics !== "undefined") {
 			const bounds = this.getBounds();
 			bounds.clear();
 
@@ -780,18 +783,9 @@ export default class Text extends Renderable {
 					break;
 			}
 
-			// compute y offset based on textBaseline
-			let ay = 0;
-			switch (this.textBaseline) {
-				case "middle":
-					ay = h / 2;
-					break;
-				case "ideographic":
-				case "alphabetic":
-				case "bottom":
-					ay = h;
-					break;
-			}
+			// the baseline places the whole block (see `TextMetrics#blockShift`),
+			// exactly as the draw does
+			const ay = h * this.metrics.blockShift();
 
 			bounds.addFrame(-ax, -ay, w - ax, h - ay);
 
@@ -925,7 +919,15 @@ export default class Text extends Renderable {
 		 */
 		const eachLine = (paint) => {
 			let remaining = this.visibleCharacters;
-			let lineY = y;
+			// `y` is where `pos` lands, which the baseline puts somewhere on
+			// the BLOCK (see `TextMetrics#updateOrigin`). Each line is handed
+			// to the canvas at its own alignment point instead — the same
+			// share of its own line box — so the first one starts that much
+			// higher, and the block fills the box from its top.
+			let lineY =
+				y -
+				(this.metrics.height - this.metrics.lineHeight()) *
+					this.metrics.blockShift();
 
 			for (let i = 0; i < text.length; i++) {
 				let string = text[i].trimEnd();

@@ -418,7 +418,7 @@ export default class UISlider extends UIBaseElement {
 
 	private readonly _onDragEnd = (event: Event) => {
 		if (this._dragging && endsPointer(event, this._dragPointer)) {
-			this.endDrag(true);
+			this.endDrag();
 		}
 	};
 
@@ -792,10 +792,12 @@ export default class UISlider extends UIBaseElement {
 
 	/**
 	 * Call off a press, and a drag in progress, without calling
-	 * `onChangeEnd`. The value stays where the drag left it.
+	 * `onChangeEnd` or `onRelease`: `onCancel` runs instead. The value stays
+	 * where the drag left it. Setting `enabled` to `false` mid-drag, or
+	 * removing the slider, calls it.
 	 */
 	override cancelPress(): void {
-		this.endDrag(false);
+		this.stopDrag();
 		super.cancelPress();
 	}
 
@@ -939,24 +941,41 @@ export default class UISlider extends UIBaseElement {
 	}
 
 	/**
-	 * Stop dragging.
-	 * @param notify - call `onChangeEnd` if the value moved
+	 * Stop following the pointer, leaving the press itself to the caller.
+	 * @returns whether a drag was going on
 	 * @ignore
 	 * @internal
 	 */
-	private endDrag(notify: boolean) {
+	private stopDrag(): boolean {
 		if (!this._dragging) {
-			return;
+			return false;
 		}
 		this._dragging = false;
 		this._dragPointer = undefined;
-		this.released = true;
 		this.isDirty = true;
 		off(POINTERMOVE, this._onDragMove);
 		for (const type of END_EVENTS) {
 			globalThis.removeEventListener?.(type, this._onDragEnd);
 		}
-		if (notify && this._value !== this._dragFrom) {
+		return true;
+	}
+
+	/**
+	 * End a drag the pointer let go of: the press ends through
+	 * `onRelease`, as on any widget, then `onChangeEnd` runs if the value
+	 * moved. A drag called off goes through {@link UISlider#cancelPress}
+	 * instead.
+	 * @param event - the pointer-up, when it came through the engine
+	 * @ignore
+	 * @internal
+	 */
+	private endDrag(event?: Pointer) {
+		if (!this.stopDrag()) {
+			return;
+		}
+		// the base class's release: up, the hold timer cleared, onRelease
+		super.release(event as Pointer);
+		if (this._value !== this._dragFrom) {
 			this.onChangeEnd?.(this._value, this);
 		}
 	}
@@ -970,7 +989,7 @@ export default class UISlider extends UIBaseElement {
 			// let go over the slider: the window may not have heard it, in a
 			// frame whose pointer-up the page never sees
 			if (isPointerUp(event)) {
-				this.endDrag(true);
+				this.endDrag(event);
 			}
 			return false;
 		}
@@ -987,12 +1006,12 @@ export default class UISlider extends UIBaseElement {
 	}
 
 	/**
-	 * Stop listening, and drop a drag in progress.
+	 * Stop listening; the base class calls off a drag in progress, through
+	 * {@link UISlider#cancelPress}.
 	 * @ignore
 	 */
 	override onDeactivateEvent(): void {
 		releasePointerEvent("wheel", this);
-		this.endDrag(false);
 		super.onDeactivateEvent();
 	}
 
@@ -1084,7 +1103,7 @@ export default class UISlider extends UIBaseElement {
 	 * @ignore
 	 */
 	override onDestroyEvent() {
-		this.endDrag(false);
+		this.stopDrag();
 		this._painter.dispose();
 		this._skin?.dispose();
 		this.label?.destroy();

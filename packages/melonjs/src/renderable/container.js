@@ -21,6 +21,58 @@ function deferredRemove(child, keepalive) {
 }
 
 /**
+ * The children the engine has sent `onActivateEvent` to and not yet sent the
+ * matching `onDeactivateEvent`.
+ *
+ * A child hears of a removal by two routes: its own `removeChildNow`, and its
+ * container's `onDeactivateEvent`, which forwards to every child. Removing a
+ * group walks both, one after the other — the group's `onDeactivateEvent`
+ * tells every descendant, then its `destroy()` empties it through
+ * `removeChildNow`, which told each of them again. A child that counted on
+ * the pair (a reference count, a light or a listener registered once and
+ * released once) was released twice for being added once. Each route now
+ * asks this set first, so whichever comes first is the one that is heard,
+ * however deep the child sits and whether the group is destroyed, pooled or
+ * kept alive. Weak, so a child dropped without being removed is not kept.
+ * @ignore
+ * @internal
+ */
+const activeChildren = new WeakSet();
+
+/**
+ * Send `onActivateEvent` to a child that has not had one yet.
+ * @ignore
+ * @internal
+ * @param {Renderable} child - the child entering the world
+ */
+function activateChild(child) {
+	if (
+		typeof child?.onActivateEvent === "function" &&
+		!activeChildren.has(child)
+	) {
+		// marked first, so a hook that re-enters (adding the child elsewhere)
+		// does not activate it a second time
+		activeChildren.add(child);
+		child.onActivateEvent();
+	}
+}
+
+/**
+ * Send `onDeactivateEvent` to a child, once for each `onActivateEvent` it had.
+ * @ignore
+ * @internal
+ * @param {Renderable} child - the child leaving the world
+ */
+function deactivateChild(child) {
+	if (
+		activeChildren.delete(child) &&
+		typeof child.onDeactivateEvent === "function"
+	) {
+		child.onDeactivateEvent();
+	}
+}
+
+/**
  * Module-level cache of the camera position used by `_sortDepth`.
  * Captured once per sort (in `sort` / `sortNow`) so the comparator —
  * which runs O(N log N) times — doesn't pay a `state.current()` lookup
@@ -329,9 +381,13 @@ export default class Container extends Renderable {
 		};
 
 		/**
-		 * Re-measure this container's bounds from its children whenever a
-		 * child's bounds change. Expensive — every update walks the whole child
-		 * list — and off by default, because a parent almost never needs it.
+		 * Re-measure this container's bounds from its children, so they follow
+		 * the children as they move: on every update (after the children have
+		 * been updated), whenever a child is added or removed, and, while the
+		 * container is culled, before each visibility check, so a group whose
+		 * members come back into view is drawn again. Expensive — every
+		 * update walks the whole child list — and off by default, because a
+		 * parent almost never needs it.
 		 *
 		 * Enable it for a group whose extent genuinely IS its members' union
 		 * and moves as they do: a flock of birds, a squad of enemies. A
@@ -502,7 +558,9 @@ export default class Container extends Renderable {
 	 * original container. Then when the World container reset() method is called the renderable
 	 * will not be in any container. <br>
 	 * if the given child implements an onActivateEvent method, that method will be called
-	 * once the child is added to this container.
+	 * once the child is added to this container, when this container is in the
+	 * world (or as soon as it is added to it). Each `onActivateEvent` is matched
+	 * by exactly one `onDeactivateEvent` when the child leaves the world again.
 	 * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child - Child to be added
 	 * @param {number} [z] - forces the z index of the child to the specified
 	 * value. This depth is scoped to THIS container: it orders the child among
@@ -574,11 +632,8 @@ export default class Container extends Renderable {
 			worldContainer?.app?.renderer?._queueWarm?.(child);
 		}
 
-		if (
-			typeof child.onActivateEvent === "function" &&
-			this.isAttachedToRoot()
-		) {
-			child.onActivateEvent();
+		if (this.isAttachedToRoot()) {
+			activateChild(child);
 		}
 
 		// force container bounds update if required
@@ -646,11 +701,8 @@ export default class Container extends Renderable {
 				worldContainer?.app?.renderer?._queueWarm?.(child);
 			}
 
-			if (
-				typeof child.onActivateEvent === "function" &&
-				this.isAttachedToRoot()
-			) {
-				child.onActivateEvent();
+			if (this.isAttachedToRoot()) {
+				activateChild(child);
 			}
 
 			// force container bounds update if required
@@ -945,16 +997,13 @@ export default class Container extends Renderable {
 	 *   assignable to the base Container/Renderable type.
 	 */
 	onActivateEvent(..._args) {
-		this.forEach((child) => {
-			if (typeof child.onActivateEvent === "function") {
-				child.onActivateEvent();
-			}
-		});
+		this.forEach(activateChild);
 	}
 
 	/**
 	 * Invokes the removeChildNow in a defer, to ensure the child is removed safely after the update & draw stack has completed. <br>
-	 * if the given child implements an onDeactivateEvent() method, that method will be called once the child is removed from this container.
+	 * if the given child implements an onDeactivateEvent() method, that method will be called once the child is removed from this container
+	 * (exactly once, for a child that had its `onActivateEvent`: the children of a removed container are told once, however deep they sit).
 	 * @param {Renderable|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child - Child to be removed
 	 * @param {boolean} [keepalive=false] - true to prevent calling child.destroy()
 	 */
@@ -969,15 +1018,19 @@ export default class Container extends Renderable {
 	/**
 	 * Removes (and optionally destroys) a child from the container.<br>
 	 * (removal is immediate and unconditional)<br>
+	 * A child that had its `onActivateEvent` gets one `onDeactivateEvent`, and
+	 * so does each child below it if it is a container — once, even though the
+	 * container's own `onDeactivateEvent` and its `destroy()` both reach them.<br>
 	 * Never use keepalive=true with objects from {@link pool}. Doing so will create a memory leak.
 	 * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child - Child to be removed
 	 * @param {boolean} [keepalive=False] - True to prevent calling child.destroy()
 	 */
 	removeChildNow(child, keepalive) {
 		if (this.hasChild(child) && this.getChildIndex(child) >= 0) {
-			if (typeof child.onDeactivateEvent === "function") {
-				child.onDeactivateEvent();
-			}
+			// once per activation: a child already told by its container's
+			// own `onDeactivateEvent` (a group being removed) is not told again
+			// here when that group's `destroy()` empties it
+			deactivateChild(child);
 
 			const root = this.getRootAncestor();
 
@@ -1219,11 +1272,7 @@ export default class Container extends Renderable {
 	 *   assignable to the base Container/Renderable type.
 	 */
 	onDeactivateEvent(..._args) {
-		this.forEach((child) => {
-			if (typeof child.onDeactivateEvent === "function") {
-				child.onDeactivateEvent();
-			}
-		});
+		this.forEach(deactivateChild);
 	}
 
 	/**
@@ -1480,6 +1529,25 @@ export default class Container extends Renderable {
 					inViewport = true;
 				}
 			});
+			// A container measured from its children re-measures itself at
+			// the end of its own update (below), and only runs that update
+			// while it is in view. Culled, it would keep the bounds of where
+			// its children WERE, and children carried back on screen by
+			// physics, a tween or game code would never be drawn, since the
+			// update that notices they moved is the one being skipped.
+			// Re-measured here, once, before it is written off.
+			if (
+				!inViewport &&
+				obj.enableChildBoundsUpdate === true &&
+				typeof obj.updateBounds === "function"
+			) {
+				obj.updateBounds();
+				cameras.forEach((camera) => {
+					if (camera.isVisible(obj, isFloating)) {
+						inViewport = true;
+					}
+				});
+			}
 			obj.inViewport = inViewport;
 
 			// update our object
@@ -1498,6 +1566,14 @@ export default class Container extends Renderable {
 			(this.sortOn === "x" || this.sortOn === "y")
 		) {
 			this.keepSorted();
+		}
+
+		// follow the children, now that they have moved (see
+		// `enableChildBoundsUpdate`): without this the bounds only changed
+		// when a child was added or removed, and the camera culled the group
+		// by where its members started
+		if (this.enableChildBoundsUpdate === true) {
+			this.updateBounds();
 		}
 
 		// call the parent method

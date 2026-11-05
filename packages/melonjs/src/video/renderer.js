@@ -333,7 +333,9 @@ export default class Renderer {
 		 * and {@link Renderer#strokeLine}. Subclasses override the
 		 * storage — `CanvasRenderer` proxies it to the underlying 2D
 		 * context via a getter/setter, while `WebGLRenderer` treats it
-		 * as a regular field consumed by its shape-stroke routines.
+		 * as a regular field consumed by its shape-stroke routines. On
+		 * every renderer it is part of the state {@link Renderer#save}
+		 * and {@link Renderer#restore} keep.
 		 * @type {number}
 		 * @default 1
 		 */
@@ -1846,6 +1848,9 @@ export default class Renderer {
 	/**
 	 * Set the current fill & stroke style color.
 	 * By default, or upon reset, the value is set to #000000.
+	 * The colour's own alpha applies to fills and strokes, times the global
+	 * alpha; it does not change {@link Renderer#getGlobalAlpha}, nor how an
+	 * image is drawn.
 	 * @param {Color|string|Gradient} color - css color value or a Gradient object
 	 */
 	// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
@@ -1922,11 +1927,25 @@ export default class Renderer {
 	}
 
 	/**
-	 * return the current global alpha
+	 * return the current global alpha, the same as {@link Renderer#getGlobalAlpha}.
+	 * It is not the alpha of the current colour: as on a 2D context, a
+	 * translucent {@link Renderer#setColor} leaves it alone.
 	 * @returns {number}
 	 */
 	globalAlpha() {
-		return this.currentColor.alpha;
+		return this.getGlobalAlpha();
+	}
+
+	/**
+	 * The current colour packed for a vertex stream, at the alpha a fill or a
+	 * stroke is drawn at: the colour's own alpha times the global alpha.
+	 * @ignore
+	 * @internal
+	 * @returns {number} the colour as a 32-bit ARGB integer
+	 */
+	packedFillColor() {
+		const color = this.currentColor;
+		return color.toUint32(color.alpha * this.getGlobalAlpha());
 	}
 
 	/**
@@ -2849,12 +2868,25 @@ export default class Renderer {
 	scale(x, y) {}
 
 	/**
-	 * Set the renderer global alpha (0..1) for subsequent draw calls.
-	 * Implemented by subclasses.
+	 * Set the renderer global alpha (0..1) for subsequent draw calls. It
+	 * multiplies everything drawn, and is part of the state that
+	 * {@link Renderer#save} and {@link Renderer#restore} keep. It is
+	 * separate from the alpha of the colour given to {@link Renderer#setColor}:
+	 * a fill or a stroke is drawn at both multiplied together, and an image
+	 * at the global alpha (times the tint) alone.
 	 * @param {number} alpha - opacity value in the [0..1] range
 	 */
-	// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
-	setGlobalAlpha(alpha) {}
+	setGlobalAlpha(alpha) {
+		this.renderState.globalAlpha = alpha;
+	}
+
+	/**
+	 * Return the renderer global alpha, as set by {@link Renderer#setGlobalAlpha}.
+	 * @returns {number} global alpha value, in the [0..1] range
+	 */
+	getGlobalAlpha() {
+		return this.renderState.globalAlpha;
+	}
 
 	/**
 	 * Fill an axis-aligned rectangle with the current color.

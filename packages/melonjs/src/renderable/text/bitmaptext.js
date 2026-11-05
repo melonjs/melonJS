@@ -74,6 +74,8 @@ export default class BitmapText extends Renderable {
 		/**
 		 * Set the text baseline (e.g. the Y-coordinate for the draw operation), <br>
 		 * possible values are "top", "hanging", "middle", "alphabetic", "ideographic", "bottom"<br>
+		 * A multi-line text is placed as one block: its top, middle or bottom is at
+		 * `pos.y` ("alphabetic" and "ideographic" place it like "bottom").
 		 * @public
 		 * @type {string}
 		 * @default "top"
@@ -92,6 +94,8 @@ export default class BitmapText extends Renderable {
 		/**
 		 * the maximum length in CSS pixel for a single segment of text.
 		 * (use -1 to disable word wrapping)
+		 * Each `\n`-separated line is wrapped on its own, so explicit line breaks
+		 * are kept; a word wider than this gets a line of its own.
 		 * @public
 		 * @type {number}
 		 * @default -1

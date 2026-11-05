@@ -1,6 +1,6 @@
 ---
 name: melonjs-camera-and-drawing
-description: "Use this skill for camera control and immediate-mode drawing in melonJS — following a target, viewport bounds, shake and fade, secondary cameras and what each one draws, and drawing shapes, lines and gradients inside a custom draw(). Covers world versus screen coordinate conversion, clipping and masking, baking with CanvasRenderTarget, and reading pixels back. Triggers on: Camera2d, viewport, follow, offset, look ahead, setBounds, minimap, second camera, split screen, cullMask, visibilityLayer, hide from a camera, shake, fadeIn, fadeOut, worldToLocal, localToWorld, colorMatrix, renderer.fill, renderer.stroke, Rect, Ellipse, Polygon, Line, Gradient, clipRect, mask, CanvasRenderTarget, NoiseTexture2d, lookAt, setBasis, toImageData, getImageData, toBlob, toDataURL, screenshot, read pixels."
+description: "Use this skill for camera control and immediate-mode drawing in melonJS — following a target, viewport bounds, shake and fade, secondary cameras and what each one draws, and drawing shapes, lines and gradients inside a custom draw(). Covers world versus screen coordinate conversion, clipping and masking, baking with CanvasRenderTarget, and reading pixels back. Triggers on: Camera2d, viewport, follow, offset, look ahead, setBounds, minimap, second camera, split screen, cullMask, visibilityLayer, hide from a camera, shake, fadeIn, fadeOut, worldToLocal, localToWorld, colorMatrix, renderer.fill, renderer.stroke, setGlobalAlpha, fillArc, Rect, Ellipse, Polygon, Line, Gradient, clipRect, mask, CanvasRenderTarget, NoiseTexture2d, lookAt, setBasis, toImageData, getImageData, toBlob, toDataURL, screenshot, read pixels."
 license: MIT
 ---
 
@@ -143,6 +143,12 @@ app.viewport.worldToLocal(x, y);   // world → screen
 app.viewport.localToWorld(x, y);   // screen → world
 ```
 
+They agree with where the camera draws: a level smaller than the view is
+centred by offsetting the world container (`world.pos`), which the default
+camera draws and a minimap, corner or zoomed camera leaves out, and each
+camera's conversions follow suit (20.13 and later; before, a minimap's were off
+by `world.pos`).
+
 Both return a `Vector2d`; with no third argument that vector comes from the
 shared pool, so in a per-frame path pass your own `v` as the third argument, or
 release it with `getPool("vector2d").release(v)`.
@@ -266,6 +272,23 @@ draw(renderer) {
     renderer.stroke(new Line(0, 0, [/* … */]));
 }
 ```
+
+**The colour's alpha and the global alpha are two things**, as on a 2D
+context. A fill or a stroke is drawn at the alpha of `setColor` times
+`setGlobalAlpha` (which is where the renderable's opacity comes in), an image at
+the global alpha (times the tint) alone, and `getGlobalAlpha()` never moves with
+`setColor`. So to fade a translucent shape, lower the global alpha and keep the
+colour; folding the colour's alpha into `setGlobalAlpha` as well counts it twice.
+
+`lineWidth`, `lineJoin`, the colour and the global alpha are all part of what
+`save()` / `restore()` keep, and every renderable's `draw()` runs between the
+two, so set them freely there: the next renderable gets them back.
+
+`fillArc` / `strokeArc` read their angles like `CanvasRenderingContext2D.arc`:
+an end before the start wraps round (`end + 2π`), and a span of 2π or more in
+the arc's own direction is the whole circle. A filled part-circle differs by
+backend, though: Canvas closes it with a straight chord, the GPU renderers fill
+a pie slice from the centre.
 
 Geometry available: `Rect`, `RoundRect`, `Ellipse`, `Polygon`, `Line`, `Point`
 (and a `Bounds`). `renderer.fill(shape)` and `renderer.stroke(shape)` take any
@@ -402,6 +425,11 @@ const data = await rt.toImageData(0, 0, w, h);
 | custom drawing appears at the origin | `draw()` not reading `this.pos` |
 | custom drawing offset by half its size | centred `anchorPoint` not zeroed |
 | `setLineWidth` is not a function | it is the `lineWidth` property |
+| after a translucent `setColor`, images, later colours and the next renderables come out faded (WebGL / WebGPU) | before 20.13 the colour's alpha leaked into the global alpha; update |
+| a translucent colour comes out fainter than asked | its alpha folded into `setGlobalAlpha` as well, so it counts twice |
+| a `lineWidth` set in one `draw()` thickens everything drawn after it (WebGL / WebGPU) | before 20.13 `restore()` did not put `lineWidth` back; update, or put it back yourself |
+| `fillArc` with the end angle before the start fills the wrong part of the circle (WebGL / WebGPU) | before 20.13 the GPU renderers did not wrap the angles like Canvas; update |
+| a minimap's `worldToLocal` / `localToWorld` are off by the level's centring offset | before 20.13 they applied `world.pos`, which a non-default camera does not draw; update |
 | clipping in the wrong place inside a container | container clips in local coordinates, after its own translate |
 | `container.clipping = true` does nothing | container has no explicit size, so `width`/`height` are `Infinity` |
 | baked target draws nothing / throws | passed the `CanvasRenderTarget`, not its `.canvas` |

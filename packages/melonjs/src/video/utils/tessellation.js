@@ -1,3 +1,28 @@
+const TAU = Math.PI * 2;
+
+/**
+ * The angle an arc from `start` to `end` turns through, read the way
+ * `CanvasRenderingContext2D.arc` reads its angles: an end before the start
+ * wraps round (`end + 2π`), and a span of 2π or more in the arc's own direction
+ * is the whole circle, never more.
+ * @param {number} start - start angle in radians
+ * @param {number} end - end angle in radians
+ * @param {boolean} [antiClockwise=false] - the arc runs anticlockwise
+ * @returns {number} the angle covered, in `[0, 2π]` (0 when nothing is drawn)
+ */
+export function arcSweep(start, end, antiClockwise = false) {
+	// the span in the arc's own direction
+	const span = antiClockwise ? start - end : end - start;
+	if (span >= TAU) {
+		return TAU;
+	}
+	if (span < 0) {
+		// wraps round: a whole number of turns back is the whole circle
+		return TAU - (-span % TAU);
+	}
+	return span;
+}
+
 /**
  * Generate triangle fan vertices for arcs, ellipses, and rounded rect corners.
  * @param {number} cx - center x

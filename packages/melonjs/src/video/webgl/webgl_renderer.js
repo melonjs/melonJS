@@ -34,6 +34,7 @@ import { FrameTexture } from "./../texture/frametexture.js";
 import { dashPath, dashSegments } from "../utils/dash.js";
 import { pointsBox } from "../utils/pixel_snap.js";
 import {
+	arcSweep,
 	generateJoinCircles,
 	generateTriangleFan,
 } from "../utils/tessellation.js";
@@ -3456,6 +3457,8 @@ export default class WebGLRenderer extends Renderer {
 		}
 		const result = this.renderState.restore(canvas.width, canvas.height);
 		if (result !== null) {
+			this.lineWidth = this.renderState.lineWidth;
+			this.lineJoin = this.renderState.lineJoin;
 			this.setBlendMode(result.blendMode);
 			if (scissorChanging) {
 				const gl = this.gl;
@@ -3497,6 +3500,10 @@ export default class WebGLRenderer extends Renderer {
 	 */
 	save() {
 		this.renderState.currentShader = this.customShader;
+		// line width and join are plain fields here, not context state: hand
+		// them to the stack so restore() puts them back, as on Canvas
+		this.renderState.lineWidth = this.lineWidth;
+		this.renderState.lineJoin = this.lineJoin;
 		this.renderState.save(this._scissorActive === true);
 	}
 
@@ -3662,7 +3669,9 @@ export default class WebGLRenderer extends Renderer {
 	 * @param {number} alpha - 0.0 to 1.0 values accepted.
 	 */
 	setGlobalAlpha(alpha) {
-		this.currentColor.alpha = alpha;
+		// apart from the colour's own alpha, as a 2D context keeps its
+		// globalAlpha apart from its fillStyle
+		this.renderState.globalAlpha = alpha;
 	}
 
 	/**
@@ -3670,7 +3679,7 @@ export default class WebGLRenderer extends Renderer {
 	 * @returns {number} global alpha value
 	 */
 	getGlobalAlpha() {
-		return this.currentColor.alpha;
+		return this.renderState.globalAlpha;
 	}
 
 	/**
@@ -3685,9 +3694,9 @@ export default class WebGLRenderer extends Renderer {
 		} else {
 			this.renderState.currentGradient = null;
 			this._currentGradient = null;
-			const alpha = this.currentColor.alpha;
+			// the colour keeps its own alpha: fills and strokes are drawn at
+			// it times the global alpha (see `packedFillColor`)
 			this.currentColor.copy(color);
-			this.currentColor.alpha *= alpha;
 		}
 	}
 
@@ -3722,7 +3731,9 @@ export default class WebGLRenderer extends Renderer {
 	}
 
 	/**
-	 * Fill an arc at the specified coordinates with given radius, start and end points
+	 * Fill an arc at the specified coordinates with given radius, start and end points.
+	 * The angles are read like `CanvasRenderingContext2D.arc`: an end before
+	 * the start wraps round, and a span of 2π or more is the whole circle.
 	 * @param {number} x - arc center point x-axis
 	 * @param {number} y - arc center point y-axis
 	 * @param {number} radius - arc radius
@@ -3751,27 +3762,28 @@ export default class WebGLRenderer extends Renderer {
 			radius * 2,
 		);
 		this.setBatcher("primitive");
-		let diff = Math.abs(end - start);
-		if (antiClockwise) {
-			diff = Math.PI * 2 - diff;
+		const diff = arcSweep(start, end, antiClockwise);
+		if (diff > 0) {
+			const segments = Math.max(
+				4,
+				Math.round((diff * radius) / this.path2D.arcResolution),
+			);
+			// the fan always runs clockwise: an anticlockwise arc from `start`
+			// covers the same angles as a clockwise one ending at `start`
+			const startAngle = antiClockwise ? start - diff : start;
+			this.currentBatcher.drawVertices(
+				this.gl.TRIANGLES,
+				generateTriangleFan(
+					x,
+					y,
+					radius,
+					radius,
+					startAngle,
+					startAngle + diff,
+					segments,
+				),
+			);
 		}
-		const segments = Math.max(
-			4,
-			Math.round((diff * radius) / this.path2D.arcResolution),
-		);
-		const startAngle = antiClockwise ? end : start;
-		this.currentBatcher.drawVertices(
-			this.gl.TRIANGLES,
-			generateTriangleFan(
-				x,
-				y,
-				radius,
-				radius,
-				startAngle,
-				startAngle + diff,
-				segments,
-			),
-		);
 		this._pixelSnapEnd(snapped);
 	}
 

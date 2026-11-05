@@ -55,9 +55,16 @@ describe("Physics : BuiltinAdapter angular API", () => {
 		new World(0, 0, 800, 600, adapter);
 	});
 
-	/** Build a 32×32 dynamic body centered at the renderable origin. */
+	/**
+	 * Build a 32×32 dynamic body on a corner-anchored renderable at the
+	 * origin, so its local frame and the world coincide: the world points
+	 * `applyForce` takes below then read as local coordinates too (the
+	 * centroid is world (16, 16)). See body-applyforce-point.spec.js for
+	 * bodies away from the origin, nested, or centre-anchored.
+	 */
 	const makeBody = (w = 32, h = 32) => {
 		const r = new Renderable(0, 0, w, h);
+		r.anchorPoint.set(0, 0);
 		const body = adapter.addBody(r, {
 			type: "dynamic",
 			shapes: [new Rect(0, 0, w, h)],

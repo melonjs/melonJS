@@ -14,6 +14,7 @@ import { remove } from "../../utils/array.ts";
 import { Bounds, boundsPool } from "../bounds.ts";
 import { collision } from "../collision.js";
 import { isShapeEntry } from "../physicseditor.js";
+import { anchorOffsetX, anchorOffsetY } from "./sat.js";
 
 /**
  * Direction bits for {@link Body#immovableBlock}. One per cardinal direction a
@@ -499,8 +500,10 @@ export default class Body {
 	 * `force/mass·dt²`, typically ~100× smaller than builtin).
 	 * @param {number} x - force along the X axis
 	 * @param {number} y - force along the Y axis
-	 * @param {number} [pointX] - world X of the application point; when
-	 *   present (along with `pointY`) and different from the body centroid,
+	 * @param {number} [pointX] - world X of the application point, as on
+	 *   the matter and planck adapters (inside an offset container, that
+	 *   includes the container's position). When present (along with
+	 *   `pointY`) and different from the body centroid,
 	 *   the resulting lever arm generates a torque
 	 *   `τ = (r.x · F.y) − (r.y · F.x)` that bumps {@link Body#angularVelocity}
 	 *   by `τ / pseudoInertia`. Omit both `pointX` and `pointY` for the
@@ -513,7 +516,9 @@ export default class Body {
 	 *
 	 * // off-centre push on a crate: the contact point at the top of the
 	 * // crate is above its centroid, so the same horizontal force now
-	 * // both translates AND tips the crate forward.
+	 * // both translates AND tips the crate forward. (`pos` is the top-left
+	 * // corner here because the crate's anchorPoint is (0, 0), as for a
+	 * // Tiled object; with the default (0.5, 0.5) anchor, `pos` is its centre.)
 	 * const topX = crate.pos.x + crate.width / 2;
 	 * const topY = crate.pos.y;
 	 * crate.body.applyForce(1.5, 0, topX, topY);
@@ -526,11 +531,35 @@ export default class Body {
 		this.force.x += x;
 		this.force.y += y;
 		if (typeof pointX === "number" && typeof pointY === "number") {
-			// Lever arm r = point - centroid. Centroid is the geometric
-			// center of the body's bounds.
+			// Lever arm r = point - centroid. The centroid is the geometric
+			// center of the body's bounds, but `body.bounds` is
+			// renderable-local while the point is a WORLD coordinate, as on
+			// matter and planck. Subtracting the local centre straight from
+			// the world point offset the lever arm by the renderable's
+			// position, so any body away from the origin got the wrong
+			// torque, often of the wrong sign. Bring the centroid into world
+			// space exactly as SAT and raycast place a body's shapes: the
+			// renderable's pos, less its anchor offset, plus its parent's
+			// absolute position.
+			const renderable = this.ancestor;
+			const parent = renderable.ancestor;
+			const parentAbs =
+				parent && typeof parent.getAbsolutePosition === "function"
+					? parent.getAbsolutePosition()
+					: undefined;
 			const bounds = this.bounds;
-			const rx = pointX - bounds.centerX;
-			const ry = pointY - bounds.centerY;
+			const cx =
+				renderable.pos.x -
+				anchorOffsetX(renderable) +
+				(parentAbs ? parentAbs.x : 0) +
+				bounds.centerX;
+			const cy =
+				renderable.pos.y -
+				anchorOffsetY(renderable) +
+				(parentAbs ? parentAbs.y : 0) +
+				bounds.centerY;
+			const rx = pointX - cx;
+			const ry = pointY - cy;
 			// Z-component of r × F.
 			const torque = rx * y - ry * x;
 			// Guard against division by zero / negative inertia

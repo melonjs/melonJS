@@ -45,19 +45,18 @@ export class PanelPainter {
 	private _round: RoundRect | undefined;
 
 	/**
-	 * Set the draw colour, with its own alpha folded into the cascaded one.
+	 * Set the draw colour, and the cascaded alpha as the global alpha.
 	 *
-	 * Not simply `setColor` then `setGlobalAlpha(cascade)`: that discards
-	 * whatever alpha the colour asked for, so a background given `#00000033`
-	 * comes out solid. Nor `setColor` then reading the alpha back, which is
-	 * worse: a renderer keeps ONE current colour, and parsing a six digit hex
-	 * into it leaves the alpha from the colour before, so a translucent
-	 * background silently leaks into the border drawn after it.
+	 * Every renderer draws a fill at the colour's own alpha times the global
+	 * alpha, so a background given `#00000033` is drawn at a fifth of the
+	 * cascade, and the colour's alpha must NOT be folded into the global
+	 * alpha as well, or it counts twice.
 	 * @param renderer - the renderer to set the colour on
 	 * @param color - what to paint with
 	 * @param cascade - the alpha the owning renderable inherited
+	 * @returns the colour's own alpha (`1` for a gradient)
 	 */
-	paint(renderer: Renderer, color: Paint, cascade: number) {
+	paint(renderer: Renderer, color: Paint, cascade: number): number {
 		if (typeof color === "string") {
 			// Borrowed on FIRST use, not in the constructor: a widget handed
 			// `Color` instances never needs one at all, and a widget that is
@@ -72,14 +71,12 @@ export class PanelPainter {
 				this._lastCss = color;
 			}
 			renderer.setColor(css);
-			renderer.setGlobalAlpha(css.alpha * cascade);
-		} else if (color instanceof Color) {
-			renderer.setColor(color);
-			renderer.setGlobalAlpha(color.alpha * cascade);
-		} else {
-			renderer.setColor(color);
 			renderer.setGlobalAlpha(cascade);
+			return css.alpha;
 		}
+		renderer.setColor(color);
+		renderer.setGlobalAlpha(cascade);
+		return color instanceof Color ? color.alpha : 1;
 	}
 
 	/**
@@ -185,12 +182,9 @@ export class PanelPainter {
 			return;
 		}
 		if (radius > 0) {
-			// Put `lineWidth` back afterwards, because `RenderState.save()`
-			// does not stack it: it keeps colour, tint, transform, scissor,
-			// gradient, line DASH, blend mode, shader and depth, and
-			// `lineWidth` is a plain field on the renderers. Left alone, a
-			// widget with a 2px border makes everything stroked after it in
-			// the frame 2px too.
+			// Put `lineWidth` back afterwards: restore() only does it at the
+			// end of the widget's draw, and whatever the widget strokes after
+			// its border (a check mark, a thumb outline) has its own width.
 			const previousWidth = renderer.lineWidth;
 			renderer.lineWidth = bw;
 			this.rect(
@@ -252,10 +246,8 @@ export class PanelPainter {
 		const layers = spread > 0 ? Math.min(8, Math.ceil(spread / 2) + 1) : 1;
 		// layers of alpha `a` stacked n deep reach 1 - (1 - a)^n; solve for
 		// the colour's own alpha in the middle, where they all overlap
-		// the colour's own alpha, a string's included: `paint` parses it and
-		// puts it in the global alpha, which is read straight back
-		this.paint(renderer, color, 1);
-		const target = renderer.globalAlpha();
+		// the colour's own alpha, a string's included: `paint` parses it
+		const target = this.paint(renderer, color, 1);
 		const each = 1 - (1 - Math.min(target, 0.999)) ** (1 / layers);
 		const scale = target > 0 ? each / target : 0;
 		for (let i = 0; i < layers; i++) {

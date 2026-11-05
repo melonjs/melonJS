@@ -348,6 +348,12 @@ export function createMockWebGPURenderer() {
 		getGlobalAlpha() {
 			return 1;
 		},
+		// as `Renderer#packedFillColor`: the colour's alpha times the global one
+		packedFillColor() {
+			return this.currentColor.toUint32(
+				this.currentColor.alpha * this.getGlobalAlpha(),
+			);
+		},
 		lineWidth: 1,
 		currentFrameLineWidth: 1,
 		pushFrameGlobals() {

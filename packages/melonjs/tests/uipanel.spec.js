@@ -1,5 +1,12 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
-import { Application, boot, Renderable, UIPanel, video } from "../src/index.js";
+import {
+	Application,
+	boot,
+	Color,
+	Renderable,
+	UIPanel,
+	video,
+} from "../src/index.js";
 
 /**
  * A recording renderer.
@@ -14,10 +21,9 @@ const makeRecorder = () => {
 	return {
 		calls,
 		lineWidth: 1,
-		// The real renderers keep ONE current colour, and its alpha IS the
-		// global alpha, so `setColor` overwrites the alpha. Modelling that is
-		// the point: a panel that forced the cascade back over it would render
-		// a deliberately translucent fill as opaque.
+		// The real renderers draw a fill at the colour's own alpha times the
+		// global alpha, which `setColor` leaves alone: each `setColor` call
+		// records the colour's alpha so a test can multiply the two.
 		_alpha: 1,
 		globalAlpha() {
 			return this._alpha;
@@ -30,6 +36,10 @@ const makeRecorder = () => {
 			calls.push({
 				op: "setColor",
 				hex: typeof color === "string" ? color : (color.toHex?.() ?? ""),
+				alpha:
+					typeof color === "string"
+						? new Color().parseCSS(color).alpha
+						: (color.alpha ?? 1),
 			});
 		},
 		fillRect(x, y, width, height) {
@@ -237,9 +247,9 @@ describe("UIPanel", () => {
 		});
 
 		it("restores the renderer's lineWidth after stroking", () => {
-			// `RenderState.save()` does not stack `lineWidth`, so a panel that
-			// left it set would make everything stroked after it in the frame
-			// as thick as its own border.
+			// restore() only puts it back at the end of the panel's draw, so
+			// one that left it set would stroke whatever it draws after its
+			// border as thick as the border.
 			const panel = new UIPanel(0, 0, {
 				width: 100,
 				height: 20,
@@ -279,15 +289,16 @@ describe("UIPanel", () => {
 				fillColor: "rgba(0, 0, 0, 0.5)",
 				borderColor: null,
 			});
-			const applied = drawn(panel, 0.5)
-				.calls.filter((c) => {
-					return c.op === "setGlobalAlpha";
-				})
-				.map((c) => {
-					return c.a;
-				});
-			// 0.5 asked for, 0.5 inherited
-			expect(applied[0]).toBeCloseTo(0.25, 6);
+			const calls = drawn(panel, 0.5).calls;
+			const color = calls.find((c) => {
+				return c.op === "setColor";
+			});
+			const global = calls.find((c) => {
+				return c.op === "setGlobalAlpha";
+			});
+			// 0.5 asked for, 0.5 inherited: the fill is drawn at the two
+			// multiplied, the colour's alpha NOT folded in the global alpha
+			expect([color.alpha, global.a]).toEqual([0.5, 0.5]);
 		});
 
 		it("hands the children the cascade, not the fill's alpha", () => {

@@ -656,13 +656,15 @@ export default class Sprite extends Renderable {
 	/**
 	 * make the object flicker
 	 * @param {number} duration - expressed in milliseconds
-	 * @param {Function} [callback] - Function to call when flickering ends
+	 * @param {Function} [callback] - Function to call when flickering ends,
+	 * with `this` set to the sprite. The flicker has already stopped when it
+	 * runs, so the callback can start another one.
 	 * @returns {Sprite} Reference to this object for method chaining
 	 * @example
 	 * // make the object flicker for 1 second
 	 * // and then remove it
 	 * this.flicker(1000, function () {
-	 *     world.removeChild(this);
+	 *     this.ancestor.removeChild(this);
 	 * });
 	 */
 	flicker(duration, callback = undefined) {
@@ -945,10 +947,15 @@ export default class Sprite extends Renderable {
 		if (this._flicker.isFlickering) {
 			this._flicker.elapsed += dt;
 			if (this._flicker.elapsed >= this._flicker.duration) {
-				if (typeof this._flicker.callback === "function") {
-					this._flicker.callback();
-				}
+				// stop first, then call back: a callback that starts a new
+				// flicker must not be cancelled the moment it returns, and it
+				// runs as a method of this sprite (as `flicker` documents),
+				// not of the internal settings object it is stored on
+				const callback = this._flicker.callback;
 				this.flicker(-1);
+				if (typeof callback === "function") {
+					callback.call(this);
+				}
 			}
 			this.isDirty = true;
 		}

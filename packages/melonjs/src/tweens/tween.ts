@@ -78,6 +78,15 @@ export default class Tween {
 	 */
 	_valuesEnd: Record<string, unknown>;
 	/**
+	 * the target values as given to `to()`, with any array (a path) copied:
+	 * `start()` rebuilds {@link Tween#_valuesEnd} from these every time, so a
+	 * restart, a chain coming back round or a finished yoyo leg cannot leave
+	 * it holding a path that already carries an earlier start value
+	 * @ignore
+	 * @internal
+	 */
+	_valuesTo: Record<string, unknown>;
+	/**
 	 * @ignore
 	 * @internal
 	 */
@@ -216,6 +225,7 @@ export default class Tween {
 		this._object = object;
 		this._valuesStart = {};
 		this._valuesEnd = {};
+		this._valuesTo = {};
 		this._valuesStartRepeat = {};
 		this._duration = 1000;
 		this._repeat = 0;
@@ -369,7 +379,18 @@ export default class Tween {
 			autoStart?: boolean | undefined;
 		},
 	) {
-		this._valuesEnd = properties;
+		// Keep the caller's values apart from the working copy `start()` and
+		// `update()` rewrite: a path gets the start value put in front of it
+		// and a yoyo leg flips it, and doing that to `properties` itself
+		// lengthened the path on every restart and reached into the caller's
+		// object (reusing one `{ x: [...] }` for two tweens corrupted the
+		// second).
+		this._valuesTo = {};
+		for (const property in properties) {
+			const value = properties[property];
+			this._valuesTo[property] = Array.isArray(value) ? value.slice() : value;
+		}
+		this._valuesEnd = { ...this._valuesTo };
 
 		if (typeof options !== "undefined") {
 			if (options.duration !== undefined) {
@@ -407,8 +428,7 @@ export default class Tween {
 	 * @returns this instance for object chaining
 	 */
 	start(time = timer.getTime()) {
-		// stop any running tween before restarting (prevents listener leaks
-		// and array value corruption from repeated start() calls)
+		// stop any running tween before restarting (prevents listener leaks)
 		this._unsubscribe();
 
 		this._onStartCallbackFired = false;
@@ -422,19 +442,33 @@ export default class Tween {
 		this._subscribe();
 
 		this._startTime = time + this._delayTime;
+		this._reversed = false;
+		// re-read below for every target; cleared so a property an earlier
+		// `to()` named does not linger and get swapped back in by a yoyo
+		this._valuesStart = {};
+		this._valuesStartRepeat = {};
 
-		for (const property in this._valuesEnd) {
-			const endValue = this._valuesEnd[property];
+		// Rebuilt from the values given to `to()` every time, never from the
+		// working copy: that one already carries the previous start value at
+		// the front of each path (which used to be prepended again, so every
+		// restart ran a longer path), and a yoyo leg leaves it flipped.
+		for (const property in this._valuesTo) {
+			const endValue = this._valuesTo[property];
 			// check if an Array was provided as property value
 			if (Array.isArray(endValue)) {
 				if (endValue.length === 0) {
+					// nothing to tween through; leave the property alone
+					delete this._valuesEnd[property];
 					continue;
 				}
 
-				// create a local copy of the Array with the start value at the front
+				// a fresh copy of the path with the start value at the front
 				this._valuesEnd[property] = [
 					(this._object as Record<string, unknown>)[property],
-				].concat(endValue);
+					...endValue,
+				];
+			} else {
+				this._valuesEnd[property] = endValue;
 			}
 
 			this._valuesStart[property] = (this._object as Record<string, unknown>)[
@@ -641,8 +675,18 @@ export default class Tween {
 					}
 
 					if (this._yoyo) {
+						const end = this._valuesEnd[property];
+						if (Array.isArray(end)) {
+							// A path plays back the way it came. Swapping it with
+							// the start value, as for a number, put the array in
+							// `_valuesStart` and a number in `_valuesEnd`, and the
+							// return leg computed NaN. `update()` reads a path from
+							// `_valuesEnd` alone, so reversing it is the whole swap.
+							this._valuesEnd[property] = end.slice().reverse();
+							continue;
+						}
 						const tmp = this._valuesStartRepeat[property];
-						this._valuesStartRepeat[property] = this._valuesEnd[property];
+						this._valuesStartRepeat[property] = end;
 						this._valuesEnd[property] = tmp;
 					}
 					this._valuesStart[property] = this._valuesStartRepeat[property];

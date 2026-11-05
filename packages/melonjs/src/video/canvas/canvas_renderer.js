@@ -1538,7 +1538,6 @@ export default class CanvasRenderer extends Renderer {
 		if (typeof context.fillStyle === "string") {
 			this.currentColor.copy(context.fillStyle);
 		}
-		this.currentColor.alpha = context.globalAlpha;
 		// reset scissor cache so the next clipRect() won't skip
 		this.currentScissor[0] = 0;
 		this.currentScissor[1] = 0;
@@ -1613,7 +1612,8 @@ export default class CanvasRenderer extends Renderer {
 	 * @param {number} alpha - 0.0 to 1.0 values accepted.
 	 */
 	setGlobalAlpha(alpha) {
-		this.currentColor.alpha = alpha;
+		// the context's own globalAlpha, apart from the colour's alpha (which
+		// is the fillStyle's): getColor() keeps the colour as it was set
 		this.getContext().globalAlpha = alpha;
 	}
 
