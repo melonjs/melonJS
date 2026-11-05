@@ -1083,10 +1083,26 @@ export default class Camera2d extends Renderable {
 	}
 
 	/**
+	 * The offset of the world container (`world.pos`, set when a level smaller
+	 * than the view is centred) as this camera draws it: a camera with default
+	 * settings draws the world shifted by it, and any other one (a minimap, a
+	 * zoomed view) cancels it in {@link Camera2d#draw}. The coordinate
+	 * conversions follow the same rule, so they agree with what is drawn.
+	 * @param axis - "x" or "y"
+	 * @returns the offset this camera draws the world container at
+	 * @ignore
+	 */
+	_worldOffset(axis: "x" | "y"): number {
+		return this.isDefault ? game.world.pos[axis] : 0;
+	}
+
+	/**
 	 * convert the given "local" (screen) coordinates into world coordinates.
 	 * Screen coordinates are in canvas pixels: on a zoomed camera, or one
 	 * drawn in a corner of the screen (see {@link screenX}), they are
 	 * measured from where the camera is drawn, and scaled by its zoom.
+	 * The world coordinates are those of the world's children, where this
+	 * camera draws them: the inverse of {@link Camera2d#worldToLocal}.
 	 * @param x - the x coordinate of the local point to be converted
 	 * @param y - the y coordinate of the local point to be converted
 	 * @param [v] - an optional vector object where to set the converted value
@@ -1096,10 +1112,12 @@ export default class Camera2d extends Renderable {
 		v = v || vector2dPool.get();
 		v.set(
 			(x - this.screenX) / this.zoom +
-				this._viewOrigin(this.pos.x + this.offset.x),
+				this._viewOrigin(this.pos.x + this.offset.x) -
+				this._worldOffset("x"),
 			(y - this.screenY) / this.zoom +
-				this._viewOrigin(this.pos.y + this.offset.y),
-		).sub(game.world.pos);
+				this._viewOrigin(this.pos.y + this.offset.y) -
+				this._worldOffset("y"),
+		);
 		if (!this.currentTransform.isIdentity()) {
 			this.invCurrentTransform.apply(v);
 		}
@@ -1120,7 +1138,8 @@ export default class Camera2d extends Renderable {
 		if (!this.currentTransform.isIdentity()) {
 			this.currentTransform.apply(v);
 		}
-		v.add(game.world.pos);
+		v.x += this._worldOffset("x");
+		v.y += this._worldOffset("y");
 		return v.set(
 			(v.x - this._viewOrigin(this.pos.x + this.offset.x)) * this.zoom +
 				this.screenX,

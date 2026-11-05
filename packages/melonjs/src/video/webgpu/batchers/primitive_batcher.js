@@ -99,8 +99,8 @@ export default class WebGPUPrimitiveBatcher extends WebGPUBatcher {
 		}
 
 		const vertexData = this.vertexData;
-		const alpha = renderer.getGlobalAlpha();
-		const colorUint32 = renderer.currentColor.toUint32(alpha);
+		// the colour's own alpha times the global alpha
+		const colorUint32 = renderer.packedFillColor();
 		// z = current renderer depth (Renderable.preDraw); a no-op under
 		// ortho, consumed by perspective (Camera3d)
 		const z = renderer.currentDepth;
@@ -147,9 +147,7 @@ export default class WebGPUPrimitiveBatcher extends WebGPUBatcher {
 	#drawTriangleFan(verts, vertexCount) {
 		const renderer = this.renderer;
 		const vertexData = this.vertexData;
-		const colorUint32 = renderer.currentColor.toUint32(
-			renderer.getGlobalAlpha(),
-		);
+		const colorUint32 = renderer.packedFillColor();
 		const z = renderer.currentDepth;
 
 		if (this.topology !== "triangle-list") {
@@ -268,7 +266,7 @@ export default class WebGPUPrimitiveBatcher extends WebGPUBatcher {
 			renderer.currentTransform,
 			verts,
 			vertexCount,
-			renderer.currentColor.toUint32(renderer.getGlobalAlpha()),
+			renderer.packedFillColor(),
 			renderer.currentDepth,
 			() => {
 				this.flush();

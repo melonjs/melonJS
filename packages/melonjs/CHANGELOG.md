@@ -23,6 +23,9 @@
 - UI: `UITextButton#bitmapText`, for `label`
 
 ### Fixed
+- Rendering: a translucent `setColor()` no longer fades the images, colours and renderables drawn after it, nor changes `getGlobalAlpha()`
+- WebGL: `fillArc()` with an end angle before the start fills the right part of the circle, and `save()` / `restore()` puts `lineWidth` and `lineJoin` back, as on Canvas
+- Camera: `worldToLocal()` / `localToWorld()` on a minimap or zoomed camera are no longer off when the level is centred in the view
 - Text: word wrap keeps the text's own line breaks, and a first word wider than `wordWrapWidth` no longer adds a blank line above it (Text and BitmapText)
 - Text: multi-line text is placed by `textBaseline` as one block, as BitmapText is, so every line is drawn inside its bounds
 - UI: `ProgressBar` re-clamps its value when `min` or `max` change, so the bar no longer overflows its track
