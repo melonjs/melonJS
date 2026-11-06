@@ -17,7 +17,8 @@ export type LineVertices =
 
 /**
  * a polygon Object.<br>
- * Please do note that melonJS implements a simple Axis-Aligned Boxes collision algorithm, which requires all polygons used for collision to be convex with all vertices defined with clockwise winding.
+ * Please do note that melonJS implements a simple Axis-Aligned Boxes collision algorithm, which requires all polygons used for collision to be convex.
+ * The points may be declared in either winding: {@link Polygon#recalc} orients the edge normals outward either way (before 20.13 a counter-clockwise polygon, such as a mirrored one, collided with circles nowhere near it).
  * A polygon is convex when all line segments connecting two points in the interior do not cross any edge of the polygon
  * (which means that all angles are less than 180 degrees), as described here below : <br>
  * <center><img src="images/convex_polygon.png"/></center><br>
@@ -56,7 +57,8 @@ export class Polygon {
 
 	/**
 	 * The normals here are the direction of the normal for the `n`th EDGE of the
-	 * polygon, relative to the position of the `n`th point. If you want to draw
+	 * polygon, relative to the position of the `n`th point. Each is a unit vector
+	 * pointing OUT of the polygon, whichever way its points are wound. If you want to draw
 	 * an edge normal, you must first translate to the position of the starting
 	 * point.
 	 *
@@ -290,6 +292,11 @@ export class Polygon {
 			throw new Error("Requires at least 3 points");
 		}
 
+		// twice the signed area (shoelace), in screen space (y down): positive
+		// when the points turn clockwise on screen, negative when they turn
+		// counter-clockwise
+		let area2 = 0;
+
 		// Calculate the edges/normals
 		for (let i = 0; i < len; i++) {
 			let edge = edges[i];
@@ -302,6 +309,7 @@ export class Polygon {
 			const ey = points[next].y - points[i].y;
 			edge.x = ex;
 			edge.y = ey;
+			area2 += points[i].x * points[next].y - points[next].x * points[i].y;
 
 			let normal = normals[i];
 			if (normal === undefined) {
@@ -312,6 +320,23 @@ export class Polygon {
 			const nlen = Math.sqrt(ey * ey + ex * ex);
 			normal.x = ey / nlen;
 			normal.y = -ex / nlen;
+		}
+
+		// `(ey, -ex)` points OUT of a polygon wound clockwise on screen and
+		// INTO one wound counter-clockwise. The narrowphase reads these as
+		// outward normals (the circle test decides "outside this edge" from
+		// their sign, a raycast reports one as the surface normal), so a
+		// counter-clockwise polygon — a Tiled polygon drawn that way, or any
+		// polygon mirrored with `scale(-1, 1)` — collided with circles nowhere
+		// near it. Flip them rather than reverse the points: callers index
+		// `points` (and the triangulation built from them) in the order they
+		// were given.
+		if (area2 < 0) {
+			for (let i = 0; i < len; i++) {
+				const normal = normals[i];
+				normal.x = -normal.x;
+				normal.y = -normal.y;
+			}
 		}
 
 		// Release any existing Vector2d objects back to the pool

@@ -402,6 +402,10 @@ export default class Body {
 		 * falling state of the body<br>
 		 * true if the object is falling<br>
 		 * false if the object is standing on something<br>
+		 * Set from the velocity by each step, then by the collisions resolved
+		 * in it: pushed up out of something below while not rising clears it
+		 * (and `jumping`), pushed down by something above while rising sets
+		 * it (and clears `jumping`), however far the body was pushed.
 		 * @readonly
 		 * @public
 		 * @type {boolean}
@@ -625,7 +629,9 @@ export default class Body {
 	 * Set absolute rotation angle (radians). Updates the body's `angle`
 	 * field and re-syncs the renderable's `currentTransform` immediately
 	 * so the visual rotation reflects the new value without waiting for
-	 * the next integration step.
+	 * the next integration step. The renderable turns about the centre of
+	 * the body's shapes, whatever its `anchorPoint`; the shapes themselves
+	 * are not rotated (see {@link Body#rotate} for that).
 	 * @param {number} rad - target angle in radians
 	 * @example
 	 * // turret aims at the player every frame:
@@ -654,9 +660,11 @@ export default class Body {
 
 	/**
 	 * Sync `this.angle` to the renderable's `currentTransform`. Pivot is
-	 * the body's bounds center (matches the matter adapter's rotation
-	 * pivot — see `MatterAdapter.syncFromPhysics`). Internal helper used
-	 * by both the per-step integrator and {@link Body#setAngle}.
+	 * the centre of the body's shapes where they are drawn and collide —
+	 * the bounds centre, in the renderable's anchored frame (matches the
+	 * matter adapter's rotation pivot — see `MatterAdapter.syncFromPhysics`).
+	 * Internal helper used by both the per-step integrator and
+	 * {@link Body#setAngle}.
 	 * @ignore
 	 * @internal
 	 */
@@ -673,8 +681,18 @@ export default class Body {
 		// renderable at (100, 50) rotated about (-80, -30) rather than its
 		// own centre. Invisible at the origin, which is where the spec that
 		// covers this used to build its renderable.
-		const cx = bounds.centerX;
-		const cy = bounds.centerY;
+		//
+		// `currentTransform` is applied about the renderable's `pos` (see
+		// `Renderable#preDraw` and `updateBounds`), BEFORE the drawn frame is
+		// shifted by `-size * anchorPoint`, while the shapes are measured from
+		// that shifted frame's top-left corner. So the shapes' centre, in the
+		// space the transform works in, is `bounds.center` less the anchor
+		// offset. Without that a centre-anchored renderable rotated about its
+		// bottom-right corner and swung away from where it stood.
+		const ancestor = this.ancestor;
+		const anchored = ancestor.anchorPoint !== undefined;
+		const cx = bounds.centerX - (anchored ? anchorOffsetX(ancestor) : 0);
+		const cy = bounds.centerY - (anchored ? anchorOffsetY(ancestor) : 0);
 		t.identity();
 		if (this.angle !== 0) {
 			if (cx !== 0 || cy !== 0) {
@@ -1314,6 +1332,10 @@ export default class Body {
 			}
 		}
 
+		// vertical velocity this body arrived with, before the cancellation
+		// below — read by the falling/jumping update at the end
+		const arrivingVelY = this.vel.y;
+
 		// Move out of the other object shape
 		this.ancestor.pos.set(
 			this.ancestor.pos.x - mtvX * ratio,
@@ -1348,16 +1370,39 @@ export default class Body {
 		// unqualified `mtvY !== 0` read that sliver as a floor or a ceiling.
 		// A body resting on a surface then reported itself airborne, since
 		// `isGrounded()` is `!falling && !jumping`.
+		//
+		// The body escapes along `-mtv`, so `mtvY > 0` pushes it UP out of
+		// something below it (a floor) and `mtvY < 0` pushes it DOWN out of
+		// something above it (a ceiling). The direction decides, never the
+		// size: the floor push-out of a resting body equals what it sank this
+		// step (`mass * gravity * gravityScale * timer.tick`), and the former
+		// `mtvY >= 1` test kept any body sinking a pixel or more per step —
+		// heavier gravity or mass, or a low frame rate — `falling` forever.
 		if (
 			Math.abs(mtvY) >= Math.abs(mtvZ) &&
 			mtvY !== 0 &&
 			!this.ignoreGravity &&
 			this.gravityScale !== 0
 		) {
-			// cancel the falling an jumping flags if necessary
-			const dir = this.falling === true ? 1 : this.jumping === true ? -1 : 0;
-			this.falling = mtvY >= dir;
-			this.jumping = mtvY <= -dir;
+			const rising = arrivingVelY < 0;
+			if (mtvY > 0) {
+				if (!rising) {
+					// pushed up out of a floor while not moving away from it:
+					// landed
+					this.falling = false;
+					this.jumping = false;
+				} else if (!this.jumping) {
+					// still on its way up (a jump grazing a ledge or a slope
+					// it is leaving): not a landing, so it stays airborne
+					this.falling = true;
+				}
+			} else if (rising || this.jumping) {
+				// pushed down by a ceiling on the way up: the jump ends and
+				// the body falls. A body that is not rising (standing on a
+				// floor and touched from above) keeps its ground state.
+				this.falling = true;
+				this.jumping = false;
+			}
 		}
 	}
 

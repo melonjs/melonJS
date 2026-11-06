@@ -152,6 +152,11 @@ class Player extends Sprite {
 The engine forwards it to the active adapter when the renderable is added with
 `Container.addChild`, and only if that container is already attached to the root
 world; the broadphase picks the renderable up on the next `world.update()`.
+Nesting is fine: adding a container registers the body of every renderable
+below it, at any depth, and removing it — destroyed, pooled or kept alive —
+takes them all out again, so moving a whole group with `other.addChild(group)`
+keeps each body simulated, once. A persistent container's children keep their
+bodies through `world.reset()` (a state change or `level.load`).
 Calling `adapter.addBody()` yourself registers the body but leaves the
 renderable out of the scene graph, so it integrates but never collides.
 
@@ -269,6 +274,13 @@ arc segments each, so it is the usual way to meet that cap; the adapter now
 samples it down and keeps the extent. Anything the 2D backends cannot express
 is refused loudly on both, rather than leaving a body with no collision
 geometry that silently never collides.
+
+A polygon may be wound either way: its edge normals are oriented outward from
+its signed area. Before 20.13 they pointed inward on a counter-clockwise
+polygon — a Tiled polygon drawn that way, anything mirrored with
+`scale(-1, 1)` or a `Rect` of negative width — and the built-in circle test
+then collided a circle with it from tens of pixels away, as soon as their
+bounding boxes met. Polygon against polygon was never affected.
 
 Whatever a backend really simulates is what `getBodyShapes()` reports, so the
 debug panel is the fastest way to see an approximation for what it is.
@@ -533,6 +545,15 @@ and only active under a 3D broadphase — i.e. `world.sortOn === "depth"`, which
 `world.adapter.capabilities.raycasts3d` before calling either. `raycast` itself
 is capability-gated by `capabilities.raycasts`.
 
+On the built-in adapter a 2D ray measures each shape the way the narrowphase
+measures it against a planar shape: polygons, `Rect`, `RoundRect` and `Line`
+by their edges, an `Ellipse` with its rotation, a `Box3d` by its XY footprint
+and a `Sphere` as a circle of its radius (a 2D ray is unbounded along Z). A
+`Point` has no area to cross and is skipped, as is an unknown shape type,
+with a one-time console warning. Before 20.13 a body carrying a `Point`,
+`Sphere` or `Box3d` made every ray that reached it throw, and a rotated
+ellipse was hit where it would have been unrotated.
+
 The legacy `collision.rayCast(line, result)` is a different API: it takes a
 `Line`, returns an **array** of every intersecting renderable, and only exists
 on the built-in path.
@@ -667,7 +688,15 @@ real rigid-body engine:
   persist.
 - **`isGrounded` is flag-based, not contact-based** — the adapter returns
   `!body.falling && !body.jumping`, flags updated by the last resolved
-  collision, not a live contact test.
+  collision, not a live contact test. The DIRECTION of the push-out decides
+  them: pushed up out of a floor while not rising is a landing, pushed down
+  by a ceiling while rising (or `jumping`) ends the jump and falls, and a
+  side contact, a body touched from above while standing, or a body with
+  `gravityScale` 0 leaves them alone. Before 20.13 a magnitude test decided
+  instead, so anything that sank a pixel or more per step — gravity above
+  about `1.02`, mass above about `1.03`, `timer.tick > 1` at a low frame
+  rate, a floor moving up under it — stayed `falling` while sitting flush on
+  the floor, and could never jump.
 - **`def.density` maps 1:1 to `body.mass`** (default `1`), and `def.friction` is
   **ignored** entirely. `body.friction` is a per-axis `Vector2d` of per-step
   velocity damping fed from `def.frictionAir`, not a surface coefficient.
@@ -698,6 +727,12 @@ rotated needs planck or matter. Under the builtin solver, approximate it with a
 shape that is close enough at every angle (a circle, or a square for
 90° steps), or rotate the shapes yourself with `body.rotate(angle)` — which
 does rotate them, unlike `setAngle()`.
+
+The visual turn pivots on the centre of the body's shapes, where they are
+drawn and collide, whatever the renderable's `anchorPoint`. Before 20.13 it
+ignored the anchor, so a centre-anchored renderable turned about its
+bottom-right corner and swung away from where it stood; only a `(0, 0)`
+anchor turned in place.
 
 `body.rotate()` applies a **delta** and does not update `body.angle`; the two
 are unlinked, so a body driven by `rotate()` still reports an angle of `0`.
@@ -783,10 +818,18 @@ use them. `adapter.capabilities` (`constraints`,
 | `applyForce` with a point spins a body pushed through its centre, or tips it the wrong way (built-in) | before 20.13 the point was measured against the body's LOCAL bounds, so only a body at the world origin got the right torque; upgrade, and drop any `pos` you subtracted to compensate |
 | forces do nothing after switching adapter | magnitude units differ — re-tune, don't reuse numbers |
 | `body.position` disagrees with `renderable.pos` on matter | matter stores the centroid, melonJS the top-left — the adapter offsets between them |
+| a `bodyDef` two containers down never falls nor collides (`body` stays `undefined`) | before 20.13 only the added container's own children were registered; upgrade |
+| `other.addChild(group)` throws "renderable is already adapter-managed" | before 20.13 a group detached with keepalive (which moving it does) left its children's bodies registered, still simulated off-stage; upgrade |
+| the children of a persistent container stop falling and colliding after a state change or `level.load` | before 20.13 `world.reset()` kept only the bodies whose own renderable was persistent; upgrade, or flag each child `isPersistent` |
 | `bodyDef.shapes: "…"` throws "is not loaded" | the name must match the `name` the JSON was preloaded under, not its filename |
 | everything falls far too fast or too slow after swapping backends | gravity is a different unit per backend; see the table above |
 | debris lands holding its spawn angle and never tumbles | `fixedRotation: true`, or matter-adapter < 1.4.0 / planck-adapter < 1.5.0 |
 | a rotated sprite collides as if upright | the built-in solver rotates visually only — `body.angle` never rotates the shapes. Use planck/matter, or `body.rotate(angle)` |
+| `setAngle` swings a sprite away from where it stood (built-in) | before 20.13 the pivot ignored `anchorPoint`, so a centre-anchored renderable turned about its bottom-right corner; upgrade |
+| `isGrounded()` stays `false` on the floor, so the player cannot jump (built-in) | before 20.13 a body sinking 1px or more per step (gravity or mass above ~1.02, `timer.tick > 1`, a rising floor) never landed; upgrade |
+| a circle body is shoved by a polygon it is nowhere near (built-in) | before 20.13 a counter-clockwise polygon (Tiled, mirrored with `scale(-1, 1)`) had inward edge normals; upgrade |
+| `raycast` throws "reading 'x'" / "reading 'length'" (built-in) | before 20.13 a body carrying a `Point`, `Sphere` or `Box3d` broke the ray walk; upgrade |
+| a ray passes through a rotated ellipse, or stops short of it (built-in) | before 20.13 the raycast ignored `Ellipse#angle`; upgrade |
 | the debug hitbox does not follow a spinning body | pre-1.2.1 matter-adapter / pre-1.3.1 planck-adapter returned the authored shapes rather than the rotated ones |
 | a Tiled polyline becomes a solid box on matter | matter cannot build a zero-area polygon; the adapter falls back to its AABB |
 

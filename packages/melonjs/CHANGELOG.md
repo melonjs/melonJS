@@ -23,6 +23,10 @@
 - UI: `UITextButton#bitmapText`, for `label`
 
 ### Fixed
+- Physics: a body resting on the floor is grounded however far it sinks per step, so heavier gravity or mass, a low frame rate or a rising floor no longer leave `isGrounded()` false
+- Physics: a polygon wound counter-clockwise (drawn that way in Tiled, or mirrored with `scale(-1, 1)`) no longer collides with circles nowhere near it
+- Physics: a raycast no longer throws on a body with a `Point`, `Sphere` or `Box3d` shape, and hits a rotated `Ellipse` where it is
+- Physics: `setAngle()` and angular velocity turn a body about its shapes' centre whatever its `anchorPoint`, instead of about a corner
 - Loader: a `preload()` given no callback no longer calls the previous preload's callback again, and `reload()` works for custom asset types
 - Loader: `LOADER_PROGRESS` reports each preload's own progress, so a second preload no longer starts part-full and progress reaches 1 again after a failed asset
 - Save: a key set again after `save.remove()` is restored on the next load

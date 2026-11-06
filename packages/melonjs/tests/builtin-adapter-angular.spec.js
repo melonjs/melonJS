@@ -330,7 +330,14 @@ describe("Physics : BuiltinAdapter angular API", () => {
 			// documents it that way — so subtracting `pos` a second time
 			// pivots a 40x40 body on a renderable at (100, 50) about
 			// (-80, -30) instead of its own centre.
+			//
+			// Corner-anchored like `makeBody`, so the transform's space and
+			// the shapes' frame share an origin. With the default centred
+			// anchor the shapes' centre sits at the transform's origin, which
+			// is what body-rotation-pivot.spec.js covers (this used to expect
+			// the corner pivot there too, which was the anchor bug).
 			const r = new Renderable(100, 50, 40, 40);
+			r.anchorPoint.set(0, 0);
 			const body = adapter.addBody(r, {
 				type: "dynamic",
 				shapes: [new Rect(0, 0, 40, 40)],
