@@ -199,19 +199,6 @@ export function setBaseURL(type, url = "./") {
 }
 
 /**
- * the completion callback most recently handed to {@link loader.preload}, so a
- * later {@link loader.load} still reports completion to it.
- *
- * Module-private on purpose: this was an exported `let`, which a module
- * namespace makes read-only — `loader.onload = fn` throws, so it never worked
- * as the settable option it was documented to be. Use the `onloadcb` parameter
- * of {@link loader.preload}, or the {@link event.LOADER_COMPLETE} event.
- * @ignore
- * @internal
- */
-let onload;
-
-/**
  * list of parser function for supported format type
  */
 const parsers = new Map();
@@ -221,12 +208,40 @@ const parsers = new Map();
  */
 let parserInitialized = false;
 
-// flag to check loading status
-let resourceCount = 0;
-let loadCount = 0;
+/**
+ * The progress {@link loader.preload} reports through `LOADER_PROGRESS`: the
+ * assets asked for and how many of them have loaded.
+ *
+ * One tally for every preload in flight, so that a second preload started
+ * before the first has settled joins it and the one progress bar keeps
+ * counting, rather than two calls taking turns to move it back and forth. Once
+ * every asset in it has settled (loaded or failed), the next preload starts a
+ * fresh tally from zero. These counters used to live for the whole session, so
+ * a second preload of two assets reported `0.75, 1` instead of `0.5, 1`, and
+ * after one failed asset no later preload reached `1` at all.
+ * @typedef {object} PreloadTally
+ * @property {number} total - assets asked for
+ * @property {number} loaded - assets that loaded
+ * @property {number} settled - assets that loaded or failed
+ * @ignore
+ * @internal
+ */
 
 /**
- * Assets uploaded with an error
+ * the tally of the preloads in flight, or `null` between them
+ * @type {PreloadTally|null}
+ * @ignore
+ * @internal
+ */
+let tally = null;
+
+/**
+ * Assets that failed to load, keyed by their `src`, each with the preload call
+ * it belonged to — so {@link loader.reload} completes THAT call, with its own
+ * callback, and counts the retry towards its own progress.
+ * @type {Object<string, {asset: Asset, call: {onload: Function|undefined, tally: PreloadTally, pending: number, failed: Set<string>}}>}
+ * @ignore
+ * @internal
  */
 const failureLoadedAssets = {};
 
@@ -297,14 +312,17 @@ function runShaderPrewarm() {
 
 /**
  * Complete loading: invoke the callback and emit the LOADER_COMPLETE event.
- * @param {Function} onloadcb - the completion callback
+ * @param {Function} [onloadcb] - the completion callback of the preload that
+ * completed, if it was given one. Only ever that preload's own: an earlier
+ * call's callback used to be kept and fired again by a later preload that
+ * passed none, so `await loader.preload(levelAssets)` re-ran the boot
+ * callback — typically a `state.change` back to the first screen.
  * @ignore
  * @internal
  */
 function completeLoading(onloadcb) {
-	const callback = onloadcb || onload;
-	if (typeof callback === "function") {
-		callback();
+	if (typeof onloadcb === "function") {
+		onloadcb();
 	}
 	// always signal completion — with the Promise form of preload() a callback
 	// is optional (you can `await` instead), so a missing callback is no longer
@@ -313,29 +331,28 @@ function completeLoading(onloadcb) {
 }
 
 /**
- * just increment the number of already loaded resources
+ * count one loaded asset towards its tally and report the progress
+ * @param {Asset} res - the asset that loaded
+ * @param {PreloadTally} counts - the tally it belongs to
  * @ignore
  * @internal
  */
-function onResourceLoaded(res) {
+function onResourceLoaded(res, counts) {
 	delete failureLoadedAssets[res.src];
-	// increment the loading counter
-	loadCount++;
-
-	// currrent progress
-	const progress = loadCount / resourceCount;
-
-	emit(LOADER_PROGRESS, progress, res);
+	counts.loaded++;
+	emit(LOADER_PROGRESS, counts.loaded / counts.total, res);
 }
 
 /**
  * on error callback for image loading
- * @param {Asset} asset - asset that loaded with failure
+ * @param {Asset} res - asset that loaded with failure
+ * @param {object} call - the preload call it belonged to
  * @ignore
  * @internal
  */
-function onLoadingError(res) {
-	failureLoadedAssets[res.src] = res;
+function onLoadingError(res, call) {
+	failureLoadedAssets[res.src] = { asset: res, call };
+	call.failed.add(res.src);
 	emit(LOADER_ERROR, res);
 	throw new Error("Failed loading resource " + res.src);
 }
@@ -528,11 +545,19 @@ export function setParser(type, parserFn) {
 /**
  * set all the specified game assets to be preloaded.
  * @param {Asset[]} assets - list of assets to load
- * @param {Function} [onloadcb=loader.onload] - function to be called when all resources are loaded
+ * @param {Function} [onloadcb] - function to be called when all resources are
+ * loaded. Each call has only its own: a preload given none calls nothing,
+ * whatever an earlier preload was given
  * @param {boolean} [switchToLoadState=true] - automatically switch to the loading screen
  * @returns {Promise<void>} resolves once every asset has loaded (rejects on a
  * load failure). The `onloadcb` callback is still invoked on success, so both
  * the callback and `await` forms work — use whichever you prefer.
+ *
+ * Progress is reported through {@link event.LOADER_PROGRESS} as the share of
+ * this call's assets loaded so far, reaching 1 with the last of them. A
+ * preload started while another is still loading joins it, and the progress
+ * then covers the assets of both; once they have all settled, the next preload
+ * counts from zero again.
  * @example
  * game.assets = [
  *   // PNG tileset
@@ -579,29 +604,53 @@ export function setParser(type, parserFn) {
  * @category Assets
  */
 export function preload(assets, onloadcb, switchToLoadState = true) {
-	// set the onload callback if defined
-	if (typeof onloadcb !== "undefined") {
-		onload = onloadcb;
+	// join the preloads still in flight, or start counting afresh
+	if (tally === null || tally.settled === tally.total) {
+		tally = { total: 0, loaded: 0, settled: 0 };
 	}
+	const counts = tally;
+
+	// this call, with its own callback: kept per call rather than in module
+	// state, so neither a later preload nor a `reload()` of one of its assets
+	// can fire a callback that belongs to another
+	const call = {
+		onload: onloadcb,
+		tally: counts,
+		pending: 0,
+		failed: new Set(),
+	};
+
+	const settle = () => {
+		counts.settled++;
+		call.pending--;
+		if (tally === counts && counts.settled === counts.total) {
+			tally = null;
+		}
+	};
 
 	// parse the resources and collect a promise for each asset. `load()` now
 	// returns a Promise in its no-callback form, so there's no need to wrap a
 	// callback in `new Promise` here — just layer the progress / error reporting
 	// on top of it. Each asset counts as one toward the progress total (parsers
 	// load 0 or 1 resource; a cached asset resolves immediately and still
-	// reports progress, keeping `loadCount`/`resourceCount` balanced).
+	// reports progress). Counted as each one starts, so an asset `load()`
+	// throws for (an unknown type) does not leave a tally that never settles.
 	const promises = assets.map((asset) => {
-		resourceCount += 1;
-		return load(asset)
+		const loading = load(asset);
+		counts.total++;
+		call.pending++;
+		return loading
 			.then(() => {
-				onResourceLoaded(asset);
+				settle();
+				onResourceLoaded(asset, counts);
 			})
 			.catch((err) => {
+				settle();
 				// onLoadingError emits LOADER_ERROR and throws by design, so this
 				// re-rejects → Promise.all (and the returned promise) reject and
 				// `await loader.preload(...)` surfaces the failure. The trailing
 				// throw keeps the rejection meaningful should it ever stop throwing.
-				onLoadingError(asset);
+				onLoadingError(asset, call);
 				throw err;
 			});
 	});
@@ -617,12 +666,17 @@ export function preload(assets, onloadcb, switchToLoadState = true) {
 	return Promise.all(promises)
 		.then(runShaderPrewarm)
 		.then(() => {
-			completeLoading(onload);
+			completeLoading(call.onload);
 		});
 }
 
 /**
- * retry loading assets after a loading failure
+ * retry loading assets after a loading failure.
+ *
+ * The retried asset counts towards the progress of the preload it failed in,
+ * and once every asset of that preload has loaded, that preload completes:
+ * its own callback is called, if it was given one, and `LOADER_COMPLETE` is
+ * emitted. The promise that preload returned has already rejected and stays so.
  * @param {string} src - src of asset to reload
  * @example
  *  event.on(
@@ -637,29 +691,50 @@ export function preload(assets, onloadcb, switchToLoadState = true) {
  *  );
  **/
 export function reload(src) {
-	const assetToReload = failureLoadedAssets[src];
-	unload(assetToReload);
-	resourceCount -= 1;
+	const { asset: assetToReload, call } = failureLoadedAssets[src];
+	// drop whatever the failed attempt left behind. A type registered with
+	// `setParser` has nothing in the loader's caches, and `unload` throws for
+	// a type it does not know, which made such an asset impossible to retry
+	if (
+		CACHED_TYPES.includes(assetToReload.type) ||
+		UNCACHED_TYPES.includes(assetToReload.type)
+	) {
+		unload(assetToReload);
+	}
 
 	new Promise((resolve, reject) => {
 		const count = load(
 			assetToReload,
 			() => {
-				onResourceLoaded(assetToReload);
+				call.failed.delete(src);
+				onResourceLoaded(assetToReload, call.tally);
 				resolve();
 			},
 			(err) => {
-				onLoadingError(assetToReload);
+				// still failing: recorded again against the same call
+				try {
+					onLoadingError(assetToReload, call);
+				} catch {
+					// the error is reported through LOADER_ERROR
+				}
 				reject(err);
 			},
 		);
-		resourceCount += count;
 		if (count === 0) {
+			call.failed.delete(src);
+			delete failureLoadedAssets[src];
 			resolve();
 		}
-	}).then(() => {
-		completeLoading(onload);
-	});
+	}).then(
+		() => {
+			// complete the preload this asset belonged to, once nothing of it
+			// is still loading or failed
+			if (call.pending === 0 && call.failed.size === 0) {
+				completeLoading(call.onload);
+			}
+		},
+		() => {},
+	);
 }
 
 /**
@@ -765,6 +840,13 @@ export function load(asset, onload, onerror) {
 	// parser returns the amount of asset to be loaded (usually 1 unless an asset is splitted into several ones)
 	return parser.parse.call(this, resource, onload, onerror, settings);
 }
+
+/**
+ * the types {@link loader.unload} handles without a cache entry of their own
+ * @ignore
+ * @internal
+ */
+const UNCACHED_TYPES = ["js", "audio", "fontface", "shader", "aseprite"];
 
 /**
  * unload the specified asset to free memory

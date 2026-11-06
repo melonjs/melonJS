@@ -172,6 +172,11 @@ including one it is not currently holding:
 const widest = hudScore.measureText("00:00").width;
 ```
 
+Given a string, it returns a new `TextMetrics` and leaves the label as it was;
+with no argument it returns the label's own metrics. Before 20.13 measuring
+another string overwrote the label's own metrics, so a centred or
+right-aligned label was drawn shifted until its next `setText()`.
+
 Advance widths scale linearly with the point size for one family, so measuring
 on an existing label and scaling the result is exact. For labels you genuinely
 spawn in bulk, `getPool("text")` recycles the bake.
@@ -1249,6 +1254,8 @@ City and Instanced Forest examples park a floating sky at `-10000` or `100000`.
 | a skinned panel's shadow has square corners | the shadow follows `radius`, and a skin does not set it | set `radius` to the art's corner size |
 | a wrapped label lost its `\n` line breaks, or starts with a blank line (before 20.13) | word wrap joined the lines with spaces, and closed an empty line before an over-wide first word | update: each line is now wrapped on its own and an over-wide word starts the first line |
 | the second line of a multi-line `"bottom"` or `"middle"` `Text` is drawn below where you put it, or outside its bounds (before 20.13) | `Text` placed only the first line by its baseline | update: the whole block is placed by the baseline, as `BitmapText` does |
+| `setText("1,000")` leaves a label showing `["1", "000"]` on two lines, or the other way round (before 20.13) | the change test compared `toString()`, and an array's joins with commas; update |
+| a centred or right-aligned label jumps sideways, or is clipped, after `label.measureText("…")` (before 20.13) | measuring another string overwrote the label's own metrics until its next `setText()`; update, or measure on a label that is not displayed |
 | `new UITextButton` with a font name draws in a plain font | the name is not a loaded bitmap font, so it is drawn as a CSS font | load the bitmap font (image and `.fnt`) under that name, or load the web font |
 
 ## Related skills

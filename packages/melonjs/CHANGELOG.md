@@ -23,6 +23,11 @@
 - UI: `UITextButton#bitmapText`, for `label`
 
 ### Fixed
+- Loader: a `preload()` given no callback no longer calls the previous preload's callback again, and `reload()` works for custom asset types
+- Loader: `LOADER_PROGRESS` reports each preload's own progress, so a second preload no longer starts part-full and progress reaches 1 again after a failed asset
+- Save: a key set again after `save.remove()` is restored on the next load
+- Text: `setText()` updates when the new text's `toString()` matches the old, e.g. `"1,000"` after `["1", "000"]` (Text and BitmapText)
+- Text: `measureText("other text")` no longer changes the label's own size and alignment (Text and BitmapText)
 - Container: the physics bodies of nested children are registered and removed at any depth, so moving a group that holds bodies to another container no longer throws, nor leaves them simulated off-stage
 - World: the children of a persistent container keep their physics bodies through a state change or `level.load`
 - Sprite: redefining the playing animation with `addAnimation()` takes effect at once, instead of crashing the next update when the new one is shorter

@@ -347,6 +347,20 @@ event.on(event.LOADER_COMPLETE, () => { /* … */ });
 event.on(event.LOADER_ERROR, (res) => { /* … */ });
 ```
 
+**Each `preload()` has only its own callback.** One given none calls nothing
+on completion, so a later `await loader.preload(levelAssets)` does not re-run
+the boot callback. Before 20.13 the loader kept the last callback it was given
+and called it again for a preload that had none — usually a `state.change`
+straight back to the first screen. `loader.reload(src)` after a failure
+completes the preload that asset failed in, with that preload's callback, once
+all of its assets are in.
+
+**Progress is per preload:** `LOADER_PROGRESS` goes from that call's first
+asset to `1` with its last, every time. A preload started while another is
+still loading joins it, and the value covers both until everything in flight
+has settled; the next preload starts from zero again. A failed asset keeps
+its preload short of `1`, and only that preload.
+
 ## Unloading
 
 ```js
@@ -439,6 +453,9 @@ throws, the same trap as the removed `loader.onload` / `onProgress`.
 | text renders in a fallback font | web font not preloaded as `"fontface"` |
 | `BitmapText` renders nothing | the `.fnt` (as `"binary"`) or its image is missing |
 | `TypeError` assigning `loader.onProgress` / `onload` | removed in 20.3; they were never writable — use the `LOADER_*` events |
+| `await loader.preload(level)` sends the game back to its title screen, or runs the boot setup twice (before 20.13) | a preload with no callback re-ran the previous preload's callback; update, each preload now calls only its own |
+| the loading bar starts part-full on a second preload, or never reaches the end after one asset failed (before 20.13) | the progress counters ran for the whole session; update, progress is per preload |
+| `loader.reload(src)` of a custom asset type throws `unload : unknown or invalid resource type` (before 20.13) | update: a type registered with `setParser` can now be retried |
 | `load : unknown or invalid resource type` | a custom type in the manifest before its `loader.setParser` call |
 | black or frozen screen when a stage is first entered, the profile shows your own code (noise, a canvas bake) | a costly derived asset built on stage entry — bake it inside the preload as a [custom asset type](#custom-asset-types) |
 | a custom asset preloads but the result is nowhere to be found | `onload` takes no value and the loader stores nothing for custom types — keep the result in your own module |

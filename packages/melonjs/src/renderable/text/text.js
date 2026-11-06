@@ -6,7 +6,7 @@ import { Gradient } from "../../video/gradient.js";
 import CanvasRenderTarget from "../../video/rendertarget/canvasrendertarget.js";
 import { resolveAnchorPoint } from "../anchorPoint.ts";
 import Renderable, { resetRenderableState } from "../renderable.js";
-import TextMetrics from "./textmetrics.js";
+import TextMetrics, { sameLines, toLines } from "./textmetrics.js";
 import setContextStyle from "./textstyle.js";
 
 /**
@@ -605,16 +605,16 @@ export default class Text extends Renderable {
 	 * @returns {Text} this object for chaining
 	 */
 	setText(value = "") {
-		// set the next text
-		if (this._text.toString() !== value.toString()) {
-			if (!Array.isArray(value)) {
-				this._text = ("" + value).split("\n");
-			} else {
-				// copy — storing the caller's array by reference would let
-				// destroy() (`_text.length = 0`) wipe it, and external
-				// mutation would change the rendered text without isDirty
-				this._text = value.slice();
-			}
+		// set the next text, compared as lines rather than through
+		// `toString()`: an array's joins with commas, so `setText("1,000")`
+		// after `["1", "000"]` (or the other way round) looked like no change
+		// and the old lines stayed. `toLines` copies an array — storing the
+		// caller's by reference would let destroy() (`_text.length = 0`) wipe
+		// it, and external mutation would change the rendered text without
+		// isDirty
+		const lines = toLines(value);
+		if (!sameLines(this._text, lines)) {
+			this._text = lines;
 		}
 
 		// word wrap if necessary
@@ -802,8 +802,13 @@ export default class Text extends Renderable {
 	}
 
 	/**
-	 * measure the given text size in pixels
-	 * @param {string} [text] - the text to be measured
+	 * measure the given text size in pixels.
+	 *
+	 * With no argument it measures the label's own text and returns the
+	 * label's own metrics. Given another text, it measures it in this label's
+	 * style and returns a new TextMetrics for it, leaving the label's own
+	 * metrics, bounds and drawing as they were.
+	 * @param {string|string[]} [text] - the text to be measured, the label's own by default
 	 * @returns {TextMetrics} a TextMetrics object defining the dimensions of the given piece of text
 	 * @example
 	 * // size a panel around a label
@@ -815,7 +820,14 @@ export default class Text extends Renderable {
 	 * const widest = label.measureText("00:00").width;
 	 */
 	measureText(text = this._text) {
-		return this.metrics.measureText(text, this.canvasTexture.context);
+		// The label's own text refreshes the label's own metrics, which is what
+		// it is drawn and bounded with. Any other text is measured into a
+		// TextMetrics of its own: measured into `this.metrics` it replaced the
+		// label's width, height and ink padding with those of the other
+		// string, so a centred or right-aligned label was drawn shifted (and
+		// clipped) until its next `setText`.
+		const metrics = text === this._text ? this.metrics : new TextMetrics(this);
+		return metrics.measureText(text, this.canvasTexture.context);
 	}
 
 	/**
