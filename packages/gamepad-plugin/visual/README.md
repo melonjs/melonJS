@@ -24,6 +24,8 @@ What to look for:
 - **minimap**: a second camera; it shows the world but never the controls
 - **2 sticks**, **floating**, **dim B**, **hide X**, **B: Open**: the options
   and the run-time changes
+- **skin**: switch between shapes and an atlas; hold a button for its pressed
+  region, drag a stick, then combine it with floating, dim B and hide X
 - **hide on pad**: plug in a pad and press a button, and the controls hide;
   touch the screen and they come back
 - **vibrate**: the phone vibrates, where the browser supports it
