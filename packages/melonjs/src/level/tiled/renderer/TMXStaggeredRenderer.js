@@ -17,7 +17,10 @@ export default class TMXStaggeredRenderer extends TMXHexagonalRenderer {
 	}
 
 	/**
-	 * return the tile position corresponding to the specified pixel
+	 * return the tile position corresponding to the specified pixel: the
+	 * column and row of the tile whose diamond holds it, plus where in that
+	 * diamond it is (each in [0, 1)), so that rounded down it is the tile.
+	 * As Tiled's `StaggeredRenderer::screenToTileCoords`
 	 * @ignore
 	 * @internal
 	 */
@@ -39,6 +42,12 @@ export default class TMXStaggeredRenderer extends TMXHexagonalRenderer {
 			Math.floor(alignedY / this.tileheight),
 		);
 
+		// Relative x and y position on the base square of the grid-aligned
+		// tile, measured before the reference point becomes a tile's column
+		// and row below (the square of row 1 is the tile of row 2)
+		const relX = alignedX - referencePoint.x * this.tilewidth;
+		const relY = alignedY - referencePoint.y * this.tileheight;
+
 		// Adjust the reference point to the correct tile coordinates
 		if (this.staggerX) {
 			referencePoint.x = referencePoint.x * 2;
@@ -52,37 +61,30 @@ export default class TMXStaggeredRenderer extends TMXHexagonalRenderer {
 			}
 		}
 
-		// Relative x and y position on the base square of the grid-aligned tile
-		const rel = vector2dPool.get(
-			alignedX - referencePoint.x * this.tilewidth,
-			alignedY - referencePoint.y * this.tileheight,
-		);
+		// Check whether the cursor is in any of the corners (neighboring
+		// tiles): the square holds its tile's diamond, and a corner of each
+		// of four neighbours, one at most
+		const y_pos = relX * (this.tileheight / this.tilewidth);
 
-		// Check whether the cursor is in any of the corners (neighboring tiles)
-		const y_pos = rel.x * (this.tileheight / this.tilewidth);
-
-		if (this.sideoffsety - y_pos > rel.y) {
+		if (this.sideoffsety - y_pos > relY) {
 			referencePoint = this.topLeft(
 				referencePoint.x,
 				referencePoint.y,
 				referencePoint,
 			);
-		}
-		if (-this.sideoffsety + y_pos > rel.y) {
+		} else if (-this.sideoffsety + y_pos > relY) {
 			referencePoint = this.topRight(
 				referencePoint.x,
 				referencePoint.y,
 				referencePoint,
 			);
-		}
-		if (this.sideoffsety + y_pos < rel.y) {
+		} else if (this.sideoffsety + y_pos < relY) {
 			referencePoint = this.bottomLeft(
 				referencePoint.x,
 				referencePoint.y,
 				referencePoint,
 			);
-		}
-		if (this.sideoffsety * 3 - y_pos < rel.y) {
+		} else if (this.sideoffsety * 3 - y_pos < relY) {
 			referencePoint = this.bottomRight(
 				referencePoint.x,
 				referencePoint.y,
@@ -106,7 +108,6 @@ export default class TMXStaggeredRenderer extends TMXHexagonalRenderer {
 			.add(referencePoint);
 
 		vector2dPool.release(referencePoint);
-		vector2dPool.release(rel);
 
 		return ret;
 	}

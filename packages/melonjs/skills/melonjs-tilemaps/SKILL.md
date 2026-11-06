@@ -209,6 +209,24 @@ Two coordinate systems, and the methods do not share one:
 | `clearTile(col, row)` | column and row | empties the cell: `cellAt` then returns `null` |
 | `getTileById(gid, col, row)` | a global tile id, column and row | a new `Tile`, to pass to `setTile` |
 
+Columns and rows are the map's tile coordinates, the ones Tiled shows. On an
+**infinite** map a layer can hold tiles left of or above the map's origin:
+there `board.startx` / `board.starty` are negative, its cells run from
+`startx` to `startx + cols - 1` (and `starty` to `starty + rows - 1`), and
+`cellAt(-3, -2)` is the tile Tiled shows at (-3, -2), drawn where Tiled draws
+it. On a finite map both are 0:
+
+```js
+for (let row = board.starty; row < board.starty + board.rows; row++) {
+    for (let col = board.startx; col < board.startx + board.cols; col++) {
+        const tile = board.cellAt(col, row);   // every cell, infinite maps included
+    }
+}
+```
+
+The viewport bounds still cover only the map's `width` x `height`: set them
+yourself to scroll to tiles painted outside it.
+
 A `Tile` carries `tileId` (its **global** id), `col`, `row` and `tileset`.
 Tiled shows a tile's *local* id in the tileset editor; the global id is
 `tileset.firstgid + localId`, and only the global one works with `setTile`.
@@ -431,6 +449,10 @@ unanimated layer into the offscreen-bake path instead.
 | a tileset's transparent color (`trans`) still shows (the console says it could not be applied) | the image cannot be read back: an image the game made itself from another origin without CORS (an `<img>` with no `crossOrigin`) cannot be, so load it with the loader, which only loads an image another origin's server allows (its CORS headers) and can always read back; and a compressed texture cannot be changed: export it with an alpha channel instead |
 | `cellAt` returns `null` (or the wrong tile) for a cell that has one | it was given pixels: `cellAt`, `setTile` and `clearTile` take column and row, only `getTile` takes world pixels |
 | `setTile` shows the wrong tile, or nothing | it was given Tiled's local tile id: use the global id, `tileset.firstgid + localId`, through `getTileById` |
+| an infinite map's tiles sit in the wrong row, or tiles left of or above the origin are missing | an older melonJS ignored where the chunks start (update); and loop from `layer.startx` / `layer.starty`, not 0, to reach cells left of or above the origin |
+| on a staggered map `getTile` gives the neighbouring tile on every row but the first, or a scrolled view draws nothing | a bug of older melonJS versions in the staggered renderer: update |
+| on an isometric (or staggered, oblique) map `getTile` gives an edge tile for a point just outside the tiles | an older melonJS rounded a fractional column or row toward 0: update |
+| tiles of a second tileset draw from the first tileset's image (that first one has a `margin`) | an older melonJS let its gid range overrun into the next tileset (update): the range is the `tilecount` Tiled saved |
 | a layer is `undefined` from `getChildByName(name)[0]` | the level is not in the world yet (await `level.load(id, { async: true })`), or the name differs from the layer's in Tiled |
 | a tile set or cleared at run time does not block or free movement | tile layers carry no collision: collision comes from collision object layers |
 | the level's `name` is not its id after loading | a map custom property named `name` replaced it: map properties are set over the map's own fields |

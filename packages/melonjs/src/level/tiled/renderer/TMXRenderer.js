@@ -65,17 +65,16 @@ export default class TMXRenderer {
 
 	/**
 	 * return the bounding rect for this map renderer
-	 * @param {TMXLayer} [layer] - calculate the bounding rect for a specific layer (will return a new bounds object)
+	 * @param {TMXLayer} [layer] - calculate the bounding rect for a specific layer (will return a new bounds object), its grid drawn from its first cell
 	 * @returns {Bounds}
 	 */
 	getBounds(layer) {
-		const bounds = layer instanceof TMXLayer ? boundsPool.get() : this.bounds;
-		bounds.setMinMax(
-			0,
-			0,
-			this.cols * this.tilewidth,
-			this.rows * this.tileheight,
-		);
+		const isLayer = layer instanceof TMXLayer;
+		const bounds = isLayer ? boundsPool.get() : this.bounds;
+		// a layer can have more cells than the map (an infinite map's)
+		const cols = isLayer ? layer.cols : this.cols;
+		const rows = isLayer ? layer.rows : this.rows;
+		bounds.setMinMax(0, 0, cols * this.tilewidth, rows * this.tileheight);
 		return bounds;
 	}
 

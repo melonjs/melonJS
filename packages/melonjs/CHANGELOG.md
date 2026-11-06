@@ -23,6 +23,11 @@
 - UI: `UITextButton#bitmapText`, for `label`
 
 ### Fixed
+- Tiled: infinite maps place every chunk at its own column and row, so tiles left of or above the origin, or past the map's size, no longer wrap into other rows or vanish. `cellAt()` / `setTile()` take Tiled's tile coordinates, and `TMXLayer.startx` / `starty` give where the layer starts
+- Tiled: on staggered maps `getTile()` / `pixelToTileCoords()` return the tile under the point on every row, and a scrolled staggered map draws again
+- Tiled: a tileset with a margin no longer claims the next tileset's tile ids, and an image collection's range covers all its tiles
+- Tiled: `getTile()` returns `null` just outside an isometric, staggered or oblique map instead of the edge tile
+- Tiled: tiles at the edges of the view no longer go missing on staggered, hexagonal and oblique maps, `left` / `up` render orders draw every visible row and column, and a view entirely outside a layer no longer hangs
 - Physics: a body resting on the floor is grounded however far it sinks per step, so heavier gravity or mass, a low frame rate or a rising floor no longer leave `isGrounded()` false
 - Physics: a polygon wound counter-clockwise (drawn that way in Tiled, or mirrored with `scale(-1, 1)`) no longer collides with circles nowhere near it
 - Physics: a raycast no longer throws on a body with a `Point`, `Sphere` or `Box3d` shape, and hits a rotated `Ellipse` where it is
