@@ -57,6 +57,15 @@ function isReserved(key: string) {
 	return key === "add" || key === "remove";
 }
 
+/**
+ * write the list of saved keys, the one boot reads back, to localStorage
+ * @ignore
+ * @internal
+ */
+function saveIndex() {
+	localStorage.setItem("me.save", JSON.stringify(Object.keys(data)));
+}
+
 // Initialize me.save on Boot event
 once(BOOT, () => {
 	// Load previous data if local Storage is supported
@@ -116,7 +125,8 @@ export interface SaveAPI {
 	add<T extends Record<string, Jsonifiable>>(props: T): this & T;
 
 	/**
-	 * Remove a key from localStorage
+	 * Remove a key from localStorage. The key stays registered: setting it
+	 * again saves it again, and it is restored on the next load like any other.
 	 * @param key - key to be removed
 	 * @example
 	 * // Remove the "score" key from localStorage
@@ -153,9 +163,17 @@ const save: SaveAPI = {
 					return data[key];
 				},
 				set(value) {
+					// a key written again after `remove()` keeps its accessor but
+					// had left the index, so the value reached localStorage and
+					// was never read back: boot restores only the keys listed
+					// in "me.save"
+					const listed = key in data;
 					data[key] = value;
 					if (hasLocalStorage) {
 						localStorage.setItem(`me.save.${key}`, JSON.stringify(value));
+						if (!listed) {
+							saveIndex();
+						}
 					}
 				},
 			});
@@ -167,7 +185,7 @@ const save: SaveAPI = {
 
 		// Save keys
 		if (hasLocalStorage) {
-			localStorage.setItem("me.save", JSON.stringify(Object.keys(data)));
+			saveIndex();
 		}
 
 		// Handed back so the caller can read what it just registered with the
@@ -185,14 +203,11 @@ const save: SaveAPI = {
 	 */
 	remove(key: string) {
 		if (!isReserved(key)) {
-			if (typeof data[key] !== "undefined") {
+			if (key in data) {
 				delete data[key];
 				if (hasLocalStorage) {
 					globalThis.localStorage.removeItem(`me.save.${key}`);
-					globalThis.localStorage.setItem(
-						"me.save",
-						JSON.stringify(Object.keys(data)),
-					);
+					saveIndex();
 				}
 			}
 		}

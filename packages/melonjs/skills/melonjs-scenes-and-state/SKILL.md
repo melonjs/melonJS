@@ -107,6 +107,9 @@ this.HUD.floating = true;               // screen coordinates, not world
 app.world.addChild(this.HUD, 100);      // explicit z — see melonjs-renderables
 ```
 
+Everything inside a persistent container is kept with it, physics bodies
+included (before 20.13 the children's bodies were dropped by the reset).
+
 ## Transitions and pausing
 
 ```js
@@ -395,6 +398,7 @@ import { save } from "melonjs";
 
 save.add({ hiscore: 0 });      // once; idempotent, loads any stored value
 save.hiscore = 1200;           // plain assignment writes to localStorage
+save.remove("hiscore");        // gone from localStorage; set it again to save it again
 ```
 
 **In TypeScript, keep what `add()` returns.** The namespace carries a
@@ -425,9 +429,11 @@ both.
 | the player character is left behind and scrolls off after a lost window | same cause: the stage advanced the camera while its world children were paused |
 | a tween does nothing | `.start()` never called |
 | an array (path) tween wanders further on each replay, or goes `NaN` with `yoyo` | before 20.13 `start()` re-prepended the start value to the path and `yoyo` swapped the array into the start value; upgrade |
+| a repeating or `yoyo` tween runs a single cycle when started again (a pulse pulses once, a yoyo stays at the far end) | before 20.13 `start()` did not restore the `repeat` count the first run had used up; upgrade |
 | effect stops during a hit-stop | tween needs `updateWhenPaused = true` |
 | crash after a stage switch | callback ran during teardown — guard with `state.isCurrent` |
 | HUD scrolls away with the camera | missing `floating = true` |
+| a `save` key set again after `save.remove()` reads back fine, then is gone (or back at its default) after a reload (before 20.13) | the write skipped the list of keys restored at boot; update |
 
 ## Related skills
 

@@ -207,17 +207,28 @@ export class Ellipse {
 
 	/**
 	 * Scale this Ellipse by the specified scalar.
+	 * The rotation is kept, and the factors apply along the ellipse's own
+	 * axes: on a rotated ellipse `x` scales the radius that was `radiusV.x`
+	 * before the rotation, wherever it now points.
 	 * @param x - the scale factor along the x-axis
 	 * @param [y=x] - the scale factor along the y-axis
 	 * @returns Reference to this object for method chaining
 	 */
 	scale(x: number, y = x) {
-		return this.setShape(
+		const angle = this._angle;
+		// `setShape` defines a new, unrotated shape; scaling must not undo a
+		// `rotate()` (it did, so a rotated ellipse snapped back to its axes)
+		this.setShape(
 			this.pos.x,
 			this.pos.y,
 			this.radiusV.x * 2 * x,
 			this.radiusV.y * 2 * y,
 		);
+		if (angle !== 0) {
+			// the setter restores the trig cache and recomputes the bounds
+			this.angle = angle;
+		}
+		return this;
 	}
 
 	/**

@@ -197,11 +197,14 @@ export default class TMXObliqueRenderer extends TMXOrthogonalRenderer {
 			vector2dPool.release(c);
 		}
 
-		// add margin for oversize tiles
+		// add margin for oversize tiles, and for the skew: a tile's image is
+		// drawn upright at its sheared top left corner, reaching up to one
+		// skew past the sheared cell the view's corners are found in
 		startX = Math.max(
 			Math.floor(
 				startX -
-					Math.max(layer.maxTileSize.width - layer.tilewidth, 0) /
+					(Math.max(layer.maxTileSize.width - layer.tilewidth, 0) +
+						Math.abs(this.skewX)) /
 						this.tilewidth,
 			),
 			0,
@@ -209,31 +212,43 @@ export default class TMXObliqueRenderer extends TMXOrthogonalRenderer {
 		startY = Math.max(
 			Math.floor(
 				startY -
-					Math.max(layer.maxTileSize.height - layer.tileheight, 0) /
+					(Math.max(layer.maxTileSize.height - layer.tileheight, 0) +
+						Math.abs(this.skewY)) /
 						this.tileheight,
 			),
 			0,
 		);
-		endX = Math.min(Math.ceil(endX) + 1, this.cols);
-		endY = Math.min(Math.ceil(endY) + 1, this.rows);
+		// the layer's range: an infinite map's layer can have more cells
+		// than the map
+		endX = Math.min(
+			Math.ceil(endX + Math.abs(this.skewX) / this.tilewidth) + 1,
+			layer.cols,
+		);
+		endY = Math.min(
+			Math.ceil(endY + Math.abs(this.skewY) / this.tileheight) + 1,
+			layer.rows,
+		);
 
-		switch (layer.renderorder) {
-			case "right-up":
-				endY = startY + (startY = endY) - endY;
-				incY = -1;
-				break;
-			case "left-down":
-				endX = startX + (startX = endX) - endX;
-				incX = -1;
-				break;
-			case "left-up":
-				endX = startX + (startX = endX) - endX;
-				endY = startY + (startY = endY) - endY;
-				incX = -1;
-				incY = -1;
-				break;
-			default: // right-down
-				break;
+		// a view wholly outside the layer: no tile to draw (and a loop
+		// stepping toward an end it has passed would never stop)
+		if (endX <= startX || endY <= startY) {
+			return;
+		}
+
+		// the columns are startX to endX - 1, the rows startY to endY - 1:
+		// a "left" or "up" render order draws them from the last one back,
+		// stopping one before the first
+		if (layer.renderorder === "left-down" || layer.renderorder === "left-up") {
+			const first = startX;
+			startX = endX - 1;
+			endX = first - 1;
+			incX = -1;
+		}
+		if (layer.renderorder === "right-up" || layer.renderorder === "left-up") {
+			const first = startY;
+			startY = endY - 1;
+			endY = first - 1;
+			incY = -1;
 		}
 
 		// main drawing loop — direct typed-array reads, short-circuit tileset cache

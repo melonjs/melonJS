@@ -38,12 +38,18 @@ export default class TMXIsometricRenderer extends TMXRenderer {
 	 * @internal
 	 */
 	getBounds(layer) {
-		const bounds = layer instanceof TMXLayer ? boundsPool.get() : this.bounds;
+		const isLayer = layer instanceof TMXLayer;
+		const bounds = isLayer ? boundsPool.get() : this.bounds;
+		// a layer can have more cells than the map (an infinite map's): its
+		// first column still starts at the map's origin, and its rows reach
+		// left of it
+		const cols = isLayer ? layer.cols : this.cols;
+		const rows = isLayer ? layer.rows : this.rows;
 		bounds.setMinMax(
+			this.originX - rows * this.hTilewidth,
 			0,
-			0,
-			(this.cols + this.rows) * (this.tilewidth / 2),
-			(this.cols + this.rows) * (this.tileheight / 2),
+			this.originX + cols * this.hTilewidth,
+			(cols + rows) * this.hTileheight,
 		);
 		return bounds;
 	}

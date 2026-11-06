@@ -196,11 +196,23 @@ export const createPool = <T extends object, A extends unknown[]>(
 			}
 		},
 		/**
-		 * purge the pool
+		 * purge the pool: drop every idle instance, so the garbage collector
+		 * can take them. Instances still in use are not the pool's to drop:
+		 * they stay counted by `used()` and can still be released.
 		 */
 		purge: () => {
+			for (const instance of available) {
+				// forgotten, not just unlisted: a purged instance is no longer
+				// this pool's, so releasing it again is ignored (as for any
+				// foreign object) instead of re-parking it and counting it
+				// back out of `used()`
+				instanceResetMethods.delete(instance);
+				instanceReleaseMethods.delete(instance);
+				parked.delete(instance);
+			}
 			available.clear();
-			inUse = 0;
+			// `inUse` is NOT reset: zeroing it here forgot the instances
+			// still out, and releasing them afterwards drove `used()` negative
 		},
 		/**
 		 * get the current size of the pool (how many objects are available)

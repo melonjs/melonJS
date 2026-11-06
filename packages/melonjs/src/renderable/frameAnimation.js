@@ -151,6 +151,7 @@ export default class FrameAnimation {
 		let counter = 0;
 
 		if (typeof host.textureAtlas !== "object") {
+			this._refreshCurrent(name);
 			return 0;
 		}
 
@@ -203,7 +204,51 @@ export default class FrameAnimation {
 		}
 		this.anim[name].length = counter;
 
+		this._refreshCurrent(name);
+
 		return counter;
+	}
+
+	/**
+	 * Re-sync the playback state after `addAnimation()` redefined `name`.
+	 *
+	 * `current.length` is copied from the definition by `setCurrentAnimation`,
+	 * and re-selecting the current id is a no-op, so redefining the animation
+	 * that is playing (the documented "slower animation" idiom re-adds an id)
+	 * left the old length behind: a shorter strip then stepped to an index
+	 * past its end and the next `update()` read `undefined.delay`.
+	 *
+	 * The playing frame is kept when it still exists and re-applied (its
+	 * region may have changed); past the new end, playback restarts on frame
+	 * 0, or holds the new last frame if a play-once run had already finished.
+	 * The timer and the `setCurrentAnimation` options are kept; `onFrame` is
+	 * not called, since redefining is not playback reaching a frame.
+	 * @ignore
+	 * @internal
+	 * @param {string} name - the animation id that was just (re)defined
+	 */
+	_refreshCurrent(name) {
+		if (!this.isCurrentAnimation(name)) {
+			return;
+		}
+		const current = this.current;
+		const length = this.anim[name].length;
+		current.length = length;
+		if (length === 0) {
+			// nothing to show or step (`_isStepping` is false): keep the last
+			// drawn region, and an index that is valid once frames come back
+			current.idx = 0;
+			this.dt = 0;
+			return;
+		}
+		if (current.idx < length) {
+			this.setAnimationFrame(current.idx);
+		} else if (this._animDone) {
+			this.setAnimationFrame(length - 1);
+		} else {
+			this.dt = 0;
+			this.setAnimationFrame(0);
+		}
 	}
 
 	/**

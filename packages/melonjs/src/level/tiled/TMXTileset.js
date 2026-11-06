@@ -260,6 +260,14 @@ export default class TMXTileset {
 		// Tiled 1.10+ provides an explicit flag; fall back to detection for older maps
 		this.isCollection = tileset.isCollection ?? this.imageCollection.size > 0;
 
+		// an image collection's gids run to its highest tile id (ids can
+		// skip numbers, where tiles were removed)
+		if (this.isCollection) {
+			for (const gid of this.imageCollection.keys()) {
+				this.lastgid = Math.max(this.lastgid, gid);
+			}
+		}
+
 		// set tile offset
 		const offset = tileset.tileoffset;
 		if (offset) {
@@ -514,24 +522,34 @@ export default class TMXTileset {
 		});
 		this.atlas = this.texture.getAtlas();
 
-		// calculate the number of tiles per horizontal line
-		const hTileCount =
-			+tileset.columns ||
-			Math.round(this.image.width / (this.tilewidth + this.spacing));
-		let vTileCount = Math.round(
-			this.image.height / (this.tileheight + this.spacing),
+		// the tiles the image holds, counted as Tiled does: whole tiles only,
+		// from the margin, a tile plus the spacing apart (Tiled lets the
+		// last column and row go without their outer margin). A partial
+		// tile at the right or bottom edge is not one, and must not take a
+		// gid of the next tileset
+		const columns = Math.max(
+			Math.floor(
+				(this.image.width - this.margin + this.spacing) /
+					(this.tilewidth + this.spacing),
+			),
+			0,
 		);
-		if (tileset.tilecount % hTileCount > 0) {
-			++vTileCount;
-		}
+		const rows = Math.max(
+			Math.floor(
+				(this.image.height - this.margin + this.spacing) /
+					(this.tileheight + this.spacing),
+			),
+			0,
+		);
+		const computed = (+tileset.columns || columns) * rows;
+		// the tile count Tiled saved (always, since Tiled 0.13) is the one
+		// its gids were given by
+		const tilecount = +tileset.tilecount > 0 ? +tileset.tilecount : computed;
 		// compute the last gid value in the tileset
-		this.lastgid = this.firstgid + (hTileCount * vTileCount - 1 || 0);
-		if (
-			tileset.tilecount &&
-			this.lastgid - this.firstgid + 1 !== +tileset.tilecount
-		) {
+		this.lastgid = this.firstgid + Math.max(tilecount - 1, 0);
+		if (+tileset.tilecount > 0 && computed < tilecount) {
 			console.warn(
-				`Computed tilecount (${this.lastgid - this.firstgid + 1}) does not match expected tilecount (${tileset.tilecount})`,
+				`melonJS: tileset '${this.name}' image holds ${computed} tiles, fewer than its tilecount (${tilecount})`,
 			);
 		}
 	}

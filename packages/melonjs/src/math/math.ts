@@ -43,23 +43,15 @@ export function isPowerOfTwo(val: number) {
 
 /**
  * returns true if the given value is a power of four
+ * (1, 4, 16, 64, …). Like {@link isPowerOfTwo}, only a positive integer can
+ * be one: a fraction, a negative number, `NaN` or `Infinity` is not.
  * @param val number to test
  * @returns true if number is a power of four
  */
 export function isPowerOfFour(val: number) {
-	if (val === 0 || val === 2 || val === 3) {
-		return false;
-	}
-	if (val === 1) {
-		return true;
-	}
-
-	if ((val & (val - 1)) === 0) {
-		if ((val & 0xaaaaaaaa) === 0) {
-			return true;
-		}
-	}
-	return false;
+	// not bitwise: `&` truncates to a 32-bit integer, which let fractions
+	// through (4.5 read as 4) and read 2^33 as 0, a "power of four"
+	return isPowerOfTwo(val) && Math.log2(val) % 2 === 0;
 }
 
 /**
@@ -153,18 +145,23 @@ export function weightedRandom(min: number, max: number) {
 }
 
 /**
- * round a value to the specified number of digit
+ * round a value to the specified number of digit.
+ * Rounds to the nearest value, and a tie the way `Math.round` does, toward
+ * positive infinity: `round(2.5)` is 3 and `round(-2.5)` is -2.
  * @param num - value to be rounded.
  * @param [dec] - number of decimal digit to be rounded to.
  * @returns rounded value
  * @example
  * // round a specific value to 2 digits
  * math.round(10.33333, 2); // return 10.33
+ * math.round(-2.7); // return -3
  */
 export function round(num: number, dec = 0) {
-	// if only one argument use the object value
 	const powres = Math.pow(10, dec);
-	return ~~(0.5 + num * powres) / powres;
+	// not `~~(0.5 + n)`: `~~` truncates toward zero, so a negative value
+	// rounded the wrong way (-2.7 gave -2), and it wraps past 2^31.
+	// `+ 0` turns the -0 `Math.round` gives for -0.5 ≤ n < 0 into 0, as before
+	return Math.round(num * powres) / powres + 0;
 }
 
 /**

@@ -19,6 +19,7 @@ import * as TMXUtils from "./TMXUtils.js";
  * @import TMXRenderer from "./renderer/TMXRenderer.js";
  * @import TMXTileset from "./TMXTileset.js";
  * @import TMXTilesetGroup from "./TMXTilesetGroup.js";
+ * @import {Vector2d} from "../../math/vector2d.ts";
  */
 // flip-mask bit layout for layerData's G channel
 const FLIP_H_BIT = 1 << 0;
@@ -28,6 +29,9 @@ const FLIP_AD_BIT = 1 << 2;
 // the area an offset camera shows, handed to the tile renderers in its place
 // (made on first use)
 let viewRect;
+// the area to draw, in the grid of a layer that does not start at the map's
+// origin (made on first use)
+let cellRect;
 
 /**
  * extract a 3-bit flip mask from a raw 32-bit GID (Tiled's flip bits live in
@@ -72,38 +76,33 @@ function gidWithFlips(gid, flipMask) {
 }
 
 /**
- * Decode a tiled layer's data blob directly into the typed-array layerData
+ * Decode a tiled layer's data blob directly into the typed-array layerData.
+ * `data` holds `width` x `height` cells whose top left one is the map's tile
+ * (`x`, `y`): a whole finite layer, or one chunk of an infinite map's layer.
+ * A cell outside the layer's grid is left out, never wrapped into another row
  * @ignore
  * @internal
  */
-function setLayerData(layer, bounds, data) {
+function setLayerData(layer, data, x, y, width, height) {
 	let idx = 0;
-	let width;
-	let height;
-
-	// layer provide rows and cols, chunk width and height
-	if (typeof bounds.rows === "undefined") {
-		width = bounds.width;
-		height = bounds.height;
-	} else {
-		width = bounds.cols;
-		height = bounds.rows;
-	}
-
 	const cols = layer.cols;
+	const rows = layer.rows;
 	const layerData = layer.layerData;
-	const offsetX = bounds.x;
-	const offsetY = bounds.y;
+	// where the data's first cell sits in the layer's grid
+	const offsetX = x - layer.startx;
+	const offsetY = y - layer.starty;
 	// One-shot warning when a layer's flip-stripped GID won't fit in the
 	// `Uint16Array` cell — silent truncation would render the wrong tile.
 	// 65535 is far above any realistic tileset size, but flag it loudly
 	// so users with degenerate maps notice immediately.
 	let overflowedGid = 0;
-	for (let y = 0; y < height; y++) {
-		for (let x = 0; x < width; x++) {
+	for (let row = 0; row < height; row++) {
+		const cy = row + offsetY;
+		for (let col = 0; col < width; col++) {
 			const rawGid = data[idx++];
-			if (rawGid !== 0) {
-				const flatIdx = ((y + offsetY) * cols + (x + offsetX)) * 2;
+			const cx = col + offsetX;
+			if (rawGid !== 0 && cx >= 0 && cx < cols && cy >= 0 && cy < rows) {
+				const flatIdx = (cy * cols + cx) * 2;
 				const cleanGid = rawGid & TMX_CLEAR_BIT_MASK;
 				if (cleanGid > 0xffff && overflowedGid === 0) {
 					overflowedGid = cleanGid;
@@ -120,6 +119,33 @@ function setLayerData(layer, bounds, data) {
 				" which exceeds the 16-bit cell capacity (max 65535). Tiles will be truncated and render incorrectly.",
 		);
 	}
+}
+
+/**
+ * the cells an infinite map's layer covers, in the map's tile coordinates:
+ * the map's own area and every chunk of the layer. Tiled gives a TMX layer
+ * the map's size whatever its chunks hold, and a JSON one the chunks' bounds
+ * (`startx`, `starty`), which can start left of or above the map. The start
+ * is moved to an even column and row, so that a staggered or hexagonal
+ * layer's cells keep the stagger of the map's tiles they hold
+ * @ignore
+ * @internal
+ */
+function chunksExtent(map, chunks) {
+	let minX = 0;
+	let minY = 0;
+	let maxX = map.cols;
+	let maxY = map.rows;
+	for (let i = 0, len = chunks.length; i < len; i++) {
+		const chunk = chunks[i];
+		minX = Math.min(minX, +chunk.x);
+		minY = Math.min(minY, +chunk.y);
+		maxX = Math.max(maxX, +chunk.x + +chunk.width);
+		maxY = Math.max(maxY, +chunk.y + +chunk.height);
+	}
+	minX -= minX & 1;
+	minY -= minY & 1;
+	return { x: minX, y: minY, cols: maxX - minX, rows: maxY - minY };
 }
 
 /**
@@ -222,8 +248,48 @@ export default class TMXLayer extends Renderable {
 
 		// additional TMX flags
 		this.name = data.name;
+
+		/**
+		 * the column, in the map's tile coordinates, of the layer's first
+		 * column. 0, except on an infinite map whose layer holds tiles left of
+		 * the map's origin: there it is negative, and the layer's columns are
+		 * `startx` to `startx + cols - 1`, the column numbers Tiled shows
+		 * @type {number}
+		 * @default 0
+		 */
+		this.startx = 0;
+
+		/**
+		 * the row, in the map's tile coordinates, of the layer's first row.
+		 * 0, except on an infinite map whose layer holds tiles above the map's
+		 * origin: there it is negative, and the layer's rows are `starty` to
+		 * `starty + rows - 1`, the row numbers Tiled shows
+		 * @type {number}
+		 * @default 0
+		 */
+		this.starty = 0;
+
+		/**
+		 * the number of columns in the layer
+		 * @type {number}
+		 */
 		this.cols = +data.width;
+
+		/**
+		 * the number of rows in the layer
+		 * @type {number}
+		 */
 		this.rows = +data.height;
+
+		// an infinite map's layer covers the map and every one of its chunks
+		const chunks = map.infinite === 1 ? (data.chunks ?? []) : undefined;
+		if (chunks !== undefined) {
+			const extent = chunksExtent(map, chunks);
+			this.startx = extent.x;
+			this.starty = extent.y;
+			this.cols = extent.cols;
+			this.rows = extent.rows;
+		}
 
 		// layer opacity
 		const visible = typeof data.visible !== "undefined" ? +data.visible : 1;
@@ -238,15 +304,6 @@ export default class TMXLayer extends Renderable {
 			this.tint.parseHex(data.tintcolor, true);
 		}
 
-		// layer "real" size
-		if (this.orientation === "isometric") {
-			this.width = (this.cols + this.rows) * (this.tilewidth / 2);
-			this.height = (this.cols + this.rows) * (this.tileheight / 2);
-		} else {
-			this.width = this.cols * this.tilewidth;
-			this.height = this.rows * this.tileheight;
-		}
-
 		// check if we have any user-defined properties
 		TMXUtils.applyTMXProperties(this, data);
 
@@ -256,7 +313,9 @@ export default class TMXLayer extends Renderable {
 		/**
 		 * The raw tile data for this layer. Each cell occupies two consecutive
 		 * `Uint16` slots: the GID (with flip bits stripped) and a 3-bit flip
-		 * mask. Cell `(x, y)` is at `layerData[(y * cols + x) * 2]` (row-major).
+		 * mask. Cell `(x, y)` is at `layerData[(y * cols + x) * 2]` (row-major),
+		 * counted from the layer's first cell: the map's tile
+		 * `(x + startx, y + starty)`.
 		 *
 		 * The 16-bit GID slot caps per-tileset GIDs at 65 535. This matches the
 		 * planned WebGL2 shader path (`RG16UI` index texture) — switching to
@@ -309,21 +368,62 @@ export default class TMXLayer extends Renderable {
 			// initialize and set the layer data
 			setLayerData(
 				this,
-				this,
 				TMXUtils.decode(data.data, data.encoding, data.compression),
+				0,
+				0,
+				this.cols,
+				this.rows,
 			);
-		} else if (map.infinite === 1) {
+		} else if (chunks !== undefined) {
 			// infinite map, initialize per chunk
-			const chunks = data.chunks;
 			for (let i = 0, len = chunks.length; i < len; i++) {
 				const chunk = chunks[i];
 				setLayerData(
 					this,
-					chunk,
 					TMXUtils.decode(chunk.data, data.encoding, data.compression),
+					+chunk.x,
+					+chunk.y,
+					+chunk.width,
+					+chunk.height,
 				);
 			}
 		}
+
+		// the layer's place and size in the world: the area its tiles are
+		// drawn in, which `contains` (and so `getTile`) checks. On a
+		// staggered or hexagonal map it reaches past `cols * tilewidth`, on
+		// an oblique one it can start left of 0, and on an infinite map's
+		// layer left of and above the map's origin
+		const bounds = this.getRenderer().getBounds(this);
+		const origin = this._cellOrigin(vector2dPool.get());
+		this.pos.x = bounds.left + origin.x;
+		this.pos.y = bounds.top + origin.y;
+		this.width = bounds.width;
+		this.height = bounds.height;
+		vector2dPool.release(origin);
+		boundsPool.release(bounds);
+	}
+
+	/**
+	 * where, in world pixels, the layer's renderer draws the tile in the
+	 * layer's first column and row, less where it draws the map's tile (0, 0):
+	 * (0, 0), but on an infinite map's layer that starts left of or above the
+	 * map's origin
+	 * @param {Vector2d} v - the vector to set
+	 * @returns {Vector2d} v
+	 * @ignore
+	 * @internal
+	 */
+	_cellOrigin(v) {
+		if (this.startx === 0 && this.starty === 0) {
+			return v.set(0, 0);
+		}
+		const renderer = this.getRenderer();
+		const zero = renderer.tileToPixelCoords(0, 0, vector2dPool.get());
+		renderer.tileToPixelCoords(this.startx, this.starty, v);
+		v.sub(zero);
+		vector2dPool.release(zero);
+		return v;
 	}
 
 	// called when the layer is added to the game world or a container
@@ -447,8 +547,8 @@ export default class TMXLayer extends Renderable {
 	 * Bring the baked canvas up to date with the tile at (x, y), just set or
 	 * cleared: redrawn in its cell where that is exact, else baked again
 	 * before the layer next draws
-	 * @param {number} x - the tile's column
-	 * @param {number} y - the tile's row
+	 * @param {number} x - the tile's column, in the map's tile coordinates
+	 * @param {number} y - the tile's row, in the map's tile coordinates
 	 * @ignore
 	 * @internal
 	 */
@@ -460,18 +560,21 @@ export default class TMXLayer extends Renderable {
 			this._preRenderStale = true;
 			return;
 		}
+		// the bake holds the layer's grid from its first cell
+		const cx = x - this.startx;
+		const cy = y - this.starty;
 		const canvas = this.canvasRenderer;
 		canvas.save();
 		canvas.translate(-this._preRenderX, -this._preRenderY);
 		canvas.clearRect(
-			x * this.tilewidth,
-			y * this.tileheight,
+			cx * this.tilewidth,
+			cy * this.tileheight,
 			this.tilewidth,
 			this.tileheight,
 		);
 		const tile = this.cellAt(x, y, false);
 		if (tile !== null) {
-			this.getRenderer().drawTile(canvas, x, y, tile);
+			this.getRenderer().drawTile(canvas, cx, cy, tile);
 		}
 		canvas.restore();
 		this._preRenderChanged = true;
@@ -651,7 +754,8 @@ export default class TMXLayer extends Renderable {
 	 * Return the Tile object at the specified position
 	 * @param {number} x - X coordinate (in world/pixels coordinates)
 	 * @param {number} y - Y coordinate (in world/pixels coordinates)
-	 * @returns {Tile} corresponding tile or null if there is no defined tile at the coordinate or if outside of the layer bounds
+	 * @returns {Tile} corresponding tile or null if there is no defined tile at the coordinate or if outside of the layer bounds:
+	 * the tile drawn there, whose `col` and `row` are the cell {@link TMXLayer#cellAt} reads
 	 * @example
 	 * // get the TMX Map Layer called "Front layer"
 	 * let layer = app.world.getChildByName("Front Layer")[0];
@@ -674,17 +778,22 @@ export default class TMXLayer extends Renderable {
 	}
 
 	/**
-	 * assign the given Tile object to the specified position
+	 * assign the given Tile object to the specified position (no change
+	 * outside the layer)
 	 * @param {Tile} tile - the tile object to be assigned
-	 * @param {number} x - x coordinate (in tile/column coordinates)
-	 * @param {number} y - y coordinate (in tile/row coordinates)
+	 * @param {number} x - column, in the map's tile coordinates (as Tiled shows them: on an infinite map, from {@link TMXLayer#startx})
+	 * @param {number} y - row, in the map's tile coordinates (on an infinite map, from {@link TMXLayer#starty})
 	 * @returns {Tile} the tile object
 	 */
 	setTile(tile, x, y) {
-		if (x < 0 || x >= this.cols || y < 0 || y >= this.rows) {
+		x = Math.floor(x);
+		y = Math.floor(y);
+		const cx = x - this.startx;
+		const cy = y - this.starty;
+		if (cx < 0 || cx >= this.cols || cy < 0 || cy >= this.rows) {
 			return tile;
 		}
-		const slot = y * this.cols + x;
+		const slot = cy * this.cols + cx;
 		const idx = slot * 2;
 		const cleanGid = tile.tileId & TMX_CLEAR_BIT_MASK;
 		// `layerData` is a Uint16Array; writes silently truncate above
@@ -711,8 +820,8 @@ export default class TMXLayer extends Renderable {
 	/**
 	 * return a new Tile object for the given tile id, to place with {@link TMXLayer#setTile}
 	 * @param {number} tileId - global tile id: the tileset's `firstgid` plus the tile's id in the tileset
-	 * @param {number} x - column of the tile (in tile/column coordinates), stored as its `col`
-	 * @param {number} y - row of the tile (in tile/row coordinates), stored as its `row`
+	 * @param {number} x - column of the tile (in the map's tile coordinates), stored as its `col`
+	 * @param {number} y - row of the tile (in the map's tile coordinates), stored as its `row`
 	 * @returns {Tile} the tile object
 	 * @example
 	 * // turn the cell at column 3, row 5 into the tileset's tile 7
@@ -729,8 +838,8 @@ export default class TMXLayer extends Renderable {
 
 	/**
 	 * Return the Tile object at the specified tile coordinates
-	 * @param {number} x - x position of the tile (in Tile unit)
-	 * @param {number} y - x position of the tile (in Tile unit)
+	 * @param {number} x - column, in the map's tile coordinates (as Tiled shows them: on an infinite map, from {@link TMXLayer#startx}); a fraction is rounded down
+	 * @param {number} y - row, in the map's tile coordinates (on an infinite map, from {@link TMXLayer#starty}); a fraction is rounded down
 	 * @param {number} [boundsCheck=true] - check first if within the layer bounds
 	 * @returns {Tile} corresponding tile or null if there is no defined tile at the position or if outside of the layer bounds
 	 * @example
@@ -738,18 +847,24 @@ export default class TMXLayer extends Renderable {
 	 * let tile = layer.cellAt(0, 0);
 	 */
 	cellAt(x, y, boundsCheck) {
-		const _x = ~~x;
-		const _y = ~~y;
+		// rounded down, not toward 0: a point just left of or above the
+		// layer (as `getTile` gives on an isometric or staggered map) is
+		// at -0.5, outside it, not in its first column (NaN is still 0)
+		const _x = Math.floor(x) || 0;
+		const _y = Math.floor(y) || 0;
+		// the cell in the layer's grid
+		const cx = _x - this.startx;
+		const cy = _y - this.starty;
 
 		// boundsCheck only used internally by the tiled renderer, when the layer bound check was already done
 		if (
 			boundsCheck !== false &&
-			(_x < 0 || _x >= this.cols || _y < 0 || _y >= this.rows)
+			(cx < 0 || cx >= this.cols || cy < 0 || cy >= this.rows)
 		) {
 			return null;
 		}
 
-		const slot = _y * this.cols + _x;
+		const slot = cy * this.cols + cx;
 		const idx = slot * 2;
 		const gid = this.layerData[idx];
 		// `cellAt(x, y, false)` skips the explicit bounds check on the
@@ -780,9 +895,9 @@ export default class TMXLayer extends Renderable {
 	}
 
 	/**
-	 * clear the tile at the specified position
-	 * @param {number} x - X coordinate (in map coordinates: row/column)
-	 * @param {number} y - Y coordinate (in map coordinates: row/column)
+	 * clear the tile at the specified position (no change outside the layer)
+	 * @param {number} x - column, in the map's tile coordinates (on an infinite map, from {@link TMXLayer#startx})
+	 * @param {number} y - row, in the map's tile coordinates (on an infinite map, from {@link TMXLayer#starty})
 	 * @example
 	 * app.world.getChildByType(me.TMXLayer).forEach(function(layer) {
 	 *     // clear all tiles at the given x,y coordinates
@@ -790,11 +905,15 @@ export default class TMXLayer extends Renderable {
 	 * });
 	 */
 	clearTile(x, y) {
-		if (x < 0 || x >= this.cols || y < 0 || y >= this.rows) {
+		x = Math.floor(x);
+		y = Math.floor(y);
+		const cx = x - this.startx;
+		const cy = y - this.starty;
+		if (cx < 0 || cx >= this.cols || cy < 0 || cy >= this.rows) {
 			return;
 		}
 		// clearing tile
-		const slot = y * this.cols + x;
+		const slot = cy * this.cols + cx;
 		const idx = slot * 2;
 		this.layerData[idx] = 0;
 		this.layerData[idx + 1] = 0;
@@ -846,6 +965,20 @@ export default class TMXLayer extends Renderable {
 			viewRect ??= new Rect(0, 0, 0, 0);
 			viewRect.pos.set(rect.pos.x + offset.x, rect.pos.y + offset.y);
 			rect = viewRect.setSize(rect.width, rect.height);
+		}
+		// an infinite map's layer that starts left of or above the map's
+		// origin: its renderer draws the layer's grid from its first cell,
+		// moved to where that cell's tile is in the world
+		if (this.startx !== 0 || this.starty !== 0) {
+			const origin = this._cellOrigin(vector2dPool.get());
+			cellRect ??= new Rect(0, 0, 0, 0);
+			cellRect.pos.set(rect.pos.x - origin.x, rect.pos.y - origin.y);
+			cellRect.setSize(rect.width, rect.height);
+			renderer.translate(origin.x, origin.y);
+			renderer.drawTileLayer(this, cellRect);
+			renderer.translate(-origin.x, -origin.y);
+			vector2dPool.release(origin);
+			return;
 		}
 		// dispatch to the active renderer — picks shader / preRender / perTile
 		// based on `this.renderMode` and the renderer's capabilities

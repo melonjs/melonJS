@@ -30,6 +30,55 @@ const INK_SLACK = 1;
 const INK_GUESS = 0.25;
 
 /**
+ * The lines a `setText` value stands for: a string (or a number) split on
+ * `\n`, or an array's entries, each as a string, in a new array.
+ * @param {number|string|string[]|null} [value] - the text, as `setText` takes it
+ * @returns {string[]} one entry per line
+ * @ignore
+ * @internal
+ */
+export function toLines(value) {
+	if (Array.isArray(value)) {
+		return value.map((line) => {
+			return "" + line;
+		});
+	}
+	return ("" + (value ?? "")).split("\n");
+}
+
+/**
+ * Whether two line arrays hold the same text, line for line. No lines at all
+ * (a label created empty) and one empty line are the same: nothing.
+ * @param {string[]} a - lines
+ * @param {string[]} b - lines
+ * @returns {boolean} true when they are the same text
+ * @ignore
+ * @internal
+ */
+export function sameLines(a, b) {
+	if (a.length !== b.length) {
+		return isBlank(a) && isBlank(b);
+	}
+	for (let i = 0; i < a.length; i++) {
+		if (a[i] !== b[i]) {
+			return false;
+		}
+	}
+	return true;
+}
+
+/**
+ * no lines, or a single empty one
+ * @param {string[]} lines - lines
+ * @returns {boolean} true when there is no text
+ * @ignore
+ * @internal
+ */
+function isBlank(lines) {
+	return lines.length === 0 || (lines.length === 1 && lines[0] === "");
+}
+
+/**
  * a Text Metrics object that contains helper for text manipulation
  */
 class TextMetrics extends Bounds {

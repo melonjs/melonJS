@@ -187,13 +187,22 @@ which is how a renderable knows its bounds went stale.
 
 ```js
 v.setCallback(() => { ... });
-v.setMuted(true);     // write without firing it
+v.setMuted(x, y, z);  // write without firing it
+v.setCallback(undefined); // stop observing
 ```
 
 **`setMuted` is what you want when writing several components**, so a
 half-updated vector does not fire a callback that reads the other half.
 `set()` already does this internally: it disables the callback, writes all
-three, fires once, and re-enables.
+three, fires once, and re-enables. Every mutating method (`add`, `scale`,
+`negateSelf`, `floorSelf`, `clampSelf`, `normalize`, `lerp`, …) goes through
+`set()`, so it fires once and returns the observable vector itself. Before
+20.13 `negateSelf`, `floorSelf`, `ceilSelf` and `clampSelf` (and the 3D
+`normalize` and `perp`) fired once per component and returned the wrapped
+plain vector instead.
+
+`clone()` takes from a pool, and gets the callback you pass it or none: before
+20.13 a recycled clone kept the callback of the vector released before it.
 
 Note the observable `set(x = 0, y = 0, z = 0)` defaults EVERY argument, so
 `set(10, 20)` zeroes z exactly as the plain vector does.
@@ -286,7 +295,7 @@ math.degToRad(deg);  math.radToDeg(rad);
 math.random(lo, hi);             // integer
 math.randomFloat(lo, hi);
 math.weightedRandom(lo, hi);     // integer, biased toward LO
-math.round(n, decimals);
+math.round(n, decimals);        // nearest; a tie goes up, as Math.round: -2.5 → -2
 math.pow(n);                     // n squared
 math.DEG_TO_RAD  math.RAD_TO_DEG  math.TAU  math.ETA  math.EPSILON
 ```
@@ -317,6 +326,8 @@ and `Math.random()` every frame jitters instead of drifting.
 | z unchanged after scaling | `scale(s)` leaves z alone; pass `scale(s, s, s)` |
 | z became 0 for no reason | `set(x, y)` defaults z to 0 |
 | the original vector changed | the method mutates; `copy()` into something first |
+| a position callback fires twice and sees a half-updated vector, or `pos.floorSelf()` returns something that is not `pos` | before 20.13 the observable `negateSelf` / `floorSelf` / `ceilSelf` / `clampSelf` wrote component by component; upgrade |
+| `math.round(-2.7)` is -2, or a large value comes back negative | before 20.13 `round` truncated toward zero through 32-bit integers; upgrade |
 | memory climbs in a loop | `clone()` or `negate()`/`floor()`/`ceil()` per frame |
 | two helper results are the same object | a shared scratch vector was returned |
 | `.z` is a type error | `Renderable.pos` is declared `Vector2d` (#1510) |
