@@ -30,6 +30,31 @@ import BuiltinAdapter from "./builtin/builtin-adapter.ts";
 const EMPTY_BODIES = Object.freeze(new Set());
 
 /**
+ * Whether {@link World#reset} keeps the body of the given renderable: a
+ * persistent renderable, or any renderable still in the world's tree after
+ * the reset, at any depth.
+ * @ignore
+ * @internal
+ * @param {World} world - the world being reset
+ * @param {object} [renderable] - the renderable owning the body
+ * @returns {boolean}
+ */
+function keepsBodyOf(world, renderable) {
+	if (!renderable) {
+		return false;
+	}
+	if (renderable.isPersistent === true) {
+		return true;
+	}
+	for (let a = renderable.ancestor; a; a = a.ancestor) {
+		if (a === world) {
+			return true;
+		}
+	}
+	return false;
+}
+
+/**
  * an object representing the physic world, and responsible for managing and updating all children and physics
  * @category Container
  */
@@ -256,7 +281,9 @@ export default class World extends Container {
 	}
 
 	/**
-	 * reset the game world
+	 * reset the game world. Children flagged
+	 * {@link Renderable#isPersistent} are kept, with everything below them,
+	 * and so are their physics bodies.
 	 */
 	reset() {
 		// clear the quadtree
@@ -268,12 +295,18 @@ export default class World extends Container {
 		// call the parent method
 		super.reset();
 
-		// save persistent child bodies (only meaningful for the builtin adapter)
+		// save the bodies of what the reset kept (only meaningful for the
+		// builtin adapter). Not only the persistent renderables themselves:
+		// a persistent container is kept with all of its children, at any
+		// depth, so their bodies are kept with them. Keeping just the bodies
+		// whose own renderable was flagged dropped every body inside a
+		// persistent group, which then stopped falling and colliding after a
+		// state change or a `level.load`.
 		const bodies = /** @type {{ bodies?: Set<Body> }} */ (this.adapter).bodies;
 		if (bodies !== undefined) {
 			const persistentBodies = [];
 			bodies.forEach((value) => {
-				if (value.ancestor && value.ancestor.isPersistent) {
+				if (keepsBodyOf(this, value.ancestor)) {
 					persistentBodies.push(value);
 				}
 			});

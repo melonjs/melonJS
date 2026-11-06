@@ -23,6 +23,8 @@
 - UI: `UITextButton#bitmapText`, for `label`
 
 ### Fixed
+- Container: the physics bodies of nested children are registered and removed at any depth, so moving a group that holds bodies to another container no longer throws, nor leaves them simulated off-stage
+- World: the children of a persistent container keep their physics bodies through a state change or `level.load`
 - Sprite: redefining the playing animation with `addAnimation()` takes effect at once, instead of crashing the next update when the new one is shorter
 - Tween: a repeating or `yoyo` tween started again repeats as configured, instead of running once
 - Math: `round()` rounds negative values to the nearest value (`round(-2.7)` is -3) and handles values past 2^31; `isPowerOfFour()` rejects fractions
