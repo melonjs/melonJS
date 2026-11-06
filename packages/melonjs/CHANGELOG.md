@@ -13,11 +13,8 @@
 - UI: every `UIBaseElement` has `enabled`, `cancelPress()` / `onCancel()`, and a hover and press bounce (`hoverScale`, `pressScale`)
 - UI: keyboard and gamepad navigation between widgets, once one takes the focus with `focus()`
 - UI: drop shadows on `UIPanel` and `ProgressBar` (`shadowColor`, `shadowOffsetX`, `shadowOffsetY`, `shadowBlur`)
+- UI: `UISpriteElement` is a `UIBaseElement` holding a `Sprite`, so it has everything the other widgets have; `Sprite` members other than its region and animation methods are on `element.sprite`
 - UI: the widgets' settings and skin types are exported, `ProgressBar`'s `onChange` also gets the bar, and `Container#clipContains(x, y)` tells whether a container shows its children at a point
-
-### Changed
-- UI: a press stops at a UI element by default (`onClick()` and `onRelease()` return `false`), so it no longer also reaches the game behind it. Return `true` to let it through
-- UI: `UISpriteElement` is now a `UIBaseElement` holding a `Sprite`, so it has everything the other widgets have. It is placed as before; `Sprite` members other than its region and animation methods are now on `element.sprite`
 
 ### Deprecated
 - UI: `UITextButton#bitmapText`, for `label`
@@ -43,6 +40,7 @@
 - Text: multi-line text is placed by `textBaseline` as one block, as BitmapText is, so it stays inside its bounds
 - Text: `setText("1,000")` after `["1", "000"]` updates the text (Text and BitmapText)
 - Text: `measureText("other text")` no longer changes the label's own size and alignment (Text and BitmapText)
+- UI: a press on a UI element no longer also reaches the game behind it (`onClick()` / `onRelease()` return `false` by default; return `true` to let it through)
 - UI: a `UITextButton` with a CSS font no longer throws, draws its background where it is after a move, and no longer writes into its settings
 - UI: a blocking `UIPanel` stays opaque to hover while the pointer is on it
 - UI: dragging works by touch, and a dragged element in the world no longer jumps by the camera position
