@@ -23,57 +23,57 @@
 - UI: `UITextButton#bitmapText`, for `label`
 
 ### Fixed
-- Tiled: infinite maps place every chunk at its own column and row, so tiles left of or above the origin, or past the map's size, no longer wrap into other rows or vanish. `cellAt()` / `setTile()` take Tiled's tile coordinates, and `TMXLayer.startx` / `starty` give where the layer starts
-- Tiled: on staggered maps `getTile()` / `pixelToTileCoords()` return the tile under the point on every row, and a scrolled staggered map draws again
-- Tiled: a tileset with a margin no longer claims the next tileset's tile ids, and an image collection's range covers all its tiles
-- Tiled: `getTile()` returns `null` just outside an isometric, staggered or oblique map instead of the edge tile
-- Tiled: tiles at the edges of the view no longer go missing on staggered, hexagonal and oblique maps, `left` / `up` render orders draw every visible row and column, and a view entirely outside a layer no longer hangs
-- Physics: a body resting on the floor is grounded however far it sinks per step, so heavier gravity or mass, a low frame rate or a rising floor no longer leave `isGrounded()` false
-- Physics: a polygon wound counter-clockwise (drawn that way in Tiled, or mirrored with `scale(-1, 1)`) no longer collides with circles nowhere near it
-- Physics: a raycast no longer throws on a body with a `Point`, `Sphere` or `Box3d` shape, and hits a rotated `Ellipse` where it is
-- Physics: `setAngle()` and angular velocity turn a body about its shapes' centre whatever its `anchorPoint`, instead of about a corner
-- Loader: a `preload()` given no callback no longer calls the previous preload's callback again, and `reload()` works for custom asset types
-- Loader: `LOADER_PROGRESS` reports each preload's own progress, so a second preload no longer starts part-full and progress reaches 1 again after a failed asset
-- Save: a key set again after `save.remove()` is restored on the next load
-- Text: `setText()` updates when the new text's `toString()` matches the old, e.g. `"1,000"` after `["1", "000"]` (Text and BitmapText)
-- Text: `measureText("other text")` no longer changes the label's own size and alignment (Text and BitmapText)
-- Container: the physics bodies of nested children are registered and removed at any depth, so moving a group that holds bodies to another container no longer throws, nor leaves them simulated off-stage
-- World: the children of a persistent container keep their physics bodies through a state change or `level.load`
-- Sprite: redefining the playing animation with `addAnimation()` takes effect at once, instead of crashing the next update when the new one is shorter
-- Tween: a repeating or `yoyo` tween started again repeats as configured, instead of running once
-- Math: `round()` rounds negative values to the nearest value (`round(-2.7)` is -3) and handles values past 2^31; `isPowerOfFour()` rejects fractions
-- Math: the observable vectors' `negateSelf()`, `floorSelf()`, `ceilSelf()` and `clampSelf()` return the vector and notify once
-- Ellipse: `scale()` keeps the ellipse's rotation
-- Pool: `purge()` keeps counting the instances still in use, so `used()` no longer goes negative
-- Rendering: a translucent `setColor()` no longer fades the images, colours and renderables drawn after it, nor changes `getGlobalAlpha()`
-- WebGL: `fillArc()` with an end angle before the start fills the right part of the circle, and `save()` / `restore()` puts `lineWidth` and `lineJoin` back, as on Canvas
-- Camera: `worldToLocal()` / `localToWorld()` on a minimap or zoomed camera are no longer off when the level is centred in the view
-- Text: word wrap keeps the text's own line breaks, and a first word wider than `wordWrapWidth` no longer adds a blank line above it (Text and BitmapText)
-- Text: multi-line text is placed by `textBaseline` as one block, as BitmapText is, so every line is drawn inside its bounds
-- UI: `ProgressBar` re-clamps its value when `min` or `max` change, so the bar no longer overflows its track
-- Container: `onDeactivateEvent` is called once on each child of a removed container, as `onActivateEvent` is, not twice or more
-- Container: `enableChildBoundsUpdate` follows children that move, so the camera no longer culls a group by where its children started
-- Sprite: a `flicker()` callback is called with the sprite as `this`, after the flicker has ended, so it can start a new one
-- Physics: `body.applyForce(x, y, pointX, pointY)` reads the point in world coordinates, so a body away from the origin, or inside a container, no longer spins the wrong way
-- Tween: a tween through an array of values no longer runs a longer path each time it is restarted, nor turns the value into NaN with `yoyo`
-- Camera: a camera with post effects no longer wipes out the cameras drawn before it. A minimap with post effects now shows the view behind wherever it draws nothing, as one without them does, instead of the background colour
-- Container: `reset()`, and so `level.load`, no longer drops the sort pending for the persistent children it keeps, which left them in the order they were added
-- Particles: particles are on their emitter's `visibilityLayer`, and follow a change to it. They stayed on layer 1, so a camera whose `cullMask` drew only the emitter's layer drew none of its particles
-- Loader: assets on the game's own origin are requested with its cookies and HTTP auth, so a game behind a login no longer gets a 403 for every asset ([#1801](https://github.com/melonjs/melonJS/issues/1801))
-- Loader: an asset on another origin loads whenever its server allows it (CORS), without `crossOrigin`, and one it does not allow fails at load with an error naming it, instead of later with "Unexpected end of input" or "The source image could not be decoded". `crossOrigin` now only applies to the `<video>`, `<script>` and glTF image elements the loader creates; `"use-credentials"` also sends credentials, as `withCredentials` does
-- Particles: an emitter without an `image` no longer leaks a texture on every `reset()` or for every emitter created, on WebGL and WebGPU, nor tinted copies of one on Canvas: all such emitters draw the renderer's one shared white pixel, stretched to `textureSize` ([#1807](https://github.com/melonjs/melonJS/issues/1807))
-- Text: an outline no longer hides thin or small letters, being drawn behind them, and is no longer cut off at the edges of the text. Its corners are round by default; only its outer half shows now, so double `lineWidth` to keep its weight, or set `paintOrder: "fill"` and `lineJoin: "miter"` for the old look
-- Tiled: a map without `nextobjectid` no longer gives objects added later the GUIDs of its own objects, which made collisions between them drop ([#1809](https://github.com/melonjs/melonJS/issues/1809))
+- Rendering: a translucent `setColor()` no longer fades what is drawn after it, nor changes `getGlobalAlpha()`
+- Rendering: on WebGL and WebGPU, a clip inside a clip is their overlap, as on Canvas ([#1816](https://github.com/melonjs/melonJS/issues/1816))
+- WebGL: `fillArc()` handles an end angle before the start, and `save()` / `restore()` keep `lineWidth` and `lineJoin`, as on Canvas
+- Camera: post effects on a camera no longer wipe out the cameras drawn before it; a minimap with effects shows the view behind where it draws nothing
+- Camera: `worldToLocal()` / `localToWorld()` are right on a minimap or zoomed camera when the level is centred
 - Camera: `fadeIn()` and `fadeOut()` always call `onComplete` ([#1810](https://github.com/melonjs/melonJS/issues/1810))
-- Rendering: on WebGL and WebGPU, a clip inside a clip is the overlap of the two, as on Canvas ([#1816](https://github.com/melonjs/melonJS/issues/1816))
-- UI: a `UITextButton` with a CSS font no longer throws, one moved after it was built draws its background where it is, and it no longer writes its computed size into the settings object it was given
-- UI: a blocking `UIPanel` stays opaque to hover while the pointer is on it, not only on the frame it enters
-- UI: a draggable element can be dragged by touch, and one in the world no longer jumps by the camera position when dragged
-- UI: a region stays hovered after a click, and its hover ends when the pointer leaves the canvas or is cancelled
-- UI: a child cropped out of view by a clipping container no longer gets pointer events where it is not drawn
-- Color: `parseHex()` keeps the full alpha precision (thanks @mmporong)
+- Container: `reset()`, and so `level.load`, keeps the pending sort of the persistent children it keeps
+- Container: `onDeactivateEvent` is called once per child of a removed container, not twice or more
+- Container: `enableChildBoundsUpdate` follows moving children, so the camera no longer culls the group
+- Container: physics bodies of nested children are added and removed at any depth; moving a group with bodies to another container no longer throws
+- World: a persistent container's children keep their physics bodies through a state change or `level.load`
+- Sprite: redefining the playing animation no longer crashes the next update when it is shorter
+- Sprite: a `flicker()` callback gets the sprite as `this`, after the flicker has ended
+- Particles: particles follow their emitter's `visibilityLayer`
+- Particles: an emitter without an `image` no longer leaks a texture per emitter or `reset()`; all share the renderer's white pixel ([#1807](https://github.com/melonjs/melonJS/issues/1807))
+- Text: an outline no longer hides thin letters or gets cut off at the edges. Its corners are round by default and only its outer half shows: double `lineWidth` to keep its weight, or use `paintOrder: "fill"` and `lineJoin: "miter"` for the old look
+- Text: word wrap keeps `\n` line breaks, and no longer adds a blank first line for a long first word (Text and BitmapText)
+- Text: multi-line text is placed by `textBaseline` as one block, as BitmapText is, so it stays inside its bounds
+- Text: `setText("1,000")` after `["1", "000"]` updates the text (Text and BitmapText)
+- Text: `measureText("other text")` no longer changes the label's own size and alignment (Text and BitmapText)
+- UI: a `UITextButton` with a CSS font no longer throws, draws its background where it is after a move, and no longer writes into its settings
+- UI: a blocking `UIPanel` stays opaque to hover while the pointer is on it
+- UI: dragging works by touch, and a dragged element in the world no longer jumps by the camera position
+- UI: hover survives a click, and ends when the pointer leaves the canvas or is cancelled
+- UI: a child clipped out of view gets no pointer events where it is hidden
+- UI: `ProgressBar` re-clamps its value when `min` or `max` change
+- Physics: a resting body stays grounded under heavier gravity or mass, at a low frame rate or on a rising floor
+- Physics: `applyForce()` reads its contact point in world coordinates, so a body away from the origin no longer spins the wrong way
+- Physics: `setAngle()` and angular velocity turn a body about its centre, not a corner, whatever its `anchorPoint`
+- Physics: a counter-clockwise polygon no longer collides with circles nowhere near it
+- Physics: a raycast no longer throws on `Point`, `Sphere` or `Box3d` shapes, and hits a rotated `Ellipse` where it is
+- Tiled: infinite maps place every chunk at its own column and row instead of wrapping tiles into other rows. `cellAt()` / `setTile()` take Tiled's tile coordinates, and `TMXLayer.startx` / `starty` give where the layer starts
+- Tiled: on staggered maps `getTile()` finds the right tile on every row, and a scrolled map draws again
+- Tiled: `getTile()` returns `null` just outside isometric, staggered and oblique maps
+- Tiled: no missing tiles at the view edges on staggered, hexagonal and oblique maps or with `left` / `up` render orders, and no hang when the view is outside a layer
+- Tiled: a tileset with a margin no longer takes the next tileset's tile ids, and an image collection covers all its tiles
+- Tiled: a map without `nextobjectid` no longer gives new objects the GUIDs of its own ([#1809](https://github.com/melonjs/melonJS/issues/1809))
+- Loader: assets on the game's own origin are requested with its cookies and HTTP auth ([#1801](https://github.com/melonjs/melonJS/issues/1801))
+- Loader: an asset on another origin loads whenever its server allows it (CORS), and one it blocks fails at load with an error naming it. `crossOrigin` now only applies to `<video>`, `<script>` and glTF images; `"use-credentials"` sends credentials, as `withCredentials` does
+- Loader: a `preload()` with no callback no longer calls the previous one's callback, and `reload()` works for custom asset types
+- Loader: progress restarts at each preload, and reaches 1 after a failed asset
+- Save: a key set again after `remove()` survives a reload
+- Tween: a path (array) tween no longer grows on each restart, nor turns `NaN` with `yoyo`
+- Tween: a repeating or `yoyo` tween repeats again when restarted
 - Math: `isPowerOfTwo()` rejects zero, negative and fractional values (thanks @mmporong)
+- Math: `round()` rounds negative values correctly and handles values past 2^31; `isPowerOfFour()` rejects fractions
+- Math: the observable vectors' `negateSelf()`, `floorSelf()`, `ceilSelf()` and `clampSelf()` return the vector and notify once
+- Color: `parseHex()` keeps the full alpha precision (thanks @mmporong)
 - Geometry: `Line#contains()` no longer reports points beyond the segment's ends (thanks @mmporong)
+- Geometry: `Ellipse#scale()` keeps the rotation
+- Pool: `purge()` keeps counting the instances still in use
 
 ## [20.12.0] (melonJS 2) - _2026-10-30_
 
