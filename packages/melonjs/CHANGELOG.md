@@ -1,6 +1,6 @@
 # Changelog
 
-## [20.13.0] (melonJS 2) - _unreleased_
+## [20.13.0] (melonJS 2) - _2026-11-06_
 
 ### Added
 - Particles: a `depth` setting, so particles under a `Camera3d` spawn through a volume instead of on a flat sheet
