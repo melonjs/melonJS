@@ -1,7 +1,7 @@
 import { TupleToUnion } from "type-fest";
 import { Point } from "../geometries/point.ts";
 import { createPool } from "../system/pool.ts";
-import { damp, lerp } from "./math.ts";
+import { clamp, damp, lerp } from "./math.ts";
 import { Vector2d } from "./vector2d";
 import { Vector3d } from "./vector3d";
 
@@ -34,7 +34,7 @@ export class ObservableVector3d {
 	 * @ignore
 	 * @internal
 	 */
-	private _callback: () => void;
+	private _callback: (() => void) | undefined;
 	/**
 	 * @ignore
 	 * @internal
@@ -155,9 +155,9 @@ export class ObservableVector3d {
 
 	/**
 	 * Sets the callback function to be called when the point changes.
-	 * @param callback - The callback function.
+	 * @param callback - The callback function, or `undefined` to remove it.
 	 */
-	setCallback(callback: () => void) {
+	setCallback(callback: (() => void) | undefined) {
 		this._callback = callback;
 	}
 
@@ -270,7 +270,11 @@ export class ObservableVector3d {
 	 * @returns Reference to this object for method chaining
 	 */
 	clampSelf(low: number, high: number) {
-		return this._vector3d.clampSelf(low, high);
+		return this.set(
+			clamp(this.x, low, high),
+			clamp(this.y, low, high),
+			clamp(this.z, low, high),
+		);
 	}
 
 	/**
@@ -314,7 +318,7 @@ export class ObservableVector3d {
 	 * @returns Reference to this object for method chaining
 	 */
 	floorSelf() {
-		return this._vector3d.floorSelf();
+		return this.set(Math.floor(this.x), Math.floor(this.y), Math.floor(this.z));
 	}
 
 	/**
@@ -330,7 +334,7 @@ export class ObservableVector3d {
 	 * @returns Reference to this object for method chaining
 	 */
 	ceilSelf() {
-		return this._vector3d.ceilSelf();
+		return this.set(Math.ceil(this.x), Math.ceil(this.y), Math.ceil(this.z));
 	}
 
 	/**
@@ -346,7 +350,7 @@ export class ObservableVector3d {
 	 * @returns Reference to this object for method chaining
 	 */
 	negateSelf() {
-		return this._vector3d.negateSelf();
+		return this.set(-this.x, -this.y, -this.z);
 	}
 
 	/**
@@ -399,7 +403,7 @@ export class ObservableVector3d {
 	 * @returns Reference to this object for method chaining
 	 */
 	normalize() {
-		return this._vector3d.normalize();
+		return this.div(this.length() || 1);
 	}
 
 	/**
@@ -408,7 +412,7 @@ export class ObservableVector3d {
 	 * @returns Reference to this object for method chaining
 	 */
 	perp() {
-		return this._vector3d.perp();
+		return this.set(this.y, -this.x, this.z);
 	}
 
 	/**
@@ -651,9 +655,10 @@ export const observableVector3dPool = createPool<
 		instance: vector,
 		reset(x = 0, y = 0, z = 0, cb?: () => void): void {
 			vector.setMuted(x, y, z);
-			if (cb) {
-				vector.setCallback(cb);
-			}
+			// unconditionally: a recycled vector still carries the callback
+			// of whoever released it, so a `clone()` without one would
+			// otherwise notify that previous owner on every write
+			vector.setCallback(cb);
 		},
 	};
 });

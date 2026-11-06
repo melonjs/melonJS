@@ -23,6 +23,12 @@
 - UI: `UITextButton#bitmapText`, for `label`
 
 ### Fixed
+- Sprite: redefining the playing animation with `addAnimation()` takes effect at once, instead of crashing the next update when the new one is shorter
+- Tween: a repeating or `yoyo` tween started again repeats as configured, instead of running once
+- Math: `round()` rounds negative values to the nearest value (`round(-2.7)` is -3) and handles values past 2^31; `isPowerOfFour()` rejects fractions
+- Math: the observable vectors' `negateSelf()`, `floorSelf()`, `ceilSelf()` and `clampSelf()` return the vector and notify once
+- Ellipse: `scale()` keeps the ellipse's rotation
+- Pool: `purge()` keeps counting the instances still in use, so `used()` no longer goes negative
 - Rendering: a translucent `setColor()` no longer fades the images, colours and renderables drawn after it, nor changes `getGlobalAlpha()`
 - WebGL: `fillArc()` with an end angle before the start fills the right part of the circle, and `save()` / `restore()` puts `lineWidth` and `lineJoin` back, as on Canvas
 - Camera: `worldToLocal()` / `localToWorld()` on a minimap or zoomed camera are no longer off when the level is centred in the view

@@ -102,6 +102,14 @@ export default class Tween {
 	 */
 	_repeat: number;
 	/**
+	 * the repeat count given to {@link Tween#repeat} (or the `repeat` option):
+	 * `_repeat` counts down as the cycles play, and `start()` restores it from
+	 * this, so a finished tween started again repeats as configured
+	 * @ignore
+	 * @internal
+	 */
+	_repeatCount: number;
+	/**
 	 * @ignore
 	 * @internal
 	 */
@@ -229,6 +237,7 @@ export default class Tween {
 		this._valuesStartRepeat = {};
 		this._duration = 1000;
 		this._repeat = 0;
+		this._repeatCount = 0;
 		this._yoyo = false;
 		this._reversed = false;
 		this._delayTime = 0;
@@ -443,6 +452,9 @@ export default class Tween {
 
 		this._startTime = time + this._delayTime;
 		this._reversed = false;
+		// `update()` counts `_repeat` down to 0, so without this a finished
+		// repeating (or yoyo) tween started again ran a single cycle
+		this._repeat = this._repeatCount;
 		// re-read below for every target; cleared so a property an earlier
 		// `to()` named does not linger and get swapped back in by a yoyo
 		this._valuesStart = {};
@@ -504,12 +516,16 @@ export default class Tween {
 	}
 
 	/**
-	 * Repeat the tween
-	 * @param times - amount of times the tween should be repeated
+	 * Repeat the tween. The count applies to every `start()`: a tween that has
+	 * finished and is started again (or is chained back round) plays its
+	 * repeats again.
+	 * @param times - amount of times the tween should be repeated, after the
+	 * first run (`Infinity` for an endless loop)
 	 * @returns this instance for object chaining
 	 */
 	repeat(times: number) {
 		this._repeat = times;
+		this._repeatCount = times;
 		return this;
 	}
 

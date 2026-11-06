@@ -1,6 +1,6 @@
 import { TupleToUnion } from "type-fest";
 import { createPool } from "../system/pool.ts";
-import { damp, lerp } from "./math.ts";
+import { clamp, damp, lerp } from "./math.ts";
 import { Vector2d } from "./vector2d.ts";
 
 const propertiesToObserve = ["x", "y"] as const;
@@ -32,7 +32,7 @@ export class ObservableVector2d {
 	 * @ignore
 	 * @internal
 	 */
-	private _callback: () => void;
+	private _callback: (() => void) | undefined;
 	/**
 	 * @ignore
 	 * @internal
@@ -135,9 +135,9 @@ export class ObservableVector2d {
 
 	/**
 	 * Sets the callback function to be called when the point changes.
-	 * @param callback - The callback function.
+	 * @param callback - The callback function, or `undefined` to remove it.
 	 */
-	setCallback(callback: () => void) {
+	setCallback(callback: (() => void) | undefined) {
 		this._callback = callback;
 	}
 
@@ -248,7 +248,7 @@ export class ObservableVector2d {
 	 * @returns Reference to this object for method chaining
 	 */
 	clampSelf(low: number, high: number) {
-		return this._vector2d.clampSelf(low, high);
+		return this.set(clamp(this.x, low, high), clamp(this.y, low, high));
 	}
 
 	/**
@@ -282,7 +282,7 @@ export class ObservableVector2d {
 	 * @returns Reference to this object for method chaining
 	 */
 	floorSelf() {
-		return this._vector2d.floorSelf();
+		return this.set(Math.floor(this.x), Math.floor(this.y));
 	}
 
 	/**
@@ -298,7 +298,7 @@ export class ObservableVector2d {
 	 * @returns Reference to this object for method chaining
 	 */
 	ceilSelf() {
-		return this._vector2d.ceilSelf();
+		return this.set(Math.ceil(this.x), Math.ceil(this.y));
 	}
 
 	/**
@@ -314,7 +314,7 @@ export class ObservableVector2d {
 	 * @returns Reference to this object for method chaining
 	 */
 	negateSelf() {
-		return this._vector2d.negateSelf();
+		return this.set(-this.x, -this.y);
 	}
 
 	/**
@@ -572,9 +572,10 @@ export const observableVector2dPool = createPool<
 		instance: vector,
 		reset(x = 0, y = 0, cb?: () => void): void {
 			vector.setMuted(x, y);
-			if (cb) {
-				vector.setCallback(cb);
-			}
+			// unconditionally: a recycled vector still carries the callback
+			// of whoever released it, so a `clone()` without one would
+			// otherwise notify that previous owner on every write
+			vector.setCallback(cb);
 		},
 	};
 });
