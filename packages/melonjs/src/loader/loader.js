@@ -1,4 +1,5 @@
 import { warnOnce } from "../lang/console.js";
+import { level } from "../level/level.js";
 import state from "./../state/state.ts";
 import {
 	emit,
@@ -15,9 +16,15 @@ import {
 	getFont,
 	getShader,
 	hasAsset,
+	imgList,
 } from "./cache.js";
 import { preloadAseprite } from "./parsers/aseprite.js";
-import { preloadAudio, unloadAllAudio, unloadAudio } from "./parsers/audio.js";
+import {
+	hasAudioAsset,
+	preloadAudio,
+	unloadAllAudio,
+	unloadAudio,
+} from "./parsers/audio.js";
 import { preloadBinary } from "./parsers/binary.js";
 import { preloadFontFace } from "./parsers/fontface.js";
 import { preloadGLTF } from "./parsers/gltf.js";
@@ -246,6 +253,309 @@ let tally = null;
 const failureLoadedAssets = {};
 
 /**
+ * A bundle declared with {@link loader.setBundle}: a named list of assets with
+ * a lifetime of its own, over the same caches as every other asset.
+ *
+ * `state` is what `setBundle` checks: a bundle is `"loading"` from a
+ * `load(id)` / `preload([id])` until every asset of that call has settled,
+ * `"loaded"` after that (even when one failed: it keeps the ones that did
+ * load), and `"unloaded"` again after `unload(id)` or `unloadAll()`.
+ * `epoch` changes on every unload, so a load still in flight from before
+ * cannot hand its assets to a bundle that has since been released.
+ * @typedef {object} Bundle
+ * @property {Asset[]} assets - the bundle's asset descriptors
+ * @property {"unloaded"|"loading"|"loaded"} state - see above
+ * @property {number} epoch - bumped on every unload of the bundle
+ * @property {number} loads - calls loading it that have not settled yet
+ * @ignore
+ * @internal
+ */
+
+/**
+ * the declared bundles, by id
+ * @type {Map<string, Bundle>}
+ * @ignore
+ * @internal
+ */
+const bundles = new Map();
+
+/**
+ * Who holds each resident asset, keyed by {@link assetKey}: the loaded bundles
+ * that list it, and whether it is PINNED — loaded the old way, by `preload` or
+ * `load` with a descriptor, which no bundle unload frees. An asset nobody
+ * holds is freed by the bundle unload that released it last. An entry only
+ * exists while somebody holds the asset.
+ * @type {Map<string, {pinned: boolean, bundles: Set<string>}>}
+ * @ignore
+ * @internal
+ */
+const owners = new Map();
+
+/**
+ * Loads started on behalf of bundles and still in flight, keyed by
+ * {@link assetKey}, with every bundle that asked for the asset meanwhile — so
+ * two bundles sharing an asset, or one bundle loaded twice at once, fetch it
+ * once, and each still becomes an owner.
+ * @type {Map<string, {promise: Promise<void>, requesters: Map<string, number>}>}
+ * @ignore
+ * @internal
+ */
+const inflight = new Map();
+
+/**
+ * types that share a cache with another under the same name
+ * @ignore
+ * @internal
+ */
+const KEY_ALIASES = { tsx: "tmx", glb: "gltf" };
+
+/**
+ * The identity of an asset for ownership: its type (aliases folded onto the
+ * cache they share) and its name — what the caches themselves key on.
+ * @param {Asset} asset - the asset descriptor
+ * @returns {string} the key
+ * @ignore
+ * @internal
+ */
+function assetKey(asset) {
+	return (KEY_ALIASES[asset.type] ?? asset.type) + ":" + asset.name;
+}
+
+/**
+ * Whether an asset is in memory: in its cache, or for a type the loader keeps
+ * nothing for (scripts, custom types), loaded and not unloaded since.
+ * @param {Asset} asset - the asset descriptor
+ * @returns {boolean} true if resident
+ * @ignore
+ * @internal
+ */
+function isResident(asset) {
+	switch (asset.type) {
+		case "audio":
+			return hasAudioAsset(asset.name);
+		case "aseprite":
+			return hasAsset("image", asset.name) && hasAsset("json", asset.name);
+		default:
+			if (CACHED_TYPES.includes(asset.type)) {
+				return hasAsset(asset.type, asset.name);
+			}
+			return owners.has(assetKey(asset));
+	}
+}
+
+/**
+ * the ownership record of an asset, created when missing
+ * @param {Asset} asset - the asset descriptor
+ * @returns {{pinned: boolean, bundles: Set<string>}} the record
+ * @ignore
+ * @internal
+ */
+function ownerRecord(asset) {
+	const key = assetKey(asset);
+	let record = owners.get(key);
+	if (record === undefined) {
+		record = { pinned: false, bundles: new Set() };
+		owners.set(key, record);
+	}
+	return record;
+}
+
+/**
+ * mark an asset as loaded the old way: no bundle unload frees it
+ * @param {Asset} asset - the asset descriptor
+ * @ignore
+ * @internal
+ */
+function pin(asset) {
+	ownerRecord(asset).pinned = true;
+}
+
+/**
+ * Make the bundles that asked for an asset its owners — those still at the
+ * epoch they asked at. One unloaded since (or by `unloadAll`) does not get it.
+ * @param {Asset} asset - the asset descriptor
+ * @param {Map<string, number>} requesters - bundle id → epoch when it asked
+ * @ignore
+ * @internal
+ */
+function adopt(asset, requesters) {
+	for (const [id, epoch] of requesters) {
+		const bundle = bundles.get(id);
+		if (bundle !== undefined && bundle.epoch === epoch) {
+			ownerRecord(asset).bundles.add(id);
+		}
+	}
+}
+
+/**
+ * Free an asset nobody holds any more, as a bundle unload does: out of its
+ * cache, its GPU objects released, and for a map or a glTF scene, its level
+ * unregistered (the parser registers it again on the next load).
+ * @param {Asset} asset - the asset descriptor
+ * @ignore
+ * @internal
+ */
+function release(asset) {
+	owners.delete(assetKey(asset));
+	// a custom type has nothing in the loader to free
+	if (
+		CACHED_TYPES.includes(asset.type) ||
+		UNCACHED_TYPES.includes(asset.type)
+	) {
+		freeAsset(asset);
+	}
+	if (asset.type === "tmx" || asset.type === "gltf" || asset.type === "glb") {
+		level.remove(asset.name);
+	}
+}
+
+/**
+ * the bundle declared under an id, or a synchronous throw
+ * @param {string} id - the bundle id
+ * @returns {Bundle} the bundle
+ * @throws {Error} when no bundle is declared under that id
+ * @ignore
+ * @internal
+ */
+function requireBundle(id) {
+	const bundle = bundles.get(id);
+	if (bundle === undefined) {
+		throw new Error(
+			`loader: unknown bundle "${id}" (declare it with loader.setBundle first)`,
+		);
+	}
+	return bundle;
+}
+
+/**
+ * Load one asset for the bundles asking for it: at once when it is already
+ * resident, by joining the load in flight when there is one, and otherwise by
+ * loading it. The bundles become its owners once it is in; and should every
+ * one of them have been unloaded while it was loading, the asset is freed
+ * again on arrival rather than left in memory with no owner.
+ * @param {Asset} asset - the asset descriptor
+ * @param {Map<string, number>} requesters - bundle id → epoch when it asked
+ * @returns {Promise<void>} settles with the load
+ * @ignore
+ * @internal
+ */
+function loadForBundles(asset, requesters) {
+	const key = assetKey(asset);
+	const pending = inflight.get(key);
+	if (pending !== undefined) {
+		for (const [id, epoch] of requesters) {
+			pending.requesters.set(id, epoch);
+		}
+		return pending.promise;
+	}
+	if (isResident(asset)) {
+		adopt(asset, requesters);
+		return Promise.resolve();
+	}
+	const entry = { promise: loadAsset(asset), requesters: new Map(requesters) };
+	inflight.set(key, entry);
+	// registered before any caller's handlers, so ownership is settled by the
+	// time they run
+	entry.promise.then(
+		() => {
+			inflight.delete(key);
+			adopt(asset, entry.requesters);
+			if (!owners.has(key)) {
+				release(asset);
+			}
+		},
+		() => {
+			inflight.delete(key);
+		},
+	);
+	return entry.promise;
+}
+
+/**
+ * Turn a preload list — asset descriptors and bundle ids, mixed — into one
+ * entry per asset to load, each knowing whether it was asked for directly
+ * (`pin`) and by which bundles.
+ *
+ * A bundle's asset that is already in the list (from another bundle, or
+ * listed directly) joins that entry rather than loading twice. Descriptors
+ * listed directly are kept one entry each, as they always were. Every id is
+ * checked before anything starts, so an unknown one throws synchronously
+ * with nothing loaded.
+ * @param {Array<Asset|string>} list - the preload list
+ * @returns {{entries: Array<{asset: Asset, pin: boolean, bundles: Map<string, number>}>, ids: string[]}} the entries, and the bundle ids in the list
+ * @ignore
+ * @internal
+ */
+function expandPreloadList(list) {
+	if (!Array.isArray(list)) {
+		throw new TypeError("loader.preload: expected an array of assets");
+	}
+	const ids = [];
+	for (const item of list) {
+		if (typeof item === "string") {
+			requireBundle(item);
+			if (!ids.includes(item)) {
+				ids.push(item);
+			}
+		}
+	}
+	if (ids.length > 0) {
+		if (parserInitialized === false) {
+			initParsers();
+		}
+		// with bundles in the list, a bad type anywhere in it throws before
+		// any of their loads start, rather than leaving them half started
+		for (const item of list) {
+			if (typeof item !== "string" && !parsers.has(item?.type)) {
+				throw new Error(
+					"load : unknown or invalid resource type : " + item?.type,
+				);
+			}
+		}
+	}
+
+	const entries = [];
+	const byKey = new Map();
+	for (const item of list) {
+		if (typeof item === "string") {
+			const bundle = bundles.get(item);
+			for (const asset of bundle.assets) {
+				// a typo in a bundle fails before anything is loaded, rather
+				// than part-way through with half the bundle in flight
+				if (!parsers.has(asset.type)) {
+					throw new Error(
+						`load : unknown or invalid resource type : ${asset.type} (in bundle "${item}")`,
+					);
+				}
+				const key = assetKey(asset);
+				let entry = byKey.get(key);
+				if (entry === undefined) {
+					entry = { asset, pin: false, bundles: new Map() };
+					byKey.set(key, entry);
+					entries.push(entry);
+				}
+				entry.bundles.set(item, bundle.epoch);
+			}
+		} else {
+			const key = assetKey(item);
+			const entry = byKey.get(key);
+			if (entry !== undefined && entry.pin === false) {
+				// a bundle's asset, also listed directly: one load, and pinned
+				entry.asset = item;
+				entry.pin = true;
+			} else {
+				const fresh = { asset: item, pin: true, bundles: new Map() };
+				if (entry === undefined) {
+					byKey.set(key, fresh);
+				}
+				entries.push(fresh);
+			}
+		}
+	}
+	return { entries, ids };
+}
+
+/**
  * init all supported parsers
  * @ignore
  * @internal
@@ -347,11 +657,13 @@ function onResourceLoaded(res, counts) {
  * on error callback for image loading
  * @param {Asset} res - asset that loaded with failure
  * @param {object} call - the preload call it belonged to
+ * @param {{pin: boolean, bundles: Map<string, number>}} [owner] - who asked
+ * for it, so a successful {@link loader.reload} hands it to them
  * @ignore
  * @internal
  */
-function onLoadingError(res, call) {
-	failureLoadedAssets[res.src] = { asset: res, call };
+function onLoadingError(res, call, owner) {
+	failureLoadedAssets[res.src] = { asset: res, call, owner };
 	call.failed.add(res.src);
 	emit(LOADER_ERROR, res);
 	throw new Error("Failed loading resource " + res.src);
@@ -543,8 +855,113 @@ export function setParser(type, parserFn) {
 }
 
 /**
+ * Declare every bundle of a record handed to {@link loader.preload}, and
+ * return their ids. All of them are checked before any is declared, so a bad
+ * one, or one that may not be redefined, throws with nothing changed.
+ * @param {Object<string, Asset[]>} record - bundle id → its asset descriptors
+ * @returns {string[]} the bundle ids
+ * @throws {TypeError} when it is not a record of asset arrays
+ * @ignore
+ * @internal
+ */
+function declareBundleRecord(record) {
+	if (typeof record !== "object" || record === null) {
+		throw new TypeError(
+			"loader.preload: expected an array of assets, or a record of bundles",
+		);
+	}
+	if (typeof record.type === "string" && typeof record.name === "string") {
+		throw new TypeError(
+			`loader.preload: "${record.name}" is a single asset; pass a list of assets ([asset]) or a record of bundles`,
+		);
+	}
+	const ids = Object.keys(record);
+	for (const id of ids) {
+		if (!Array.isArray(record[id])) {
+			throw new TypeError(
+				`loader.preload: "${id}" is not a list of assets; a record maps each bundle id to an array of asset descriptors`,
+			);
+		}
+		validateBundle(id, record[id]);
+		const existing = bundles.get(id);
+		if (
+			existing !== undefined &&
+			existing.state !== "unloaded" &&
+			!sameAssets(existing.assets, record[id])
+		) {
+			throw new Error(
+				`loader.setBundle("${id}"): the bundle is ${existing.state}; unload it before redefining it`,
+			);
+		}
+	}
+	for (const id of ids) {
+		const existing = bundles.get(id);
+		if (existing === undefined || !sameAssets(existing.assets, record[id])) {
+			setBundle(id, record[id]);
+		}
+	}
+	return ids;
+}
+
+/**
+ * Declare every bundle of a record — `{ id: assets, ... }`, as an assets file
+ * exports it — and load them all, behind the loading screen.
+ *
+ * Each key becomes a bundle, exactly as {@link loader.setBundle} would make
+ * it (the same checks; a bundle already declared with the same assets is left
+ * as it is, and one declared with others is redefined, which throws while it
+ * is loaded or loading), and every one of them is then loaded as one preload:
+ * one progress bar over all their assets, the shader warm-up, then the
+ * callback and `LOADER_COMPLETE`. An asset several bundles list is loaded
+ * once. Each bundle is then loaded as if by `load(id)`, so the usual calls
+ * apply from there: `unload(id)` to free a level's own assets,
+ * `load(id)` to bring them back.
+ *
+ * Calling it again fetches nothing already in memory. A single asset
+ * descriptor passed here by mistake throws a `TypeError`: wrap it in an array.
+ * @overload
+ * @param {Object<string, Asset[]>} bundles - bundle id → its asset descriptors
+ * @param {Function} [onloadcb] - called once every asset has loaded
+ * @param {boolean} [switchToLoadState=true] - automatically switch to the loading screen
+ * @returns {Promise<void>} resolves once every asset has loaded
+ * @example
+ * // resources.js
+ * export default {
+ *     common: [
+ *         { name: "player", type: "image", src: "img/player.png" },
+ *         { name: "jump",   type: "audio", src: "sfx/" },
+ *     ],
+ *     map1: [
+ *         { name: "map1",  type: "tmx",   src: "map/map1.tmx" },
+ *         { name: "hills", type: "image", src: "img/hills.png" },
+ *     ],
+ *     map2: [
+ *         { name: "map2",  type: "tmx",   src: "map/map2.tmx" },
+ *         { name: "hills", type: "image", src: "img/hills.png" },
+ *     ],
+ * };
+ *
+ * // game.js: the same call as with a flat list
+ * import resources from "./resources.js";
+ * await loader.preload(resources);
+ * // ...later, per level
+ * loader.unload("map1");
+ * await loader.load("map1");
+ * @category Assets
+ */
+/**
  * set all the specified game assets to be preloaded.
- * @param {Asset[]} assets - list of assets to load
+ * @overload
+ *
+ * The list may also name bundles declared with {@link loader.setBundle},
+ * mixed freely with asset descriptors: each id stands for the assets of that
+ * bundle, and an asset that appears more than once (in two bundles, or in a
+ * bundle and directly) is loaded once. Those bundles are loaded by this call,
+ * exactly as {@link loader.load} with their id would, and their assets
+ * already in memory are not fetched again. An unknown id throws
+ * synchronously, before anything is loaded.
+ * @param {Array<Asset|string>} assets - list of assets to load, and/or ids of
+ * bundles declared with {@link loader.setBundle}
  * @param {Function} [onloadcb] - function to be called when all resources are
  * loaded. Each call has only its own: a preload given none calls nothing,
  * whatever an earlier preload was given
@@ -601,9 +1018,30 @@ export function setParser(type, parserFn) {
  * me.loader.preload(game.assets, () => this.loaded());
  * // ...or await it (the callback still fires too)
  * await me.loader.preload(game.assets);
+ * @example
+ * // bundles and descriptors in one list, behind the loading screen
+ * loader.setBundle("common", commonAssets);
+ * loader.setBundle("level1", level1Assets);
+ * await loader.preload(["common", "level1", { name: "logo", type: "image", src: "img/logo.png" }]);
  * @category Assets
  */
+/**
+ * @param {Array<Asset|string>|Object<string, Asset[]>} assets - see the overloads
+ * @param {Function} [onloadcb] - called once every asset has loaded
+ * @param {boolean} [switchToLoadState=true] - automatically switch to the loading screen
+ * @returns {Promise<void>} see the overloads
+ * @ignore
+ */
 export function preload(assets, onloadcb, switchToLoadState = true) {
+	// a record of bundles: declare them all, then load them all, by id
+	if (!Array.isArray(assets)) {
+		assets = declareBundleRecord(assets);
+	}
+
+	// bundle ids expand to their assets; an unknown one throws here, before
+	// the tally, the loading screen or any request
+	const { entries, ids } = expandPreloadList(assets);
+
 	// join the preloads still in flight, or start counting afresh
 	if (tally === null || tally.settled === tally.total) {
 		tally = { total: 0, loaded: 0, settled: 0 };
@@ -635,12 +1073,23 @@ export function preload(assets, onloadcb, switchToLoadState = true) {
 	// load 0 or 1 resource; a cached asset resolves immediately and still
 	// reports progress). Counted as each one starts, so an asset `load()`
 	// throws for (an unknown type) does not leave a tally that never settles.
-	const promises = assets.map((asset) => {
-		const loading = load(asset);
+	//
+	// An asset listed directly goes through `load()` as it always has (which
+	// pins it); one only a bundle asked for goes through `loadForBundles`,
+	// which skips it when resident and shares a load already in flight.
+	const promises = entries.map((entry) => {
+		const asset = entry.asset;
+		const loading = entry.pin
+			? load(asset)
+			: loadForBundles(asset, entry.bundles);
 		counts.total++;
 		call.pending++;
 		return loading
 			.then(() => {
+				// a bundle asset also listed directly: the bundles own it too
+				if (entry.pin && entry.bundles.size > 0) {
+					adopt(asset, entry.bundles);
+				}
 				settle();
 				onResourceLoaded(asset, counts);
 			})
@@ -650,10 +1099,29 @@ export function preload(assets, onloadcb, switchToLoadState = true) {
 				// re-rejects → Promise.all (and the returned promise) reject and
 				// `await loader.preload(...)` surfaces the failure. The trailing
 				// throw keeps the rejection meaningful should it ever stop throwing.
-				onLoadingError(asset, call);
+				onLoadingError(asset, call, entry);
 				throw err;
 			});
 	});
+
+	// the bundles of this call are loading until all of its assets settle;
+	// marked only now, so a synchronous throw above leaves them as they were
+	const loadingBundles = ids.map((id) => {
+		const bundle = bundles.get(id);
+		bundle.state = "loading";
+		bundle.loads++;
+		return { bundle, epoch: bundle.epoch };
+	});
+	if (loadingBundles.length > 0) {
+		Promise.allSettled(promises).then(() => {
+			for (const { bundle, epoch } of loadingBundles) {
+				// one unloaded meanwhile has already been reset
+				if (bundle.epoch === epoch && --bundle.loads === 0) {
+					bundle.state = "loaded";
+				}
+			}
+		});
+	}
 
 	if (switchToLoadState === true) {
 		// switch to the loading screen
@@ -691,21 +1159,39 @@ export function preload(assets, onloadcb, switchToLoadState = true) {
  *  );
  **/
 export function reload(src) {
-	const { asset: assetToReload, call } = failureLoadedAssets[src];
+	const { asset: assetToReload, call, owner } = failureLoadedAssets[src];
 	// drop whatever the failed attempt left behind. A type registered with
 	// `setParser` has nothing in the loader's caches, and `unload` throws for
-	// a type it does not know, which made such an asset impossible to retry
+	// a type it does not know, which made such an asset impossible to retry.
+	// Freed without touching who owns it: the retry is still on their behalf
 	if (
 		CACHED_TYPES.includes(assetToReload.type) ||
 		UNCACHED_TYPES.includes(assetToReload.type)
 	) {
-		unload(assetToReload);
+		freeAsset(assetToReload);
 	}
 
+	// once in, the asset belongs to whoever asked for it in the failed
+	// preload: pinned if it was listed directly, owned by its bundles if a
+	// bundle asked — and freed again at once if every one of those bundles
+	// has been unloaded since
+	const settleOwnership = () => {
+		if (owner === undefined || owner.pin) {
+			pin(assetToReload);
+		}
+		if (owner !== undefined && owner.bundles.size > 0) {
+			adopt(assetToReload, owner.bundles);
+			if (!owners.has(assetKey(assetToReload))) {
+				release(assetToReload);
+			}
+		}
+	};
+
 	new Promise((resolve, reject) => {
-		const count = load(
+		const count = loadAsset(
 			assetToReload,
 			() => {
+				settleOwnership();
 				call.failed.delete(src);
 				onResourceLoaded(assetToReload, call.tally);
 				resolve();
@@ -721,6 +1207,7 @@ export function reload(src) {
 			},
 		);
 		if (count === 0) {
+			settleOwnership();
 			call.failed.delete(src);
 			delete failureLoadedAssets[src];
 			resolve();
@@ -738,8 +1225,67 @@ export function reload(src) {
 }
 
 /**
+ * Declare a bundle and load it, in one call: exactly
+ * {@link loader.setBundle} with these assets followed by `load(id)`, so the
+ * same checks, the same progress and shader warm-up, and the same promise.
+ *
+ * Called again with the same assets (same type, name and src, in any order),
+ * it simply loads the bundle, fetching nothing already in memory. With
+ * different assets it redefines the bundle, which is allowed only while that
+ * bundle is not loaded or loading, and throws synchronously otherwise, as
+ * `setBundle` does. Release it with {@link loader.unload} and its id.
+ * @overload
+ * @param {string} id - the bundle id
+ * @param {Asset[]|Asset} assets - the bundle's asset descriptors (one
+ * descriptor on its own is accepted too)
+ * @returns {Promise<void>} resolves once the bundle is loaded
+ * @example
+ * // a level's assets, declared where they are loaded
+ * await loader.load("level2", [
+ *     { name: "map2",  type: "tmx",   src: "data/map/map2.tmx" },
+ *     { name: "tiles", type: "image", src: "data/img/tiles.png" },
+ * ]);
+ * // ...and later, by id as usual
+ * loader.unload("level2");
+ * @category Assets
+ */
+/**
+ * Load a bundle declared with {@link loader.setBundle}: every asset it lists
+ * that is not already in memory, then the shader warm-up, the same way
+ * {@link loader.preload} does — so `LOADER_PROGRESS` reports this call's
+ * assets, and `LOADER_COMPLETE` fires once they are in — but WITHOUT switching
+ * to the loading screen: the game keeps running while it loads. Each asset
+ * of the bundle is one step of that progress; one already in memory is not
+ * fetched again, and counts as a step done at once.
+ *
+ * The bundle then holds its assets: they stay in memory until
+ * {@link loader.unload} with the same id releases them, and are freed then
+ * unless another loaded bundle lists them too, or they were loaded the old
+ * way (by `preload` / `load` with a descriptor), which pins them. Assets keep
+ * their own names: `getImage("tiles")` reads a bundle's image as before.
+ *
+ * An unknown id throws synchronously. The promise rejects if any asset fails
+ * to load, as `preload` does; the assets that did load stay, held by the
+ * bundle, and {@link loader.reload} retries the one that failed.
+ * @overload
+ * @param {string} id - the id of a bundle declared with {@link loader.setBundle}
+ * @param {Function} [onload] - called once every asset of the bundle has loaded
+ * @param {Function} [onerror] - called with the error if one fails to load
+ * @returns {Promise<void>} resolves once the bundle is loaded, in every form
+ * @example
+ * // the next level's assets, loaded while the current one keeps playing
+ * await loader.load("level2");
+ * await level.load("level2", { async: true });
+ * loader.unload("level1");
+ * @category Assets
+ */
+/**
  * Load a single asset (to be used if you need to load additional asset(s) during the game)
- * @param {Asset} asset
+ *
+ * An asset loaded this way is pinned: unloading a bundle that also lists it
+ * does not free it. {@link loader.unload} with the descriptor does.
+ * @overload
+ * @param {Asset} asset - the asset to load
  * @param {Function} [onload] - function to be called when the asset is loaded
  * @param {Function} [onerror] - function to be called in case of error
  * @returns {number|Promise<void>} with `onload`/`onerror` provided, the amount
@@ -771,7 +1317,56 @@ export function reload(src) {
  * });
  * @category Assets
  */
+/**
+ * @param {string|Asset} asset - a bundle id, or an asset descriptor
+ * @param {Function|Asset[]|Asset} [onload] - called once loaded, or with a
+ * bundle id, the assets to declare it with
+ * @param {Function} [onerror] - called in case of error
+ * @returns {number|Promise<void>} see the overloads
+ * @ignore
+ */
 export function load(asset, onload, onerror) {
+	if (typeof asset === "string") {
+		if (typeof onload === "object" && onload !== null) {
+			// `load(id, assets)`: declare, then load as below. The same
+			// assets as already declared just load; others redefine the
+			// bundle, which `setBundle` refuses while it is loaded or loading
+			const assets = Array.isArray(onload) ? onload : [onload];
+			validateBundle(asset, assets);
+			const existing = bundles.get(asset);
+			if (existing === undefined || !sameAssets(existing.assets, assets)) {
+				setBundle(asset, assets);
+			}
+			return preload([asset], undefined, false);
+		}
+		// the bundle path is preload's, minus the loading screen: progress,
+		// the shader warm-up and LOADER_COMPLETE all come with it
+		const loading = preload([asset], onload, false);
+		if (typeof onerror === "function") {
+			// handled here, so a caller using the callback need not also catch
+			// the promise to avoid an unhandled rejection
+			loading.catch(onerror);
+		}
+		return loading;
+	}
+	return loadAsset(asset, onload, onerror, () => {
+		pin(asset);
+	});
+}
+
+/**
+ * Load a single asset through its parser: the body of {@link loader.load}
+ * for a descriptor, without the ownership the public call adds.
+ * @param {Asset} asset - the asset to load
+ * @param {Function} [onload] - function to be called when the asset is loaded
+ * @param {Function} [onerror] - function to be called in case of error
+ * @param {Function} [onLoaded] - called once the asset is in, before `onload`
+ * or the promise resolves
+ * @returns {number|Promise<void>} as {@link loader.load}
+ * @ignore
+ * @internal
+ */
+function loadAsset(asset, onload, onerror, onLoaded) {
 	// make sure all parsers have been initialized
 	if (parserInitialized === false) {
 		initParsers();
@@ -815,6 +1410,8 @@ export function load(asset, onload, onerror) {
 		withCredentials: withCredentials,
 	};
 
+	const loaded = typeof onLoaded === "function" ? onLoaded : () => {};
+
 	// Promise form: with no callbacks, resolve once the asset (and any
 	// sub-resources) have loaded — for a one-off `await loader.load(asset)`.
 	// The legacy callback form below still returns the resource count.
@@ -826,19 +1423,36 @@ export function load(asset, onload, onerror) {
 				this,
 				resource,
 				() => {
+					loaded();
 					resolve();
 				},
 				reject,
 				settings,
 			);
 			if (count === 0) {
+				loaded();
 				resolve();
 			}
 		});
 	}
 
+	// the callback is wrapped only when there is one: several parsers test
+	// `typeof onload === "function"` to decide what to wait for
+	const onloadcb =
+		typeof onload === "function"
+			? () => {
+					loaded();
+					onload();
+				}
+			: onload;
+
 	// parser returns the amount of asset to be loaded (usually 1 unless an asset is splitted into several ones)
-	return parser.parse.call(this, resource, onload, onerror, settings);
+	const count = parser.parse.call(this, resource, onloadcb, onerror, settings);
+	// already cached (no callback will come), or no callback to hear it by
+	if (count === 0 || typeof onload !== "function") {
+		loaded();
+	}
+	return count;
 }
 
 /**
@@ -849,13 +1463,87 @@ export function load(asset, onload, onerror) {
 const UNCACHED_TYPES = ["js", "audio", "fontface", "shader", "aseprite"];
 
 /**
- * unload the specified asset to free memory
- * @param {Asset} asset
+ * Unload an asset, or release a bundle, to free memory.
+ *
+ * **With a bundle id** (see {@link loader.setBundle}), the bundle lets go of
+ * each of its assets, and every one that nothing else still holds is freed:
+ * an asset another loaded bundle lists stays, and so does one loaded the old
+ * way (by `preload` / `load` with a descriptor), which pins it. Freeing a map
+ * or a glTF scene also unregisters its level, so `level.load` of it throws
+ * "not found" until the bundle is loaded again — and unloading the bundle of
+ * the level being played leaves what is in the world as it is, with no current
+ * level to reload. Returns `false` when the bundle was not loaded. An unknown
+ * id throws synchronously.
+ *
+ * **With an asset descriptor**, the asset is freed at once, whoever holds it:
+ * a bundle listing it reports {@link loader.isLoaded} `false` afterwards, and
+ * loading that bundle again fetches it again.
+ *
+ * Either way, freeing an image also frees the texture the renderer uploaded
+ * from it, and freeing a shader its GPU program. A shader handed out by
+ * {@link loader.getShader} is not tracked once handed out, so an effect that
+ * outlives a level (a HUD's, a camera's) belongs in a bundle that outlives it
+ * too, or it is freed under whatever still uses it.
+ * @param {string|Asset} asset - a bundle id, or the asset to unload
  * @returns {boolean} true if unloaded
- * @example me.loader.unload({name: "avatar",  type:"image"});
+ * @example
+ * me.loader.unload({name: "avatar",  type:"image"});
+ * @example
+ * // after switching levels: free what only the previous level used
+ * loader.unload("level1");
  * @category Assets
  */
 export function unload(asset) {
+	if (typeof asset === "string") {
+		return unloadBundle(asset);
+	}
+	const unloaded = freeAsset(asset);
+	// whoever held it, it is gone now: the bundles listing it see it missing
+	owners.delete(assetKey(asset));
+	return unloaded;
+}
+
+/**
+ * Release a bundle: drop it from the owners of each of its assets, and free
+ * the ones nobody holds any more. Allowed while it is still loading — its
+ * assets still in flight are then freed as they arrive, unless another owner
+ * has taken them meanwhile.
+ * @param {string} id - the bundle id
+ * @returns {boolean} false if the bundle was not loaded
+ * @ignore
+ * @internal
+ */
+function unloadBundle(id) {
+	const bundle = requireBundle(id);
+	if (bundle.state === "unloaded") {
+		return false;
+	}
+	bundle.state = "unloaded";
+	bundle.loads = 0;
+	bundle.epoch++;
+	for (const asset of bundle.assets) {
+		const record = owners.get(assetKey(asset));
+		if (record === undefined || !record.bundles.delete(id)) {
+			continue;
+		}
+		if (record.bundles.size === 0 && !record.pinned) {
+			release(asset);
+		}
+	}
+	return true;
+}
+
+/**
+ * Free an asset from the loader: its cache entry, and what it owns elsewhere
+ * — an image's GPU texture, a shader's program, a font's place in the
+ * document. The body of {@link loader.unload} for a descriptor, without the
+ * ownership bookkeeping.
+ * @param {Asset} asset - the asset to free
+ * @returns {boolean} true if unloaded
+ * @ignore
+ * @internal
+ */
+function freeAsset(asset) {
 	switch (asset.type) {
 		case "js":
 			// nothing is cached for a script: it ran at load time
@@ -897,6 +1585,7 @@ export function unload(asset) {
 		case "aseprite": {
 			// an aseprite asset populates both the image and the json cache
 			// under the same key, and either one alone counts as present
+			releaseImageTexture(asset.name);
 			const hadImage = deleteAsset("image", asset.name);
 			const hadJson = deleteAsset("json", asset.name);
 			return hadImage || hadJson;
@@ -911,12 +1600,40 @@ export function unload(asset) {
 					"unload : unknown or invalid resource type : " + asset.type,
 				);
 			}
+			if (asset.type === "image") {
+				releaseImageTexture(asset.name);
+			}
 			return deleteAsset(asset.type, asset.name);
 	}
 }
 
 /**
+ * Free the texture the renderer made from a cached image, before the image
+ * leaves the cache: the GPU copy (WebGL, WebGPU) and the tinted copies
+ * (Canvas). An image unloaded used to keep its GPU texture until the next
+ * level reset on WebGL, and for good on WebGPU. Nothing to do before the
+ * renderer exists, nor for an image never drawn.
+ * @param {string} name - the image asset name
+ * @ignore
+ * @internal
+ */
+function releaseImageTexture(name) {
+	const image = imgList[name];
+	if (image === undefined || image === null) {
+		return;
+	}
+	const renderer = _app?.renderer;
+	if (typeof renderer?.releaseImage === "function") {
+		renderer.releaseImage(image);
+	}
+}
+
+/**
  * unload all resources to free memory
+ *
+ * Every asset goes, whoever holds it. Bundles declared with
+ * {@link loader.setBundle} stay declared, all of them back to not loaded, so
+ * they can be loaded again.
  * @example me.loader.unloadAll();
  * @category Assets
  */
@@ -926,10 +1643,169 @@ export function unloadAll() {
 	// their siblings already cleared, which costs one empty pass each.
 	for (const type of CACHED_TYPES) {
 		for (const name of assetNames(type)) {
-			unload({ name, type });
+			freeAsset({ name, type });
 		}
 	}
 
 	// and the audio, which keeps its own store
 	unloadAllAudio();
+
+	// nobody holds anything now; the bundles stay declared, ready to load
+	// again, and a load of one still in flight no longer hands it its assets
+	owners.clear();
+	for (const bundle of bundles.values()) {
+		bundle.state = "unloaded";
+		bundle.loads = 0;
+		bundle.epoch++;
+	}
+}
+
+/**
+ * Declare a bundle: a named list of the asset descriptors you would otherwise
+ * pass to {@link loader.preload}, to load and free together — typically the
+ * assets of one level, plus a `"common"` bundle for what every level uses.
+ *
+ * A bundle is a lifetime, not a namespace: its assets keep their own names
+ * and live in the same caches as every other asset, so `getImage("tiles")`
+ * and `level.load("map1")` read them as before. Load it with
+ * {@link loader.load} (or name it in a {@link loader.preload} list), check it
+ * with {@link loader.isLoaded}, and release it with {@link loader.unload}. An
+ * asset listed in several bundles is loaded once and freed with the last
+ * loaded bundle that lists it.
+ *
+ * Declaring does not load anything, and a bundle can be declared before the
+ * parsers of custom types it uses are registered. Redefining an id replaces
+ * its list, but only while that bundle is not loaded or loading: unload it
+ * first. The list is copied, so changing the array afterwards changes nothing.
+ * An asset listed twice is one asset (type and name identify it), and an
+ * empty list is allowed: such a bundle loads at once and is always loaded.
+ * @param {string} id - the bundle id
+ * @param {Asset[]} assets - its asset descriptors (bundle ids cannot be nested)
+ * @throws {TypeError} on an empty or non-string id, or a list that is not an
+ * array of asset descriptors
+ * @throws {Error} when that bundle is loaded or loading
+ * @example
+ * loader.setBundle("common", [
+ *     { name: "player", type: "image", src: "img/player.png" },
+ *     { name: "font",   type: "fontface", src: "font/PressStart2P.ttf" },
+ * ]);
+ * loader.setBundle("level1", [
+ *     { name: "level1", type: "tmx",   src: "map/level1.tmx" },
+ *     { name: "hills",  type: "image", src: "img/hills.png" },
+ * ]);
+ * loader.setBundle("level2", [
+ *     { name: "level2", type: "tmx",   src: "map/level2.tmx" },
+ *     { name: "hills",  type: "image", src: "img/hills.png" }, // shared
+ * ]);
+ *
+ * // boot: behind the loading screen
+ * await loader.preload(["common", "level1"]);
+ * @category Assets
+ */
+export function setBundle(id, assets) {
+	validateBundle(id, assets);
+	const existing = bundles.get(id);
+	if (existing !== undefined && existing.state !== "unloaded") {
+		throw new Error(
+			`loader.setBundle("${id}"): the bundle is ${existing.state}; unload it before redefining it`,
+		);
+	}
+	bundles.set(id, {
+		assets: assets.slice(),
+		state: "unloaded",
+		loads: 0,
+		// carried over, so a load from before a redefinition cannot match
+		epoch: existing !== undefined ? existing.epoch + 1 : 0,
+	});
+}
+
+/**
+ * check a bundle declaration, throwing a `TypeError` naming what is wrong
+ * @param {string} id - the bundle id
+ * @param {Asset[]} assets - its asset descriptors
+ * @ignore
+ * @internal
+ */
+function validateBundle(id, assets) {
+	if (typeof id !== "string" || id.length === 0) {
+		throw new TypeError("loader.setBundle: the id must be a non-empty string");
+	}
+	if (!Array.isArray(assets)) {
+		throw new TypeError(
+			`loader.setBundle("${id}"): expected an array of asset descriptors`,
+		);
+	}
+	for (const asset of assets) {
+		if (typeof asset === "string") {
+			throw new TypeError(
+				`loader.setBundle("${id}"): "${asset}" is a string; a bundle lists asset descriptors, not other bundles`,
+			);
+		}
+		if (
+			typeof asset !== "object" ||
+			asset === null ||
+			typeof asset.name !== "string" ||
+			typeof asset.type !== "string"
+		) {
+			throw new TypeError(
+				`loader.setBundle("${id}"): every asset needs a string \`name\` and \`type\``,
+			);
+		}
+	}
+}
+
+/**
+ * Whether two asset lists declare the same assets — the same type, name and
+ * src, in any order — so `load(id, assets)` called again with what is already
+ * declared loads the bundle rather than redefining it.
+ * @param {Asset[]} a - one list
+ * @param {Asset[]} b - the other
+ * @returns {boolean} true if they list the same assets
+ * @ignore
+ * @internal
+ */
+function sameAssets(a, b) {
+	const signature = (list) => {
+		return list
+			.map((asset) => {
+				return JSON.stringify([asset.type, asset.name, asset.src ?? null]);
+			})
+			.sort()
+			.join("\n");
+	};
+	return a.length === b.length && signature(a) === signature(b);
+}
+
+/**
+ * The asset list of a declared bundle.
+ * @param {string} id - the bundle id
+ * @returns {Asset[]|undefined} a copy of its asset descriptors, or
+ * `undefined` when no bundle is declared under that id
+ * @example
+ * if (loader.getBundle("level3") === undefined) {
+ *     loader.setBundle("level3", level3Assets);
+ * }
+ * @category Assets
+ */
+export function getBundle(id) {
+	const bundle = bundles.get(id);
+	return bundle !== undefined ? bundle.assets.slice() : undefined;
+}
+
+/**
+ * Whether every asset of a bundle is in memory, however it got there — so a
+ * game can skip a loading screen it does not need. `false` again as soon as
+ * one of them is unloaded, by the bundle or on its own.
+ * @param {string} id - the bundle id
+ * @returns {boolean} true if every asset of the bundle is loaded
+ * @throws {Error} when no bundle is declared under that id
+ * @example
+ * if (!loader.isLoaded("level2")) {
+ *     await loader.preload(["level2"]); // with the loading screen
+ * }
+ * level.load("level2");
+ * @category Assets
+ */
+export function isLoaded(id) {
+	return requireBundle(id).assets.every(isResident);
 }

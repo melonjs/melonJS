@@ -10,10 +10,12 @@ import {
 	device,
 	event,
 	game,
+	loader,
 	UISpriteElement,
 	Vector2d,
 } from "melonjs";
 import { gameState } from "../gameState";
+import { resources } from "../resources";
 
 /**
  * a basic control to toggle fullscreen on/off
@@ -152,6 +154,48 @@ class ScoreItem extends BitmapText {
 }
 
 /**
+ * a small readout of the asset bundles in memory: all of them after the boot
+ * preload, then `common` and the map being played, the map left behind being
+ * unloaded once the next level is in
+ */
+class BundleReadout extends BitmapText {
+	/** where it sits, relative to the bottom-left corner */
+	private relative: Vector2d;
+	/** the text on show, to set it only when it changes */
+	private shown = "";
+
+	constructor(x: number, y: number) {
+		super(x, game.viewport.height + y, {
+			font: "PressStart2P",
+			size: 0.5,
+			textAlign: "left",
+			textBaseline: "bottom",
+			text: "",
+		});
+		this.relative = new Vector2d(x, y);
+		this.floating = false;
+
+		// stay at the bottom of the screen if the canvas is resized
+		event.on(event.CANVAS_ONRESIZE, (_w: number, h: number) => {
+			this.pos.set(this.relative.x, h + this.relative.y);
+		});
+	}
+
+	override update(dt: number) {
+		const loaded = Object.keys(resources).filter((id) => {
+			return loader.isLoaded(id);
+		});
+		const text = `bundles: ${loaded.join(" ")}`;
+		if (text !== this.shown) {
+			this.shown = text;
+			this.setText(text);
+			this.isDirty = true;
+		}
+		return super.update(dt);
+	}
+}
+
+/**
  * a HUD container and child items
  */
 class UIContainer extends Container {
@@ -175,6 +219,9 @@ class UIContainer extends Container {
 
 		// add our child score object at position
 		this.addChild(new ScoreItem(-10, -30));
+
+		// which asset bundles are in memory
+		this.addChild(new BundleReadout(10, -10));
 
 		// add our audio control object
 		this.addChild(new AudioControl(36, 56));

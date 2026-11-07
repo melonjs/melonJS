@@ -47,7 +47,8 @@ export const createGame = async () => {
 	// initialize the sound engine
 	audio.init("mp3,ogg");
 
-	// preload all resources
+	// preload all resources: each bundle of the record is declared and loaded
+	// (see resources.ts); a map's own assets are freed once the player leaves it
 	loader.preload(resources, () => {
 		// set the Play screen
 		state.set(state.PLAY, new PlayScreen());

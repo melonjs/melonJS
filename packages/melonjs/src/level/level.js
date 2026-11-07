@@ -218,6 +218,37 @@ export const level = {
 	},
 
 	/**
+	 * Unregister a level, the reverse of {@link level.add}: the loader calls it
+	 * when unloading a bundle frees the map or scene the level was built from,
+	 * and the map's parser registers it again (at the end of the level order)
+	 * when that bundle is loaded again.
+	 *
+	 * Unregistering the CURRENT level leaves the world as it is — what was
+	 * built from the level stays there and keeps running — but there is then no
+	 * current level: {@link level.getCurrentLevelId} returns `undefined`, so
+	 * {@link level.reload} has nothing to reload, until a level is loaded again.
+	 * @param {string} levelId - the level id (or name)
+	 * @returns {boolean} true if the level was registered
+	 * @ignore
+	 * @internal
+	 */
+	remove(levelId) {
+		const index = levelIdx.indexOf(levelId);
+		if (index === -1) {
+			return false;
+		}
+		levelIdx.splice(index, 1);
+		delete levels[levelId];
+		// keep the index pointing at the same level, or at none
+		if (index < currentLevelIdx) {
+			currentLevelIdx--;
+		} else if (index === currentLevelIdx) {
+			currentLevelIdx = -1;
+		}
+		return true;
+	},
+
+	/**
 	 * load a level into the game manager, and return a promise that settles once
 	 * it is actually in the world<br>
 	 * (will also create all level defined entities, etc..)
