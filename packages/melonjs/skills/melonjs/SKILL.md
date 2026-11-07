@@ -47,7 +47,7 @@ dependencies.
 | [melonjs-particles-and-trails](../melonjs-particles-and-trails/SKILL.md) | `ParticleEmitter`, burst versus stream, `referenceSpace`, and the `Trail` renderable. |
 | [melonjs-lighting](../melonjs-lighting/SKILL.md) | 2D dynamic lighting — `Light2d`, stage ambient, normal-mapped sprites. |
 | [melonjs-deployment](../melonjs-deployment/SKILL.md) | Scaffolding a project, building, browser support and transpiling, native and mini-game platforms. |
-| [melonjs-loading-assets](../melonjs-loading-assets/SKILL.md) | Resource descriptors, the asset type list, base URLs, cross-origin, progress events, unloading. |
+| [melonjs-loading-assets](../melonjs-loading-assets/SKILL.md) | Resource descriptors, the asset type list, a multi-level game's assets as bundles (`common` + one per level), loading and freeing a level's assets, base URLs, cross-origin, progress events. |
 | [melonjs-renderer-backends](../melonjs-renderer-backends/SKILL.md) | A feature works on one machine but not another; choosing or pinning a backend; degrading gracefully. |
 | [melonjs-display-and-scaling](../melonjs-display-and-scaling/SKILL.md) | Blurry, soft or cropped output; the design resolution, how the canvas fills its page, and pixel-perfect integer scaling. |
 | [melonjs-events](../melonjs-events/SKILL.md) | The event bus, per-frame and lifecycle events, and subscribing without leaking. |

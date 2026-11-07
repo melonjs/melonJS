@@ -1,6 +1,6 @@
 ---
 name: melonjs-loading-assets
-description: "Use this skill for loading and managing game assets in melonJS — the resource descriptor format, the full asset type list, preload versus load, retrieving loaded assets, base URLs and cross-origin settings, and the loading screen. Triggers on: loader, loader.preload, loader.load, resources, getImage, getJSON, getTMX, getGLTF, getVideo, getFont, setBaseURL, setOptions, crossOrigin, withCredentials, credentials, cookies, authenticated assets, CORS, asset, preload, LOADER_COMPLETE, loading screen, unload, setParser, custom asset type, generated texture, procedural texture."
+description: "Use this skill for loading and managing game assets in melonJS — the resource descriptor format, the full asset type list, organising a multi-level game's assets as bundles (an assets file exporting common plus one bundle per level, passed to loader.preload), loading and freeing a level's bundle, preload versus load, retrieving loaded assets, base URLs and cross-origin settings, and the loading screen. Triggers on: loader, loader.preload, loader.load, resources, resources.js, assets file, getImage, getJSON, getTMX, getGLTF, getVideo, getFont, setBaseURL, setOptions, crossOrigin, withCredentials, credentials, cookies, authenticated assets, CORS, asset, preload, LOADER_COMPLETE, loading screen, unload, unloadAll, bundle, asset bundle, setBundle, getBundle, isLoaded, several levels, per-level assets, free memory between levels, setParser, custom asset type, generated texture, procedural texture."
 license: MIT
 ---
 
@@ -8,26 +8,13 @@ license: MIT
 
 ## The resource descriptor
 
-Every asset is `{ name, type, src }` plus type-specific extras:
+Every asset is `{ name, type, src }` plus type-specific extras. The name is
+what the asset is read back by; the type picks the parser. Type and name
+together identify an asset, so an atlas's image and its JSON share a name:
 
 ```js
-import { loader } from "melonjs";
-
-await loader.preload([
-    { name: "tiles",   type: "image",    src: "data/img/tiles.png" },
-    { name: "map1",    type: "tmx",      src: "data/map/map1.tmx" },
-    { name: "tileset", type: "tsx",      src: "data/map/tileset.tsx" },
-    { name: "sfx",     type: "audio",    src: "data/sfx/" },
-    { name: "font",    type: "fontface", src: "data/font/PressStart2P.ttf" },
-    { name: "atlas",   type: "json",     src: "data/img/atlas.json" },
-]);
-```
-
-`preload()` has been awaitable since 19.8. The callback form still works and
-takes a third argument to suppress the built-in loading screen:
-
-```js
-loader.preload(resources, onLoaded, /* switchToLoadState */ false);
+{ name: "texture", type: "image", src: "data/img/texture.png" }
+{ name: "texture", type: "json",  src: "data/img/texture.json" }
 ```
 
 ## The type list
@@ -49,6 +36,128 @@ The type strings are melonJS-specific — this is not a generic loader:
 | `"gltf"` / `"glb"` | glTF scenes |
 | `"js"` | scripts |
 | any type you register | your own formats, and things you generate rather than download — see [Custom asset types](#custom-asset-types) |
+
+## Organise the assets: `common` plus one bundle per level
+
+For any game with **more than one level or screen**, the assets file exports a
+**record of bundles**: what every level uses under `common`, and each level's
+own assets in a bundle of its own. The boot call takes the record as it is:
+
+```js
+// resources.js
+export const resources = {
+    common: [                          // everything every level uses
+        { name: "player",  type: "image", src: "data/img/player.png" },
+        { name: "tileset", type: "image", src: "data/img/tileset.png" },
+        { name: "tileset", type: "tsx",   src: "data/map/tileset.tsx" },
+        { name: "music",   type: "audio", src: "data/bgm/" },
+        { name: "jump",    type: "audio", src: "data/sfx/" },
+    ],
+    level1: [
+        { name: "level1", type: "tmx",   src: "data/map/level1.tmx" },
+        { name: "hills",  type: "image", src: "data/img/hills.png" },
+    ],
+    level2: [
+        { name: "level2", type: "tmx",   src: "data/map/level2.tmx" },
+        { name: "hills",  type: "image", src: "data/img/hills.png" },   // shared: listed again
+        { name: "lava",   type: "image", src: "data/img/lava.png" },
+    ],
+};
+```
+
+```js
+// game.js
+import { audio, loader, state } from "melonjs";
+import { resources } from "./resources.js";
+
+audio.init("mp3,ogg");                 // before any audio is loaded
+await loader.preload(resources);       // every bundle, behind the loading screen
+state.change(state.PLAY);
+```
+
+`preload(record)` declares each key as a bundle and loads them all, with one
+progress bar; an asset several bundles list is fetched once. Nothing else
+changes: a bundle is a lifetime, not a namespace, so assets keep their own
+names, and `getImage("hills")`, `new Sprite(x, y, { image: "player" })` and
+`level.load("level1")` work as with a flat list. What bundles add is that a
+level can later be freed and loaded again **by its id** (next section). Starting
+with bundles costs nothing even if the game never unloads anything.
+
+- **Name a level's bundle after its map.** Bundle ids and asset names are
+  separate, so `"level1"` can be both, and `level.load(id)` and
+  `loader.load(id)` then take the same string.
+- **List a shared asset in every bundle that uses it.** It is still fetched
+  once, and it is what keeps the asset alive when one of those bundles is
+  unloaded.
+- **A map's dependencies go with it**: its `.tsx` and tileset images in the
+  same bundle, or in `common`.
+- **Effects that outlive a level go in `common`** (a HUD's or a camera's
+  shader): unloading the level's bundle would destroy them under whatever
+  still draws with them.
+
+**A flat array is the simplest form**, and is fine for a single-screen game, a
+prototype or a jam game. It works as it always has, and everything in it stays
+in memory for the whole game:
+
+```js
+await loader.preload([
+    { name: "tiles", type: "image", src: "data/img/tiles.png" },
+    { name: "map1",  type: "tmx",   src: "data/map/map1.tmx" },
+    { name: "sfx",   type: "audio", src: "data/sfx/" },
+]);
+```
+
+Moving to bundles later is a change to the assets file alone: wrap the list in
+`{ common: [ … ] }` and split the levels out.
+
+Either way, `preload()` can be awaited (since 19.8) or given a callback, and a
+third argument suppresses the built-in loading screen:
+
+```js
+loader.preload(resources, onLoaded, /* switchToLoadState */ false);
+```
+
+## Level by level: load before, unload after
+
+With every bundle preloaded at boot, nothing more is needed to play. To keep
+memory bounded in a game whose levels are many or large:
+
+```js
+import { level, loader } from "melonjs";
+
+// leaving level1 for good: load the next, switch, then free the previous
+await loader.load("level2");                  // fetches nothing if still in memory
+await level.load("level2", { async: true });
+loader.unload("level1");                      // "hills" stays: level2 lists it too
+
+// going back to a level that was unloaded
+await loader.load("level1");                  // fetches what unloading freed
+await level.load("level1", { async: true });
+```
+
+- **`await loader.load(id)` before entering a level that may not be in
+  memory.** When the bundle is still loaded it resolves at once with no
+  request, so it is cheap to call every time. It does not show the loading
+  screen (the game keeps running); use `loader.preload([id])` for that, or
+  `loader.isLoaded(id)` to decide.
+- **`loader.unload(id)` for a level the player will not come back to soon,
+  after the next level is in.** It frees what no other loaded bundle lists.
+  Unloading the level being played leaves its world as it is, but with no
+  current level, so `level.reload()` has nothing to reload.
+
+**When not to unload:**
+
+- **Levels that loop back** — a hub, a retry after game over, a last level
+  whose exit leads to the first. Unloading one means fetching it again, and a
+  hitch, every time the player returns.
+- **A small game.** If every level fits comfortably in memory, keep
+  everything loaded. The platformer example does exactly this: `resources.ts`
+  exports `{ common, map1, map2 }`, `preload(resources)` loads it all at boot,
+  and since map2's exit leads back to map1, nothing is ever unloaded.
+
+Unload when the levels are large (big tilesets and backgrounds, per-level
+music, 3D scenes), numerous, or linear (a level behind the player for good),
+and on memory-constrained targets such as phones and mini-game platforms.
 
 ## What belongs in the manifest — and what cannot
 
@@ -117,8 +226,8 @@ const app = new Application(1280, 720, {
 
 **You do not call this yourself.** `preload()` calls `renderer.prewarm()` once
 the assets are in and **before** `LOADER_COMPLETE` fires, so it happens while
-the progress bar is still up. Every `preload()` warms, not just the first, so a
-per-level preload warms whatever that level brought with it.
+the progress bar is still up. Every `preload()` warms, not just the first, and
+so does `load(id)`, so loading a level's bundle warms whatever it brought.
 
 The one precondition for this part: **a game that never calls
 `loader.preload()` does not get it**. If you load assets another way, call
@@ -361,15 +470,63 @@ still loading joins it, and the value covers both until everything in flight
 has settled; the next preload starts from zero again. A failed asset keeps
 its preload short of `1`, and only that preload.
 
-## Unloading
+## Bundle and unloading reference
+
+Bundles can also be declared one by one, which is what `preload(record)` does
+for each key:
 
 ```js
-loader.unload({ name: "map1", type: "tmx" });
-loader.unloadAll();
+loader.setBundle("level3", [
+    { name: "level3", type: "tmx",   src: "data/map/level3.tmx" },
+    { name: "hills",  type: "image", src: "data/img/hills.png" },
+]);
+await loader.preload(["common", "level3"]);   // ids and descriptors mix freely
 ```
 
-`unloadAll()` also releases audio and GPU resources such as shader programs, so
-it is the right teardown for switching between large levels.
+- **Strings are bundles, objects are assets.** `loader.unload("map1")`
+  releases the bundle `"map1"`; `loader.unload({ name: "map1", type: "tmx" })`
+  frees that one asset at once, whoever holds it (the bundles listing it then
+  report `isLoaded(id) === false`, and loading one again fetches it again).
+- **`load(id)`** goes through the same path as `preload()`: `LOADER_PROGRESS`
+  for the bundle's own assets, the shader warm-up, then `LOADER_COMPLETE`. It
+  does not switch to the loading screen, and always returns a promise
+  (`onload` / `onerror` callbacks are optional extras).
+- **`load(id, assets)` declares and loads in one call** — `setBundle(id, assets)`
+  then `load(id)`. Called again with the same assets (type, name, src) it just
+  loads; with different ones it redefines the bundle, which throws while that
+  bundle is loaded. Handy where a level's assets are declared next to the code
+  that enters it.
+- **`preload(record)` again** fetches nothing already in memory. A bundle
+  already declared with the same assets is left as it is. A single descriptor
+  passed by mistake throws: wrap it in an array.
+- **Progress:** each asset of the bundle is one step; one already in memory
+  counts as a step done at once. An asset listed twice is one asset, and an
+  empty bundle is allowed (it is always loaded).
+- **Nothing is fetched twice.** An asset already in memory is not requested
+  again, however it got there, and two bundles loading the same asset at once
+  share one request.
+- **Ownership.** Each loaded bundle listing an asset holds it; `unload(id)`
+  frees the assets no other loaded bundle lists. An asset loaded the old way —
+  a flat `preload` list, or `load(asset)` — is **pinned**: no bundle unload
+  frees it, only `unload(asset)` or `unloadAll()`.
+- **`isLoaded(id)`** is true when every asset of the bundle is in memory,
+  however it got there. `getBundle(id)` returns a copy of the list, or
+  `undefined` for an id never declared.
+- **Freeing a map unregisters its level.** After `unload(id)`, `level.load` of
+  a map (or glTF scene) that bundle freed throws "level … not found" until the
+  bundle is loaded again, which registers it again.
+- **Freeing releases the GPU side too:** an image's texture (since 20.14), a
+  shader's program, a font's place in `document.fonts`. `getShader()` hands out
+  the loader's shared instance and does not track who took it, hence
+  "effects that outlive a level go in `common`".
+- **A failing asset rejects `load(id)`**, like `preload`; the assets that did
+  load stay, held by the bundle, and `loader.reload(src)` completes it.
+- **Errors are synchronous.** An unknown id throws in `load`, `unload`,
+  `preload` and `isLoaded`. Redefining a bundle with `setBundle` throws while
+  it is loading or loaded: unload it first. A bundle lists descriptors only,
+  not other bundle ids.
+- **`unloadAll()`** frees every asset, audio included, whoever holds it. The
+  bundles stay declared, all back to not loaded, ready to be loaded again.
 
 ## Loading between scenes
 
@@ -459,6 +616,15 @@ throws, the same trap as the removed `loader.onload` / `onProgress`.
 | `load : unknown or invalid resource type` | a custom type in the manifest before its `loader.setParser` call |
 | black or frozen screen when a stage is first entered, the profile shows your own code (noise, a canvas bake) | a costly derived asset built on stage entry — bake it inside the preload as a [custom asset type](#custom-asset-types) |
 | a custom asset preloads but the result is nowhere to be found | `onload` takes no value and the loader stores nothing for custom types — keep the result in your own module |
+| `level X not found` after switching levels with bundles | that map's bundle was unloaded (it unregisters the level), or never loaded: `await loader.load(id)` before `level.load` |
+| `loader: unknown bundle "…"` | a typo, or `setBundle` not called yet; ids and asset names are separate, a bundle is not found by an asset's name |
+| `setBundle(…): the bundle is loaded` | redefining a loaded bundle, by `setBundle` or by `load(id, assets)` with a different list: `loader.unload(id)` first |
+| a shared image disappears (blank layer) after unloading the previous level's bundle | the next level's bundle does not list it: list a shared asset in every bundle that uses it |
+| an asset survives `unload(id)` and memory stays up | it was also loaded the old way (a flat `preload` list, or `load(asset)`), which pins it; load it only through bundles, or `unload(asset)` |
+| a HUD or camera effect goes blank, or throws, after a level's bundle is unloaded | its shader came from that bundle; effects that outlive a level belong in a bundle that outlives it (`"common"`) |
+| `level.reload()` throws `level undefined not found` | the current level's own bundle was unloaded; unload the previous level's bundle after the next level is in |
+| a pause and new network requests every time the player goes back to an earlier level | that level's bundle is unloaded on leaving it although the game loops back to it; keep it loaded (see [When not to unload](#level-by-level-load-before-unload-after)) |
+| memory grows level after level although assets are unloaded (before 20.14) | unloading an image left its GPU texture in the renderer; update |
 
 ## Related skills
 

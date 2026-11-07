@@ -1071,6 +1071,22 @@ export default class Renderer {
 	destroy() {}
 
 	/**
+	 * Release everything this renderer derived from an image that is going
+	 * away: its texture cache entries and its tinted copies, and on a GPU
+	 * renderer (which overrides this) the texture uploaded from it. Called by
+	 * the loader when an image asset is unloaded; an image never drawn costs
+	 * nothing. Should the image be drawn again afterwards, it is simply
+	 * uploaded again.
+	 * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap|object} image - the image source
+	 * @ignore
+	 * @internal
+	 */
+	releaseImage(image) {
+		this.cache?.delete(image);
+		this.cache?.tinted?.delete(image);
+	}
+
+	/**
 	 * return a reference to the current render target corresponding canvas which this renderer draws to
 	 * @returns {HTMLCanvasElement}
 	 */
