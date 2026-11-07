@@ -14,9 +14,15 @@ import {
 	type Renderer,
 	Stage,
 	state,
+	TextureAtlas,
 	video,
 } from "melonjs";
-import { GamepadPlugin, type GamepadPluginOptions } from "../src/index.ts";
+import {
+	type ButtonOptions,
+	GamepadPlugin,
+	type GamepadPluginOptions,
+	type StickOptions,
+} from "../src/index.ts";
 
 const { BUTTONS, AXES } = input.GAMEPAD;
 const { KEY } = input;
@@ -214,6 +220,27 @@ state.set(state.PLAY, new TestStage());
 state.change(state.PLAY);
 
 // the toggles: options that need the plugin made again, and run-time ones
+// A small atlas made here, so the skin toggle needs no external assets.
+const skinImage = document.createElement("canvas");
+skinImage.width = 256;
+skinImage.height = 64;
+const skinContext = skinImage.getContext("2d")!;
+["#25536c", "#5ad4db", "#4469b0", "#f0ab56"].forEach((color, i) => {
+	const x = i * 64 + 32;
+	skinContext.fillStyle = color;
+	skinContext.strokeStyle = "#ddf5ff";
+	skinContext.lineWidth = 3;
+	skinContext.beginPath();
+	skinContext.arc(x, 32, 29, 0, Math.PI * 2);
+	skinContext.fill();
+	skinContext.stroke();
+	skinContext.strokeStyle = "#ffffff55";
+	skinContext.beginPath();
+	skinContext.arc(x, 32, 23, Math.PI, Math.PI * 1.7);
+	skinContext.stroke();
+});
+const skin = new TextureAtlas({ framewidth: 64, frameheight: 64 }, skinImage);
+let skinned = false;
 const options: GamepadPluginOptions = {
 	enabled: true,
 	sticks: [{}],
@@ -223,6 +250,33 @@ let gamepad = new GamepadPlugin(options, app);
 
 const remake = (change: Partial<GamepadPluginOptions>): void => {
 	Object.assign(options, change);
+	if (skinned) {
+		options.skin = skin;
+	} else {
+		delete options.skin;
+	}
+	options.sticks = (options.sticks as StickOptions[]).map((stick) => {
+		const next = { ...stick };
+		if (skinned) {
+			next.base = "0";
+			next.thumb = "1";
+		} else {
+			delete next.base;
+			delete next.thumb;
+		}
+		return next;
+	});
+	options.buttons = (options.buttons as ButtonOptions[]).map((button) => {
+		const next = { ...button };
+		if (skinned) {
+			next.region = "2";
+			next.pressed = "3";
+		} else {
+			delete next.region;
+			delete next.pressed;
+		}
+		return next;
+	});
 	gamepad.destroy();
 	gamepad = new GamepadPlugin(options, app);
 };
@@ -258,6 +312,10 @@ const toggle = (
 
 toggle("enabled", true, (on) => {
 	gamepad.enabled = on;
+});
+toggle("skin", false, (on) => {
+	skinned = on;
+	remake({});
 });
 toggle("2 sticks", false, (on) => {
 	remake({ sticks: on ? [{}, {}] : [{}] });
