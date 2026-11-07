@@ -1,9 +1,9 @@
 # Changelog
 
-## [1.2.0] - _unreleased_
+## [1.2.0] - _2026-11-07_
 
 ### Added
-- Controls: an optional `skin` texture atlas, with `base` / `thumb` regions on sticks and `region` / `pressed` regions on buttons. Parts without a region keep their shapes ([#1802](https://github.com/melonjs/melonJS/issues/1802))
+- Controls: an optional `skin` texture atlas, with `base` / `thumb` regions on sticks and `region` / `pressed` regions on buttons. Parts without a region keep their shapes, and a button without a `pressed` region is drawn slightly smaller while held ([#1802](https://github.com/melonjs/melonJS/issues/1802), thanks @snowyukitty)
 
 ## [1.1.0] - _2026-11-02_
 
