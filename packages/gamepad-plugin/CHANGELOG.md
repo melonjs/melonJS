@@ -1,5 +1,10 @@
 # Changelog
 
+## [_unreleased_]
+
+### Added
+- Controls: optional `skin` texture atlas, stick `base` / `thumb` regions and button `region` / `pressed` regions. Match the game's artwork while keeping the existing layout, hit areas, labels, opacity and hold highlight. Unskinned parts still draw shapes.
+
 ## [1.1.0] - _2026-11-02_
 
 ### Added

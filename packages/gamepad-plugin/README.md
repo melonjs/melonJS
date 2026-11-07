@@ -20,7 +20,7 @@ The sticks and buttons are drawn over the game and read by the engine as a pad i
 - two thumbs at once on iOS too: Safari's pinch gesture is kept from taking the second finger
 - a touch that starts on the controls does not reach the game
 - drawn over the whole frame, above every renderable and every camera (a minimap does not show them), and kept across stage changes
-- drawn with the renderer's own shapes: no images to load
+- drawn with the renderer's own shapes by default, or with regions from the game's texture atlas
 - hidden while the player uses a real pad, and back on the next touch
 - a light vibration on each button press, as a real button gives, and `input.vibrateGamepad` vibrating the phone, where the browser supports it
 
@@ -76,6 +76,7 @@ plugin.register(GamepadPlugin, "gamepad", {
 | `buttons` | `1` | how many buttons, or a list of [button options](#buttons) |
 | `hideOnGamepad` | `true` | hide them while a real pad is in use |
 | `color` | `"#ffffff"` | their color |
+| `skin` | none | an already-loaded `TextureAtlas` for named control regions; atlas colors are preserved |
 | `opacity` | `0.35` | how opaque they are at rest; a press doubles it |
 | `margin` | 6% of the shorter side | the space kept from the edges of the viewport |
 | `vibrate` | `true` | let `input.vibrateGamepad` vibrate the phone |
@@ -88,6 +89,7 @@ Sizes and positions are in viewport pixels, the same units the game is drawn in.
 | Option | Default | |
 | --- | --- | --- |
 | `side` | `"left"`, then `"right"` | the left stick reports `LX`/`LY`, the right one `RX`/`RY` |
+| `base`, `thumb` | none | regions in `skin`, scaled to the base's diameter and the thumb's diameter (45% of the base); omitted parts keep their shapes |
 | `position` | its bottom corner | `{ left or right, top or bottom }`: from the edges to its center |
 | `radius` | 13% of the shorter side | the radius of its base |
 | `floating` | `false` | centered where the thumb lands, inside its `area` |
@@ -106,6 +108,7 @@ Sizes and positions are in viewport pixels, the same units the game is drawn in.
 | `button` | `FACE_1`, `FACE_2`… | the pad button it presses; `null` for none |
 | `key` | none | a key to press, instead of a pad button unless `button` is also given |
 | `label` | none | the text on it |
+| `region`, `pressed` | none | regions in `skin`, scaled to the button's diameter; `pressed` is optional and otherwise the resting region is drawn brighter |
 | `position` | gathered in the bottom-right corner | from the edges to its center |
 | `radius` | 7.5% of the shorter side | its radius |
 | `floating` | `false` | pressed wherever a finger lands inside its `area`, and drawn under that finger while held; it rests at its `position` |
@@ -113,6 +116,37 @@ Sizes and positions are in viewport pixels, the same units the game is drawn in.
 | `hideAtRest` | `false` | draw a floating button only while a finger holds it; let go, it fades where it was |
 
 With a second stick, the buttons gather above it.
+
+### Custom skins
+
+Use regions from a preloaded atlas to match the game's art. Once the application
+is initialized and the atlas JSON and image are loaded:
+
+```ts
+import { loader, plugin, TextureAtlas } from "melonjs";
+import { GamepadPlugin } from "@melonjs/gamepad-plugin";
+
+const skin = new TextureAtlas(loader.getJSON("controls"), loader.getImage("controls"));
+plugin.register(GamepadPlugin, "gamepad", {
+	skin,
+	sticks: [{ base: "stick_base.png", thumb: "stick_thumb.png" }],
+	buttons: [{ label: "A", region: "button.png", pressed: "button_down.png" }],
+});
+```
+
+Skins change the artwork, not the layout or circular hit areas: `radius` and
+`position` still define those. Regions are centered and stretched to the control's
+diameter square, so use square artwork to preserve its proportions;
+their colors are preserved, while `color` still colors labels, feedback rings
+and any parts drawn as shapes. Atlas packing, including rotated and trimmed
+frames, is handled by the engine's sprites.
+
+`opacity`, the hold highlight, floating controls, hiding and dimming still
+apply, including the hold highlight when a `pressed` region is supplied.
+A label stays above the button image. Omit `pressed` to reuse the
+resting image with the hold highlight; omit any other region to keep that
+part's shapes. A named region requires `skin` and must exist in it; a missing
+region throws during registration.
 
 ### Floating controls
 

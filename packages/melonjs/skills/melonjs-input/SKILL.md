@@ -326,6 +326,12 @@ Every press lasts at least one frame, so a 15 ms thumb tap still reaches
 `isKeyPressed`, and Safari's pinch gesture is cancelled while the controls
 show, so a second thumb works on iOS.
 
+To match the game's artwork, pass an already-loaded `TextureAtlas` as
+`skin` to `GamepadPlugin`, with `base` / `thumb` region names on sticks
+and `region` / optional `pressed` names on buttons. Omitted parts keep
+their shapes. Regions scale to the controls' sizes without changing hit areas;
+labels, floating controls, opacity, hiding and dimming keep working.
+
 A single key can also be pressed directly, reaching the same actions:
 
 ```js

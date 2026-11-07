@@ -1,3 +1,5 @@
+import type { TextureAtlas } from "melonjs";
+
 /**
  * Where a control sits: the distance from its center to the edges of the
  * viewport, in viewport pixels. Give one of `left` / `right` and one of
@@ -62,6 +64,10 @@ export interface StickTap {
  * @category Plugins
  */
 export interface StickOptions {
+	/** the base region in the plugin's `skin` atlas; shapes when omitted */
+	base?: string;
+	/** the thumb region in the plugin's `skin` atlas; a circle when omitted */
+	thumb?: string;
 	/**
 	 * which stick of a pad it is: `"left"` reports `GAMEPAD.AXES.LX`/`LY`,
 	 * `"right"` reports `RX`/`RY`. The first stick is the left one, the
@@ -131,6 +137,10 @@ export interface StickOptions {
  * @category Plugins
  */
 export interface ButtonOptions {
+	/** the region in the plugin's `skin` atlas; shapes when omitted */
+	region?: string;
+	/** the region while held; the resting region drawn brighter when omitted */
+	pressed?: string;
 	/**
 	 * the pad button it presses, from `input.GAMEPAD.BUTTONS`. The buttons
 	 * press `FACE_1`, `FACE_2`, `FACE_3` and `FACE_4` in turn by default, or
@@ -176,6 +186,12 @@ export interface ButtonOptions {
  * @category Plugins
  */
 export interface GamepadPluginOptions {
+	/**
+	 * an already-loaded atlas for the controls' named regions. Regions are
+	 * scaled to each control's size; positions and hit areas are unchanged.
+	 * Omitted regions keep their shapes. Atlas colors are preserved.
+	 */
+	skin?: TextureAtlas;
 	/**
 	 * whether the controls are shown, `device.touch` by default: on a phone
 	 * or a tablet, and not on a desktop. Can be changed at any time through
