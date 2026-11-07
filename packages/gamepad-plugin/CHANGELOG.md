@@ -1,9 +1,9 @@
 # Changelog
 
-## [_unreleased_]
+## [1.2.0] - _unreleased_
 
 ### Added
-- Controls: optional `skin` texture atlas, stick `base` / `thumb` regions and button `region` / `pressed` regions. Match the game's artwork while keeping the existing layout, hit areas, labels, opacity and hold highlight. Unskinned parts still draw shapes.
+- Controls: an optional `skin` texture atlas, with `base` / `thumb` regions on sticks and `region` / `pressed` regions on buttons. Parts without a region keep their shapes ([#1802](https://github.com/melonjs/melonJS/issues/1802))
 
 ## [1.1.0] - _2026-11-02_
 
