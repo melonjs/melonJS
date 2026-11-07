@@ -10,16 +10,18 @@ const base = `${import.meta.env.BASE_URL}assets/platformer/`;
 /**
  * The game's assets, as a record of named bundles: what every level needs,
  * and what each map brings with it. `loader.preload(resources)` declares each
- * one as a bundle and loads them all at boot; from then on a map's bundle is
- * freed and loaded again by its id (see LevelTrigger). A bundle is only a
- * lifetime: the assets keep their own names, so `loader.getImage("background")`
- * reads them whichever bundle loaded them.
+ * one as a bundle and loads them all at boot. A bundle is only a lifetime: the
+ * assets keep their own names, so `loader.getImage("background")` reads them
+ * whichever bundle loaded them, and `level.load("map2")` finds the map.
  *
- * Bundle ids are the map names, so a level trigger's `to` names both. An
- * asset may appear in several bundles, and is freed with the last of them to
- * be unloaded: both maps draw the same background hills and clouds, so those
- * two images are listed in BOTH map bundles, and when the game unloads the
- * map it left, they stay, still held by the map being played.
+ * Bundle ids are the map names. An asset may appear in several bundles and is
+ * loaded once: both maps draw the same background hills and clouds, so those
+ * two images are listed in BOTH map bundles.
+ *
+ * The maps loop (map2's exit leads back to map1), so every bundle stays
+ * loaded for the whole game. A game whose levels do not come back would
+ * `loader.unload("map1")` once the player has left it, and
+ * `await loader.load("map1")` before going back to it.
  */
 export const resources: Record<string, loader.Asset[]> = {
 	/* everything both levels use */

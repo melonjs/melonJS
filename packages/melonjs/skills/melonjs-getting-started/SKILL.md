@@ -144,6 +144,11 @@ await loader.preload([
 ]);
 ```
 
+A flat list suits a single-screen game. A game with several levels exports a
+record of bundles instead — `{ common: [...], level1: [...], level2: [...] }`,
+passed to the same `loader.preload()` — so each level's assets can later be
+freed and loaded again by id; see `melonjs-loading-assets`.
+
 Two ordering rules that produce confusing failures when missed:
 
 - **`audio.init()` must run before any audio asset is preloaded**, and names the
