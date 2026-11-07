@@ -139,7 +139,10 @@ export interface StickOptions {
 export interface ButtonOptions {
 	/** the region in the plugin's `skin` atlas; shapes when omitted */
 	region?: string;
-	/** the region while held; the resting region drawn brighter when omitted */
+	/**
+	 * the region while held. When omitted, the resting region is drawn slightly
+	 * smaller while held (and brighter, while the opacity leaves room)
+	 */
 	pressed?: string;
 	/**
 	 * the pad button it presses, from `input.GAMEPAD.BUTTONS`. The buttons

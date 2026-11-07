@@ -108,7 +108,7 @@ Sizes and positions are in viewport pixels, the same units the game is drawn in.
 | `button` | `FACE_1`, `FACE_2`… | the pad button it presses; `null` for none |
 | `key` | none | a key to press, instead of a pad button unless `button` is also given |
 | `label` | none | the text on it |
-| `region`, `pressed` | none | regions in `skin`, scaled to the button's diameter; `pressed` is optional and otherwise the resting region is drawn brighter |
+| `region`, `pressed` | none | regions in `skin`, scaled to the button's diameter; `pressed` is optional; otherwise the resting region is drawn slightly smaller while held |
 | `position` | gathered in the bottom-right corner | from the edges to its center |
 | `radius` | 7.5% of the shorter side | its radius |
 | `floating` | `false` | pressed wherever a finger lands inside its `area`, and drawn under that finger while held; it rests at its `position` |
@@ -144,7 +144,7 @@ frames, is handled by the engine's sprites.
 `opacity`, the hold highlight, floating controls, hiding and dimming still
 apply, including the hold highlight when a `pressed` region is supplied.
 A label stays above the button image. Omit `pressed` to reuse the
-resting image with the hold highlight; omit any other region to keep that
+resting image, drawn slightly smaller while held, with the hold highlight; omit any other region to keep that
 part's shapes. A named region requires `skin` and must exist in it; a missing
 region throws during registration.
 

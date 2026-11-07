@@ -101,6 +101,13 @@ const TAP_RING_MS = 260;
 /** how long a floating button hidden at rest takes to fade once let go, in milliseconds */
 const BUTTON_FADE_MS = 180;
 
+/**
+ * how much a skinned button without a `pressed` region shrinks while held, so
+ * a press shows even when the opacity leaves no room to brighten it (the
+ * engine's UI buttons use the same `pressScale` idea)
+ */
+const PRESS_SCALE = 0.9;
+
 /** the look shared by every control */
 export interface Look {
 	color: string;
@@ -806,7 +813,9 @@ export class VirtualButton {
 			? (this.pressedRegion ?? this.region)
 			: this.region;
 		if (region) {
-			drawSkin(renderer, region, x, y, r, alpha);
+			const shrink =
+				this.pressed && this.pressedRegion === null ? PRESS_SCALE : 1;
+			drawSkin(renderer, region, x, y, r * shrink, alpha);
 		} else {
 			renderer.setGlobalAlpha(alpha * (this.pressed ? 0.8 : 0.5));
 			renderer.fillEllipse(x, y, r, r);

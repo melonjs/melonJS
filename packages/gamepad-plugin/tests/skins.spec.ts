@@ -209,6 +209,31 @@ describe.each([
 		expect((await pixel(240, 100))[2]).toBeCloseTo(51, -1);
 	});
 
+	it("shows a press at full opacity without a pressed region, by drawing the region smaller", async () => {
+		create({
+			opacity: 1,
+			buttons: [
+				{ radius: 24, position: { left: 240, top: 100 }, region: "button" },
+			],
+		});
+		// at rest the region reaches 23px from the centre
+		expect(await pixel(240, 77)).toEqual([0, 0, 255]);
+		pointer("pointerdown", 240, 100);
+		expect(gamepad.buttons[0].pressed).toBe(true);
+		// held, it is drawn smaller: the edge is gone, the middle is still there
+		expect(await pixel(240, 77)).toEqual([0, 0, 0]);
+		expect(await pixel(240, 80)).toEqual([0, 0, 255]);
+		// and the hit area does not shrink with it
+		event.emit(event.GAME_BEFORE_UPDATE, performance.now());
+		pointer("pointerup", 240, 100);
+		expect(await pixel(240, 77)).toEqual([0, 0, 255]);
+	});
+
+	it("keeps a pressed region at full size", async () => {
+		pointer("pointerdown", 240, 100);
+		expect(await pixel(240, 77)).toEqual([255, 255, 0]);
+	});
+
 	it("hides and releases a skinned button without changing its hit area", async () => {
 		pointer("pointerdown", 265, 100); // just outside the artwork, inside the existing hit area
 		expect(gamepad.buttons[0].pressed).toBe(true);
