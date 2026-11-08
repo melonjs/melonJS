@@ -717,7 +717,7 @@ by default):
 | `onClick(event)` | pressed | `false` to stop the event propagating |
 | `onRelease(event)` | the press ends (up, left while held, or cancelled) | `false` to stop propagating |
 | `onOver(event)` | pointer enters | `false` to stop propagating |
-| `onOut(event)` | pointer leaves | — |
+| `onOut(event)` | pointer leaves, or the element is removed while hovered (no event then) | — |
 | `onHold()` | pressed and held | — |
 
 ```js
@@ -735,6 +735,12 @@ class MuteButton extends UISpriteElement {
     }
 }
 ```
+
+Undo in `onOut` whatever `onOver` set up (a tooltip, a highlight, a cursor):
+it also runs when the element leaves the world while the pointer is on it,
+removed on its own, with the panel holding it, or with the scene, so nothing
+is left behind. Keep effects that should only follow the pointer (a sound, a
+tween) out of it, or check `event`, which is `undefined` for a removal.
 
 The image is `button.sprite`: animations, tint and regions live there
 (`setRegion`, `addAnimation`, `setCurrentAnimation` and `isCurrentAnimation`
@@ -1249,6 +1255,8 @@ City and Instanced Forest examples park a floating sky at `-10000` or `100000`.
 | the arrow keys or the pad do nothing in a menu | no widget has the focus: nothing listens until one does | call `firstWidget.focus()` when the menu opens |
 | the arrow keys stop moving the player after a menu | a widget still has the focus | `UIBaseElement.focusOwner?.blur()`, or remove the menu: a focused widget leaving the scene gives the keys back |
 | a `bindKey: ENTER` button does not fire while another widget is focused | Enter and Space go to the focused widget, ring shown or not, so one press never clicks both | focus that button, `blur()` the focused one, or bind another key |
+| a tooltip or highlight shown in `onOver` stays after its widget is removed (before 20.14) | the pointer's leave never reaches a removed widget | update: a widget removed while hovered now gets `onOut()`, with no event |
+| an `onOut` sound or tween plays when a menu closes or the scene changes (since 20.14) | a widget removed while hovered gets `onOut()` | keep pointer-only effects out of `onOut`, or skip them when its `event` is `undefined` |
 | a widget removed while held gets `onCancel()` and no `onRelease()` | the pointer-up never reaches a removed widget, so the press is called off (and `hover` cleared), leaving it at rest when added back | stop what `onClick()` started in `onCancel()` as well as in `onRelease()` |
 | a `ProgressBar` fill runs past its track after `max` is lowered (before 20.13) | `min` and `max` did not re-clamp the value | update: they re-clamp it now (and call `onChange` if it moved); `ratio` stays within 0..1 |
 | a skinned panel's shadow has square corners | the shadow follows `radius`, and a skin does not set it | set `radius` to the art's corner size |

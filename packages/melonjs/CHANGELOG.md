@@ -11,6 +11,7 @@
 - Tiled: tile layers follow the map's render order, instead of always "right-down"
 - Tiled: on an infinite map, the level's bounds, and so the camera, reach tiles painted past the map's size or left of and above its origin
 - Tiled: the isometric renderer's `drawTile` and `drawTileRaw` draw a tile where the layer does
+- UI: a widget removed while hovered gets its `onOut`, so a tooltip or highlight shown in `onOver` does not stay
 
 ## [20.13.0] (melonJS 2) - _2026-11-06_
 
