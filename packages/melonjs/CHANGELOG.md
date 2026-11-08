@@ -1,5 +1,13 @@
 # Changelog
 
+## [20.14.0] (melonJS 2) - _unreleased_
+
+### Added
+- Loader: asset bundles, to load and free a level's assets together: `loader.preload({ common: […], level1: […] })`, then `loader.load("level1")` / `loader.unload("level1")`; an asset shared by several bundles is fetched once and freed with the last ([#1656](https://github.com/melonjs/melonJS/issues/1656))
+
+### Fixed
+- Loader: unloading an image also frees its GPU texture on WebGL and WebGPU, and its tinted copies on Canvas
+
 ## [20.13.0] (melonJS 2) - _2026-11-06_
 
 ### Added

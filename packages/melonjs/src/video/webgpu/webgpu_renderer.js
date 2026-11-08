@@ -4772,6 +4772,19 @@ export default class WebGPURenderer extends Renderer {
 	}
 
 	/**
+	 * Release the GPU texture uploaded from an image that is going away. The
+	 * store retires it rather than destroying it outright, so a draw already
+	 * recorded in the current frame still submits.
+	 * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap|object} image - the image source
+	 * @ignore
+	 * @internal
+	 */
+	releaseImage(image) {
+		this.textureStore?.destroyTexture(image);
+		super.releaseImage(image);
+	}
+
+	/**
 	 * Returns the WebGPU canvas context
 	 * @returns {GPUCanvasContext} the WebGPU canvas context
 	 */

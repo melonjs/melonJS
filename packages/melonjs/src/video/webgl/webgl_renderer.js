@@ -1291,6 +1291,41 @@ export default class WebGLRenderer extends Renderer {
 		}
 	}
 
+	/**
+	 * Release the GL texture uploaded from an image that is going away, and
+	 * every batcher's belief that it is bound — the colour texture the shared
+	 * store holds, and the lit batcher's copy when it was used as a normal map.
+	 * Every batcher, not just the current one: each keeps its own record of
+	 * what is bound to which unit.
+	 * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap|object} image - the image source
+	 * @ignore
+	 * @internal
+	 */
+	releaseImage(image) {
+		const record = this.textureStore?.peek(image);
+		if (this.batchers) {
+			this.batchers.forEach((batcher) => {
+				if (
+					record !== undefined &&
+					typeof batcher.unbindTexture2D === "function"
+				) {
+					// a texture can sit on several units (one per wrap mode);
+					// bounded, should a custom batcher not report -1 when done
+					const units = batcher.boundTextures?.length ?? 1;
+					for (let i = 0; i < units; i++) {
+						const unit = batcher.unbindTexture2D(record.handle);
+						if (typeof unit !== "number" || unit < 0) {
+							break;
+						}
+					}
+				}
+				batcher.evictNormalMap?.(image);
+			});
+		}
+		this.textureStore?.destroyTexture(image);
+		super.releaseImage(image);
+	}
+
 	reset() {
 		super.reset();
 

@@ -155,9 +155,15 @@ export function assetNames(type) {
  */
 
 /**
- * return the specified TMX/TSX object
- * @param {string} elt - name of the tmx/tsx element ("map1");
- * @returns {object} requested element or null if not found
+ * Get a loaded Tiled map or tileset (a `"tmx"` or `"tsx"` asset) as parsed
+ * data: the map's JSON structure, whether it was loaded from XML or JSON.
+ * Most code never needs it: `level.load(name)` builds the level from it.
+ * @param {string} elt - the asset name
+ * @returns {object} the parsed map or tileset, or `null` if none is loaded
+ * under that name
+ * @example
+ * const map = loader.getTMX("map1");
+ * console.log(map.width, map.height, map.layers.length);
  * @category Assets
  */
 export function getTMX(elt) {
@@ -170,9 +176,18 @@ export function getTMX(elt) {
 }
 
 /**
- * return the specified Binary object
- * @param {string} elt - name of the binary object ("ymTrack");
- * @returns {object} requested element or null if not found
+ * Get the content of a loaded `"binary"` asset, decoded as UTF-8 text: what
+ * a bitmap font's `.fnt` descriptor, for one, is loaded as.
+ * @param {string} elt - the asset name
+ * @returns {object} the file's content, as a string, or `null` if none is
+ * loaded under that name
+ * @example
+ * // a bitmap font: its image, and its descriptor as "binary"
+ * await loader.preload([
+ *     { name: "PressStart2P", type: "image",  src: "data/fnt/PressStart2P.png" },
+ *     { name: "PressStart2P", type: "binary", src: "data/fnt/PressStart2P.fnt" },
+ * ]);
+ * const fnt = loader.getBinary("PressStart2P");
  * @category Assets
  */
 export function getBinary(elt) {
@@ -185,9 +200,17 @@ export function getBinary(elt) {
 }
 
 /**
- * return the specified Image Object
- * @param {string} image - name of the Image element ("tileset-platformer");
- * @returns {HTMLImageElement|CompressedImage|null} requested element or null if not found
+ * Get a loaded image (an `"image"` asset, or the image of an `"aseprite"`
+ * one). Given a path, its directory and extension are ignored, so
+ * `getImage("data/img/player.png")` finds the image named `"player"`.
+ * Most engine classes take the name instead, and look it up themselves:
+ * `new Sprite(0, 0, { image: "player" })`.
+ * @param {string} image - the asset name
+ * @returns {HTMLImageElement|CompressedImage|null} the image, or `null` if
+ * none is loaded under that name
+ * @example
+ * const player = loader.getImage("player");
+ * console.log(player.width, player.height);
  * @category Assets
  */
 export function getImage(image) {
@@ -201,9 +224,14 @@ export function getImage(image) {
 }
 
 /**
- * return the specified JSON Object
- * @param {string} elt - name of the json file
- * @returns {JSON}
+ * Get a loaded JSON file (a `"json"` asset, or the descriptor of an
+ * `"aseprite"` one), parsed.
+ * @param {string} elt - the asset name
+ * @returns {JSON} the parsed content, or `null` if none is loaded under that
+ * name
+ * @example
+ * // a texture atlas: its image and its JSON descriptor share a name
+ * const atlas = new TextureAtlas(loader.getJSON("texture"), loader.getImage("texture"));
  * @category Assets
  */
 export function getJSON(elt) {
@@ -216,33 +244,33 @@ export function getJSON(elt) {
 }
 
 /**
- * return the specified OBJ model data
- * @param {string} elt - name of the OBJ file (as specified in the preload list)
- * @returns {object} parsed OBJ data with `vertices` (Float32Array), `uvs` (Float32Array), `indices` (Uint16Array), and `vertexCount` (number), or null if not found
+ * Get a loaded Wavefront OBJ model (an `"obj"` asset), parsed. Most code
+ * never needs it: a `Mesh` takes the model's name.
+ * @param {string} elt - the asset name
+ * @returns {object} the parsed model: `vertices` (Float32Array of x, y, z),
+ * `uvs` (Float32Array of u, v), `indices` (Uint16Array of triangle vertex
+ * indices), `vertexCount`, and `groups` (the `usemtl` material groups, as
+ * `{materialName, start, count}` index ranges); or `null` if none is loaded
+ * under that name
  * @category Assets
  * @example
  * // 1. preload the OBJ model and its texture
- * me.loader.preload([
- *     { name: "cube", type: "obj", src: "models/cube.obj" },
+ * await loader.preload([
+ *     { name: "cube", type: "obj",   src: "models/cube.obj" },
  *     { name: "cube", type: "image", src: "models/cube_texture.png" },
- * ], () => {
- *     // 2. create a Mesh using the preloaded model name
- *     const mesh = new me.Mesh(400, 300, {
- *         model: "cube",        // references the preloaded OBJ
- *         texture: "cube",      // references the preloaded image
- *         width: 200,
- *         height: 200,
- *     });
- *     me.game.world.addChild(mesh);
+ * ]);
  *
- *     // 3. or access the raw parsed data directly
- *     const data = me.loader.getOBJ("cube");
- *     // data.vertices — Float32Array of x,y,z positions
- *     // data.uvs — Float32Array of u,v texture coordinates
- *     // data.indices — Uint16Array of triangle vertex indices
- *     // data.vertexCount — number of unique vertices
- *     // data.groups — usemtl material groups ({materialName, start, count} index ranges)
+ * // 2. a Mesh takes the model and the texture by name
+ * const mesh = new Mesh(400, 300, {
+ *     model: "cube",
+ *     texture: "cube",
+ *     width: 200,
+ *     height: 200,
  * });
+ * app.world.addChild(mesh);
+ *
+ * // 3. or read the parsed data directly
+ * const { vertices, uvs, indices, vertexCount } = loader.getOBJ("cube");
  */
 export function getOBJ(elt) {
 	// force as string
@@ -254,7 +282,7 @@ export function getOBJ(elt) {
 }
 
 /**
- * return the parsed glTF/GLB scene descriptor for the given asset name.
+ * Get a loaded glTF/GLB scene (a `"gltf"` or `"glb"` asset), parsed.
  *
  * The descriptor is `{ nodes, cameras, lights, bounds, graph, animations }`:
  * - `nodes` — one entry per mesh primitive, each carrying its accumulated
@@ -270,26 +298,25 @@ export function getOBJ(elt) {
  *   automatically (see {@link level.load} options).
  * - `bounds` — world-space `{ min, max }` (glTF units), handy for framing.
  *
- * Most code never needs this: a preloaded glTF/GLB auto-registers with the
+ * Most code never needs this: a loaded glTF/GLB registers with the
  * {@link level} director, so the whole scene loads into a container in one
- * call via `me.level.load(name)` — exactly like a Tiled map. Reach for
- * `getGLTF` only when you want to inspect the raw descriptor (e.g. to frame
- * a `Camera3d` from the embedded camera).
- * @param {string} elt - name of the glTF/GLB file (as specified in the preload list)
- * @returns {GLTFData|null} the parsed scene descriptor, or `null` if not found
+ * call, `level.load(name)`, exactly like a Tiled map. Reach for `getGLTF`
+ * only to inspect the raw descriptor (to frame a `Camera3d` from the
+ * embedded camera, say).
+ * @param {string} elt - the asset name
+ * @returns {GLTFData|null} the parsed scene descriptor, or `null` if none is
+ * loaded under that name
  * @category Assets
  * @example
- * me.loader.preload(
- *     [{ name: "diorama", type: "glb", src: "scenes/diorama.glb" }],
- *     () => {
- *         // load the whole scene into the world (view under a Camera3d)
- *         me.level.load("diorama", { scale: 32 });
+ * await loader.preload([
+ *     { name: "diorama", type: "glb", src: "scenes/diorama.glb" },
+ * ]);
  *
- *         // ...or inspect the raw descriptor for custom framing
- *         const scene = me.loader.getGLTF("diorama");
- *         const { min, max } = scene.bounds;
- *     },
- * );
+ * // load the whole scene into the world (view it under a Camera3d)
+ * level.load("diorama", { scale: 32 });
+ *
+ * // ...or inspect the raw descriptor for custom framing
+ * const { min, max } = loader.getGLTF("diorama").bounds;
  */
 export function getGLTF(elt) {
 	elt = "" + elt;
@@ -300,9 +327,8 @@ export function getGLTF(elt) {
 }
 
 /**
- * Return the precompiled `ShaderEffect` for the given "shader" asset —
- * compiled once during preloading, ready to assign to a renderable or
- * camera `shader` property.
+ * Get the shader compiled from a loaded `"shader"` asset — compiled once,
+ * at load time, ready to add to a renderable or a camera as a post effect.
  *
  * **This returns a SHARED instance**: the *same* `ShaderEffect` object on
  * every call, owned by the loader (its `shared` flag is `true`). That means:
@@ -325,6 +351,11 @@ export function getGLTF(elt) {
  * `renderer.customShader`, a custom batcher). Same shared-instance
  * semantics, and `GLShader.clone()` likewise yields a caller-owned copy.
  *
+ * Unloading the asset destroys the shared instance, under whatever still
+ * draws with it: with bundles, an effect that outlives a level (a HUD's, a
+ * camera's) belongs in a bundle that outlives that level, such as
+ * `"common"`. A `clone()` is the caller's own and is not destroyed with it.
+ *
  * Degradation is never fatal: a fragment-body asset without a body in the
  * active renderer's language (or on Canvas) is an inert `ShaderEffect`
  * stub, and a complete-program asset without a realization for the active
@@ -332,34 +363,35 @@ export function getGLTF(elt) {
  * built-in rendering. Note that shader assets require an initialized
  * Application (`await app.init()`) — an inherent precondition of the
  * preload flow, since the loading screen itself needs the renderer.
- * @param {string} elt - name of the shader asset (as specified in the preload list)
- * @returns {ShaderEffect|GLShader|null} the shared, precompiled shader, or `null` if not found
+ * @param {string} elt - the asset name
+ * @returns {ShaderEffect|GLShader|null} the shared, precompiled shader, or
+ * `null` if none is loaded under that name
  * @category Assets
  * @example
- * me.loader.preload([
- *     // from a file (or data: URI)
+ * await loader.preload([
+ *     // from a file (or a data: URI)
  *     { name: "waterRipple", type: "shader", src: "shaders/waterRipple.frag" },
- *     // or inline GLSL via the `data` field
+ *     // or inline GLSL, through the `data` field
  *     { name: "flash", type: "shader", data: `
  *         uniform float uIntensity;
  *         vec4 apply(vec4 color, vec2 uv) { return mix(color, vec4(1.0), uIntensity); }
  *     ` },
- *     // or a complete program — a {vertex, fragment} GLSL pair and/or a
- *     // full WGSL module → one GLShader carrying both realizations; the
- *     // active renderer hosts the one it speaks
+ *     // or a complete program: a {vertex, fragment} GLSL pair and/or a full
+ *     // WGSL module, compiled into one GLShader; the active renderer hosts
+ *     // the one it speaks
  *     { name: "toonMesh", type: "shader", src: {
  *         vertex: "shaders/toon.vert",
  *         fragment: "shaders/toon.frag",
  *         wgsl: "shaders/toon.wgsl",
  *     } },
- * ], () => {
- *     // one shared program — same uniform state for every user
- *     mySprite.addPostEffect(me.loader.getShader("waterRipple"));
- *     // private copy with its own uniforms (caller-owned, shared = false)
- *     boss.addPostEffect(me.loader.getShader("flash").clone());
- *     // a complete program hosts on a mesh, replacing the built-in shading
- *     myMesh.addPostEffect(me.loader.getShader("toonMesh"));
- * });
+ * ]);
+ *
+ * // one shared program: the same uniform values for every user
+ * mySprite.addPostEffect(loader.getShader("waterRipple"));
+ * // a private copy with its own uniforms (caller-owned, shared = false)
+ * boss.addPostEffect(loader.getShader("flash").clone());
+ * // a complete program hosts on a mesh, replacing the built-in shading
+ * myMesh.addPostEffect(loader.getShader("toonMesh"));
  */
 export function getShader(elt) {
 	elt = "" + elt;
@@ -370,33 +402,36 @@ export function getShader(elt) {
 }
 
 /**
- * return the specified MTL material data
- * @param {string} elt - name of the MTL file (as specified in the preload list)
- * @returns {object} map of material names to properties (`Kd`, `d`, `map_Kd`), or null if not found
+ * Get a loaded Wavefront MTL material library (an `"mtl"` asset), parsed.
+ * Most code never needs it: a `Mesh` takes the library's name as its
+ * `material`.
+ * @param {string} elt - the asset name
+ * @returns {object} the materials by name, each with its properties (`Kd`,
+ * `d`, `Ke`, `map_Kd`...), or `null` if none is loaded under that name
  * @category Assets
  * @example
- * // 1. preload OBJ + MTL + texture
- * me.loader.preload([
- *     { name: "fox", type: "obj", src: "models/fox.obj" },
- *     { name: "fox", type: "mtl", src: "models/fox.mtl" },
+ * // 1. preload the model, its materials and their texture
+ * await loader.preload([
+ *     { name: "fox",      type: "obj",   src: "models/fox.obj" },
+ *     { name: "fox",      type: "mtl",   src: "models/fox.mtl" },
  *     { name: "colormap", type: "image", src: "models/colormap.png" },
- * ], () => {
- *     // 2. create a Mesh with material — texture, tint, opacity auto-applied
- *     const mesh = new me.Mesh(400, 300, {
- *         model: "fox",
- *         material: "fox",
- *         texture: "colormap",
- *         width: 200,
- *         height: 200,
- *     });
+ * ]);
  *
- *     // 3. or access the raw material data directly
- *     const materials = me.loader.getMTL("fox");
- *     // materials["colormap"].Kd — [r, g, b] diffuse color (0-1 range)
- *     // materials["colormap"].d — opacity (0-1)
- *     // materials["colormap"].Ke — [r, g, b] emissive color (glow, applied as Mesh.emissive)
- *     // materials["colormap"].map_Kd — resolved texture URL
+ * // 2. a Mesh with a material: texture, tint and opacity applied for you
+ * const mesh = new Mesh(400, 300, {
+ *     model: "fox",
+ *     material: "fox",
+ *     texture: "colormap",
+ *     width: 200,
+ *     height: 200,
  * });
+ *
+ * // 3. or read the materials directly
+ * const materials = loader.getMTL("fox");
+ * // materials["colormap"].Kd — [r, g, b] diffuse color (0-1 range)
+ * // materials["colormap"].d — opacity (0-1)
+ * // materials["colormap"].Ke — [r, g, b] emissive color (applied as Mesh.emissive)
+ * // materials["colormap"].map_Kd — resolved texture URL
  */
 export function getMTL(elt) {
 	elt = "" + elt;
@@ -407,9 +442,15 @@ export function getMTL(elt) {
 }
 
 /**
- * return the specified Video Object
- * @param {string} elt - name of the video file
- * @returns {HTMLVideoElement}
+ * Get a loaded video (a `"video"` asset): the `<video>` element the loader
+ * created for it.
+ * @param {string} elt - the asset name
+ * @returns {HTMLVideoElement} the video element, or `null` if none is loaded
+ * under that name
+ * @example
+ * await loader.preload([{ name: "intro", type: "video", src: "data/video/intro.mp4" }]);
+ * const intro = loader.getVideo("intro");
+ * intro.play();
  * @category Assets
  */
 export function getVideo(elt) {
@@ -422,9 +463,17 @@ export function getVideo(elt) {
 }
 
 /**
- * return the specified FontFace Object
- * @param {string} elt - name of the font file
- * @returns {FontFace}
+ * Get a loaded web font (a `"fontface"` asset): the `FontFace` the loader
+ * added to `document.fonts`. Text uses it by its name, as a CSS font family.
+ * @param {string} elt - the asset name
+ * @returns {FontFace} the font face, or `null` if none is loaded under that
+ * name
+ * @example
+ * await loader.preload([
+ *     { name: "kenpixel", type: "fontface", src: "data/font/kenvector_future.woff2" },
+ * ]);
+ * const label = new Text(10, 10, { font: "kenpixel", size: 16, text: "Score" });
+ * console.log(loader.getFont("kenpixel").status); // "loaded"
  * @category Assets
  */
 export function getFont(elt) {

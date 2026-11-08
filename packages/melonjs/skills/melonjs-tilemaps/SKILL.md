@@ -25,12 +25,21 @@ await loader.preload([
 level.load("map1");           // inside Stage.onResetEvent
 ```
 
+**A game with several maps** keeps each map and the images only it uses in a
+bundle of its own, beside a `common` bundle for the shared tileset, the player
+and the sounds: an assets file exporting `{ common: [...], map1: [...],
+map2: [...] }`, passed as it is to `loader.preload()`. A map's level can then be
+freed with `loader.unload("map1")` and brought back with
+`await loader.load("map1")` before `level.load("map1")`; a game whose maps
+loop back simply keeps them all loaded. `melonjs-loading-assets` covers the
+pattern.
+
 Asset `type` is `"tmx"` for maps and `"tsx"` for external tilesets — those are
 the only two type strings the loader knows. The *file* can be `.tmx` / `.tsx`
 (XML), or `.json` / `.tmj` / `.tsj`; the parser branches on the extension, not
 on the type. `type: "tmj"` throws `unknown or invalid resource type`. You can
-also skip `src` and pass the map inline via `data` (with `format: "json"` or
-`"xml"`).
+also skip `src` and pass the map inline via `data`, as the parsed JSON object
+of a Tiled JSON export (not an XML string).
 
 `level.load(levelId, options)` accepts `container` (default `game.world`),
 `onLoaded` (default `game.onLevelLoaded`), `flatten` (default `game.mergeGroup`),
@@ -432,7 +441,7 @@ unanimated layer into the offscreen-bake path instead.
 | a Tiled object becomes a plain shape with no behaviour | its class/name does not match any registered factory, or it was registered after `level.load` |
 | the world is still empty right after `level.load` | the load is deferred to a timer while the loop runs — `await level.load(id, { async: true })`, or use `onLoaded` / `LEVEL_LOADED` |
 | `await level.load(id)` returned `true` rather than a promise | without `async: true` the call returns a boolean; `await true` resolves immediately and the load has not run yet — pass the flag when you mean to await |
-| `level <id> not found` | the map was never preloaded, or the asset `name` differs from the id passed to `load` |
+| `level <id> not found` | the map was never preloaded, its bundle was unloaded (`await loader.load(bundleId)` first), or the asset `name` differs from the id passed to `load` |
 | `unknown or invalid resource type` | asset `type` set to `"tmj"` / `"tsj"` — use `"tmx"` / `"tsx"` with the `.tmj` / `.tsj` file |
 | camera will not scroll | `setViewportBounds: false`, or the map was added with `addTo()` (which defaults to `false`) |
 | `No inflate function set` at parse time | compressed layers without the tiled-inflate plugin |
