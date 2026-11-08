@@ -1,6 +1,5 @@
 import { Vector2d, vector2dPool } from "../../../math/vector2d.ts";
 import { boundsPool } from "../../../physics/bounds.ts";
-import TMXLayer from "./../TMXLayer.js";
 import TMXRenderer from "./TMXRenderer.js";
 
 /**
@@ -76,7 +75,7 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 	 * @internal
 	 */
 	getBounds(layer) {
-		const isLayer = layer instanceof TMXLayer;
+		const isLayer = layer !== undefined;
 		const bounds = isLayer ? boundsPool.get() : this.bounds;
 		// a layer can have more cells than the map (an infinite map's)
 		const cols = isLayer ? layer.cols : this.cols;

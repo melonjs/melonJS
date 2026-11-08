@@ -155,6 +155,10 @@ export default class FrameAnimation {
 			return 0;
 		}
 
+		// the "default" animation a sprite makes itself, over every frame of
+		// its texture: a named atlas's frames are not numbered, so that one
+		// can find none, quietly
+		const quiet = index == null;
 		if (index == null) {
 			index = [];
 			// create a default animation with all frame
@@ -163,7 +167,10 @@ export default class FrameAnimation {
 			});
 		}
 
-		// set each frame configuration (offset, size, etc..)
+		// set each frame configuration (offset, size, etc..). A frame the
+		// texture does not have is left out, so the frames that exist play in
+		// order with no empty slot between them
+		const missing = [];
 		for (let i = 0, len = index.length; i < len; i++) {
 			const frame = index[i];
 			let frameObject;
@@ -176,31 +183,36 @@ export default class FrameAnimation {
 				frameObject = frame;
 			}
 			const frameObjectName = frameObject.name;
+			let region;
 			if (typeof frameObjectName === "number") {
-				if (typeof host.textureAtlas[frameObjectName] !== "undefined") {
-					// see https://github.com/melonjs/melonJS/issues/1281
-					this.anim[name].frames[i] = Object.assign(
-						{},
-						host.textureAtlas[frameObjectName],
-						frameObject,
-					);
-					counter++;
-				}
+				region = host.textureAtlas[frameObjectName];
 			} else {
 				// string
 				if (host.source.getFormat().includes("Spritesheet")) {
 					throw new Error(
 						"string parameters for addAnimation are not allowed for standard spritesheet based Texture",
 					);
-				} else {
-					this.anim[name].frames[i] = Object.assign(
-						{},
-						host.textureAtlas[host.atlasIndices[frameObjectName]],
-						frameObject,
-					);
-					counter++;
 				}
+				const atlasIndex = host.atlasIndices?.[frameObjectName];
+				region =
+					atlasIndex === undefined ? undefined : host.textureAtlas[atlasIndex];
 			}
+			if (region === undefined) {
+				missing.push(frameObjectName);
+				continue;
+			}
+			// see https://github.com/melonjs/melonJS/issues/1281
+			this.anim[name].frames[counter] = Object.assign({}, region, frameObject);
+			counter++;
+		}
+		if (missing.length > 0 && !quiet) {
+			console.warn(
+				`melonJS: addAnimation("${name}"): no frame ${missing
+					.map((m) => {
+						return JSON.stringify(m);
+					})
+					.join(", ")} in the texture, left out of the animation`,
+			);
 		}
 		this.anim[name].length = counter;
 

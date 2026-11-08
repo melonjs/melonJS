@@ -189,6 +189,59 @@ const framed = (
 	};
 };
 
+/** what the bag holds, and the tooltip each shows */
+const ITEMS = [
+	{ label: "HP", tip: "Potion: heals 20 HP" },
+	{ label: "MP", tip: "Ether: restores 10 MP" },
+	{ label: "ATK", tip: "Tonic: +5 attack for a fight" },
+	{ label: "KEY", tip: "Key: opens one door" },
+];
+
+/** the tooltip line with nothing under the pointer */
+const HINT = "Point at an item, click to use it";
+
+/**
+ * A slot of the bag: its tooltip is shown in `onOver` and put back in
+ * `onOut`. Using the item removes the slot while the pointer is still on it;
+ * the slot then gets its `onOut` as well, so the tooltip never outlives it.
+ */
+class ItemSlot extends UITextButton {
+	constructor(item: (typeof ITEMS)[number], tooltip: Text) {
+		super(0, 0, {
+			...FONT,
+			fontSize: 12,
+			text: item.label,
+			hoverScale: 1.12,
+			pressScale: 0.9,
+			skin: {
+				atlas: texture,
+				normal: "green_button07",
+				pressed: "green_button08",
+			},
+			onClick: () => {
+				// used up: the slot goes, and the row closes the gap
+				this.ancestor.removeChild(this);
+			},
+		});
+		this.item = item;
+		this.tooltip = tooltip;
+	}
+
+	/** what it holds */
+	item: (typeof ITEMS)[number];
+
+	/** where its tip is shown */
+	tooltip: Text;
+
+	override onOver() {
+		this.tooltip.setText(this.item.tip);
+	}
+
+	override onOut() {
+		this.tooltip.setText(HINT);
+	}
+}
+
 class PlayScreen extends Stage {
 	override onResetEvent(app: Application) {
 		const background = new ColorLayer("background", "rgba(248, 194, 40, 1.0)");
@@ -197,6 +250,7 @@ class PlayScreen extends Stage {
 		const first = this.addOptions(app, background);
 		this.addBars(app);
 		this.addLevels(app);
+		this.addBag(app);
 
 		// keyboard and gamepad play: with the focus on a widget, the arrows or
 		// a pad's D-pad move between them, Enter or the pad's A press one
@@ -344,6 +398,54 @@ class PlayScreen extends Stage {
 			});
 			panel.addChild(pick);
 		}
+		app.world.addChild(panel, 1);
+	}
+
+	/**
+	 * A bag of items, each with a tooltip shown while the pointer is on it.
+	 * Clicking one uses it up and removes its slot; Restock fills the bag
+	 * again.
+	 * @param app - the application
+	 */
+	private addBag(app: Application) {
+		const frame = framed(724, 330, 260, 100, "BAG");
+		const panel = new UIPanel(frame.x, frame.y, {
+			...frame.settings,
+			layout: "column",
+			padding: 14,
+			gap: 10,
+			autoSize: true,
+		});
+		const tooltip = new Text(0, 0, {
+			font: "kenpixel",
+			size: 11,
+			fillStyle: "black",
+			textAlign: "left",
+			textBaseline: "top",
+			text: HINT,
+		});
+		// a row of slots, drawing nothing of its own
+		const slots = new UIPanel(0, 0, {
+			width: 232,
+			height: 52,
+			layout: "row",
+			gap: 8,
+			blocking: false,
+		});
+		const restock = () => {
+			for (const item of ITEMS) {
+				const held = slots.children.some((child) => {
+					return child instanceof ItemSlot && child.item === item;
+				});
+				if (!held) {
+					slots.addChildAt(new ItemSlot(item, tooltip), ITEMS.indexOf(item));
+				}
+			}
+		};
+		restock();
+		panel.addChild(slots);
+		panel.addChild(tooltip);
+		panel.addChild(button("grey", "Restock", 232, restock));
 		app.world.addChild(panel, 1);
 	}
 

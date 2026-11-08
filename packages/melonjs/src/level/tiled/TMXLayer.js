@@ -228,11 +228,12 @@ export default class TMXLayer extends Renderable {
 
 		/**
 		 * the order in which tiles on orthogonal tile layers are rendered.
-		 * (valid values are "left-down", "left-up", "right-down", "right-up")
+		 * (valid values are "left-down", "left-up", "right-down", "right-up").
+		 * Tiled sets it on the map, which every layer follows
 		 * @type {string}
 		 * @default "right-down"
 		 */
-		this.renderorder = data.renderorder || "right-down";
+		this.renderorder = data.renderorder || map.renderorder || "right-down";
 
 		/**
 		 * the layer class

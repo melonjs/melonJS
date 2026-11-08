@@ -151,7 +151,8 @@ function offerPressToScroller(element: UIBaseElement, event: Pointer) {
  * - {@link UIBaseElement#onRelease}: the press ended: the pointer came up,
  *   left the element while held, or the browser cancelled it.
  * - {@link UIBaseElement#onOver} / {@link UIBaseElement#onOut}: the pointer
- *   came in / went out. `hover` is `true` in between.
+ *   came in / went out. `hover` is `true` in between. An element removed
+ *   while hovered gets its `onOut` too.
  * - {@link UIBaseElement#onHold}: held for `holdThreshold` ms, when
  *   `isHoldable` is set.
  * - {@link UIBaseElement#onCancel}: the press was called off without a
@@ -869,6 +870,12 @@ export default class UIBaseElement extends Container {
 	 * has stopped the move, since the pointer is then over that instead. A
 	 * press in progress ends first, through `onRelease`.
 	 *
+	 * It also fires, with no event, when the element is removed from the
+	 * world while the pointer is on it (on its own, with a panel or container
+	 * holding it, or with the scene), after a press in progress was called
+	 * off through `onCancel`: undo there whatever `onOver` set up, and it
+	 * cannot be left behind.
+	 *
 	 * Unlike {@link UIBaseElement#onOver} it cannot stop the event: an
 	 * element that skipped its own leave would stay lit after the pointer
 	 * had gone.
@@ -988,11 +995,16 @@ export default class UIBaseElement extends Container {
 		// Removed, the element hears nothing more from the pointer: the
 		// dispatcher forgets it, so neither the pointer-up of a press nor the
 		// leave of a hover will ever come. A press in progress is called off
-		// (onCancel, once: it does nothing on an element already up), and the
-		// hover is dropped, so an element added back later starts at rest
-		// rather than drawn held or lit, with its shortcut and Enter blocked.
+		// (onCancel, once: it does nothing on an element already up), and a
+		// hover ends as if the pointer had left, through onOut, so whatever
+		// onOver showed (a tooltip, a cursor) goes with it. An element added
+		// back later starts at rest rather than drawn held or lit, with its
+		// shortcut and Enter blocked.
 		this.cancelPress();
-		this.hover = false;
+		if (this.hover) {
+			this.hover = false;
+			this.onOut();
+		}
 		this._juice = 1;
 		this.isDirty = true;
 

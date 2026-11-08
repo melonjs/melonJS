@@ -233,6 +233,18 @@ for (let row = board.starty; row < board.starty + board.rows; row++) {
 }
 ```
 
+An infinite map's `getBounds()` (and its `width` / `height`) covers the map's
+own area and every painted tile, so a level loaded with `setViewportBounds`
+lets the camera reach tiles painted past the map's size, or left of or above
+its origin. Empty chunk cells past the last painted tile are not part of it.
+Size a camera you set up yourself from `map.getBounds()`, not from
+`cols * tilewidth`, which is only right for an orthogonal map:
+
+```js
+const b = level.getCurrentLevel().getBounds();
+app.viewport.setBounds(b.left, b.top, b.width, b.height);
+```
+
 The viewport bounds still cover only the map's `width` x `height`: set them
 yourself to scroll to tiles painted outside it.
 
@@ -458,6 +470,8 @@ unanimated layer into the offscreen-bake path instead.
 | a tileset's transparent color (`trans`) still shows (the console says it could not be applied) | the image cannot be read back: an image the game made itself from another origin without CORS (an `<img>` with no `crossOrigin`) cannot be, so load it with the loader, which only loads an image another origin's server allows (its CORS headers) and can always read back; and a compressed texture cannot be changed: export it with an alpha channel instead |
 | `cellAt` returns `null` (or the wrong tile) for a cell that has one | it was given pixels: `cellAt`, `setTile` and `clearTile` take column and row, only `getTile` takes world pixels |
 | `setTile` shows the wrong tile, or nothing | it was given Tiled's local tile id: use the global id, `tileset.firstgid + localId`, through `getTileById` |
+| on an infinite map the camera stops before tiles painted past the map's size, or left of or above its origin | an older melonJS held the camera to the map's width and height from (0, 0): update; and size a camera you set up yourself from `map.getBounds()` |
+| oversized tiles overlap in the wrong order (the map's render order is not "right-down") | an older melonJS drew every layer "right-down", whatever the map's render order: update |
 | an infinite map's tiles sit in the wrong row, or tiles left of or above the origin are missing | an older melonJS ignored where the chunks start (update); and loop from `layer.startx` / `layer.starty`, not 0, to reach cells left of or above the origin |
 | on a staggered map `getTile` gives the neighbouring tile on every row but the first, or a scrolled view draws nothing | a bug of older melonJS versions in the staggered renderer: update |
 | on an isometric (or staggered, oblique) map `getTile` gives an edge tile for a point just outside the tiles | an older melonJS rounded a fractional column or row toward 0: update |

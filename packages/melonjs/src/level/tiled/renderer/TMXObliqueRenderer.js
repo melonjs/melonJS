@@ -1,12 +1,12 @@
 import { vector2dPool } from "../../../math/vector2d.ts";
 import { boundsPool } from "../../../physics/bounds.ts";
-import TMXLayer from "./../TMXLayer.js";
 import TMXOrthogonalRenderer from "./TMXOrthogonalRenderer.js";
 
 /**
  * additional import for TypeScript
  * @import {Bounds} from "../../../physics/bounds.ts";
  * @import TMXTileMap from "../TMXTileMap.js";
+ * @import TMXLayer from "../TMXLayer.js";
  */
 /**
  * an Oblique Map Renderer (Tiled 1.12+)
@@ -69,13 +69,14 @@ export default class TMXObliqueRenderer extends TMXOrthogonalRenderer {
 
 	/**
 	 * return the bounding rect for this map renderer
-	 * @param {TMXLayer} [layer] - calculate the bounding rect for a specific layer
+	 * @param {TMXLayer|{cols: number, rows: number}} [layer] - calculate the bounding rect for a specific layer, or any area of `cols` x `rows` cells
 	 * @returns {Bounds}
 	 */
 	getBounds(layer) {
-		const bounds = layer instanceof TMXLayer ? boundsPool.get() : this.bounds;
-		const cols = layer instanceof TMXLayer ? layer.cols : this.cols;
-		const rows = layer instanceof TMXLayer ? layer.rows : this.rows;
+		const isLayer = layer !== undefined;
+		const bounds = isLayer ? boundsPool.get() : this.bounds;
+		const cols = isLayer ? layer.cols : this.cols;
+		const rows = isLayer ? layer.rows : this.rows;
 		const w = cols * this.tilewidth;
 		const h = rows * this.tileheight;
 

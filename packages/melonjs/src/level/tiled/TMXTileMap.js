@@ -1,6 +1,7 @@
 import { warning } from "../../lang/console.js";
 import { getImage } from "../../loader/loader.js";
 import { vector2dPool } from "../../math/vector2d.ts";
+import { boundsPool } from "../../physics/bounds.ts";
 import { collision } from "../../physics/collision.js";
 import Container from "../../renderable/container.js";
 import ImageLayer from "../../renderable/imagelayer.js";
@@ -29,6 +30,48 @@ import {
 	resolveEmbeddedImage,
 	tiledBlendMode,
 } from "./TMXUtils.js";
+
+/**
+ * the cells an infinite map's level covers, in the map's tile coordinates:
+ * the map's own area, grown to every painted tile of its tile layers. Tiled
+ * saves whole chunks (16 x 16 cells by default), so a layer's chunks usually
+ * reach past its last painted tile: those empty cells are left out
+ * @param {TMXTileMap} map - the map
+ * @param {Array<object>} layers - the map's layers
+ * @returns {{x: number, y: number, cols: number, rows: number}} the area
+ * @ignore
+ * @internal
+ */
+function paintedExtent(map, layers) {
+	let minX = 0;
+	let minY = 0;
+	let maxX = map.cols;
+	let maxY = map.rows;
+	for (const layer of layers) {
+		if (!(layer instanceof TMXLayer)) {
+			continue;
+		}
+		const data = layer.layerData;
+		const cols = layer.cols;
+		for (let i = 0, len = cols * layer.rows; i < len; i++) {
+			if (data[i * 2] !== 0) {
+				const x = layer.startx + (i % cols);
+				const y = layer.starty + Math.floor(i / cols);
+				minX = Math.min(minX, x);
+				minY = Math.min(minY, y);
+				maxX = Math.max(maxX, x + 1);
+				maxY = Math.max(maxY, y + 1);
+			}
+		}
+	}
+	// a staggered or hexagonal grid alternates every other row or column:
+	// start on an even one, as its layers do, for the stagger to line up
+	if (map.orientation === "staggered" || map.orientation === "hexagonal") {
+		minX -= minX & 1;
+		minY -= minY & 1;
+	}
+	return { x: minX, y: minY, cols: maxX - minX, rows: maxY - minY };
+}
 
 /**
  * read the layer Data
@@ -335,10 +378,6 @@ export default class TMXTileMap {
 		// calculate the map bounding rect
 		this.bounds = this.getRenderer().getBounds().clone();
 
-		// map "real" size
-		this.width = this.bounds.width;
-		this.height = this.bounds.height;
-
 		// background color
 		this.backgroundcolor = data.backgroundcolor;
 
@@ -382,11 +421,33 @@ export default class TMXTileMap {
 	}
 
 	/**
-	 * return the map bounding rect
+	 * the map's width in pixels: its bounds' width (see {@link TMXTileMap#getBounds})
+	 * @type {number}
+	 */
+	get width() {
+		return this.getBounds().width;
+	}
+
+	/**
+	 * the map's height in pixels: its bounds' height (see {@link TMXTileMap#getBounds})
+	 * @type {number}
+	 */
+	get height() {
+		return this.getBounds().height;
+	}
+
+	/**
+	 * return the map bounding rect: the area its tiles are drawn in. On an
+	 * infinite map, the map's own area grown to every painted tile, which can
+	 * start left of or above 0
 	 * @returns {Bounds}
 	 */
 	getBounds() {
-		// calculated in the constructor
+		// an infinite map's bounds cover its painted tiles, known once its
+		// layers are read
+		if (this.infinite === 1) {
+			this.readMapObjects(this.data);
+		}
 		return this.bounds;
 	}
 
@@ -454,6 +515,50 @@ export default class TMXTileMap {
 		}
 
 		this.initialized = true;
+
+		// an infinite map can be painted past its own width and height, and
+		// left of or above its origin: the level covers those tiles too
+		if (this.infinite === 1) {
+			this._growToPaintedTiles();
+		}
+	}
+
+	/**
+	 * grow the level's bounds, from the map's own area, to every painted tile
+	 * of an infinite map
+	 * @ignore
+	 * @internal
+	 */
+	_growToPaintedTiles() {
+		const area = paintedExtent(this, this.layers);
+		if (
+			area.x === 0 &&
+			area.y === 0 &&
+			area.cols === this.cols &&
+			area.rows === this.rows
+		) {
+			return;
+		}
+		const renderer = this.getRenderer();
+		const bounds = renderer.getBounds(area);
+		// the area's grid starts at its first cell, not the map's (0, 0)
+		const origin = renderer.tileToPixelCoords(
+			area.x,
+			area.y,
+			vector2dPool.get(),
+		);
+		const zero = renderer.tileToPixelCoords(0, 0, vector2dPool.get());
+		const dx = origin.x - zero.x;
+		const dy = origin.y - zero.y;
+		this.bounds.setMinMax(
+			bounds.left + dx,
+			bounds.top + dy,
+			bounds.right + dx,
+			bounds.bottom + dy,
+		);
+		vector2dPool.release(origin);
+		vector2dPool.release(zero);
+		boundsPool.release(bounds);
 	}
 
 	/**
@@ -508,9 +613,10 @@ export default class TMXTileMap {
 
 			function _setBounds(width, height) {
 				// adjust the viewport bounds if level is smaller
+				// (an infinite map's level can start left of or above 0)
 				app.viewport.setBounds(
-					0,
-					0,
+					levelBounds.left,
+					levelBounds.top,
 					Math.max(levelBounds.width, width),
 					Math.max(levelBounds.height, height),
 				);
