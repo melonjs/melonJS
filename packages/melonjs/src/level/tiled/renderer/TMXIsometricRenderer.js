@@ -1,6 +1,5 @@
 import { vector2dPool } from "../../../math/vector2d.ts";
 import { boundsPool } from "../../../physics/bounds.ts";
-import TMXLayer from "./../TMXLayer.js";
 import TMXRenderer from "./TMXRenderer.js";
 
 /**
@@ -38,7 +37,7 @@ export default class TMXIsometricRenderer extends TMXRenderer {
 	 * @internal
 	 */
 	getBounds(layer) {
-		const isLayer = layer instanceof TMXLayer;
+		const isLayer = layer !== undefined;
 		const bounds = isLayer ? boundsPool.get() : this.bounds;
 		// a layer can have more cells than the map (an infinite map's): its
 		// first column still starts at the map's origin, and its rows reach
@@ -114,13 +113,9 @@ export default class TMXIsometricRenderer extends TMXRenderer {
 	 */
 	drawTile(renderer, x, y, tmxTile) {
 		const tileset = tmxTile.tileset;
-		// draw the tile
-		tileset.drawTile(
-			renderer,
-			((this.cols - 1) * tileset.tilewidth + (x - y) * tileset.tilewidth) >> 1,
-			(-tileset.tilewidth + (x + y) * tileset.tileheight) >> 2,
-			tmxTile,
-		);
+		const pos = this._tileDrawPosition(x, y, tileset, vector2dPool.get());
+		tileset.drawTile(renderer, pos.x, pos.y, tmxTile);
+		vector2dPool.release(pos);
 	}
 
 	/**
@@ -130,12 +125,28 @@ export default class TMXIsometricRenderer extends TMXRenderer {
 	 * @internal
 	 */
 	drawTileRaw(renderer, x, y, gid, flipMask, tileset) {
-		tileset.drawTileRaw(
-			renderer,
-			((this.cols - 1) * tileset.tilewidth + (x - y) * tileset.tilewidth) >> 1,
-			(-tileset.tilewidth + (x + y) * tileset.tileheight) >> 2,
-			gid,
-			flipMask,
+		const pos = this._tileDrawPosition(x, y, tileset, vector2dPool.get());
+		tileset.drawTileRaw(renderer, pos.x, pos.y, gid, flipMask);
+		vector2dPool.release(pos);
+	}
+
+	/**
+	 * where a tile of `tileset` in cell (x, y) is drawn from: the left of its
+	 * cell's diamond, and as far above the cell's bottom as the tile is tall,
+	 * moved by the tileset's offset. The same place `drawTileLayer` draws it
+	 * @param {number} x - the cell's column
+	 * @param {number} y - the cell's row
+	 * @param {object} tileset - the tile's tileset
+	 * @param {Vector2d} v - the vector to set
+	 * @returns {Vector2d} v
+	 * @ignore
+	 * @internal
+	 */
+	_tileDrawPosition(x, y, tileset, v) {
+		this.tileToPixelCoords(x, y, v);
+		return v.set(
+			v.x - this.hTilewidth + tileset.tileoffset.x,
+			v.y + this.tileheight - tileset.tileheight + tileset.tileoffset.y,
 		);
 	}
 

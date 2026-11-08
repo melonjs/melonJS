@@ -104,6 +104,10 @@ finished `loop: false` run holds the new last frame, and the
 a shorter strip threw on the next `update()` and a longer one never reached its
 new frames.
 
+A frame the texture does not have (a number past the end of the sheet, a name
+the atlas does not hold) is left out with a console warning naming it, and
+the frames that exist play in order; `addAnimation` returns how many it kept.
+
 ## Texture atlases
 
 `TextureAtlas` reads several formats:
@@ -198,6 +202,7 @@ Two consequences:
 | animation never advances | no `framewidth`/`frameheight`, so the sheet is one frame |
 | animation plays once and stops | `{ loop: false }`, or a callback that returned `false` |
 | `TypeError` reading `offset` or `delay` in `update()` after re-adding the playing animation with fewer frames, or a longer one never shows its new frames | before 20.13 redefining the current animation kept its old frame count; upgrade |
+| a console warning `addAnimation("walk"): no frame … in the texture`, or a `TypeError` reading `delay` / `offset` on an older melonJS | a frame number or name the sheet or atlas does not have (often an atlas re-exported without one of its images): fix the frame list or re-export the atlas |
 | `this` is wrong in a `flicker(ms, callback)` callback, or a flicker started from it stops at once | before 20.13.0 the callback ran on an internal object and the flicker was stopped after it; now `this` is the sprite and the flicker has already ended |
 | sprites do not batch | more distinct textures in one frame than `renderer.maxTextures` |
 | nine-slice corners stretch anyway | `insetX`/`insetY` instead of `insetx`/`insety` |
