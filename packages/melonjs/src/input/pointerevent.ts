@@ -21,6 +21,9 @@ interface PointerHandler {
 	region: any;
 	callbacks: Record<string, Array<(pointer: Pointer) => boolean | void>>;
 	pointerId: number | null;
+	// every pointer pressed on the region that has not left it since: with
+	// several fingers on it, `pointerId` holds only the last one to touch it
+	pressed: Set<number>;
 }
 
 /**
@@ -363,6 +366,7 @@ function dispatchEvent(normalizedEvents: Pointer[]): boolean {
 		// spatial query below, which only finds regions near that point)
 		if (POINTER_LEAVE.includes(pointer.type)) {
 			for (const handlers of eventHandlers.values()) {
+				handlers.pressed.delete(pointer.pointerId!);
 				if (handlers.pointerId === pointer.pointerId) {
 					triggerEvent(handlers, pointer.type, pointer, null);
 				}
@@ -465,6 +469,7 @@ function dispatchEvent(normalizedEvents: Pointer[]): boolean {
 				// how a button half under a panel stayed lit while the pointer
 				// sat on the panel.
 				if (occluded) {
+					handlers.pressed.delete(pointer.pointerId!);
 					if (handlers.pointerId === pointer.pointerId) {
 						triggerEvent(
 							handlers,
@@ -481,6 +486,10 @@ function dispatchEvent(normalizedEvents: Pointer[]): boolean {
 					case POINTER_MOVE[1]:
 					case POINTER_MOVE[2]:
 					case POINTER_MOVE[3]:
+						// moved out of bounds: its press no longer counts here
+						if (!eventInBounds) {
+							handlers.pressed.delete(pointer.pointerId!);
+						}
 						// moved out of bounds: trigger the POINTER_LEAVE callbacks
 						if (handlers.pointerId === pointer.pointerId && !eventInBounds) {
 							if (
@@ -523,23 +532,26 @@ function dispatchEvent(normalizedEvents: Pointer[]): boolean {
 					case POINTER_UP[0]:
 					case POINTER_UP[1]:
 					case POINTER_UP[2]:
-					case POINTER_UP[3]:
+					case POINTER_UP[3]: {
 						// pointer defined & inside of bounds: trigger the POINTER_UP callback.
 						// The region keeps the pointer: the press is over, but the
 						// pointer is still over it, so moving away still leaves it and
 						// moving on over it does not enter it again. A legacy
 						// `touchend` is the exception: a lifted finger is over nothing,
 						// and touch events send no leave after it, so it leaves here.
-						if (handlers.pointerId === pointer.pointerId && eventInBounds) {
+						// A pointer pressed on it is released here as well after
+						// another one took `pointerId`, which then keeps it.
+						const ours = handlers.pointerId === pointer.pointerId;
+						const pressed = handlers.pressed.delete(pointer.pointerId!);
+						if ((ours || pressed) && eventInBounds) {
 							const lifted = pointer.type === POINTER_UP[2];
+							let keep = handlers.pointerId;
+							if (ours) {
+								keep = lifted ? null : pointer.pointerId!;
+							}
 							// trigger the corresponding callback
-							const stop = triggerEvent(
-								handlers,
-								pointer.type,
-								pointer,
-								lifted ? null : pointer.pointerId,
-							);
-							if (lifted) {
+							const stop = triggerEvent(handlers, pointer.type, pointer, keep);
+							if (lifted && ours) {
 								triggerEvent(
 									handlers,
 									findActiveEvent(activeEventList, POINTER_LEAVE),
@@ -553,28 +565,41 @@ function dispatchEvent(normalizedEvents: Pointer[]): boolean {
 							}
 						}
 						break;
+					}
 
 					case POINTER_CANCEL[0]:
 					case POINTER_CANCEL[1]:
 					case POINTER_CANCEL[2]:
-					case POINTER_CANCEL[3]:
+					case POINTER_CANCEL[3]: {
 						// pointer defined: trigger the POINTER_CANCEL callback, then
 						// leave: a cancelled pointer is gone, and the region forgets it
-						// here, so the browser's own leave after it would not reach it
-						if (handlers.pointerId === pointer.pointerId) {
-							const stop = triggerEvent(handlers, pointer.type, pointer, null);
-							triggerEvent(
+						// here, so the browser's own leave after it would not reach it.
+						// A pointer pressed on it is cancelled here as well after
+						// another one took `pointerId`, which then keeps it.
+						const ours = handlers.pointerId === pointer.pointerId;
+						const pressed = handlers.pressed.delete(pointer.pointerId!);
+						if (ours || pressed) {
+							const stop = triggerEvent(
 								handlers,
-								findActiveEvent(activeEventList, POINTER_LEAVE),
+								pointer.type,
 								pointer,
-								null,
+								ours ? null : handlers.pointerId,
 							);
+							if (ours) {
+								triggerEvent(
+									handlers,
+									findActiveEvent(activeEventList, POINTER_LEAVE),
+									pointer,
+									null,
+								);
+							}
 							if (stop) {
 								handled = true;
 								break;
 							}
 						}
 						break;
+					}
 
 					default:
 						// event inside of bounds: trigger the POINTER_DOWN or WHEEL callback
@@ -584,6 +609,7 @@ function dispatchEvent(normalizedEvents: Pointer[]): boolean {
 							// alone would never get that release
 							if (POINTER_DOWN.includes(pointer.type)) {
 								handlers.pointerId = pointer.pointerId!;
+								handlers.pressed.add(pointer.pointerId!);
 							}
 							// trigger the corresponding callback
 							if (
@@ -910,6 +936,7 @@ export function registerPointerEvent(
 			region: region,
 			callbacks: {},
 			pointerId: null,
+			pressed: new Set(),
 		});
 	}
 
