@@ -703,8 +703,9 @@ function onPointerEvent(e: Event): void {
 
 	const keycode = pointer.bind[button];
 
-	// check if mapped to a key
-	if (keycode) {
+	// check if mapped to a key. Not on a wheel turn: a wheel event always
+	// reports the main button, pressed or not, and would release its key
+	if (keycode && e.type !== WHEEL[0]) {
 		triggerKeyEvent(keycode, POINTER_DOWN.includes(e.type), button + 1);
 	}
 }
