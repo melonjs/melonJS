@@ -184,4 +184,13 @@ describe("Draggable under a moved camera", () => {
 		expect(d.pos.x).toBe(400);
 		expect(d.pos.y).toBe(300);
 	});
+
+	it("still moves from an event made by hand with only gameX and gameY", () => {
+		const d = draggable(100, 100);
+		d.dragStart({ gameX: 110, gameY: 110 });
+		d.dragMove({ gameX: 150, gameY: 130 });
+		expect(d.pos.x).toBeCloseTo(140);
+		expect(d.pos.y).toBeCloseTo(120);
+		d.dragEnd();
+	});
 });
