@@ -770,7 +770,10 @@ export function hasRegisteredEvents(): boolean {
 export function globalToLocal(x: number, y: number, v?: Vector2d): Vector2d {
 	v = v || vector2dPool.get();
 	const rect = device.getElementBounds(_app.renderer.getCanvas());
-	const pixelRatio = globalThis.devicePixelRatio || 1;
+	// the ratio `scaleRatio` was built with, so that the two cancel out: the
+	// canvas's CSS size is its backing size times the fit factor alone, and
+	// the live ratio changes with browser zoom or another screen without it
+	const pixelRatio = device.devicePixelRatio;
 	x -= rect.left + (globalThis.pageXOffset || 0);
 	y -= rect.top + (globalThis.pageYOffset || 0);
 	const scale = _app.renderer.scaleRatio;
