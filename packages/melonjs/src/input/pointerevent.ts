@@ -579,6 +579,12 @@ function dispatchEvent(normalizedEvents: Pointer[]): boolean {
 					default:
 						// event inside of bounds: trigger the POINTER_DOWN or WHEEL callback
 						if (eventInBounds) {
+							// a press takes the pointer even without a callback
+							// of its own, or a region registered for its release
+							// alone would never get that release
+							if (POINTER_DOWN.includes(pointer.type)) {
+								handlers.pointerId = pointer.pointerId!;
+							}
 							// trigger the corresponding callback
 							if (
 								triggerEvent(
