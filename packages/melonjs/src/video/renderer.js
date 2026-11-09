@@ -351,6 +351,28 @@ export default class Renderer {
 		this.projectionMatrix = new Matrix3d();
 
 		/**
+		 * The transform the world's direct children are drawn under, which
+		 * is the frame `Light3d` positions and directions are authored in.
+		 * Recorded by {@link Renderer#_setLightSpace}; see
+		 * {@link Renderer#_lightSpaceInverse}.
+		 * @ignore
+		 * @internal
+		 */
+		this._lightSpace = new Matrix3d();
+		/**
+		 * whether `_lightSpace` describes the walk being drawn
+		 * @ignore
+		 * @internal
+		 */
+		this._lightSpaceValid = false;
+		/**
+		 * scratch returned by {@link Renderer#_lightSpaceInverse}
+		 * @ignore
+		 * @internal
+		 */
+		this._lightSpaceScratch = new Matrix3d();
+
+		/**
 		 * what each nested {@link Renderer#_pixelSnapBegin} changed, to put
 		 * it back
 		 * @ignore
@@ -572,6 +594,7 @@ export default class Renderer {
 	 */
 	resetFrameState() {
 		this._screenSpaceDepth = 0;
+		this._lightSpaceValid = false;
 		// Purge anything a previous frame left queued. Only `reset()` did this,
 		// and that runs on a stage change, not per frame — so a frame abandoned
 		// between `beginPostEffect` and `endPostEffect` left entries keyed to a
@@ -589,6 +612,58 @@ export default class Renderer {
 			}
 			queue.count = 0;
 		}
+	}
+
+	/**
+	 * Record the current transform as the frame 3D lights live in. Called by
+	 * the world container ({@link Container#draw} on a `root` container) once
+	 * it has applied its own placement, so the transform is exactly the one
+	 * its direct children draw under. `false` (an orthographic projection,
+	 * which never lights a mesh) forgets it instead.
+	 * @param {boolean} enabled - whether this walk can light a mesh at all
+	 * @ignore
+	 * @internal
+	 */
+	_setLightSpace(enabled) {
+		if (enabled === true && this.currentTransform !== undefined) {
+			this._lightSpace.copy(this.currentTransform);
+			this._lightSpaceValid = true;
+		} else {
+			this._lightSpaceValid = false;
+		}
+	}
+
+	/**
+	 * The matrix taking the lights' frame (see {@link Renderer#_setLightSpace})
+	 * to the frame of the mesh being drawn now, or `null` when they are the
+	 * same frame or no world walk recorded one.
+	 *
+	 * The lit mesh shaders shade in the frame of the mesh's PARENT: they take
+	 * `uModelMatrix` as the world, and `Container#draw` folds every ancestor
+	 * into the view. That is the world itself for a mesh added straight to it,
+	 * and `null` here, which leaves its lighting exactly as authored. One
+	 * container down it is not, and lights uploaded as authored lit the mesh
+	 * as though its container had not moved or turned. Both frames draw
+	 * through the current transform, `C · p = W · q`, so `p = C⁻¹ · W · q`.
+	 * @returns {Matrix3d|null} a scratch matrix, valid until the next call
+	 * @ignore
+	 * @internal
+	 */
+	_lightSpaceInverse() {
+		if (this._lightSpaceValid !== true) {
+			return null;
+		}
+		const c = this.currentTransform.val;
+		const w = this._lightSpace.val;
+		for (let i = 0; i < 16; i++) {
+			if (c[i] !== w[i]) {
+				return this._lightSpaceScratch
+					.copy(this.currentTransform)
+					.invert()
+					.multiply(this._lightSpace);
+			}
+		}
+		return null;
 	}
 
 	/**
@@ -1054,6 +1129,7 @@ export default class Renderer {
 		// bounds an unbalanced bracket — `reset()` runs on a stage change and
 		// on context restore, NOT once per frame
 		this._screenSpaceDepth = 0;
+		this._lightSpaceValid = false;
 		this.renderState.reset(this.width, this.height);
 		this.resetTransform();
 		this.setBlendMode(this.settings.blendMode);

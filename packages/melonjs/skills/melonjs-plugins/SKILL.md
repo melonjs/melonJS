@@ -126,6 +126,10 @@ It also exports helpers usable on their own: `onBackButton`, `bindStageBack`,
 `lockOrientation` / `unlockOrientation`, `hideSplash`. See `melonjs-deployment`
 for the wider packaging picture.
 
+With `pauseOnBackground` (the default), going to the background pauses the
+game and coming back resumes it, but only if this pause was the plugin's: a
+game the player had paused stays paused.
+
 ## Physics adapters
 
 `@melonjs/planck-adapter` and `@melonjs/matter-adapter` swap the physics world
@@ -205,6 +209,10 @@ or a `Stage` is simpler and easier to test.
 | plugin setup never runs | setup written in an `init()` method — there is no such hook |
 | `plugin.register` for an adapter does nothing | adapters are a construction setting, not a plugin |
 | physics behaves differently after adding an adapter | expected — units and force scales differ; re-tune |
+| a Spine object slides off screen when the camera moves, or ignores its container (WebGL / WebGPU) | spine-plugin < 4.0.1 drew without the camera's and the parents' transform; upgrade |
+| a Spine object ignores `setOpacity()` / `alpha` | spine-plugin < 4.0.1; upgrade |
+| a game paused from its menu is running again after the app comes back from the background | capacitor-plugin < 1.0.1 resumed on every return; upgrade |
+| touch controls miss the finger after browser zoom or a move to another screen | gamepad-plugin < 1.2.1; upgrade |
 
 ## Related skills
 

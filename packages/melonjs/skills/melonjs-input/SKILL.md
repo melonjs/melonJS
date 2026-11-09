@@ -54,6 +54,14 @@ narrows it; it also repeats while the key is held, so guard anything that must
 happen once. Keep polling for movement and for a menu cursor, where one step
 per press and a key held across a state change are the things that matter.
 
+When the window loses the focus or the page is hidden, every key and
+`bindPointer` button still held is released, since its real release goes to
+another window: polling sees it up when the player comes back, and a key still
+held then is pressed again by its next `keydown`. No `KEYUP` is sent for it,
+so code moved by `KEYDOWN` / `KEYUP` rather than by polling should also listen
+to `event.BLUR`. A gamepad's presses are left to the gamepad, which is read
+every frame.
+
 The full signature is `bindKey(keyCode, action, lock?, preventDefault?)`;
 `preventDefault` defaults to `input.preventDefault` (itself `true`). Pass the
 fourth argument per binding, or change the global default with
@@ -102,6 +110,11 @@ The accepted event names are exactly `"pointerdown"`, `"pointerup"`,
 throw `invalid event type`. melonJS maps the canonical name onto whichever
 mouse/touch events the device actually supports, so you always register the
 pointer name.
+
+A region can listen to `"pointerup"` alone, to act on release: it gets the
+release of a press made on it. With several fingers on one region, each finger
+that pressed it gets its own `pointerup` / `pointercancel`; `pointerenter` and
+`pointerleave` still follow one pointer per region.
 
 ## Which object gets the event
 
@@ -182,9 +195,10 @@ globalThis.addEventListener("pointerup", onRelease);
 
 For plain drag-and-drop, `Draggable` / `DropTarget` already wire all of this up
 (`pointerdown` / `pointerup` / `pointercancel` regions plus a global
-`POINTERMOVE` listener) and emit `event.DRAGSTART` / `event.DRAGEND`. `DRAGEND`
-still originates from a region handler, so it only fires when the release lands
-on the draggable itself.
+`POINTERMOVE` listener) and emit `event.DRAGSTART` / `event.DRAGEND`, and
+follow the pointer under any camera, scrolled or zoomed. `DRAGEND` still
+originates from a region handler, so it only fires when the release lands on
+the draggable itself.
 
 ## Gamepad
 
@@ -350,6 +364,11 @@ input.triggerKeyEvent(input.KEY.LEFT, false);   // release
 | drag stops when leaving the object | region events end at the region — use `event.POINTERMOVE` |
 | release never detected outside the region | no global pointer-up event — add a raw listener |
 | jump fires every frame while held | `bindKey` without its third `lock` argument |
+| the hero keeps walking after an Alt-Tab, until the key is pressed again (before 20.14) | the key's release went to another window: update, held keys are now released on blur |
+| a region with only a `"pointerup"` callback never gets it, or the first finger's release is lost with two on one region (before 20.14) | the release was only delivered to the last pointer to press the region: update |
+| firing (a key bound with `bindPointer`) stops while the button is held and the wheel turns (before 20.14) | a wheel event released the main button's key: update |
+| clicks land off target after browser zoom or a move to another screen (before 20.14) | the pointer was scaled by the live pixel ratio against a canvas sized with the old one: update |
+| a `Draggable` jumps away when grabbed, and stays stuck dragging, once the camera has moved (before 20.14) | it mixed screen and world coordinates: update |
 | `invalid event type` thrown at registration | non-pointer name (`"click"`, `"mousedown"`, …) passed to `registerPointerEvent` |
 | `no action defined for keycode N` | `bindGamepad` called before `bindKey` for that keycode |
 | floating stick ignores the right half of the screen | its `area` defaults to `"half"`, its own side — use `area: "screen"` |

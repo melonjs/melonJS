@@ -363,6 +363,7 @@ In rough order for a typical 2D game:
 
 | symptom | cause |
 |---|---|
+| the game stops updating for good after a long hitch, or freezes on the first frame of a new state, while `requestAnimationFrame` keeps running (20.12 and 20.13) | one update slower than ten frames made the next step need more saved time than the loop keeps: update |
 | high draw-call count | the texture-unit pool overflows, or primitives/meshes are interleaved with sprites |
 | draw calls jump when one effect is enabled | a custom shader on the quad batcher disables multi-texture batching |
 | frame time spikes and GC pauses | allocating per frame instead of pooling |

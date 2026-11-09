@@ -1232,9 +1232,17 @@ export default class Application {
 			this.accumulator = Math.min(this.accumulator, this.accumulatorMax);
 
 			this.updateDelta = timer.interpolation ? timer.getDelta() : this.stepSize;
+			// a step drains what it really cost, so a scene too heavy for real
+			// time slows down rather than spiralling; but never more than the
+			// accumulator can hold, or one update slower than that would need
+			// more saved time than it is allowed, and the world would never be
+			// stepped (nor the cost measured) again
 			this.accumulatorUpdateDelta = timer.interpolation
 				? this.updateDelta
-				: Math.max(this.updateDelta, this.lastUpdateDelta);
+				: Math.min(
+						Math.max(this.updateDelta, this.lastUpdateDelta),
+						Math.max(this.accumulatorMax, this.updateDelta),
+					);
 
 			if (stepOwed) {
 				// one step now rather than once a whole step of time has

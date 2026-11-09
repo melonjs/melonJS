@@ -1,4 +1,4 @@
-import { emit, KEYDOWN, KEYUP } from "../system/event.ts";
+import { BLUR, emit, KEYDOWN, KEYUP, on } from "../system/event.ts";
 import { preventDefault as preventDefaultAction } from "./input.ts";
 
 // corresponding actions
@@ -71,6 +71,34 @@ const keyUpEvent: KeyEventHandler = (options) => {
 	}
 };
 
+// gamepads press keys with a source of 256 and up (keys and mouse buttons
+// use their own codes, below that)
+const POLLED_SOURCE = 256;
+
+/**
+ * Let go of every key and mouse button held when the window loses the focus:
+ * their release goes to another window, and would otherwise never arrive.
+ * A gamepad is polled every frame and lets go of its own presses, so what it
+ * holds is left to it.
+ */
+const releaseHeldKeys = () => {
+	for (const action in _keyRefs) {
+		const refs = _keyRefs[action];
+		for (const trigger in refs) {
+			if (+trigger < POLLED_SOURCE) {
+				delete refs[trigger];
+				if (_keyStatus[action] > 0) {
+					_keyStatus[action]--;
+				}
+			}
+		}
+		// unlocked once nothing holds it, as its last keyup would
+		if (!(_keyStatus[action] > 0)) {
+			_keyLocked[action] = false;
+		}
+	}
+};
+
 /*
  * PUBLIC STUFF
  */
@@ -91,6 +119,8 @@ export function initKeyboardEvent() {
 		);
 		globalThis.addEventListener("keyup", keyUpEvent, false);
 	}
+	// emitted on the window's blur and when the page is hidden
+	on(BLUR, releaseHeldKeys);
 }
 
 /**

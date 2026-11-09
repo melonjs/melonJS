@@ -6,7 +6,7 @@ import {
 	Vector2,
 } from "@esotericsoftware/spine-core";
 import * as spineWebGL from "@esotericsoftware/spine-webgl";
-import { Math, plugin, Renderable } from "melonjs";
+import { Math, Matrix3d, plugin, Renderable } from "melonjs";
 import { getManagedContext } from "./glContext.js";
 import SkeletonRenderer from "./SkeletonRenderer.js";
 import { SpinePlugin } from "./SpinePlugin.js";
@@ -21,6 +21,9 @@ Skeleton.yDown = true;
 
 // a temporary array used for skeleton.getBounds();
 const tempArray = [];
+
+// the debug overlay's model-view-projection, reused every frame
+const debugMVP = new Matrix3d();
 
 /**
  * Union of the five concrete constraint classes Spine 4.3 exposes via
@@ -310,14 +313,26 @@ export default class Spine extends Renderable {
 
 	/**
 	 * Rotate this Spine object by the specified angle (in radians).
+	 * Without `v`, it turns around its root bone, through the root bone
+	 * itself; with `v`, through its transform, as {@link Renderable#rotate}
+	 * does.
 	 * @param {number} angle - The angle to rotate (in radians)
 	 * @param {Vector2d|ObservableVector2d} [v] - an optional point to rotate around
 	 * @returns {Spine} Reference to this object for method chaining
 	 */
 	rotate(angle, v) {
-		this.skeleton.getRootBone().pose.rotation -= Math.radToDeg(angle);
-		// apply melonJS transform as well
-		return super.rotate(angle, v);
+		// One or the other, never both: every backend draws through the
+		// transform, so turning the root bone AND the transform turned the
+		// object twice (it did on Canvas, the GPU paths used to drop the
+		// transform)
+		if (typeof v !== "undefined") {
+			return super.rotate(angle, v);
+		}
+		if (angle !== 0) {
+			this.skeleton.getRootBone().pose.rotation -= Math.radToDeg(angle);
+			this.isDirty = true;
+		}
+		return this;
 	}
 
 	/**
@@ -328,9 +343,13 @@ export default class Spine extends Renderable {
 	 */
 	scale(x, y = x) {
 		if (this.isWebGL || this.isWebGPU) {
-			// batched paths ignore currentTransform — scale through root bone
+			// GPU paths: scale through the root bone, as they always have,
+			// and through it only — they draw through currentTransform too,
+			// so scaling that as well would scale twice
 			this.root.pose.scaleX *= x;
 			this.root.pose.scaleY *= y;
+			this.isDirty = true;
+			return this;
 		}
 		// Canvas: scale through currentTransform only (applied by preDraw),
 		// which scales both region bone transforms and mesh world vertices uniformly
@@ -431,9 +450,18 @@ export default class Spine extends Renderable {
 			return;
 		}
 
-		// apply melonJS tint to Spine skeleton color
+		// apply melonJS tint and opacity to the Spine skeleton color. The
+		// renderer's global alpha is this object's opacity, cascaded from
+		// its ancestors by `preDraw`; every backend's skeleton renderer
+		// reads the skeleton color and none read the renderer's alpha (the
+		// canvas one even overwrites it per slot), so `setOpacity()` and a
+		// faded container did nothing. Multiplied into the skeleton's own
+		// alpha for this draw only, so an alpha set on `skeleton.color`
+		// is kept rather than compounded frame after frame.
+		const color = this.skeleton.color;
+		const alpha = color.a;
 		const t = this.tint.toArray();
-		this.skeleton.color.set(t[0], t[1], t[2], this.skeleton.color.a);
+		color.set(t[0], t[1], t[2], alpha * renderer.globalAlpha());
 
 		if (this.isWebGPU) {
 			// switch to the Spine batcher via melonJS batcher system, then
@@ -443,10 +471,7 @@ export default class Spine extends Renderable {
 			renderer.setBatcher("spine");
 			this.spineBatcher.drawSkeleton(this.skeleton, this.premultipliedAlpha);
 			this.spineBatcher.flush();
-			return;
-		}
-
-		if (this.isWebGL) {
+		} else if (this.isWebGL) {
 			// switch to the Spine batcher via melonJS batcher system
 			renderer.setBatcher("spine");
 
@@ -465,9 +490,14 @@ export default class Spine extends Renderable {
 			// debug rendering uses Spine's own GL pipeline
 			if (this.skeletonRenderer.debugRendering) {
 				this.shapesShader.bind();
+				// through the current transform, as the skeleton itself is
+				// drawn, so the overlay follows the camera and the parents
 				this.shapesShader.setUniform4x4f(
 					this.runtime.Shader.MVP_MATRIX,
-					renderer.projectionMatrix.toArray(),
+					debugMVP
+						.copy(renderer.projectionMatrix)
+						.multiply(renderer.currentTransform)
+						.toArray(),
 				);
 				this.shapes.begin(this.shapesShader);
 				this.skeletonDebugRenderer.draw(this.shapes, this.skeleton);
@@ -479,6 +509,8 @@ export default class Spine extends Renderable {
 		} else {
 			this.skeletonRenderer.draw(renderer, this.skeleton);
 		}
+
+		color.a = alpha;
 	}
 
 	/**

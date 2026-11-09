@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.3 - _unreleased_
+
+### Fixed
+- `isGrounded()` works for a body made of several shapes, or a concave outline matter splits into parts
+- `isGrounded()` counts a contact only when it pushes the body up, so the side of a wall no longer counts as ground and can no longer be climbed with repeated jumps. A sensor contact keeps the old rule
+- `setSensor()` takes effect on a body already in contact, so a one-way platform can be dropped through, and it reaches every part of a body made of several shapes, as `bodyDef.isSensor` does
+
 ## 1.5.2 - _2026-10-07_
 
 ### Changed

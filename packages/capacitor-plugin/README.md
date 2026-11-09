@@ -82,7 +82,7 @@ Options (`ConnectCapacitorOptions`):
 
 | key | default | description |
 |---|---|---|
-| `pauseOnBackground` | `true` | When the OS sends the app to background, call `state.pause()`; resume on foreground. |
+| `pauseOnBackground` | `true` | When the OS sends the app to background, call `state.pause()`; resume on foreground. A game already paused when the app left (a pause menu) stays paused. |
 | `pauseAudio` | `true` | Forwarded to `state.pause(music)` / `state.resume(music)`. Set `false` if you want background audio to keep playing. |
 | `forwardBackButton` | `true` | Forward Capacitor's `backButton` event to the engine bus so subscribers can intercept it. |
 | `onUnhandledBack` | `() => App.exitApp()` | Called when no subscriber calls `evt.preventDefault()`. Override to e.g. show a confirm dialog. |

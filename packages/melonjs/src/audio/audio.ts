@@ -161,9 +161,10 @@ export function disable(): void {
  * MP3 drops out for a moment at each loop there: a region of the loop's exact
  * length keeps it gapless.
  * @param sound_name - Audio track name (case-sensitive).
- * @param volumeOrOptions - Playback volume, `0.0..1.0` (defaults to the
- *   current global volume), or a {@link TrackOptions} object with `volume`
- *   and the `sprite` region to loop on.
+ * @param volumeOrOptions - The track's own volume, `0.0..1.0` (defaults to
+ *   `1`; the global volume set with {@link setVolume} scales it on top), or a
+ *   {@link TrackOptions} object with `volume` and the `sprite` region to loop
+ *   on.
  * @returns The sound instance ID.
  * @throws {Error} when no clip of that name is loaded, raised before anything
  *   is stopped, so a mistyped name cannot silence the music already playing.
@@ -197,9 +198,15 @@ export function playTrack(
 	// audio context is still locked, and a queued stop with no id resolves
 	// its ids when it finally runs — late enough to catch the replacement
 	// and leave the game silent.
+	//
+	// The whole clip is NAMED (`__default`, the backend's region for it)
+	// rather than left out. A play with no region is read by the backend as
+	// "resume the paused instance, if exactly one is paused", and with the
+	// track paused that instance is the track itself: it was resumed, its id
+	// came back, and the stop below then silenced it.
 	const id = play(sound_name, {
 		loop: true,
-		sprite: options.sprite,
+		sprite: options.sprite ?? "__default",
 		volume: options.volume,
 	});
 	audioState.currentTrackId = sound_name;
@@ -239,7 +246,11 @@ export function stopTrack(): void {
  */
 export function pauseTrack(): void {
 	if (audioState.currentTrackId !== null) {
-		audioState.tracks[audioState.currentTrackId]?.pause();
+		// the track's own voice: a bare pause() pauses every instance of the
+		// clip, effects played from the same file included
+		audioState.tracks[audioState.currentTrackId]?.pause(
+			audioState.currentTrackVoiceId,
+		);
 	}
 }
 
@@ -252,8 +263,41 @@ export function pauseTrack(): void {
  * @category Audio
  */
 export function resumeTrack(): void {
-	if (audioState.currentTrackId !== null) {
-		audioState.tracks[audioState.currentTrackId]?.play();
+	if (audioState.currentTrackId === null) {
+		return;
+	}
+	const sound = audioState.tracks[audioState.currentTrackId];
+	if (sound === undefined) {
+		return;
+	}
+	const id = audioState.currentTrackVoiceId;
+	const voice = id === undefined ? null : sound._soundById(id);
+	if (id === undefined || voice === null || voice._ended) {
+		// no voice of the track left to resume (its clip was stopped): start
+		// the clip, which is what this has always done with nothing paused
+		sound.play();
+		return;
+	}
+	// The track's own voice, not a bare play(). That one resumes only when
+	// EXACTLY ONE instance of the clip is paused: with an effect of the same
+	// clip paused too it started the whole file again from the top, on a clip
+	// with a sprite map it threw, and with the track playing it layered a
+	// second copy of it.
+	if (sound._playLock || sound.state() !== "loaded") {
+		// The voice is still starting (its clip loading, or the context not
+		// running yet), so a pause was queued behind that start, and the
+		// resume queues behind the pause. Played now, it would start the
+		// voice a second time underneath the first.
+		sound._queue.push({
+			event: "play",
+			action: () => {
+				sound.play(id);
+			},
+		});
+		return;
+	}
+	if (voice._paused) {
+		sound.play(id);
 	}
 }
 
@@ -267,7 +311,10 @@ export function getCurrentTrack(): string | null {
 }
 
 /**
- * Set the default global volume.
+ * Set the global volume: the master level every sound plays through, those
+ * already playing included. A sound's own volume, given to {@link play} or
+ * {@link playTrack}, is scaled by it, so at `0.5` a sound played at `0.8` is
+ * heard at `0.4`.
  * @param volume - Volume value, `0.0..1.0`.
  * @category Audio
  */

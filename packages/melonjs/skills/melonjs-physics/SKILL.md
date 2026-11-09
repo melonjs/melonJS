@@ -780,13 +780,17 @@ Same call, different magnitude — these are the ones that waste an afternoon:
 - **`body.position` is the centroid in matter**, while `renderable.pos` is
   top-left in melonJS. The adapter stores a per-body offset so `renderable.pos`
   stays correct — but read `body.position` directly and you get the centroid.
-- **Degenerate (zero-area / collinear) polygons — a Tiled polyline, a `Line` —
-  cannot be built by matter and fall back to their axis-aligned bounding box.**
-  Any other shape type throws `unsupported shape type`.
+- **A `Line` (what Tiled emits for a polyline) is a thin 2px rectangle along
+  the segment on matter**, which is what `getBodyShapes()` reports (since
+  matter-adapter 1.5.0; before that it fell back to its axis-aligned bounding
+  box). Only a degenerate (zero-area, collinear) `Polygon` still falls back to
+  its bounding box. Any other shape type throws `unsupported shape type`.
 - **Ellipses become circles on matter**, using the average of the two radii.
 - **`isGrounded` is capability-gated** (`capabilities.isGrounded`) and computed
   differently per adapter: a flag read on built-in, a live scan of active
-  contacts on matter.
+  contacts on matter and planck, counting a solid contact that pushes the body
+  up (a sensor contact counts when the other body is below). On every adapter
+  the side of a wall is not ground.
 
 Adapter-specific escapes exist (`(this.body as MatterAdapter.Body).frictionAir`,
 `adapter.matter.Constraint.create(...)`) but are not portable — flag them if you
@@ -831,7 +835,10 @@ use them. `adapter.capabilities` (`constraints`,
 | `raycast` throws "reading 'x'" / "reading 'length'" (built-in) | before 20.13 a body carrying a `Point`, `Sphere` or `Box3d` broke the ray walk; upgrade |
 | a ray passes through a rotated ellipse, or stops short of it (built-in) | before 20.13 the raycast ignored `Ellipse#angle`; upgrade |
 | the debug hitbox does not follow a spinning body | pre-1.2.1 matter-adapter / pre-1.3.1 planck-adapter returned the authored shapes rather than the rotated ones |
-| a Tiled polyline becomes a solid box on matter | matter cannot build a zero-area polygon; the adapter falls back to its AABB |
+| a Tiled polyline becomes a solid box on matter | matter-adapter < 1.5.0 built a `Line` as its AABB; upgrade (a degenerate `Polygon` still falls back to one) |
+| the player climbs a tall wall with repeated jumps (matter, planck) | matter-adapter < 1.5.3 / planck-adapter < 1.6.3 counted any contact with a lower body as ground; upgrade |
+| a hero made of several shapes is never grounded, so it cannot jump (matter) | matter-adapter < 1.5.3 missed contacts on the parts of a compound body; upgrade |
+| `setSensor(true)` on a platform under the player does nothing, so it cannot be dropped through (matter) | matter-adapter < 1.5.3 did not update a contact already in place; upgrade |
 
 ## Related skills
 

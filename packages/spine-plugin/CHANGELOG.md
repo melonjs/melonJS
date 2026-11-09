@@ -1,5 +1,12 @@
 # Changelog
 
+## 4.0.1 - _unreleased_
+
+### Fixed
+- On WebGL and WebGPU, a Spine object follows the camera and its parent containers, as on Canvas, and so does the WebGL debug overlay
+- `setOpacity()`, `alpha` and a faded parent container fade a Spine object, on every renderer
+- `rotate()` turns a Spine object once on Canvas, where it turned it twice, and the bounds match the drawing after `scale()` or `rotate()`
+
 ## 4.0.0 - _2026-08-21_
 
 ### Added

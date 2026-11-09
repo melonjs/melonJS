@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.6.3 - _unreleased_
+
+### Fixed
+- `isGrounded()` counts a contact only when it pushes the body up, so the side of a wall no longer counts as ground and can no longer be climbed with repeated jumps; and ground whose body starts above the player (a Tiled polyline starting on a ledge) now counts. A sensor contact keeps the old rule
+
 ## 1.6.2 - _2026-10-07_
 
 ### Changed

@@ -35,12 +35,23 @@ export function connectCapacitor(
 	const handles: CapacitorListenerHandle[] = [];
 
 	if (pauseOnBackground) {
+		// Remembered so the return undoes THIS pause and not someone else's,
+		// as the engine does for window blur and focus. A game the player
+		// paused (a pause menu) is already paused when the app goes away:
+		// resuming on every return restarted it underneath the menu. Only
+		// raised when leaving, so a second "inactive" (iOS sends inactive,
+		// then background) keeps it, and cleared on the return.
+		let pausedInBackground = false;
 		handles.push(
 			App.addListener("appStateChange", ({ isActive }) => {
 				if (isActive) {
-					state.resume(pauseAudio);
-				} else {
+					if (pausedInBackground) {
+						state.resume(pauseAudio);
+					}
+					pausedInBackground = false;
+				} else if (!state.isPaused()) {
 					state.pause(pauseAudio);
+					pausedInBackground = true;
 				}
 			}) as unknown as CapacitorListenerHandle,
 		);
