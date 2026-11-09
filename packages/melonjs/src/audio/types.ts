@@ -327,7 +327,10 @@ export interface PlayOptions {
 	volume?: number | undefined;
 	/**
 	 * Place this sound at a renderable and keep it there, re-reading its world
-	 * position every frame. Tracking stops when the renderable is destroyed.
+	 * position every frame. Tracking stops when the renderable is destroyed,
+	 * or when it leaves the world back to the pool that built it (see
+	 * `createPool`). A renderable moved to another container, or removed
+	 * with `keepalive`, is still followed.
 	 *
 	 * Positions are WORLD pixels, with `+y` down like everything else in
 	 * melonJS; the Y flip Web Audio wants is applied for you. Sounds placed
@@ -351,8 +354,9 @@ export interface PlayOptions {
 	 */
 	at?: { x: number; y: number; z?: number } | undefined;
 	/**
-	 * Stop the sound when the renderable it follows is destroyed, rather than
-	 * leaving it playing where the renderable was. Defaults to `false`.
+	 * Stop the sound when the renderable it follows is destroyed, or leaves
+	 * the world back to its pool, rather than leaving it playing where the
+	 * renderable was. Defaults to `false`.
 	 *
 	 * Note that stopping discards the playback id, so keep this `false` for a
 	 * looping sound you intend to reposition and resume later.
