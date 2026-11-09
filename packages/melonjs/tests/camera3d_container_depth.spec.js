@@ -90,7 +90,6 @@ describe("Camera3d draws a container's children at the container's depth", () =>
 			cullBackFaces: false,
 			castGroundShadow: false,
 		});
-		mesh.isKinematic = true;
 		return mesh;
 	};
 
@@ -108,6 +107,12 @@ describe("Camera3d draws a container's children at the container's depth", () =>
 		const markInView = (c) => {
 			for (const child of c.getChildren()) {
 				child.inViewport = true;
+				// what `Mesh#onActivateEvent` sets when a mesh joins a world
+				// whose camera is a Camera3d (this app's own is a Camera2d), and
+				// what keeps the 2D anchor offset out of the world-space path
+				if (child instanceof Mesh) {
+					child._useWorldSpace = true;
+				}
 				if (child instanceof Container) {
 					markInView(child);
 				}
