@@ -116,12 +116,15 @@ export default class GLTFModel extends Container {
 		super(0, 0);
 
 		/**
-		 * pixels per glTF unit (uniform scene scale)
+		 * pixels per glTF unit (uniform scene scale), as given by
+		 * `options.scale`. Kept under its own name: stored as `this.scale` it
+		 * shadowed the inherited {@link Renderable#scale} method, so
+		 * `model.scale(2)` threw instead of growing the rig.
 		 * @type {number}
 		 * @ignore
 		 * @internal
 		 */
-		this.scale = options.scale ?? 1;
+		this._sceneScale = options.scale ?? 1;
 		// right-handed (glTF) → negate Z as well as Y so the Y-up→Y-down bridge
 		// is a rotation, matching Mesh#rightHanded / GLTFScene
 		/**
@@ -212,7 +215,7 @@ export default class GLTFModel extends Container {
 		const dx = b.max[0] - b.min[0];
 		const dy = b.max[1] - b.min[1];
 		const dz = b.max[2] - b.min[2];
-		const radius = (Math.hypot(dx, dy, dz) / 2) * this.scale;
+		const radius = (Math.hypot(dx, dy, dz) / 2) * this._sceneScale;
 		const boxSize = Math.max(radius, 1) * Math.SQRT2;
 
 		/**
@@ -233,13 +236,13 @@ export default class GLTFModel extends Container {
 		 * @ignore
 		 * @internal
 		 */
-		this._extentX = ((b.min[0] + b.max[0]) / 2) * this.scale;
+		this._extentX = ((b.min[0] + b.max[0]) / 2) * this._sceneScale;
 		// render space is Y-DOWN and the model is bridged from glTF's Y-up
 		/**
 		 * @ignore
 		 * @internal
 		 */
-		this._extentY = -((b.min[1] + b.max[1]) / 2) * this.scale;
+		this._extentY = -((b.min[1] + b.max[1]) / 2) * this._sceneScale;
 
 		const lit = options.lit === true;
 		const rightHanded = options.rightHanded !== false;
@@ -271,7 +274,7 @@ export default class GLTFModel extends Container {
 					texture: prim.image,
 					width: boxSize,
 					height: boxSize,
-					scale: this.scale,
+					scale: this._sceneScale,
 					normalize: false,
 					rightHanded,
 					// KHR_materials_unlit materials skip the lit path even in a lit scene
@@ -388,6 +391,17 @@ export default class GLTFModel extends Container {
 		 * @internal
 		 */
 		this._animDone = false;
+
+		/**
+		 * The placement the rig was last posed with: `pos.x`, `pos.y`, `pos.z`
+		 * then the 16 entries of `currentTransform`. `update()` compares the
+		 * live placement against it, so a model whose clip is not advancing
+		 * (never played, paused, finished, stopped, zero length) still follows
+		 * a move, a turn or a resize, and a still one is not re-posed.
+		 * @ignore
+		 * @internal
+		 */
+		this._posedPlacement = new Float64Array(19);
 
 		// pose to the bind/rest pose so the model is correctly assembled even
 		// before any clip plays
@@ -540,7 +554,9 @@ export default class GLTFModel extends Container {
 	}
 
 	/**
-	 * Advance the active clip and re-pose the rig.
+	 * Advance the active clip and re-pose the rig. With no clip advancing
+	 * (none set, paused, finished or of zero length) the rig is re-posed only
+	 * when the model was moved, turned or resized since its last pose.
 	 * @param {number} dt - elapsed time since the last update, in milliseconds
 	 * @returns {boolean} true if the model (or any child) needs redrawing
 	 * @protected
@@ -583,8 +599,37 @@ export default class GLTFModel extends Container {
 			}
 			this._pose();
 			this.isDirty = true;
+		} else if (this._isLive() && this._placementChanged()) {
+			// no clip is advancing, but the model itself was moved, turned or
+			// resized: the placement only reaches the parts through `_pose()`,
+			// so re-pose at the clip's current time, which leaves a paused or
+			// finished clip exactly where it is
+			this._pose();
+			this.isDirty = true;
 		}
 		return super.update(dt);
+	}
+
+	/**
+	 * Whether the model's placement differs from the one the rig was last
+	 * posed with (see `_posedPlacement`).
+	 * @returns {boolean} true if `pos` or `currentTransform` changed
+	 * @ignore
+	 * @internal
+	 */
+	_placementChanged() {
+		const p = this._posedPlacement;
+		const pos = this.pos;
+		if (p[0] !== pos.x || p[1] !== pos.y || p[2] !== pos.z) {
+			return true;
+		}
+		const t = this.currentTransform.val;
+		for (let i = 0; i < 16; i++) {
+			if (p[i + 3] !== t[i]) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
@@ -648,13 +693,27 @@ export default class GLTFModel extends Container {
 	 */
 	updateBounds(absolute = true) {
 		const bounds = this.getBounds();
-		const e = this._extent;
-		bounds.setMinMax(
-			this._extentX - e,
-			this._extentY - e,
-			this._extentX + e,
-			this._extentY + e,
-		);
+		// `scale()` grows the rig through `currentTransform`, so the measured
+		// extent grows with it: the radius by the longest of the three axes,
+		// which keeps the box containing a non-uniformly scaled model, and the
+		// centre offset along each axis by that axis's own length. A pure
+		// rotation leaves every axis at length 1, so a turned model reports
+		// exactly what it did before.
+		let e = this._extent;
+		let cx = this._extentX;
+		let cy = this._extentY;
+		// (the base constructor measures before `currentTransform` exists)
+		const m = this.currentTransform;
+		if (m !== undefined && !m.isIdentity()) {
+			const t = m.val;
+			const sx = Math.hypot(t[0], t[1], t[2]);
+			const sy = Math.hypot(t[4], t[5], t[6]);
+			const sz = Math.hypot(t[8], t[9], t[10]);
+			e *= Math.max(sx, sy, sz);
+			cx *= sx;
+			cy *= sy;
+		}
+		bounds.setMinMax(cx - e, cy - e, cx + e, cy + e);
 		if (absolute === true) {
 			const absPos = this.getAbsolutePosition();
 			bounds.translate(absPos.x, absPos.y);
@@ -673,6 +732,12 @@ export default class GLTFModel extends Container {
 		for (const root of this._roots) {
 			this._visit(root, parent, clip, t);
 		}
+		// remember the placement this pose was built from
+		const p = this._posedPlacement;
+		p[0] = this.pos.x;
+		p[1] = this.pos.y;
+		p[2] = this.pos.z;
+		p.set(this.currentTransform.val, 3);
 	}
 
 	/**
@@ -693,7 +758,7 @@ export default class GLTFModel extends Container {
 	_rootMatrix() {
 		const { x, y, z } = this.pos;
 		const t = this.currentTransform.val;
-		const s = this.scale;
+		const s = this._sceneScale;
 		// An unplaced, unrotated model must pose exactly as it did before this
 		// existed, so take the identity straight out rather than composing one.
 		if (x === 0 && y === 0 && z === 0 && this.currentTransform.isIdentity()) {
@@ -803,9 +868,9 @@ export default class GLTFModel extends Container {
 	 */
 	_applyWorldToMesh(mesh, world) {
 		mesh.setPosition(
-			world[12] * this.scale,
-			-world[13] * this.scale,
-			this._zSign * world[14] * this.scale,
+			world[12] * this._sceneScale,
+			-world[13] * this._sceneScale,
+			this._zSign * world[14] * this._sceneScale,
 		);
 		const v = mesh.currentTransform.val;
 		v.set(world);
