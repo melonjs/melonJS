@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.2.1] - _unreleased_
+## [1.2.1] - _2026-11-09_
 
 ### Fixed
 - Controls are found under the finger after browser zoom, or after the window moves to a screen of another pixel density

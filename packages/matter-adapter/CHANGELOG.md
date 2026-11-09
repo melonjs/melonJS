@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.5.3 - _unreleased_
+## 1.5.3 - _2026-11-09_
 
 ### Fixed
 - `isGrounded()` works for a body made of several shapes, or a concave outline matter splits into parts

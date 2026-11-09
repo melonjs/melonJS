@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.0.1] - _unreleased_
+## [1.0.1] - _2026-11-09_
 
 ### Fixed
 - Coming back to the app no longer resumes a game that was already paused when it left, such as one showing its pause menu

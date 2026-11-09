@@ -1,6 +1,6 @@
 # Changelog
 
-## 4.0.1 - _unreleased_
+## 4.0.1 - _2026-11-09_
 
 ### Fixed
 - On WebGL and WebGPU, a Spine object follows the camera and its parent containers, as on Canvas, and so does the WebGL debug overlay
