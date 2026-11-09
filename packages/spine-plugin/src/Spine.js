@@ -450,9 +450,18 @@ export default class Spine extends Renderable {
 			return;
 		}
 
-		// apply melonJS tint to Spine skeleton color
+		// apply melonJS tint and opacity to the Spine skeleton color. The
+		// renderer's global alpha is this object's opacity, cascaded from
+		// its ancestors by `preDraw`; every backend's skeleton renderer
+		// reads the skeleton color and none read the renderer's alpha (the
+		// canvas one even overwrites it per slot), so `setOpacity()` and a
+		// faded container did nothing. Multiplied into the skeleton's own
+		// alpha for this draw only, so an alpha set on `skeleton.color`
+		// is kept rather than compounded frame after frame.
+		const color = this.skeleton.color;
+		const alpha = color.a;
 		const t = this.tint.toArray();
-		this.skeleton.color.set(t[0], t[1], t[2], this.skeleton.color.a);
+		color.set(t[0], t[1], t[2], alpha * renderer.globalAlpha());
 
 		if (this.isWebGPU) {
 			// switch to the Spine batcher via melonJS batcher system, then
@@ -462,10 +471,7 @@ export default class Spine extends Renderable {
 			renderer.setBatcher("spine");
 			this.spineBatcher.drawSkeleton(this.skeleton, this.premultipliedAlpha);
 			this.spineBatcher.flush();
-			return;
-		}
-
-		if (this.isWebGL) {
+		} else if (this.isWebGL) {
 			// switch to the Spine batcher via melonJS batcher system
 			renderer.setBatcher("spine");
 
@@ -503,6 +509,8 @@ export default class Spine extends Renderable {
 		} else {
 			this.skeletonRenderer.draw(renderer, this.skeleton);
 		}
+
+		color.a = alpha;
 	}
 
 	/**

@@ -10,6 +10,10 @@
  * it through the root bone; with the transform applied that must not now
  * scale twice, and neither may `rotate()` or the root-bone flips.
  *
+ * Bug pinned here too: `setOpacity()` (and a faded parent container) had no
+ * effect. The skeleton renderers read spine's skeleton color and never the
+ * renderer's global alpha, where `preDraw` puts the cascaded opacity.
+ *
  * Checked on the vertices that reach the GPU: what the batcher hands to its
  * draw call, which the shader multiplies by the projection alone.
  */
@@ -76,7 +80,7 @@ const shift = (box: Box, dx: number, dy: number): Box => {
 	};
 };
 
-describe("Spine on WebGL: camera and parent transforms", () => {
+describe("Spine on WebGL: camera, parent transforms and opacity", () => {
 	let spine: Spine;
 	let parent: Container | undefined;
 
@@ -274,5 +278,76 @@ describe("Spine on WebGL: camera and parent transforms", () => {
 			p[1] * 70 + p[5] * 100 + p[13],
 			5,
 		);
+	});
+
+	// opacity. Each vertex carries spine's light color, whose
+	// alpha is what the shader multiplies the texel by
+	const flushedAlphas = (): number[] => {
+		const out: number[] = [];
+		for (const v of flushed) {
+			for (let i = 0; i < v.length; i += STRIDE) {
+				out.push(v[i + 5]);
+			}
+		}
+		return out;
+	};
+
+	it("setOpacity() fades it", () => {
+		app.world.addChild(spine);
+		spine.setOpacity(0.5);
+		frame();
+		const alphas = flushedAlphas();
+		expect(alphas.length).toBeGreaterThan(0);
+		for (const a of alphas) {
+			expect(a).toBeCloseTo(0.5, 3);
+		}
+	});
+
+	it("a faded parent container fades it, multiplied by its own opacity", () => {
+		parent = new Container(0, 0, 400, 400);
+		parent.setOpacity(0.5);
+		parent.addChild(spine);
+		spine.setOpacity(0.5);
+		app.world.addChild(parent);
+		frame();
+		for (const a of flushedAlphas()) {
+			expect(a).toBeCloseTo(0.25, 3);
+		}
+	});
+
+	it("fully opaque by default", () => {
+		app.world.addChild(spine);
+		frame();
+		for (const a of flushedAlphas()) {
+			expect(a).toBeCloseTo(1, 3);
+		}
+	});
+
+	it("keeps an alpha set on skeleton.color, frame after frame", () => {
+		app.world.addChild(spine);
+		spine.skeleton.color.a = 0.5;
+		spine.setOpacity(0.5);
+		frame();
+		frame();
+		for (const a of flushedAlphas()) {
+			expect(a).toBeCloseTo(0.25, 3);
+		}
+		expect(spine.skeleton.color.a).toEqual(0.5);
+	});
+
+	it("keeps the tint", () => {
+		app.world.addChild(spine);
+		spine.tint.setColor(255, 0, 0);
+		spine.setOpacity(0.5);
+		frame();
+		// spine-webgl premultiplies the vertex color by its alpha
+		for (const v of flushed) {
+			for (let i = 0; i < v.length; i += STRIDE) {
+				expect(v[i + 2]).toBeCloseTo(0.5, 3);
+				expect(v[i + 3]).toBeCloseTo(0, 3);
+				expect(v[i + 4]).toBeCloseTo(0, 3);
+				expect(v[i + 5]).toBeCloseTo(0.5, 3);
+			}
+		}
 	});
 });

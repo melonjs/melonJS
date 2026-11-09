@@ -5,6 +5,11 @@
  * parent container have always applied here; this pins that, and that
  * `scale()`, `rotate()` and the flips each apply once.
  *
+ * Bugs pinned here: `rotate()` turned the object twice (through the root
+ * bone AND the transform), and `setOpacity()` (and a faded parent container)
+ * had no effect, since the canvas skeleton renderer set the renderer's global
+ * alpha to each slot's own alpha rather than multiplying it.
+ *
  * Measured on the pixels drawn: the fixture skeleton is one opaque white
  * 40x40 box on a black background.
  */
@@ -72,7 +77,7 @@ const shift = (box: Box, dx: number, dy: number): Box => {
 	};
 };
 
-describe("Spine on Canvas: camera and parent transforms", () => {
+describe("Spine on Canvas: camera, parent transforms and opacity", () => {
 	let spine: Spine;
 	let parent: Container | undefined;
 
@@ -181,4 +186,48 @@ describe("Spine on Canvas: camera and parent transforms", () => {
 			expect(Math.abs(bounds.bottom - drawn.maxY)).toBeLessThanOrEqual(1);
 		});
 	}
+
+	// opacity, read off the red channel of the box's centre
+	// pixel (the box is white, the background black)
+	const centre = (): number => {
+		app.world.update(16);
+		app.isDirty = true;
+		app.draw();
+		const canvas = app.renderer.getCanvas();
+		return (canvas.getContext("2d") as CanvasRenderingContext2D).getImageData(
+			120,
+			100,
+			1,
+			1,
+		).data[0];
+	};
+
+	it("setOpacity() fades it", () => {
+		app.world.addChild(spine);
+		spine.setOpacity(0.5);
+		expect(Math.abs(centre() - 128)).toBeLessThanOrEqual(2);
+	});
+
+	it("a faded parent container fades it, multiplied by its own opacity", () => {
+		parent = new Container(0, 0, 400, 400);
+		parent.setOpacity(0.5);
+		parent.addChild(spine);
+		spine.setOpacity(0.5);
+		app.world.addChild(parent);
+		expect(Math.abs(centre() - 64)).toBeLessThanOrEqual(2);
+	});
+
+	it("fully opaque by default", () => {
+		app.world.addChild(spine);
+		expect(centre()).toEqual(255);
+	});
+
+	it("keeps an alpha set on skeleton.color, frame after frame", () => {
+		app.world.addChild(spine);
+		spine.skeleton.color.a = 0.5;
+		spine.setOpacity(0.5);
+		centre();
+		expect(Math.abs(centre() - 64)).toBeLessThanOrEqual(2);
+		expect(spine.skeleton.color.a).toEqual(0.5);
+	});
 });
