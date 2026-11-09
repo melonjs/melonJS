@@ -16,7 +16,8 @@ export interface CapacitorBackEvent {
 export interface ConnectCapacitorOptions {
 	/**
 	 * Auto-pause the engine when the app goes to background and
-	 * resume when it comes back. Default `true`.
+	 * resume when it comes back. A game that was already paused when
+	 * the app left (a pause menu) stays paused on return. Default `true`.
 	 */
 	pauseOnBackground?: boolean;
 

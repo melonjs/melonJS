@@ -1,0 +1,5 @@
+box.png
+size: 8, 8
+filter: Linear, Linear
+box
+bounds: 0, 0, 8, 8

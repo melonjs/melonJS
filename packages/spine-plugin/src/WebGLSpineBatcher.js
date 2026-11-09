@@ -123,9 +123,26 @@ export default class WebGLSpineBatcher extends WebGLBatcher {
 		// add indices (rebased by current vertex count)
 		this.addIndices(indices);
 
-		// copy vertex data into the vertex buffer
+		// Copy the vertex data into the vertex buffer, through the renderer's
+		// current transform. Spine's world vertices are in the Spine object's
+		// own (parent) space, and the camera scroll and every ancestor's
+		// transform live in `currentTransform`, which the engine's batchers
+		// apply to each vertex here, on the CPU: the shader applies the
+		// projection alone. Pushing them as they come drew a Spine object as
+		// if the camera never moved and its container sat at the origin.
+		const m = this.renderer.currentTransform;
+		const identity = m.isIdentity();
+		const a = m.val;
+		const f32 = vertexData.bufferF32;
 		for (let i = 0; i < vertices.length; i += VERTEX_SIZE) {
+			const offset = vertexData.vertexCount * VERTEX_SIZE;
 			vertexData.pushFloats(vertices, i, VERTEX_SIZE);
+			if (!identity) {
+				const x = vertices[i];
+				const y = vertices[i + 1];
+				f32[offset] = a[0] * x + a[4] * y + a[12];
+				f32[offset + 1] = a[1] * x + a[5] * y + a[13];
+			}
 		}
 	}
 
