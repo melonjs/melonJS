@@ -1073,12 +1073,11 @@ export class MatterAdapter implements PhysicsAdapter {
 	isGrounded(renderable: Renderable): boolean {
 		const body = this.bodyMap.get(renderable);
 		if (!body) return false;
-		// "Grounded" = at least one active, solid contact that pushes us
-		// UP, the rule the builtin adapter applies too: a side contact
-		// (a wall) or a sensor never lands a body. Comparing the other
-		// body's centre instead made the side of a tall wall count once
-		// the player's centre was above the wall's, so a player could
-		// climb it with repeated jumps.
+		// "Grounded" = at least one active contact that pushes us UP, the
+		// rule the builtin adapter applies too: a side contact (a wall)
+		// never lands a body. Comparing the other body's centre instead
+		// made the side of a tall wall count once the player's centre was
+		// above the wall's, so a player could climb it with repeated jumps.
 		//
 		// matter's pairs hold PARTS, so a compound body (several shapes, or
 		// a concave outline matter decomposed) is matched through
@@ -1087,10 +1086,22 @@ export class MatterAdapter implements PhysicsAdapter {
 		// (matter orients it away from `bodyB` and its solver pushes
 		// `bodyA` along it), so it is negated for the `bodyB` side.
 		for (const pair of this.engine.pairs.list) {
-			if (!pair.isActive || pair.isSensor) continue;
+			if (!pair.isActive) continue;
 			const isA = pair.bodyA.parent === body;
 			const isB = pair.bodyB.parent === body;
 			if (isA === isB) continue;
+			if (pair.isSensor) {
+				// A sensor pushes nothing, so it keeps the rule it always
+				// had: the other body's centre is below ours. Games use a
+				// sensor with a response of their own as ground (the
+				// platformer-matter example's slopes snap the player up),
+				// and rely on it to jump from there.
+				const other = isA ? pair.bodyB : pair.bodyA;
+				if (other.position.y > body.position.y) {
+					return true;
+				}
+				continue;
+			}
 			const ny = isA ? pair.collision.normal.y : -pair.collision.normal.y;
 			if (ny < -GROUND_NORMAL_Y) {
 				return true;

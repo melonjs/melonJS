@@ -9,12 +9,12 @@
  *    (or from a concave outline matter decomposes) could never jump.
  * 2. "Grounded" meant touching any body whose centre is lower. The side of a
  *    tall wall counts once the player's centre is above the wall's, so a
- *    player could climb a wall with repeated jumps; a sensor (a trigger
- *    zone) counted too; and ground whose centre sits higher than the player
- *    (a compound terrain body) did not count. The rule the interface
+ *    player could climb a wall with repeated jumps. The rule the interface
  *    documents, and the one the builtin adapter applies (only an upward
- *    push-out out of a solid body lands it), is a contact whose normal
- *    points up.
+ *    push-out lands a body), is a contact whose normal points up. Sensor
+ *    contacts keep the old rule: a game can use a sensor with a response of
+ *    its own as ground (the platformer-matter example's slopes), and a
+ *    sensor has no push to read a direction from.
  * 3. `setSensor()` only wrote `body.isSensor`. matter copies that flag into a
  *    pair once, when the pair is created, so toggling it while two bodies
  *    already touch did nothing: a one-way platform could not be dropped
@@ -218,13 +218,38 @@ describe("MatterAdapter — isGrounded and setSensor", () => {
 			expect(grounded).toEqual(0);
 		});
 
-		it("overlapping a sensor zone whose centre is lower is not grounded", () => {
-			// a trigger area the player falls through
-			const zone = addStatic(0, 100, 800, 300, { isSensor: true });
-			const p = addPlayer(100, 120);
-			run(3);
-			expect(touching(p, zone)).toEqual(true);
-			expect(adapter.isGrounded(p)).toEqual(false);
+		it("a sensor slope the game snaps the player onto still counts as ground", () => {
+			// the platformer-matter example's slopes: a sensor polygon, and the
+			// player pushed up out of it by the contact depth every step.
+			// Jumping from such a slope has to keep working
+			const slope = make(100, 300, 300, 100);
+			adapter.addBody(slope, {
+				type: "static",
+				shapes: [new Polygon(0, 0, pts(0, 100, 300, 0, 300, 100))],
+				isSensor: true,
+			});
+			const p = addPlayer(234, 280);
+			const snap = new Vector2d();
+			(
+				p as unknown as {
+					onCollisionActive: (r: { depth: number }, o: Renderable) => void;
+				}
+			).onCollisionActive = (response, other) => {
+				if (other !== slope) return;
+				const v = adapter.getVelocity(p);
+				if (v.y > 0) adapter.setVelocity(p, new Vector2d(v.x, 0));
+				adapter.setPosition(p, snap.set(p.pos.x, p.pos.y - response.depth));
+			};
+			let grounded = 0;
+			run(60, () => {
+				if (adapter.isGrounded(p)) grounded++;
+			});
+			// riding the slope, not fallen through it
+			expect(touching(p, slope)).toEqual(true);
+			expect(p.pos.y).toBeLessThan(330);
+			// the snap clears the overlap, so the pair drops out every few
+			// steps (20 of 60 here, as before this rule changed)
+			expect(grounded).toBeGreaterThan(15);
 		});
 
 		it("standing on terrain whose centre is higher than the player is grounded", () => {

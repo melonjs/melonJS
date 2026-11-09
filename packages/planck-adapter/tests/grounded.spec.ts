@@ -1,14 +1,16 @@
 /**
  * isGrounded against the contacts planck really holds.
  *
- * Bug pinned here: "grounded" meant touching any body whose centre is lower.
- * The side of a tall wall counts once the player's centre is above the
- * wall's, so a player could climb a wall with repeated jumps; a sensor (a
- * trigger zone) counted too; and ground whose body centre sits higher than
- * the player (one terrain body carrying a floor and a tall tower) did not
- * count. The rule the interface documents, and the one the builtin adapter
- * applies (only an upward push-out out of a solid body lands it), is a
- * contact whose normal points up.
+ * Bug pinned here: "grounded" meant touching any body whose position is
+ * lower. The side of a tall wall counts once the player's centre is above the
+ * wall's, so a player could climb a wall with repeated jumps; and ground
+ * whose body origin (its first shape) sits higher than the player did not
+ * count: a Tiled polyline that starts on a ledge, or one terrain body listing
+ * a tall tower first. The rule the interface documents, and the one the
+ * builtin adapter applies (only an upward push-out lands a body), is a
+ * contact whose normal points up. Sensor contacts keep the old rule: a game
+ * can use a sensor with a response of its own as ground, and Box2D computes
+ * no contact normal for a sensor.
  *
  * The rest are the normal cases the fix must keep working.
  */
@@ -139,13 +141,24 @@ describe("PlanckAdapter — isGrounded", () => {
 			expect(groundedWhileTouching).toEqual(0);
 		});
 
-		it("overlapping a sensor zone whose centre is lower is not grounded", () => {
-			// a trigger area the player falls through
-			const zone = addStatic(0, 100, 800, 300, { isSensor: true });
-			const p = addPlayer(100, 120);
-			run(3);
-			expect(touching(p, zone)).toEqual(true);
-			expect(adapter.isGrounded(p)).toEqual(false);
+		it("a sensor floor the game holds the player on still counts as ground", () => {
+			// a sensor used as ground with a response of the game's own: the
+			// player is held 2 px into its top every step. Jumping from it has
+			// to keep working
+			const floor = addStatic(0, 200, 800, 40, { isSensor: true });
+			const p = addPlayer(100, 150);
+			const hold = new Vector2d();
+			let grounded = 0;
+			run(60, () => {
+				if (p.pos.y + 32 > 202) {
+					const v = adapter.getVelocity(p);
+					adapter.setVelocity(p, new Vector2d(v.x, 0));
+					adapter.setPosition(p, hold.set(p.pos.x, 170));
+				}
+				if (touching(p, floor) && adapter.isGrounded(p)) grounded++;
+			});
+			expect(p.pos.y).toBeLessThan(180);
+			expect(grounded).toBeGreaterThan(30);
 		});
 
 		it("standing on terrain whose centre is higher than the player is grounded", () => {

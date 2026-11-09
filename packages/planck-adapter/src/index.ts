@@ -1120,14 +1120,13 @@ export class PlanckAdapter implements PhysicsAdapter {
 	isGrounded(renderable: Renderable): boolean {
 		const body = this.bodyMap.get(renderable);
 		if (!body) return false;
-		// "Grounded" = at least one touching, solid contact that pushes us
-		// UP, the rule the builtin adapter applies too: a side contact
-		// (a wall) or a sensor never lands a body. Comparing the other
-		// body's position instead made the side of a tall wall count once
-		// the player's centre was above the wall's (wall climbing with
-		// repeated jumps), and missed ground whose body origin, its first
-		// shape, sits above the player (a Tiled polyline that starts on a
-		// ledge).
+		// "Grounded" = at least one touching contact that pushes us UP,
+		// the rule the builtin adapter applies too: a side contact (a
+		// wall) never lands a body. Comparing the other body's position
+		// instead made the side of a tall wall count once the player's
+		// centre was above the wall's (wall climbing with repeated jumps),
+		// and missed ground whose body origin, its first shape, sits above
+		// the player (a Tiled polyline that starts on a ledge).
 		//
 		// Box2D's world-manifold normal points from fixture A to fixture B,
 		// so the direction this body is pushed is `-normal` when it owns
@@ -1146,7 +1145,20 @@ export class PlanckAdapter implements PhysicsAdapter {
 			const contact = contactEdge.contact;
 			if (!contact.isTouching()) continue;
 			const fixtureA = contact.getFixtureA();
-			if (fixtureA.isSensor() || contact.getFixtureB().isSensor()) continue;
+			if (fixtureA.isSensor() || contact.getFixtureB().isSensor()) {
+				// A sensor pushes nothing and Box2D computes no manifold for
+				// it, so it keeps the rule it always had: the other body is
+				// below us. Games use a sensor with a response of their own
+				// as ground and rely on it to jump from there.
+				//
+				// `other` is nullable in planck's typings (a contact edge
+				// can outlive its partner during destruction).
+				const other = contactEdge.other;
+				if (other && other.getPosition().y > body.getPosition().y) {
+					return true;
+				}
+				continue;
+			}
 			const manifold = contact.getWorldManifold(this.groundManifold);
 			if (!manifold) continue;
 			const ny =
