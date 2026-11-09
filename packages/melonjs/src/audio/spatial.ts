@@ -16,6 +16,7 @@ import { Vector3d } from "../math/vector3d.ts";
 import type { Bounds } from "../physics/bounds.ts";
 import type Renderable from "../renderable/renderable.js";
 import { GAME_AFTER_UPDATE, off, on } from "../system/event.ts";
+import { timesRecycled } from "../system/pool.ts";
 import { position as setPosition, stop as stopSound } from "./playback.ts";
 import {
 	state as audioState,
@@ -70,6 +71,8 @@ interface FollowedSound {
 	name: string;
 	target: Renderable;
 	stopWithTarget: boolean;
+	/** how many times the target had been recycled when it was followed */
+	recycled: number;
 }
 
 /** followed sounds, keyed by the playback id `play()` returned */
@@ -96,6 +99,27 @@ function isDestroyed(target: Renderable): boolean {
 	// the type says `pos` is always a vector; `destroy()` says otherwise
 	// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
 	return target.pos === undefined;
+}
+
+/**
+ * Whether a followed renderable has gone: destroyed, or handed back to its
+ * pool since it was followed.
+ *
+ * A renderable built by a pool is not destroyed when it leaves the world, it
+ * goes back to its pool, and the pool can lend it out again as something new
+ * before the next frame (a bullet pool does, on the next shot). So asking
+ * whether it is destroyed, or even whether it is in its pool right now, is
+ * not enough: the count of times it was recycled is noted when it is
+ * followed, and a change in it means the object is no longer that target.
+ * A renderable moved to another container, or removed with `keepalive`, is
+ * not recycled, and is still followed.
+ * @param entry - the followed sound
+ * @returns true when the target is gone
+ */
+function isGone(entry: FollowedSound): boolean {
+	return (
+		isDestroyed(entry.target) || timesRecycled(entry.target) !== entry.recycled
+	);
 }
 
 /**
@@ -196,7 +220,7 @@ function tick() {
 	}
 
 	for (const [id, entry] of followed) {
-		if (isDestroyed(entry.target)) {
+		if (isGone(entry)) {
 			_dead.push(id);
 			continue;
 		}
@@ -430,7 +454,8 @@ export function unfollow(id: number): void {
  * @param options - the placement the caller asked for
  * @param options.follow - a renderable to track every frame
  * @param options.at - a fixed world point to pin the sound to
- * @param options.stopWithTarget - stop the sound when `follow` is destroyed
+ * @param options.stopWithTarget - stop the sound when `follow` is destroyed,
+ *   or handed back to its pool
  * @internal
  * @ignore
  */
@@ -475,6 +500,7 @@ export function applySpatialPlacement(
 			name,
 			target: follow,
 			stopWithTarget: stopWithTarget === true,
+			recycled: timesRecycled(follow),
 		});
 		startTicking();
 	}
