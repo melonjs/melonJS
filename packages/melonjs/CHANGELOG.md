@@ -6,29 +6,29 @@
 - Loader: asset bundles, to load and free a level's assets together: `loader.preload({ common: […], level1: […] })`, then `loader.load("level1")` / `loader.unload("level1")`; an asset shared by several bundles is fetched once and freed with the last ([#1656](https://github.com/melonjs/melonJS/issues/1656))
 
 ### Fixed
-- 3D: `GLTFModel#scale()` grows the model instead of throwing, and multiplies the `scale` it was built with
-- 3D: a `GLTFModel` follows `pos`, `depth`, `rotate` and `scale` while its animation is paused, finished or not playing
-- 3D: under `Camera3d`, a container's children are drawn at the container's depth, as they were already culled and sorted
-- 3D: lit meshes inside a moved or rotated container are lit where they are
-- 3D: `Camera3d` culls against the camera as it is now, so a camera moved from a `GAME_UPDATE` listener or an object's update no longer shows objects a frame late
-- Application: one update slower than ten frames no longer stops the game for good; it slows down for a moment and catches up. A heavy first frame after a state change could freeze a game on it since 20.12
-- Audio: the global volume is applied once: at `setVolume(0.5)` a new sound plays at 0.5, not 0.25, and a track started while the volume was 0 is heard when it comes back
-- Audio: `playTrack` on a paused track restarts it, instead of leaving the game silent
-- Audio: `pauseTrack` / `resumeTrack` act on the track alone, leaving effects from the same file alone; `resumeTrack` no longer starts a second copy, and leaving the tab before the first click no longer leaves the music paused
-- Audio: `stop(name)` keeps the `on: { end }` callback the clip was loaded with
-- Audio: a sound following a pooled object (`follow`, `stopWithTarget`) ends when the object goes back to its pool, instead of following the next one
-- Input: keys and mouse buttons held when the window loses the focus are released, so a hero no longer keeps walking after an Alt-Tab
-- Input: a region registered for `"pointerup"` alone receives it
-- Input: with several fingers on one region, each finger's `pointerup` and `pointercancel` reach it
-- Input: turning the mouse wheel no longer releases a key bound with `bindPointer`
-- Input: the pointer position stays right after browser zoom, or after the window moves to a screen of another pixel density
-- Input: a `Draggable` follows the pointer under a scrolled or zoomed camera, and its drag ends on release there
-- Loader: unloading an image also frees its GPU texture on WebGL and WebGPU, and its tinted copies on Canvas
-- Sprites: `addAnimation` leaves out frames the texture does not have, with a console warning, instead of throwing later in `update()`
-- Tiled: tile layers follow the map's render order, instead of always "right-down"
-- Tiled: on an infinite map, the level's bounds, and so the camera, reach tiles painted past the map's size or left of and above its origin
-- Tiled: the isometric renderer's `drawTile` and `drawTileRaw` draw a tile where the layer does
-- UI: a widget removed while hovered gets its `onOut`, so a tooltip or highlight shown in `onOver` does not stay
+- Application: one very slow update no longer freezes the game for good (since 20.12, a heavy first frame could)
+- 3D: `GLTFModel#scale()` works instead of throwing
+- 3D: a `GLTFModel` follows `pos`, `depth`, `rotate` and `scale` when no animation is playing
+- 3D: a container's children are drawn at its depth under `Camera3d`
+- 3D: lit meshes in a moved or rotated container are lit where they are
+- 3D: `Camera3d` no longer culls a frame late after the camera moves
+- Sprite: `addAnimation()` skips frames the texture lacks, with a warning, instead of crashing later
+- UI: a widget removed while hovered gets its `onOut()`
+- Input: keys held when the window loses the focus are released
+- Input: a region with only a `"pointerup"` callback receives it
+- Input: each finger on a multi-touch region gets its own `pointerup`
+- Input: the mouse wheel no longer releases a key bound with `bindPointer()`
+- Input: the pointer position stays right after browser zoom or a move to another screen
+- Input: `Draggable` follows the pointer under a scrolled or zoomed camera
+- Audio: `setVolume()` is applied once, not twice
+- Audio: `playTrack()` on a paused track restarts it
+- Audio: `pauseTrack()` / `resumeTrack()` act on the track only
+- Audio: `stop(name)` keeps the clip's `on.end` callback
+- Audio: a sound following a pooled object stops when the object is recycled
+- Tiled: tile layers use the map's render order
+- Tiled: the camera reaches every painted tile of an infinite map
+- Tiled: the isometric `drawTile()` places tiles where the layer does
+- Loader: unloading an image also frees its GPU texture
 
 ## [20.13.0] (melonJS 2) - _2026-11-06_
 
