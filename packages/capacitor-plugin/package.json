@@ -1,6 +1,6 @@
 {
 	"name": "@melonjs/capacitor-plugin",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "melonJS Capacitor plugin",
 	"homepage": "https://www.npmjs.com/package/@melonjs/capacitor-plugin",
 	"type": "module",

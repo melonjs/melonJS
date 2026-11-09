@@ -6,6 +6,17 @@
 - Loader: asset bundles, to load and free a level's assets together: `loader.preload({ common: […], level1: […] })`, then `loader.load("level1")` / `loader.unload("level1")`; an asset shared by several bundles is fetched once and freed with the last ([#1656](https://github.com/melonjs/melonJS/issues/1656))
 
 ### Fixed
+- Audio: the global volume is applied once: at `setVolume(0.5)` a new sound plays at 0.5, not 0.25, and a track started while the volume was 0 is heard when it comes back
+- Audio: `playTrack` on a paused track restarts it, instead of leaving the game silent
+- Audio: `pauseTrack` / `resumeTrack` act on the track alone, leaving effects from the same file alone; `resumeTrack` no longer starts a second copy, and leaving the tab before the first click no longer leaves the music paused
+- Audio: `stop(name)` keeps the `on: { end }` callback the clip was loaded with
+- Audio: a sound following a pooled object (`follow`, `stopWithTarget`) ends when the object goes back to its pool, instead of following the next one
+- Input: keys and mouse buttons held when the window loses the focus are released, so a hero no longer keeps walking after an Alt-Tab
+- Input: a region registered for `"pointerup"` alone receives it
+- Input: with several fingers on one region, each finger's `pointerup` and `pointercancel` reach it
+- Input: turning the mouse wheel no longer releases a key bound with `bindPointer`
+- Input: the pointer position stays right after browser zoom, or after the window moves to a screen of another pixel density
+- Input: a `Draggable` follows the pointer under a scrolled or zoomed camera, and its drag ends on release there
 - Loader: unloading an image also frees its GPU texture on WebGL and WebGPU, and its tinted copies on Canvas
 - Sprites: `addAnimation` leaves out frames the texture does not have, with a console warning, instead of throwing later in `update()`
 - Tiled: tile layers follow the map's render order, instead of always "right-down"
