@@ -697,7 +697,9 @@ export class GamepadPlugin extends plugin.BasePlugin {
 	private toViewport(e: { clientX: number; clientY: number }): Vector2d {
 		const rect = this.app.renderer.getCanvas().getBoundingClientRect();
 		const scale = this.app.renderer.scaleRatio;
-		const ratio = globalThis.devicePixelRatio || 1;
+		// the ratio `scaleRatio` was built with, so that the two cancel out:
+		// the live one changes with browser zoom or another screen
+		const ratio = device.devicePixelRatio;
 		return this.point.set(
 			((e.clientX - rect.left) / scale.x) * ratio,
 			((e.clientY - rect.top) / scale.y) * ratio,

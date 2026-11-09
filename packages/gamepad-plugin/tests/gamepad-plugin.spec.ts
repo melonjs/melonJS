@@ -363,6 +363,46 @@ describe("GamepadPlugin", () => {
 		}
 	});
 
+	// The browser's pixel ratio changes with its zoom, or when the window moves
+	// to a screen of another density, after the canvas was sized: the controls
+	// are found where they are drawn all the same. They used to be looked for
+	// at the touch's position times the new ratio over the old one, so at a
+	// ratio of 2 a finger on a button pressed nothing, or another control.
+	it.each([2, 0.5])(
+		"finds the controls after the pixel ratio changes to %s",
+		(ratio) => {
+			const own = Object.getOwnPropertyDescriptor(
+				globalThis,
+				"devicePixelRatio",
+			);
+			Object.defineProperty(globalThis, "devicePixelRatio", {
+				value: ratio,
+				configurable: true,
+			});
+			try {
+				down(1, button.center);
+				expect(button.pressed).toBe(true);
+				poll();
+				up(1, button.center);
+				expect(button.pressed).toBe(false);
+
+				// and a stick reads the lean the finger gives it
+				down(2, lean(stick, 1, 0));
+				poll();
+				expect(input.keyStatus("stickRight")).toBe(true);
+				up(2, lean(stick, 1, 0));
+				poll();
+				expect(input.keyStatus("stickRight")).toBe(false);
+			} finally {
+				if (own !== undefined) {
+					Object.defineProperty(globalThis, "devicePixelRatio", own);
+				} else {
+					delete (globalThis as { devicePixelRatio?: number }).devicePixelRatio;
+				}
+			}
+		},
+	);
+
 	it("does not let a finger held on the controls select the canvas", () => {
 		// (-webkit-touch-callout, for iOS, is not read back by Chromium)
 		expect(canvas.style.getPropertyValue("user-select")).toBe("none");
