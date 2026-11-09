@@ -264,7 +264,9 @@ clip name the asset does not define — check `getAnimationNames()` first.
 
 A `GLTFModel` is placed like any other renderable — `pos`, `depth`, `rotate`
 and `scale` move the **whole rig**, and compose with whatever the active clip
-is doing, so a walk cycle plays wherever the character stands:
+is doing, so a walk cycle plays wherever the character stands. They apply just
+the same while the clip is paused, finished or was never played, and `scale()`
+multiplies the `scale` option the model was built with:
 
 ```js
 const boat = new me.GLTFModel(me.loader.getGLTF("boat"), { scale: 40, lit: false });
