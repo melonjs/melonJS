@@ -192,7 +192,9 @@ export class HUD {
 			text: "GAME OVER",
 		});
 		const trialWidth = trial.getBounds().width;
-		app.world.removeChild(trial);
+		// removed at once: a deferred removal would leave it in the world
+		// for the first frame, which steps and draws it
+		app.world.removeChildNow(trial);
 		const overSize =
 			trialWidth > 0
 				? Math.round(TRIAL_SIZE * ((w * GAME_OVER_WIDTH_RATIO) / trialWidth))

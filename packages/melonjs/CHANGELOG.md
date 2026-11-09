@@ -11,6 +11,7 @@
 - 3D: under `Camera3d`, a container's children are drawn at the container's depth, as they were already culled and sorted
 - 3D: lit meshes inside a moved or rotated container are lit where they are
 - 3D: `Camera3d` culls against the camera as it is now, so a camera moved from a `GAME_UPDATE` listener or an object's update no longer shows objects a frame late
+- Application: one update slower than ten frames no longer stops the game for good; it slows down for a moment and catches up. A heavy first frame after a state change could freeze a game on it since 20.12
 - Audio: the global volume is applied once: at `setVolume(0.5)` a new sound plays at 0.5, not 0.25, and a track started while the volume was 0 is heard when it comes back
 - Audio: `playTrack` on a paused track restarts it, instead of leaving the game silent
 - Audio: `pauseTrack` / `resumeTrack` act on the track alone, leaving effects from the same file alone; `resumeTrack` no longer starts a second copy, and leaving the tab before the first click no longer leaves the music paused
