@@ -305,6 +305,21 @@ function triggerEvent(
 }
 
 /**
+ * Whether a region has a callback for the end of a press: a release or a
+ * cancel, under whichever event names the device uses.
+ * @ignore
+ * @internal
+ */
+function listensForRelease(handlers: PointerHandler): boolean {
+	for (const type in handlers.callbacks) {
+		if (POINTER_UP.includes(type) || POINTER_CANCEL.includes(type)) {
+			return true;
+		}
+	}
+	return false;
+}
+
+/**
  * Whether a point is outside the visible area of a container above a region.
  *
  * Asks each ancestor through `clipContains`, which a `Container` answers from
@@ -604,12 +619,15 @@ function dispatchEvent(normalizedEvents: Pointer[]): boolean {
 					default:
 						// event inside of bounds: trigger the POINTER_DOWN or WHEEL callback
 						if (eventInBounds) {
-							// a press takes the pointer even without a callback
-							// of its own, or a region registered for its release
-							// alone would never get that release
 							if (POINTER_DOWN.includes(pointer.type)) {
-								handlers.pointerId = pointer.pointerId!;
 								handlers.pressed.add(pointer.pointerId!);
+								// a press takes the pointer for a region waiting
+								// for its release, even with no callback for the
+								// press itself (taken for any other region, the
+								// pointer would leave one it never entered)
+								if (listensForRelease(handlers)) {
+									handlers.pointerId = pointer.pointerId!;
+								}
 							}
 							// trigger the corresponding callback
 							if (

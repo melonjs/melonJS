@@ -50,7 +50,7 @@ describe("a region registered for pointerup only", () => {
 	};
 
 	/** send a pointer event at a canvas position */
-	const send = (type, x, y, pointerId = 1) => {
+	const send = (type, x, y, pointerId = 1, pointerType = "mouse") => {
 		const canvas = app.renderer.getCanvas();
 		const rect = canvas.getBoundingClientRect();
 		canvas.dispatchEvent(
@@ -60,7 +60,7 @@ describe("a region registered for pointerup only", () => {
 				button: 0,
 				buttons: type === "pointerup" ? 0 : 1,
 				pointerId,
-				pointerType: "mouse",
+				pointerType,
 				width: 1,
 				height: 1,
 				isPrimary: true,
@@ -182,5 +182,37 @@ describe("a region registered for pointerup only", () => {
 			["down", 120, 130],
 			["up", 160, 170],
 		]);
+	});
+
+	// a press must not take the pointer for a region that does not ask for
+	// the release: it would then be left without ever being entered
+	const hoverOnly = () => {
+		const region = box(100, 100);
+		const log = [];
+		input.registerPointerEvent("pointerenter", region, () => {
+			log.push("enter");
+		});
+		input.registerPointerEvent("pointerleave", region, () => {
+			log.push("leave");
+		});
+		return log;
+	};
+
+	it("a tap on a region listening to hover only: no leave without an enter", () => {
+		const log = hoverOnly();
+		// a touch comes with no hover before it, and leaves once lifted
+		send("pointerdown", 150, 150, 5, "touch");
+		send("pointerup", 150, 150, 5, "touch");
+		send("pointerleave", 150, 150, 5, "touch");
+		expect(log).toEqual([]);
+	});
+
+	it("a press on a region listening to hover only: one enter, one leave", () => {
+		const log = hoverOnly();
+		send("pointermove", 150, 150);
+		send("pointerdown", 150, 150);
+		send("pointerup", 150, 150);
+		send("pointermove", 300, 300);
+		expect(log).toEqual(["enter", "leave"]);
 	});
 });
