@@ -674,6 +674,19 @@ export default class GLTFModel extends Container {
 	}
 
 	/**
+	 * Under a perspective camera {@link Container#draw} also moves its
+	 * children by the container's depth. The parts already carry this
+	 * model's depth (see `_rootMatrix`), so for the same reason as the x/y
+	 * cancelled in {@link GLTFModel#draw}, it must not be applied again.
+	 * @returns {number} always 0
+	 * @ignore
+	 * @internal
+	 */
+	_drawDepth() {
+		return 0;
+	}
+
+	/**
 	 * Where this model is, as a 2D box — what culling, picking and the physics
 	 * broadphase all read.
 	 *

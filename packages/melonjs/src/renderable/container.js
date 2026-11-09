@@ -1,4 +1,5 @@
 import { colorPool } from "../math/color.ts";
+import { Matrix3d } from "../math/matrix3d.ts";
 import Body from "../physics/builtin/body.js";
 import {
 	needsShapeResolution,
@@ -38,6 +39,15 @@ function deferredRemove(child, keepalive) {
  * @internal
  */
 const activeChildren = new WeakSet();
+
+/**
+ * Scratch for {@link Container#draw}'s depth translation: an identity matrix
+ * whose z translation is rewritten per draw and consumed at once by
+ * `renderer.transform`, so one is enough.
+ * @ignore
+ * @internal
+ */
+const _depthShift = new Matrix3d();
 
 /**
  * Send `onActivateEvent` to a child that has not had one yet.
@@ -1747,6 +1757,27 @@ export default class Container extends Renderable {
 	}
 
 	/**
+	 * The depth {@link Container#draw} moves its children by, on top of its
+	 * `pos.x` / `pos.y`: this container's own `pos.z` under a perspective
+	 * projection (a {@link Camera3d}), where depth is a real axis, and 0 under
+	 * an orthographic one, where depth is draw order only and must stay out
+	 * of the transform (a large sort key would clip against near/far, which
+	 * is what {@link Renderer#setDepth} guards against for the same reason).
+	 * Read from the projection installed when the container draws, so a
+	 * floating container, drawn with the camera's screen projection, is 0.
+	 * @param {Renderer} renderer - the renderer drawing this container
+	 * @returns {number} the depth to translate the children by
+	 * @ignore
+	 * @internal
+	 */
+	_drawDepth(renderer) {
+		const projection = renderer.projectionMatrix;
+		return projection !== undefined && projection.val[11] !== 0
+			? this.pos.z
+			: 0;
+	}
+
+	/**
 	 * draw this renderable (automatically called by melonJS)
 	 * @param {Renderer} renderer - a renderer instance
 	 * @param {Camera2d} [viewport] - the viewport to (re)draw
@@ -1763,6 +1794,21 @@ export default class Container extends Renderable {
 		// translation when the container was nested inside a translated
 		// parent.)
 		renderer.translate(this.pos.x, this.pos.y);
+		// Under a perspective projection depth is a real axis, and the
+		// children sit at this container's depth as well as at its x/y —
+		// which is where culling (`getAbsolutePosition`) and the "depth" sort
+		// already put them. See `_drawDepth`; 0, and so nothing here, under
+		// an orthographic (2D) projection.
+		const z = this._drawDepth(renderer);
+		if (z !== 0) {
+			_depthShift.val[14] = z;
+			renderer.transform(_depthShift);
+			// `preDraw` left this container's depth on the renderer for its
+			// own draw calls; it is now carried by the transform instead, so
+			// move it out of `currentDepth` or a quad drawn here (a particle
+			// reads it as its emitter's depth) would count it twice
+			renderer.setDepth(renderer.currentDepth - z);
+		}
 
 		// clip the container children to the container bounds.
 		// Container's anchorPoint is forced to (0, 0), so the local rect
