@@ -123,6 +123,15 @@ function unsupportedShapeMessage(adapter: string, shape: BodyShape): string {
 const MAX_POLYGON_VERTICES = 12;
 
 /**
+ * How far UP a contact normal must point for {@link PlanckAdapter.isGrounded}
+ * to count the contact as ground: the upward component of the unit normal
+ * the body is pushed along. `0.1` accepts any surface up to about 84 degrees
+ * from horizontal, so slopes stay ground, and rejects a vertical wall with a
+ * margin for float noise and a body turned by a few degrees.
+ */
+const GROUND_NORMAL_Y = 0.1;
+
+/**
  * melonJS physics adapter wrapping planck.js (https://piqnt.com/planck.js/).
  *
  * Planck is a JavaScript/TypeScript port of Box2D 2.3.0 — a mature,
@@ -236,6 +245,9 @@ export class PlanckAdapter implements PhysicsAdapter {
 	 * the shape's own array, so this holds no geometry between calls.
 	 */
 	private readonly shapeProxy = new planck.DistanceProxy();
+
+	/** Scratch world manifold reused by {@link isGrounded}. */
+	private readonly groundManifold = new planck.WorldManifold();
 
 	/**
 	 * Offset between `renderable.pos` (top-left in melonJS convention)
@@ -1108,10 +1120,18 @@ export class PlanckAdapter implements PhysicsAdapter {
 	isGrounded(renderable: Renderable): boolean {
 		const body = this.bodyMap.get(renderable);
 		if (!body) return false;
-		// "Grounded" = at least one active contact with a body whose
-		// centre is below us. Box2D's contact normal direction is "from
-		// fixtureA to fixtureB" which isn't a stable per-body sign;
-		// comparing the other body's vertical position is more robust.
+		// "Grounded" = at least one touching, solid contact that pushes us
+		// UP, the rule the builtin adapter applies too: a side contact
+		// (a wall) or a sensor never lands a body. Comparing the other
+		// body's position instead made the side of a tall wall count once
+		// the player's centre was above the wall's (wall climbing with
+		// repeated jumps), and missed ground whose body origin, its first
+		// shape, sits above the player (a Tiled polyline that starts on a
+		// ledge).
+		//
+		// Box2D's world-manifold normal points from fixture A to fixture B,
+		// so the direction this body is pushed is `-normal` when it owns
+		// fixture A and `+normal` when it owns fixture B.
 		//
 		// Sleeping bodies in Box2D keep their contact list but the
 		// contact edges aren't refreshed until something wakes them up;
@@ -1125,11 +1145,13 @@ export class PlanckAdapter implements PhysicsAdapter {
 		) {
 			const contact = contactEdge.contact;
 			if (!contact.isTouching()) continue;
-			const other = contactEdge.other;
-			// `other` is nullable in planck's typings (a contact edge can
-			// outlive its partner during destruction); skip orphaned
-			// edges rather than risk a crash.
-			if (other && other.getPosition().y > body.getPosition().y) {
+			const fixtureA = contact.getFixtureA();
+			if (fixtureA.isSensor() || contact.getFixtureB().isSensor()) continue;
+			const manifold = contact.getWorldManifold(this.groundManifold);
+			if (!manifold) continue;
+			const ny =
+				fixtureA.getBody() === body ? -manifold.normal.y : manifold.normal.y;
+			if (ny < -GROUND_NORMAL_Y) {
 				return true;
 			}
 		}
