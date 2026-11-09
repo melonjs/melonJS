@@ -17,7 +17,6 @@ import {
 } from "./spatial.ts";
 import {
 	state as audioState,
-	getGlobalVolume,
 	getSoundOrThrow,
 	soundLoadError,
 	stopAllPlayback,
@@ -80,7 +79,10 @@ export function load(
 	// the spatial plugin augments every instance via its onSoundCreate hook
 	audioState.tracks[sound.name] = new Sound({
 		src: urls,
-		volume: getGlobalVolume(),
+		// the clip's own level, not the global volume: that one is the master
+		// gain (and the HTML5 multiplier), which every sound already goes
+		// through, so passing it here as well applied it twice
+		volume: 1,
 		autoplay: sound.autoplay === true,
 		loop: sound.loop === true,
 		// forwarded only when set, so the backend keeps its own defaults
@@ -148,8 +150,8 @@ export function load(
  *   {@link PlayOptions} object. The object form is the only way to name a
  *   sprite region; the boolean form is unchanged.
  * @param onend - Called when the sound instance ends playing.
- * @param volume - Playback volume, `0.0..1.0`. Defaults to the current
- *   global volume.
+ * @param volume - This sound's own volume, `0.0..1.0`. Defaults to `1`.
+ *   The global volume ({@link setVolume}) scales every sound on top of it.
  * @returns The sound instance ID.
  * @example
  * // play the "cling" audio clip
@@ -204,10 +206,11 @@ export function play(
 		(sound.loop() ||
 			sound._sprite[options.sprite ?? "__default"]?.[2] === true);
 	sound.loop(loop, id);
-	sound.volume(
-		typeof level === "number" ? clamp(level, 0.0, 1.0) : getGlobalVolume(),
-		id,
-	);
+	// The voice's OWN level. The global volume is applied once, by the master
+	// gain (and by the HTML5 path's multiplier), to every sound alike; it used
+	// to be the default here as well, which played a new sound at the square
+	// of the slider and left one started at volume 0 silent for good.
+	sound.volume(typeof level === "number" ? clamp(level, 0.0, 1.0) : 1, id);
 	if (typeof endCallback === "function") {
 		if (loop) {
 			sound.on("end", endCallback, id);

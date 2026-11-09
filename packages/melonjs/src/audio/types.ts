@@ -320,7 +320,10 @@ export interface PlayOptions {
 	loop?: boolean | undefined;
 	/** Called when this instance finishes playing. */
 	onend?: (() => void) | undefined;
-	/** Playback volume, `0.0..1.0`. Defaults to the current global volume. */
+	/**
+	 * This sound's own volume, `0.0..1.0`. Defaults to `1`. The global
+	 * volume ({@link audio.setVolume | `audio.setVolume`}) scales it on top.
+	 */
 	volume?: number | undefined;
 	/**
 	 * Place this sound at a renderable and keep it there, re-reading its world
@@ -392,7 +395,10 @@ export interface SoundEvents {
  * @category Audio
  */
 export interface TrackOptions {
-	/** Playback volume, `0.0..1.0`. Defaults to the current global volume. */
+	/**
+	 * This sound's own volume, `0.0..1.0`. Defaults to `1`. The global
+	 * volume ({@link audio.setVolume | `audio.setVolume`}) scales it on top.
+	 */
 	volume?: number | undefined;
 	/**
 	 * Name of a region declared in the clip's `sprite` map: the track loops on

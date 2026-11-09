@@ -161,9 +161,10 @@ export function disable(): void {
  * MP3 drops out for a moment at each loop there: a region of the loop's exact
  * length keeps it gapless.
  * @param sound_name - Audio track name (case-sensitive).
- * @param volumeOrOptions - Playback volume, `0.0..1.0` (defaults to the
- *   current global volume), or a {@link TrackOptions} object with `volume`
- *   and the `sprite` region to loop on.
+ * @param volumeOrOptions - The track's own volume, `0.0..1.0` (defaults to
+ *   `1`; the global volume set with {@link setVolume} scales it on top), or a
+ *   {@link TrackOptions} object with `volume` and the `sprite` region to loop
+ *   on.
  * @returns The sound instance ID.
  * @throws {Error} when no clip of that name is loaded, raised before anything
  *   is stopped, so a mistyped name cannot silence the music already playing.
@@ -267,7 +268,10 @@ export function getCurrentTrack(): string | null {
 }
 
 /**
- * Set the default global volume.
+ * Set the global volume: the master level every sound plays through, those
+ * already playing included. A sound's own volume, given to {@link play} or
+ * {@link playTrack}, is scaled by it, so at `0.5` a sound played at `0.8` is
+ * heard at `0.4`.
  * @param volume - Volume value, `0.0..1.0`.
  * @category Audio
  */
