@@ -198,9 +198,15 @@ export function playTrack(
 	// audio context is still locked, and a queued stop with no id resolves
 	// its ids when it finally runs — late enough to catch the replacement
 	// and leave the game silent.
+	//
+	// The whole clip is NAMED (`__default`, the backend's region for it)
+	// rather than left out. A play with no region is read by the backend as
+	// "resume the paused instance, if exactly one is paused", and with the
+	// track paused that instance is the track itself: it was resumed, its id
+	// came back, and the stop below then silenced it.
 	const id = play(sound_name, {
 		loop: true,
-		sprite: options.sprite,
+		sprite: options.sprite ?? "__default",
 		volume: options.volume,
 	});
 	audioState.currentTrackId = sound_name;
