@@ -243,6 +243,26 @@ describe("MatterAdapter — isGrounded and setSensor", () => {
 			expect(adapter.isGrounded(p)).toEqual(true);
 		});
 
+		it("standing low on a polyline that starts high is grounded", () => {
+			// a Tiled polyline: a ledge at y = 100 dropping to a floor at
+			// y = 400, one static body with one Line per segment
+			const ground = make(0, 0, 800, 600);
+			adapter.addBody(ground, {
+				type: "static",
+				shapes: [
+					new Line(0, 0, [new Vector2d(0, 100), new Vector2d(200, 100)]),
+					new Line(0, 0, [new Vector2d(200, 100), new Vector2d(200, 400)]),
+					new Line(0, 0, [new Vector2d(200, 400), new Vector2d(800, 400)]),
+				],
+			});
+			const p = addPlayer(400, 330);
+			run(60);
+			expect(p.pos.y).toBeGreaterThan(360);
+			expect(p.pos.y).toBeLessThan(370);
+			expect(touching(p, ground)).toEqual(true);
+			expect(adapter.isGrounded(p)).toEqual(true);
+		});
+
 		it("standing on the TOP of the same tall wall is grounded", () => {
 			addStatic(300, 100, 64, 400);
 			const p = addPlayer(316, 50);
