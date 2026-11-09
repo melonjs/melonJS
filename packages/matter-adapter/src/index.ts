@@ -80,6 +80,15 @@ export interface MatterAdapterOptions {
 const LINE_THICKNESS = 2;
 
 /**
+ * How far UP a contact normal must point for {@link MatterAdapter.isGrounded}
+ * to count the contact as ground: the upward component of the unit normal
+ * the body is pushed along. `0.1` accepts any surface up to about 84 degrees
+ * from horizontal, so slopes stay ground, and rejects a vertical wall with a
+ * margin for float noise and a body turned by a few degrees.
+ */
+const GROUND_NORMAL_Y = 0.1;
+
+/**
  * The message for a shape this adapter cannot build a fixture from.
  *
  * Worth more than the shape's name. Both refusals are deliberate rather than
@@ -546,7 +555,10 @@ export class MatterAdapter implements PhysicsAdapter {
 			body.collisionFilter.mask = def.collisionMask;
 		}
 		if (def.isSensor) {
-			body.isSensor = true;
+			// on every part: matter's pairs are per PART and read the flag
+			// from the part, so a compound body flagged only on its parent
+			// stayed solid
+			this._setSensor(body, true);
 		}
 		// Only when asked. Matter computes a finite inertia from the body's
 		// vertices, so a body rotates by default, and an adapter that locks
@@ -619,8 +631,8 @@ export class MatterAdapter implements PhysicsAdapter {
 					y: body.velocity.y + y * invMass,
 				});
 			},
-			setSensor(isSensor = true) {
-				body.isSensor = isSensor;
+			setSensor: (isSensor = true) => {
+				this._setSensor(body, isSensor);
 			},
 			setStatic(isStatic = true) {
 				Matter.Body.setStatic(body, isStatic);
@@ -880,7 +892,29 @@ export class MatterAdapter implements PhysicsAdapter {
 	setSensor(renderable: Renderable, isSensor: boolean): void {
 		const body = this.bodyMap.get(renderable);
 		if (body) {
-			body.isSensor = isSensor;
+			this._setSensor(body, isSensor);
+		}
+	}
+
+	/**
+	 * Make a body a sensor, or solid again, including while it is already
+	 * touching something. matter reads `isSensor` from the PARTS a pair
+	 * holds, and copies it into the pair only when the pair is created, so
+	 * the flag is written on every part (`parts[0]` is the body itself) and
+	 * on the pairs the body is already in. Without the latter a one-way
+	 * platform turned into a sensor under a standing player kept holding it
+	 * up.
+	 * @param body - the body to change
+	 * @param isSensor - `true` for a sensor, `false` for a solid body
+	 */
+	private _setSensor(body: Matter.Body, isSensor: boolean): void {
+		for (const part of body.parts) {
+			part.isSensor = isSensor;
+		}
+		for (const pair of this.engine.pairs.list) {
+			if (pair.bodyA.parent === body || pair.bodyB.parent === body) {
+				pair.isSensor = pair.bodyA.isSensor || pair.bodyB.isSensor;
+			}
 		}
 	}
 
@@ -1039,18 +1073,26 @@ export class MatterAdapter implements PhysicsAdapter {
 	isGrounded(renderable: Renderable): boolean {
 		const body = this.bodyMap.get(renderable);
 		if (!body) return false;
-		// "Grounded" = at least one active contact with a body whose center
-		// is below us. Matter's `pair.collision.normal` direction depends
-		// on which body was the SAT reference (it's not stably "from A to
-		// B"), so comparing the other body's vertical position is more
-		// robust than reading the normal sign.
+		// "Grounded" = at least one active, solid contact that pushes us
+		// UP, the rule the builtin adapter applies too: a side contact
+		// (a wall) or a sensor never lands a body. Comparing the other
+		// body's centre instead made the side of a tall wall count once
+		// the player's centre was above the wall's, so a player could
+		// climb it with repeated jumps.
+		//
+		// matter's pairs hold PARTS, so a compound body (several shapes, or
+		// a concave outline matter decomposed) is matched through
+		// `parent`, which is the body itself for a simple body.
+		// `collision.normal` is the direction `bodyA` moves to separate
+		// (matter orients it away from `bodyB` and its solver pushes
+		// `bodyA` along it), so it is negated for the `bodyB` side.
 		for (const pair of this.engine.pairs.list) {
-			if (!pair.isActive) continue;
-			const isA = pair.bodyA === body;
-			const isB = pair.bodyB === body;
-			if (!isA && !isB) continue;
-			const other = isA ? pair.bodyB : pair.bodyA;
-			if (other.position.y > body.position.y) {
+			if (!pair.isActive || pair.isSensor) continue;
+			const isA = pair.bodyA.parent === body;
+			const isB = pair.bodyB.parent === body;
+			if (isA === isB) continue;
+			const ny = isA ? pair.collision.normal.y : -pair.collision.normal.y;
+			if (ny < -GROUND_NORMAL_Y) {
 				return true;
 			}
 		}
