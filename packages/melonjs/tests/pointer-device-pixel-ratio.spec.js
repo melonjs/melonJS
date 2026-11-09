@@ -57,7 +57,9 @@ describe("pointer coordinates after devicePixelRatio changes", () => {
 	const setRatio = (ratio) => {
 		Object.defineProperty(globalThis, "devicePixelRatio", {
 			configurable: true,
-			get: () => ratio,
+			get: () => {
+				return ratio;
+			},
 		});
 		expect(globalThis.devicePixelRatio).toBe(ratio);
 	};

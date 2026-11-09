@@ -1,12 +1,5 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
-import {
-	Application,
-	boot,
-	Draggable,
-	event,
-	input,
-	video,
-} from "../src/index.js";
+import { Application, boot, Draggable, event, video } from "../src/index.js";
 
 /**
  * `Draggable` jumped as soon as it was dragged under a scrolled or zoomed
