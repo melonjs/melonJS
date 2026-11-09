@@ -246,7 +246,11 @@ export function stopTrack(): void {
  */
 export function pauseTrack(): void {
 	if (audioState.currentTrackId !== null) {
-		audioState.tracks[audioState.currentTrackId]?.pause();
+		// the track's own voice: a bare pause() pauses every instance of the
+		// clip, effects played from the same file included
+		audioState.tracks[audioState.currentTrackId]?.pause(
+			audioState.currentTrackVoiceId,
+		);
 	}
 }
 
@@ -259,8 +263,41 @@ export function pauseTrack(): void {
  * @category Audio
  */
 export function resumeTrack(): void {
-	if (audioState.currentTrackId !== null) {
-		audioState.tracks[audioState.currentTrackId]?.play();
+	if (audioState.currentTrackId === null) {
+		return;
+	}
+	const sound = audioState.tracks[audioState.currentTrackId];
+	if (sound === undefined) {
+		return;
+	}
+	const id = audioState.currentTrackVoiceId;
+	const voice = id === undefined ? null : sound._soundById(id);
+	if (id === undefined || voice === null || voice._ended) {
+		// no voice of the track left to resume (its clip was stopped): start
+		// the clip, which is what this has always done with nothing paused
+		sound.play();
+		return;
+	}
+	// The track's own voice, not a bare play(). That one resumes only when
+	// EXACTLY ONE instance of the clip is paused: with an effect of the same
+	// clip paused too it started the whole file again from the top, on a clip
+	// with a sprite map it threw, and with the track playing it layered a
+	// second copy of it.
+	if (sound._playLock || sound.state() !== "loaded") {
+		// The voice is still starting (its clip loading, or the context not
+		// running yet), so a pause was queued behind that start, and the
+		// resume queues behind the pause. Played now, it would start the
+		// voice a second time underneath the first.
+		sound._queue.push({
+			event: "play",
+			action: () => {
+				sound.play(id);
+			},
+		});
+		return;
+	}
+	if (voice._paused) {
+		sound.play(id);
 	}
 }
 
