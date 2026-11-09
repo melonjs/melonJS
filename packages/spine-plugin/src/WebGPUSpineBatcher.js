@@ -27,10 +27,10 @@ const MAX_VERTICES = 10920;
  * tint-black equation
  * `out.rgb = ((tex.a - 1) × dark.a + 1 - tex.rgb) × dark.rgb + tex.rgb × light.rgb`
  * per pixel, with `dark.a` carrying the premultiplied-alpha flag exactly
- * as `SkeletonRendererCore` packs it. Positions arrive in world space
- * (the skeleton root bone carries placement and scale — this batcher
- * ignores `currentTransform`, like its WebGL counterpart), so the vertex
- * stage applies the frame projection only, with the engine's clip-z remap.
+ * as `SkeletonRendererCore` packs it. Positions arrive already through
+ * the renderer's `currentTransform` (applied on the CPU when a command is
+ * appended, like its WebGL counterpart), so the vertex stage applies the
+ * frame projection only, with the engine's clip-z remap.
  * Packed colors are ARGB uint32s — bytes read back as (B, G, R, A) by the
  * unorm8x4 vertex format, hence the `.bgr` swizzle.
  */
@@ -256,12 +256,25 @@ export default class WebGPUSpineBatcher extends WebGPUBatcher {
 		const colors = command.colors;
 		const darkColors = command.darkColors;
 
+		// world vertices through the renderer's current transform, where the
+		// camera scroll and every ancestor's transform live (see the WebGL
+		// batcher): the shader applies the projection alone
+		const m = this.renderer.currentTransform.val;
+		const m0 = m[0];
+		const m1 = m[1];
+		const m4 = m[4];
+		const m5 = m[5];
+		const m12 = m[12];
+		const m13 = m[13];
+
 		const base = vertexData.vertexCount;
 		let offset = base * VERTEX_SIZE;
 		for (let i = 0; i < command.numVertices; i++) {
 			const i2 = i * 2;
-			f32[offset] = positions[i2];
-			f32[offset + 1] = positions[i2 + 1];
+			const x = positions[i2];
+			const y = positions[i2 + 1];
+			f32[offset] = m0 * x + m4 * y + m12;
+			f32[offset + 1] = m1 * x + m5 * y + m13;
 			u32[offset + 2] = colors[i];
 			f32[offset + 3] = uvs[i2];
 			f32[offset + 4] = uvs[i2 + 1];
