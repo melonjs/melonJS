@@ -50,6 +50,21 @@ const activeChildren = new WeakSet();
 const _depthShift = new Matrix3d();
 
 /**
+ * Whether `renderer` is drawing through a perspective projection (a
+ * {@link Camera3d}): the projection's z→w term is non-zero, the same test
+ * {@link Renderer#setDepth} makes. Orthographic (every `Camera2d`, and the
+ * screen projection floating children draw with) leaves it 0.
+ * @param {Renderer} renderer - the renderer drawing
+ * @returns {boolean} true under a perspective projection
+ * @ignore
+ * @internal
+ */
+function isPerspective(renderer) {
+	const projection = renderer.projectionMatrix;
+	return projection !== undefined && projection.val[11] !== 0;
+}
+
+/**
  * Send `onActivateEvent` to a child that has not had one yet.
  * @ignore
  * @internal
@@ -1771,10 +1786,7 @@ export default class Container extends Renderable {
 	 * @internal
 	 */
 	_drawDepth(renderer) {
-		const projection = renderer.projectionMatrix;
-		return projection !== undefined && projection.val[11] !== 0
-			? this.pos.z
-			: 0;
+		return isPerspective(renderer) ? this.pos.z : 0;
 	}
 
 	/**
@@ -1808,6 +1820,14 @@ export default class Container extends Renderable {
 			// move it out of `currentDepth` or a quad drawn here (a particle
 			// reads it as its emitter's depth) would count it twice
 			renderer.setDepth(renderer.currentDepth - z);
+		}
+
+		// the world's own placement is now applied, so this is the transform
+		// its direct children draw under: the frame 3D lights are authored in,
+		// which a lit mesh further down is shaded against (see
+		// `Renderer#_lightSpaceInverse`)
+		if (this.root === true) {
+			renderer._setLightSpace?.(isPerspective(renderer));
 		}
 
 		// clip the container children to the container bounds.

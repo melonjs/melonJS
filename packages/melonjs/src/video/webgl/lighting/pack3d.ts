@@ -58,13 +58,22 @@ const _result: PackedMeshLighting = {
  * - **ambient** lights are summed into a single flat ambient color.
  *
  * The same buffers are returned each call (overwritten in place).
+ * Lights are authored in the frame of the world's direct children. A mesh
+ * further down the tree is shaded in its PARENT's frame (the lit shaders take
+ * `uModelMatrix` as the world, and every ancestor is folded into the view), so
+ * for one `space` carries the lights into that frame: positions through the
+ * whole matrix, directions through its rotation part and renormalized.
  * @param lights - iterable of lights, or `null`/`undefined` (treated as empty)
+ * @param [space] - column-major matrix taking the lights' frame to the frame
+ * the mesh is shaded in; omitted or `null` for a mesh shaded in the lights'
+ * own frame, which leaves every value exactly as authored
  * @returns the packed lighting (reused instance)
  * @ignore
  * @internal
  */
 export function packMeshLights(
 	lights: Iterable<Light3d> | null | undefined,
+	space?: { val: ArrayLike<number> } | null,
 ): PackedMeshLighting {
 	let count = 0;
 	let ar = 0;
@@ -151,5 +160,47 @@ export function packMeshLights(
 	_ambient[1] = ag;
 	_ambient[2] = ab;
 	_result.count = count;
+	if (space !== undefined && space !== null) {
+		toSpace(space.val, count);
+	}
 	return _result;
+}
+
+/**
+ * Carry the first `count` packed lights into another frame (see
+ * {@link packMeshLights}). Point and spot positions go through the whole
+ * matrix; directional and spot directions through its 3×3 and are
+ * renormalized, so a scaled frame still hands the shader unit vectors. A
+ * point light's empty direction is left at zero.
+ * @param m - column-major 4×4 matrix
+ * @param count - how many packed lights to transform
+ * @ignore
+ * @internal
+ */
+function toSpace(m: ArrayLike<number>, count: number): void {
+	for (let i = 0; i < count; i++) {
+		const o = i * 4;
+		if (_posRange[o + 3] >= 0) {
+			// point / spot: a position (directional carries the -1 sentinel)
+			const x = _posRange[o];
+			const y = _posRange[o + 1];
+			const z = _posRange[o + 2];
+			_posRange[o] = m[0] * x + m[4] * y + m[8] * z + m[12];
+			_posRange[o + 1] = m[1] * x + m[5] * y + m[9] * z + m[13];
+			_posRange[o + 2] = m[2] * x + m[6] * y + m[10] * z + m[14];
+		}
+		const dx = _dirCone[o];
+		const dy = _dirCone[o + 1];
+		const dz = _dirCone[o + 2];
+		if (dx === 0 && dy === 0 && dz === 0) {
+			continue;
+		}
+		const tx = m[0] * dx + m[4] * dy + m[8] * dz;
+		const ty = m[1] * dx + m[5] * dy + m[9] * dz;
+		const tz = m[2] * dx + m[6] * dy + m[10] * dz;
+		const len = Math.hypot(tx, ty, tz) || 1;
+		_dirCone[o] = tx / len;
+		_dirCone[o + 1] = ty / len;
+		_dirCone[o + 2] = tz / len;
+	}
 }
