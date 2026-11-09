@@ -521,8 +521,18 @@ export function stop(sound_name?: string, id?: number): void {
 	}
 	const sound = getSoundOrThrow(sound_name);
 	sound.stop(id);
-	// remove the defined onend callback (if any defined)
-	sound.off("end", undefined, id);
+	// remove the onend callbacks `play()` registered for the voices stopped
+	if (id !== undefined) {
+		sound.off("end", undefined, id);
+	} else {
+		// Every per-voice one, and only those. `off("end")` with no id is the
+		// backend's "remove EVERY end listener", which also dropped the clip's
+		// own `on.end` given at load, so it never fired again. Those are the
+		// listeners registered with no voice id.
+		sound._onend = sound._onend.filter((listener) => {
+			return listener.id === undefined;
+		});
+	}
 }
 
 /**
