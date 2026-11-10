@@ -299,7 +299,7 @@ const registeredBodies = new WeakMap();
  * @param {Renderable} node - the renderable entering the world
  * @param {Container} worldContainer - the root world container
  */
-function registerTreeBodies(node, worldContainer) {
+export function registerTreeBodies(node, worldContainer) {
 	if (registeredBodies.get(node) !== worldContainer) {
 		if (registerChildBody(node, worldContainer)) {
 			registeredBodies.set(node, worldContainer);
@@ -376,7 +376,7 @@ function unregisterBody(node, root) {
  * @param {Renderable} node - the renderable leaving the world
  * @param {Container} [root] - the root of the tree it is being removed from
  */
-function unregisterTreeBodies(node, root) {
+export function unregisterTreeBodies(node, root) {
 	unregisterBody(node, root);
 	if (node instanceof Container) {
 		node.forEach((child) => {

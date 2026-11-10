@@ -133,10 +133,14 @@ game the player had paused stays paused.
 ## Physics adapters
 
 `@melonjs/planck-adapter` and `@melonjs/matter-adapter` swap the physics world
-wholesale. Pick **one** per game. The portable surface — the declarative
+wholesale. Pick **one** per game (`app.world.setAdapter()` can switch it
+later). The portable surface — the declarative
 `renderable.bodyDef`, `world.adapter.queryAABB(rect)` and
 `world.adapter.raycast(from, to)` — works unchanged across the built-in world and
-both adapters, so entity code does not have to branch.
+both adapters, so entity code does not have to branch. The exceptions are in
+`melonjs-physics`: `Box3d`, `Sphere` and `Point` shapes are built-in only,
+`type: "kinematic"` is planck only, and the adapters' `queryAABB` returns only
+renderables with a body.
 
 Two queries are **not** portable: `querySphere` and `raycast3d` exist only on the
 built-in adapter (planck and matter are 2D-only and deliberately omit them).

@@ -1,5 +1,8 @@
 import { hasRegisteredEvents } from "../input/pointerevent.ts";
-import Container from "../renderable/container.js";
+import Container, {
+	registerTreeBodies,
+	unregisterTreeBodies,
+} from "../renderable/container.js";
 import {
 	emit,
 	GAME_RESET,
@@ -90,7 +93,7 @@ export default class World extends Container {
 
 		/**
 		 * Identifier of the active physics adapter, taken from the
-		 * adapter's `physicLabel` field at `Application` construction —
+		 * adapter's `physicLabel` field by {@link World#setAdapter} —
 		 * `"builtin"` (default — `BuiltinAdapter`), `"matter"`
 		 * (`@melonjs/matter-adapter`), or a third-party label.
 		 * The reserved value `"none"` is set when physics is disabled via
@@ -152,14 +155,28 @@ export default class World extends Container {
 		this.gpuTilemap = true;
 
 		/**
-		 * the physics adapter driving this world. Defaults to a
-		 * {@link BuiltinAdapter} wrapping the engine's native SAT-based
-		 * physics. Override at `Application` construction time via
-		 * `settings.physic.adapter`. Cannot be swapped at runtime.
+		 * the active physics adapter, read through {@link World#adapter}
+		 * @ignore
 		 * @type {PhysicsAdapter}
 		 */
-		this.adapter = adapter ?? new BuiltinAdapter();
-		this.adapter.init?.(this);
+		this._adapter = undefined;
+
+		/**
+		 * an adapter given to {@link World#setAdapter} during a physics
+		 * step, installed once that step ends
+		 * @ignore
+		 * @type {PhysicsAdapter|undefined}
+		 */
+		this._pendingAdapter = undefined;
+
+		/**
+		 * true while the active adapter is stepping
+		 * @ignore
+		 * @type {boolean}
+		 */
+		this._stepping = false;
+
+		this.setAdapter(adapter ?? new BuiltinAdapter());
 
 		/**
 		 * Spatial broadphase used by built-in physics and pointer
@@ -239,6 +256,66 @@ export default class World extends Container {
 		if (was3D !== now3D) {
 			this.broadphase = createBroadphase(this);
 		}
+	}
+
+	/**
+	 * The physics adapter driving this world: a {@link BuiltinAdapter}
+	 * unless the `Application`'s `physic` setting, or
+	 * {@link World#setAdapter}, gave it another one. Read-only; change it
+	 * with {@link World#setAdapter}.
+	 * @returns {PhysicsAdapter}
+	 */
+	get adapter() {
+		return this._adapter;
+	}
+
+	/**
+	 * Replace the physics adapter driving this world, for example to move a
+	 * game from `@melonjs/planck-adapter` to `@melonjs/matter-adapter`. The
+	 * previous adapter is destroyed, and the new one builds every physics
+	 * body in the world again, from each renderable's `bodyDef`, where the
+	 * renderable stands.
+	 *
+	 * Nothing else carries over: velocities, forces, contacts and joints
+	 * start again from rest, and gravity is the new adapter's own, in its
+	 * own units. A body added with a direct `adapter.addBody()` call rather
+	 * than a `bodyDef` is not built again, and a legacy `Body` without a
+	 * `bodyDef` only works with the {@link BuiltinAdapter}.
+	 *
+	 * Called during a physics step, from a collision handler for example,
+	 * the swap happens as soon as that step ends.
+	 * @param {PhysicsAdapter} adapter - the adapter to use from now on
+	 * @returns {World} this world
+	 * @example
+	 * import { MatterAdapter } from "@melonjs/matter-adapter";
+	 * app.world.setAdapter(new MatterAdapter({ gravity: { x: 0, y: 1 } }));
+	 */
+	setAdapter(adapter) {
+		if (this._stepping) {
+			// tearing an engine down from inside its own step is unsafe
+			// (planck silently refuses to destroy a body while stepping)
+			this._pendingAdapter = adapter;
+			return this;
+		}
+		const previous = this._adapter;
+		if (adapter === previous) {
+			return this;
+		}
+		if (previous !== undefined) {
+			// take every body out of the outgoing simulation, at any depth
+			this.forEach((child) => {
+				unregisterTreeBodies(child, this);
+			});
+			previous.destroy?.();
+		}
+		this._adapter = adapter;
+		this.physic = adapter.physicLabel ?? "builtin";
+		adapter.init?.(this);
+		// and build them again in the new one
+		this.forEach((child) => {
+			registerTreeBodies(child, this);
+		});
+		return this;
 	}
 
 	/**
@@ -398,8 +475,18 @@ export default class World extends Container {
 		// etc.) or the sentinel "none" when physics is disabled. The step
 		// runs under any adapter; only "none" skips it.
 		if (this.physic !== "none") {
-			this.adapter.step(dt);
-			this.adapter.syncFromPhysics();
+			this._stepping = true;
+			try {
+				this.adapter.step(dt);
+				this.adapter.syncFromPhysics();
+			} finally {
+				this._stepping = false;
+			}
+			const pending = this._pendingAdapter;
+			if (pending !== undefined) {
+				this._pendingAdapter = undefined;
+				this.setAdapter(pending);
+			}
 		}
 		emit(WORLD_STEP, dt);
 	}

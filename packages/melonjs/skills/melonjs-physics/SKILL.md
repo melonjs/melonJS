@@ -1,6 +1,6 @@
 ---
 name: melonjs-physics
-description: "Use this skill for collision, physics bodies, movement, and spatial queries in melonJS — the built-in SAT world and the planck/matter adapters. Covers bodyDef vs Body, collision types and masks, the collision callback family and their firing rules, raycast/queryAABB/querySphere, the behaviour differences between adapters, and which one to pick for a given game. Triggers on: which physics engine, choosing an adapter, rotation collision, rotating body, torque, joints, stacking, Body, bodyDef, collision, collisionType, collisionMask, onCollision, onCollisionStart, onCollisionActive, raycast, queryAABB, querySphere, PlanckAdapter, MatterAdapter, gravity, velocity, applyForce, isGrounded, SAT."
+description: "Use this skill for collision, physics bodies, movement, and spatial queries in melonJS — the built-in SAT world and the planck/matter adapters. Covers bodyDef vs Body, collision types and masks, the collision callback family and their firing rules, raycast/queryAABB/querySphere, the behaviour differences between adapters, and which one to pick for a given game. Triggers on: which physics engine, choosing an adapter, switching adapters, setAdapter, rotation collision, rotating body, torque, joints, stacking, Body, bodyDef, collision, collisionType, collisionMask, onCollision, onCollisionStart, onCollisionActive, raycast, queryAABB, querySphere, raycast3d, PlanckAdapter, MatterAdapter, gravity, velocity, applyForce, isGrounded, isSensor, isTrigger, onShapeCollisionStart, kinematic, subSteps, pixelsPerMeter, Box3d, Sphere, getBodyShapes, hitbox offset, slope, SAT."
 license: MIT
 ---
 
@@ -62,13 +62,15 @@ adapters expose the same portable API, so a game can switch with an import
 change and a gravity re-tune.
 
 - **planck** (a Box2D port) is the more accurate and the more predictable under
-  stress: better stacking, better joint behaviour, a continuous-collision
-  `bullet` mode for fast movers. It works in **metres**, so it has a
-  `pixelsPerMeter` scale to think about, and its tuning vocabulary is Box2D's.
+  stress: better stacking, better joint behaviour, continuous collision for
+  fast movers. Box2D's `bullet` mode is not a `bodyDef` field: set it on the
+  native body with `(this.body as PlanckAdapter.Body).setBullet(true)`. It
+  works in **metres**, so it has a `pixelsPerMeter` scale to think about, and
+  its tuning vocabulary is Box2D's.
 - **matter-js** works directly in **pixels**, which makes it the gentler
   introduction, and its compound bodies and constraints are pleasant to author.
-  It is the softer solver: stacks settle less crisply and fast bodies need
-  `subSteps`.
+  It is the softer solver: stacks settle less crisply, and it has no continuous
+  collision, so fast bodies need `subSteps`.
 
 If you have no preference and the game leans on stacking, joints or fast
 projectiles, take planck. If you want to be up and running with the least
@@ -95,9 +97,14 @@ await app.init();
 `gravity` (default `{x: 0, y: 1}`, matter's own convention), `subSteps` and
 `matterEngineOptions`; it has no `pixelsPerMeter` because it already works in
 pixels. `subSteps` is the anti-tunnelling knob when per-frame motion exceeds a
-body radius. Pick **one** adapter per game; `physic: "none"` disables physics
-entirely — `world.step` skips the simulation and the world behaves as a pure
-scene graph.
+body radius. Both engines clear forces after every sub-step, so a force applied
+once per frame acts on the first sub-step only: raising `subSteps` weakens
+every `applyForce`, and forces need re-tuning after it changes.
+
+Pick **one** adapter per game (it can be switched later, see
+[Switching adapters while the game runs](#switching-adapters-while-the-game-runs));
+`physic: "none"` disables physics entirely — `world.step` skips the simulation
+and the world behaves as a pure scene graph.
 
 **Gravity is a different unit in every backend, and the defaults are NOT the
 same speed.** Each is "Earth-like" in its own convention, but measured against
@@ -105,19 +112,20 @@ each other by timing a 200px free fall in one scene:
 
 | backend | default | unit | measured fall |
 |---|---|---|---|
-| built-in | `0.98` | per FRAME, integrated against `timer.tick` | **~4450 px/s²** |
+| built-in | `0.98` | pixels per STEP², 60 steps a second | **~3600 px/s²** |
 | matter | `{x: 0, y: 1}` | matter's own, after its internal `gravity.scale` | **~900 px/s²** |
 | planck | `320` | pixels per second² | **~330 px/s²** |
 
-That is a **thirteenfold spread**, so swapping the built-in world for an adapter
-and keeping everything else the same makes the whole game feel different. It is
-not a bug in either one: they simply do not share a unit.
+That is a roughly **elevenfold spread**, so swapping the built-in world for an
+adapter and keeping everything else the same makes the whole game feel
+different. It is not a bug in either one: they simply do not share a unit.
 
 To match a backend you are porting FROM, pick a target in px/s² and convert:
 planck takes it directly; matter takes `target / 900`; the built-in takes
-`target / 4450 * 0.98`, because it applies gravity per frame rather than per
-second. Passing one number to two of them compares nothing: hand planck
-matter's `{x: 0, y: 1}` and it runs at a three-hundredth of Earth gravity.
+`target / 3600`, because it applies gravity per step, 60 steps a second,
+rather than per second. Passing one number to two of them compares nothing:
+hand planck matter's `{x: 0, y: 1}` and it runs at a three-hundredth of Earth
+gravity.
 
 That mistake is quiet and it does not look like a gravity problem. Bodies fall
 slowly enough that a spawner keeping a fixed interval starts constructing them
@@ -129,6 +137,33 @@ rather than as a bad gravity constant. Spawn clear of anything already there.
 
 `world.physic` carries the active adapter's label (`"builtin"`, `"planck"`,
 `"matter"`, `"none"`), so game code can branch without importing the class.
+
+### Switching adapters while the game runs
+
+`world.adapter` is read-only. `app.world.setAdapter(adapter)` replaces it, for
+example to move from planck to matter between two screens:
+
+```ts
+import { MatterAdapter } from "@melonjs/matter-adapter";
+
+app.world.setAdapter(new MatterAdapter({ gravity: { x: 0, y: 1 } }));
+```
+
+The old adapter is destroyed, and the new one builds every body in the world
+again from its renderable's `bodyDef`, where the renderable stands.
+`world.physic` takes the new adapter's label.
+
+- Nothing else carries over: velocities, forces, contacts and joints start
+  from rest, and gravity is the new adapter's own, in its own unit (see the
+  table above).
+- A body added with a direct `adapter.addBody()` call rather than a `bodyDef`
+  is not built again. A legacy `Body` without a `bodyDef` works on the
+  built-in adapter only.
+- Called from a collision handler, the swap waits for the end of the physics
+  step, so `world.adapter` is still the old adapter for the rest of that
+  handler.
+- Code that kept the old adapter in a field (`this.adapter = app.world.adapter`)
+  must read `app.world.adapter` again after the swap.
 
 ## Two ways to declare a body
 
@@ -158,7 +193,16 @@ takes them all out again, so moving a whole group with `other.addChild(group)`
 keeps each body simulated, once. A persistent container's children keep their
 bodies through `world.reset()` (a state change or `level.load`).
 Calling `adapter.addBody()` yourself registers the body but leaves the
-renderable out of the scene graph, so it integrates but never collides.
+renderable out of the scene graph. On the built-in adapter that body is then
+outside the broadphase, so it never collides, and it does not move either
+unless the renderable has `alwaysUpdate` set. On matter and planck the body is
+in the engine's world and collides, but its renderable is never drawn.
+
+`type` is `"static"`, `"dynamic"` or `"kinematic"`, but only planck has a
+kinematic body. The built-in and matter adapters build `"kinematic"` as a
+dynamic body, which falls under gravity. For a moving platform that works on
+every backend, use `type: "static"` and move it with
+`app.world.adapter.setPosition()`.
 
 **`fixedRotation` follows the engine, so bodies rotate.** Both matter and
 planck default it to `false`, and so do the adapters from matter-adapter 1.4.0
@@ -171,13 +215,18 @@ unable to rotate.
 
 `frictionAir` damps **rotation as well as translation** on both adapters, so
 it is also what settles a spin. Left at `0` a body that starts turning never
-stops, which only became visible once rotation stopped being locked.
+stops, which only became visible once rotation stopped being locked. The same
+holds for `adapter.setFrictionAir()` at runtime (on planck, from
+planck-adapter 1.6.4).
 
 Other portable `bodyDef` fields: `density`, `frictionAir` (number or `{x, y}`),
 `friction`, `restitution`, `gravityScale`, `maxVelocity`, `fixedRotation`,
-`isSensor`, `userData`. Not every adapter honours every one — the built-in
-adapter ignores `friction`, `fixedRotation` and `userData`, and maps
-`frictionAir` onto its per-axis `body.friction` damping vector.
+`isSensor`, `userData`. Not every adapter honours every one. The built-in
+adapter ignores `friction` and `fixedRotation`, and no adapter reads
+`userData`. The built-in maps `frictionAir` onto its per-axis `body.friction`
+vector, a per-step deceleration in pixels rather than the damping coefficient
+matter and planck use, so the same number is not the same drag. matter and
+planck average an `{x, y}` value into one.
 
 **`new Body(this, shape)`** — the built-in-native API. Fine, but ties the entity
 to the built-in world.
@@ -185,8 +234,11 @@ to the built-in world.
 ### Per-shape filtering and triggers
 
 A shape in `shapes` may carry its own `collisionType`, `collisionMask`,
-`isTrigger` (default `false`) and `isActive` (default `true`). A shape can only
-**narrow** what its body allows — the body's type/mask are checked first.
+`isTrigger` (default `false`) and `isActive` (default `true`). On the built-in
+adapter a shape can only **narrow** what its body allows: the body's type/mask
+are checked first. On planck a shape's own `collisionType` / `collisionMask`
+replace the body's for that shape, so they can widen it too. matter filters
+per body and ignores them.
 
 ```js
 const feet = new Rect(0, 24, 32, 8);
@@ -197,10 +249,17 @@ torso.isTrigger = true;      // detects hits, never gets pushed by them
 ```
 
 `isActive: false` removes the shape from the narrow phase *and* from raycasts
-without shrinking the body's bounds. Honoured by the built-in and planck
-adapters; the matter adapter filters per body and ignores them. Under planck the
-body-wide setters (`setCollisionType` / `setCollisionMask` / `setSensor`) write
-every fixture and so overwrite per-shape values.
+without shrinking the body's bounds, on all three backends. matter and planck
+read it only when the body is built, so after changing it call
+`app.world.adapter.updateShape(renderable, renderable.bodyDef.shapes)`, which
+works on every adapter. The built-in also reads it live, from the shapes the
+body holds; those are not always the ones you authored, since a `Rect` is
+stored as a converted `Polygon`, so toggle `body.getShape(i)` there.
+
+`isTrigger` works on the built-in and planck; matter ignores it, as it does
+the per-shape filter. Under planck the body-wide setters (`setCollisionType` /
+`setCollisionMask` / `setSensor`) write every fixture and so overwrite
+per-shape values.
 
 For contacts reported per *shape pair* rather than per body pair, define
 `onShapeCollisionStart` / `onShapeCollisionActive` / `onShapeCollisionEnd`.
@@ -259,8 +318,10 @@ built-in-only spelling of this and are deprecated since 20.7.0.
 
 | shape | builtin | matter | planck |
 |---|---|---|---|
-| `Rect`, `Polygon` | exact | exact | exact, up to 12 vertices |
-| `RoundRect` | exact | exact (decomposed) | sampled down to 12 vertices |
+| `Rect` | exact | exact | exact |
+| convex `Polygon` | exact | exact | exact, up to 12 vertices |
+| concave `Polygon` | **wrong**: SAT is convex-only | exact, split into convex parts | its convex hull |
+| `RoundRect` | exact | exact | sampled down to 12 vertices |
 | `Ellipse` | exact | circle of the average radius | circle of the average radius |
 | `Line` | exact | thin quad along the segment | thin quad along the segment |
 | `Box3d`, `Sphere` | exact, and in 3D | **throws** | **throws** |
@@ -274,6 +335,12 @@ arc segments each, so it is the usual way to meet that cap; the adapter now
 samples it down and keeps the extent. Anything the 2D backends cannot express
 is refused loudly on both, rather than leaving a body with no collision
 geometry that silently never collides.
+
+A concave polygon is a third. A Tiled map is safe: the loader splits a
+concave collision polygon into convex triangles before any backend sees it,
+and a shape editor exports one already split. A concave `Polygon` you build
+yourself is split by matter only; the built-in tests it as if it were convex
+and planck fills it in to its hull, so split it into convex pieces yourself.
 
 A polygon may be wound either way: its edge normals are oriented outward from
 its signed area. Before 20.13 they pointed inward on a counter-clockwise
@@ -425,6 +492,18 @@ this.body.setFriction(0.4, 0);     // ground drag, none vertically
 `friction` here is per-axis per-step velocity damping, not a surface
 coefficient — see the built-in quirks below.
 
+These two are methods of the built-in `Body` and are not functions on matter or
+planck. The portable forms go through the adapter, or the `bodyDef`'s
+`maxVelocity` / `frictionAir`:
+
+```js
+app.world.adapter.setMaxVelocity(this, { x: 3, y: 15 });
+app.world.adapter.setFrictionAir(this, { x: 0.4, y: 0 }); // matter and planck average the axes
+```
+
+A velocity cap is in the adapter's velocity unit: pixels per step on the
+built-in and matter, pixels per second on planck (see *Porting* below).
+
 Under matter and planck, `syncFromPhysics()` copies the engine body's position
 back onto `renderable.pos` after every step, so a direct write is simply erased
 — no error. The built-in world integrates `pos` in place instead, so a write
@@ -459,24 +538,34 @@ interface Contacts {
     onCollisionStart?: (response: CollisionResponse, other: Renderable) => void;
 }
 (rock as Contacts).onCollisionStart = (response, other) => { … };
-``` The legacy `onCollision` still exists and has a trap:
+```
+
+How often the lifecycle fires depends on the adapter. The built-in fires each
+hook once per body pair, per side, per step. matter and planck report contacts
+per SHAPE pair, so a body touching through two of its shapes gets two calls,
+and matter fires `onCollisionActive` once per sub-step. Guard a one-shot
+reaction (a pickup, a landing sound) with a flag of your own.
+
+The legacy `onCollision` still exists and has a trap:
 
 > On the built-in world, `onCollision` fires **twice per frame** for
 > dynamic-dynamic pairs — once per outer-loop visit — and gets the raw SAT
 > response with a fixed `a`/`b` per pair. On the adapters it is routed to their
-> "still touching" phase and fires once per side.
+> "still touching" phase and fires once per side. There it receives the same
+> response as `onCollisionActive` (`a`, `b`, `normal`, `depth`, `pair`), so
+> `overlap`, `overlapN` and `overlapV` are `undefined`.
 
 The legacy dedupe idiom is `if (this !== response.a) return;`. Defining
 `onCollisionActive` suppresses the legacy callback on that renderable (the
 "supersedes" rule, applied per side so `a` and `b` can migrate independently),
-and is deduped to once per pair per side per frame on every adapter.
+on every adapter.
 
 **Return values only work on the legacy handler.** `return false` from
-`onCollision` skips the built-in SAT push-out; what `onCollisionStart` /
-`onCollisionActive` return is discarded. To opt a body out of the physical
-response, set `bodyDef.isSensor` / `body.setSensor(true)`, or make the shape a
-trigger. With no `onCollision` defined at all, push-out happens by default for
-dynamic non-sensor bodies.
+`onCollision` skips the built-in SAT push-out; matter and planck ignore it, and
+what `onCollisionStart` / `onCollisionActive` return is discarded everywhere.
+To opt a body out of the physical response, set `bodyDef.isSensor` /
+`body.setSensor(true)`, or make the shape a trigger. With no `onCollision`
+defined at all, push-out happens by default for dynamic non-sensor bodies.
 
 The two handler families do **not** get the same response object:
 
@@ -487,11 +576,15 @@ The two handler families do **not** get the same response object:
 | contact axis | `response.overlapN` / `overlapV` | `response.normal` |
 | also carries | `aInB`, `bInA`, `indexShapeA/B`, `isTriggerContact` | `pair` (adapter-native, absent on built-in) |
 
+The left-hand column is the built-in's. On matter and planck `onCollision`
+gets the right-hand one too.
+
 On the modern response `overlap` / `overlapN` / `overlapV` are still present but
-`@deprecated` (and `undefined` under the matter adapter) — use `depth` and
-`normal`. `normal` is the direction the receiver must move to separate, in
-canvas coordinates: `normal.y < -0.7` means "push me up", i.e. I landed on top
-of `other`.
+`@deprecated` (and `undefined` under the matter and planck adapters) — use
+`depth` and `normal`. `depth` is in pixels on every adapter (on planck from
+planck-adapter 1.6.4; before, it was always `0`). `normal` is the direction
+the receiver must move to separate, in canvas coordinates: `normal.y < -0.7`
+means "push me up", i.e. I landed on top of `other`.
 
 One portability wrinkle: the built-in adapter dispatches `onCollisionEnd` with
 `undefined` as the response; the matter and planck adapters pass a real one.
@@ -520,6 +613,9 @@ What actually happens per adapter:
   planck's `begin-contact` / `end-contact` events, which fire *while the world
   is locked*. Adding a renderable with a `bodyDef` there makes planck's
   `createBody` return `null` and the adapter then throws on the null handle.
+  Removing one there is safe from planck-adapter 1.6.4: the body leaves every
+  event and query at once and is destroyed when the step ends. Before that,
+  `removeChildNow()` left an invisible body behind that still collided.
   `onCollisionActive` is dispatched after the step and is the safe one.
 - **matter** — callbacks come from matter's `collisionStart` / `collisionActive`
   / `collisionEnd` events during `Engine.update`.
@@ -541,9 +637,16 @@ const inArea = app.world.adapter.queryAABB(new Rect(x, y, w, h));
 
 `querySphere(centre, radius)` (or `querySphere(sphere)`) is **built-in only**,
 and only active under a 3D broadphase — i.e. `world.sortOn === "depth"`, which
-`Camera3d` sets. So is `raycast3d`. Check
-`world.adapter.capabilities.raycasts3d` before calling either. `raycast` itself
-is capability-gated by `capabilities.raycasts`.
+`Camera3d` sets. So is `raycast3d`. `world.adapter.capabilities.raycasts3d`
+says whether the adapter has them at all, and it stays `true` on the built-in
+under a 2D camera, where `raycast3d` returns `null` and `querySphere` returns
+`[]`: check `world.sortOn === "depth"` as well. `raycast` itself is
+capability-gated by `capabilities.raycasts`.
+
+`queryAABB` does not return the same set everywhere. On the built-in it
+returns every non-kinematic renderable whose bounds overlap the rectangle, with
+a body or without; matter and planck query their own world, so they return
+only renderables that have a body.
 
 On the built-in adapter a 2D ray measures each shape the way the narrowphase
 measures it against a planar shape: polygons, `Rect`, `RoundRect` and `Line`
@@ -558,7 +661,8 @@ The legacy `collision.rayCast(line, result)` is a different API: it takes a
 `Line`, returns an **array** of every intersecting renderable, and only exists
 on the built-in path.
 
-Two prerequisites that produce empty results rather than errors:
+Two prerequisites on the built-in adapter that produce empty results rather
+than errors:
 
 - **`isKinematic` must be `false`** for a renderable to be in the broadphase at
   all (a `Body` sets this for you).
@@ -574,10 +678,11 @@ along **Z** as well as X and Y.
 ```js
 import { Box3d, Sphere } from "melonjs";
 
-// a box: centre offset from the body, then half-extents on each axis
-crate.body.addShape(new Box3d(0, 0, 0, 40, 60, 40));
-// a sphere: centre offset, then one radius
-rock.body.addShape(new Sphere(0, 0, 0, 30));
+// a box: its centre, measured from the frame's top-left corner like any
+// shape, then its FULL width, height and depth (not half-extents)
+crate.body.addShape(new Box3d(crate.width / 2, crate.height / 2, 0, 40, 60, 40));
+// a sphere: its centre, then one radius
+rock.body.addShape(new Sphere(rock.width / 2, rock.height / 2, 0, 30));
 ```
 
 Reach for these for anything moving in the XZ plane under a `Camera3d` — a
@@ -621,7 +726,7 @@ the mistake to avoid: correct for a box pair, and for a sphere it throws away
 the planar half of the contact.
 
 **Mixed pairs degrade to 2D.** A `Box3d` or a `Sphere` against a `Polygon`,
-`Rectangle`, `RoundRect` or `Ellipse` tests the 3D shape's XY footprint and
+`Rect`, `RoundRect` or `Ellipse` tests the 3D shape's XY footprint and
 treats the planar shape as unbounded along Z, which is what keeps a sphere or
 box body colliding with an ordinary Tiled collision layer. `overlapZ` is zero
 for those, since only one side has a depth to resolve. Give BOTH sides a 3D
@@ -672,7 +777,8 @@ real rigid-body engine:
   not contact state — it says nothing about what a body is touching.
 - **Gravity defaults to `(0, 0.98)`** — pixels per frame², not m/s². Mutate
   `app.world.adapter.gravity` at runtime, or pass
-  `physic: new BuiltinAdapter({ gravity })` to override it. `body.gravityScale`
+  `physic: new BuiltinAdapter({ gravity: new Vector2d(0, g) })` to override
+  it (a `Vector2d` here, where the adapters take `{x, y}`). `body.gravityScale`
   (default `1`) scales it per body; `0` disables gravity for that body and is
   the portable replacement for the deprecated `body.ignoreGravity`.
 - **`applyForce(x, y)` is linear only** unless you pass the optional
@@ -750,7 +856,8 @@ box on the builtin is the solver telling you the truth, not a drawing bug.
 On planck and matter that report comes from the engine rather than from your
 definitions, so it shows the approximations they make: an `Ellipse` appears as
 the circle of average radius it is simulated as, a concave polygon as the
-convex pieces it was decomposed into, and a `Rect` as a `Polygon`. Your
+convex parts matter splits it into or the hull planck fills it in to, and a
+`Rect` as a `Polygon`. Your
 authored shapes are untouched and still readable on `renderable.bodyDef.shapes`.
 
 **If you need rotation to affect collision, use planck or matter.** That is the
@@ -770,22 +877,36 @@ Same call, different magnitude — these are the ones that waste an afternoon:
   `adapter.setVelocity` / `body.setVelocity(x, y)` are in pixels on every
   adapter; reaching for the raw handle (`body.setLinearVelocity` on planck) puts
   you in metres per second, scaled by `pixelsPerMeter`.
-- **Time base differs.** Built-in `body.vel` is pixels *per frame*; planck and
-  matter integrate in seconds. The same number is ~60× off.
+- **Time base differs.** Built-in `body.vel` and matter's velocity are pixels
+  *per step* (60 steps a second); planck's is pixels *per second*, so the same
+  number is about 60× off there. `maxVelocity` follows the same split, and so
+  does angular velocity: radians per step on the built-in and matter, per
+  second on planck.
 - **Force magnitudes are not comparable** between adapters; re-tune rather than
   reuse. `applyForce` is a per-step accumulator everywhere (cleared each step,
-  so call it every frame) — `applyImpulse` is the one-shot. Matter has no native
-  impulse, so the adapter emulates it as `Δv = J / mass` and ignores the
-  application point.
+  so call it every frame, and weakened by `subSteps` on matter and planck);
+  `applyImpulse` is the one-shot. Only planck applies an impulse at its
+  application point. The built-in and matter ignore the point; matter has no
+  native impulse, so the adapter emulates it as `Δv = J / mass`.
 - **`body.position` is the centroid in matter**, while `renderable.pos` is
-  top-left in melonJS. The adapter stores a per-body offset so `renderable.pos`
-  stays correct — but read `body.position` directly and you get the centroid.
+  wherever its `anchorPoint` puts it. The adapter stores a per-body offset so
+  `renderable.pos` stays correct — but read `body.position` directly and you
+  get the centroid.
+- **The default collision type differs.** With no `collisionType`, a body is
+  `ENEMY_OBJECT` on the built-in but category `1` (`PLAYER_OBJECT`) on matter
+  and planck. With no `collisionMask`, it collides with every type on all
+  three (before planck-adapter 1.6.4, planck stopped at bit 15, so a user type
+  from `collision.types.USER << 9` up never hit it). Set `collisionType` on
+  every `bodyDef`.
+- **`type: "kinematic"` is planck-only**; the built-in and matter build a
+  dynamic body (see *Two ways to declare a body*).
 - **A `Line` (what Tiled emits for a polyline) is a thin 2px rectangle along
   the segment on matter**, which is what `getBodyShapes()` reports (since
   matter-adapter 1.5.0; before that it fell back to its axis-aligned bounding
   box). Only a degenerate (zero-area, collinear) `Polygon` still falls back to
   its bounding box. Any other shape type throws `unsupported shape type`.
-- **Ellipses become circles on matter**, using the average of the two radii.
+- **Ellipses become circles on matter and planck**, using the average of the
+  two radii.
 - **`isGrounded` is capability-gated** (`capabilities.isGrounded`) and computed
   differently per adapter: a flag read on built-in, a live scan of active
   contacts on matter and planck, counting a solid contact that pushes the body
@@ -796,21 +917,34 @@ Adapter-specific escapes exist (`(this.body as MatterAdapter.Body).frictionAir`,
 `adapter.matter.Constraint.create(...)`) but are not portable — flag them if you
 use them. `adapter.capabilities` (`constraints`,
 `continuousCollisionDetection`, `sleepingBodies`, `raycasts`, `raycasts3d`,
-`velocityLimit`, `isGrounded`) is the portable way to branch.
+`velocityLimit`, `isGrounded`) is the portable way to branch. matter reports
+`continuousCollisionDetection: false` (from matter-adapter 1.5.4; earlier
+versions claimed `true`): it has none, and `subSteps` is the remedy for fast
+bodies. Its `sleepingBodies` needs `matterEngineOptions: { enableSleeping: true }`.
 
 ## Symptom → cause
 
 | symptom | cause |
 |---|---|
 | entity jitters or does not move | assigning `pos` instead of applying force |
+| `world.adapter = …` throws a `TypeError` | `world.adapter` is read-only; call `world.setAdapter(adapter)` |
+| a body stops simulating after `world.setAdapter()` | it was added with a direct `adapter.addBody()`; give it a `bodyDef` |
 | collision handler runs twice per frame | legacy `onCollision` on a dynamic pair (built-in) — use `onCollisionActive` |
 | `return false` from a handler does nothing | return values are only honoured by legacy `onCollision` — use `isSensor` / `isTrigger` |
 | crash or a null body when spawning from `onCollisionStart` | world mutated during contact dispatch (locked world under planck) |
 | `raycast` / `queryAABB` finds nothing | `isKinematic` still `true`, or no `world.update` yet (built-in) |
-| `querySphere` / `raycast3d` is not a function | 2D adapter, or built-in without a 3D broadphase (`sortOn !== "depth"`) |
+| `querySphere` / `raycast3d` is not a function | matter or planck: both are 2D-only and omit them |
+| `querySphere` returns `[]` and `raycast3d` returns `null` (built-in) | no 3D broadphase: `world.sortOn !== "depth"`; they need a `Camera3d` stage |
+| `queryAABB` misses objects that have no body (matter, planck) | those adapters query their own world, which holds bodies only |
 | a 3D contact reports no overlap to push against | read `overlapNZ` / `overlapZ` — a Z-axis MTV leaves `overlapN` / `overlapV` at zero |
 | two 3D objects never separate in depth | one of them carries a planar shape; a mixed pair is tested as the box's XY footprint, unbounded along Z |
-| `response.depth` / `response.normal` are `undefined` | reading a legacy `onCollision` response — it carries `overlap` / `overlapN` |
+| `response.depth` / `response.normal` are `undefined` (built-in) | reading a legacy `onCollision` response — it carries `overlap` / `overlapN` |
+| `response.overlapV` / `overlapN` are `undefined` (matter, planck) | the adapters hand `onCollision` the modern response too; use `normal` / `depth` |
+| a pickup or a landing sound fires twice (matter, planck) | contacts are reported per shape pair, and `onCollisionActive` once per sub-step on matter; guard with a flag |
+| a `type: "kinematic"` platform falls (built-in, matter) | only planck has kinematic bodies; use `type: "static"` and `adapter.setPosition()` |
+| `this.body.setMaxVelocity is not a function` (matter, planck) | it is a built-in `Body` method; use `app.world.adapter.setMaxVelocity(this, { x, y })` |
+| every force got weaker after raising `subSteps` (matter, planck) | forces are cleared after each sub-step, so they act on the first one only; re-tune |
+| `isActive = false` on a shape changes nothing (matter, planck) | read only when the body is built; call `adapter.updateShape(renderable, shapes)` |
 | `onCollisionEnd` handler throws on `response` | built-in dispatches it with `undefined` |
 | off-screen bodies stop simulating | built-in gating on `inViewport`; set `alwaysUpdate` |
 | a body sinks through one shape of a multi-shape body | fixed in 20.7; before that the compound pass only ever re-resolved the first overlapping pair |
@@ -821,7 +955,7 @@ use them. `adapter.capabilities` (`constraints`,
 | a body in a pile sinks into the floor (built-in) | fixed in 20.7 for anything with an immovable side; bodies pinned only by other DYNAMIC bodies still overlap by a pixel or two, which is what planck/matter are for |
 | `applyForce` with a point spins a body pushed through its centre, or tips it the wrong way (built-in) | before 20.13 the point was measured against the body's LOCAL bounds, so only a body at the world origin got the right torque; upgrade, and drop any `pos` you subtracted to compensate |
 | forces do nothing after switching adapter | magnitude units differ — re-tune, don't reuse numbers |
-| `body.position` disagrees with `renderable.pos` on matter | matter stores the centroid, melonJS the top-left — the adapter offsets between them |
+| `body.position` disagrees with `renderable.pos` on matter | matter stores the centroid, while `renderable.pos` sits where its `anchorPoint` puts it; the adapter offsets between them |
 | a `bodyDef` two containers down never falls nor collides (`body` stays `undefined`) | before 20.13 only the added container's own children were registered; upgrade |
 | `other.addChild(group)` throws "renderable is already adapter-managed" | before 20.13 a group detached with keepalive (which moving it does) left its children's bodies registered, still simulated off-stage; upgrade |
 | the children of a persistent container stop falling and colliding after a state change or `level.load` | before 20.13 `world.reset()` kept only the bodies whose own renderable was persistent; upgrade, or flag each child `isPersistent` |
@@ -839,6 +973,11 @@ use them. `adapter.capabilities` (`constraints`,
 | the player climbs a tall wall with repeated jumps (matter, planck) | matter-adapter < 1.5.3 / planck-adapter < 1.6.3 counted any contact with a lower body as ground; upgrade |
 | a hero made of several shapes is never grounded, so it cannot jump (matter) | matter-adapter < 1.5.3 missed contacts on the parts of a compound body; upgrade |
 | `setSensor(true)` on a platform under the player does nothing, so it cannot be dropped through (matter) | matter-adapter < 1.5.3 did not update a contact already in place; upgrade |
+| `raycast` misses a body made of several shapes, or a concave one (matter) | matter-adapter < 1.5.4 did not resolve the part it hit to its body; upgrade |
+| a shape hook's `normal` points the opposite way to `onCollisionStart`'s (matter) | matter-adapter < 1.5.4 reversed it; upgrade |
+| `response.depth` is always `0` (planck) | planck-adapter < 1.6.4 read the depth from the wrong place; upgrade |
+| an invisible body keeps colliding after `removeChildNow()` from `onCollisionStart` (planck) | planck-adapter < 1.6.4 could not destroy a body while the world was locked; upgrade, or use `removeChild()` |
+| a spin never settles after `adapter.setFrictionAir()` (planck) | planck-adapter < 1.6.4 damped movement only there; upgrade |
 
 ## Related skills
 

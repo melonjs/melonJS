@@ -523,7 +523,8 @@ export default class Application {
 		// explicit form `{ adapter: PhysicsAdapter }`.
 		const { adapter, physicLabel } = resolvePhysicSetting(settings.physic);
 
-		// create a new physic world wired to the resolved adapter
+		// create a new physic world; its constructor installs the resolved
+		// adapter with `world.setAdapter()`, the same path a later swap takes
 		this.world = new World(0, 0, settings.width, settings.height, adapter);
 
 		// set the reference to this application instance

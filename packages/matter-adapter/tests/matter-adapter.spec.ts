@@ -56,7 +56,8 @@ describe("MatterAdapter — feature parity with BuiltinAdapter", () => {
 
 		it("declares richer capabilities than BuiltinAdapter", () => {
 			expect(adapter.capabilities.constraints).toEqual(true);
-			expect(adapter.capabilities.continuousCollisionDetection).toEqual(true);
+			// matter-js steps discretely; it has no continuous detection
+			expect(adapter.capabilities.continuousCollisionDetection).toEqual(false);
 			expect(adapter.capabilities.sleepingBodies).toEqual(true);
 			expect(adapter.capabilities.raycasts).toEqual(true);
 			expect(adapter.capabilities.velocityLimit).toEqual(true);

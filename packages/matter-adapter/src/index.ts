@@ -32,15 +32,11 @@ import {
 declare const __VERSION__: string;
 
 /**
- * Minimum melonJS version this adapter requires. The PhysicsAdapter
- * interface, `bodyDef` auto-registration, and the resolver in
- * `Application` are part of the 19.5 work — older releases don't have
- * the plumbing for instance-based adapters. Tracks the engine version
- * actually shipping these APIs (will be bumped to "19.5.0" once the
- * engine release is cut).
+ * Minimum melonJS version this adapter requires: the lower bound of its
+ * `melonjs` peer dependency range, so the two cannot disagree.
  * @hidden
  */
-export const REQUIRED_MELONJS_VERSION = "19.5.0";
+export const REQUIRED_MELONJS_VERSION = "20.0.0";
 
 /**
  * Options accepted by the {@link MatterAdapter} constructor.
@@ -143,7 +139,9 @@ export class MatterAdapter implements PhysicsAdapter {
 
 	readonly capabilities: AdapterCapabilities = {
 		constraints: true,
-		continuousCollisionDetection: true,
+		// matter-js steps discretely: a fast body can pass through a thin
+		// one. `subSteps` is the remedy, not a capability to branch on.
+		continuousCollisionDetection: false,
 		sleepingBodies: true,
 		raycasts: true,
 		// Matter.js is 2D-only; no `raycast3d` method. User code under
@@ -1171,7 +1169,10 @@ export class MatterAdapter implements PhysicsAdapter {
 		}
 
 		if (bestBody === null) return null;
-		const renderable = this.renderableMap.get(bestBody);
+		// `Query.ray` reports the PART it hit, which for a body made of
+		// several shapes (or a concave polygon matter split into pieces) is
+		// not the body the renderable owns: resolve it through its parent
+		const renderable = this._renderableForPart(bestBody);
 		if (!renderable) return null;
 
 		// Edge outward normal — perpendicular to the winning edge,
@@ -1383,7 +1384,8 @@ export class MatterAdapter implements PhysicsAdapter {
 	 * @param rB renderable owning part B
 	 * @param partA the matter part on A's side
 	 * @param partB the matter part on B's side
-	 * @param normal contact normal, in A -> B orientation
+	 * @param normal the pair's `collision.normal`: the direction A must move
+	 * to separate from B, as the body-level hooks hand it to A
 	 * @param normal.x normal x component
 	 * @param normal.y normal y component
 	 * @param depth penetration depth
@@ -1446,11 +1448,15 @@ export class MatterAdapter implements PhysicsAdapter {
 				partner,
 			);
 		};
+		// oriented as the body-level response is: each receiver gets the
+		// direction it must move to separate. These were negated, so a
+		// shape hook pointed into the partner while `onCollisionStart`
+		// pointed away from it.
 		if (!aDetached) {
-			emit(rA, rB, entryA, entryB, -normal.x, -normal.y);
+			emit(rA, rB, entryA, entryB, normal.x, normal.y);
 		}
 		if (!bDetached) {
-			emit(rB, rA, entryB, entryA, normal.x, normal.y);
+			emit(rB, rA, entryB, entryA, -normal.x, -normal.y);
 		}
 	}
 

@@ -88,7 +88,7 @@ const factories: AdapterFactory[] = [
 		rayPrecision: 0,
 		expectedCapabilities: {
 			constraints: true,
-			continuousCollisionDetection: true,
+			continuousCollisionDetection: false,
 			sleepingBodies: true,
 			raycasts: true,
 			raycasts3d: false,

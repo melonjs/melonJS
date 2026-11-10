@@ -4,6 +4,7 @@
 
 ### Added
 - Loader: asset bundles, to load and free a level's assets together: `loader.preload({ common: […], level1: […] })`, then `loader.load("level1")` / `loader.unload("level1")`; an asset shared by several bundles is fetched once and freed with the last ([#1656](https://github.com/melonjs/melonJS/issues/1656))
+- Physics: `world.setAdapter()` switches the physics adapter of a running game, rebuilding every body from its `bodyDef`; `world.adapter` is now read-only
 
 ### Fixed
 - Application: one very slow update no longer freezes the game for good (since 20.12, a heavy first frame could)

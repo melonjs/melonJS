@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.4 - _unreleased_
+
+### Fixed
+- `raycast()` finds a body made of several shapes, or a concave outline matter splits into parts; it returned `null`
+- The shape-level hooks (`onShapeCollisionStart`, `Active`, `End`) get the same normal as `onCollisionStart`; it pointed the other way
+- `capabilities.continuousCollisionDetection` is `false`: matter-js has none, and `subSteps` is the remedy for fast bodies
+- The start-up version check asks for melonJS 20.0, as the peer dependency does
+
 ## 1.5.3 - _2026-11-09_
 
 ### Fixed

@@ -3,6 +3,7 @@ import {
 	type BodyDefinition,
 	type BodyShape,
 	type Bounds,
+	collision,
 	Ellipse,
 	Line,
 	version as melonjsVersion,
@@ -22,13 +23,11 @@ import * as planck from "planck";
 declare const __VERSION__: string;
 
 /**
- * Minimum melonJS version this adapter requires. The PhysicsAdapter
- * interface, `bodyDef` auto-registration, and the resolver in
- * `Application` are part of the 19.5 work — older releases don't have
- * the plumbing for instance-based adapters.
+ * Minimum melonJS version this adapter requires: the lower bound of its
+ * `melonjs` peer dependency range, so the two cannot disagree.
  * @hidden
  */
-export const REQUIRED_MELONJS_VERSION = "19.5.0";
+export const REQUIRED_MELONJS_VERSION = "20.0.0";
 
 /**
  * Options accepted by the {@link PlanckAdapter} constructor.
@@ -189,11 +188,12 @@ export class PlanckAdapter implements PhysicsAdapter {
 	 * just to reach the factories you need:
 	 *
 	 * ```ts
-	 * const joint = adapter.planck.RevoluteJoint(
+	 * const bodyA = a.body as PlanckAdapter.Body;
+	 * const joint = new adapter.planck.RevoluteJoint(
 	 *     { collideConnected: false },
-	 *     a.body as PlanckAdapter.Body,
+	 *     bodyA,
 	 *     b.body as PlanckAdapter.Body,
-	 *     adapter.planck.Vec2(0, 0),
+	 *     bodyA.getPosition(), // the pin, a world point in meters
 	 * );
 	 * adapter.world.createJoint(joint);
 	 * ```
@@ -217,6 +217,11 @@ export class PlanckAdapter implements PhysicsAdapter {
 	melonWorld!: World;
 
 	private readonly bodyMap = new Map<Renderable, planck.Body>();
+	/**
+	 * Bodies removed while the world was locked, destroyed after the step.
+	 * See {@link PlanckAdapter.removeBody}.
+	 */
+	private readonly lockedRemovals: planck.Body[] = [];
 	private readonly renderableMap = new Map<planck.Body, Renderable>();
 	/**
 	 * planck fixture -> the melonJS shape it was built from, and that shape's
@@ -348,6 +353,7 @@ export class PlanckAdapter implements PhysicsAdapter {
 			this.world.destroyBody(body);
 			body = next;
 		}
+		this.lockedRemovals.length = 0;
 		this.bodyMap.clear();
 		this.renderableMap.clear();
 		this.fixtureShapeMap.clear();
@@ -371,19 +377,30 @@ export class PlanckAdapter implements PhysicsAdapter {
 		// one full-dt step, for narrow-phase accuracy on fast bodies.
 		const dtSeconds = dt / 1000;
 		if (this.subSteps === 1) {
-			this.world.step(
-				dtSeconds,
-				this.velocityIterations,
-				this.positionIterations,
-			);
+			this._stepWorld(dtSeconds);
 		} else {
 			const sub = dtSeconds / this.subSteps;
 			for (let i = 0; i < this.subSteps; i++) {
-				this.world.step(sub, this.velocityIterations, this.positionIterations);
+				this._stepWorld(sub);
 			}
 		}
 		this._clampVelocities();
 		this._dispatchActiveContacts();
+	}
+
+	/**
+	 * One `world.step`, then the bodies removed while it ran: the world is
+	 * unlocked again, so planck destroys them now.
+	 * @param seconds the time to advance the world by
+	 */
+	private _stepWorld(seconds: number): void {
+		this.world.step(seconds, this.velocityIterations, this.positionIterations);
+		if (this.lockedRemovals.length > 0) {
+			for (const body of this.lockedRemovals) {
+				this.world.destroyBody(body);
+			}
+			this.lockedRemovals.length = 0;
+		}
 	}
 
 	syncFromPhysics(): void {
@@ -508,8 +525,10 @@ export class PlanckAdapter implements PhysicsAdapter {
 				// a trigger shape is a sensor fixture: it reports contacts and
 				// contributes nothing to the solver
 				isSensor: def.isSensor === true || shapeTrigger === true,
-				// Bit 0 reserved by Box2D for "no filter set"; melonJS
-				// collisionType/Mask map directly onto categoryBits/maskBits.
+				// melonJS collisionType/Mask map directly onto Box2D's
+				// categoryBits/maskBits. With no mask, collide with every
+				// collision type, as the other adapters do: Box2D's own default
+				// (0xFFFF) ignored user types from bit 16 up.
 				filterCategoryBits:
 					typeof shapeType === "number"
 						? shapeType
@@ -521,7 +540,7 @@ export class PlanckAdapter implements PhysicsAdapter {
 						? shapeMask
 						: typeof def.collisionMask === "number"
 							? def.collisionMask
-							: 0xffff,
+							: collision.types.ALL_OBJECT,
 			};
 			const fixture = body.createFixture(planckShape, fixtureDef);
 			// Box2D reports contacts per FIXTURE pair, and this backend already
@@ -580,8 +599,9 @@ export class PlanckAdapter implements PhysicsAdapter {
 		// `applyForce` IS spliced because its signature differs from the
 		// native — the portable helper takes `(x, y, pointX?, pointY?)`
 		// numbers while planck's native takes `(Vec2, Vec2, wake?)`. The
-		// native is reachable via `body.applyForceToCenter(Vec2)` or by
-		// casting `body as planck.Body` if a user needs the raw form.
+		// native is reachable via `body.applyForceToCenter(Vec2)`, or as
+		// `planck.Body.prototype.applyForce.call(body, …)`: the helper is an
+		// own property of the body, so no cast gets past it.
 		// Capture native applyForce reference so the spliced helper can
 		// reach the real planck method without recursing. Also stored on
 		// the adapter (in `nativeApplyForce`) so adapter-level methods
@@ -736,7 +756,16 @@ export class PlanckAdapter implements PhysicsAdapter {
 	removeBody(renderable: Renderable): void {
 		const body = this.bodyMap.get(renderable);
 		if (body) {
-			this.world.destroyBody(body);
+			if (this.world.isLocked()) {
+				// inside a step (a contact event handler): planck ignores
+				// `destroyBody` there without a word, which left a body that
+				// nothing tracked but that still collided. Destroy it once the
+				// step ends; dropping it from the maps now already keeps it
+				// out of every event and query.
+				this.lockedRemovals.push(body);
+			} else {
+				this.world.destroyBody(body);
+			}
 			this.bodyMap.delete(renderable);
 			this.renderableMap.delete(body);
 			for (let f = body.getFixtureList(); f; f = f.getNext()) {
@@ -902,7 +931,10 @@ export class PlanckAdapter implements PhysicsAdapter {
 	): void {
 		const body = this.bodyMap.get(renderable);
 		if (!body) return;
-		body.setLinearDamping(this._scalarOf(friction) ?? 0);
+		// both, as `addBody` sets them from the `bodyDef`'s `frictionAir`
+		const damping = this._scalarOf(friction) ?? 0;
+		body.setLinearDamping(damping);
+		body.setAngularDamping(damping);
 	}
 
 	setMaxVelocity(
@@ -1314,7 +1346,7 @@ export class PlanckAdapter implements PhysicsAdapter {
 		// to escape B is `-normal`, MTV for B is `+normal`. Per
 		// CollisionResponse contract, each side sees the normal pointing
 		// in the direction it must move to separate.
-		const depth = this._estimateContactDepth(contact);
+		const depth = this._contactDepth(contact, worldManifold);
 
 		const methodForSide = (receiver: Renderable): string => {
 			if (phase === "start") return "onCollisionStart";
@@ -1459,18 +1491,29 @@ export class PlanckAdapter implements PhysicsAdapter {
 		}
 	}
 
-	private _estimateContactDepth(contact: planck.Contact): number {
-		// Box2D's manifold tracks per-point separation in meters; the
-		// most-overlapping point's separation is the negated depth.
-		const manifold = contact.getManifold();
+	/**
+	 * How deep two fixtures overlap, in pixels: the deepest of the contact's
+	 * points. Box2D keeps a point's separation on the world manifold, not on
+	 * the manifold point, where this used to be read from and always came
+	 * back empty, so every contact reported a depth of 0. A separation is in
+	 * meters and negative while the fixtures overlap.
+	 * @param contact the Box2D contact being reported
+	 * @param worldManifold its world manifold, already computed
+	 * @returns the penetration depth, 0 when the fixtures do not overlap
+	 */
+	private _contactDepth(
+		contact: planck.Contact,
+		worldManifold: planck.WorldManifold,
+	): number {
+		const count = contact.getManifold().pointCount;
 		let minSep = 0;
-		for (let i = 0; i < manifold.pointCount; i++) {
-			const sep = (manifold.points[i] as { separation?: number }).separation;
-			if (typeof sep === "number" && sep < minSep) {
+		for (let i = 0; i < count; i++) {
+			const sep = worldManifold.separations[i];
+			if (sep < minSep) {
 				minSep = sep;
 			}
 		}
-		// Convert to pixels for parity with matter-adapter's `depth` units.
+		// pixels, the unit of `depth` on every adapter
 		return this.m2px(-minSep);
 	}
 

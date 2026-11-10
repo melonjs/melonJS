@@ -92,7 +92,9 @@ class Button extends Renderable {
 `Container`, `Camera2d`, `Draggable`, `DropTarget` and the `UI*` elements set it
 to `false` for you, and so does attaching a physics body (`Body`'s constructor
 sets `ancestor.isKinematic = false`) — so plain `Renderable` and `Sprite`
-subclasses with no body are the ones that catch people.
+subclasses with no body are the ones that catch people. That constructor runs
+on the built-in physics adapter only: under matter or planck a `bodyDef` leaves
+`isKinematic` at `true`, so set it yourself.
 
 Register in `onActivateEvent` and release in `onDeactivateEvent`, not in the
 constructor — pooled objects are reused and would otherwise accumulate handlers.

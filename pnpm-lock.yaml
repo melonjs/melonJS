@@ -294,9 +294,12 @@ importers:
   packages/planck-adapter:
     dependencies:
       planck:
-        specifier: ^1.5.0
-        version: 1.5.0(stage-js@1.0.2)
+        specifier: ^1.5.1
+        version: 1.5.1(stage-js@1.0.2)
     devDependencies:
+      '@melonjs/matter-adapter':
+        specifier: workspace:*
+        version: link:../matter-adapter
       concurrently:
         specifier: ^9.2.1
         version: 9.2.1
@@ -1811,8 +1814,8 @@ packages:
     resolution: {integrity: sha512-RvwwcruNjI1ncT5xRakeyS9Lf8lcItv34KD+aif+VH9kduAyfYBipGh12274xtenIPZ119/R9BdTBa8gAwSh0A==}
     engines: {node: '>=12'}
 
-  planck@1.5.0:
-    resolution: {integrity: sha512-dlvqJE+FscZgrGUXJ5ybd0o5bvZ5XXyZNbm08xGsXp9WjXeAyWSFT6n9s/1PQcUBo4546fDXA5RMA4wbDyZw6g==}
+  planck@1.5.1:
+    resolution: {integrity: sha512-x3nHPSyoNTAxN0v8UXrSwP0XVTG0e7JCENBVZljZ8PZOjbOo7aRHq2+fy+DOREDhfW52aq5GiwgIm+m8kIErKQ==}
     engines: {node: '>=24.0'}
     peerDependencies:
       stage-js: ^1.0.0-alpha.12
@@ -3583,7 +3586,7 @@ snapshots:
 
   picomatch@4.0.5: {}
 
-  planck@1.5.0(stage-js@1.0.2):
+  planck@1.5.1(stage-js@1.0.2):
     dependencies:
       stage-js: 1.0.2
 

@@ -14,6 +14,11 @@ import type World from "./world.js";
  * `dynamic` bodies are simulated (player, projectiles); `kinematic`
  * bodies are user-positioned but participate in collision (moving
  * platforms, elevators).
+ *
+ * Only the planck adapter simulates `kinematic` as such. The builtin and
+ * matter adapters build a dynamic body, which falls under gravity; for a
+ * portable moving platform use `static` and move it with
+ * {@link PhysicsAdapter.setPosition}.
  */
 export type BodyType = "static" | "dynamic" | "kinematic";
 
@@ -27,7 +32,8 @@ export type BodyType = "static" | "dynamic" | "kinematic";
  * Adapter support: the builtin and planck adapters honour them (planck maps
  * them onto per-fixture filters, which Box2D provides natively). The matter
  * adapter does NOT — its `collisionFilter` and `isSensor` belong to a body, not
- * to the parts it is built from, so per-shape values are ignored there.
+ * to the parts it is built from, so per-shape values are ignored there, except
+ * `isActive: false`, which leaves the shape out of the body.
  *
  * **The two 3D shapes are builtin-only.** `Box3d` and `Sphere` exist because
  * the builtin solver resolves along Z; the matter and planck adapters are 2D
@@ -193,7 +199,10 @@ export interface CollisionResponse {
  * itself (e.g. `adapter.setVelocity(r, v)` always works).
  */
 export interface PhysicsBody {
-	/** Set linear velocity in viewport pixels per frame. */
+	/**
+	 * Set linear velocity, in pixels per step on the builtin and matter
+	 * adapters (a step is 1/60 s) and in pixels per second on planck.
+	 */
 	setVelocity(x: number, y: number): void;
 	/** Read linear velocity; writes into `out` if provided to avoid an alloc. */
 	getVelocity(out?: Vector2d): Vector2d;
@@ -717,9 +726,9 @@ export interface PhysicsAdapter {
 	setAngle?(renderable: Renderable, angle: number): void;
 	/** Read absolute rotation angle (radians). Returns 0 if not tracked. */
 	getAngle?(renderable: Renderable): number;
-	/** Set angular velocity (rad / frame). */
+	/** Set angular velocity: radians per step, per second on planck. */
 	setAngularVelocity?(renderable: Renderable, omega: number): void;
-	/** Read angular velocity (rad / frame). Returns 0 if not tracked. */
+	/** Read angular velocity, in the same unit. Returns 0 if not tracked. */
 	getAngularVelocity?(renderable: Renderable): number;
 	/** Apply an angular impulse (`Δω = τ / inertia`). */
 	applyTorque?(renderable: Renderable, torque: number): void;
