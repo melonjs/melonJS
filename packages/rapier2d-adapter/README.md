@@ -60,6 +60,8 @@ await rapierReady;
 app.world.setAdapter(new RapierAdapter());
 ```
 
+`world.setAdapter()` needs melonJS 20.14 or later. On an earlier version, pass the adapter as `physic` as above, and call `RapierAdapter.load()` as early as you can so the download starts sooner.
+
 ### Options
 
 The options go in the `RapierAdapter.create({ ... })` call you pass as `physic` above. They are all optional; this is that call with each one at its default:
@@ -72,7 +74,7 @@ physic: await RapierAdapter.create({
 }),
 ```
 
-`gravity` can also change while the game runs: the adapter reads `app.world.adapter.gravity` at every step, so `app.world.adapter.gravity.set(0, 160)` halves it from the next one. The other options cannot change on a live adapter. To change them, switch to a new one with `app.world.setAdapter(await RapierAdapter.create({ ... }))`, which rebuilds every body from its `bodyDef`, at rest. Rapier's own settings, such as the solver iterations, stay writable on `adapter.world.integrationParameters`.
+`gravity` can also change while the game runs: the adapter reads `app.world.adapter.gravity` at every step, so `app.world.adapter.gravity.set(0, 160)` halves it from the next one. The other options cannot change on a live adapter. To change them, switch to a new one with `app.world.setAdapter(await RapierAdapter.create({ ... }))` (melonJS 20.14 or later), which rebuilds every body from its `bodyDef`, at rest. Rapier's own settings, such as the solver iterations, stay writable on `adapter.world.integrationParameters`.
 
 #### `gravity`
 
