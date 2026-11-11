@@ -55,7 +55,7 @@ game events in a `.ts` project.
 | event | when |
 |---|---|
 | `GAME_BEFORE_UPDATE` / `GAME_UPDATE` / `GAME_AFTER_UPDATE` | around the world update — `GAME_UPDATE` is **not** emitted while paused |
-| `GAME_BEFORE_DRAW` / `GAME_AFTER_DRAW` | around the draw pass |
+| `GAME_BEFORE_DRAW` / `GAME_AFTER_DRAW` | around the draw pass, on frames that redraw: one where no update reported a change is not drawn |
 | `WORLD_STEP` | after the physics step |
 | `TICK` | the raw engine tick |
 
@@ -67,7 +67,7 @@ game events in a `.ts` project.
 | `STATE_CHANGE`, `STATE_PAUSE`, `STATE_RESUME`, `STATE_STOP` | state machine |
 | `STAGE_RESET` | a stage was reset |
 | `LEVEL_LOADED` | a Tiled level finished loading |
-| `LOADER_PROGRESS`, `LOADER_COMPLETE`, `LOADER_ERROR` | asset loading |
+| `LOADER_PROGRESS`, `LOADER_COMPLETE`, `LOADER_ERROR` | asset loading: every `loader.preload()`, and a bundle loaded with `loader.load(id)` (20.14); not one asset loaded with `loader.load(descriptor)` |
 | `BLUR` / `FOCUS` | the page lost or regained focus |
 | `CANVAS_ONRESIZE`, `VIEWPORT_ONRESIZE` | relayout hooks |
 | `POINTERMOVE` | global pointer movement |
@@ -153,6 +153,7 @@ Use `removeChild()`, or flag the work and drain it from `Stage.update`.
 | crash during a stage switch | callback ran mid-teardown — guard with `state.isCurrent` |
 | crash after a collision | `removeChildNow()` inside a contact callback — use `removeChild()` |
 | progress callbacks never fire | assigned `loader.onProgress` (removed in 20.3) instead of subscribing to `LOADER_PROGRESS` |
+| a `LOADER_COMPLETE` handler (a `state.change` to the first screen) runs again mid-game | a later `preload()`, or a level's bundle loaded with `loader.load(id)`, emits it too; subscribe with `event.once`, or use `preload()`'s promise or callback |
 | `onActivateEvent` never runs | the child was added to a container not yet attached to the world |
 | `onDeactivateEvent` runs twice when a group is removed (a count goes negative, a light or listener is released twice) | the group's `onDeactivateEvent` and its `destroy()` both reached the children, before 20.13.0 — now once per `onActivateEvent` |
 | `onDeactivateEvent` never runs on a child of a group built off-world and destroyed | it never had `onActivateEvent` either: the pair is only sent to children that entered the world |

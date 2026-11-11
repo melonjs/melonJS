@@ -1,6 +1,6 @@
 ---
 name: melonjs-20-migration
-description: "Use this skill when writing melonJS code that may be based on pre-20.x knowledge, when migrating a game from melonJS 19.x or earlier, or when an API you expected does not exist. Covers the mandatory async Application.init(), the WebGL 2 baseline and WebGPU backend, renderable post effects replacing the shader property, and the deprecated exports still present. Triggers on: migration, upgrade, melonJS 19, me.game, me.video.init, renderable.shader, Compositor, CanvasTexture, me.Math, deprecated."
+description: "Use this skill when writing melonJS code that may be based on pre-20.x knowledge, when migrating a game from melonJS 19.x or earlier, or when an API you expected does not exist. Covers the mandatory async Application.init(), the WebGL 2 baseline and WebGPU backend, renderable post effects replacing the shader property, the deprecated exports still present, and what changed again during 20.x. Triggers on: migration, upgrade, melonJS 19, me.game, me.video.init, video.renderer, renderable.shader, Compositor, CanvasTexture, me.Math, pool.pull, pool.register, world.adapter, uvOffset, deprecated."
 license: MIT
 ---
 
@@ -43,7 +43,13 @@ none, and anything passed is ignored (settings come from the constructor).
 **`video.init(...)` no longer exists.** The `video` module now exports only the
 four renderer constants (`AUTO`, `CANVAS`, `WEBGL`, `WEBGPU`) — there is no
 `init` on it to call. Any code shaped like `me.video.init(800, 600, {...})` is
-from a removed API. Build an `Application` and await `init()`.
+from a removed API. Build an `Application` and await `init()`. Its siblings
+went with it: `video.renderer`, `video.createCanvas()` and `video.getParent()`
+are now `app.renderer`, `app.renderer.createCanvas()` and
+`app.getParentElement()`.
+
+`init()` runs once: a second call is ignored with a console warning, and after
+`app.destroy()` it throws. A destroyed `Application` is final; build a new one.
 
 Note that `import * as me from "melonjs"` still works, so `me.Sprite` style is
 fine. It is the *globals bootstrap* that is gone, not the namespace import.
@@ -77,6 +83,16 @@ Consequences:
   on either GPU backend.
 - Features needing a programmable pipeline are inert on Canvas and warn once
   rather than throwing.
+- Test capabilities, not the backend: `renderer.shaderLanguage` and
+  `renderer.supportsDepthBuffer` replace checks on `renderer.gl` or
+  `instanceof WebGLRenderer`, which answer "no" on WebGPU.
+  `renderer.WebGLVersion` is always `2` (deprecated), and the `preferWebGL1`
+  setting and the `#webgl1` URL flag are gone.
+- A custom WebGL batcher extends `WebGLBatcher` (`Batcher` is now the
+  backend-neutral base), and a custom shader on a `Mesh` receives model-space
+  geometry: position with
+  `uProjectionMatrix * uViewMatrix * uModelMatrix * vec4(aVertex, 1.0)` and
+  tint with `uTint`. Sprite and post-effect shaders are unchanged.
 
 ## 4. Deprecated exports still present
 
@@ -93,8 +109,14 @@ These resolve but should not be used in new code:
 | `renderable.shader = …` | 19.2.0 | `addPostEffect()` |
 | `Entity` | 18.1.0 | `Sprite` / `Renderable` + a `Body` |
 | `loader.onload` / `onProgress` / `onError` | 18.2.0, **removed 20.3** | the `LOADER_*` events, or `preload(assets, onloadcb)` |
-| `response.overlap` / `overlapN` / `overlapV` | — | `response.depth` / `response.normal` |
+| `response.overlap` / `overlapN` / `overlapV` | 19.5.0 | `response.depth` / `response.normal` |
 | `setLineWidth()` | 17.3.0 | the `lineWidth` property |
+| `pool.register` / `pool.pull` / `pool.push` | 18.0.0 (a console notice since 20.9) | `createPool()` / `getPool()`; `registerTiledObjectClass()` for a class a Tiled map names |
+| `body.fromJSON()`, a shape list given to `addShape()` | 20.7.0 (the `Body` constructor form throws) | `bodyDef = { type, shapes: "<json asset>", id }` |
+| `body.ignoreGravity` | 19.5.0 | `gravityScale = 0`, or `body.setGravityScale(0)` |
+| `app.updateAverageDelta` | 20.0.0 | `app.lastUpdateDelta` |
+| `loader.crossOrigin = …` / `loader.withCredentials = …` | 20.4.0 (assigning throws) | `loader.setOptions({ crossOrigin, withCredentials })` |
+| `UITextButton#bitmapText` | 20.13.0 | `label` |
 
 Two of these deserve emphasis:
 
@@ -128,6 +150,25 @@ feature is used. Transpile if you need older browsers, and note that transpiling
 handles *syntax* only: built-in methods need separate polyfills, which a
 bundler's `target` setting will never add.
 
+## 8. Changed again during 20.x
+
+Code written against an early 20.x release can still trip on these:
+
+- **`world.adapter` is read-only** (20.14): assigning it throws a
+  `TypeError`. `app.world.setAdapter(adapter)` switches adapters, rebuilding
+  every body from its `bodyDef`.
+- **`renderer.uvOffset` and the `textureSeamFix` setting are removed** (20.11).
+  Code that added `uvOffset` to a size should drop it.
+- **The engine's classes are no longer in the legacy pool** (20.9):
+  `pool.pull("Sprite")`, `pool.pull("Text")` and the other built-in names
+  throw `Cannot instantiate object of type`. Call the constructor, or
+  `getPool("text")`, `getPool("tween")`, `getPool("particle")`,
+  `getPool("colorLayer")` to recycle. `pool.register(name, Class, true)` no
+  longer returns an instance to the pool on removal either; `createPool` does.
+- **A container sorted on `"x"` or `"y"` re-sorts its children as they move**
+  (20.11, `autoSort` on by default). Turn `autoSort` off to keep an order set
+  by hand. A `"z"` sort is unchanged.
+
 ## The shipped examples are not all current
 
 The examples in this repository are the best reference for how melonJS is
@@ -139,10 +180,11 @@ from them:
   right; the comment is wrong.
 - Several examples assign `viewport.shader = …` / `sprite.shader = …`, which is
   deprecated. `addPostEffect()` is current.
-- Five files set `this.z = Number.POSITIVE_INFINITY` on a HUD. That property
-  does not exist; those HUDs draw on top only because they are added last.
-- `platformer/entities/player.ts` reads `response.overlapV`, the deprecated
-  field. Use `response.depth` / `response.normal`.
+- Three files (in `platformer-matter/` and `pool-matter/`) set
+  `this.z = Number.POSITIVE_INFINITY` on a HUD or a virtual joypad. That
+  property does not exist; they draw on top only because they are added last.
+- `platformer/entities/player.ts` and `enemies.ts` read `response.overlapV`,
+  the deprecated field. Use `response.depth` / `response.normal`.
 - Particle speeds tuned before 20.2 look wrong now: the particle transform fix
   changed how far a burst travels, and emitters were retuned upward to match.
 
@@ -153,6 +195,7 @@ from them:
 3. Is it using `renderable.shader =` instead of `addPostEffect()`?
 4. Is it importing a deprecated symbol from the table above?
 5. Is it referencing a global `game`?
+6. Is it relying on something section 8 lists as changed during 20.x?
 
 ## Related skills
 

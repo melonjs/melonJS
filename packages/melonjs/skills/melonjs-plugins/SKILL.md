@@ -13,7 +13,7 @@ This trips people up, so it is worth stating first:
 | | how it is installed |
 |---|---|
 | **Plugins** | `plugin.register(Class, name?, ...args)` — after `await app.init()` |
-| **Physics adapters** | an `Application` **setting** (`physic:`), before `init()` |
+| **Physics adapters** | an `Application` **setting** (`physic:`), before `init()`; or `app.world.setAdapter()` on a running game |
 
 ```js
 // the adapter is chosen at construction …
@@ -88,6 +88,19 @@ This is the answer for deforming animated characters — glTF import does not re
 vertex skinning. It also registers a Tiled object class, so Spine skeletons can
 be placed from a map.
 
+```js
+import Spine, { SpinePlugin } from "@melonjs/spine-plugin";
+
+await app.init();
+plugin.register(SpinePlugin);   // after init: it reads app.renderer
+// preloaded as { name: "hero.atlas", type: "spine", src: … }, and the same for
+// "hero.json" (a binary "hero.skel" also goes in jsonFile)
+const hero = new Spine(100, 100, { atlasFile: "hero.atlas", jsonFile: "hero.json" });
+```
+
+Register it after `await app.init()` like any plugin: its constructor builds
+an asset manager on the application's renderer, which does not exist before.
+
 ### `@melonjs/gamepad-plugin`
 
 On-screen touch controls, reported as a gamepad: one or two sticks and any
@@ -109,8 +122,10 @@ of a pad button. Since 1.1 a stick or button can be `floating` (shows up
 under the finger anywhere in its `area`), `hideAtRest` (drawn only while
 held), and a stick can take a `tap` (a quick touch that does not steer presses
 a key or button) — so the mobile layouts, two thumbs or one thumb with
-tap-to-act, need no code of their own. See `melonjs-input` for the bindings,
-the layouts and the overlap rules.
+tap-to-act, need no code of their own. Since 1.2 a `skin` texture atlas draws
+them from the game's own art (`base` / `thumb` regions on a stick, `region` /
+`pressed` on a button). It needs melonJS 20.12 or later. See `melonjs-input`
+for the bindings, the layouts and the overlap rules.
 
 ### `@melonjs/capacitor-plugin`
 
@@ -142,6 +157,9 @@ every adapter, so entity code does not have to branch. The exceptions are in
 `type: "kinematic"` is planck and Rapier only, and the adapters' `queryAABB`
 returns only renderables with a body. The Rapier adapter's WebAssembly loads
 asynchronously, so it must be made with `await RapierAdapter.create()`.
+`create()` is on every adapter from planck-adapter 1.7, matter-adapter 1.6 and
+rapier2d-adapter 1.0 (an older planck or matter adapter is made with
+`new X(options)`), and `world.setAdapter()` from melonJS 20.14.
 
 Two queries are **not** portable: `querySphere` and `raycast3d` exist only on the
 built-in adapter (planck, matter and Rapier are 2D-only and deliberately omit
@@ -213,7 +231,9 @@ or a `Stage` is simpler and easier to test.
 | `world.adapter.querySphere is not a function` | built-in adapter only; planck, matter and Rapier are 2D-only |
 | a Tiled map opens in Tiled but not melonJS | compressed layers, tiled-inflate plugin missing |
 | plugin setup never runs | setup written in an `init()` method — there is no such hook |
-| `plugin.register` for an adapter does nothing | adapters are a construction setting, not a plugin |
+| `Plugin should extend the BasePlugin Class !` when registering an adapter | adapters are a construction setting (or `world.setAdapter()`), not a plugin |
+| `PlanckAdapter.create is not a function` (or `MatterAdapter`) | planck-adapter < 1.7 or matter-adapter < 1.6; upgrade, or `new PlanckAdapter(options)` |
+| `TypeError` reading `renderer` from `plugin.register(SpinePlugin)` | registered before `await app.init()`; the plugin's `app` is still unset |
 | physics behaves differently after adding an adapter | expected — units and force scales differ; re-tune |
 | a Spine object slides off screen when the camera moves, or ignores its container (WebGL / WebGPU) | spine-plugin < 4.0.1 drew without the camera's and the parents' transform; upgrade |
 | a Spine object ignores `setOpacity()` / `alpha` | spine-plugin < 4.0.1; upgrade |

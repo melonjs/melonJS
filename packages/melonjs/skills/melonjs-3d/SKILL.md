@@ -1,6 +1,6 @@
 ---
 name: melonjs-3d
-description: "Use this skill for anything 3D or 2.5D in melonJS — Camera3d, Mesh, InstancedMesh, Sprite3d billboards, Light3d, ground shadows, glTF/GLB scenes, and depth sorting. Covers the Y-down/+Z-forward convention that is the inverse of OpenGL, the cameraClass opt-in, clip planes, and what does not work on the Canvas fallback. Triggers on: Camera3d, Mesh, InstancedMesh, Sprite3d, Trail3d, ribbon, exhaust trail, Light3d, billboard, glTF, glb, 3D, 2.5D, depth, cameraClass, fov, setClipPlanes, setFog, fog, distance fog, height fog, heightFalloff, transparent, transparency, alpha, blendMode, fade, castGroundShadow, lit, setBasis, getBasis, lookAt, up vector, gimbal, slerp, great circle, turn a direction."
+description: "Use this skill for anything 3D or 2.5D in melonJS — Camera3d, Mesh, InstancedMesh, Sprite3d billboards, Light3d, ground shadows, glTF/GLB scenes, and depth sorting. Covers the Y-down/+Z-forward convention that is the inverse of OpenGL, the cameraClass opt-in, clip planes, and what does not work on the Canvas fallback. Triggers on: Camera3d, Mesh, InstancedMesh, Sprite3d, Trail3d, ribbon, exhaust trail, Light3d, billboard, glTF, glb, 3D, 2.5D, depth, cameraClass, fov, setClipPlanes, setFog, fog, distance fog, height fog, heightFalloff, transparent, transparency, alpha, blendMode, fade, castGroundShadow, shadowGroundPoint, lit, emissive, specular, shininess, normalMap, alphaCutoff, depthTest, vertexColors, worldToScreen, followOffset, setBasis, getBasis, lookAt, up vector, gimbal, slerp, great circle, turn a direction."
 license: MIT
 ---
 
@@ -69,7 +69,8 @@ await app.init();
 
 That flips the world's sort to `"depth"`, switches the broadphase to a 3D index,
 and renders sprites and meshes with perspective projection. `Camera3d` extends
-`Camera2d`, so follow, fade, shake and post effects all still work.
+`Camera2d`, so follow, fade, shake and post effects all still work (follow with
+a difference, see the camera traps).
 
 ### Keep the camera, do not fish it back out
 
@@ -193,8 +194,15 @@ class GameStage extends Stage {
   sense to `lookAt`'s, and one negation apart.
 - **`worldToLocal` does not project.** It is a 2D camera's offset subtraction.
   To pin a label or marker to a point in the scene use
-  `camera.worldToScreen(x, y, z)`, which applies the projection and returns
+  `camera.worldToScreen(point, out?)`: it takes a `Vector3d`, applies the
+  projection and returns a `Vector2d` in the camera's pixels (y down), or
   `null` behind the camera. See `melonjs-camera-and-drawing`.
+- **`follow()` tracks exactly.** Under a `Camera3d` the camera sits at the
+  target's position plus `followOffset` (world space, set with
+  `camera.setFollowOffset(x, y, z)`) every frame. The 2D follow's axis,
+  deadzone and damping are not applied. For a damped chase camera, leave the
+  target unset and move the camera yourself (`math.damp`, or `slerp` below for
+  its facing).
 
 ## Where an up vector earns its keep
 
@@ -332,8 +340,9 @@ Meshes render in two phases. The **opaque pass** writes depth in sort order; the
 depth. A draw lands in the second whenever its alpha is fractional.
 
 That default matters because the opaque path writes premultiplied colour with
-blending off, so before this a faded mesh came out **darkened toward black**
-rather than see-through — the background contributed nothing.
+blending off, so a faded mesh that stays there (as every one did before 20.4)
+comes out **darkened toward black** rather than see-through — the background
+contributes nothing.
 
 **`transparent: true`** when the transparency is in the TEXTURE rather than the
 opacity — a soft-edged glow, smoke, a glTF material with `alphaMode: "BLEND"`.
@@ -381,8 +390,9 @@ const halo = new Sprite3d(0, 0, {
 });
 ```
 
-Honoured in the transparent pass on both GPU backends; the Canvas renderer has
-no depth buffer and ignores it.
+Honoured in the **transparent pass only**, on both GPU backends: a mesh drawn
+in the opaque pass ignores it, so pair it with `transparent: true` as above.
+The Canvas renderer has no depth buffer and ignores it.
 
 Blending uses the renderable's existing `blendMode`, so a glow is one property.
 The advanced modes (`"overlay"`, `"difference"`, and the rest that need a
@@ -487,6 +497,8 @@ the built-in ones:
 uniform vec3 uFogColor;   // straight (unpremultiplied) fog colour
 uniform vec4 uFogParams;  // x = mode (0 off / 1 linear / 2 exp2),
                           // y = near, z = 1/(far - near), w = density
+uniform vec4 uFogHeight;  // height falloff: xyz = falloff x world-up axis,
+                          // in VIEW space; w = pre-baked altitude term
 ```
 
 Your vertex stage computes the distance itself — `length((uViewMatrix *
@@ -494,6 +506,12 @@ uModelMatrix * vec4(aVertex, 1.0)).xyz)`, radially so it does not swim as the
 camera turns — and the blend must scale the fog colour by the fragment's own
 alpha, `mix(uFogColor * a, rgb, f)`, because `vColor` arrives premultiplied.
 Mixing toward the unscaled colour haloes every alpha-cutout edge.
+
+`uFogHeight` is only needed to honour `heightFalloff`, and is fed only to a
+program that also declares `uFogParams`. The engine's own shaders multiply the
+distance by `uFogHeight.w * (exp(k) - 1.0) / k`, with `k = dot(uFogHeight.xyz,
+viewPos)` and the factor taken as `uFogHeight.w` when `k` is near zero. Leave it
+out and your mesh fogs uniformly at every altitude.
 
 The flip side is the reason fog costs nothing when unused: with no camera fog,
 the mesh programs are compiled without any of it, on both backends. It is not a
@@ -515,7 +533,32 @@ const cube = new Mesh(x, y, {
 `Camera3d` it opts out of the anchor offset entirely, so `anchorPoint` is inert
 there — place the origin where you want the pivot at authoring time, or nest the
 mesh under a transformed parent. The anchor is only honoured on the legacy
-2D-camera path.
+2D-camera path. `Sprite3d` is the exception: it bakes its `anchorPoint` into
+the quad's vertices, so a `"bottom"` anchor works under either camera.
+
+### Material settings
+
+What a material file can state is also a setting, so a hand-built mesh gets the
+same surface. All but `baseColorFactor` are GPU-only; the Canvas renderer
+ignores them.
+
+| setting | what it does | needs |
+|---|---|---|
+| `emissive: [r, g, b]` | self-illumination added on top, 0..1 (above 1 for an HDR glow) | nothing, lit or unlit |
+| `specular: [r, g, b]` + `shininess` | a highlight; `shininess` 0, the default, turns it off however bright `specular` is | `lit`, a `Light3d`, normals |
+| `normalMap` | tangent-space relief, a loader key or image (see Lighting below) | `lit` and a `Camera3d` |
+| `alphaCutoff` | discard texels below this alpha: foliage, fences | nothing |
+| `alphaMap` | per-texel opacity, multiplied in before the cutoff | a non-zero `alphaCutoff` |
+| `baseColorFactor` | a LINEAR colour, encoded into `tint` (see `melonjs-3d-assets`) | nothing |
+
+`emissive`, `specular` and `shininess` can be changed after construction too;
+`setBaseColorFactor()` is the method form of the last row.
+
+A `ShaderEffect` can shade a mesh as well: `mesh.addPostEffect(fx)` splices it
+into the mesh shader as a colour hook on both GPU backends, so the mesh keeps its
+placement, cutout, lighting and fog. A few builtins are unavailable there, and an
+`InstancedMesh` cannot host one; both warn once. See
+`melonjs-effects-and-shaders`.
 
 ### InstancedMesh, and when it is the wrong tool
 
@@ -583,9 +626,9 @@ vertices. Want smooth: share them.
 An explicit `settings.normals` always wins, and an unlit mesh gets none — there
 would be nothing to read them.
 
-**A lit mesh with no normals used to render fullbright**, which looks like the
-lighting is broken rather than absent. If an older scene suddenly picks up
-shading, that is why.
+**A lit mesh with no normals used to render fullbright** (before 20.4), which
+looks like the lighting is broken rather than absent. If an older scene suddenly
+picks up shading, that is why.
 
 ## Colouring a mesh
 
@@ -596,7 +639,7 @@ There are four levels, and picking the wrong one is the usual reason a colour
 |---|---|---|
 | whole object | `mesh.setTint("#ff8800")`, or `mesh.tint.setColor(r, g, b)` | flash on hit, team colour, fading one object |
 | per vertex | `settings.vertexColors`, or `mesh.setVertexColor(i, color)` | a gradient *within* one mesh — distance haze, a darker crease |
-| per material | `textureGroups`, from a multi-material OBJ + MTL | a model whose parts differ, in one draw call |
+| per material | a multi-material OBJ + MTL | a model whose parts differ: each `Kd` is baked into the vertex colours, and only a different `map_Kd` costs a draw (one per `textureGroups` entry) |
 | per instance | `new InstancedMesh(…, { instanceColors: true })` then `setInstanceColor(i, color)` | a thousand copies that differ |
 
 **`tint` is per object.** That is the trap: build a terrain as one big mesh and
@@ -634,10 +677,11 @@ On a lit mesh the colour multiplies the **lit** result, so it behaves as albedo
 rather than as an emissive override — a vertex colour will not make an unlit
 face bright.
 
-`alpha` hides a mesh as it hides anything else: at 0 the draw is skipped. There
-is no *partial* mesh transparency though — the mesh path renders opaque, so a
-mesh at `alpha = 0.5` draws fully opaque rather than half see-through. Fade a
-mesh out and it will stay solid until it vanishes.
+`alpha` hides a mesh as it hides anything else: below 1/255 the draw is skipped.
+A fractional `alpha` fades it, through the transparent pass described under
+Transparency above, which needs a `Camera3d` on a GPU backend. Without that pass
+(a 2D camera on a GPU backend, or `transparent: false`) the mesh path does not
+blend, and a faded mesh darkens instead of turning see-through.
 
 ## Moving a mesh in 3D
 
@@ -654,6 +698,12 @@ rotates about that axis. Both write to `currentTransform`, a **`Matrix3d`**,
 which `Mesh` folds into its model matrix — so orienting a mesh costs a matrix
 update, not new geometry.
 
+Under a `Camera3d` on a GPU backend the geometry is uploaded once and redrawn
+from the GPU, so moving, turning, scaling or re-tinting needs no signal. Editing the geometry
+itself does: after writing into `originalVertices`, the UVs, normals or
+indices, set `mesh.needsUpdate = true`, or the change shows under a 2D camera and
+not under the 3D one.
+
 This matters most for the case it is least obvious for: a horizontal plane.
 `Sprite3d` with `billboard: false` is a quad in the sprite plane — upright —
 and the way to lay one flat (water, a road, a shadow decal) is to rotate it a
@@ -662,13 +712,14 @@ geometry instead is tiling: a `Sprite3d` bakes its UVs 0..1 from its atlas
 frame, so a surface that needs `textureRepeat` across many world units still
 wants an explicit `vertices`/`uvs` mesh.
 
-## The mesh pass is opaque
+## The opaque pass does not blend
 
 Worth stating plainly, because the symptom does not look like a blending
-problem: **the mesh pass disables blending**. A soft-edged texture — a glow, a
-sun, a halo, anything with a gradient alpha — composites as a hard-edged disc
-with a grey rim, which reads as a broken texture rather than as a missing
-feature.
+problem: **the opaque mesh pass disables blending**, and a draw goes there
+unless its alpha is fractional or it says `transparent: true`. A soft-edged
+texture — a glow, a sun, a halo, anything with a gradient alpha — drawn at full
+opacity composites as a hard-edged disc with a grey rim, which reads as a broken
+texture rather than as a missing feature.
 
 `transparent: true` routes it through the transparent pass, and `blendMode:
 "additive"` on top of that makes a light source add to the sky instead of
@@ -746,11 +797,13 @@ world.addChild(new Light3d({ type: "spot", position: torch.pos, range: 400 }));
 ```
 
 `direction` and `position` take an `[x, y, z]` array **or** a `Vector3d`, and
-`color` takes a `Color`, a CSS string or an `[r, g, b]` array — so a value the
-game already holds can go straight in. Each is read, not retained: move your
-vector afterwards and the light stays where it was.
+`color` takes a `Color`, a CSS string or an `[r, g, b]` array in **0..1** (the
+glTF convention, not 0..255) — so a value the game already holds can go straight
+in. The vectors are read, not retained: move your vector afterwards and the
+light stays where it was. A `Color` is kept as given, so mutating it recolours
+the light.
 
-Two things still bite, both silently:
+Three things still bite, all silently:
 
 - `new Light3d(0, 0, {…})` — the constructor takes **options alone**. JavaScript
   drops the extra arguments, so `options` becomes the number `0` and every
@@ -771,6 +824,10 @@ Two things still bite, both silently:
 
   `position` follows the same convention: a lamp above the floor has a
   **smaller** y than the floor.
+- **`position` and `direction` are in world coordinates, wherever the light
+  sits in the tree.** A `Light3d` added under a container does not move or turn
+  with it, and its own `pos` is never read. To carry a lamp with a car or a
+  torch, write the object's world position into `light.position` each frame.
 
 Use **both halves**: with a key light but no ambient, the shadow side of a mesh
 goes black. With no `Light3d` in the world at all, a `lit: true` mesh falls back
@@ -780,6 +837,10 @@ is why "I added `lit: true` and nothing changed" is the usual first report.
 Other defaults worth knowing: `intensity` 1, `color` white, `range` 1000 (point
 and spot, a stylised quadratic falloff, not inverse-square),
 `innerConeAngle` 0 and `outerConeAngle` π/4 (spot).
+
+Up to **32** directional, point and spot lights shade a mesh; ambient lights are
+summed into one fill and do not count. Lights past the 32nd are dropped without
+a warning.
 
 **`Light2d` is 2D-only** and produces visible artifacts under perspective
 projection. Do not combine it with `Camera3d`.
@@ -863,7 +924,10 @@ the fade clamps to full strength and the blob never fades at all; and a point
 on the wrong side of the caster reads as a large height, so the blob
 disappears outright rather than thinning to a ring the way a backwards
 `shadowGroundY` does. It is also the one shadow setting that THROWS rather
-than clamping or hiding: a non-finite component is rejected on the spot.
+than clamping or hiding: a non-finite component is rejected on the spot. A
+two-component point (a `Vector2d`, a 2-element array) does not throw: its z
+silently becomes 0. The point is copied, so moving the vector you passed moves
+nothing; assign it again.
 
 The blob is an ellipse sized to the caster's own footprint and placed at the
 caster's x/z, or at `shadowGroundPoint` when one is set. So a tall or narrow object (a character, a tree, a pickup) shows
@@ -1061,8 +1125,8 @@ render correctly there — usually a black canvas. `Light3d` and shader effects
 are inert too. A `Mesh` under a *2D* camera still renders, CPU-projected by
 painter's algorithm and unlit.
 
-`Application` does warn: constructing with a `cameraClass` whose
-`defaultSortOn` is `"depth"` on a renderer with no depth buffer logs a
+`Application` does warn: `await app.init()` with a `cameraClass` whose
+`defaultSortOn` is `"depth"`, on a renderer with no depth buffer, logs a
 `console.warn`. But `video.AUTO` falls back silently to Canvas, so the strong
 gate is to ask for a GPU backend by name — `renderer: video.WEBGL` (or
 `video.WEBGPU`) makes `await app.init()` reject instead of misrendering:
@@ -1089,11 +1153,13 @@ To branch rather than fail, read `app.renderer.supportsDepthBuffer` after
 | a sprite or mesh in a container draws too near under `Camera3d`, and pops in and out at the wrong time (before 20.14) | the container's depth was used to cull and sort its children but not to draw them: update |
 | a lit mesh inside a moved or turned container is lit as if the container were at the origin (before 20.14) | lights were not taken into the container's frame: update. Under a *scaled* container, a point light's range is measured in the container's units |
 | objects at the screen edge pop in a frame late while the camera turns, or a camera cut shows one empty frame (before 20.14) | culling used the camera as it was at the last `camera.update()`: update |
-| a `lit` mesh renders fullbright | it had no normals — supply them, or let the engine generate them |
+| a `lit` mesh renders fullbright | no `Light3d` in the world, or a 2D camera (which warns once). Before 20.4 a mesh with no normals did it too; they are generated now |
 | a gradient across one mesh is impossible | `tint` is per object — use `vertexColors` / `setVertexColor` |
-| a mesh stays solid as you fade it out | meshes render opaque; only `alpha` 0 (hidden) and 1 differ |
 | a glow is cut along a hard straight line, worst near a round object's limb | a flat billboard being depth tested against the geometry behind it — `depthTest: false` |
-| vertex colour applies under a 2D camera but not `Camera3d` | wrote the array directly without setting `needsUpdate` |
+| `depthTest: false` changes nothing | the mesh draws in the opaque pass, which ignores it — add `transparent: true` |
+| `specular` is set but no highlight appears | `shininess` is 0 (the default), or the mesh is not `lit` |
+| `setInstanceColor` does nothing | the set was built without `instanceColors: true`; the slot does not exist |
+| a vertex colour or a geometry edit applies under a 2D camera but not `Camera3d` | wrote the array directly without setting `needsUpdate` |
 | `Mesh: vertexColors has N entries, expected M` | one colour per *vertex*, not per triangle or per index |
 | nothing renders, or a backdrop covers everything | wrong depth sign — "far" is *larger* z when looking along +Z |
 | distant objects vanish or warp | scene exceeds the default far plane; `setClipPlanes` |
@@ -1126,9 +1192,13 @@ To branch rather than fail, read `app.renderer.supportsDepthBuffer` after
 | `setBasis` throws "forward must have a non-zero length" | `forward` is all zeros, the one case that names no direction; a short one is fine, so a surface frame that shrank as it drifted still works |
 | roll is ignored when the target is straight up or down | no rotation about the view axis is determined there, so `lookAt` keeps the roll it had and `setBasis` falls back to the `right` axis |
 | an object jumps to the camera plane | `Vector3d.set(x, y)` / `camera.pos.set(x, y)` zeroed its z |
+| a follow camera ignores its deadzone and damping | `Camera3d` follows exactly, at the target plus `followOffset`; damp it yourself with no target set |
+| a `Light3d` parented to a moving object stays behind | `position` is in world coordinates and its container is not applied; copy the world position into it each frame |
 | lighting looks wrong under a 3D camera | `Light2d` used instead of `Light3d` |
 
 ## Related skills
 
+- `melonjs-3d-assets` — glTF/GLB and OBJ/MTL loading, imported materials and lights
+- `melonjs-effects-and-shaders` — a `ShaderEffect` hosted on a mesh, and custom mesh shaders
 - `melonjs-renderables` — the 2D z-ordering rules, anchors, custom draw
 - `melonjs-getting-started` — Application settings and the renderer fallback

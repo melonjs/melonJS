@@ -1,6 +1,6 @@
 ---
 name: melonjs-scenes-and-state
-description: "Use this skill for scene structure and game flow in melonJS — Stage subclasses, the state manager, transitions, pausing, the update loop, timers and tweens. Covers onResetEvent versus the constructor, state.set before state.change, the camera and world lifecycle per stage, and pause-aware timing. Triggers on: Tween, easing, fade out, flash, pulse, punch, shrink back, ease in, ease out, animate over time, countdown in update, Stage, state, state.set, state.change, state.transition, state.pause, onResetEvent, onDestroyEvent, onActivateEvent, onDeactivateEvent, PLAY, MENU, LOADING, update loop, GAME_UPDATE, timer, setTimeout, setInterval, Tween, freeze."
+description: "Use this skill for scene structure and game flow in melonJS — Stage subclasses, the state manager, transitions, pausing, the update loop, timers and tweens. Covers onResetEvent versus the constructor, state.set before state.change, the camera and world lifecycle per stage, and pause-aware timing. Triggers on: Tween, easing, fade out, flash, pulse, punch, shrink back, ease in, ease out, animate over time, countdown in update, Stage, state, state.set, state.change, state.transition, pixelate, Trigger transition, retry level, state.pause, pauseOnBlur, resumeOnFocus, onResetEvent, onDestroyEvent, onActivateEvent, onDeactivateEvent, PLAY, MENU, LOADING, update loop, GAME_UPDATE, timer, setTimeout, setInterval, Tween, freeze."
 license: MIT
 ---
 
@@ -58,6 +58,12 @@ was drawn unstepped, and showed the stage's background alone for one frame.
 `state.change` **throws** `Undefined Stage for state '<id>'` if nothing was
 registered for that id, and `state.set` throws if the second argument is not a
 `Stage` instance. Neither fails quietly.
+
+A change to the state that is **already current does nothing**: no
+`onDestroyEvent`, no `onResetEvent`, no transition. So a "Retry" that calls
+`state.change(state.PLAY)` from `PLAY` is ignored; reload the level with
+`level.reload()`, or go through another state (a game-over or `READY` screen)
+and back.
 
 ### Always leave `state.LOADING` — it is transitional
 
@@ -122,11 +128,21 @@ app.freeze(150);                             // brief hit-stop (proxies state.fr
 ```
 
 `state.transition` is global and sticky — once set it applies to every later
-`state.change`. The `"mask"` form needs its fourth argument, an `Ellipse` or
+`state.change`; `state.setTransition(id, false)` turns it off for changes
+into one state.
+The duration (1000 ms when omitted) is for each half: the cover, then the
+reveal. The `"mask"` form needs its fourth argument, an `Ellipse` or
 `Polygon`; without one it warns and falls back to a direct switch. The
 `"pixelate"` form breaks the screen up into blocks (its fourth argument is the
-largest block size in pixels). It is a shader effect, so on Canvas it does
-nothing and the state changes directly.
+largest block size in pixels; the color is not used). It is a shader effect,
+so on Canvas it does nothing and the state changes directly.
+
+A level change is not a state change, so `state.transition` does not apply to
+it. A Tiled `Trigger` that loads a level has a transition of its own, set on
+the trigger: `color` and `duration` (both needed, or the level loads with
+none), and `transition: "fade"` (the default) or `"mask"` with a `shape`.
+A `"mask"` without a `shape` fades instead, without a warning, and there is
+no pixelate form for a trigger. See `melonjs-tilemaps`.
 
 A `state.change` asked for while a transition covers the screen (Enter pressed
 twice on a menu, a timer firing as the player skips a screen) needs no guard:
@@ -149,7 +165,8 @@ this.isDirty = state.current().update(this.updateDelta) || this.isDirty;
 Only `Container.update` consults the pause — it reads `state.isPaused()` and
 skips every child that is not `updateWhenPaused`. So world children (entities,
 sprites, meshes, a `GLTFModel`) freeze correctly, while **the Stage subclass's
-own `update()` keeps running**.
+own `update()` keeps running**. (`event.GAME_UPDATE` is not emitted while
+paused, so logic hung off it stops with the world.)
 
 A game that keeps its logic in entities pauses for free and never notices. A
 game that drives the simulation from `Stage.update` — common for an endless
@@ -174,6 +191,10 @@ update(dt) {
 Worth knowing that `pauseOnBlur` (default `true`) fires on a window `blur`, not
 only on tab `visibilitychange` — so clicking another window on the same screen
 triggers it while the canvas is still fully visible.
+
+On focus, `resumeOnFocus` (default `true`) undoes only the pause the
+application applied on blur. A game the player paused from its own menu stays
+paused when the window comes back; before 20.9 it resumed underneath the menu.
 
 ## The update loop
 
@@ -422,6 +443,10 @@ both.
 |---|---|
 | scene builds once and is empty on return | content created in the constructor, not `onResetEvent` |
 | `Undefined Stage for state 'N'` thrown | no `state.set` for that id first |
+| `state.change(state.PLAY)` from `PLAY` does nothing ("Retry" ignored) | a change to the current state is a no-op — `level.reload()`, or go through another state |
+| a level change through a `Trigger` ignores `state.transition` | it is a level change, not a state change: set `color` and `duration` (and `transition`) on the trigger |
+| the game stops updating for good after one very slow update, such as a heavy first frame (20.12 and 20.13) | the loop could no longer save enough time to step the world: update |
+| the game resumes under its own pause menu after a tab switch (before 20.9) | focus undid any pause; update, only the blur pause is undone |
 | a tween finishes in 1000 ms whatever you pass | `to()` takes `{ duration }`, not a number |
 | object frozen while its state updates | `update()` not returning `true` |
 | timers fire behind a pause menu | `window.setTimeout` instead of `timer.setTimeout` |

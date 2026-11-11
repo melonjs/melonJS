@@ -19,10 +19,13 @@ await loader.preload([
 ```
 
 1. **`audio.init(format)` must run before any audio asset is preloaded**, and
-   lists the formats you actually ship. Preloading first throws
-   `target audio extension(s) should be set through me.audio.init() before
-   calling the preloader.` It returns `false` when no audio backend is
-   available, so it is worth checking. The format list defaults to `"mp3"`.
+   lists the formats you actually ship. Preloading first fails the preload:
+   `await loader.preload(...)` rejects with the loader's `Failed loading
+   resource <src>`, which hides the real reason, `target audio extension(s)
+   should be set through me.audio.init() before calling the preloader.`
+   (thrown as it is by `audio.load()` called directly). It returns `false`
+   when no audio backend is available, so it is worth checking. The format
+   list defaults to `"mp3"`.
 2. **`src` is a prefix, not a file.** The loader appends the asset `name` plus
    each configured extension and uses the first that loads — so
    `data/sfx/` + `cling` + `mp3` → `data/sfx/cling.mp3`. Passing a full filename
@@ -50,7 +53,8 @@ audio.playTrack("theme");               // background music
 audio.stopTrack();
 ```
 
-Use **`playTrack`** for music, not `play`. `playTrack(name, volume?)` always
+Use **`playTrack`** for music, not `play`. `playTrack(name, volume?)` (or
+`playTrack(name, { volume, sprite })`, to loop one region of the clip) always
 loops, and it records the name as the current track — which is what
 `app.pauseOnBlur` / `resumeOnFocus` / `stopOnBlur` act on, via
 `state.pause(true)` → `pauseTrack()`. `stopTrack()`, `pauseTrack()`,
@@ -173,8 +177,10 @@ also clears the current-track pointer if it named that clip.
 When the window loses focus the engine mutes all audio, and unmutes it on
 focus. That covers sound effects, procedural `tone` / `noise` and the mixer
 effects, not just the music track that `state.pause()` pauses. Set
-`pauseOnBlur: false` in the application settings if a clip has to keep playing
-in the background.
+`app.pauseOnBlur = false` (with `stopOnBlur` left at its `false` default) if a
+clip has to keep playing in the background. It is a property of the
+application, not a constructor setting: `new Application(w, h, { pauseOnBlur:
+false })` does nothing.
 
 ## Spatial audio
 
@@ -207,10 +213,15 @@ audio.play("portal", { at: { x: 1200, y: 480 } });
 
 `follow` and `at` are mutually exclusive: passing both throws, rather than
 quietly picking one. `follow` re-reads the target's **absolute** position each
-frame, so a renderable nested in a moving container is placed correctly. `stopWithTarget` is what you
-want for a sound that belongs to an entity: without it a looping clip on a
-destroyed renderable keeps playing from wherever it last was. `audio.unfollow(id)`
-detaches a sound and leaves it playing where it is.
+frame, so a renderable nested in a moving container is placed correctly. That
+position is where its `anchorPoint` sits: the center of a `Renderable` or a
+`Sprite`, but the **top-left corner** of an `Entity` or an object loaded from
+Tiled, whose anchor is `(0, 0)`, so a large one (a boss) sounds from up and to
+the left of where it looks to be. `stopWithTarget` is what you want for a sound
+that belongs to an entity: without it a looping clip on a destroyed renderable
+keeps playing from wherever it last was. It also counts a pooled renderable
+going back to its pool, which can lend it out again before the next frame.
+`audio.unfollow(id)` detaches a sound and leaves it playing where it is.
 
 ### Move the listener, don't do the subtraction yourself
 
@@ -231,7 +242,12 @@ player's position.
 `setListener` places the ear at the target's absolute position after the world
 updates. A plain renderable contributes position only, so a side-scroller keeps
 the default "facing into the screen" and gets left-right panning plus distance
-falloff from the one call.
+falloff from the one call. A `Camera2d` (`audio.setListener(app.viewport)` in a
+2D game) is heard from the **center of its view**, its `worldView`, zoom and
+offset included, not from its `pos`, the view's top-left corner (before 20.12
+it was the corner, and everything panned right). Following stops on its own
+when the target is destroyed, which a stage that owns its camera does on every
+state change.
 
 A `Camera3d` target also contributes its **orientation**, taken from its own
 basis, so turning the camera swings the stereo image with it. That is the whole
@@ -500,7 +516,7 @@ either way — blank screen, empty console.
 | symptom | cause |
 |---|---|
 | audio assets 404 | `src` given as a full filename instead of a directory prefix |
-| `target audio extension(s) should be set...` thrown at preload | `audio.init()` not called before preloading |
+| `preload()` rejects with `Failed loading resource data/sfx/` (or `audio.load()` throws `target audio extension(s) should be set...`) | `audio.init()` not called before preloading |
 | `audio clip X does not exist` | the clip was never preloaded, or the name is mis-cased — every per-clip call throws this |
 | nothing plays until the user clicks | browser autoplay policy — expected, design around it |
 | `playing()` is false right after `play()` | playback starts asynchronously |
@@ -517,6 +533,8 @@ either way — blank screen, empty console.
 | a positioned sound is silent, or only audible right next to the player | placed by hand with `audio.position()`, which keeps WebAudio's metre defaults (`refDistance: 1`) — use `follow` / `at`, or set `refDistance` in pixels with `audio.panner()` |
 | a positioned sound does not follow the player | nothing is placing it — `audio.play(name, { follow: entity })`, and `audio.setListener(player)` once |
 | a followed sound pans to the wrong side as the player moves | the listener was moved **and** positions are still relative to the player — with a listener in the world, pass absolute world coordinates |
+| with `audio.setListener(app.viewport)`, a sound in the middle of the screen is heard off to the right (before 20.12) | the ear was at the camera's top-left corner: update, it is at the center of the view |
+| a followed `Entity` (or Tiled object) sounds offset up and to the left | `follow` uses the anchor point, which is the top-left corner under their `(0, 0)` anchor |
 | a looping sound outlives the entity that owns it | `follow` without `stopWithTarget: true`; with it, before 20.14 a pooled entity going back to its pool did not count either |
 | new sounds are quieter than the volume slider says, or the music stays silent after the volume went to 0 and back (before 20.14) | the global volume was applied twice: update |
 | "Retry" from a pause menu restarts the level with no music (before 20.14) | `playTrack` on a paused track stopped it: update |
@@ -525,6 +543,7 @@ either way — blank screen, empty console.
 | a reverb / compressor on the master gain does not affect the music | the music is `stream: true`, which bypasses the master gain — preload it buffered |
 | a looping MP3 drops out for a moment at every loop, in Safari only | Safari keeps the encoder's padding at the end of the file: loop a sprite region of the clip's exact length (see "A loop with no gap") |
 | sound effects keep playing after the window loses focus | `pauseOnBlur` and `stopOnBlur` are both off, so the engine is deliberately leaving the game running in the background |
+| the game still pauses and goes quiet on blur although `pauseOnBlur: false` was passed to `new Application()` | it is not a setting: assign `app.pauseOnBlur = false` |
 
 ## Related skills
 

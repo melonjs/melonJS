@@ -18,8 +18,13 @@ await app.init();
 plugin.register(DebugPanelPlugin, "debugPanel");
 ```
 
-It reports frame time, draw calls, object counts, and can overlay collision
-shapes and bounds. **Draw calls** is usually the number that matters.
+It reports update and draw time, FPS, heap and object counts, and can overlay
+collision shapes, bounds, velocities and the quadtree. Its `#draws` is the
+number of the world's direct children drawn this frame, **not** GPU draw
+calls. Draw calls are usually the number that matters, and nothing in the
+engine counts them: on WebGL, count them the way the `linkProgram` counter
+below counts programs, by wrapping `drawElements` and `drawArrays` (and
+their `Instanced` forms) on `WebGL2RenderingContext.prototype`.
 
 ## Batching: the biggest lever
 
@@ -227,10 +232,14 @@ queries one at a time, usually not. See `melonjs-3d` for the decision table.
   when first played.
 - `pool` on an audio clip sizes the reuse pool for finished instances — it is
   **not** a concurrency cap.
-- `loader.unloadAll()` between large levels drops every loaded asset and
-  `destroy()`s the shader programs the loader owns — that last part is a real
-  GPU release. Images, by contrast, only lose their loader-side reference; the
-  renderer's texture cache is not purged by unloading.
+- Free a level's assets when the player leaves it: load them as a bundle
+  (`{ common: [...], level1: [...] }` passed to `loader.preload()`), then
+  `loader.unload("level1")` once the next level is in. An asset another loaded
+  bundle lists stays; `loader.unloadAll()` drops everything. Either way a
+  freed image also frees the GPU texture uploaded from it (since 20.14; before,
+  only the loader's reference went), and a shader its program — so an effect
+  that outlives a level belongs in a bundle that outlives it, such as
+  `common`. See `melonjs-loading-assets`.
 
 ## The first frame of a scene is not like the others
 
