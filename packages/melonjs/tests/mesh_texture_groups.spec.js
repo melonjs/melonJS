@@ -154,6 +154,22 @@ describe("Mesh per-material textures (#1573)", () => {
 			mesh.destroy();
 		});
 
+		it("a normalized mesh leaves the loader's model as it was", (ctx) => {
+			requireWebGL(ctx, renderer);
+			const authored = Array.from(loader.getOBJ("single").vertices);
+			const fitted = makeMesh({ model: "single", material: "single" });
+			expect(Array.from(loader.getOBJ("single").vertices)).toEqual(authored);
+			// so a later mesh that keeps the authored units gets them
+			const raw = makeMesh({
+				model: "single",
+				material: "single",
+				normalize: false,
+			});
+			expect(Array.from(raw.originalVertices)).toEqual(authored);
+			fitted.destroy();
+			raw.destroy();
+		});
+
 		it("stays undefined for a single-material model", (ctx) => {
 			requireWebGL(ctx, renderer);
 			const mesh = new Mesh(0, 0, {

@@ -30,6 +30,7 @@ class Square extends Draggable {
 		this.font.bold();
 		// set the text
 		this.text = "Drag me";
+		this.font.setText(this.text);
 	}
 	/**
 	 * update function
@@ -44,7 +45,10 @@ class Square extends Draggable {
 	draw(renderer) {
 		renderer.setColor(this.color);
 		renderer.fillRect(this.pos.x, this.pos.y, this.width, this.height);
-		this.font.draw(renderer, this.text, this.pos.x, this.pos.y);
+		// the label is a Text of its own, drawn at its own position: move it
+		// to the square's corner first
+		this.font.pos.set(this.pos.x, this.pos.y);
+		this.font.draw(renderer);
 	}
 	/**
 	 * dragStart overwrite function
@@ -82,6 +86,7 @@ class DropTarget1 extends DropTarget {
 		this.font.bold();
 		// set the text
 		this.text = 'Drop on me\n\nAnd I"ll turn green\n\ncheckmethod: overlap';
+		this.font.setText(this.text);
 	}
 	/**
 	 * update function
@@ -96,7 +101,10 @@ class DropTarget1 extends DropTarget {
 	draw(renderer) {
 		renderer.setColor(this.color);
 		renderer.fillRect(this.pos.x, this.pos.y, this.width, this.height);
-		this.font.draw(renderer, this.text, this.pos.x, this.pos.y);
+		// the label is a Text of its own, drawn at its own position: move it
+		// to the square's corner first
+		this.font.pos.set(this.pos.x, this.pos.y);
+		this.font.draw(renderer);
 	}
 	/**
 	 * drop overwrite function
@@ -138,6 +146,7 @@ class DropTarget2 extends DropTarget1 {
 		this.font.bold();
 		// set the text
 		this.text = 'Drop on me\n\nAnd I"ll turn green\n\ncheckmethod: contains';
+		this.font.setText(this.text);
 		// set the check method to "contains" (default is "overlap")
 		this.setCheckMethod(this.CHECKMETHOD_CONTAINS);
 	}

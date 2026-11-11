@@ -42,9 +42,6 @@ Then import and use the plugin in your project. For example:
 import Spine, { SpinePlugin } from '@melonjs/spine-plugin';
 import * as me from 'melonjs';
 
-// register the plugin
-me.plugin.register(SpinePlugin);
-
 // prepare/declare assets for the preloader
 const DataManifest = [
     {
@@ -67,6 +64,10 @@ const app = new me.Application(800, 600, {
 
 // mandatory since melonJS 20.0: the renderer is built here
 await app.init();
+
+// register the plugin, once the renderer exists: it sets up Spine's
+// asset manager on it
+me.plugin.register(SpinePlugin, "SpinePlugin", app);
 
 // preload assets
 me.loader.preload(DataManifest, function() {

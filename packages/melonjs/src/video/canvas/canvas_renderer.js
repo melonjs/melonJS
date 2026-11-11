@@ -460,10 +460,8 @@ export default class CanvasRenderer extends Renderer {
 	 * `globalCompositeOperation` that disables blending for the drawn area
 	 * alone (`"copy"` clears the rest of the surface), so this renderer falls
 	 * back to "normal" and reports it <br>
-	 * A few draw types cannot honour every mode — 3D meshes, and fills using
-	 * a {@link Gradient} — and fall back to "normal" with a one-time console
-	 * warning. `setBlendMode` returns what it actually applied, so comparing
-	 * the result against your request detects that case.
+	 * `setBlendMode` returns what it actually applied, so comparing the result
+	 * against your request detects that case.
 	 * @see https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation
 	 * @param {string} [mode="normal"] - blend mode
 	 * @returns {string} the blend mode actually applied (may differ if the requested mode is unsupported)

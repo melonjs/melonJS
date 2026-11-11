@@ -505,8 +505,9 @@ export default class UICheckbox extends UIBaseElement {
 			} else {
 				this.label.setText(text);
 			}
-			// read straight away: `measureText` hands back the same object
-			// each time, so a second call overwrites the first
+			// read straight away: for the label's current string `measureText`
+			// re-measures into the label's own metrics, which a later call
+			// for that string would overwrite
 			let metrics = this.label.measureText(this._labelOn);
 			const onWidth = metrics.width;
 			const onHeight = metrics.height;

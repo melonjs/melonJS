@@ -426,15 +426,6 @@ export default class Camera2d extends Renderable {
 	// -- public function ---
 
 	/**
-	 * the zoom level of this camera.
-	 * Values less than 1 zoom out (show more of the world),
-	 * values greater than 1 zoom in (show less of the world).
-	 * @default 1
-	 * @example
-	 * // zoom out to show the full level in a 180x100 minimap
-	 * camera.zoom = Math.min(180 / levelWidth, 100 / levelHeight);
-	 */
-	/**
 	 * Roll this camera in the screen plane, in radians — the 2D spelling of
 	 * {@link Camera3d#roll}, so a helper that banks "a camera" works on either.
 	 *
@@ -482,6 +473,16 @@ export default class Camera2d extends Renderable {
 		this.isDirty = true;
 	}
 
+	/**
+	 * the zoom level of this camera.
+	 * Values less than 1 zoom out (show more of the world),
+	 * values greater than 1 zoom in (show less of the world).
+	 * A value of 0 or less is taken as 1.
+	 * @default 1
+	 * @example
+	 * // zoom out to show the full level in a 180x100 minimap
+	 * camera.zoom = Math.min(180 / levelWidth, 100 / levelHeight);
+	 */
 	get zoom(): number {
 		return this._zoom;
 	}

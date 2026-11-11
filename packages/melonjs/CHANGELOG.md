@@ -17,6 +17,7 @@
 - 3D: a container's children are drawn at its depth under `Camera3d`
 - 3D: lit meshes in a moved or rotated container are lit where they are
 - 3D: `Camera3d` no longer culls a frame late after the camera moves
+- 3D: a normalized `Mesh` no longer rewrites the vertex array it was given, which shrank later meshes and scenes of the same model
 - Sprite: `addAnimation()` skips frames the texture lacks, with a warning, instead of crashing later
 - UI: a widget removed while hovered gets its `onOut()`
 - Input: keys held when the window loses the focus are released

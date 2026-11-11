@@ -1291,12 +1291,13 @@ export default class Camera3d extends Camera2d {
 	}
 
 	/**
-	 * Set the target-local follow offset. Called once when configuring
-	 * a follow-cam (e.g. behind-and-above third person:
-	 * `setFollowOffset(0, -2, -8)`).
-	 * @param x - target-local x offset
-	 * @param y - target-local y offset
-	 * @param z - target-local z offset
+	 * Set the follow offset, in world space: the camera sits at
+	 * `target.pos + followOffset`, whichever way the target faces. Called
+	 * once when configuring a follow-cam (e.g. behind-and-above third
+	 * person: `setFollowOffset(0, -2, -8)`).
+	 * @param x - world-space x offset
+	 * @param y - world-space y offset
+	 * @param z - world-space z offset
 	 * @returns this camera
 	 */
 	setFollowOffset(x: number, y: number, z: number): this {

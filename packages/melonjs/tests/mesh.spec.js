@@ -1069,6 +1069,25 @@ describe("Mesh × Camera3d world-space path", () => {
 		};
 	}
 
+	it("normalizes a copy, leaving the vertex array it was given as it was", () => {
+		const settings = buildPyramidSettings();
+		const given = settings.vertices;
+		const authored = Array.from(given);
+		const m = new Mesh(0, 0, settings);
+		expect(Array.from(given)).toEqual(authored);
+		expect(m.originalVertices).not.toBe(given);
+		// the mesh's own copy is fitted into the unit cube
+		for (const v of m.originalVertices) {
+			expect(Math.abs(v)).toBeLessThanOrEqual(0.5 + 1e-6);
+		}
+	});
+
+	it("keeps the array it was given when normalize is false", () => {
+		const settings = { ...buildPyramidSettings(), normalize: false };
+		const m = new Mesh(0, 0, settings);
+		expect(m.originalVertices).toBe(settings.vertices);
+	});
+
 	it("activation under Camera3d marks the mesh for world-space draw", () => {
 		const m = new Mesh(0, 0, buildPyramidSettings());
 		expect(m._useWorldSpace).toBeUndefined();

@@ -84,7 +84,7 @@ export type ApplicationSettings = {
 	/**
 	 * how the canvas is scaled to the page. A number is a fixed multiplier applied to the design resolution and nothing is measured; `"auto"` scales to the available space every time the window changes, using {@link ApplicationSettings.scaleMethod} to decide how and {@link ApplicationSettings.scaleTarget} to decide what is measured.
 	 *
-	 * `scaleMethod`, `scaleTarget` and {@link ApplicationSettings.scaleRounding} apply to `"auto"` only. With a fixed number they are ignored.
+	 * `scaleMethod`, `scaleTarget` and {@link ApplicationSettings.scaleRounding} apply to automatic scaling only. Naming a `scaleMethod` other than `"manual"` turns automatic scaling on as well, and a fixed number is then ignored.
 	 * @default 1
 	 * @see ApplicationSettings.scaleMethod
 	 * @see ApplicationSettings.scaleTarget
@@ -95,7 +95,7 @@ export type ApplicationSettings = {
 	/**
 	 * how automatic scaling uses the space available to it. Applies when {@link ApplicationSettings.scale} is `"auto"`.
 	 *
-	 * The distinction that decides which to pick is whether the DESIGN RESOLUTION moves. `"fit"` keeps it and scales the whole frame to the largest factor that fits, leaving the rest as margin, so the game always sees exactly the world it was authored for. Every other mode calls `renderer.resize()`, so the design resolution follows the container and the game sees MORE or LESS of the world on a different window: `"fill-min"` / `"fill-max"` keep the aspect ratio while doing so, `"flex"` / `"flex-width"` / `"flex-height"` resize one or both axes, and `"stretch"` scales each axis independently so the aspect ratio is not preserved. `"manual"` does nothing automatic.
+	 * The distinction that decides which to pick is whether the DESIGN RESOLUTION moves. `"fit"` keeps it and scales the whole frame to the largest factor that fits, leaving the rest as margin, so the game always sees exactly the world it was authored for. Every other mode calls `renderer.resize()`, so the design resolution follows the container and the game sees MORE or LESS of the world on a different window: `"fill-min"` / `"fill-max"` keep the aspect ratio while doing so, `"flex"` / `"flex-width"` / `"flex-height"` resize one or both axes, and `"stretch"` scales each axis independently so the aspect ratio is not preserved. `"manual"`, the default, leaves it to {@link ApplicationSettings.scale}: with a number nothing is automatic, and with `"auto"` it scales as `"fit"`.
 	 *
 	 * A game whose layout assumes a known frame wants `"fit"`. A game that should reveal more world on a larger window wants one of the others, and has to cope with a viewport whose size it did not choose.
 	 * @default "manual"

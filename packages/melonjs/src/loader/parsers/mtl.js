@@ -184,7 +184,7 @@ export function parseMTL(text, basePath) {
 					//
 					// `Ka` predates scene-wide ambient lighting. Adding it to
 					// the lit path would give two ambient contributions
-					// fighting each other, since `Stage.ambientLightingColor`
+					// fighting each other, since an `"ambient"` `Light3d`
 					// already provides one.
 					//
 					// `illum` enumerates fixed-function behaviours from the
