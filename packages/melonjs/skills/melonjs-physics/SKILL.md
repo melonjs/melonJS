@@ -80,10 +80,26 @@ an import change and a gravity re-tune.
   is the download: about 3 MB of WebAssembly, fetched and compiled on demand,
   so the adapter must be made with `await RapierAdapter.create()`.
 
-If you have no preference and the game leans on stacking, joints or fast
-projectiles, take planck. If you want to be up and running with the least
-conversion to think about, take matter. If the game has many bodies at once or
-wants a character controller, and can afford the download, take Rapier.
+**By game type**, the same choice from the other end:
+
+| game | adapter | why |
+|---|---|---|
+| tile platformer, jumps authored as curves | built-in | movement is designed, not simulated; a body resting on flat static ground is exact to the pixel |
+| platformer whose player stands still on slopes or rides moving platforms | Rapier or planck | the built-in has no surface friction, so a body on an incline slides down it; both have true kinematic bodies, and Rapier a character controller (its own API, not the portable one) |
+| top-down RPG or adventure, grid or tile puzzle | built-in | collision is "did these touch" plus a push-out; no dependency, smallest bundle |
+| shoot-'em-up, bullet hell | built-in | bullets need detection, not a physical response |
+| 2.5D with height: isometric, beat-'em-up lanes | built-in only | the only backend that takes `Box3d` and `Sphere`; the 2D engines refuse them |
+| fighting game or brawler, hitboxes and hurtboxes on one body | built-in, planck or Rapier | matter ignores a shape's own `collisionType`, `collisionMask` and `isTrigger` |
+| stacking, towers, catapult and destruction puzzles | planck, or Rapier for many pieces | an iterative solver keeps a pile crisp; Rapier is built for many bodies at once |
+| pinball, billiards, mini-golf | planck or Rapier | fast balls need continuous collision; matter has none, only `subSteps` |
+| vehicles, ragdolls, ropes, chains | planck or Rapier | joint solvers; on every adapter a joint is made through the engine's own API |
+| casual physics toy, prototype, game jam | matter | it works in pixels, so there is nothing to convert; its softer stacking does not show |
+| sandbox with lots of debris | Rapier | many bodies at once, concave pieces simulated exactly |
+| playable ad, size-capped portal, instant load | built-in, not Rapier | Rapier downloads and compiles about 3 MB of WebAssembly |
+
+One game can use more than one: `world.setAdapter()` swaps the backend between
+screens, so a platformer on the built-in can run a physics mini-game on planck
+(see [Switching adapters while the game runs](#switching-adapters-while-the-game-runs)).
 
 An adapter is an `Application` setting, not a plugin:
 
