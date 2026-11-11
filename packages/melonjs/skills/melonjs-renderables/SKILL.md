@@ -70,7 +70,7 @@ Note that `Container`, `Camera2d`, `Draggable`, `DropTarget` and the `UI*`
 elements set it to `false` for you, and so does giving a renderable a body (a
 `bodyDef`, on every physics adapter, or a `Body`, which covers `Entity`) — so a
 plain `Renderable` or `Sprite` subclass with no body is the case that catches
-people. Before melonJS 20.14, matter-adapter 1.5.4 and planck-adapter 1.6.4,
+people. Before melonJS 20.14, matter-adapter 1.6.0 and planck-adapter 1.7.0,
 only the built-in adapter cleared it: under matter or planck a renderable with
 a `bodyDef` stayed kinematic and missed pointer events.
 

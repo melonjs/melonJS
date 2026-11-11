@@ -23,6 +23,8 @@
  *   `addBody()` (only the built-in cleared the flag)
  * - `getMaxVelocity()` reads no cap as no limit, and hands out a copy
  *   (matter and planck returned `{ 0, 0 }`, and the stored object)
+ * - `load()` and `create()`, the static API every adapter shares: `create()`
+ *   builds what the constructor builds, also for a subclass
  * - `world.setAdapter()` moves every body from any adapter to any other
  */
 
@@ -33,6 +35,8 @@ import {
 	boot,
 	Container,
 	collision,
+	type PhysicsAdapter,
+	type PhysicsAdapterClass,
 	Rect,
 	Renderable,
 	Vector2d,
@@ -48,8 +52,12 @@ interface Backend {
 	name: string;
 	/** a fresh adapter, at its own default gravity */
 	make(): AnyAdapter;
+	/** the adapter class, for the static API every adapter shares */
+	klass: PhysicsAdapterClass<AnyAdapter>;
+	/** constructor options, in this adapter's own form, that set a gravity */
+	options: object;
 	/** how many bodies the adapter's engine holds */
-	bodyCount(adapter: AnyAdapter): number;
+	bodyCount(adapter: PhysicsAdapter): number;
 }
 
 const BACKENDS: Backend[] = [
@@ -58,6 +66,8 @@ const BACKENDS: Backend[] = [
 		make: () => {
 			return new BuiltinAdapter();
 		},
+		klass: BuiltinAdapter,
+		options: { gravity: new Vector2d(0, 0.5) },
 		bodyCount: (adapter) => {
 			return (adapter as BuiltinAdapter).bodies.size;
 		},
@@ -67,6 +77,8 @@ const BACKENDS: Backend[] = [
 		make: () => {
 			return new MatterAdapter();
 		},
+		klass: MatterAdapter,
+		options: { gravity: { x: 0, y: 2 } },
 		bodyCount: (adapter) => {
 			const matter = adapter as MatterAdapter;
 			return matter.matter.Composite.allBodies(matter.engine.world).length;
@@ -77,6 +89,8 @@ const BACKENDS: Backend[] = [
 		make: () => {
 			return new PlanckAdapter();
 		},
+		klass: PlanckAdapter,
+		options: { gravity: { x: 0, y: 500 } },
 		bodyCount: (adapter) => {
 			return (adapter as PlanckAdapter).world.getBodyCount();
 		},
@@ -160,6 +174,32 @@ beforeAll(async () => {
 });
 
 describe.each(BACKENDS)("$name adapter", (backend) => {
+	it("load() resolves, and create() builds what the constructor builds", async () => {
+		const { klass, options } = backend;
+		await expect(klass.load()).resolves.toBeUndefined();
+		const created = await klass.create(options);
+		const constructed = new klass(options);
+		expect(created).toBeInstanceOf(klass);
+		expect(created.physicLabel).toBe(constructed.physicLabel);
+		// the options reached the constructor
+		expect(created.gravity.y).toBeCloseTo(constructed.gravity.y, 6);
+		expect(created.gravity.y).not.toBeCloseTo(backend.make().gravity.y, 6);
+		// and the adapter runs a scene
+		const world = new World(0, 0, 800, 600, created);
+		world.addChild(staticRect(0, FLOOR_Y, 800, 64));
+		const box = dynamicBox(384, 300);
+		world.addChild(box);
+		run(world, 240);
+		expectLanded(box);
+	});
+
+	it("create() called on a subclass builds the subclass", async () => {
+		const Base: PhysicsAdapterClass = backend.klass;
+		class Custom extends Base {}
+		const created = await Custom.create();
+		expect(created).toBeInstanceOf(Custom);
+	});
+
 	it("reports how deep two bodies overlap, in pixels", () => {
 		const world = new World(0, 0, 800, 600, backend.make());
 		world.addChild(staticRect(0, FLOOR_Y, 800, 64));
@@ -184,7 +224,7 @@ describe.each(BACKENDS)("$name adapter", (backend) => {
 		});
 		world.addChild(twin);
 		run(world, 1);
-		const hit = world.adapter.raycast(
+		const hit = world.adapter.raycast?.(
 			new Vector2d(0, 310),
 			new Vector2d(800, 310),
 		);
@@ -339,15 +379,15 @@ describe.each(BACKENDS)("$name adapter", (backend) => {
 		adapter.setFrictionAir(assigned, 0.05);
 		for (const r of [declared, assigned]) {
 			adapter.setVelocity(r, new Vector2d(2, 0));
-			adapter.setAngularVelocity(r, 0.1);
+			adapter.setAngularVelocity?.(r, 0.1);
 		}
 		run(world, 30);
 		const v1 = adapter.getVelocity(declared);
 		const v2 = adapter.getVelocity(assigned);
 		expect(v2.x).toBeCloseTo(v1.x, 4);
 		expect(v2.y).toBeCloseTo(v1.y, 4);
-		expect(adapter.getAngularVelocity(assigned)).toBeCloseTo(
-			adapter.getAngularVelocity(declared),
+		expect(adapter.getAngularVelocity?.(assigned)).toBeCloseTo(
+			adapter.getAngularVelocity?.(declared) ?? Number.NaN,
 			4,
 		);
 	});

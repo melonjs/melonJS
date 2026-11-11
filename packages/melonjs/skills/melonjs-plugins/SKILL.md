@@ -19,7 +19,7 @@ This trips people up, so it is worth stating first:
 // the adapter is chosen at construction …
 const app = new Application(800, 600, {
     parent: "screen",
-    physic: new PlanckAdapter({ gravity, pixelsPerMeter }),
+    physic: await PlanckAdapter.create({ gravity, pixelsPerMeter }),
 });
 
 // … the plugin is registered once the renderer exists

@@ -23,7 +23,7 @@ npm install @melonjs/planck-adapter
 
 ## Usage
 
-Pass a `PlanckAdapter` instance as the `physic` option when constructing your `Application`:
+Create the adapter with `PlanckAdapter.create()` and pass it as the `physic` option when constructing your `Application`:
 
 ```ts
 import { PlanckAdapter } from "@melonjs/planck-adapter";
@@ -32,7 +32,7 @@ import { Application, video } from "melonjs";
 const app = new Application(800, 600, {
     parent: "screen",
     renderer: video.AUTO,
-    physic: new PlanckAdapter({
+    physic: await PlanckAdapter.create({
         gravity: { x: 0, y: 320 },
     }),
 });
@@ -43,12 +43,14 @@ await app.init();
 
 That's it — every renderable that declares a `bodyDef` gets registered with planck automatically on `Container.addChild`, and the rest of your game code (collision handlers, velocity reads, gravity tweaks, etc.) talks to the shared `PhysicsAdapter` interface so it works with either adapter.
 
+`create()` is the form every melonJS physics adapter shares (see `PhysicsAdapterClass` in the melonJS API): it waits for the adapter's `load()`, then constructs it, so the same line works for an adapter whose engine is WebAssembly and has to be downloaded first. planck is plain JavaScript and needs no loading, so here `load()` resolves at once and `new PlanckAdapter({ ... })` does exactly the same thing. It stays supported.
+
 ### Options
 
-The options go in the `new PlanckAdapter({ ... })` call you pass as `physic` above. They are all optional; this is that call with each one at its default:
+The options go in the `PlanckAdapter.create({ ... })` call you pass as `physic` above. They are all optional; this is that call with each one at its default:
 
 ```ts
-physic: new PlanckAdapter({
+physic: await PlanckAdapter.create({
     gravity: { x: 0, y: 320 },  // pixels per second², ≈ 10 m/s² pulling down
     pixelsPerMeter: 32,
     subSteps: 1,
@@ -57,7 +59,7 @@ physic: new PlanckAdapter({
 }),
 ```
 
-`gravity` can also change while the game runs: the adapter reads `app.world.adapter.gravity` at every step, so `app.world.adapter.gravity.set(0, 160)` halves it from the next one. The other options cannot change on a live adapter. To change them, create a new `PlanckAdapter` and switch to it with `app.world.setAdapter()`, which rebuilds every body from its `bodyDef`, at rest.
+`gravity` can also change while the game runs: the adapter reads `app.world.adapter.gravity` at every step, so `app.world.adapter.gravity.set(0, 160)` halves it from the next one. The other options cannot change on a live adapter. To change them, switch to a new one with `app.world.setAdapter(await PlanckAdapter.create({ ... }))`, which rebuilds every body from its `bodyDef`, at rest.
 
 #### `gravity`
 
@@ -269,7 +271,7 @@ app.world.adapter.setCollisionMask(renderable, collision.types.ENEMY_OBJECT);
 
 The body-wide setters overwrite any per-shape values. To filter one shape on its own, set `collisionType` / `collisionMask` on that shape in the body definition.
 
-A body with no `collisionType` is in category `0x0001` (`collision.types.PLAYER_OBJECT`), where the builtin adapter defaults to `ENEMY_OBJECT`, so set it on any body whose filtering matters. A body with no `collisionMask` collides with every collision type (`ALL_OBJECT`), as on the other adapters; before 1.6.4 it stopped at bit 15 (`0xFFFF`), which left out user types from `collision.types.USER << 9` up.
+A body with no `collisionType` is in category `0x0001` (`collision.types.PLAYER_OBJECT`), where the builtin adapter defaults to `ENEMY_OBJECT`, so set it on any body whose filtering matters. A body with no `collisionMask` collides with every collision type (`ALL_OBJECT`), as on the other adapters; before 1.7.0 it stopped at bit 15 (`0xFFFF`), which left out user types from `collision.types.USER << 9` up.
 
 ## Behavioural notes when porting from the builtin adapter
 
@@ -313,7 +315,7 @@ import { MatterAdapter } from "@melonjs/matter-adapter";
 const app = new Application(800, 600, {
     parent: "screen",
     renderer: video.AUTO,
-    physic: new MatterAdapter({ gravity: { x: 0, y: 5 } }),
+    physic: await MatterAdapter.create({ gravity: { x: 0, y: 5 } }),
 });
 
 // mandatory since melonJS 20.0: the renderer is built here
@@ -331,7 +333,7 @@ const app = new Application(800, 600, {
     renderer: video.AUTO,
     // (1) Swap the adapter. Gravity is in px/s² now — pick a value that feels
     //     right for your sprite scale (32 px/m default ⇒ 320 ≈ Earth gravity).
-    physic: new PlanckAdapter({ gravity: { x: 0, y: 320 } }),
+    physic: await PlanckAdapter.create({ gravity: { x: 0, y: 320 } }),
 });
 
 // mandatory since melonJS 20.0: the renderer is built here

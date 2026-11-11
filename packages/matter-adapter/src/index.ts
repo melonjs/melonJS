@@ -18,6 +18,7 @@ import {
 	Line,
 	version as melonjsVersion,
 	type PhysicsAdapter,
+	type PhysicsAdapterClass,
 	type PhysicsBody,
 	Polygon,
 	type RaycastHit,
@@ -235,6 +236,37 @@ export class MatterAdapter implements PhysicsAdapter {
 	private readonly matterOptions: Matter.IEngineDefinition | undefined;
 
 	private readonly subSteps: number;
+
+	/**
+	 * Resolves once the adapter can be constructed. matter-js is plain JavaScript, loaded with this package, so this resolves
+	 * at once; it is here so every adapter has the same
+	 * {@link PhysicsAdapterClass} API, and code written as
+	 * `await MatterAdapter.create()` reads the same as for one that loads
+	 * WebAssembly first.
+	 * @returns a resolved promise
+	 */
+	static load(): Promise<void> {
+		return Promise.resolve();
+	}
+
+	/**
+	 * Create an adapter, the same way for every adapter: wait for
+	 * {@link MatterAdapter.load}, then construct it. Here that is the same as
+	 * `new MatterAdapter(options)`, which stays supported.
+	 * @param options - the constructor's options
+	 * @returns the new adapter, an instance of the class `create` is called on
+	 * @example
+	 * const app = new Application(800, 600, {
+	 *     physic: await MatterAdapter.create(),
+	 * });
+	 */
+	static async create<T extends PhysicsAdapter>(
+		this: PhysicsAdapterClass<T, MatterAdapterOptions>,
+		options?: MatterAdapterOptions,
+	): Promise<T> {
+		await this.load();
+		return new this(options);
+	}
 
 	constructor(options: MatterAdapterOptions = {}) {
 		// Mirror the BasePlugin version-check pattern: refuse to construct

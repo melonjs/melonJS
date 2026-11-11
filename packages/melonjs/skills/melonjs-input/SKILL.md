@@ -93,7 +93,7 @@ class Button extends Renderable {
 to `false` for you, and so does giving it a physics body (a `bodyDef` on any
 adapter, or a `Body`) — so plain `Renderable` and `Sprite` subclasses with no
 body are the ones that catch people. Before melonJS 20.14, matter-adapter
-1.5.4 and planck-adapter 1.6.4, a `bodyDef` under matter or planck left
+1.6.0 and planck-adapter 1.7.0, a `bodyDef` under matter or planck left
 `isKinematic` at `true`, so set it yourself there.
 
 Register in `onActivateEvent` and release in `onDeactivateEvent`, not in the

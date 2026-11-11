@@ -882,3 +882,30 @@ export interface PhysicsAdapter {
 	 */
 	getBodyShapes(renderable: Renderable): readonly BodyShape[];
 }
+
+/**
+ * The static side every physics adapter class shares, next to its
+ * constructor. `load()` resolves once the adapter can be constructed, and
+ * `create()` waits for it, then constructs: an adapter whose engine is plain
+ * JavaScript (the builtin, matter and planck adapters) resolves `load()` at
+ * once, while one built on WebAssembly downloads and compiles it there. So
+ * `await X.create(options)` is the same line for every adapter, at boot or
+ * before {@link World#setAdapter}; `new X(options)` stays available wherever
+ * the adapter needs no loading.
+ * @example
+ * const app = new Application(800, 600, {
+ *     physic: await PlanckAdapter.create({ gravity: { x: 0, y: 320 } }),
+ * });
+ * // later, between two screens
+ * app.world.setAdapter(await MatterAdapter.create());
+ */
+export interface PhysicsAdapterClass<
+	T extends PhysicsAdapter = PhysicsAdapter,
+	O = any,
+> {
+	new (options?: O): T;
+	/** Resolves once the adapter can be constructed. Every call returns the same promise. */
+	load(): Promise<void>;
+	/** Resolves with a new adapter: waits for `load()`, then constructs it. */
+	create(options?: O): Promise<T>;
+}

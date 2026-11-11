@@ -1,6 +1,6 @@
 ---
 name: melonjs-physics
-description: "Use this skill for collision, physics bodies, movement, and spatial queries in melonJS — the built-in SAT world and the planck/matter adapters. Covers bodyDef vs Body, collision types and masks, the collision callback family and their firing rules, raycast/queryAABB/querySphere, the behaviour differences between adapters, and which one to pick for a given game. Triggers on: which physics engine, choosing an adapter, switching adapters, setAdapter, rotation collision, rotating body, torque, joints, stacking, Body, bodyDef, collision, collisionType, collisionMask, onCollision, onCollisionStart, onCollisionActive, raycast, queryAABB, querySphere, raycast3d, PlanckAdapter, MatterAdapter, gravity, velocity, applyForce, isGrounded, isSensor, isTrigger, onShapeCollisionStart, kinematic, subSteps, pixelsPerMeter, Box3d, Sphere, getBodyShapes, hitbox offset, slope, SAT."
+description: "Use this skill for collision, physics bodies, movement, and spatial queries in melonJS — the built-in SAT world and the planck/matter adapters. Covers bodyDef vs Body, collision types and masks, the collision callback family and their firing rules, raycast/queryAABB/querySphere, the behaviour differences between adapters, and which one to pick for a given game. Triggers on: which physics engine, choosing an adapter, switching adapters, setAdapter, PhysicsAdapterClass, create, rotation collision, rotating body, torque, joints, stacking, Body, bodyDef, collision, collisionType, collisionMask, onCollision, onCollisionStart, onCollisionActive, raycast, queryAABB, querySphere, raycast3d, PlanckAdapter, MatterAdapter, gravity, velocity, applyForce, isGrounded, isSensor, isTrigger, onShapeCollisionStart, kinematic, subSteps, pixelsPerMeter, Box3d, Sphere, getBodyShapes, hitbox offset, slope, SAT."
 license: MIT
 ---
 
@@ -83,7 +83,7 @@ import { PlanckAdapter } from "@melonjs/planck-adapter";
 
 const app = new Application(800, 600, {
     parent: "screen",
-    physic: new PlanckAdapter({
+    physic: await PlanckAdapter.create({
         gravity: { x: 0, y: 320 },   // pixels/s², default {x: 0, y: 320}
         pixelsPerMeter: 32,          // default 32
         subSteps: 2,                 // default 1
@@ -91,6 +91,15 @@ const app = new Application(800, 600, {
 });
 await app.init();
 ```
+
+**Make an adapter with `await X.create(options)`.** Every adapter class has
+the same static pair (`PhysicsAdapterClass`): `load()` resolves once the
+adapter can be built, and `create()` waits for it, then constructs. The
+builtin, matter and planck adapters are plain JavaScript, so their `load()`
+resolves at once and `new X(options)` is equivalent and still supported; an
+adapter whose engine is WebAssembly downloads and compiles it in `load()`, and
+only `create()` works for it without a prior `load()`. Write `create()` and
+the code is the same for every adapter.
 
 `PlanckAdapter` also takes `velocityIterations` (default `8`) and
 `positionIterations` (default `3`). `MatterAdapter` takes a different set —
@@ -146,7 +155,7 @@ example to move from planck to matter between two screens:
 ```ts
 import { MatterAdapter } from "@melonjs/matter-adapter";
 
-app.world.setAdapter(new MatterAdapter({ gravity: { x: 0, y: 1 } }));
+app.world.setAdapter(await MatterAdapter.create({ gravity: { x: 0, y: 1 } }));
 ```
 
 The old adapter is destroyed, and the new one builds every body in the world
@@ -217,7 +226,7 @@ unable to rotate.
 it is also what settles a spin. Left at `0` a body that starts turning never
 stops, which only became visible once rotation stopped being locked. The same
 holds for `adapter.setFrictionAir()` at runtime (on planck, from
-planck-adapter 1.6.4).
+planck-adapter 1.7.0).
 
 Other portable `bodyDef` fields: `density`, `frictionAir` (number or `{x, y}`),
 `friction`, `restitution`, `gravityScale`, `maxVelocity`, `fixedRotation`,
@@ -582,7 +591,7 @@ gets the right-hand one too.
 On the modern response `overlap` / `overlapN` / `overlapV` are still present but
 `@deprecated` (and `undefined` under the matter and planck adapters) — use
 `depth` and `normal`. `depth` is in pixels on every adapter (on planck from
-planck-adapter 1.6.4; before, it was always `0`). `normal` is the direction
+planck-adapter 1.7.0; before, it was always `0`). `normal` is the direction
 the receiver must move to separate, in canvas coordinates: `normal.y < -0.7`
 means "push me up", i.e. I landed on top of `other`.
 
@@ -613,7 +622,7 @@ What actually happens per adapter:
   planck's `begin-contact` / `end-contact` events, which fire *while the world
   is locked*. Adding a renderable with a `bodyDef` there makes planck's
   `createBody` return `null` and the adapter then throws on the null handle.
-  Removing one there is safe from planck-adapter 1.6.4: the body leaves every
+  Removing one there is safe from planck-adapter 1.7.0: the body leaves every
   event and query at once and is destroyed when the step ends. Before that,
   `removeChildNow()` left an invisible body behind that still collided.
   `onCollisionActive` is dispatched after the step and is the safe one.
@@ -777,7 +786,7 @@ real rigid-body engine:
   not contact state — it says nothing about what a body is touching.
 - **Gravity defaults to `(0, 0.98)`** — pixels per frame², not m/s². Mutate
   `app.world.adapter.gravity` at runtime, or pass
-  `physic: new BuiltinAdapter({ gravity: new Vector2d(0, g) })` to override
+  `physic: await BuiltinAdapter.create({ gravity: new Vector2d(0, g) })` to override
   it (a `Vector2d` here, where the adapters take `{x, y}`). `body.gravityScale`
   (default `1`) scales it per body; `0` disables gravity for that body and is
   the portable replacement for the deprecated `body.ignoreGravity`.
@@ -895,7 +904,7 @@ Same call, different magnitude — these are the ones that waste an afternoon:
 - **The default collision type differs.** With no `collisionType`, a body is
   `ENEMY_OBJECT` on the built-in but category `1` (`PLAYER_OBJECT`) on matter
   and planck. With no `collisionMask`, it collides with every type on all
-  three (before planck-adapter 1.6.4, planck stopped at bit 15, so a user type
+  three (before planck-adapter 1.7.0, planck stopped at bit 15, so a user type
   from `collision.types.USER << 9` up never hit it). Set `collisionType` on
   every `bodyDef`.
 - **`type: "kinematic"` is planck-only**; the built-in and matter build a
@@ -918,7 +927,7 @@ Adapter-specific escapes exist (`(this.body as MatterAdapter.Body).frictionAir`,
 use them. `adapter.capabilities` (`constraints`,
 `continuousCollisionDetection`, `sleepingBodies`, `raycasts`, `raycasts3d`,
 `velocityLimit`, `isGrounded`) is the portable way to branch. matter reports
-`continuousCollisionDetection: false` (from matter-adapter 1.5.4; earlier
+`continuousCollisionDetection: false` (from matter-adapter 1.6.0; earlier
 versions claimed `true`): it has none, and `subSteps` is the remedy for fast
 bodies. Its `sleepingBodies` needs `matterEngineOptions: { enableSleeping: true }`.
 
@@ -973,11 +982,11 @@ bodies. Its `sleepingBodies` needs `matterEngineOptions: { enableSleeping: true 
 | the player climbs a tall wall with repeated jumps (matter, planck) | matter-adapter < 1.5.3 / planck-adapter < 1.6.3 counted any contact with a lower body as ground; upgrade |
 | a hero made of several shapes is never grounded, so it cannot jump (matter) | matter-adapter < 1.5.3 missed contacts on the parts of a compound body; upgrade |
 | `setSensor(true)` on a platform under the player does nothing, so it cannot be dropped through (matter) | matter-adapter < 1.5.3 did not update a contact already in place; upgrade |
-| `raycast` misses a body made of several shapes, or a concave one (matter) | matter-adapter < 1.5.4 did not resolve the part it hit to its body; upgrade |
-| a shape hook's `normal` points the opposite way to `onCollisionStart`'s (matter) | matter-adapter < 1.5.4 reversed it; upgrade |
-| `response.depth` is always `0` (planck) | planck-adapter < 1.6.4 read the depth from the wrong place; upgrade |
-| an invisible body keeps colliding after `removeChildNow()` from `onCollisionStart` (planck) | planck-adapter < 1.6.4 could not destroy a body while the world was locked; upgrade, or use `removeChild()` |
-| a spin never settles after `adapter.setFrictionAir()` (planck) | planck-adapter < 1.6.4 damped movement only there; upgrade |
+| `raycast` misses a body made of several shapes, or a concave one (matter) | matter-adapter < 1.6.0 did not resolve the part it hit to its body; upgrade |
+| a shape hook's `normal` points the opposite way to `onCollisionStart`'s (matter) | matter-adapter < 1.6.0 reversed it; upgrade |
+| `response.depth` is always `0` (planck) | planck-adapter < 1.7.0 read the depth from the wrong place; upgrade |
+| an invisible body keeps colliding after `removeChildNow()` from `onCollisionStart` (planck) | planck-adapter < 1.7.0 could not destroy a body while the world was locked; upgrade, or use `removeChild()` |
+| a spin never settles after `adapter.setFrictionAir()` (planck) | planck-adapter < 1.7.0 damped movement only there; upgrade |
 
 ## Related skills
 

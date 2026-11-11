@@ -1,6 +1,9 @@
 # Changelog
 
-## 1.6.4 - _unreleased_
+## 1.7.0 - _unreleased_
+
+### Added
+- `PlanckAdapter.load()` and `PlanckAdapter.create(options)`, the static API every melonJS physics adapter shares; `new PlanckAdapter(options)` is unchanged
 
 ### Fixed
 - Collision `depth` is the overlap in pixels, in the body and shape hooks; it was always 0

@@ -518,8 +518,8 @@ export default class Application {
 		// resolve the physic setting into (adapter, legacy-string) pair.
 		// Accepts a string ("builtin"/"none" — built-in adapters that ship
 		// in core), a {@link PhysicsAdapter} instance (e.g.
-		// `new BuiltinAdapter({ gravity })` or
-		// `new MatterAdapter()` from `@melonjs/matter-adapter`), or the
+		// `await BuiltinAdapter.create({ gravity })` or
+		// `await MatterAdapter.create()` from `@melonjs/matter-adapter`), or the
 		// explicit form `{ adapter: PhysicsAdapter }`.
 		const { adapter, physicLabel } = resolvePhysicSetting(settings.physic);
 

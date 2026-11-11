@@ -10,6 +10,7 @@ import type {
 	BodyDefinition,
 	BodyShape,
 	PhysicsAdapter,
+	PhysicsAdapterClass,
 	RaycastHit,
 	RaycastHit3d,
 } from "../adapter.ts";
@@ -332,8 +333,9 @@ function rayAABB3d(
  * `body.isStatic = true`) keeps working unchanged.
  *
  * Instantiated by default during `Application` construction; user code
- * only touches this directly when explicitly wiring it via
- * `new Application(w, h, { physic: { adapter: new BuiltinAdapter() } })`.
+ * only touches this directly when explicitly wiring it, for example with
+ * another gravity:
+ * `new Application(w, h, { physic: await BuiltinAdapter.create({ gravity }) })`.
  * @category Physics
  */
 export default class BuiltinAdapter implements PhysicsAdapter {
@@ -377,6 +379,37 @@ export default class BuiltinAdapter implements PhysicsAdapter {
 	 * Back-reference to the owning world, set in {@link init}.
 	 */
 	private world!: World;
+
+	/**
+	 * Resolves once the adapter can be constructed. The built-in solver is plain JavaScript, loaded with melonJS, so this resolves
+	 * at once; it is here so every adapter has the same
+	 * {@link PhysicsAdapterClass} API, and code written as
+	 * `await BuiltinAdapter.create()` reads the same as for one that loads
+	 * WebAssembly first.
+	 * @returns a resolved promise
+	 */
+	static load(): Promise<void> {
+		return Promise.resolve();
+	}
+
+	/**
+	 * Create an adapter, the same way for every adapter: wait for
+	 * {@link BuiltinAdapter.load}, then construct it. Here that is the same as
+	 * `new BuiltinAdapter(options)`, which stays supported.
+	 * @param options - the constructor's options
+	 * @returns the new adapter, an instance of the class `create` is called on
+	 * @example
+	 * const app = new Application(800, 600, {
+	 *     physic: await BuiltinAdapter.create(),
+	 * });
+	 */
+	static async create<T extends PhysicsAdapter>(
+		this: PhysicsAdapterClass<T, AdapterOptions>,
+		options?: AdapterOptions,
+	): Promise<T> {
+		await this.load();
+		return new this(options);
+	}
 
 	constructor(options: AdapterOptions = {}) {
 		this.gravity = options.gravity ?? new Vector2d(0, 0.98);

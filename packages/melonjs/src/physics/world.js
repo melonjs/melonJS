@@ -288,7 +288,7 @@ export default class World extends Container {
 	 * @returns {World} this world
 	 * @example
 	 * import { MatterAdapter } from "@melonjs/matter-adapter";
-	 * app.world.setAdapter(new MatterAdapter({ gravity: { x: 0, y: 1 } }));
+	 * app.world.setAdapter(await MatterAdapter.create({ gravity: { x: 0, y: 1 } }));
 	 */
 	setAdapter(adapter) {
 		if (this._stepping) {

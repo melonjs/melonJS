@@ -37,8 +37,10 @@ type BlendMode =
  *
  * - `"builtin"` (default): auto-construct a {@link BuiltinAdapter} with default options.
  * - `"none"`: keep an adapter for API compatibility but skip the per-frame `step()` call (frozen world).
- * - `PhysicsAdapter` instance: use the given adapter (e.g. `new BuiltinAdapter({ gravity })`,
- *   or `new MatterAdapter()` from `@melonjs/matter-adapter`).
+ * - `PhysicsAdapter` instance: use the given adapter, made with the
+ *   `create()` every adapter class has (e.g. `await MatterAdapter.create()`
+ *   from `@melonjs/matter-adapter`, or `await BuiltinAdapter.create({ gravity })`).
+ *   See {@link PhysicsAdapterClass}.
  * - `{ adapter: PhysicsAdapter }`: explicit form, reserved for future per-app physics options.
  */
 type PhysicsType =
@@ -458,8 +460,9 @@ export type ApplicationSettings = {
 	 * - `"builtin"` (default) — the built-in SAT physics adapter
 	 * - `"none"` — disables physics; `World.step` skips the simulation,
 	 *   the world container behaves like a pure scene graph
-	 * - a `PhysicsAdapter` instance — e.g. `new MatterAdapter()` from
-	 *   `@melonjs/matter-adapter`, or any third-party adapter
+	 * - a `PhysicsAdapter` instance — e.g. `await MatterAdapter.create()`
+	 *   from `@melonjs/matter-adapter`, or any third-party adapter (see
+	 *   {@link PhysicsAdapterClass})
 	 * - `{ adapter: PhysicsAdapter }` — explicit form, reserved for
 	 *   future per-app physics options
 	 *

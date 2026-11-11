@@ -19,7 +19,7 @@ npm install @melonjs/matter-adapter
 
 ## Usage
 
-Pass a `MatterAdapter` instance as the `physic` option when constructing your `Application`:
+Create the adapter with `MatterAdapter.create()` and pass it as the `physic` option when constructing your `Application`:
 
 ```ts
 import { MatterAdapter } from "@melonjs/matter-adapter";
@@ -28,7 +28,7 @@ import { Application, video } from "melonjs";
 const app = new Application(800, 600, {
     parent: "screen",
     renderer: video.AUTO,
-    physic: new MatterAdapter({
+    physic: await MatterAdapter.create({
         gravity: { x: 0, y: 5 },
     }),
 });
@@ -39,12 +39,14 @@ await app.init();
 
 That's it — every renderable that declares a `bodyDef` gets registered with matter automatically on `Container.addChild`, and the rest of your game code (collision handlers, velocity reads, gravity tweaks, etc.) talks to the shared [`PhysicsAdapter`](https://melonjs.github.io/melonJS/) interface so it works with either adapter.
 
+`create()` is the form every melonJS physics adapter shares (see `PhysicsAdapterClass` in the melonJS API): it waits for the adapter's `load()`, then constructs it, so the same line works for an adapter whose engine is WebAssembly and has to be downloaded first. matter-js is plain JavaScript and needs no loading, so here `load()` resolves at once and `new MatterAdapter({ ... })` does exactly the same thing. It stays supported.
+
 ### Options
 
-The options go in the `new MatterAdapter({ ... })` call you pass as `physic` above. They are all optional; this is that call with each one at its default:
+The options go in the `MatterAdapter.create({ ... })` call you pass as `physic` above. They are all optional; this is that call with each one at its default:
 
 ```ts
-physic: new MatterAdapter({
+physic: await MatterAdapter.create({
     gravity: { x: 0, y: 1 },
     subSteps: 1,
     // forwarded to Matter.Engine.create; these are matter's own defaults
@@ -54,7 +56,7 @@ physic: new MatterAdapter({
 
 `gravity` can also change while the game runs: the adapter reads `app.world.adapter.gravity` at every step, so `app.world.adapter.gravity.set(0, 5)` applies from the next one. It also overrides any `x` / `y` given in `matterEngineOptions.gravity`.
 
-The other options cannot change on a live adapter. To change them, create a new `MatterAdapter` and switch to it with `app.world.setAdapter()`, which rebuilds every body from its `bodyDef`, at rest. The matter engine's own settings stay writable on `adapter.engine`: `positionIterations`, `velocityIterations` and `enableSleeping` are read at every step.
+The other options cannot change on a live adapter. To change them, switch to a new one with `app.world.setAdapter(await MatterAdapter.create({ ... }))`, which rebuilds every body from its `bodyDef`, at rest. The matter engine's own settings stay writable on `adapter.engine`: `positionIterations`, `velocityIterations` and `enableSleeping` are read at every step.
 
 The defaults are matter-js native (`gravity = (0, 1)` with `gravity.scale = 0.001`). For an arcade-feel platformer where the player moves a few px per step, you usually want a stronger `gravity.y` (e.g. `4`–`6`).
 
@@ -336,7 +338,7 @@ Use `stiffness: 1` for a rigid hinge, low `stiffness` (~0.01–0.05) for spring-
 Matter can mark idle bodies as "sleeping" and skip integrating them entirely until disturbed — a meaningful CPU win when you have dozens of static-after-settling props (debris, fallen blocks, settled stacks). Enable at the engine level via the constructor, then leave matter to manage sleep state.
 
 ```ts
-new MatterAdapter({
+await MatterAdapter.create({
     gravity: { x: 0, y: 5 },
     matterEngineOptions: {
         enableSleeping: true,
@@ -546,7 +548,7 @@ const app = new Application(800, 600, {
     parent: "screen",
     renderer: video.AUTO,
     // (1) Swap the adapter. Pick a gravity that suits your sprite scale.
-    physic: new MatterAdapter({ gravity: { x: 0, y: 5 } }),
+    physic: await MatterAdapter.create({ gravity: { x: 0, y: 5 } }),
 });
 
 // mandatory since melonJS 20.0: the renderer is built here

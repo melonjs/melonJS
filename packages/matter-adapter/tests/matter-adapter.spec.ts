@@ -95,8 +95,8 @@ describe("MatterAdapter — feature parity with BuiltinAdapter", () => {
 			adapter.setStatic(a, true);
 
 			const spring = adapter.matter.Constraint.create({
-				bodyA: a.body,
-				bodyB: b.body,
+				bodyA: a.body as MatterAdapter.Body,
+				bodyB: b.body as MatterAdapter.Body,
 				stiffness: 0.1,
 				length: 0,
 			});
@@ -432,7 +432,8 @@ describe("MatterAdapter — feature parity with BuiltinAdapter", () => {
 				type: "dynamic",
 				shapes: [new Rect(0, 0, 32, 32)],
 			});
-			body = r.body;
+			// the matter adapter installs every helper below on the body
+			body = r.body as MatterAdapter.Body as typeof body;
 		});
 
 		it("body.setVelocity writes through to Matter.Body.velocity", () => {

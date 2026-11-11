@@ -1,6 +1,9 @@
 # Changelog
 
-## 1.5.4 - _unreleased_
+## 1.6.0 - _unreleased_
+
+### Added
+- `MatterAdapter.load()` and `MatterAdapter.create(options)`, the static API every melonJS physics adapter shares; `new MatterAdapter(options)` is unchanged
 
 ### Fixed
 - `raycast()` finds a body made of several shapes, or a concave outline matter splits into parts; it returned `null`

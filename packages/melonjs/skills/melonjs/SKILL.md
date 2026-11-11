@@ -136,7 +136,7 @@ const app = new Application(800, 600, {
     parent: "screen",
     // gravity is in pixels/s²; pixelsPerMeter converts it to the adapter's
     // metres. Both are shown at their defaults; subSteps defaults to 1
-    physic: new PlanckAdapter({
+    physic: await PlanckAdapter.create({
         gravity: { x: 0, y: 320 },
         pixelsPerMeter: 32,
         subSteps: 2,
@@ -144,6 +144,8 @@ const app = new Application(800, 600, {
 });
 await app.init();
 ```
+
+Every adapter is made the same way, with `await X.create(options)`.
 
 `melonjs-plugins` covers the registry, the version gate and writing your own.
 
