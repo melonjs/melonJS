@@ -91,7 +91,8 @@ an import change and a gravity re-tune.
 | 2.5D with height: isometric, beat-'em-up lanes | built-in only | the only backend that takes `Box3d` and `Sphere`; the 2D engines refuse them |
 | fighting game or brawler, hitboxes and hurtboxes on one body | built-in, planck or Rapier | matter ignores a shape's own `collisionType`, `collisionMask` and `isTrigger` |
 | stacking, towers, catapult and destruction puzzles | planck, or Rapier for many pieces | an iterative solver keeps a pile crisp; Rapier is built for many bodies at once |
-| pinball, billiards, mini-golf | planck or Rapier | fast balls need continuous collision; matter has none, only `subSteps` |
+| pool, billiards, mini-golf: few bodies, a capped top speed | any rigid-body adapter, matter included | give matter enough `subSteps` that a ball moves less than its radius per sub-step: the `pool-matter` example's break, about 30 px a frame on 16 px balls, runs on 2 |
+| pinball, physical bullets: bodies much faster than their own size, with no useful cap | planck or Rapier | continuous collision (planck's `setBullet`, Rapier's `enableCcd`); matter has none, and each sub-step is a full extra solve |
 | vehicles, ragdolls, ropes, chains | planck or Rapier | joint solvers; on every adapter a joint is made through the engine's own API |
 | casual physics toy, prototype, game jam | matter | it works in pixels, so there is nothing to convert; its softer stacking does not show |
 | sandbox with lots of debris | Rapier | many bodies at once, concave pieces simulated exactly |
