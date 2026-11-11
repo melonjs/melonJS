@@ -97,7 +97,7 @@ export class PlayerEntity extends Sprite {
 					settings.height,
 				),
 			],
-			// a platformer actor must stay upright: since matter-adapter 2.0.0
+			// a platformer actor must stay upright: since matter-adapter 1.4.0
 			// `fixedRotation` follows matter's own default of `false`, so a
 			// body that should never tip over asks for it
 			fixedRotation: true,

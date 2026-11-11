@@ -13,8 +13,9 @@
  *         // hit.fraction   — 0..1 along the ray, from `from` to `to`
  *     }
  *
- * Same call works unchanged under BuiltinAdapter, MatterAdapter, and
- * PlanckAdapter — game code never branches on the active engine.
+ * Same call works unchanged under BuiltinAdapter, MatterAdapter,
+ * PlanckAdapter and RapierAdapter — game code never branches on the active
+ * engine. On every one a ray skips a body it starts inside.
  *
  * This demo wraps `raycast` in a stealth-style vision cone: a fan of
  * 21 rays cast each frame from a rotating "sentry" across its forward
@@ -98,10 +99,10 @@ const OBSTACLE_OUTLINE_WIDTH = 2;
 /**
  * Something the sentry cannot see through. Declarative `bodyDef` — the
  * engine forwards it to the active physics adapter (BuiltinAdapter here,
- * but the same code runs unchanged under Matter or Planck) on `addChild`,
- * which creates the actual `body` and wires it into the broadphase so
- * raycasts can find it. The user can drag obstacles around; the body
- * follows `pos`, so the next raycast picks up the new position
+ * but the same code runs unchanged under Matter, Planck or Rapier) on
+ * `addChild`, which creates the actual `body` and wires it into the
+ * broadphase so raycasts can find it. The user can drag obstacles around;
+ * the body follows `pos`, so the next raycast picks up the new position
  * automatically.
  */
 abstract class Obstacle extends Renderable {
@@ -376,7 +377,7 @@ class Sentry extends Renderable {
  *      against last frame's set to avoid re-flagging the unchanged.
  *
  * All raycasts go through `world.adapter.raycast(from, to)` — the same
- * call works under Builtin / Matter / Planck.
+ * call works under Builtin / Matter / Planck / Rapier.
  */
 class VisionCone extends Renderable {
 	private readonly sentry: Sentry;

@@ -85,7 +85,8 @@ an import change and a gravity re-tune.
 | game | adapter | why |
 |---|---|---|
 | tile platformer, jumps authored as curves | built-in | movement is designed, not simulated; a body resting on flat static ground is exact to the pixel |
-| platformer whose player stands still on slopes or rides moving platforms | Rapier or planck | the built-in has no surface friction, so a body on an incline slides down it; both have true kinematic bodies, and Rapier a character controller (its own API, not the portable one) |
+| platformer with slopes the player stands still on | any rigid-body adapter | the built-in has no surface friction, so a body on an incline slides down it. Walking up one is your own code on matter and planck (the `platformer-matter` example snaps its player onto sensor slopes); Rapier's character controller does it, through Rapier's own API, not the portable one |
+| platformer with moving platforms that carry the player | planck or Rapier | true kinematic bodies, moved by their velocity; the built-in and matter build a dynamic body for `kinematic` |
 | top-down RPG or adventure, grid or tile puzzle | built-in | collision is "did these touch" plus a push-out; no dependency, smallest bundle |
 | shoot-'em-up, bullet hell | built-in | bullets need detection, not a physical response |
 | 2.5D with height: isometric, beat-'em-up lanes | built-in only | the only backend that takes `Box3d` and `Sphere`; the 2D engines refuse them |
