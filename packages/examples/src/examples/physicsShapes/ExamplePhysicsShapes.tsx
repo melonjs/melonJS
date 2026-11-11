@@ -83,26 +83,30 @@ const BACKENDS = [
  * matter takes its own scaled figure), and comparing backends is worthless
  * unless they agree.
  */
-const createAdapter = (id: string): PhysicsAdapter => {
+const createAdapter = (id: string): Promise<PhysicsAdapter> => {
+	// `create()` is the same call on every adapter: it waits for the adapter
+	// to load, which these three never need, then constructs it
 	if (id === "planck") {
-		return new PlanckAdapter({ gravity: { x: 0, y: GRAVITY_PX_S2 } });
+		return PlanckAdapter.create({ gravity: { x: 0, y: GRAVITY_PX_S2 } });
 	}
 	if (id === "matter") {
-		return new MatterAdapter(); // the reference: its own default
+		return MatterAdapter.create(); // the reference: its own default
 	}
-	return new BuiltinAdapter({
+	return BuiltinAdapter.create({
 		gravity: new Vector2d(0, (GRAVITY_PX_S2 / 3600) * 0.98),
 	});
 };
 
 /**
- * Switch backend without reloading the page: empty the world, hand it the new
- * adapter, and build the scene again on it.
+ * Switch backend without reloading the page. The new adapter is ready first,
+ * so the scene keeps running while one loads; then the world is emptied,
+ * handed the adapter, and the scene is built again on it.
  */
-const switchBackend = (id: string) => {
+const switchBackend = async (id: string) => {
+	const adapter = await createAdapter(id);
 	backend = id;
 	game.world.reset();
-	game.world.setAdapter(createAdapter(id));
+	game.world.setAdapter(adapter);
 	(state.current() as PlayScreen).build();
 };
 
@@ -271,7 +275,7 @@ class BackendButton extends UIBaseElement {
 
 	override onClick() {
 		if (!this.active) {
-			switchBackend(this.target);
+			void switchBackend(this.target);
 		}
 		return false;
 	}
@@ -448,7 +452,7 @@ const createGame = async () => {
 		scaleTarget,
 		renderer: video.AUTO,
 		antiAlias: true,
-		physic: createAdapter(backend),
+		physic: await createAdapter(backend),
 	});
 	await app.init();
 
