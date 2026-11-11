@@ -41,6 +41,14 @@ on the type. `type: "tmj"` throws `unknown or invalid resource type`. You can
 also skip `src` and pass the map inline via `data`, as the parsed JSON object
 of a Tiled JSON export (not an XML string).
 
+**Prefer JSON where there is no DOM.** XML maps and tilesets are parsed with
+`DOMParser`, which only a page has: in a Web Worker, or on nx.js (the Nintendo
+Switch, see `melonjs-deployment`), loading one fails, and `preload()` rejects
+with "Failed loading resource …" whose `cause` (also logged to the console)
+says to export it as JSON. Export the map *and* its external tilesets as
+`.tmj` / `.tsj` (Tiled: File → Export As, or set JSON as the format in the
+project).
+
 `level.load(levelId, options)` accepts `container` (default `game.world`),
 `onLoaded` (default `game.onLevelLoaded`), `flatten` (default `game.mergeGroup`),
 `setViewportBounds` (default **`true`**) and `async` (default `false`). It throws
@@ -471,6 +479,7 @@ layer into the offscreen-bake path instead.
 | a property set on a tile is undefined on the object's `settings` | tile properties are not copied onto `settings`: read them with `settings.resolvedProperty(name)` |
 | objects placed from a classed tile come out as plain sprites | that class is not registered, it is a built-in name, or the object has a class or a registered name of its own, which come first |
 | missing tiles or a blank map | the `.tsx` or tileset image was not preloaded |
+| a map fails to load with "needs DOMParser" (in the error's `cause` and the console) | an XML `.tmx` / `.tsx` loaded where there is no DOM (a Web Worker, nx.js): export the map and its tilesets as JSON (`.tmj` / `.tsj`) |
 | a tileset's transparent color (`trans`) still shows (the console says it could not be applied) | the image cannot be read back: an image the game made itself from another origin without CORS (an `<img>` with no `crossOrigin`) cannot be, so load it with the loader, which only loads an image another origin's server allows (its CORS headers) and can always read back; and a compressed texture cannot be changed: export it with an alpha channel instead |
 | `cellAt` returns `null` (or the wrong tile) for a cell that has one | it was given pixels: `cellAt`, `setTile` and `clearTile` take column and row, only `getTile` takes world pixels |
 | `setTile` shows the wrong tile, or nothing | it was given Tiled's local tile id: use the global id, `tileset.firstgid + localId`, through `getTileById` |

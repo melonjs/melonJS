@@ -55,14 +55,22 @@ export function preloadTMX(tmxData, onload, onerror, settings) {
 				case "xml":
 				case "tmx":
 				case "tsx": {
-					const parser = new DOMParser();
-
-					if (typeof parser.parseFromString === "undefined") {
-						throw new Error(
-							"XML file format loading supported, use the JSON file format instead",
-						);
+					// checked BEFORE constructing one: without it (a Web Worker,
+					// nx.js) `new DOMParser()` is a bare ReferenceError that says
+					// nothing about what to do instead
+					if (
+						typeof globalThis.DOMParser === "undefined" ||
+						typeof globalThis.DOMParser.prototype.parseFromString !== "function"
+					) {
+						// logged as well as thrown: the loader reports a failed
+						// asset by name only (this is the error's `cause`), and
+						// only a runtime with no DOM ever gets here
+						const message = `${tmxData.src}: loading a Tiled map or tileset in XML (.tmx/.tsx/.xml) needs DOMParser, which this runtime does not have. Export it from Tiled as JSON (.tmj/.tsj) instead.`;
+						console.error(message);
+						throw new Error(message);
 					}
 
+					const parser = new DOMParser();
 					const xmlDoc = parser.parseFromString(response, "text/xml");
 					const data = TMXUtils.parse(xmlDoc);
 

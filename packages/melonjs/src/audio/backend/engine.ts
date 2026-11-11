@@ -436,10 +436,12 @@ export class AudioEngine {
 				this._audioUnlocked = true;
 				source.disconnect(0);
 
-				document.removeEventListener("touchstart", unlock, true);
-				document.removeEventListener("touchend", unlock, true);
-				document.removeEventListener("click", unlock, true);
-				document.removeEventListener("keydown", unlock, true);
+				if (typeof document !== "undefined") {
+					document.removeEventListener("touchstart", unlock, true);
+					document.removeEventListener("touchend", unlock, true);
+					document.removeEventListener("click", unlock, true);
+					document.removeEventListener("keydown", unlock, true);
+				}
 
 				for (let i = 0; i < this.sounds.length; i++) {
 					this.sounds[i]._emit("unlock");
@@ -454,6 +456,14 @@ export class AudioEngine {
 				});
 			}
 		};
+
+		// No DOM (nx.js, a Web Worker): no page for a gesture to land on, and
+		// no autoplay policy waiting for one. Unlock straight away instead of
+		// listening on a `document` that does not exist.
+		if (typeof document === "undefined") {
+			unlock();
+			return;
+		}
 
 		document.addEventListener("touchstart", unlock, true);
 		document.addEventListener("touchend", unlock, true);

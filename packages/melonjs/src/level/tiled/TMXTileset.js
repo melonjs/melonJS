@@ -477,9 +477,7 @@ export default class TMXTileset {
 						sw !== image.width ||
 						sh !== image.height
 					) {
-						const canvas = document.createElement("canvas");
-						canvas.width = sw;
-						canvas.height = sh;
+						const canvas = createCanvas(sw, sh);
 						canvas
 							.getContext("2d")
 							.drawImage(image, sx, sy, sw, sh, 0, 0, sw, sh);

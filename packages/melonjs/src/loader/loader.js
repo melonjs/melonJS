@@ -746,14 +746,19 @@ function onResourceLoaded(res, counts) {
  * @param {object} call - the preload call it belonged to
  * @param {{pin: boolean, bundles: Map<string, number>}} [owner] - who asked
  * for it, so a successful {@link loader.reload} hands it to them
+ * @param {*} [cause] - the parser's own error, kept as the thrown error's
+ * `cause`: the message only names the asset, the cause says what went wrong
  * @ignore
  * @internal
  */
-function onLoadingError(res, call, owner) {
+function onLoadingError(res, call, owner, cause) {
 	failureLoadedAssets[res.src] = { asset: res, call, owner };
 	call.failed.add(res.src);
 	emit(LOADER_ERROR, res);
-	throw new Error("Failed loading resource " + res.src);
+	throw new Error(
+		"Failed loading resource " + res.src,
+		cause !== undefined ? { cause } : undefined,
+	);
 }
 
 /** a src that is already a bare path needs no unwrapping @ignore @internal */
@@ -1191,7 +1196,7 @@ export function preload(assets, onloadcb, switchToLoadState = true) {
 				// re-rejects → Promise.all (and the returned promise) reject and
 				// `await loader.preload(...)` surfaces the failure. The trailing
 				// throw keeps the rejection meaningful should it ever stop throwing.
-				onLoadingError(asset, call, entry);
+				onLoadingError(asset, call, entry, err);
 				throw err;
 			});
 	});

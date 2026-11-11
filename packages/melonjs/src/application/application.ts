@@ -6,6 +6,7 @@ import World from "../physics/world.js";
 import state from "../state/state.ts";
 import { boot, initialized } from "../system/bootstrap.ts";
 import * as device from "../system/device.js";
+import { hasDOM } from "../system/dom.ts";
 import {
 	BLUR,
 	emit,
@@ -144,7 +145,11 @@ function resolvePhysicSetting(physic: ApplicationSettings["physic"]): {
  */
 export default class Application {
 	/**
-	 * the parent HTML element holding the main canvas of this application
+	 * the parent HTML element holding the main canvas of this application.
+	 *
+	 * `undefined` in a runtime with no DOM (a Web Worker, or nx.js on the
+	 * Nintendo Switch), where the canvas given in `settings.canvas` is the
+	 * display itself and is not attached to anything.
 	 */
 	parentElement: HTMLElement;
 
@@ -457,8 +462,9 @@ export default class Application {
 		this.settings = settings;
 
 		// identify parent element and/or the html target for resizing
+		// without a DOM there is nothing to mount the canvas in or measure
 		this.parentElement = device.getElement(settings.parent!);
-		if (typeof settings.scaleTarget !== "undefined") {
+		if (hasDOM() && typeof settings.scaleTarget !== "undefined") {
 			settings.scaleTarget = device.getElement(settings.scaleTarget);
 		}
 
@@ -466,6 +472,7 @@ export default class Application {
 		// a white flash before the first render frame
 		if (
 			settings.backgroundColor !== "transparent" &&
+			hasDOM() &&
 			typeof globalThis.getComputedStyle === "function"
 		) {
 			const computedBg = globalThis.getComputedStyle(
@@ -733,16 +740,21 @@ export default class Application {
 		// EVERY resize event (the slow canvas-growth loop of #1231). `block`
 		// removes the gap. Only applied when the canvas carries no explicit
 		// inline display, so user styling stays authoritative.
-		if (canvas.style.display === "") {
-			canvas.style.display = "block";
+		// (a canvas with no `style`, like nx.js's `screen`, is not in a page)
+		const style = (canvas as { style?: CSSStyleDeclaration }).style;
+		if (style?.display === "") {
+			style.display = "block";
 		}
-		this.parentElement.appendChild(canvas);
+		// no DOM: the canvas is the display, there is nothing to append it to
+		if (hasDOM()) {
+			this.parentElement.appendChild(canvas);
+		}
 
 		// trigger an initial resize();
 		onresize(this);
 
 		// add an observer to detect when the dom tree is modified
-		if ("MutationObserver" in globalThis) {
+		if (hasDOM() && "MutationObserver" in globalThis) {
 			// Create an observer instance linked to the callback function
 			// (stored so destroy() can disconnect it — otherwise every
 			// discarded Application keeps re-laying-out against a parent
@@ -884,6 +896,7 @@ export default class Application {
 
 	/**
 	 * Returns the parent HTML Element holding the main canvas of this application
+	 * (`undefined` in a runtime with no DOM, see {@link Application#parentElement})
 	 * @returns the parent HTML element
 	 */
 	getParentElement(): HTMLElement {

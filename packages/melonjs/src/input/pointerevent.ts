@@ -839,7 +839,12 @@ export function setTouchAction(
 	element: HTMLCanvasElement,
 	value?: string,
 ): void {
-	element.style["touch-action" as any] = value || "none";
+	// a canvas with no `style` (nx.js's `screen`) has no browser gestures
+	// to disable
+	const style = (element as { style?: CSSStyleDeclaration }).style;
+	if (style) {
+		style["touch-action" as any] = value || "none";
+	}
 }
 
 /**
