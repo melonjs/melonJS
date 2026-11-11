@@ -1,9 +1,10 @@
 /**
- * What the Rapier adapter does that the cross-adapter spec (in the planck
- * package) does not already pin on every backend: loading its WebAssembly,
- * 32-bit collision filtering over Rapier's 16-bit groups, the colliders a
- * shape becomes, forces across sub-steps, sensors, the event lifecycle, and
- * the queries.
+ * What only the Rapier adapter does. The shared contract (collision
+ * filtering on 32 bits, the event lifecycle, isGrounded, the queries,
+ * setStatic, updateShape, swaps) is pinned on every backend by the
+ * cross-adapter spec in the planck package; this spec covers loading its
+ * WebAssembly, its units, forces across sub-steps, the colliders a shape
+ * becomes, its sensors, kinematic bodies, and its lifecycle.
  */
 
 import {
@@ -11,7 +12,6 @@ import {
 	type BodyShape,
 	Box3d,
 	boot,
-	collision,
 	Ellipse,
 	Line,
 	Point,
@@ -167,72 +167,6 @@ describe("RapierAdapter", () => {
 		});
 	});
 
-	describe("collision filtering, on 32 bits", () => {
-		// each case in a world of its own
-		const fallsThrough = (floor: object, faller: object) => {
-			adapter = new RapierAdapter();
-			world = new World(0, 0, 800, 600, adapter);
-			wall(0, 300, 800, 20, floor);
-			const b = box(384, 200, faller);
-			run(90);
-			return b.pos.y > 320;
-		};
-
-		it("low types and masks filter natively", () => {
-			const { PLAYER_OBJECT, ENEMY_OBJECT, WORLD_SHAPE } = collision.types;
-			expect(
-				fallsThrough(
-					{ collisionType: WORLD_SHAPE },
-					{ collisionType: PLAYER_OBJECT, collisionMask: ENEMY_OBJECT },
-				),
-			).toBe(true);
-			expect(
-				fallsThrough(
-					{ collisionType: WORLD_SHAPE },
-					{ collisionType: PLAYER_OBJECT, collisionMask: WORLD_SHAPE },
-				),
-			).toBe(false);
-		});
-
-		it("a type from bit 16 up collides only where the masks allow it", () => {
-			const HIGH = collision.types.USER << 12;
-			expect(fallsThrough({}, { collisionType: HIGH })).toBe(false);
-			expect(
-				fallsThrough(
-					{ collisionMask: collision.types.PLAYER_OBJECT },
-					{ collisionType: HIGH },
-				),
-			).toBe(true);
-		});
-
-		it("a mask of high bits only reaches a high type, and nothing else", () => {
-			const HIGH = collision.types.USER << 12;
-			expect(
-				fallsThrough(
-					{ collisionType: HIGH },
-					{ collisionType: collision.types.PLAYER_OBJECT, collisionMask: HIGH },
-				),
-			).toBe(false);
-			expect(
-				fallsThrough(
-					{ collisionType: collision.types.WORLD_SHAPE },
-					{ collisionType: collision.types.PLAYER_OBJECT, collisionMask: HIGH },
-				),
-			).toBe(true);
-		});
-
-		it("collisionType and collisionMask on the body read and write the filter", () => {
-			const b = box(100, 100);
-			const body = b.body as RapierAdapter.Body;
-			expect(body.collisionType).toBe(collision.types.PLAYER_OBJECT);
-			expect(body.collisionMask).toBe(collision.types.ALL_OBJECT);
-			body.collisionType = collision.types.ENEMY_OBJECT;
-			adapter.setCollisionMask(b, collision.types.WORLD_SHAPE);
-			expect(body.collisionType).toBe(collision.types.ENEMY_OBJECT);
-			expect(body.collisionMask).toBe(collision.types.WORLD_SHAPE);
-		});
-	});
-
 	describe("the colliders a shape becomes", () => {
 		const shapesOf = (shapes: BodyShape[], type = "static") => {
 			const r = make(100, 100, 100, 100, {
@@ -323,43 +257,6 @@ describe("RapierAdapter", () => {
 	});
 
 	describe("collision events", () => {
-		it("start once, active while touching, end once, with normal and depth", () => {
-			wall(0, 300, 800, 20);
-			const b = box(384, 200);
-			const log: string[] = [];
-			let landing: Response | undefined;
-			b.onCollisionStart = (r) => {
-				log.push("start");
-				landing = { normal: { ...r.normal }, depth: r.depth };
-			};
-			b.onCollisionActive = () => {
-				if (log.at(-1) !== "active") log.push("active");
-			};
-			b.onCollisionEnd = () => {
-				log.push("end");
-			};
-			run(90);
-			expect(landing?.normal.y).toBeCloseTo(-1, 3);
-			expect(landing?.depth).toBeGreaterThanOrEqual(0);
-			adapter.setVelocity(b, new Vector2d(0, -600));
-			run(10);
-			expect(log).toEqual(["start", "active", "end"]);
-		});
-
-		it("a partner hears the end when the other body is removed", () => {
-			const floor = wall(0, 300, 800, 20);
-			const b = box(384, 200);
-			let ended = 0;
-			b.onCollisionEnd = () => {
-				ended++;
-			};
-			run(90);
-			world.removeChildNow(floor);
-			expect(ended).toBe(1);
-			run(5);
-			expect(ended).toBe(1);
-		});
-
 		it("a sensor reports contacts, pushes nothing, and has no normal", () => {
 			const zone = wall(300, 250, 200, 100, { isSensor: true });
 			const b = box(384, 100);
@@ -375,62 +272,11 @@ describe("RapierAdapter", () => {
 	});
 
 	describe("isGrounded", () => {
-		it("on a floor, not in the air, not against a wall", () => {
-			wall(0, 300, 800, 20);
-			wall(500, 0, 20, 300);
-			const b = box(200, 100);
-			expect(adapter.isGrounded(b)).toBe(false);
-			run(90);
-			expect(adapter.isGrounded(b)).toBe(true);
-			// pushed against the wall, off the floor
-			const side = box(470, 50, { gravityScale: 0 });
-			adapter.setVelocity(side, new Vector2d(300, 0));
-			run(10);
-			expect(adapter.isGrounded(side)).toBe(false);
-		});
-
 		it("on a sensor, when the sensor's centre is below", () => {
 			wall(0, 300, 800, 40, { isSensor: true });
 			const b = box(200, 290, { gravityScale: 0 });
 			run(1);
 			expect(adapter.isGrounded(b)).toBe(true);
-		});
-	});
-
-	describe("queries", () => {
-		it("raycast finds the first body, its surface and normal", () => {
-			const target = wall(400, 280, 40, 40);
-			run(1);
-			const hit = adapter.raycast(
-				new Vector2d(100, 300),
-				new Vector2d(700, 300),
-			);
-			expect(hit?.renderable).toBe(target);
-			expect(hit?.point.x).toBeCloseTo(400, 1);
-			expect(hit?.normal.x).toBeCloseTo(-1, 3);
-			expect(hit?.fraction).toBeCloseTo(0.5, 2);
-		});
-
-		it("raycast skips a body the ray starts inside", () => {
-			const self = wall(80, 280, 40, 40);
-			const target = wall(400, 280, 40, 40);
-			run(1);
-			const hit = adapter.raycast(
-				new Vector2d(100, 300),
-				new Vector2d(700, 300),
-			);
-			expect(hit?.renderable).not.toBe(self);
-			expect(hit?.renderable).toBe(target);
-		});
-
-		it("queryAABB returns each body overlapping the rectangle once", () => {
-			const a = make(100, 100, 40, 40, {
-				type: "static",
-				shapes: [new Rect(0, 0, 20, 40), new Rect(20, 0, 20, 40)],
-			});
-			wall(600, 100, 40, 40);
-			run(1);
-			expect(adapter.queryAABB(new Rect(90, 90, 100, 100))).toEqual([a]);
 		});
 	});
 
@@ -444,24 +290,6 @@ describe("RapierAdapter", () => {
 			run(60);
 			expect(k.pos.y).toBeCloseTo(100, 3);
 			expect(k.pos.x).toBeCloseTo(160, 0);
-		});
-
-		it("setStatic stops a body, and lets it go again", () => {
-			const b = box(100, 100);
-			adapter.setStatic(b, true);
-			run(30);
-			expect(b.pos.y).toBeCloseTo(100, 3);
-			adapter.setStatic(b, false);
-			run(30);
-			expect(b.pos.y).toBeGreaterThan(110);
-		});
-
-		it("updateShape rebuilds the body and keeps its velocity", () => {
-			const b = box(100, 100, { gravityScale: 0 });
-			adapter.setVelocity(b, new Vector2d(90, 0));
-			adapter.updateShape(b, [new Rect(0, 0, 32, 64)]);
-			expect(adapter.getVelocity(b).x).toBeCloseTo(90, 3);
-			expect(adapter.getBodyShapes(b)[0].getBounds().height).toBeCloseTo(64, 3);
 		});
 
 		it("a body rotates unless fixedRotation is set", () => {
@@ -487,6 +315,39 @@ describe("RapierAdapter", () => {
 				3,
 			);
 		});
+	});
+
+	it("step() outside init() says so, and destroy() is safe twice", () => {
+		adapter.destroy();
+		expect(() => {
+			adapter.destroy();
+		}).not.toThrow();
+		expect(() => {
+			adapter.step(FRAME_MS);
+		}).toThrow(/no Rapier world/);
+		expect(() => {
+			new RapierAdapter().destroy();
+		}).not.toThrow();
+	});
+
+	it("units hold at another scale and anchor", () => {
+		adapter = new RapierAdapter({ pixelsPerMeter: 64 });
+		world = new World(0, 0, 800, 600, adapter);
+		const r = new Renderable(100, 100, 32, 32) as Hooked;
+		r.alwaysUpdate = true;
+		// centred anchor, the Renderable default
+		r.bodyDef = {
+			type: "dynamic",
+			shapes: [new Rect(0, 0, 32, 32)],
+			gravityScale: 0,
+		};
+		world.addChild(r);
+		adapter.setVelocity(r, new Vector2d(120, 0));
+		run(60);
+		// px/s whatever the scale, and `pos` stays where the anchor puts it
+		expect(r.pos.x).toBeCloseTo(220, 0);
+		expect(r.pos.y).toBeCloseTo(100, 3);
+		expect(adapter.getVelocity(r).x).toBeCloseTo(120, 3);
 	});
 
 	it("destroy() frees Rapier's world, and init() builds a new one", () => {

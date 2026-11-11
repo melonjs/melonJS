@@ -303,10 +303,23 @@ const registeredBodies = new WeakMap();
  * @internal
  * @param {Renderable} node - the renderable entering the world
  * @param {Container} worldContainer - the root world container
+ * @param {Error[]} [refused] - when given, a body the adapter refuses to
+ * build is recorded here and the rest of the tree is still registered;
+ * otherwise the refusal is thrown
  */
-export function registerTreeBodies(node, worldContainer) {
+export function registerTreeBodies(node, worldContainer, refused) {
 	if (registeredBodies.get(node) !== worldContainer) {
-		if (registerChildBody(node, worldContainer)) {
+		let registered;
+		try {
+			registered = registerChildBody(node, worldContainer);
+		} catch (error) {
+			if (refused === undefined) {
+				throw error;
+			}
+			refused.push(error);
+			registered = false;
+		}
+		if (registered) {
 			registeredBodies.set(node, worldContainer);
 		} else {
 			// nothing for the engine to register: a body this renderable
@@ -316,7 +329,7 @@ export function registerTreeBodies(node, worldContainer) {
 	}
 	if (node instanceof Container) {
 		node.forEach((child) => {
-			registerTreeBodies(child, worldContainer);
+			registerTreeBodies(child, worldContainer, refused);
 		});
 	}
 }

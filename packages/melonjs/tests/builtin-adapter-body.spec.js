@@ -571,9 +571,14 @@ describe("Physics : BuiltinAdapter (Body parity with body.spec.js)", () => {
 			expect(r.body.collisionMask).toEqual(7);
 		});
 
-		it("isGrounded reflects !body.falling && !body.jumping", () => {
+		it("isGrounded needs a surface under the body, and !falling && !jumping", () => {
 			r.body.falling = false;
 			r.body.jumping = false;
+			// not falling, but nothing under it: the interface's rule is a
+			// surface below, which a collision pushing the body up records
+			r.body.onSurface = false;
+			expect(adapter.isGrounded(r)).toEqual(false);
+			r.body.onSurface = true;
 			expect(adapter.isGrounded(r)).toEqual(true);
 
 			r.body.falling = true;

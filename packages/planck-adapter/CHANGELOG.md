@@ -10,11 +10,13 @@
 - A body removed with `removeChildNow()` from `onCollisionStart` or `onCollisionEnd` no longer stays behind as an invisible collider
 - `setFrictionAir()` damps rotation as well as movement, as `frictionAir` in a `bodyDef` does
 - A body with no `collisionMask` collides with every collision type, as on the other adapters; user types from bit 16 up were ignored
-- The start-up version check asks for melonJS 20.0, as the peer dependency does
+- The start-up version check requires melonJS 20.0 or later, as the peer dependency does; it accepted 19.5
 - Requires planck 1.5.1, where a jammed body no longer makes `World.step()` throw
 - A shape contact carries `overlapN`, `overlapV` and the Z fields its type declares, as on the builtin adapter
 - `getMaxVelocity()` reads a body with no cap as `Infinity`, not `{ 0, 0 }`, and returns a copy
 - `addBody()` sets `renderable.isKinematic` to `false`, as the builtin adapter does, so a renderable with a body receives pointer events
+- `body.collisionType` and `body.collisionMask` read the first shape's values; they read the last shape's
+- A body removed by its partner's collision handler is no longer told about that contact
 
 ## 1.6.3 - _2026-11-09_
 

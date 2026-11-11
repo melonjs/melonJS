@@ -210,6 +210,8 @@ export class RapierAdapter implements PhysicsAdapter {
 	melonWorld!: World;
 
 	private eventQueue!: RAPIER.EventQueue;
+	/** true between {@link init} and {@link destroy}: Rapier's world exists */
+	private alive = false;
 	/** Filters every pair with a 32-bit collision type or mask; see `_applyFilter`. */
 	private readonly hooks: RAPIER.PhysicsHooks;
 
@@ -368,9 +370,15 @@ export class RapierAdapter implements PhysicsAdapter {
 			this.vecInMeters(this.gravity.x, this.gravity.y),
 		);
 		this.eventQueue = new this.rapier.EventQueue(true);
+		this.alive = true;
 	}
 
 	destroy(): void {
+		// nothing to free before `init()`, or a second time
+		if (!this.alive) {
+			return;
+		}
+		this.alive = false;
 		// Rapier's objects live in WebAssembly memory, which the garbage
 		// collector does not reclaim: they are freed here
 		this.eventQueue.free();
@@ -389,6 +397,11 @@ export class RapierAdapter implements PhysicsAdapter {
 	}
 
 	step(dt: number): void {
+		if (!this.alive) {
+			throw new Error(
+				"@melonjs/rapier2d-adapter: step() on an adapter with no Rapier world: it was destroyed, or never installed with `world.setAdapter()`.",
+			);
+		}
 		// as the other adapters: no simulation while the game is paused
 		if (state.isPaused()) {
 			return;
@@ -1319,7 +1332,8 @@ export class RapierAdapter implements PhysicsAdapter {
 			depth,
 			pair,
 		};
-		if (!aDetached) {
+		// a handler earlier in this dispatch may have removed this body
+		if (!aDetached && this.bodyMap.has(rA)) {
 			const fnA = (rA as Renderable & Record<string, unknown>)[
 				methodForSide(rA)
 			];
@@ -1331,7 +1345,7 @@ export class RapierAdapter implements PhysicsAdapter {
 				);
 			}
 		}
-		if (!bDetached) {
+		if (!bDetached && this.bodyMap.has(rB)) {
 			const fnB = (rB as Renderable & Record<string, unknown>)[
 				methodForSide(rB)
 			];
@@ -1385,7 +1399,8 @@ export class RapierAdapter implements PhysicsAdapter {
 		): void => {
 			const receiver = own.renderable;
 			const fn = (receiver as Renderable & Record<string, unknown>)[method];
-			if (typeof fn !== "function") {
+			// skipped too when an earlier handler removed this body
+			if (typeof fn !== "function" || !this.bodyMap.has(receiver)) {
 				return;
 			}
 			(fn as (contact: unknown, other: Renderable) => unknown).call(

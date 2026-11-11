@@ -164,6 +164,8 @@ adapter.queryAABB(rect: Rect) → Renderable[]
 
 `queryAABB` returns every renderable with a body overlapping the rectangle, once each, from the colliders' bounding boxes. A renderable without a body is never returned.
 
+Rapier indexes bodies for these queries when its world steps, so a body added this frame is found from the next frame on, as on the built-in adapter.
+
 ## Shapes
 
 | melonJS shape | Rapier collider | notes |

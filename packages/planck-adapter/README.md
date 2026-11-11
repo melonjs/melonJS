@@ -257,7 +257,7 @@ Internally each `shape` becomes a `planck.Fixture` attached to a single `planck.
 
 ### Collision filter API
 
-planck filters per fixture, with `categoryBits` and `maskBits`. `body.collisionType` and `body.collisionMask` are live aliases of those bits: a write sets every fixture of the body, and a read returns the last shape's value.
+planck filters per fixture, with `categoryBits` and `maskBits`. `body.collisionType` and `body.collisionMask` are live aliases of those bits: a write sets every fixture of the body, and a read returns the first shape's value.
 
 ```ts
 // these two lines do the same thing, on every fixture of the body:

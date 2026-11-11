@@ -126,9 +126,10 @@ describe("Physics : BuiltinAdapter (latent bug hunt)", () => {
 			// ACTUAL: falling = vel.y * Math.sign(0) > 0 = 5 * 0 > 0 = false.
 			// PIN — confirms the force-dependent semantic.
 			expect(r.body.falling).toEqual(false);
-			// And consequently isGrounded reports TRUE for a body in free fall
-			// — a real arcade-physics footgun for anyone relying on it.
-			expect(adapter.isGrounded(r)).toEqual(true);
+			// isGrounded used to read only these flags, and so reported TRUE
+			// for a body in free fall. It now also needs a surface the body
+			// was pushed up out of this step, and there is none.
+			expect(adapter.isGrounded(r)).toEqual(false);
 		});
 
 		it("PIN: during an upward jump (force<0, vel<0), falling reports TRUE", () => {

@@ -115,6 +115,20 @@ function unsupportedShapeMessage(adapter: string, shape: BodyShape): string {
 }
 
 /**
+ * The fixture built from a body's first shape: Box2D keeps the fixture list
+ * newest first, so it is the list's last.
+ * @param body - the planck body
+ * @returns that fixture, or null for a body without any
+ */
+function firstShapeFixture(body: planck.Body): planck.Fixture | null {
+	let fixture = body.getFixtureList();
+	while (fixture?.getNext()) {
+		fixture = fixture.getNext();
+	}
+	return fixture;
+}
+
+/**
  * The most vertices Box2D will keep on one polygon. Measured against planck
  * rather than taken from the header: anything above this is truncated without
  * a word, and far above it the shape collapses.
@@ -743,14 +757,16 @@ export class PlanckAdapter implements PhysicsAdapter {
 		Object.assign(body, helpers);
 
 		// Live getter/setter aliases for `collisionType` / `collisionMask`
-		// that read and write the first fixture's filter bits. Each
+		// that read the first shape's filter bits and write every fixture's.
+		// Box2D keeps its fixture list newest first, so the first shape's
+		// fixture is the list's last. Each
 		// fixture has its own filter in Box2D; we surface the body-wide
 		// aliases here because user code expects single values. Writes
 		// propagate to every fixture (see setCollisionType / setCollisionMask).
 		Object.defineProperties(body, {
 			collisionType: {
 				get(this: planck.Body) {
-					const f = this.getFixtureList();
+					const f = firstShapeFixture(this);
 					return f ? f.getFilterCategoryBits() : 0;
 				},
 				set(this: planck.Body, v: number) {
@@ -767,7 +783,7 @@ export class PlanckAdapter implements PhysicsAdapter {
 			},
 			collisionMask: {
 				get(this: planck.Body) {
-					const f = this.getFixtureList();
+					const f = firstShapeFixture(this);
 					return f ? f.getFilterMaskBits() : 0;
 				},
 				set(this: planck.Body, v: number) {
@@ -1426,7 +1442,8 @@ export class PlanckAdapter implements PhysicsAdapter {
 			pair: contact,
 		};
 
-		if (!aDetached) {
+		// a handler earlier in this dispatch may have removed this body
+		if (!aDetached && this.bodyMap.has(rA)) {
 			const mA = methodForSide(rA);
 			const fnA = (rA as Renderable & Record<string, unknown>)[mA];
 			if (typeof fnA === "function") {
@@ -1437,7 +1454,7 @@ export class PlanckAdapter implements PhysicsAdapter {
 				);
 			}
 		}
-		if (!bDetached) {
+		if (!bDetached && this.bodyMap.has(rB)) {
 			const mB = methodForSide(rB);
 			const fnB = (rB as Renderable & Record<string, unknown>)[mB];
 			if (typeof fnB === "function") {
@@ -1502,7 +1519,8 @@ export class PlanckAdapter implements PhysicsAdapter {
 			ownNy: number,
 		): void => {
 			const fn = (receiver as Renderable & Record<string, unknown>)[method];
-			if (typeof fn !== "function") {
+			// skipped too when an earlier handler removed this body
+			if (typeof fn !== "function" || !this.bodyMap.has(receiver)) {
 				return;
 			}
 			// a separated contact carries identity only, matching the builtin

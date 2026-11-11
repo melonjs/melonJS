@@ -43,8 +43,8 @@ const VIEWPORT_H = 640;
 
 /**
  * matter's own default fall speed, measured in this scene by timing a 200px
- * free fall. It is the reference the other two backends are matched to, so
- * the three piles are comparable.
+ * free fall. It is the reference the other backends are matched to, so the
+ * four piles are comparable.
  */
 const GRAVITY_PX_S2 = 900;
 
@@ -82,16 +82,16 @@ const BACKENDS = [
 
 /**
  * A fresh adapter for a backend, with gravity matched to MATTER across all
- * three. The defaults are not comparable: measured by timing a 200px free
+ * four. The defaults are not comparable: measured by timing a 200px free
  * fall, the built-in world falls at ~3600 px/s², matter at ~900 and planck at
  * ~330, an elevenfold spread. Each is "Earth-like" in its own unit (the
- * built-in applies gravity per step, 60 steps a second; planck takes px/s²;
- * matter takes its own scaled figure), and comparing backends is worthless
- * unless they agree.
+ * built-in applies gravity per step, 60 steps a second; planck and Rapier
+ * take px/s²; matter takes its own scaled figure), and comparing backends
+ * is worthless unless they agree.
  */
 const createAdapter = (id: string): Promise<PhysicsAdapter> => {
 	// `create()` is the same call on every adapter: it waits for the adapter
-	// to load, which these three never need, then constructs it
+	// to load (only Rapier has anything to load), then constructs it
 	if (id === "planck") {
 		return PlanckAdapter.create({ gravity: { x: 0, y: GRAVITY_PX_S2 } });
 	}
@@ -193,7 +193,7 @@ class ShapeBody extends Renderable {
 		this.autoTransform = true;
 		this.isKinematic = false;
 		// the shape file, named by the key it was preloaded under, and the
-		// body to read out of it. Identical on all three backends.
+		// body to read out of it. Identical on every backend.
 		this.bodyDef = {
 			type: still ? "static" : "dynamic",
 			shapes: "shapes",

@@ -1097,18 +1097,29 @@ class Detector {
 							const isEntry = !this.activePairs.has(pairKey);
 							const viewA = this.fillSymView(0, this.response, false);
 							const viewB = this.fillSymView(1, this.response, true);
+							// each handler is user code, and may remove either object:
+							// one whose body is gone is no longer part of this contact
 							if (isEntry) {
 								if (typeof objA.onCollisionStart === "function") {
 									objA.onCollisionStart(viewA, objB);
 								}
-								if (typeof objB.onCollisionStart === "function") {
+								if (
+									objB.body !== undefined &&
+									typeof objB.onCollisionStart === "function"
+								) {
 									objB.onCollisionStart(viewB, objA);
 								}
 							}
-							if (typeof objA.onCollisionActive === "function") {
+							if (
+								objA.body !== undefined &&
+								typeof objA.onCollisionActive === "function"
+							) {
 								objA.onCollisionActive(viewA, objB);
 							}
-							if (typeof objB.onCollisionActive === "function") {
+							if (
+								objB.body !== undefined &&
+								typeof objB.onCollisionActive === "function"
+							) {
 								objB.onCollisionActive(viewB, objA);
 							}
 						}

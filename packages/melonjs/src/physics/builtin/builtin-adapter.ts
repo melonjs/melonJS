@@ -780,11 +780,14 @@ export default class BuiltinAdapter implements PhysicsAdapter {
 	}
 
 	isGrounded(renderable: Renderable): boolean {
-		// Derived from the SAT body's `falling` flag, updated by the
-		// detector each frame: a body is grounded when it's not currently
-		// moving downward off a surface.
+		// The interface's rule: a surface under the body, one this step's
+		// collisions pushed it up out of. The `falling` / `jumping` flags
+		// keep their say (a body rising past a ledge it grazes is still
+		// airborne), but alone they called a body grounded whenever it was
+		// not moving down: one never stepped, or held still in the air with
+		// no gravity.
 		const body = renderable.body as Body;
-		return !body.falling && !body.jumping;
+		return body.onSurface && !body.falling && !body.jumping;
 	}
 
 	raycast(from: Vector2d, to: Vector2d): RaycastHit | null {

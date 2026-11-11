@@ -34,8 +34,9 @@ import {
 /**
  * A minimal adapter that records what the world asks of it.
  * @param {string} label - its `physicLabel`
+ * @param {string[]} [refuse] - names of renderables it cannot build a body for
  */
-const recorder = (label) => {
+const recorder = (label, refuse = []) => {
 	return {
 		physicLabel: label,
 		capabilities: {},
@@ -60,6 +61,9 @@ const recorder = (label) => {
 			this.log.push("sync");
 		},
 		addBody(renderable) {
+			if (refuse.includes(renderable.name)) {
+				throw new Error(`${label} cannot build ${renderable.name}`);
+			}
 			this.held.add(renderable);
 			this.log.push(`add ${renderable.name}`);
 			const body = { owner: label };
@@ -287,6 +291,99 @@ describe("World#setAdapter", () => {
 		expect(world.adapter).toBe(second);
 		expect(second.held.size).toBe(3);
 		expect(second.log).not.toContain("step");
+	});
+
+	it("a body the new adapter refuses does not stop the swap", () => {
+		const first = recorder("first");
+		world.setAdapter(first);
+		const picky = recorder("picky", ["inner"]);
+		expect(() => {
+			world.setAdapter(picky);
+		}).toThrow(/could not build 1 body.*picky cannot build inner/);
+		// the swap is complete for everything else
+		expect(world.adapter).toBe(picky);
+		expect(first.log).toContain("destroy");
+		expect(names(picky)).toEqual(["deep", "top"]);
+		// and the refused renderable holds no handle of the destroyed adapter
+		expect(inner.body).toBeUndefined();
+	});
+
+	it("a refusal during a step is reported, not thrown out of the loop", () => {
+		const first = recorder("first");
+		world.setAdapter(first);
+		const picky = recorder("picky", ["top"]);
+		first.step = function () {
+			world.setAdapter(picky);
+		};
+		const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+		try {
+			expect(() => {
+				world.step(16);
+			}).not.toThrow();
+			expect(spy).toHaveBeenCalledTimes(1);
+			expect(world.adapter).toBe(picky);
+			expect(names(picky)).toEqual(["deep", "inner"]);
+		} finally {
+			spy.mockRestore();
+		}
+	});
+
+	it("asked twice in one step, the last adapter is installed", () => {
+		const first = recorder("first");
+		const second = recorder("second");
+		const third = recorder("third");
+		world.setAdapter(first);
+		first.step = function () {
+			world.setAdapter(second);
+			world.setAdapter(third);
+		};
+		world.step(16);
+		expect(world.adapter).toBe(third);
+		expect(second.log).toEqual([]);
+		expect(third.held.size).toBe(3);
+	});
+
+	it("a swap to another built-in adapter starts the bodies at rest", () => {
+		// the default adapter, a built-in one
+		const old = top.body;
+		old.vel.set(4, 25);
+		world.setAdapter(new BuiltinAdapter());
+		expect(top.body).toBeInstanceOf(Body);
+		expect(top.body).not.toBe(old);
+		expect(top.body.vel.x).toBe(0);
+		expect(top.body.vel.y).toBe(0);
+	});
+
+	it("a body added with a direct addBody() is not built again", () => {
+		const loose = new Renderable(0, 0, 16, 16);
+		loose.name = "loose";
+		world.addChild(loose);
+		const first = recorder("first");
+		world.setAdapter(first);
+		first.addBody(loose, { type: "dynamic", shapes: [new Rect(0, 0, 16, 16)] });
+		const second = recorder("second");
+		world.setAdapter(second);
+		expect(second.held.has(loose)).toBe(false);
+		expect(names(second)).toEqual(["deep", "inner", "top"]);
+	});
+
+	it("setAdapter turns physics on in a world created with none", () => {
+		world.physic = "none";
+		world.setAdapter(recorder("second"));
+		expect(world.physic).toBe("second");
+	});
+
+	it("destroying the world destroys its adapter", () => {
+		const own = recorder("own");
+		const w = new World(0, 0, 100, 100, own);
+		w.destroy();
+		expect(own.log).toContain("destroy");
+		// the default too
+		const builtin = new World(0, 0, 100, 100);
+		const adapter = builtin.adapter;
+		builtin.addChild(withBodyDef("solo"));
+		builtin.destroy();
+		expect(adapter.bodies.size).toBe(0);
 	});
 
 	it("the World constructor installs its adapter through setAdapter", () => {

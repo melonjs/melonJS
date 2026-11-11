@@ -13,11 +13,11 @@ import {
 	WORLD_STEP,
 } from "../system/event.ts";
 import { createBroadphase } from "./broadphase/factory.ts";
+import Body from "./builtin/body.js";
 import BuiltinAdapter from "./builtin/builtin-adapter.ts";
 
 /**
  * @import Application from "./../application/application.ts";
- * @import Body from "./builtin/body.js";
  * @import Detector from "./builtin/detector.js";
  * @import { Vector2d } from "../math/vector2d.ts";
  * @import { PhysicsAdapter } from "./adapter.ts";
@@ -56,6 +56,30 @@ function keepsBodyOf(world, renderable) {
 		}
 	}
 	return false;
+}
+
+/**
+ * Drop the body handles {@link World#setAdapter} is about to build again, at
+ * any depth: a renderable with a `bodyDef` gets a new body from it, at rest,
+ * even from another instance of the same adapter, which would otherwise take
+ * the old built-in `Body` over with its velocity. A definition with no shapes
+ * of its own keeps its body: it is the legacy bridge, whose shapes live on
+ * the `Body` it was built with.
+ * @ignore
+ * @internal
+ * @param {object} node - a renderable leaving the outgoing adapter
+ */
+function releaseDefinedBodies(node) {
+	const shapes = node.bodyDef?.shapes;
+	if (node.body !== undefined && shapes !== undefined && shapes.length > 0) {
+		if (node.body instanceof Body) {
+			node.body.destroy();
+		}
+		node.body = undefined;
+	}
+	if (node instanceof Container) {
+		node.forEach(releaseDefinedBodies);
+	}
 }
 
 /**
@@ -233,6 +257,11 @@ export default class World extends Container {
 		off(LEVEL_LOADED, this.onLevelLoaded);
 		this.onLevelLoaded = undefined;
 		super.destroy(...arguments);
+		// after the children, whose bodies the adapter takes out as they go:
+		// an adapter can hold memory the garbage collector does not reclaim
+		// (Rapier's WebAssembly), so it is released with its world
+		this._pendingAdapter = undefined;
+		this._adapter?.destroy?.();
 	}
 
 	/**
@@ -284,7 +313,15 @@ export default class World extends Container {
 	 * `bodyDef` only works with the {@link BuiltinAdapter}.
 	 *
 	 * Called during a physics step, from a collision handler for example,
-	 * the swap happens as soon as that step ends.
+	 * the swap happens as soon as that step ends; called more than once in
+	 * one step, the last adapter asked for is installed.
+	 *
+	 * A body the new adapter cannot build (a `Box3d`, `Sphere` or `Point`
+	 * moving to a 2D adapter) does not stop the swap: every other body is
+	 * moved, the refused ones are left without a body, and this throws once
+	 * the swap is complete, naming the first refusal. Called during a step,
+	 * that error is reported with `console.error` instead, so the game loop
+	 * keeps running.
 	 * @param {PhysicsAdapter} adapter - the adapter to use from now on
 	 * @returns {World} this world
 	 * @example
@@ -294,7 +331,8 @@ export default class World extends Container {
 	setAdapter(adapter) {
 		if (this._stepping) {
 			// tearing an engine down from inside its own step is unsafe
-			// (planck silently refuses to destroy a body while stepping)
+			// (planck silently refuses to destroy a body while stepping); the
+			// last adapter asked for is the one installed once the step ends
 			this._pendingAdapter = adapter;
 			return this;
 		}
@@ -303,23 +341,34 @@ export default class World extends Container {
 			return this;
 		}
 		if (previous !== undefined) {
-			// take every body out of the outgoing simulation, at any depth
+			// take every body out of the outgoing simulation, at any depth,
+			// and drop the handles it built: each is built again, at rest
 			this.forEach((child) => {
 				unregisterTreeBodies(child, this);
+				releaseDefinedBodies(child);
 			});
 			previous.destroy?.();
 		}
 		this._adapter = adapter;
 		this.physic = adapter.physicLabel ?? "builtin";
 		adapter.init?.(this);
-		// and build them again in the new one
+		// and build them again in the new one. A body it cannot build does
+		// not stop the others: the swap completes, then says what it refused
+		const refused = [];
 		this.forEach((child) => {
-			registerTreeBodies(child, this);
+			registerTreeBodies(child, this, refused);
 		});
 		// the start-up banner names the adapter of the moment; a later switch
 		// is named too, so the console never lists an adapter no longer in use
 		if (this.app?.isInitialized === true && this.app.settings.consoleHeader) {
 			consolePhysics(this);
+		}
+		if (refused.length > 0) {
+			const count =
+				refused.length === 1 ? "1 body" : `${refused.length} bodies`;
+			throw new Error(
+				`melonJS: setAdapter() could not build ${count} on the new adapter, which now runs without ${refused.length === 1 ? "it" : "them"}. The first: ${refused[0].message}`,
+			);
 		}
 		return this;
 	}
@@ -491,7 +540,13 @@ export default class World extends Container {
 			const pending = this._pendingAdapter;
 			if (pending !== undefined) {
 				this._pendingAdapter = undefined;
-				this.setAdapter(pending);
+				try {
+					this.setAdapter(pending);
+				} catch (error) {
+					// thrown out of the game loop it would stop the game; the
+					// swap itself is complete for every other body
+					console.error(error);
+				}
 			}
 		}
 		emit(WORLD_STEP, dt);

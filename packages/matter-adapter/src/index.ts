@@ -741,6 +741,19 @@ export class MatterAdapter implements PhysicsAdapter {
 	removeBody(renderable: Renderable): void {
 		const body = this.bodyMap.get(renderable);
 		if (body) {
+			// a partner still touching this body learns the contact ended, as
+			// on the other adapters: matter only reports the end of a pair
+			// whose bodies it still holds
+			const touching = this.engine.pairs.list.filter((pair: Matter.Pair) => {
+				return (
+					pair.isActive &&
+					(this._renderableForPart(pair.bodyA) === renderable ||
+						this._renderableForPart(pair.bodyB) === renderable)
+				);
+			});
+			if (touching.length > 0) {
+				this._dispatchCollisions(touching, "end");
+			}
 			Matter.Composite.remove(this.engine.world, body);
 			this.bodyMap.delete(renderable);
 			this.renderableMap.delete(body);
@@ -1175,6 +1188,11 @@ export class MatterAdapter implements PhysicsAdapter {
 
 		for (const collision of collisions) {
 			const candidate = collision.bodyA;
+			// a part the ray starts inside is not hit, as on the other
+			// adapters: a body casting from its own centre does not see itself
+			if (Matter.Vertices.contains(candidate.vertices, from)) {
+				continue;
+			}
 			// Compound bodies expose actual collision shapes in
 			// `parts[1..N]`; `parts[0]` is the parent wrapper whose
 			// vertices are the convex hull, not the per-part shapes. For
@@ -1359,7 +1377,8 @@ export class MatterAdapter implements PhysicsAdapter {
 				depth,
 				pair,
 			};
-			if (!aDetached) {
+			// a handler earlier in this dispatch may have removed this body
+			if (!aDetached && this.bodyMap.has(rA)) {
 				const mA = methodForSide(rA);
 				const fnA = (rA as Renderable & Record<string, unknown>)[mA];
 				if (typeof fnA === "function") {
@@ -1370,7 +1389,7 @@ export class MatterAdapter implements PhysicsAdapter {
 					);
 				}
 			}
-			if (!bDetached) {
+			if (!bDetached && this.bodyMap.has(rB)) {
 				const mB = methodForSide(rB);
 				const fnB = (rB as Renderable & Record<string, unknown>)[mB];
 				if (typeof fnB === "function") {
@@ -1469,7 +1488,8 @@ export class MatterAdapter implements PhysicsAdapter {
 			ny: number,
 		): void => {
 			const fn = (receiver as Renderable & Record<string, unknown>)[method];
-			if (typeof fn !== "function") {
+			// skipped too when an earlier handler removed this body
+			if (typeof fn !== "function" || !this.bodyMap.has(receiver)) {
 				return;
 			}
 			// separated contacts carry identity only, matching the builtin

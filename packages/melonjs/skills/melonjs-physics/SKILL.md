@@ -156,10 +156,11 @@ That is a roughly **elevenfold spread**, so swapping the built-in world for an
 adapter and keeping everything else the same makes the whole game feel
 different. It is not a bug in either one: they simply do not share a unit.
 
-To match a backend you are porting FROM, pick a target in px/s² and convert:
-planck and Rapier take it directly; matter takes `target / 900`; the built-in takes
-`target / 3600`, because it applies gravity per step, 60 steps a second,
-rather than per second. Passing one number to two of them compares nothing:
+To match a backend you are porting FROM, pick a target in px/s² and convert,
+scaling each default by its measured fall: planck and Rapier take it directly;
+matter takes `target / 900`; the built-in takes `0.98 * target / 3600`,
+because it applies gravity per step, 60 steps a second, rather than per
+second. Passing one number to two of them compares nothing:
 hand planck matter's `{x: 0, y: 1}` and it runs at a three-hundredth of Earth
 gravity.
 
@@ -375,7 +376,7 @@ polygon's vertex count and says nothing when you go over: measured, a
 from 70x36 to 47x18. A `RoundRect` carries 36 points, four corners of nine
 arc segments each, so it is the usual way to meet that cap; the adapter now
 samples it down and keeps the extent. Rapier has no such cap. Anything the 2D
-backends cannot express is refused loudly on all three, rather than leaving a
+backends cannot express is refused loudly on each of them, rather than leaving a
 body with no collision geometry that silently never collides.
 
 A concave polygon is a third. A Tiled map is safe: the loader splits a
@@ -700,9 +701,10 @@ capability-gated by `capabilities.raycasts`.
 `queryAABB` does not return the same set everywhere. On the built-in it
 returns every non-kinematic renderable whose bounds overlap the rectangle, with
 a body or without; matter, planck and Rapier query their own world, so they
-return only renderables that have a body. On Rapier a ray skips a body it
-starts inside, so a body casting from its own centre does not hit itself, and
-it hits sensors like any other body.
+return only renderables that have a body. On every adapter a ray skips a body
+it starts inside, so a body casting from its own centre does not hit itself
+(before 20.14 the built-in and matter-adapter < 1.6.0 returned that body); on
+Rapier it hits sensors like any other body.
 
 On the built-in adapter a 2D ray measures each shape the way the narrowphase
 measures it against a planar shape: polygons, `Rect`, `RoundRect` and `Line`
@@ -724,6 +726,8 @@ than errors:
   all (a `Body` sets this for you).
 - On the **built-in** adapter, the broadphase is cleared and rebuilt inside
   `world.update()`, so querying before the first update returns nothing.
+  Rapier behaves the same: it indexes bodies for queries when its world
+  steps, so a body added this frame is found from the next one on.
 
 ## 3D collision: `Box3d`, `Sphere` and the Z pushback
 
@@ -848,10 +852,13 @@ real rigid-body engine:
 - **Force accumulators reset at end-of-step** — for every body, including
   static, paused and off-screen ones — so forces must be applied every frame to
   persist.
-- **`isGrounded` is flag-based, not contact-based** — the adapter returns
-  `!body.falling && !body.jumping`, flags updated by the last resolved
-  collision, not a live contact test. The DIRECTION of the push-out decides
-  them: pushed up out of a floor while not rising is a landing, pushed down
+- **`isGrounded` reads the last step's push-out, not a live contact test** —
+  `true` when a collision in the last step pushed the body up out of
+  something below it (a floor or a slope, not a wall) and neither
+  `body.falling` nor `body.jumping` is set. Before 20.14 it read the two flags
+  alone, so a body never stepped, or held still in mid-air with
+  `gravityScale` 0, read as grounded. The DIRECTION of the push-out decides
+  the flags: pushed up out of a floor while not rising is a landing, pushed down
   by a ceiling while rising (or `jumping`) ends the jump and falls, and a
   side contact, a body touched from above while standing, or a body with
   `gravityScale` 0 leaves them alone. Before 20.13 a magnitude test decided
@@ -969,10 +976,10 @@ Same call, different magnitude — these are the ones that waste an afternoon:
 - **Ellipses become circles on matter, planck and Rapier**, using the average
   of the two radii.
 - **`isGrounded` is capability-gated** (`capabilities.isGrounded`) and computed
-  differently per adapter: a flag read on built-in, a live scan of active
-  contacts on matter, planck and Rapier, counting a solid contact that pushes the body
-  up (a sensor contact counts when the other body is below). On every adapter
-  the side of a wall is not ground.
+  differently per adapter: the last step's push-out on built-in, a live scan of
+  active contacts on matter, planck and Rapier, counting a solid contact that
+  pushes the body up (a sensor contact counts when the other body is below).
+  On every adapter the side of a wall is not ground.
 
 Adapter-specific escapes exist (`(this.body as MatterAdapter.Body).frictionAir`,
 `adapter.matter.Constraint.create(...)`) but are not portable — flag them if you
@@ -1049,6 +1056,9 @@ you made yourself with `world.removeImpulseJoint()` /
 | a rotated sprite collides as if upright | the built-in solver rotates visually only — `body.angle` never rotates the shapes. Use a rigid-body adapter, or `body.rotate(angle)` |
 | `setAngle` swings a sprite away from where it stood (built-in) | before 20.13 the pivot ignored `anchorPoint`, so a centre-anchored renderable turned about its bottom-right corner; upgrade |
 | `isGrounded()` stays `false` on the floor, so the player cannot jump (built-in) | before 20.13 a body sinking 1px or more per step (gravity or mass above ~1.02, `timer.tick > 1`, a rising floor) never landed; upgrade |
+| `isGrounded()` is `true` in mid-air, for a body with `gravityScale` 0 or one not yet stepped (built-in) | before 20.14 it read the `falling` / `jumping` flags alone, without a surface under the body; upgrade |
+| a ray cast from a body's centre hits that body (built-in, matter) | before 20.14 / matter-adapter 1.6.0 a ray did not skip a body it starts inside; upgrade |
+| `raycast()` / `queryAABB()` find nothing right after the bodies are added (built-in, Rapier) | both index bodies for queries during a world step: query from the next frame on |
 | a circle body is shoved by a polygon it is nowhere near (built-in) | before 20.13 a counter-clockwise polygon (Tiled, mirrored with `scale(-1, 1)`) had inward edge normals; upgrade |
 | `raycast` throws "reading 'x'" / "reading 'length'" (built-in) | before 20.13 a body carrying a `Point`, `Sphere` or `Box3d` broke the ray walk; upgrade |
 | a ray passes through a rotated ellipse, or stops short of it (built-in) | before 20.13 the raycast ignored `Ellipse#angle`; upgrade |

@@ -4,7 +4,7 @@
  * Each case states what the `PhysicsAdapter` contract promises on every
  * backend, so a case that passes on one adapter and fails on another is a
  * bug in that adapter, not an expected difference. Lives in this package
- * because it is the one with all three adapters available.
+ * because it is the one with every adapter available.
  *
  * - collision `depth` is the overlap in pixels (planck reported 0)
  * - a raycast finds a body made of several shapes (matter missed it)
@@ -25,6 +25,11 @@
  *   (matter and planck returned `{ 0, 0 }`, and the stored object)
  * - `load()` and `create()`, the static API every adapter shares: `create()`
  *   builds what the constructor builds, also for a subclass
+ * - the shared contract: filtering, the event lifecycle, sensors,
+ *   `isGrounded` (the built-in called a body never stepped grounded), the
+ *   queries (the built-in and matter hit a body the ray starts inside), and a
+ *   body removed mid-contact (matter never told its partner; every adapter
+ *   told a body removed by its partner's handler about that contact)
  * - `world.setAdapter()` moves every body from any adapter to any other
  */
 
@@ -36,6 +41,7 @@ import {
 	boot,
 	Container,
 	collision,
+	Ellipse,
 	type PhysicsAdapter,
 	type PhysicsAdapterClass,
 	Rect,
@@ -44,7 +50,7 @@ import {
 	video,
 	World,
 } from "melonjs";
-import { beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { PlanckAdapter } from "../src/index";
 
 type AnyAdapter =
@@ -63,6 +69,12 @@ interface Backend {
 	options: object;
 	/** how many bodies the adapter's engine holds */
 	bodyCount(adapter: PhysicsAdapter): number;
+	/** velocities in pixels per second (planck, Rapier), else per 1/60 s step */
+	perSecond: boolean;
+	/** what `getMaxVelocity()` reads for a body given no cap */
+	defaultMaxVelocity: number;
+	/** whether a shape's own collisionType / collisionMask are honoured */
+	perShapeFilters: boolean;
 }
 
 const BACKENDS: Backend[] = [
@@ -76,6 +88,10 @@ const BACKENDS: Backend[] = [
 		bodyCount: (adapter) => {
 			return (adapter as BuiltinAdapter).bodies.size;
 		},
+		perSecond: false,
+		// the built-in `Body` always has a cap
+		defaultMaxVelocity: 490,
+		perShapeFilters: true,
 	},
 	{
 		name: "matter",
@@ -88,6 +104,9 @@ const BACKENDS: Backend[] = [
 			const matter = adapter as MatterAdapter;
 			return matter.matter.Composite.allBodies(matter.engine.world).length;
 		},
+		perSecond: false,
+		defaultMaxVelocity: Infinity,
+		perShapeFilters: false,
 	},
 	{
 		name: "planck",
@@ -99,6 +118,9 @@ const BACKENDS: Backend[] = [
 		bodyCount: (adapter) => {
 			return (adapter as PlanckAdapter).world.getBodyCount();
 		},
+		perSecond: true,
+		defaultMaxVelocity: Infinity,
+		perShapeFilters: true,
 	},
 	{
 		name: "rapier",
@@ -115,6 +137,9 @@ const BACKENDS: Backend[] = [
 				| undefined;
 			return bodies === undefined ? 0 : bodies.len();
 		},
+		perSecond: true,
+		defaultMaxVelocity: Infinity,
+		perShapeFilters: true,
 	},
 ];
 
@@ -124,6 +149,8 @@ const BOX = 32;
 
 type Handlers = Renderable & {
 	onCollisionStart?: (response: CollisionInfo, other: Renderable) => void;
+	onCollisionActive?: (response: CollisionInfo, other: Renderable) => void;
+	onCollisionEnd?: (response: CollisionInfo, other: Renderable) => void;
 	onShapeCollisionStart?: (
 		contact: ShapeContactInfo,
 		other: Renderable,
@@ -357,9 +384,9 @@ describe.each(BACKENDS)("$name adapter", (backend) => {
 			expect(cap).toBeDefined();
 			return cap as { x: number; y: number };
 		};
-		// whatever the default, it does not hold the body still
-		expect(read().x).toBeGreaterThan(0);
-		expect(read().y).toBeGreaterThan(0);
+		// no cap reads as no limit; the built-in `Body` always has one
+		expect(read().x).toBe(backend.defaultMaxVelocity);
+		expect(read().y).toBe(backend.defaultMaxVelocity);
 		adapter.setMaxVelocity(box, { x: 5, y: 7 });
 		const cap = read();
 		expect(cap.x).toBe(5);
@@ -416,11 +443,262 @@ describe.each(BACKENDS)("$name adapter", (backend) => {
 	});
 });
 
-/** every ordered pair of different backends */
+// the same `bodyDef` and hooks, the same behaviour, on every backend
+describe.each(BACKENDS)("$name adapter: the shared contract", (backend) => {
+	let world: World;
+	beforeEach(() => {
+		world = new World(0, 0, 800, 600, backend.make());
+	});
+	const add = <T extends Renderable>(r: T): T => {
+		world.addChild(r);
+		return r;
+	};
+	// more body settings, before the renderable is added
+	const withDef = <T extends Renderable>(r: T, extra: object): T => {
+		r.bodyDef = { ...r.bodyDef, ...extra };
+		return r;
+	};
+	// a velocity given in px/s, in the adapter's own unit
+	const speed = (pxPerSecond: number) => {
+		return backend.perSecond ? pxPerSecond : pxPerSecond / 60;
+	};
+	const { PLAYER_OBJECT, ENEMY_OBJECT, WORLD_SHAPE } = collision.types;
+
+	it("collision types and masks filter, on all 32 bits", () => {
+		const HIGH = collision.types.USER << 12;
+		// each case in a world of its own
+		const fallsThrough = (floor: object, faller: object) => {
+			world = new World(0, 0, 800, 600, backend.make());
+			add(withDef(staticRect(0, 300, 800, 20), floor));
+			const b = add(withDef(dynamicBox(384, 200), faller));
+			run(world, 90);
+			return b.pos.y > 320;
+		};
+		const player = { collisionType: PLAYER_OBJECT };
+		expect(
+			fallsThrough(
+				{ collisionType: WORLD_SHAPE },
+				{ ...player, collisionMask: ENEMY_OBJECT },
+			),
+		).toBe(true);
+		expect(
+			fallsThrough(
+				{ collisionType: WORLD_SHAPE },
+				{ ...player, collisionMask: WORLD_SHAPE },
+			),
+		).toBe(false);
+		// a user type from bit 16 up
+		expect(fallsThrough({}, { collisionType: HIGH })).toBe(false);
+		expect(
+			fallsThrough({ collisionMask: PLAYER_OBJECT }, { collisionType: HIGH }),
+		).toBe(true);
+		// a mask of such a type only
+		expect(
+			fallsThrough({ collisionType: HIGH }, { ...player, collisionMask: HIGH }),
+		).toBe(false);
+		expect(
+			fallsThrough(
+				{ collisionType: WORLD_SHAPE },
+				{ ...player, collisionMask: HIGH },
+			),
+		).toBe(true);
+	});
+
+	it("collisionType and collisionMask read back what was written", () => {
+		const b = add(dynamicBox(100, 100));
+		world.adapter.setCollisionType(b, ENEMY_OBJECT);
+		world.adapter.setCollisionMask(b, WORLD_SHAPE);
+		expect(b.body.collisionType).toBe(ENEMY_OBJECT);
+		expect(b.body.collisionMask).toBe(WORLD_SHAPE);
+		b.body.collisionType = PLAYER_OBJECT;
+		expect(b.body.collisionType).toBe(PLAYER_OBJECT);
+	});
+
+	it("start once, active while touching, end once; the landing normal points up", () => {
+		add(staticRect(0, FLOOR_Y, 800, 64));
+		const b = add(dynamicBox(384, 400));
+		const log: string[] = [];
+		let normalY = 0;
+		b.onCollisionStart = (r) => {
+			log.push("start");
+			normalY = r.normal.y;
+		};
+		b.onCollisionActive = () => {
+			if (log.at(-1) !== "active") log.push("active");
+		};
+		b.onCollisionEnd = () => {
+			log.push("end");
+		};
+		run(world, 120);
+		world.adapter.setVelocity(b, new Vector2d(0, -speed(600)));
+		run(world, 10);
+		expect(log).toEqual(["start", "active", "end"]);
+		expect(normalY).toBeLessThan(-0.7);
+	});
+
+	it("a partner hears the end when the other body is removed", () => {
+		const floor = add(staticRect(0, FLOOR_Y, 800, 64));
+		const b = add(dynamicBox(384, 400));
+		let ended = 0;
+		b.onCollisionEnd = () => {
+			ended++;
+		};
+		run(world, 120);
+		world.removeChildNow(floor);
+		run(world, 5);
+		expect(ended).toBe(1);
+	});
+
+	it("a body removed by its partner's handler hears nothing more", () => {
+		add(staticRect(0, FLOOR_Y, 800, 64));
+		const ledge = add(staticRect(300, 300, 200, 20));
+		const b = add(dynamicBox(384, 200));
+		const removed = new Set<Renderable>();
+		const late: string[] = [];
+		// whichever side is told first removes the other, which must then
+		// not be told about a contact it is no longer part of
+		const meet = (self: Renderable, other: Renderable) => {
+			if (removed.has(self)) {
+				late.push(self === b ? "box" : "ledge");
+			} else if (!removed.has(other)) {
+				removed.add(other);
+				world.removeChildNow(other);
+			}
+		};
+		b.onCollisionStart = (_r, other) => {
+			if (other === ledge) meet(b, ledge);
+		};
+		ledge.onCollisionStart = (_r, other) => {
+			if (other === b) meet(ledge, b);
+		};
+		run(world, 90);
+		expect(removed.size).toBe(1);
+		expect(late).toEqual([]);
+	});
+
+	it("a sensor reports the contact and pushes nothing", () => {
+		const zone = add(
+			withDef(staticRect(300, 300, 200, 100), { isSensor: true }),
+		);
+		const b = add(dynamicBox(384, 100));
+		let started = 0;
+		b.onCollisionStart = () => {
+			started++;
+		};
+		run(world, 150);
+		expect(started).toBeGreaterThan(0);
+		expect(b.pos.y).toBeGreaterThan(zone.pos.y + 100);
+	});
+
+	it("isGrounded: on a floor, not in the air, not against a wall", () => {
+		add(staticRect(0, FLOOR_Y, 800, 64));
+		add(staticRect(600, 0, 20, FLOOR_Y));
+		const b = add(dynamicBox(200, 300));
+		expect(world.adapter.isGrounded?.(b)).toBe(false);
+		run(world, 120);
+		expect(world.adapter.isGrounded?.(b)).toBe(true);
+		const side = add(withDef(dynamicBox(560, 100), { gravityScale: 0 }));
+		world.adapter.setVelocity(side, new Vector2d(speed(300), 0));
+		run(world, 10);
+		expect(world.adapter.isGrounded?.(side)).toBe(false);
+	});
+
+	it("raycast finds the first body, its surface, normal and fraction", () => {
+		const target = add(staticRect(400, 280, 40, 40));
+		run(world, 1);
+		const hit = world.adapter.raycast?.(
+			new Vector2d(100, 300),
+			new Vector2d(700, 300),
+		);
+		expect(hit?.renderable).toBe(target);
+		expect(hit?.point.x).toBeCloseTo(400, 0);
+		expect(hit?.normal.x).toBeCloseTo(-1, 2);
+		expect(hit?.fraction).toBeCloseTo(0.5, 2);
+	});
+
+	it("raycast skips a body the ray starts inside, a box or a circle", () => {
+		add(staticRect(80, 280, 40, 40));
+		add(
+			make(80, 380, 40, 40, {
+				type: "static",
+				shapes: [new Ellipse(20, 20, 40, 40)],
+			}),
+		);
+		const target = add(staticRect(400, 280, 40, 140));
+		run(world, 1);
+		// one ray from the box's centre, one from the circle's
+		for (const y of [300, 400]) {
+			const hit = world.adapter.raycast?.(
+				new Vector2d(100, y),
+				new Vector2d(700, y),
+			);
+			expect(hit?.renderable).toBe(target);
+		}
+	});
+
+	it("queryAABB returns each overlapping body once", () => {
+		const a = add(
+			make(100, 100, 40, 40, {
+				type: "static",
+				shapes: [new Rect(0, 0, 20, 40), new Rect(20, 0, 20, 40)],
+			}),
+		);
+		add(staticRect(600, 100, 40, 40));
+		run(world, 1);
+		expect(world.adapter.queryAABB(new Rect(90, 90, 100, 100))).toEqual([a]);
+	});
+
+	it("setStatic stops a body, and lets it go again", () => {
+		const b = add(dynamicBox(100, 100));
+		world.adapter.setStatic(b, true);
+		run(world, 30);
+		expect(b.pos.y).toBeCloseTo(100, 3);
+		world.adapter.setStatic(b, false);
+		run(world, 30);
+		expect(b.pos.y).toBeGreaterThan(110);
+	});
+
+	it("updateShape changes the shape and keeps the velocity", () => {
+		const b = add(withDef(dynamicBox(100, 100), { gravityScale: 0 }));
+		world.adapter.setVelocity(b, new Vector2d(speed(90), 0));
+		world.adapter.updateShape?.(b, [new Rect(0, 0, 32, 64)]);
+		expect(world.adapter.getVelocity(b).x).toBeCloseTo(speed(90), 3);
+		let top = Number.POSITIVE_INFINITY;
+		let bottom = Number.NEGATIVE_INFINITY;
+		for (const shape of world.adapter.getBodyShapes(b)) {
+			const bounds = shape.getBounds();
+			top = Math.min(top, bounds.top);
+			bottom = Math.max(bottom, bounds.bottom);
+		}
+		expect(bottom - top).toBeCloseTo(64, 0);
+	});
+});
+
+// where a shape's own collision settings are honoured
+describe.each(
+	BACKENDS.filter((b) => {
+		return b.perShapeFilters;
+	}),
+)("$name adapter: per-shape collision settings", (backend) => {
+	it("body.collisionType reads the first shape's own type", () => {
+		const world = new World(0, 0, 800, 600, backend.make());
+		const first = new Rect(0, 0, 32, 32);
+		const second = new Rect(32, 0, 32, 32);
+		Object.assign(first, { collisionType: collision.types.ENEMY_OBJECT });
+		Object.assign(second, { collisionType: collision.types.WORLD_SHAPE });
+		const r = make(100, 100, 64, 32, {
+			type: "static",
+			shapes: [first, second],
+		});
+		world.addChild(r);
+		expect(r.body.collisionType).toBe(collision.types.ENEMY_OBJECT);
+	});
+});
+
+/** every ordered pair of backends */
 const PAIRS = BACKENDS.flatMap((from) => {
-	return BACKENDS.filter((to) => {
-		return to !== from;
-	}).map((to) => {
+	// every pair, a swap to another instance of the same adapter included
+	return BACKENDS.map((to) => {
 		return { from, to, name: `${from.name} to ${to.name}` };
 	});
 });
@@ -457,6 +735,9 @@ describe.each(PAIRS)("world.setAdapter(): $name", ({ from, to }) => {
 		expect(from.bodyCount(source)).toBe(0);
 		expect(to.bodyCount(target)).toBe(2);
 		expect(box.pos.y).toBeCloseTo(y, 3);
+		// and at rest: nothing carries over from the old simulation
+		const v = world.adapter.getVelocity(box);
+		expect(Math.hypot(v.x, v.y)).toBeLessThan(1e-6);
 
 		run(world, 240);
 		expectLanded(box);
