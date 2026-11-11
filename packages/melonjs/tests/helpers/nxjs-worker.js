@@ -270,7 +270,7 @@ function installNxAudio(g) {
 			});
 			return source;
 		}
-		decodeAudioData(data) {
+		decodeAudioData(_data) {
 			audioLog.decoded++;
 			return Promise.resolve(this.createBuffer(2, 48000, 48000));
 		}
