@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.0 - _unreleased_
+## 1.0.0 - _2026-11-12_
 
 ### Added
 - A melonJS physics adapter for Rapier 2D, compiled to WebAssembly, implementing the full `PhysicsAdapter` interface ([#1845](https://github.com/melonjs/melonJS/issues/1845))
