@@ -19,12 +19,13 @@ import { endpointToCenterParameterization } from "./toarccanvas.ts";
  * **Sub-paths & holes:** a new sub-path begins on every {@link moveTo} (and on
  * each `M` in an SVG string). When filled, the first sub-path is the outer
  * contour and each subsequent sub-path is treated as a hole — so shapes with
- * holes or disconnected regions (a donut, a ring, the letter "O", text outlines)
- * fill correctly. The Canvas renderer fills via the native non-zero winding rule
- * (so holes should be wound opposite to the outer contour); the WebGL renderer
- * triangulates with holes via earcut, which matches that result for the usual
- * case of oppositely-wound holes. Sub-path boundaries are tracked in
- * {@link subPaths}.
+ * holes (a donut, a ring, the letter "O") fill correctly. The Canvas renderer
+ * fills via the native non-zero winding rule (so holes should be wound opposite
+ * to the outer contour); the WebGL and WebGPU renderers triangulate with holes
+ * via earcut, which matches that result for the usual case of oppositely-wound
+ * holes. Disconnected regions are not holes: on the GPU renderers every
+ * sub-path after the first is cut out of the first, so fill each separate shape
+ * as a path of its own. Sub-path boundaries are tracked in {@link subPaths}.
  *
  * Supported SVG commands: `M`, `L`, `H`, `V`, `Q`, `C`, `A`, `Z` (uppercase /
  * absolute only; `H` and `V` take a relative offset).
@@ -340,8 +341,8 @@ class Path2D {
 	/**
 	 * triangulate the shape defined by this path into a flat list of triangle
 	 * vertices (every three consecutive points form one triangle). Sub-paths
-	 * after the first are treated as holes. Used by the WebGL renderer to fill,
-	 * and cached until the path changes.
+	 * after the first are treated as holes. Used by the WebGL and WebGPU
+	 * renderers to fill, and cached until the path changes.
 	 * @returns the triangulated vertices, three per triangle
 	 * @example
 	 * path.parseSVGPath("M 0 0 L 100 0 L 50 100 Z");

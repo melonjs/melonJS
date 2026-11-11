@@ -135,8 +135,9 @@ export const createGame = async () => {
 
 		// Per-shape fix-ups for TMX geometry that matter handles differently
 		// from the built-in SAT solver:
-		//   - Platforms are zero-thickness polylines (matter can't make a
-		//     body from collinear vertices); swap to a thin solid rect.
+		//   - Platforms are polylines, which matter simulates as a 2px thick
+		//     rectangle per segment; rebuild them as a thicker solid rect so
+		//     a falling player cannot pass through one.
 		//   - Each platform gets a unique collision-filter bit so the
 		//     player can include/exclude individual platforms from its
 		//     mask each frame (see `oneWayPlatforms` doc above for why

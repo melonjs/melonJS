@@ -174,6 +174,7 @@ export type {
 	BodyType,
 	CollisionResponse,
 	PhysicsAdapter,
+	PhysicsAdapterClass,
 	PhysicsBody,
 	RaycastHit,
 	RaycastHit3d,

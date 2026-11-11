@@ -1,6 +1,6 @@
 ---
 name: melonjs-input
-description: "Use this skill for keyboard, pointer, mouse, touch and gamepad input in melonJS. Covers the bindKey action indirection, registerPointerEvent on regions, the isKinematic requirement that silently blocks pointer events, which of several overlapping objects receives an event and how to consume it, world vs screen pointer coordinates, and gamepad mapping onto the same actions. Triggers on: input, bindKey, isKeyPressed, KEY, registerPointerEvent, releasePointerEvent, pointerdown, pointerup, pointermove, POINTERMOVE, gamepad, bindGamepad, triggerKeyEvent, virtual gamepad, touch controls, joystick, gamepad-plugin, floating stick, floating button, floating joystick, two thumbs, tap to fire, hideAtRest, mobile controls, KEYDOWN, KEYUP, press any key, splash screen, click, touch, drag, hit test, event propagation, stop propagating, overlapping, which object gets the click."
+description: "Use this skill for keyboard, pointer, mouse, touch and gamepad input in melonJS. Covers the bindKey action indirection, registerPointerEvent on regions, the isKinematic requirement that silently blocks pointer events, which of several overlapping objects receives an event and how to consume it, world vs screen pointer coordinates, and gamepad mapping onto the same actions. Triggers on: input, bindKey, isKeyPressed, KEY, bindPointer, mouse button, vibrateGamepad, rumble, activeGamepad, registerPointerEvent, releasePointerEvent, pointerdown, pointerup, pointermove, POINTERMOVE, gamepad, bindGamepad, triggerKeyEvent, virtual gamepad, touch controls, joystick, gamepad-plugin, floating stick, floating button, floating joystick, two thumbs, tap to fire, hideAtRest, mobile controls, KEYDOWN, KEYUP, press any key, splash screen, click, touch, drag, hit test, event propagation, stop propagating, overlapping, which object gets the click."
 license: MIT
 ---
 
@@ -68,6 +68,23 @@ fourth argument per binding, or change the global default with
 `input.setPreventDefault(false)` — **assigning `input.preventDefault = false`
 does not work**, it is a read-only module binding.
 
+### A mouse button as a key
+
+`bindPointer` makes a mouse button press a bound key, so a click fires the same
+action and `isKeyPressed` sees it:
+
+```js
+input.bindKey(input.KEY.X, "fire");
+input.bindPointer(input.KEY.X);                       // the left button
+input.bindPointer(input.pointer.RIGHT, input.KEY.X);  // or another button
+input.unbindPointer(input.pointer.RIGHT);             // LEFT when omitted
+```
+
+As with `bindGamepad`, the key needs its `bindKey` first, or `bindPointer`
+throws `no action defined for keycode N`. Turning the wheel neither presses
+nor releases a bound button's key (before 20.14 it released the left
+button's).
+
 ## Pointer events need `isKinematic = false`
 
 **This is the trap.** `Renderable.isKinematic` defaults to `true`, and both the
@@ -90,9 +107,11 @@ class Button extends Renderable {
 ```
 
 `Container`, `Camera2d`, `Draggable`, `DropTarget` and the `UI*` elements set it
-to `false` for you, and so does attaching a physics body (`Body`'s constructor
-sets `ancestor.isKinematic = false`) — so plain `Renderable` and `Sprite`
-subclasses with no body are the ones that catch people.
+to `false` for you, and so does giving it a physics body (a `bodyDef` on any
+adapter, or a `Body`) — so plain `Renderable` and `Sprite` subclasses with no
+body are the ones that catch people. Before melonJS 20.14, matter-adapter
+1.6.0 and planck-adapter 1.7.0, a `bodyDef` under matter or planck left
+`isKinematic` at `true`, so set it yourself there.
 
 Register in `onActivateEvent` and release in `onDeactivateEvent`, not in the
 constructor — pooled objects are reused and would otherwise accumulate handlers.
@@ -266,10 +285,10 @@ input.hasGamepadVibration(index);    // for an options-screen toggle
 
 Safe to call blind: no pad, no motors, or no Gamepad API at all resolves
 `false` and does nothing, so game code never branches on support. Magnitudes
-default to **full** — the underlying web API defaults every parameter to zero,
-which makes a bare `playEffect` a silent no-op. A second call preempts the
-first on the same pad, so a rapid series of hits reads as a rapid series of
-hits rather than as a queue. For a SUSTAINED rumble issue one effect with a
+default to **full** and `duration` to 200 ms — the underlying web API defaults
+every parameter to zero, which makes a bare `playEffect` a silent no-op. A
+second call preempts the first on the same pad, so a rapid series of hits
+reads as a rapid series of hits rather than as a queue. For a SUSTAINED rumble issue one effect with a
 long `duration` instead of calling every frame.
 
 Hot-plugging needs no polling of your own — the engine listens for the browser's
@@ -284,12 +303,15 @@ event.on(event.GAMEPAD_DISCONNECTED, (gamepad) => { /* pause, show a prompt */ }
 
 Bindings survive a disconnect: they are attached to the index, not to the
 device, so a pad unplugged and plugged back into the same slot keeps working.
+A pad unplugged with a button or the stick held lets go of the keys bound to
+them, as releasing them would.
 
 ## Virtual controls
 
-For on-screen touch controls, use `@melonjs/gamepad-plugin` rather than
-writing them: sticks and buttons drawn over the game and reported as a pad in
-a gamepad slot, so the `bindGamepad` bindings above answer to them unchanged.
+For on-screen touch controls, use `@melonjs/gamepad-plugin` (it needs melonJS
+20.12 or later) rather than writing them: sticks and buttons drawn over the
+game and reported as a pad in a gamepad slot, so the `bindGamepad` bindings
+above answer to them unchanged.
 
 ```js
 import { GamepadPlugin } from "@melonjs/gamepad-plugin";
@@ -340,7 +362,7 @@ Every press lasts at least one frame, so a 15 ms thumb tap still reaches
 `isKeyPressed`, and Safari's pinch gesture is cancelled while the controls
 show, so a second thumb works on iOS.
 
-To match the game's artwork, pass an already-loaded `TextureAtlas` as
+To match the game's artwork (1.2), pass an already-loaded `TextureAtlas` as
 `skin` to `GamepadPlugin`, with `base` / `thumb` region names on sticks
 and `region` / optional `pressed` names on buttons. Omitted parts keep
 their shapes. Regions scale to the controls' sizes without changing hit areas;
@@ -366,16 +388,18 @@ input.triggerKeyEvent(input.KEY.LEFT, false);   // release
 | jump fires every frame while held | `bindKey` without its third `lock` argument |
 | the hero keeps walking after an Alt-Tab, until the key is pressed again (before 20.14) | the key's release went to another window: update, held keys are now released on blur |
 | a region with only a `"pointerup"` callback never gets it, or the first finger's release is lost with two on one region (before 20.14) | the release was only delivered to the last pointer to press the region: update |
+| a key bound with `bindPointer` never fires once the mouse has entered the canvas (before 20.12) | the pointer's button bindings were replaced on each event: update |
 | firing (a key bound with `bindPointer`) stops while the button is held and the wheel turns (before 20.14) | a wheel event released the main button's key: update |
 | clicks land off target after browser zoom or a move to another screen (before 20.14) | the pointer was scaled by the live pixel ratio against a canvas sized with the old one: update |
 | a `Draggable` jumps away when grabbed, and stays stuck dragging, once the camera has moved (before 20.14) | it mixed screen and world coordinates: update |
 | `invalid event type` thrown at registration | non-pointer name (`"click"`, `"mousedown"`, …) passed to `registerPointerEvent` |
-| `no action defined for keycode N` | `bindGamepad` called before `bindKey` for that keycode |
+| `no action defined for keycode N` | `bindGamepad` or `bindPointer` called before `bindKey` for that keycode |
 | floating stick ignores the right half of the screen | its `area` defaults to `"half"`, its own side — use `area: "screen"` |
 | `area: "screen"` stick still ignores part of the screen | a floating button's area comes first there — the overlap order is fixed buttons, fixed sticks, floating buttons, floating sticks |
 | a quick tap on a stick moves instead of acting | it leaned past `dpadThreshold` or outlasted `tap.time` before lifting |
 | stick has to be pushed well past its `threshold` before it registers | `threshold` is ADDED to the deadzone, not used instead of it |
 | one half of a stick does nothing | each half is a separate `bindGamepad`, chosen by the sign of `threshold` |
+| a key stays pressed after its pad is unplugged, or a stick bound on one side holds its key after coming back to the centre (before 20.12) | update: an unplugged pad lets go of what it held, and a stick lets go when it returns to rest, even just past the centre |
 | a widget under an overlapping panel still lights up | the panel consumes no hover: return `false` from its `onOver` (presses already stop at UI elements; `UIPanel` with `blocking` does both) |
 | a widget stays highlighted after the pointer moves onto a panel over it | the panel consumes no `pointermove`, so nothing takes the pointer off the widget |
 | a child's big `z` does not put it in front of another container | `pos.z` is container-local — use `ancestor.moveToTop()` on the container |

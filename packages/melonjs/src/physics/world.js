@@ -1,5 +1,9 @@
+import { consolePhysics } from "../application/header.ts";
 import { hasRegisteredEvents } from "../input/pointerevent.ts";
-import Container from "../renderable/container.js";
+import Container, {
+	registerTreeBodies,
+	unregisterTreeBodies,
+} from "../renderable/container.js";
 import {
 	emit,
 	GAME_RESET,
@@ -9,11 +13,11 @@ import {
 	WORLD_STEP,
 } from "../system/event.ts";
 import { createBroadphase } from "./broadphase/factory.ts";
+import Body from "./builtin/body.js";
 import BuiltinAdapter from "./builtin/builtin-adapter.ts";
 
 /**
  * @import Application from "./../application/application.ts";
- * @import Body from "./builtin/body.js";
  * @import Detector from "./builtin/detector.js";
  * @import { Vector2d } from "../math/vector2d.ts";
  * @import { PhysicsAdapter } from "./adapter.ts";
@@ -55,6 +59,30 @@ function keepsBodyOf(world, renderable) {
 }
 
 /**
+ * Drop the body handles {@link World#setAdapter} is about to build again, at
+ * any depth: a renderable with a `bodyDef` gets a new body from it, at rest,
+ * even from another instance of the same adapter, which would otherwise take
+ * the old built-in `Body` over with its velocity. A definition with no shapes
+ * of its own keeps its body: it is the legacy bridge, whose shapes live on
+ * the `Body` it was built with.
+ * @ignore
+ * @internal
+ * @param {object} node - a renderable leaving the outgoing adapter
+ */
+function releaseDefinedBodies(node) {
+	const shapes = node.bodyDef?.shapes;
+	if (node.body !== undefined && shapes !== undefined && shapes.length > 0) {
+		if (node.body instanceof Body) {
+			node.body.destroy();
+		}
+		node.body = undefined;
+	}
+	if (node instanceof Container) {
+		node.forEach(releaseDefinedBodies);
+	}
+}
+
+/**
  * an object representing the physic world, and responsible for managing and updating all children and physics
  * @category Container
  */
@@ -90,7 +118,7 @@ export default class World extends Container {
 
 		/**
 		 * Identifier of the active physics adapter, taken from the
-		 * adapter's `physicLabel` field at `Application` construction —
+		 * adapter's `physicLabel` field by {@link World#setAdapter} —
 		 * `"builtin"` (default — `BuiltinAdapter`), `"matter"`
 		 * (`@melonjs/matter-adapter`), or a third-party label.
 		 * The reserved value `"none"` is set when physics is disabled via
@@ -152,14 +180,28 @@ export default class World extends Container {
 		this.gpuTilemap = true;
 
 		/**
-		 * the physics adapter driving this world. Defaults to a
-		 * {@link BuiltinAdapter} wrapping the engine's native SAT-based
-		 * physics. Override at `Application` construction time via
-		 * `settings.physic.adapter`. Cannot be swapped at runtime.
+		 * the active physics adapter, read through {@link World#adapter}
+		 * @ignore
 		 * @type {PhysicsAdapter}
 		 */
-		this.adapter = adapter ?? new BuiltinAdapter();
-		this.adapter.init?.(this);
+		this._adapter = undefined;
+
+		/**
+		 * an adapter given to {@link World#setAdapter} during a physics
+		 * step, installed once that step ends
+		 * @ignore
+		 * @type {PhysicsAdapter|undefined}
+		 */
+		this._pendingAdapter = undefined;
+
+		/**
+		 * true while the active adapter is stepping
+		 * @ignore
+		 * @type {boolean}
+		 */
+		this._stepping = false;
+
+		this.setAdapter(adapter ?? new BuiltinAdapter());
 
 		/**
 		 * Spatial broadphase used by built-in physics and pointer
@@ -215,6 +257,11 @@ export default class World extends Container {
 		off(LEVEL_LOADED, this.onLevelLoaded);
 		this.onLevelLoaded = undefined;
 		super.destroy(...arguments);
+		// after the children, whose bodies the adapter takes out as they go:
+		// an adapter can hold memory the garbage collector does not reclaim
+		// (Rapier's WebAssembly), so it is released with its world
+		this._pendingAdapter = undefined;
+		this._adapter?.destroy?.();
 	}
 
 	/**
@@ -239,6 +286,91 @@ export default class World extends Container {
 		if (was3D !== now3D) {
 			this.broadphase = createBroadphase(this);
 		}
+	}
+
+	/**
+	 * The physics adapter driving this world: a {@link BuiltinAdapter}
+	 * unless the `Application`'s `physic` setting, or
+	 * {@link World#setAdapter}, gave it another one. Read-only; change it
+	 * with {@link World#setAdapter}.
+	 * @returns {PhysicsAdapter}
+	 */
+	get adapter() {
+		return this._adapter;
+	}
+
+	/**
+	 * Replace the physics adapter driving this world, for example to move a
+	 * game from `@melonjs/planck-adapter` to `@melonjs/matter-adapter`. The
+	 * previous adapter is destroyed, and the new one builds every physics
+	 * body in the world again, from each renderable's `bodyDef`, where the
+	 * renderable stands.
+	 *
+	 * Nothing else carries over: velocities, forces, contacts and joints
+	 * start again from rest, and gravity is the new adapter's own, in its
+	 * own units. A body added with a direct `adapter.addBody()` call rather
+	 * than a `bodyDef` is not built again, and a legacy `Body` without a
+	 * `bodyDef` only works with the {@link BuiltinAdapter}.
+	 *
+	 * Called during a physics step, from a collision handler for example,
+	 * the swap happens as soon as that step ends; called more than once in
+	 * one step, the last adapter asked for is installed.
+	 *
+	 * A body the new adapter cannot build (a `Box3d`, `Sphere` or `Point`
+	 * moving to a 2D adapter) does not stop the swap: every other body is
+	 * moved, the refused ones are left without a body, and this throws once
+	 * the swap is complete, naming the first refusal. Called during a step,
+	 * that error is reported with `console.error` instead, so the game loop
+	 * keeps running.
+	 * @param {PhysicsAdapter} adapter - the adapter to use from now on
+	 * @returns {World} this world
+	 * @example
+	 * import { MatterAdapter } from "@melonjs/matter-adapter";
+	 * app.world.setAdapter(await MatterAdapter.create({ gravity: { x: 0, y: 1 } }));
+	 */
+	setAdapter(adapter) {
+		if (this._stepping) {
+			// tearing an engine down from inside its own step is unsafe
+			// (planck silently refuses to destroy a body while stepping); the
+			// last adapter asked for is the one installed once the step ends
+			this._pendingAdapter = adapter;
+			return this;
+		}
+		const previous = this._adapter;
+		if (adapter === previous) {
+			return this;
+		}
+		if (previous !== undefined) {
+			// take every body out of the outgoing simulation, at any depth,
+			// and drop the handles it built: each is built again, at rest
+			this.forEach((child) => {
+				unregisterTreeBodies(child, this);
+				releaseDefinedBodies(child);
+			});
+			previous.destroy?.();
+		}
+		this._adapter = adapter;
+		this.physic = adapter.physicLabel ?? "builtin";
+		adapter.init?.(this);
+		// and build them again in the new one. A body it cannot build does
+		// not stop the others: the swap completes, then says what it refused
+		const refused = [];
+		this.forEach((child) => {
+			registerTreeBodies(child, this, refused);
+		});
+		// the start-up banner names the adapter of the moment; a later switch
+		// is named too, so the console never lists an adapter no longer in use
+		if (this.app?.isInitialized === true && this.app.settings.consoleHeader) {
+			consolePhysics(this);
+		}
+		if (refused.length > 0) {
+			const count =
+				refused.length === 1 ? "1 body" : `${refused.length} bodies`;
+			throw new Error(
+				`melonJS: setAdapter() could not build ${count} on the new adapter, which now runs without ${refused.length === 1 ? "it" : "them"}. The first: ${refused[0].message}`,
+			);
+		}
+		return this;
 	}
 
 	/**
@@ -398,8 +530,24 @@ export default class World extends Container {
 		// etc.) or the sentinel "none" when physics is disabled. The step
 		// runs under any adapter; only "none" skips it.
 		if (this.physic !== "none") {
-			this.adapter.step(dt);
-			this.adapter.syncFromPhysics();
+			this._stepping = true;
+			try {
+				this.adapter.step(dt);
+				this.adapter.syncFromPhysics();
+			} finally {
+				this._stepping = false;
+			}
+			const pending = this._pendingAdapter;
+			if (pending !== undefined) {
+				this._pendingAdapter = undefined;
+				try {
+					this.setAdapter(pending);
+				} catch (error) {
+					// thrown out of the game loop it would stop the game; the
+					// swap itself is complete for every other body
+					console.error(error);
+				}
+			}
 		}
 		emit(WORLD_STEP, dt);
 	}

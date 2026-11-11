@@ -47,7 +47,7 @@ const TIME_SAMPLES = 30;
  * &bull; default key can be configured using the following parameters in the url : e.g. http://myURL/index.html#debugToggleKey=d <br>
  * <b>the debug panel provides the following information : </b><br>
  * &bull; amount of total objects currently active in the current stage <br>
- * &bull; amount of draws operation <br>
+ * &bull; amount of the world's direct children drawn this frame <br>
  * &bull; amount of body shape (for collision) <br>
  * &bull; amount of bounding box <br>
  * &bull; amount of sprites objects <br>

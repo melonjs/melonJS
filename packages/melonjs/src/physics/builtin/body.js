@@ -423,6 +423,16 @@ export default class Body {
 		 */
 		this.jumping = false;
 
+		/**
+		 * whether a collision resolved in the current step pushed this body up
+		 * out of something below it: an actual surface under it, which the
+		 * `falling` / `jumping` flags alone do not say (a body held still
+		 * with no gravity, or one never stepped, is not falling either)
+		 * @ignore
+		 * @type {boolean}
+		 */
+		this.onSurface = false;
+
 		if (typeof onBodyUpdate === "function") {
 			this.onBodyUpdate = onBodyUpdate;
 		}
@@ -438,7 +448,7 @@ export default class Body {
 				// to `_fromJSON` and listing the character indices as
 				// candidate body names.
 				throw new Error(
-					`melonJS: new Body(renderable, "${shapes}") cannot take a loader key. Set \`renderable.bodyDef = { type, shapes: "${shapes}", id: <body name> }\` instead, which resolves the asset and works on the builtin, matter and planck backends alike.`,
+					`melonJS: new Body(renderable, "${shapes}") cannot take a loader key. Set \`renderable.bodyDef = { type, shapes: "${shapes}", id: <body name> }\` instead, which resolves the asset and works on every physics adapter.`,
 				);
 			}
 			if (Array.isArray(shapes)) {
@@ -450,7 +460,7 @@ export default class Body {
 				// path that works on every backend.
 				if (shapes.some(isShapeEntry)) {
 					throw new Error(
-						"melonJS: new Body(renderable, shapes) cannot take an exported shape list. Set `renderable.bodyDef = { type, shapes: <loader key>, id: <body name> }` instead, which works on the builtin, matter and planck backends alike.",
+						"melonJS: new Body(renderable, shapes) cannot take an exported shape list. Set `renderable.bodyDef = { type, shapes: <loader key>, id: <body name> }` instead, which works on every physics adapter.",
 					);
 				}
 				for (let s = 0; s < shapes.length; s++) {
@@ -975,7 +985,7 @@ export default class Body {
 			// `addShape` is untouched.
 			warning(
 				"Body#addShape with an exported shape list",
-				"renderable.bodyDef = { type, shapes: <loader key>, id: <body name> }, which works on the builtin, matter and planck backends alike",
+				"renderable.bodyDef = { type, shapes: <loader key>, id: <body name> }, which works on every physics adapter",
 				"20.7.0",
 			);
 			stored = undefined;
@@ -1336,6 +1346,17 @@ export default class Body {
 		// below — read by the falling/jumping update at the end
 		const arrivingVelY = this.vel.y;
 
+		// pushed up out of something below: a surface under the body this
+		// step, by the same rule as the other adapters' contact normal (an
+		// upward component above a tenth, so a wall never counts)
+		if (
+			mtvY > 0 &&
+			Math.abs(mtvY) >= Math.abs(mtvZ) &&
+			mtvY > 0.1 * Math.hypot(mtvX, mtvY)
+		) {
+			this.onSurface = true;
+		}
+
 		// Move out of the other object shape
 		this.ancestor.pos.set(
 			this.ancestor.pos.x - mtvX * ratio,
@@ -1555,6 +1576,9 @@ export default class Body {
 	 * @returns {boolean} true if resulting velocity is different than 0
 	 */
 	update() {
+		// a new step: what the body stands on is found again by its collisions
+		this.onSurface = false;
+
 		// apply timer.tick to delta time for linear interpolation (when enabled)
 		// #761 add delta time in body update
 		const deltaTime = /* dt * */ timer.tick;

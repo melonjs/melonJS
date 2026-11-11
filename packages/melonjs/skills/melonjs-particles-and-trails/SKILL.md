@@ -1,6 +1,6 @@
 ---
 name: melonjs-particles-and-trails
-description: "Use this skill for particle effects and motion trails in melonJS — ParticleEmitter configuration, burst versus stream emission, the referenceSpace frame of reference introduced in 20.2, 3D particle motion through elevation and minSpread/maxSpread in 20.8, and the Trail renderable. Covers the emitter that silently does nothing until you call an emit method. Triggers on: Trail3d, ribbon, exhaust trail, speed streak, ski track, tyre mark, ribbonNormal, ParticleEmitter, particles, particle editor, tune particles, spawn depth, volume, burstParticles, streamParticles, referenceSpace, ParticleEmitterSettings, elevation, minSpread, maxSpread, spawn area, Trail, explosion, smoke, sparks, debris, ring, exhaust, emitter, tintOverLife, colour over life, color over life, flame, fire."
+description: "Use this skill for particle effects and motion trails in melonJS — ParticleEmitter configuration, burst versus stream emission, the referenceSpace frame of reference introduced in 20.2, 3D particle motion through elevation and minSpread/maxSpread in 20.8, and the Trail renderable. Covers the emitter that silently does nothing until you call an emit method. Triggers on: Trail3d, ribbon, exhaust trail, speed streak, ski track, tyre mark, ribbonNormal, ParticleEmitter, particles, particle editor, tune particles, spawn depth, volume, burstParticles, streamParticles, stopStream, autoDestroyOnComplete, onComplete, sprite sheet particles, framewidth, randomFrame, cone, sphere, referenceSpace, ParticleEmitterSettings, elevation, minSpread, maxSpread, spawn area, Trail, explosion, smoke, sparks, debris, ring, exhaust, emitter, tintOverLife, colour over life, color over life, flame, fire."
 license: MIT
 ---
 
@@ -64,7 +64,8 @@ It covers every setting that changes how one emitter looks, but not:
   the one drawn on top last (or with a higher `z`).
 - **Trails.** `Trail` and `Trail3d` are separate renderables; see below.
 - **Code-only settings.** `onComplete`, `autoDestroyOnComplete`,
-  `accurateBounds`, and a `Container` as `referenceSpace` (it offers
+  `accurateBounds` (deprecated since 20.2, and does nothing), and a
+  `Container` as `referenceSpace` (it offers
   `"local"` and `"world"`). `textureAdditive` is left out: `blendMode`
   replaces it.
 - **Changes at run time.** Calling `burstParticles()` when something
@@ -258,7 +259,9 @@ debris.
 
 For one-shot effects, `autoDestroyOnComplete: true` removes the emitter once its
 particles have finished. The `onComplete` callback fires at that same moment
-either way.
+either way. A stream finishes only once it stops emitting: one left on the
+default `duration` (`Infinity`) never completes until you call `stopStream()`,
+so give a stream that should clean up after itself a `duration`.
 
 For repeated effects (muzzle flashes, impacts) keep **one** long-lived emitter
 and re-aim it per shot, rather than allocating an emitter per event.
@@ -392,6 +395,7 @@ answer when you want discrete puffs rather than a continuous ribbon.
 | the cloud follows a moving emitter | default `referenceSpace: "local"` — use `"world"` for trails |
 | particles do not travel far enough | settings tuned pre-20.2, when drawn travel was doubled |
 | one-shot emitters accumulate | missing `autoDestroyOnComplete: true` |
+| a streaming emitter with `autoDestroyOnComplete` never goes away | the stream runs on the default `duration` of `Infinity`: give it a `duration`, or call `stopStream()` |
 | every particle of an emitter is the same colour all its life | `tint` is one value for the emitter: use `tintOverLife` for a colour that changes as it ages |
 | a `tintOverLife` colour's transparency has no effect | the list sets the colour only; opacity is the particle's fade |
 | `tintOverLife` colours look muddy | the texture is coloured; author it white so the tints come through as given |

@@ -260,6 +260,11 @@ function registerChildBody(child, worldContainer) {
 		// none exists, or re-applies def fields onto the existing one
 		// (legacy-bridge path) — see BuiltinAdapter.addBody.
 		worldContainer.adapter.addBody(child, def);
+		// a renderable with a body takes part in physics and input. Adapters
+		// say so in `addBody`, as the built-in `Body` constructor does; this
+		// covers one that does not, whose renderables would stay kinematic
+		// and be skipped by pointer events.
+		child.isKinematic = false;
 	} else if (child.body instanceof Body) {
 		worldContainer.addBody(child.body);
 	} else {
@@ -298,10 +303,23 @@ const registeredBodies = new WeakMap();
  * @internal
  * @param {Renderable} node - the renderable entering the world
  * @param {Container} worldContainer - the root world container
+ * @param {Error[]} [refused] - when given, a body the adapter refuses to
+ * build is recorded here and the rest of the tree is still registered;
+ * otherwise the refusal is thrown
  */
-function registerTreeBodies(node, worldContainer) {
+export function registerTreeBodies(node, worldContainer, refused) {
 	if (registeredBodies.get(node) !== worldContainer) {
-		if (registerChildBody(node, worldContainer)) {
+		let registered;
+		try {
+			registered = registerChildBody(node, worldContainer);
+		} catch (error) {
+			if (refused === undefined) {
+				throw error;
+			}
+			refused.push(error);
+			registered = false;
+		}
+		if (registered) {
 			registeredBodies.set(node, worldContainer);
 		} else {
 			// nothing for the engine to register: a body this renderable
@@ -311,7 +329,7 @@ function registerTreeBodies(node, worldContainer) {
 	}
 	if (node instanceof Container) {
 		node.forEach((child) => {
-			registerTreeBodies(child, worldContainer);
+			registerTreeBodies(child, worldContainer, refused);
 		});
 	}
 }
@@ -376,7 +394,7 @@ function unregisterBody(node, root) {
  * @param {Renderable} node - the renderable leaving the world
  * @param {Container} [root] - the root of the tree it is being removed from
  */
-function unregisterTreeBodies(node, root) {
+export function unregisterTreeBodies(node, root) {
 	unregisterBody(node, root);
 	if (node instanceof Container) {
 		node.forEach((child) => {

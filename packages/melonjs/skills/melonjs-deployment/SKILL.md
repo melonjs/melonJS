@@ -15,9 +15,11 @@ npm create melonjs@latest my-game
 ```
 
 The project name is required — without it the command prints its usage and
-exits. It downloads the melonJS TypeScript boilerplate (Vite, TypeScript and the
-debug plugin already wired in), which saves you the top-level-await and
-asset-path issues that a hand-rolled config usually hits first.
+exits — and it names a new directory: an existing one is refused. It downloads
+the melonJS TypeScript boilerplate (Vite, TypeScript and the debug plugin
+already wired in), which saves you the top-level-await and asset-path issues
+that a hand-rolled config usually hits first. Then `npm install` and
+`npm run dev` in that directory.
 
 ## Adding melonJS to an existing project
 
@@ -69,14 +71,22 @@ Two caveats worth knowing:
 
 ## Native apps
 
-**Capacitor** is the current recommendation for iOS and Android — see
-`@melonjs/capacitor-plugin`. **Cordova** also works and is documented, but is the
-older route.
+**Capacitor** is the current recommendation for iOS and Android. A melonJS game
+runs in its WebView unchanged; `@melonjs/capacitor-plugin` adds the native
+lifecycle: the game pauses when the app goes to the background and resumes when
+it comes back (but stays paused if the player had paused it, from 1.0.1), the
+hardware back button reaches the current stage (`bindStageBack`), and
+orientation lock and the splash screen are one call each. The boilerplate's
+Vite build writes to `dist/`, Capacitor's default `webDir`. See
+`melonjs-plugins` for its options. **Cordova** also works and is documented,
+but is the older route.
 
-The thing that breaks first in both is asset loading: the app is served from
-`file://`, where `fetch()` cannot read local files. melonJS's loader falls back
-to XHR for that scheme, so engine-loaded assets work — but any `fetch()` in
-*your* game code will fail there.
+The thing that breaks first under Cordova is asset loading: the app is served
+from `file://`, where `fetch()` cannot read local files. melonJS's loader falls
+back to XHR for that scheme, so engine-loaded assets work — but any `fetch()` in
+*your* game code will fail there. Capacitor serves the app from a local web
+server instead (`https://localhost` on Android, `capacitor://localhost` on
+iOS), so `fetch()` works there.
 
 ## Mini-game platforms
 
@@ -103,11 +113,13 @@ are not decoded into memory.
 |---|---|
 | blank page, syntax error in the console | browser older than the ES2022 target |
 | transpiling changes nothing | build config excludes `node_modules` |
-| assets 404 in a packaged native app | `fetch()` in game code — `file://` needs XHR |
+| assets 404 in a packaged Cordova app | `fetch()` in game code — `file://` needs XHR |
 | a built-in method is missing after transpiling | transpiling is syntax-only; polyfills are separate |
 | bundle much larger than expected | tree-shaking recovers little — subsystems are interconnected |
+| a native app paused from its menu is running again after coming back from the background | capacitor-plugin < 1.0.1 resumed on every return; upgrade |
 
 ## Related skills
 
 - `melonjs` — the companion packages, including the Capacitor plugin
+- `melonjs-plugins` — registering the Capacitor plugin, and its helpers
 - `melonjs-getting-started` — the Application bootstrap the template produces

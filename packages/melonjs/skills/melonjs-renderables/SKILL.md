@@ -1,6 +1,6 @@
 ---
 name: melonjs-renderables
-description: "Use this skill when subclassing Renderable, writing a custom draw() method, handling pointer or click events on game objects, applying post effects and shaders, or controlling draw order. Covers the pos-relative draw contract, isKinematic and input, addPostEffect vs the deprecated shader property, and z-ordering. Triggers on: Tween, easing, animate, Renderable, extends Renderable, draw(, update(, isKinematic, pointerEvent, registerPointerEvent, onClick, addPostEffect, removePostEffect, ShaderEffect, addChild, z-order, anchorPoint, floating."
+description: "Use this skill when subclassing Renderable, writing a custom draw() method, handling pointer or click events on game objects, applying post effects and shaders, or controlling draw order. Covers the pos-relative draw contract, isKinematic and input, addPostEffect vs the deprecated shader property, z-ordering, y-sorting with sortOn and sortOffset, and Container clipping. Triggers on: Tween, easing, animate, Renderable, extends Renderable, draw(, update(, isKinematic, pointerEvent, registerPointerEvent, onClick, addPostEffect, removePostEffect, ShaderEffect, addChild, z-order, sortOn, sortOffset, autoSort, clipping, clipContains, anchorPoint, floating."
 license: MIT
 ---
 
@@ -67,14 +67,19 @@ class Button extends Renderable {
 The symptom is a handler that is registered, looks correct, and never fires.
 
 Note that `Container`, `Camera2d`, `Draggable`, `DropTarget` and the `UI*`
-elements set it to `false` for you, and so does the `Body` constructor on its
-owner (which covers `Entity` and anything you give a body to) — so a plain
-`Renderable` or `Sprite` subclass with no body is the case that catches people.
+elements set it to `false` for you, and so does giving a renderable a body (a
+`bodyDef`, on every physics adapter, or a `Body`, which covers `Entity`) — so a
+plain `Renderable` or `Sprite` subclass with no body is the case that catches
+people. Before melonJS 20.14, matter-adapter 1.6.0 and planck-adapter 1.7.0,
+only the built-in adapter cleared it: under matter or planck a renderable with
+a `bodyDef` stayed kinematic and missed pointer events.
 
 The same flag has a second, less obvious effect: it is also the opt-in to the
 world **broadphase**. The quadtree/octree insert skips any child with
 `isKinematic === true`, so body-less objects you want `adapter.queryAABB` /
-`querySphere` to find need `isKinematic = false` as well. The builtin
+`querySphere` to find need `isKinematic = false` as well. That is the built-in
+adapter; the `queryAABB` of matter, planck and Rapier only ever returns
+renderables with a body. The builtin
 narrowphase likewise requires *both* partners to be non-kinematic.
 
 ## 3. Draw order: only `addChild(child, z)` works
@@ -297,6 +302,13 @@ With the flag, the bounds are the children's union, re-measured on every update
 and, while the group is off screen, before each culling check — so a squad that
 walks back into view is drawn again.
 
+`clipping = true` crops a container's children to its own rectangle, so it
+needs a size of its own: a sizeless container (the default) does not clip.
+Since 20.13 the pointer skips a child where it is cropped away, and
+`container.clipContains(x, y)` tells whether the container shows its children
+at a point (screen pixels for a floating one). A clip inside a clip shows
+their overlap, on WebGL and WebGPU as on Canvas.
+
 ## Anchors and floating
 
 - `anchorPoint` defaults to centre `(0.5, 0.5)` on `Renderable`, but `Container`
@@ -312,8 +324,10 @@ walks back into view is drawn again.
 ## Prefer built-in features
 
 Before writing custom `draw()` code, check whether the engine already covers it —
-`ParticleEmitter`, `Tween`, the `ShaderEffect` presets, `UISpriteElement` and
-`UITextButton`, the physics adapters, and the Tiled tilemap renderers all exist.
+`ParticleEmitter`, `Tween`, the `ShaderEffect` presets, the UI widgets
+(`UITextButton`, `UISpriteElement`, `UIPanel`, `ProgressBar` and the rest, see
+`melonjs-ui-and-text`), `NineSliceSprite`, the physics adapters, and the Tiled
+tilemap renderers all exist.
 Hand-rolled equivalents miss the batching and the multi-backend support.
 
 ## Symptom → cause
@@ -334,9 +348,12 @@ Hand-rolled equivalents miss the batching and the multi-backend support.
 | `z` unexpectedly 0 after a `set` | `Vector3d.set(x, y)` defaults `z` to 0 — `setPosition(x, y)` on the renderable leaves the depth alone |
 | a settings option appears to do nothing | the class never reads that key — see section 7 |
 | `isRenderable = false` did not hide the object | it gates bounds, not drawing — use `alpha` |
+| `clipping = true` crops nothing | the container has no size of its own: give it one (`resize`) |
+| a child cropped out of a clipping container still takes clicks where it is hidden | before 20.13 the pointer ignored the clip: update |
 
 ## Related skills
 - `melonjs-scenes-and-state` — `Tween` and the easing families, for animating any of this
 
 - `melonjs-getting-started` — Application lifecycle and the scene graph
+- `melonjs-ui-and-text` — the UI widgets, before drawing your own
 - `melonjs-20-migration` — the deprecated `shader` property and other pre-20 APIs

@@ -611,6 +611,10 @@ export default class Mesh extends Renderable {
 
 		// load geometry from OBJ model or raw data
 		let objGroups = null;
+		// whether `originalVertices` is an array this mesh made: otherwise it
+		// is the loader's cached model or the caller's own array, which
+		// normalizing must not rewrite
+		let ownsVertices = false;
 		// the normal source that wins: an explicit `settings.normals`, else
 		// whatever the OBJ supplied
 		let sourceNormals = settings.normals;
@@ -661,10 +665,10 @@ export default class Mesh extends Renderable {
 			// parser's "anonymous group" fallback)
 			objGroups = objData.groups;
 		} else {
-			this.originalVertices =
-				settings.vertices instanceof Float32Array
-					? settings.vertices
-					: new Float32Array(settings.vertices);
+			ownsVertices = !(settings.vertices instanceof Float32Array);
+			this.originalVertices = ownsVertices
+				? new Float32Array(settings.vertices)
+				: settings.vertices;
 			this.uvs =
 				settings.uvs instanceof Float32Array
 					? settings.uvs
@@ -1587,6 +1591,12 @@ export default class Mesh extends Renderable {
 		// and shares a coordinate space with sibling meshes) opt out via
 		// `normalize: false` to preserve real-world scale across the scene.
 		if (settings.normalize !== false) {
+			// on a copy of an array the mesh does not own: rewriting the
+			// loader's cached model in place shrank every later mesh and
+			// scene built from it with `normalize: false`
+			if (!ownsVertices) {
+				this.originalVertices = new Float32Array(this.originalVertices);
+			}
 			normalizeVertices(this.originalVertices);
 		}
 

@@ -46,5 +46,9 @@ export {
 	PlanckAdapter,
 	type PlanckAdapterOptions,
 } from "../../../planck-adapter/src/index.ts";
+export {
+	RapierAdapter,
+	type RapierAdapterOptions,
+} from "../../../rapier2d-adapter/src/index.ts";
 export { SpinePlugin } from "../../../spine-plugin/src/index.js";
 export { TiledInflatePlugin } from "../../../tiled-inflate-plugin/src/index.js";

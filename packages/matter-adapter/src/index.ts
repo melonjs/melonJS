@@ -32,15 +32,11 @@ import {
 declare const __VERSION__: string;
 
 /**
- * Minimum melonJS version this adapter requires. The PhysicsAdapter
- * interface, `bodyDef` auto-registration, and the resolver in
- * `Application` are part of the 19.5 work — older releases don't have
- * the plumbing for instance-based adapters. Tracks the engine version
- * actually shipping these APIs (will be bumped to "19.5.0" once the
- * engine release is cut).
+ * Minimum melonJS version this adapter requires: the lower bound of its
+ * `melonjs` peer dependency range, so the two cannot disagree.
  * @hidden
  */
-export const REQUIRED_MELONJS_VERSION = "19.5.0";
+export const REQUIRED_MELONJS_VERSION = "20.0.0";
 
 /**
  * Options accepted by the {@link MatterAdapter} constructor.
@@ -143,7 +139,9 @@ export class MatterAdapter implements PhysicsAdapter {
 
 	readonly capabilities: AdapterCapabilities = {
 		constraints: true,
-		continuousCollisionDetection: true,
+		// matter-js steps discretely: a fast body can pass through a thin
+		// one. `subSteps` is the remedy, not a capability to branch on.
+		continuousCollisionDetection: false,
 		sleepingBodies: true,
 		raycasts: true,
 		// Matter.js is 2D-only; no `raycast3d` method. User code under
@@ -237,6 +235,42 @@ export class MatterAdapter implements PhysicsAdapter {
 	private readonly matterOptions: Matter.IEngineDefinition | undefined;
 
 	private readonly subSteps: number;
+
+	/**
+	 * Resolves once the adapter can be constructed. matter-js is plain JavaScript, loaded with this package, so this resolves
+	 * at once; it is here so every adapter has the same
+	 * {@link PhysicsAdapterClass} API, and code written as
+	 * `await MatterAdapter.create()` reads the same as for one that loads
+	 * WebAssembly first.
+	 * @returns a resolved promise
+	 */
+	static load(): Promise<void> {
+		return Promise.resolve();
+	}
+
+	/**
+	 * Create an adapter, the same way for every adapter: wait for
+	 * {@link MatterAdapter.load}, then construct it. Here that is the same as
+	 * `new MatterAdapter(options)`, which stays supported.
+	 * @param options - the constructor's options
+	 * @returns the new adapter, an instance of the class `create` is called on
+	 * @example
+	 * const app = new Application(800, 600, {
+	 *     physic: await MatterAdapter.create(),
+	 * });
+	 */
+	static async create<T extends PhysicsAdapter>(
+		// the shape of `PhysicsAdapterClass`, spelled out so this package
+		// still type-checks against a melonJS older than the one defining it
+		this: Pick<typeof MatterAdapter, "load"> &
+			(new (
+				options?: MatterAdapterOptions,
+			) => T),
+		options?: MatterAdapterOptions,
+	): Promise<T> {
+		await this.load();
+		return new this(options);
+	}
 
 	constructor(options: MatterAdapterOptions = {}) {
 		// Mirror the BasePlugin version-check pattern: refuse to construct
@@ -698,12 +732,28 @@ export class MatterAdapter implements PhysicsAdapter {
 		// specific code casts to `MatterAdapter.Body` to reach native
 		// fields (frictionAir, angle, …).
 		renderable.body = adapterBody;
+		// as the builtin `Body` constructor does: a renderable with a body
+		// takes part in physics and receives pointer events
+		renderable.isKinematic = false;
 		return adapterBody;
 	}
 
 	removeBody(renderable: Renderable): void {
 		const body = this.bodyMap.get(renderable);
 		if (body) {
+			// a partner still touching this body learns the contact ended, as
+			// on the other adapters: matter only reports the end of a pair
+			// whose bodies it still holds
+			const touching = this.engine.pairs.list.filter((pair: Matter.Pair) => {
+				return (
+					pair.isActive &&
+					(this._renderableForPart(pair.bodyA) === renderable ||
+						this._renderableForPart(pair.bodyB) === renderable)
+				);
+			});
+			if (touching.length > 0) {
+				this._dispatchCollisions(touching, "end");
+			}
 			Matter.Composite.remove(this.engine.world, body);
 			this.bodyMap.delete(renderable);
 			this.renderableMap.delete(body);
@@ -937,7 +987,10 @@ export class MatterAdapter implements PhysicsAdapter {
 	}
 
 	getMaxVelocity(renderable: Renderable): { x: number; y: number } {
-		return this.velocityLimits.get(renderable) ?? { x: 0, y: 0 };
+		// a copy, so changing it does not change the cap; and no cap reads as
+		// Infinity, where `{ 0, 0 }` read as a cap that holds the body still
+		const limit = this.velocityLimits.get(renderable);
+		return limit ? { x: limit.x, y: limit.y } : { x: Infinity, y: Infinity };
 	}
 
 	setCollisionType(renderable: Renderable, type: number): void {
@@ -1135,6 +1188,11 @@ export class MatterAdapter implements PhysicsAdapter {
 
 		for (const collision of collisions) {
 			const candidate = collision.bodyA;
+			// a part the ray starts inside is not hit, as on the other
+			// adapters: a body casting from its own centre does not see itself
+			if (Matter.Vertices.contains(candidate.vertices, from)) {
+				continue;
+			}
 			// Compound bodies expose actual collision shapes in
 			// `parts[1..N]`; `parts[0]` is the parent wrapper whose
 			// vertices are the convex hull, not the per-part shapes. For
@@ -1171,7 +1229,10 @@ export class MatterAdapter implements PhysicsAdapter {
 		}
 
 		if (bestBody === null) return null;
-		const renderable = this.renderableMap.get(bestBody);
+		// `Query.ray` reports the PART it hit, which for a body made of
+		// several shapes (or a concave polygon matter split into pieces) is
+		// not the body the renderable owns: resolve it through its parent
+		const renderable = this._renderableForPart(bestBody);
 		if (!renderable) return null;
 
 		// Edge outward normal — perpendicular to the winning edge,
@@ -1316,7 +1377,8 @@ export class MatterAdapter implements PhysicsAdapter {
 				depth,
 				pair,
 			};
-			if (!aDetached) {
+			// a handler earlier in this dispatch may have removed this body
+			if (!aDetached && this.bodyMap.has(rA)) {
 				const mA = methodForSide(rA);
 				const fnA = (rA as Renderable & Record<string, unknown>)[mA];
 				if (typeof fnA === "function") {
@@ -1327,7 +1389,7 @@ export class MatterAdapter implements PhysicsAdapter {
 					);
 				}
 			}
-			if (!bDetached) {
+			if (!bDetached && this.bodyMap.has(rB)) {
 				const mB = methodForSide(rB);
 				const fnB = (rB as Renderable & Record<string, unknown>)[mB];
 				if (typeof fnB === "function") {
@@ -1383,7 +1445,8 @@ export class MatterAdapter implements PhysicsAdapter {
 	 * @param rB renderable owning part B
 	 * @param partA the matter part on A's side
 	 * @param partB the matter part on B's side
-	 * @param normal contact normal, in A -> B orientation
+	 * @param normal the pair's `collision.normal`: the direction A must move
+	 * to separate from B, as the body-level hooks hand it to A
 	 * @param normal.x normal x component
 	 * @param normal.y normal y component
 	 * @param depth penetration depth
@@ -1425,9 +1488,12 @@ export class MatterAdapter implements PhysicsAdapter {
 			ny: number,
 		): void => {
 			const fn = (receiver as Renderable & Record<string, unknown>)[method];
-			if (typeof fn !== "function") {
+			// skipped too when an earlier handler removed this body
+			if (typeof fn !== "function" || !this.bodyMap.has(receiver)) {
 				return;
 			}
+			// separated contacts carry identity only, matching the builtin
+			const d = phase === "end" ? 0 : depth;
 			(fn as (contact: unknown, other: Renderable) => unknown).call(
 				receiver,
 				{
@@ -1438,19 +1504,31 @@ export class MatterAdapter implements PhysicsAdapter {
 					indexShapeA: own.index,
 					indexShapeB: other.index,
 					isTrigger,
-					// separated contacts carry identity only, matching the builtin
-					depth: phase === "end" ? 0 : depth,
-					overlap: phase === "end" ? 0 : depth,
+					depth: d,
+					overlap: d,
 					normal: { x: nx, y: ny },
+					// the legacy SAT fields `ShapeCollisionContact` declares, in
+					// the builtin's convention: `overlapN` is the opposite of
+					// `normal`, `overlapV` is `overlapN` scaled by the depth, and
+					// a 2D engine has no Z
+					overlapN: { x: -nx, y: -ny },
+					overlapV: { x: -nx * d, y: -ny * d },
+					overlapZ: 0,
+					overlapNZ: 0,
+					normalZ: 0,
 				},
 				partner,
 			);
 		};
+		// oriented as the body-level response is: each receiver gets the
+		// direction it must move to separate. These were negated, so a
+		// shape hook pointed into the partner while `onCollisionStart`
+		// pointed away from it.
 		if (!aDetached) {
-			emit(rA, rB, entryA, entryB, -normal.x, -normal.y);
+			emit(rA, rB, entryA, entryB, normal.x, normal.y);
 		}
 		if (!bDetached) {
-			emit(rB, rA, entryB, entryA, normal.x, normal.y);
+			emit(rB, rA, entryB, entryA, -normal.x, -normal.y);
 		}
 	}
 

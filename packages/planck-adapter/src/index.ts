@@ -3,6 +3,7 @@ import {
 	type BodyDefinition,
 	type BodyShape,
 	type Bounds,
+	collision,
 	Ellipse,
 	Line,
 	version as melonjsVersion,
@@ -22,13 +23,11 @@ import * as planck from "planck";
 declare const __VERSION__: string;
 
 /**
- * Minimum melonJS version this adapter requires. The PhysicsAdapter
- * interface, `bodyDef` auto-registration, and the resolver in
- * `Application` are part of the 19.5 work — older releases don't have
- * the plumbing for instance-based adapters.
+ * Minimum melonJS version this adapter requires: the lower bound of its
+ * `melonjs` peer dependency range, so the two cannot disagree.
  * @hidden
  */
-export const REQUIRED_MELONJS_VERSION = "19.5.0";
+export const REQUIRED_MELONJS_VERSION = "20.0.0";
 
 /**
  * Options accepted by the {@link PlanckAdapter} constructor.
@@ -116,6 +115,20 @@ function unsupportedShapeMessage(adapter: string, shape: BodyShape): string {
 }
 
 /**
+ * The fixture built from a body's first shape: Box2D keeps the fixture list
+ * newest first, so it is the list's last.
+ * @param body - the planck body
+ * @returns that fixture, or null for a body without any
+ */
+function firstShapeFixture(body: planck.Body): planck.Fixture | null {
+	let fixture = body.getFixtureList();
+	while (fixture?.getNext()) {
+		fixture = fixture.getNext();
+	}
+	return fixture;
+}
+
+/**
  * The most vertices Box2D will keep on one polygon. Measured against planck
  * rather than taken from the header: anything above this is truncated without
  * a word, and far above it the shape collapses.
@@ -189,11 +202,12 @@ export class PlanckAdapter implements PhysicsAdapter {
 	 * just to reach the factories you need:
 	 *
 	 * ```ts
-	 * const joint = adapter.planck.RevoluteJoint(
+	 * const bodyA = a.body as PlanckAdapter.Body;
+	 * const joint = new adapter.planck.RevoluteJoint(
 	 *     { collideConnected: false },
-	 *     a.body as PlanckAdapter.Body,
+	 *     bodyA,
 	 *     b.body as PlanckAdapter.Body,
-	 *     adapter.planck.Vec2(0, 0),
+	 *     bodyA.getPosition(), // the pin, a world point in meters
 	 * );
 	 * adapter.world.createJoint(joint);
 	 * ```
@@ -217,6 +231,11 @@ export class PlanckAdapter implements PhysicsAdapter {
 	melonWorld!: World;
 
 	private readonly bodyMap = new Map<Renderable, planck.Body>();
+	/**
+	 * Bodies removed while the world was locked, destroyed after the step.
+	 * See {@link PlanckAdapter.removeBody}.
+	 */
+	private readonly lockedRemovals: planck.Body[] = [];
 	private readonly renderableMap = new Map<planck.Body, Renderable>();
 	/**
 	 * planck fixture -> the melonJS shape it was built from, and that shape's
@@ -271,6 +290,42 @@ export class PlanckAdapter implements PhysicsAdapter {
 	private readonly subSteps: number;
 	private readonly velocityIterations: number;
 	private readonly positionIterations: number;
+
+	/**
+	 * Resolves once the adapter can be constructed. planck is plain JavaScript, loaded with this package, so this resolves
+	 * at once; it is here so every adapter has the same
+	 * {@link PhysicsAdapterClass} API, and code written as
+	 * `await PlanckAdapter.create()` reads the same as for one that loads
+	 * WebAssembly first.
+	 * @returns a resolved promise
+	 */
+	static load(): Promise<void> {
+		return Promise.resolve();
+	}
+
+	/**
+	 * Create an adapter, the same way for every adapter: wait for
+	 * {@link PlanckAdapter.load}, then construct it. Here that is the same as
+	 * `new PlanckAdapter(options)`, which stays supported.
+	 * @param options - the constructor's options
+	 * @returns the new adapter, an instance of the class `create` is called on
+	 * @example
+	 * const app = new Application(800, 600, {
+	 *     physic: await PlanckAdapter.create(),
+	 * });
+	 */
+	static async create<T extends PhysicsAdapter>(
+		// the shape of `PhysicsAdapterClass`, spelled out so this package
+		// still type-checks against a melonJS older than the one defining it
+		this: Pick<typeof PlanckAdapter, "load"> &
+			(new (
+				options?: PlanckAdapterOptions,
+			) => T),
+		options?: PlanckAdapterOptions,
+	): Promise<T> {
+		await this.load();
+		return new this(options);
+	}
 
 	constructor(options: PlanckAdapterOptions = {}) {
 		// Mirror the BasePlugin version-check pattern: refuse to construct
@@ -348,6 +403,7 @@ export class PlanckAdapter implements PhysicsAdapter {
 			this.world.destroyBody(body);
 			body = next;
 		}
+		this.lockedRemovals.length = 0;
 		this.bodyMap.clear();
 		this.renderableMap.clear();
 		this.fixtureShapeMap.clear();
@@ -371,19 +427,30 @@ export class PlanckAdapter implements PhysicsAdapter {
 		// one full-dt step, for narrow-phase accuracy on fast bodies.
 		const dtSeconds = dt / 1000;
 		if (this.subSteps === 1) {
-			this.world.step(
-				dtSeconds,
-				this.velocityIterations,
-				this.positionIterations,
-			);
+			this._stepWorld(dtSeconds);
 		} else {
 			const sub = dtSeconds / this.subSteps;
 			for (let i = 0; i < this.subSteps; i++) {
-				this.world.step(sub, this.velocityIterations, this.positionIterations);
+				this._stepWorld(sub);
 			}
 		}
 		this._clampVelocities();
 		this._dispatchActiveContacts();
+	}
+
+	/**
+	 * One `world.step`, then the bodies removed while it ran: the world is
+	 * unlocked again, so planck destroys them now.
+	 * @param seconds the time to advance the world by
+	 */
+	private _stepWorld(seconds: number): void {
+		this.world.step(seconds, this.velocityIterations, this.positionIterations);
+		if (this.lockedRemovals.length > 0) {
+			for (const body of this.lockedRemovals) {
+				this.world.destroyBody(body);
+			}
+			this.lockedRemovals.length = 0;
+		}
 	}
 
 	syncFromPhysics(): void {
@@ -508,8 +575,10 @@ export class PlanckAdapter implements PhysicsAdapter {
 				// a trigger shape is a sensor fixture: it reports contacts and
 				// contributes nothing to the solver
 				isSensor: def.isSensor === true || shapeTrigger === true,
-				// Bit 0 reserved by Box2D for "no filter set"; melonJS
-				// collisionType/Mask map directly onto categoryBits/maskBits.
+				// melonJS collisionType/Mask map directly onto Box2D's
+				// categoryBits/maskBits. With no mask, collide with every
+				// collision type, as the other adapters do: Box2D's own default
+				// (0xFFFF) ignored user types from bit 16 up.
 				filterCategoryBits:
 					typeof shapeType === "number"
 						? shapeType
@@ -521,7 +590,7 @@ export class PlanckAdapter implements PhysicsAdapter {
 						? shapeMask
 						: typeof def.collisionMask === "number"
 							? def.collisionMask
-							: 0xffff,
+							: collision.types.ALL_OBJECT,
 			};
 			const fixture = body.createFixture(planckShape, fixtureDef);
 			// Box2D reports contacts per FIXTURE pair, and this backend already
@@ -580,8 +649,9 @@ export class PlanckAdapter implements PhysicsAdapter {
 		// `applyForce` IS spliced because its signature differs from the
 		// native — the portable helper takes `(x, y, pointX?, pointY?)`
 		// numbers while planck's native takes `(Vec2, Vec2, wake?)`. The
-		// native is reachable via `body.applyForceToCenter(Vec2)` or by
-		// casting `body as planck.Body` if a user needs the raw form.
+		// native is reachable via `body.applyForceToCenter(Vec2)`, or as
+		// `planck.Body.prototype.applyForce.call(body, …)`: the helper is an
+		// own property of the body, so no cast gets past it.
 		// Capture native applyForce reference so the spliced helper can
 		// reach the real planck method without recursing. Also stored on
 		// the adapter (in `nativeApplyForce`) so adapter-level methods
@@ -687,14 +757,16 @@ export class PlanckAdapter implements PhysicsAdapter {
 		Object.assign(body, helpers);
 
 		// Live getter/setter aliases for `collisionType` / `collisionMask`
-		// that read and write the first fixture's filter bits. Each
+		// that read the first shape's filter bits and write every fixture's.
+		// Box2D keeps its fixture list newest first, so the first shape's
+		// fixture is the list's last. Each
 		// fixture has its own filter in Box2D; we surface the body-wide
 		// aliases here because user code expects single values. Writes
 		// propagate to every fixture (see setCollisionType / setCollisionMask).
 		Object.defineProperties(body, {
 			collisionType: {
 				get(this: planck.Body) {
-					const f = this.getFixtureList();
+					const f = firstShapeFixture(this);
 					return f ? f.getFilterCategoryBits() : 0;
 				},
 				set(this: planck.Body, v: number) {
@@ -711,7 +783,7 @@ export class PlanckAdapter implements PhysicsAdapter {
 			},
 			collisionMask: {
 				get(this: planck.Body) {
-					const f = this.getFixtureList();
+					const f = firstShapeFixture(this);
 					return f ? f.getFilterMaskBits() : 0;
 				},
 				set(this: planck.Body, v: number) {
@@ -730,13 +802,25 @@ export class PlanckAdapter implements PhysicsAdapter {
 
 		const adapterBody = body as PlanckAdapter.Body;
 		renderable.body = adapterBody;
+		// as the builtin `Body` constructor does: a renderable with a body
+		// takes part in physics and receives pointer events
+		renderable.isKinematic = false;
 		return adapterBody;
 	}
 
 	removeBody(renderable: Renderable): void {
 		const body = this.bodyMap.get(renderable);
 		if (body) {
-			this.world.destroyBody(body);
+			if (this.world.isLocked()) {
+				// inside a step (a contact event handler): planck ignores
+				// `destroyBody` there without a word, which left a body that
+				// nothing tracked but that still collided. Destroy it once the
+				// step ends; dropping it from the maps now already keeps it
+				// out of every event and query.
+				this.lockedRemovals.push(body);
+			} else {
+				this.world.destroyBody(body);
+			}
 			this.bodyMap.delete(renderable);
 			this.renderableMap.delete(body);
 			for (let f = body.getFixtureList(); f; f = f.getNext()) {
@@ -902,7 +986,10 @@ export class PlanckAdapter implements PhysicsAdapter {
 	): void {
 		const body = this.bodyMap.get(renderable);
 		if (!body) return;
-		body.setLinearDamping(this._scalarOf(friction) ?? 0);
+		// both, as `addBody` sets them from the `bodyDef`'s `frictionAir`
+		const damping = this._scalarOf(friction) ?? 0;
+		body.setLinearDamping(damping);
+		body.setAngularDamping(damping);
 	}
 
 	setMaxVelocity(
@@ -913,7 +1000,10 @@ export class PlanckAdapter implements PhysicsAdapter {
 	}
 
 	getMaxVelocity(renderable: Renderable): { x: number; y: number } {
-		return this.velocityLimits.get(renderable) ?? { x: 0, y: 0 };
+		// a copy, so changing it does not change the cap; and no cap reads as
+		// Infinity, where `{ 0, 0 }` read as a cap that holds the body still
+		const limit = this.velocityLimits.get(renderable);
+		return limit ? { x: limit.x, y: limit.y } : { x: Infinity, y: Infinity };
 	}
 
 	setCollisionType(renderable: Renderable, type: number): void {
@@ -1314,7 +1404,7 @@ export class PlanckAdapter implements PhysicsAdapter {
 		// to escape B is `-normal`, MTV for B is `+normal`. Per
 		// CollisionResponse contract, each side sees the normal pointing
 		// in the direction it must move to separate.
-		const depth = this._estimateContactDepth(contact);
+		const depth = this._contactDepth(contact, worldManifold);
 
 		const methodForSide = (receiver: Renderable): string => {
 			if (phase === "start") return "onCollisionStart";
@@ -1352,7 +1442,8 @@ export class PlanckAdapter implements PhysicsAdapter {
 			pair: contact,
 		};
 
-		if (!aDetached) {
+		// a handler earlier in this dispatch may have removed this body
+		if (!aDetached && this.bodyMap.has(rA)) {
 			const mA = methodForSide(rA);
 			const fnA = (rA as Renderable & Record<string, unknown>)[mA];
 			if (typeof fnA === "function") {
@@ -1363,7 +1454,7 @@ export class PlanckAdapter implements PhysicsAdapter {
 				);
 			}
 		}
-		if (!bDetached) {
+		if (!bDetached && this.bodyMap.has(rB)) {
 			const mB = methodForSide(rB);
 			const fnB = (rB as Renderable & Record<string, unknown>)[mB];
 			if (typeof fnB === "function") {
@@ -1428,9 +1519,13 @@ export class PlanckAdapter implements PhysicsAdapter {
 			ownNy: number,
 		): void => {
 			const fn = (receiver as Renderable & Record<string, unknown>)[method];
-			if (typeof fn !== "function") {
+			// skipped too when an earlier handler removed this body
+			if (typeof fn !== "function" || !this.bodyMap.has(receiver)) {
 				return;
 			}
+			// a separated contact carries identity only, matching the builtin
+			// adapter and `onCollisionEnd`
+			const d = phase === "end" ? 0 : depth;
 			(fn as (contact: unknown, other: Renderable) => unknown).call(
 				receiver,
 				{
@@ -1441,11 +1536,18 @@ export class PlanckAdapter implements PhysicsAdapter {
 					indexShapeA: own.index,
 					indexShapeB: other.index,
 					isTrigger,
-					// a separated contact carries identity only, matching the
-					// builtin adapter and `onCollisionEnd`
-					depth: phase === "end" ? 0 : depth,
-					overlap: phase === "end" ? 0 : depth,
+					depth: d,
+					overlap: d,
 					normal: { x: ownNx, y: ownNy },
+					// the legacy SAT fields `ShapeCollisionContact` declares, in
+					// the builtin's convention: `overlapN` is the opposite of
+					// `normal`, `overlapV` is `overlapN` scaled by the depth, and
+					// a 2D engine has no Z
+					overlapN: { x: -ownNx, y: -ownNy },
+					overlapV: { x: -ownNx * d, y: -ownNy * d },
+					overlapZ: 0,
+					overlapNZ: 0,
+					normalZ: 0,
 					pair: contact,
 				},
 				partner,
@@ -1459,18 +1561,29 @@ export class PlanckAdapter implements PhysicsAdapter {
 		}
 	}
 
-	private _estimateContactDepth(contact: planck.Contact): number {
-		// Box2D's manifold tracks per-point separation in meters; the
-		// most-overlapping point's separation is the negated depth.
-		const manifold = contact.getManifold();
+	/**
+	 * How deep two fixtures overlap, in pixels: the deepest of the contact's
+	 * points. Box2D keeps a point's separation on the world manifold, not on
+	 * the manifold point, where this used to be read from and always came
+	 * back empty, so every contact reported a depth of 0. A separation is in
+	 * meters and negative while the fixtures overlap.
+	 * @param contact the Box2D contact being reported
+	 * @param worldManifold its world manifold, already computed
+	 * @returns the penetration depth, 0 when the fixtures do not overlap
+	 */
+	private _contactDepth(
+		contact: planck.Contact,
+		worldManifold: planck.WorldManifold,
+	): number {
+		const count = contact.getManifold().pointCount;
 		let minSep = 0;
-		for (let i = 0; i < manifold.pointCount; i++) {
-			const sep = (manifold.points[i] as { separation?: number }).separation;
-			if (typeof sep === "number" && sep < minSep) {
+		for (let i = 0; i < count; i++) {
+			const sep = worldManifold.separations[i];
+			if (sep < minSep) {
 				minSep = sep;
 			}
 		}
-		// Convert to pixels for parity with matter-adapter's `depth` units.
+		// pixels, the unit of `depth` on every adapter
 		return this.m2px(-minSep);
 	}
 

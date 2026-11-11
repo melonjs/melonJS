@@ -4,6 +4,11 @@
 
 ### Added
 - Loader: asset bundles, to load and free a level's assets together: `loader.preload({ common: […], level1: […] })`, then `loader.load("level1")` / `loader.unload("level1")`; an asset shared by several bundles is fetched once and freed with the last ([#1656](https://github.com/melonjs/melonJS/issues/1656))
+- Physics: `world.setAdapter()` switches the physics adapter of a running game, rebuilding every body from its `bodyDef`
+- Physics: every adapter class has `load()` and `create()` (`PhysicsAdapterClass`), so `await X.create(options)` makes any adapter the same way
+
+### Changed
+- Physics: `world.adapter` is read-only; switch adapters with `world.setAdapter()`
 
 ### Fixed
 - Application: one very slow update no longer freezes the game for good (since 20.12, a heavy first frame could)
@@ -12,6 +17,7 @@
 - 3D: a container's children are drawn at its depth under `Camera3d`
 - 3D: lit meshes in a moved or rotated container are lit where they are
 - 3D: `Camera3d` no longer culls a frame late after the camera moves
+- 3D: a normalized `Mesh` no longer rewrites the vertex array it was given, which shrank later meshes and scenes of the same model
 - Sprite: `addAnimation()` skips frames the texture lacks, with a warning, instead of crashing later
 - UI: a widget removed while hovered gets its `onOut()`
 - Input: keys held when the window loses the focus are released
@@ -29,6 +35,10 @@
 - Tiled: the camera reaches every painted tile of an infinite map
 - Tiled: the isometric `drawTile()` places tiles where the layer does
 - Loader: unloading an image also frees its GPU texture
+- Physics: a renderable with a `bodyDef` receives pointer events under the matter and planck adapters, as on the built-in
+- Physics: the built-in `isGrounded()` needs a surface under the body; one never stepped, or held in mid-air, read as grounded
+- Physics: the built-in `raycast()` skips a body the ray starts inside, as the other adapters do
+- Physics: a body removed by its partner's collision handler is no longer told about that contact
 
 ## [20.13.0] (melonJS 2) - _2026-11-06_
 

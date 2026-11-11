@@ -75,6 +75,35 @@ function _computeShapeAbsPos(
 
 const _shapeAbs = new Vector2d(0, 0);
 
+/**
+ * Whether a point lies inside a polygon, by the even-odd rule.
+ * @param points - the polygon's points, relative to its position
+ * @param ox - the polygon's absolute x
+ * @param oy - the polygon's absolute y
+ * @param px - the point's x
+ * @param py - the point's y
+ * @returns true when the point is inside
+ */
+function _contains(
+	points: Polygon["points"],
+	ox: number,
+	oy: number,
+	px: number,
+	py: number,
+): boolean {
+	let inside = false;
+	for (let i = 0, j = points.length - 1; i < points.length; j = i++) {
+		const xi = ox + points[i].x;
+		const yi = oy + points[i].y;
+		const xj = ox + points[j].x;
+		const yj = oy + points[j].y;
+		if (yi > py !== yj > py && px < ((xj - xi) * (py - yi)) / (yj - yi) + xi) {
+			inside = !inside;
+		}
+	}
+	return inside;
+}
+
 function _raycastPolygon(
 	fromX: number,
 	fromY: number,
@@ -99,6 +128,12 @@ function _raycastPolygon(
 	// closed loop of two: walking it back from the last point to the first
 	// read a normal that does not exist
 	const edgeCount = len === 2 ? 1 : len;
+	// a ray that starts inside the shape does not hit it, as on the other
+	// adapters: a body casting from its own centre does not see itself. A
+	// `Line` has no inside.
+	if (len >= 3 && _contains(points, shapeAbsX, shapeAbsY, fromX, fromY)) {
+		return null;
+	}
 	let bestT = Infinity;
 	let bestNormalIdx = -1;
 
@@ -184,6 +219,11 @@ function _raycastEllipse(
 	const A = ddx * ddx + ddy * ddy;
 	const B = 2 * (ddx * ox + ddy * oy);
 	const C = ox * ox + oy * oy - 1;
+	// `C < 0`: the ray starts inside the ellipse, which it then does not
+	// hit, as on the other adapters
+	if (C < 0) {
+		return null;
+	}
 	const disc = B * B - 4 * A * C;
 	if (disc < 0 || A < 1e-12) {
 		return null;
@@ -191,9 +231,8 @@ function _raycastEllipse(
 	const sqrtDisc = Math.sqrt(disc);
 	const t0 = (-B - sqrtDisc) / (2 * A);
 	const t1 = (-B + sqrtDisc) / (2 * A);
-	// Smaller positive root in [0, 1] is the entry; if ray origin is
-	// inside the ellipse (`t0 < 0`), the entry is behind us so we use
-	// `t1` (the exit point on this side).
+	// the smaller root in [0, 1] is the entry: the origin is outside (an
+	// inside origin returned above), so both roots lie on the same side
 	let t: number;
 	if (t0 >= 0 && t0 <= 1) {
 		t = t0;
