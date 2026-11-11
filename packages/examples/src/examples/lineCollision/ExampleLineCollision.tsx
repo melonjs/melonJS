@@ -18,12 +18,15 @@
 import { DebugPanelPlugin } from "@melonjs/debug-plugin";
 import { MatterAdapter } from "@melonjs/matter-adapter";
 import { PlanckAdapter } from "@melonjs/planck-adapter";
+import { RapierAdapter } from "@melonjs/rapier2d-adapter";
 import {
 	Application,
 	BuiltinAdapter,
 	type CanvasRenderer,
 	game,
 	Line,
+	type PhysicsAdapter,
+	type Polygon,
 	plugin,
 	Rect,
 	Renderable,
@@ -45,13 +48,14 @@ const VIEWPORT_H = 640;
 const GRAVITY_PX_S2 = 900;
 
 const PARAMS = new URLSearchParams(globalThis.location.search);
-const BACKEND = PARAMS.get("physics") ?? "builtin";
+/** the backend in use: `?physics=` picks the first one, the buttons the rest */
+let backend = PARAMS.get("physics") ?? "builtin";
 
 const BACKENDS = [
 	{
 		id: "builtin",
 		label: "built-in",
-		note: "collides with every segment, sloped ones included, but has no SURFACE friction: nothing removes the pull of gravity along an incline, so the crate slides down the diagonal and off its end, and swings from arm to arm of the valley for a while before settling on the flat. matter and planck have real friction and settle sooner",
+		note: "collides with every segment, sloped ones included, but has no SURFACE friction: nothing removes the pull of gravity along an incline, so the crate slides down the diagonal and off its end, and swings from arm to arm of the valley for a while before settling on the flat. The rigid-body backends have real friction and settle sooner",
 	},
 	{
 		id: "matter",
@@ -63,11 +67,45 @@ const BACKENDS = [
 		label: "planck",
 		note: "Box2D needs three vertices and silently substitutes a one-metre box for fewer, so a line is simulated as a thin quad following it instead: the crate lands on the slope and settles in the valley of the polyline",
 	},
+	{
+		id: "rapier",
+		label: "rapier",
+		note: "has a segment primitive, so a line on a static body is simulated exactly as authored, with nothing substituted: the crate lands on the slope and slides off its end, and settles in the valley of the polyline",
+	},
 ] as const;
 
-const ACTIVE = BACKENDS.find((b) => {
-	return b.id === BACKEND;
-});
+/**
+ * A fresh adapter for a backend, with gravity matched as in the physics
+ * shapes example. `create()` is the same call on every adapter: it waits for
+ * the adapter to load (Rapier's WebAssembly, the first time), then builds it.
+ */
+const createAdapter = (id: string): Promise<PhysicsAdapter> => {
+	if (id === "planck") {
+		return PlanckAdapter.create({ gravity: { x: 0, y: GRAVITY_PX_S2 } });
+	}
+	if (id === "matter") {
+		return MatterAdapter.create();
+	}
+	if (id === "rapier") {
+		return RapierAdapter.create({ gravity: { x: 0, y: GRAVITY_PX_S2 } });
+	}
+	return BuiltinAdapter.create({
+		gravity: new Vector2d(0, (GRAVITY_PX_S2 / 3600) * 0.98),
+	});
+};
+
+/**
+ * Switch backend without reloading the page. The new adapter is ready first,
+ * so the scene keeps running while one loads; then the world is emptied,
+ * handed the adapter, and the scene is built again on it.
+ */
+const switchBackend = async (id: string) => {
+	const adapter = await createAdapter(id);
+	backend = id;
+	game.world.reset();
+	game.world.setAdapter(adapter);
+	(state.current() as PlayScreen).build();
+};
 
 const INK = "#e8eaf2";
 const DIM = "#7c84a3";
@@ -155,11 +193,11 @@ class BackendButton extends UIBaseElement {
 	private readonly target: string;
 
 	constructor(x: number, y: number, label: string, target: string) {
-		super(x, y, 108, 30);
+		super(x, y, 96, 30);
 		this.target = target;
-		this.active = target === BACKEND;
+		this.active = target === backend;
 		this.anchorPoint.set(0, 0);
-		const text = new Text(54, 15, {
+		const text = new Text(48, 15, {
 			font: "monospace",
 			size: 14,
 			fillStyle: this.active ? "#10121c" : INK,
@@ -172,7 +210,9 @@ class BackendButton extends UIBaseElement {
 	}
 
 	override onClick() {
-		globalThis.location.search = `?physics=${this.target}`;
+		if (!this.active) {
+			void switchBackend(this.target);
+		}
 		return false;
 	}
 
@@ -195,6 +235,11 @@ class BackendButton extends UIBaseElement {
 
 class PlayScreen extends Stage {
 	override onResetEvent() {
+		this.build();
+	}
+
+	/** The header, the four pieces of ground and their crates, on the current backend. */
+	build() {
 		game.world.backgroundColor.parseCSS("#10121c");
 
 		const title = new Text(40, 16, {
@@ -208,17 +253,20 @@ class PlayScreen extends Stage {
 
 		BACKENDS.forEach((b, i) => {
 			game.world.addChild(
-				new BackendButton(40 + i * 120, 46, b.label, b.id),
+				new BackendButton(40 + i * 104, 46, b.label, b.id),
 				100,
 			);
 		});
 
-		const note = new Text(408, 50, {
+		const note = new Text(464, 50, {
 			font: "monospace",
 			size: 12,
 			fillStyle: DIM,
-			text: ACTIVE?.note ?? "",
-			wordWrapWidth: VIEWPORT_W - 448,
+			text:
+				BACKENDS.find((b) => {
+					return b.id === backend;
+				})?.note ?? "",
+			wordWrapWidth: VIEWPORT_W - 504,
 		});
 		note.isKinematic = true;
 		game.world.addChild(note, 100);
@@ -324,23 +372,13 @@ class PlayScreen extends Stage {
 const createGame = async () => {
 	const scaleTarget = document.getElementById("screen") ?? undefined;
 
-	// the same per-backend gravity units as the physics shapes example
-	const physic =
-		BACKEND === "planck"
-			? new PlanckAdapter({ gravity: { x: 0, y: GRAVITY_PX_S2 } })
-			: BACKEND === "matter"
-				? new MatterAdapter()
-				: new BuiltinAdapter({
-						gravity: new Vector2d(0, (GRAVITY_PX_S2 / 3600) * 0.98),
-					});
-
 	const app = new Application(VIEWPORT_W, VIEWPORT_H, {
 		parent: "screen",
 		scaleMethod: "fit",
 		scaleTarget,
 		renderer: video.AUTO,
 		antiAlias: true,
-		physic,
+		physic: await createAdapter(backend),
 	});
 	await app.init();
 
@@ -351,6 +389,13 @@ const createGame = async () => {
 
 	state.set(state.PLAY, new PlayScreen());
 	state.change(state.PLAY);
+
+	// Compile Rapier's WebAssembly in the background, so switching to it is
+	// instant. `load()` is shared: the switch awaits this same promise, and a
+	// load that failed here is tried again, and reported, by the switch.
+	RapierAdapter.load().catch(() => {
+		// reported by the switch, if it is ever asked for
+	});
 };
 
 export const ExampleLineCollision = createExampleComponent(createGame);
