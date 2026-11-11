@@ -11,6 +11,7 @@
 - Requires planck 1.5.1, where a jammed body no longer makes `World.step()` throw
 - A shape contact carries `overlapN`, `overlapV` and the Z fields its type declares, as on the builtin adapter
 - `getMaxVelocity()` reads a body with no cap as `Infinity`, not `{ 0, 0 }`, and returns a copy
+- `addBody()` sets `renderable.isKinematic` to `false`, as the builtin adapter does, so a renderable with a body receives pointer events
 
 ## 1.6.3 - _2026-11-09_
 

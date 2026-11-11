@@ -685,7 +685,9 @@ export interface PhysicsAdapter {
 	/**
 	 * Register a body with the simulation. Returns an opaque handle that
 	 * becomes `renderable.body`. Each adapter chooses its own concrete
-	 * body type — see the class doc for the convention.
+	 * body type — see the class doc for the convention. Like the builtin
+	 * `Body` constructor, it sets `renderable.isKinematic` to `false`, so the
+	 * renderable takes part in physics and receives pointer events.
 	 *
 	 * **Prefer the declarative path.** Set `renderable.bodyDef` and call
 	 * `Container.addChild(renderable)` — the container auto-invokes

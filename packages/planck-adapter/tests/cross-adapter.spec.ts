@@ -18,8 +18,9 @@
  *   (planck's default mask stopped at bit 15)
  * - a shape contact carries the SAT fields its type declares (the adapters
  *   left them out)
- * - a renderable with a body is not kinematic, so pointer events reach it
- *   (only the built-in cleared the flag)
+ * - a renderable with a body is not kinematic, so pointer events reach it,
+ *   whether it was added to the world or registered with a direct
+ *   `addBody()` (only the built-in cleared the flag)
  * - `getMaxVelocity()` reads no cap as no limit, and hands out a copy
  *   (matter and planck returned `{ 0, 0 }`, and the stored object)
  * - `world.setAdapter()` moves every body from any adapter to any other
@@ -271,6 +272,16 @@ describe.each(BACKENDS)("$name adapter", (backend) => {
 		expect(box.isKinematic).toBe(true);
 		world.addChild(box);
 		expect(box.isKinematic).toBe(false);
+	});
+
+	it("a direct addBody() clears isKinematic, as the built-in Body does", () => {
+		const adapter = backend.make();
+		new World(0, 0, 800, 600, adapter);
+		// registered by the adapter alone, outside any container
+		const r = new Renderable(0, 0, BOX, BOX);
+		expect(r.isKinematic).toBe(true);
+		adapter.addBody(r, { type: "dynamic", shapes: [new Rect(0, 0, BOX, BOX)] });
+		expect(r.isKinematic).toBe(false);
 	});
 
 	it("getMaxVelocity() reads no cap as no limit, and hands out a copy", () => {

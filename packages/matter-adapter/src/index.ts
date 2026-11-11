@@ -696,6 +696,9 @@ export class MatterAdapter implements PhysicsAdapter {
 		// specific code casts to `MatterAdapter.Body` to reach native
 		// fields (frictionAir, angle, …).
 		renderable.body = adapterBody;
+		// as the builtin `Body` constructor does: a renderable with a body
+		// takes part in physics and receives pointer events
+		renderable.isKinematic = false;
 		return adapterBody;
 	}
 
