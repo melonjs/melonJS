@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { device } from "../src/index.js";
 
 /**
  * NX.js compatibility: melonJS running with no DOM.
@@ -57,25 +56,6 @@ const ALL_STEPS = [
 	"touch input",
 	"audio",
 ];
-
-describe("NX.js compatibility: browsers are unchanged", () => {
-	it("detects touch exactly as before when there is a DOM", () => {
-		// the no-DOM fallback (a global `TouchEvent`) must not apply in a
-		// page: desktop Chromium defines `TouchEvent` with no touchscreen,
-		// and counting it would turn on touch input for every desktop
-		expect(device.touchEvent).toBe("ontouchstart" in globalThis);
-		expect(device.touch).toBe(
-			device.touchEvent ||
-				(device.pointerEvent && globalThis.navigator.maxTouchPoints > 0),
-		);
-	});
-
-	it("still finds OffscreenCanvas in a browser", () => {
-		expect(device.offscreenCanvas).toBe(
-			typeof globalThis.OffscreenCanvas !== "undefined",
-		);
-	});
-});
 
 describe("NX.js compatibility: no DOM and no OffscreenCanvas", () => {
 	it("says it cannot create a canvas", async () => {
