@@ -63,8 +63,9 @@ export type BodyShape = Rect | Ellipse | Polygon | Box3d | Sphere;
  * directly; `@melonjs/planck-adapter` and `@melonjs/matter-adapter` map one
  * melonJS shape onto one native collider and their engines already report
  * contacts per collider pair, so both dispatch these natively. The adapters
- * supply `normal` and `depth` rather than the full SAT vector set, matching
- * what they already provide to `onCollision`.
+ * derive the SAT fields from their `normal` and `depth`, as the builtin
+ * defines them: `overlapN` is `-normal`, `overlapV` is `overlapN * depth`, and
+ * the Z fields are 0.
  *
  * **Receiver-symmetric**, exactly like `CollisionResponse`: `a` and `shapeA`
  * are always the side whose handler is firing, `b` and `shapeB` the partner.
@@ -750,8 +751,9 @@ export interface PhysicsAdapter {
 	/**
 	 * Read the body's current velocity cap (mirror of
 	 * {@link setMaxVelocity}). Returns plain `{x, y}` so callers don't
-	 * need to import a vector type. Optional — adapters that don't
-	 * implement velocity caps omit this method.
+	 * need to import a vector type. A body with no cap reports `Infinity`
+	 * on both axes. Optional — adapters that don't implement velocity caps
+	 * omit this method.
 	 */
 	getMaxVelocity?(renderable: Renderable): {
 		x: number;

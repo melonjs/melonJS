@@ -260,6 +260,11 @@ function registerChildBody(child, worldContainer) {
 		// none exists, or re-applies def fields onto the existing one
 		// (legacy-bridge path) — see BuiltinAdapter.addBody.
 		worldContainer.adapter.addBody(child, def);
+		// a renderable with a body takes part in physics and input, as the
+		// built-in `Body` constructor already says for its own adapter. The
+		// other adapters build no `Body`, so their renderables stayed
+		// kinematic, and pointer events skipped them.
+		child.isKinematic = false;
 	} else if (child.body instanceof Body) {
 		worldContainer.addBody(child.body);
 	} else {

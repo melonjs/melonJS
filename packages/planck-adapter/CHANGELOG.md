@@ -9,6 +9,8 @@
 - A body with no `collisionMask` collides with every collision type, as on the other adapters; user types from bit 16 up were ignored
 - The start-up version check asks for melonJS 20.0, as the peer dependency does
 - Requires planck 1.5.1, where a jammed body no longer makes `World.step()` throw
+- A shape contact carries `overlapN`, `overlapV` and the Z fields its type declares, as on the builtin adapter
+- `getMaxVelocity()` reads a body with no cap as `Infinity`, not `{ 0, 0 }`, and returns a copy
 
 ## 1.6.3 - _2026-11-09_
 

@@ -331,7 +331,7 @@ const createGame = async () => {
 			: BACKEND === "matter"
 				? new MatterAdapter()
 				: new BuiltinAdapter({
-						gravity: new Vector2d(0, (GRAVITY_PX_S2 / 4453) * 0.98),
+						gravity: new Vector2d(0, (GRAVITY_PX_S2 / 3600) * 0.98),
 					});
 
 	const app = new Application(VIEWPORT_W, VIEWPORT_H, {

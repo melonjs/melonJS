@@ -67,12 +67,12 @@ class Button extends Renderable {
 The symptom is a handler that is registered, looks correct, and never fires.
 
 Note that `Container`, `Camera2d`, `Draggable`, `DropTarget` and the `UI*`
-elements set it to `false` for you, and so does the `Body` constructor on its
-owner (which covers `Entity` and anything you give a body to) — so a plain
-`Renderable` or `Sprite` subclass with no body is the case that catches people.
-The `Body` constructor only runs on the built-in physics adapter: under matter
-or planck a `bodyDef` leaves `isKinematic` at `true`, so set it to `false`
-yourself on a body that must receive pointer events.
+elements set it to `false` for you, and so does giving a renderable a body (a
+`bodyDef`, on every physics adapter, or a `Body`, which covers `Entity`) — so a
+plain `Renderable` or `Sprite` subclass with no body is the case that catches
+people. Before melonJS 20.14 only the built-in adapter cleared it: under matter
+or planck a renderable with a `bodyDef` stayed kinematic and missed pointer
+events.
 
 The same flag has a second, less obvious effect: it is also the opt-in to the
 world **broadphase**. The quadtree/octree insert skips any child with

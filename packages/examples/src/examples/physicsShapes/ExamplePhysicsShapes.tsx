@@ -395,18 +395,18 @@ const createGame = async () => {
 
 	// Gravity matched to MATTER across all three, which takes explicit numbers
 	// because the defaults are not comparable. Measured by timing a 200px free
-	// fall in this very scene: the built-in world falls at ~4450 px/s², matter
-	// at ~900 and planck at ~330, a thirteenfold spread. Each is "Earth-like"
-	// in its own unit (the built-in applies gravity per FRAME, integrated
-	// against `timer.tick`; planck takes px/s²; matter takes its own scaled
-	// figure), and comparing backends is worthless unless they agree.
+	// fall: the built-in world falls at ~3600 px/s², matter at ~900 and planck
+	// at ~330, an elevenfold spread. Each is "Earth-like" in its own unit (the
+	// built-in applies gravity per step, 60 steps a second; planck takes px/s²;
+	// matter takes its own scaled figure), and comparing backends is worthless
+	// unless they agree.
 	const physic =
 		BACKEND === "planck"
 			? new PlanckAdapter({ gravity: { x: 0, y: GRAVITY_PX_S2 } })
 			: BACKEND === "matter"
 				? new MatterAdapter() // the reference: its own default
 				: new BuiltinAdapter({
-						gravity: new Vector2d(0, (GRAVITY_PX_S2 / 4453) * 0.98),
+						gravity: new Vector2d(0, (GRAVITY_PX_S2 / 3600) * 0.98),
 					});
 
 	const app = new Application(VIEWPORT_W, VIEWPORT_H, {

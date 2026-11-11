@@ -16,6 +16,12 @@
  *   in its `bodyDef` does (planck left rotation undamped)
  * - a body with no `collisionMask` collides with every collision type
  *   (planck's default mask stopped at bit 15)
+ * - a shape contact carries the SAT fields its type declares (the adapters
+ *   left them out)
+ * - a renderable with a body is not kinematic, so pointer events reach it
+ *   (only the built-in cleared the flag)
+ * - `getMaxVelocity()` reads no cap as no limit, and hands out a copy
+ *   (matter and planck returned `{ 0, 0 }`, and the stored object)
  * - `world.setAdapter()` moves every body from any adapter to any other
  */
 
@@ -82,12 +88,23 @@ const BOX = 32;
 
 type Handlers = Renderable & {
 	onCollisionStart?: (response: CollisionInfo, other: Renderable) => void;
-	onShapeCollisionStart?: (contact: CollisionInfo, other: Renderable) => void;
+	onShapeCollisionStart?: (
+		contact: ShapeContactInfo,
+		other: Renderable,
+	) => void;
 };
 
 interface CollisionInfo {
 	normal: { x: number; y: number };
 	depth: number;
+}
+
+interface ShapeContactInfo extends CollisionInfo {
+	overlapN: { x: number; y: number };
+	overlapV: { x: number; y: number };
+	overlapZ: number;
+	overlapNZ: number;
+	normalZ: number;
 }
 
 // A renderable anchored at its top-left corner, so `pos` is the corner of
@@ -212,6 +229,69 @@ describe.each(BACKENDS)("$name adapter", (backend) => {
 		expect(bodyNormals[0].y).toBeLessThan(-0.7);
 		expect(shapeNormals[0].x).toBeCloseTo(bodyNormals[0].x, 2);
 		expect(shapeNormals[0].y).toBeCloseTo(bodyNormals[0].y, 2);
+	});
+
+	it("a shape contact carries the SAT fields its type declares", () => {
+		const world = new World(0, 0, 800, 600, backend.make());
+		world.addChild(staticRect(0, FLOOR_Y, 800, 64));
+		// born 8px into the floor, so the contact has a depth to scale by
+		const box = dynamicBox(384, FLOOR_Y - BOX + 8);
+		const contacts: ShapeContactInfo[] = [];
+		box.onShapeCollisionStart = (c) => {
+			// the contact is pooled: copy what is checked below
+			contacts.push({
+				normal: { ...c.normal },
+				depth: c.depth,
+				overlapN: { ...c.overlapN },
+				overlapV: { ...c.overlapV },
+				overlapZ: c.overlapZ,
+				overlapNZ: c.overlapNZ,
+				normalZ: c.normalZ,
+			});
+		};
+		world.addChild(box);
+		run(world, 1);
+		expect(contacts.length).toBe(1);
+		const c = contacts[0];
+		expect(c.depth).toBeGreaterThan(6);
+		// the builtin's convention: overlapN opposes normal, overlapV is
+		// overlapN scaled by the depth, and a planar pair has no Z
+		expect(c.overlapN.x).toBeCloseTo(-c.normal.x, 5);
+		expect(c.overlapN.y).toBeCloseTo(-c.normal.y, 5);
+		expect(c.overlapV.x).toBeCloseTo(c.overlapN.x * c.depth, 3);
+		expect(c.overlapV.y).toBeCloseTo(c.overlapN.y * c.depth, 3);
+		expect(Math.abs(c.overlapZ)).toBe(0);
+		expect(Math.abs(c.overlapNZ)).toBe(0);
+		expect(Math.abs(c.normalZ)).toBe(0);
+	});
+
+	it("a renderable with a body is not kinematic, so pointer events reach it", () => {
+		const world = new World(0, 0, 800, 600, backend.make());
+		const box = dynamicBox(384, 100);
+		expect(box.isKinematic).toBe(true);
+		world.addChild(box);
+		expect(box.isKinematic).toBe(false);
+	});
+
+	it("getMaxVelocity() reads no cap as no limit, and hands out a copy", () => {
+		const world = new World(0, 0, 800, 600, backend.make());
+		const box = dynamicBox(384, 100);
+		world.addChild(box);
+		const adapter = world.adapter;
+		const read = () => {
+			const cap = adapter.getMaxVelocity?.(box);
+			expect(cap).toBeDefined();
+			return cap as { x: number; y: number };
+		};
+		// whatever the default, it does not hold the body still
+		expect(read().x).toBeGreaterThan(0);
+		expect(read().y).toBeGreaterThan(0);
+		adapter.setMaxVelocity(box, { x: 5, y: 7 });
+		const cap = read();
+		expect(cap.x).toBe(5);
+		expect(cap.y).toBe(7);
+		cap.x = 99;
+		expect(read().x).toBe(5);
 	});
 
 	it("a body with no collisionMask collides with every collision type", () => {

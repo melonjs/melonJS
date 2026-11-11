@@ -30,6 +30,7 @@
 - Tiled: the camera reaches every painted tile of an infinite map
 - Tiled: the isometric `drawTile()` places tiles where the layer does
 - Loader: unloading an image also frees its GPU texture
+- Physics: a renderable with a `bodyDef` receives pointer events under the matter and planck adapters, as on the built-in
 
 ## [20.13.0] (melonJS 2) - _2026-11-06_
 

@@ -7,6 +7,8 @@
 - The shape-level hooks (`onShapeCollisionStart`, `Active`, `End`) get the same normal as `onCollisionStart`; it pointed the other way
 - `capabilities.continuousCollisionDetection` is `false`: matter-js has none, and `subSteps` is the remedy for fast bodies
 - The start-up version check asks for melonJS 20.0, as the peer dependency does
+- A shape contact carries `overlapN`, `overlapV` and the Z fields its type declares, as on the builtin adapter
+- `getMaxVelocity()` reads a body with no cap as `Infinity`, not `{ 0, 0 }`, and returns a copy
 
 ## 1.5.3 - _2026-11-09_
 

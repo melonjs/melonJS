@@ -945,7 +945,10 @@ export class PlanckAdapter implements PhysicsAdapter {
 	}
 
 	getMaxVelocity(renderable: Renderable): { x: number; y: number } {
-		return this.velocityLimits.get(renderable) ?? { x: 0, y: 0 };
+		// a copy, so changing it does not change the cap; and no cap reads as
+		// Infinity, where `{ 0, 0 }` read as a cap that holds the body still
+		const limit = this.velocityLimits.get(renderable);
+		return limit ? { x: limit.x, y: limit.y } : { x: Infinity, y: Infinity };
 	}
 
 	setCollisionType(renderable: Renderable, type: number): void {
@@ -1463,6 +1466,9 @@ export class PlanckAdapter implements PhysicsAdapter {
 			if (typeof fn !== "function") {
 				return;
 			}
+			// a separated contact carries identity only, matching the builtin
+			// adapter and `onCollisionEnd`
+			const d = phase === "end" ? 0 : depth;
 			(fn as (contact: unknown, other: Renderable) => unknown).call(
 				receiver,
 				{
@@ -1473,11 +1479,18 @@ export class PlanckAdapter implements PhysicsAdapter {
 					indexShapeA: own.index,
 					indexShapeB: other.index,
 					isTrigger,
-					// a separated contact carries identity only, matching the
-					// builtin adapter and `onCollisionEnd`
-					depth: phase === "end" ? 0 : depth,
-					overlap: phase === "end" ? 0 : depth,
+					depth: d,
+					overlap: d,
 					normal: { x: ownNx, y: ownNy },
+					// the legacy SAT fields `ShapeCollisionContact` declares, in
+					// the builtin's convention: `overlapN` is the opposite of
+					// `normal`, `overlapV` is `overlapN` scaled by the depth, and
+					// a 2D engine has no Z
+					overlapN: { x: -ownNx, y: -ownNy },
+					overlapV: { x: -ownNx * d, y: -ownNy * d },
+					overlapZ: 0,
+					overlapNZ: 0,
+					normalZ: 0,
 					pair: contact,
 				},
 				partner,
