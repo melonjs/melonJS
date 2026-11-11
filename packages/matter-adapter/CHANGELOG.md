@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.6.0 - _unreleased_
+## 1.6.0 - _2026-11-12_
 
 ### Added
 - `MatterAdapter.load()` and `MatterAdapter.create(options)`, the static API every melonJS physics adapter shares; `new MatterAdapter(options)` is unchanged
