@@ -4,7 +4,8 @@
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  *
  * One shape file, one body definition, three solvers. The buttons along the
- * top switch backend; nothing else in the scene changes when they do.
+ * top switch backend with `world.setAdapter()`, then build the same scene
+ * again on it; nothing else changes.
  *
  * Every body is drawn from what the adapter reports as its ACTUAL collision
  * geometry (`world.adapter.getBodyShapes`) rather than from a sprite, so what
@@ -20,6 +21,7 @@ import {
 	game,
 	loader,
 	Matrix3d,
+	type PhysicsAdapter,
 	plugin,
 	Rect,
 	Renderable,
@@ -46,7 +48,8 @@ const VIEWPORT_H = 640;
 const GRAVITY_PX_S2 = 900;
 
 const PARAMS = new URLSearchParams(globalThis.location.search);
-const BACKEND = PARAMS.get("physics") ?? "matter";
+/** the backend in use: `?physics=` picks the first one, the buttons the rest */
+let backend = PARAMS.get("physics") ?? "matter";
 
 /**
  * The backends, and the honest one-line version of what each one does with a
@@ -71,9 +74,37 @@ const BACKENDS = [
 	},
 ] as const;
 
-const ACTIVE = BACKENDS.find((b) => {
-	return b.id === BACKEND;
-});
+/**
+ * A fresh adapter for a backend, with gravity matched to MATTER across all
+ * three. The defaults are not comparable: measured by timing a 200px free
+ * fall, the built-in world falls at ~3600 px/s², matter at ~900 and planck at
+ * ~330, an elevenfold spread. Each is "Earth-like" in its own unit (the
+ * built-in applies gravity per step, 60 steps a second; planck takes px/s²;
+ * matter takes its own scaled figure), and comparing backends is worthless
+ * unless they agree.
+ */
+const createAdapter = (id: string): PhysicsAdapter => {
+	if (id === "planck") {
+		return new PlanckAdapter({ gravity: { x: 0, y: GRAVITY_PX_S2 } });
+	}
+	if (id === "matter") {
+		return new MatterAdapter(); // the reference: its own default
+	}
+	return new BuiltinAdapter({
+		gravity: new Vector2d(0, (GRAVITY_PX_S2 / 3600) * 0.98),
+	});
+};
+
+/**
+ * Switch backend without reloading the page: empty the world, hand it the new
+ * adapter, and build the scene again on it.
+ */
+const switchBackend = (id: string) => {
+	backend = id;
+	game.world.reset();
+	game.world.setAdapter(createAdapter(id));
+	(state.current() as PlayScreen).build();
+};
 
 /** The bodies in the shape file, and how each one was authored. */
 const BODIES = [
@@ -223,7 +254,7 @@ class BackendButton extends UIBaseElement {
 	constructor(x: number, y: number, label: string, target: string) {
 		super(x, y, 108, 30);
 		this.target = target;
-		this.active = target === BACKEND;
+		this.active = target === backend;
 		this.anchorPoint.set(0, 0);
 
 		const text = new Text(54, 15, {
@@ -239,9 +270,9 @@ class BackendButton extends UIBaseElement {
 	}
 
 	override onClick() {
-		// the adapter is chosen when the Application is constructed, so
-		// switching one means booting the example again
-		globalThis.location.search = `?physics=${this.target}`;
+		if (!this.active) {
+			switchBackend(this.target);
+		}
 		return false;
 	}
 
@@ -264,8 +295,24 @@ class BackendButton extends UIBaseElement {
 
 class PlayScreen extends Stage {
 	private spawned = 0;
+	private spawner = 0;
 
 	override onResetEvent() {
+		this.build();
+		// one spawner for the stage's whole life; a backend switch only
+		// starts the count again
+		this.spawner = timer.setInterval(() => {
+			this.spawn();
+		}, 460);
+	}
+
+	override onDestroyEvent() {
+		timer.clearInterval(this.spawner);
+	}
+
+	/** The walls, the header and the specimens, on the current backend. */
+	build() {
+		this.spawned = 0;
 		game.world.backgroundColor.parseCSS("#10121c");
 
 		game.world.addChild(new Wall(0, VIEWPORT_H - 40, VIEWPORT_W, 40), 10);
@@ -282,50 +329,49 @@ class PlayScreen extends Stage {
 
 		this.addHeader();
 		this.addSpecimens();
+	}
 
-		// then drop a pile of the same bodies onto the floor. Deterministic
-		// columns rather than a random x: bodies dropped on top of each other
-		// would be born overlapping, which no solver is required to untangle.
+	/**
+	 * Drop the next body of the pile onto the floor, up to 25. Deterministic
+	 * columns rather than a random x: bodies dropped on top of each other
+	 * would be born overlapping, which no solver is required to untangle.
+	 */
+	private spawn() {
+		if (this.spawned >= 25) {
+			return;
+		}
 		const columns = 5;
-		timer.setInterval(() => {
-			if (this.spawned >= 25) {
-				return;
-			}
-			const body = BODIES[this.spawned % BODIES.length];
-			const column = this.spawned % columns;
-			const x = 230 + column * ((VIEWPORT_W - 560) / (columns - 1));
-			const shape = new ShapeBody(x, 290, body.id, body.colour);
-			game.world.addChild(shape, 20);
-			// drop each one already tilted, so it lands off balance and has
-			// somewhere to topple to
-			const tilt = ((this.spawned * 37) % 360) * (Math.PI / 180);
-			if (BACKEND === "builtin") {
-				// `setAngle` on the builtin solver turns the SPRITE only: its
-				// SAT never reads `body.angle`, so the hitbox would stay
-				// upright under the artwork. `body.rotate()` is the supported
-				// way to get rotated collision there, and it genuinely turns
-				// the shape points.
-				//
-				// It bakes the rotation in rather than tracking an angle, so
-				// the pivot has to be captured BEFORE the call (rotating the
-				// shapes moves the bounds, and with it their centre), and the
-				// sprite is turned about that same point by hand. `angle` is
-				// left at 0 deliberately: non-zero makes the body re-sync its
-				// own transform every step, from the NEW bounds centre, which
-				// would pull the sprite off the shapes it just matched.
-				const pivot = shape.body.getBounds().center;
-				const px = pivot.x;
-				const py = pivot.y;
-				shape.body.rotate(tilt);
-				shape.currentTransform
-					.translate(px, py)
-					.rotate(tilt)
-					.translate(-px, -py);
-			} else {
-				shape.body.setAngle?.(tilt);
-			}
-			this.spawned++;
-		}, 460);
+		const body = BODIES[this.spawned % BODIES.length];
+		const column = this.spawned % columns;
+		const x = 230 + column * ((VIEWPORT_W - 560) / (columns - 1));
+		const shape = new ShapeBody(x, 290, body.id, body.colour);
+		game.world.addChild(shape, 20);
+		// drop each one already tilted, so it lands off balance and has
+		// somewhere to topple to
+		const tilt = ((this.spawned * 37) % 360) * (Math.PI / 180);
+		if (game.world.physic === "builtin") {
+			// `setAngle` on the builtin solver turns the SPRITE only: its
+			// SAT never reads `body.angle`, so the hitbox would stay
+			// upright under the artwork. `body.rotate()` is the supported
+			// way to get rotated collision there, and it genuinely turns
+			// the shape points.
+			//
+			// It bakes the rotation in rather than tracking an angle, so
+			// the pivot has to be captured BEFORE the call (rotating the
+			// shapes moves the bounds, and with it their centre), and the
+			// sprite is turned about that same point by hand. `angle` is
+			// left at 0 deliberately: non-zero makes the body re-sync its
+			// own transform every step, from the NEW bounds centre, which
+			// would pull the sprite off the shapes it just matched.
+			const pivot = shape.body.getBounds().center;
+			const px = pivot.x;
+			const py = pivot.y;
+			shape.body.rotate(tilt);
+			shape.currentTransform.translate(px, py).rotate(tilt).translate(-px, -py);
+		} else {
+			shape.body.setAngle?.(tilt);
+		}
+		this.spawned++;
 	}
 
 	/** Title, backend buttons, and what the running backend does. */
@@ -362,7 +408,10 @@ class PlayScreen extends Stage {
 			font: "monospace",
 			size: 12,
 			fillStyle: DIM,
-			text: ACTIVE?.note ?? "",
+			text:
+				BACKENDS.find((b) => {
+					return b.id === backend;
+				})?.note ?? "",
 			wordWrapWidth: VIEWPORT_W - 448,
 		});
 		note.isKinematic = true;
@@ -393,29 +442,13 @@ class PlayScreen extends Stage {
 const createGame = async () => {
 	const scaleTarget = document.getElementById("screen") ?? undefined;
 
-	// Gravity matched to MATTER across all three, which takes explicit numbers
-	// because the defaults are not comparable. Measured by timing a 200px free
-	// fall: the built-in world falls at ~3600 px/s², matter at ~900 and planck
-	// at ~330, an elevenfold spread. Each is "Earth-like" in its own unit (the
-	// built-in applies gravity per step, 60 steps a second; planck takes px/s²;
-	// matter takes its own scaled figure), and comparing backends is worthless
-	// unless they agree.
-	const physic =
-		BACKEND === "planck"
-			? new PlanckAdapter({ gravity: { x: 0, y: GRAVITY_PX_S2 } })
-			: BACKEND === "matter"
-				? new MatterAdapter() // the reference: its own default
-				: new BuiltinAdapter({
-						gravity: new Vector2d(0, (GRAVITY_PX_S2 / 3600) * 0.98),
-					});
-
 	const app = new Application(VIEWPORT_W, VIEWPORT_H, {
 		parent: "screen",
 		scaleMethod: "fit",
 		scaleTarget,
 		renderer: video.AUTO,
 		antiAlias: true,
-		physic,
+		physic: createAdapter(backend),
 	});
 	await app.init();
 
