@@ -37,7 +37,7 @@ import { autoDetectRenderer } from "../video/utils/autodetect.js";
 import WebGLRenderer from "../video/webgl/webgl_renderer.js";
 import WebGPURenderer from "../video/webgpu/webgpu_renderer.js";
 import { defaultApplicationSettings } from "./defaultApplicationSettings.ts";
-import { consoleHeader } from "./header.ts";
+import { consoleHeader, consolePhysics } from "./header.ts";
 import { onresize } from "./resize.ts";
 import { ScaleMethods } from "./scaleMethods.ts";
 import type {
@@ -766,30 +766,10 @@ export default class Application {
 		// report the active physics adapter (wired in the constructor) —
 		// useful confirmation when a third-party adapter (e.g.
 		// `@melonjs/matter-adapter`) is plugged in via `settings.physic`.
-		// External adapters that set `name` / `version` / `url` get logged
-		// the same way as @melonjs/debug-plugin; BuiltinAdapter falls back
-		// to just its class name. Skipped when `consoleHeader` is disabled.
+		// `world.setAdapter()` reports a later switch the same way. Skipped
+		// when `consoleHeader` is disabled.
 		if (this.settings.consoleHeader) {
-			if (this.world.physic === "none") {
-				console.log("physics: disabled");
-			} else if (this.world.adapter) {
-				const a = this.world.adapter as {
-					constructor: { name: string };
-					name?: string;
-					physicLabel?: string;
-					version?: string;
-					url?: string;
-				};
-				// prefer the adapter's declared name, then its stable physicLabel;
-				// `constructor.name` is a last resort (it's mangled in minified
-				// builds, e.g. the built-in adapter would print "physics: ry")
-				const label = a.name ?? a.physicLabel ?? a.constructor.name;
-				const version = a.version ? ` ${a.version}` : "";
-				const url = a.url ? ` | ${a.url}` : "";
-				console.log(`physics: ${label}${version}${url}`);
-			} else {
-				console.log("physics: enabled (no adapter)");
-			}
+			consolePhysics(this.world);
 		}
 
 		// The GPU tilemap path needs a WebGL 2 renderer. The previous

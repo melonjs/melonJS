@@ -638,7 +638,7 @@ class Player extends Sprite {
 
 ## Porting checklist
 
-1. Verify the boot banner shows `physics: @melonjs/matter-adapter`
+1. Verify the console shows `@melonjs/matter-adapter <version> | <url>` and `physics: matter`
 2. Set a reasonable `gravity` (e.g. `{ x: 0, y: 4 }` for arcade platformers)
 3. Divide your existing `applyForce` magnitudes by ~30–100 as a starting point
 4. Use `response.normal.y < -0.7` for stomp checks instead of `!isGrounded` (matter-native MTV; portable to builtin too)
@@ -657,7 +657,7 @@ The melonJS repo's `platformer-matter` example is a full port of the canonical p
 - Stomp detection from `response.normal`
 - Slope grip in `onCollisionActive`, with the slopes made sensors
 - One-way platforms that stay solid: each has its own collision bit, and the player leaves that bit out of its `collisionMask` while it is below the platform or holding _down_
-- A live `physics:` line in the boot banner showing this adapter was loaded
+- The adapter's own line and `physics: matter` in the console, showing it was loaded
 
 ## License
 

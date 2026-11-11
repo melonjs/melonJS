@@ -1,3 +1,4 @@
+import { consolePhysics } from "../application/header.ts";
 import { hasRegisteredEvents } from "../input/pointerevent.ts";
 import Container, {
 	registerTreeBodies,
@@ -315,6 +316,11 @@ export default class World extends Container {
 		this.forEach((child) => {
 			registerTreeBodies(child, this);
 		});
+		// the start-up banner names the adapter of the moment; a later switch
+		// is named too, so the console never lists an adapter no longer in use
+		if (this.app?.isInitialized === true && this.app.settings.consoleHeader) {
+			consolePhysics(this);
+		}
 		return this;
 	}
 

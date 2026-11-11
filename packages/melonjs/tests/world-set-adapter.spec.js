@@ -204,6 +204,60 @@ describe("World#setAdapter", () => {
 		expect(second.held.size).toBe(0);
 	});
 
+	it("a switch after start-up names the new adapter in the console", () => {
+		const spy = vi.spyOn(console, "log").mockImplementation(() => {});
+		try {
+			// a running game with the console header on
+			world.app = { isInitialized: true, settings: { consoleHeader: true } };
+			world.setAdapter(recorder("second"));
+			expect(spy).toHaveBeenCalledWith("physics: second");
+		} finally {
+			spy.mockRestore();
+		}
+	});
+
+	it("an adapter package introduces itself once, then physics names the active one", () => {
+		const spy = vi.spyOn(console, "log").mockImplementation(() => {});
+		try {
+			world.app = { isInitialized: true, settings: { consoleHeader: true } };
+			const named = () => {
+				return Object.assign(recorder("named"), {
+					name: "@test/named-adapter",
+					version: "1.2.3",
+					url: "https://example.com/named",
+				});
+			};
+			world.setAdapter(named());
+			world.setAdapter(recorder("other"));
+			world.setAdapter(named());
+			const lines = spy.mock.calls.map((args) => {
+				return args.join(" ");
+			});
+			expect(lines).toEqual([
+				"@test/named-adapter 1.2.3 | https://example.com/named",
+				"physics: named",
+				"physics: other",
+				"physics: named",
+			]);
+		} finally {
+			spy.mockRestore();
+		}
+	});
+
+	it("but not before start-up, nor with the console header off", () => {
+		const spy = vi.spyOn(console, "log").mockImplementation(() => {});
+		try {
+			// before `app.init()`: the start-up banner names the adapter then
+			world.app = { isInitialized: false, settings: { consoleHeader: true } };
+			world.setAdapter(recorder("second"));
+			world.app = { isInitialized: true, settings: { consoleHeader: false } };
+			world.setAdapter(recorder("third"));
+			expect(spy).not.toHaveBeenCalled();
+		} finally {
+			spy.mockRestore();
+		}
+	});
+
 	it("setting the active adapter again does nothing", () => {
 		const first = recorder("first");
 		world.setAdapter(first);

@@ -413,7 +413,7 @@ Useful for the player or any body that must respond instantly to input regardles
 
 ## Porting checklist
 
-1. Verify the boot banner shows `physics: @melonjs/planck-adapter`
+1. Verify the console shows `@melonjs/planck-adapter <version> | <url>` and `physics: planck`
 2. Pick a sensible `pixelsPerMeter` (default 32 works for most 16/32-px games)
 3. Set `gravity` in px/s² (default 320 ≈ 10 m/s² at default scale)
 4. Convert velocities and `maxVelocity` to px/s (60 times a builtin or matter value)
