@@ -69,6 +69,18 @@ function hasLocalStorage() {
 	}
 }
 
+function hasScreenOrientation() {
+	try {
+		return (
+			typeof screen !== "undefined" && typeof screen.orientation !== "undefined"
+		);
+	} catch {
+		// nx.js implements `screen.orientation` as a getter that throws "not
+		// implemented": read at import, that failed `import "melonjs"` itself
+		return false;
+	}
+}
+
 function hasOffscreenCanvas() {
 	try {
 		// some browser (e.g. Safari) implements WebGL1 and WebGL2 contexts only
@@ -174,8 +186,7 @@ export const hasDeviceOrientation = !!globalThis.DeviceOrientationEvent;
  * Supports the ScreenOrientation API
  * @see https://developer.mozilla.org/en-US/docs/Web/API/ScreenOrientation/onchange
  */
-export const screenOrientation =
-	typeof screen !== "undefined" && typeof screen.orientation !== "undefined";
+export const screenOrientation = hasScreenOrientation();
 
 /**
  * Browser accelerometer capabilities

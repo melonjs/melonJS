@@ -1301,7 +1301,7 @@ export function reload(src) {
 			(err) => {
 				// still failing: recorded again against the same call
 				try {
-					onLoadingError(assetToReload, call);
+					onLoadingError(assetToReload, call, undefined, err);
 				} catch {
 					// the error is reported through LOADER_ERROR
 				}

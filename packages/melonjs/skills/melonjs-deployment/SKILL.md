@@ -133,15 +133,23 @@ What changes without a DOM:
   them as pointer events as usual. There is no mouse. On nx.js the Joy-Con are
   standard gamepads (`melonjs-input`), and keyboard events only come from a
   USB keyboard.
-- **Audio** needs no gesture to unlock. nx.js's Web Audio has no `PannerNode`,
+- **Audio** needs no gesture to unlock. nx.js cannot say which formats it
+  decodes (its `Audio` has no `canPlayType`), so melonJS tries the first
+  extension given to `audio.init()`: list one FFmpeg decodes, such as
+  `audio.init("ogg,mp3")`. nx.js's Web Audio has no `PannerNode`,
   `OscillatorNode`, `BiquadFilterNode` or effect nodes, so plain playback,
   volume and `stereo()` work, but 3D `position()` / `panner()`, `tone()` /
   `noise()` and the reverb / echo / compressor effects throw there (see
   `melonjs-audio`).
 - **Fonts**: nx.js's `FontFace` only takes the font's bytes, so a `fontface`
   asset (a URL) fails there. Load the bytes yourself and add the face before
-  using it in a `Text`:
-  `fonts.add(await new FontFace("Pixel", await (await fetch("font.ttf")).arrayBuffer()).load())`.
+  using it in a `Text`. The face is ready once made, and its `load()` throws
+  on nx.js, so do not call it:
+  `fonts.add(new FontFace("Pixel", await (await fetch("font.ttf")).arrayBuffer()))`.
+- **Save data**: melonJS checks `localStorage` when it loads. On nx.js, if the
+  app declares user save data (`userAccountSaveDataSize` in its NACP), that
+  first read is when the Switch asks the player to pick a user profile. An app
+  that saves nothing should leave that size at 0, so no picker appears.
 - A Web Worker has no `Image`, `Audio` or `AudioContext` of its own: draw
   there, and play sound from the page.
 

@@ -21,7 +21,7 @@ import { device } from "../src/index.js";
  * touch (listened for as mouse events), and an XML map failing with a bare
  * "DOMParser is not defined" rather than saying to use JSON.
  */
-function runInNxWorker(renderer) {
+function runInNxWorker(renderer, mode = "game") {
 	return new Promise((resolve, reject) => {
 		const worker = new Worker(
 			new URL("./helpers/nxjs-worker.js", import.meta.url),
@@ -41,7 +41,7 @@ function runInNxWorker(renderer) {
 			worker.terminate();
 			reject(new Error(`nx.js worker (${renderer}): ${e.message}`));
 		};
-		worker.postMessage({ renderer });
+		worker.postMessage({ renderer, mode });
 	});
 }
 
@@ -50,10 +50,12 @@ const ALL_STEPS = [
 	"import melonjs",
 	"new Application",
 	"app.init()",
+	"device helpers without a DOM",
 	"preload an image and a JSON Tiled map",
 	"preload an XML Tiled map",
 	"load the level and draw",
 	"touch input",
+	"audio",
 ];
 
 describe("NX.js compatibility: browsers are unchanged", () => {
@@ -72,6 +74,14 @@ describe("NX.js compatibility: browsers are unchanged", () => {
 		expect(device.offscreenCanvas).toBe(
 			typeof globalThis.OffscreenCanvas !== "undefined",
 		);
+	});
+});
+
+describe("NX.js compatibility: no DOM and no OffscreenCanvas", () => {
+	it("says it cannot create a canvas", async () => {
+		const r = await runInNxWorker(undefined, "no-offscreen-canvas");
+		expect(r.errors).toEqual([]);
+		expect(r.createCanvasError).toMatch(/cannot create a canvas here/);
 	});
 });
 
@@ -98,6 +108,29 @@ describe("NX.js compatibility (no DOM)", () => {
 				// the map's first two tiles over it: orange, then green
 				expect(r.tilePixels[0]).toEqual([255, 128, 0, 255]);
 				expect(r.tilePixels[1]).toEqual([0, 200, 0, 255]);
+				// an image-collection tile cut from the strip (its green half)
+				// through a scratch canvas, next to an orange one
+				expect(r.croppedTilePixel).toEqual([0, 200, 0, 255]);
+				expect(r.beforeCroppedTilePixel).toEqual([255, 128, 0, 255]);
+				// text, drawn through a scratch canvas too
+				expect(r.textPixels).toBeGreaterThan(50);
+			});
+
+			it("handles the display canvas as the only element", async () => {
+				const r = await getReport();
+				expect(r.elements).toEqual({
+					screen: true,
+					parentOfScreen: true,
+					byName: "undefined",
+				});
+			});
+
+			it("loads and plays a sound on an Audio without canPlayType", async () => {
+				const r = await getReport();
+				// nx.js cannot say which formats it decodes: the clip is
+				// fetched and decoded anyway, and starts without a gesture
+				expect(r.audio.decoded).toBeGreaterThanOrEqual(1);
+				expect(r.audio.started).toBeGreaterThanOrEqual(1);
 			});
 
 			it("receives touch events dispatched on the display canvas", async () => {

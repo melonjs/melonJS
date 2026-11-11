@@ -15,11 +15,16 @@
  * - any other `OffscreenCanvas` is 2D only;
  * - no `XMLHttpRequest`, no `DOMParser`, no WebGPU;
  * - `window === globalThis`, `localStorage`, `navigator.getGamepads()`;
- * - touch is reported as `TouchEvent`s dispatched on `screen`, and there is
- *   no `PointerEvent` nor `ontouchstart`.
- *
- * Not reproduced: Web Audio (a worker has no `AudioContext`; nx.js has one
- * without `PannerNode`, `OscillatorNode` or `BiquadFilterNode`).
+ * - touch is reported as `TouchEvent`s dispatched on `screen`, whose touches
+ *   carry `clientX/Y` and `screenX/Y` but no `pageX/Y`; there is no
+ *   `PointerEvent` nor `ontouchstart`;
+ * - `screen.orientation` is a getter that throws "Method not implemented";
+ * - an `OffscreenCanvas` of 0x0 is refused;
+ * - Web Audio: a worker has none, so a small stand-in plays nx.js's part: an
+ *   `AudioContext` that is running from the start, has gain, stereo panner
+ *   and buffer source nodes, and throws "Method not implemented" for the
+ *   panner, oscillator and filter nodes; an `Audio` with no `canPlayType`.
+ *   It records what the engine did with it, it does not make sound.
  *
  * The engine is imported only AFTER the globals are installed, as on nx.js,
  * where they exist before any game code runs.
@@ -58,6 +63,11 @@ function installNxGlobals() {
 
 	// nx.js `screen`: the display, as a canvas with DOM-compat metrics
 	const screen = new OffscreenCanvas(1280, 720);
+	Object.defineProperty(screen, "orientation", {
+		get() {
+			throw new Error("Method not implemented.");
+		},
+	});
 
 	// nx.js refuses a canvas with no pixels: `new OffscreenCanvas(0, 0)`
 	// throws there, where Chromium allows it
@@ -170,6 +180,124 @@ function installNxGlobals() {
 			this.changedTouches = init.changedTouches ?? [];
 		}
 	};
+
+	installNxAudio(g);
+}
+
+/** what the stand-in Web Audio saw the engine do */
+const audioLog = { decoded: 0, started: 0 };
+
+function installNxAudio(g) {
+	const notImplemented = () => {
+		throw new Error("Method not implemented.");
+	};
+	const param = (value) => {
+		return {
+			value,
+			setValueAtTime() {},
+			linearRampToValueAtTime() {},
+			exponentialRampToValueAtTime() {},
+			setTargetAtTime() {},
+			cancelScheduledValues() {},
+		};
+	};
+	class Node extends EventTarget {
+		connect(target) {
+			return target;
+		}
+		disconnect() {}
+	}
+	class AudioContext extends EventTarget {
+		state = "running";
+		sampleRate = 48000;
+		destination = new Node();
+		listener = {
+			positionX: param(0),
+			positionY: param(0),
+			positionZ: param(0),
+			forwardX: param(0),
+			forwardY: param(0),
+			forwardZ: param(-1),
+			upX: param(0),
+			upY: param(1),
+			upZ: param(0),
+		};
+		get currentTime() {
+			return performance.now() / 1000;
+		}
+		resume() {
+			return Promise.resolve();
+		}
+		suspend() {
+			return Promise.resolve();
+		}
+		close() {
+			return Promise.resolve();
+		}
+		createGain() {
+			return Object.assign(new Node(), { gain: param(1) });
+		}
+		createStereoPanner() {
+			return Object.assign(new Node(), { pan: param(0) });
+		}
+		createBuffer(numberOfChannels, length, sampleRate) {
+			return {
+				numberOfChannels,
+				length,
+				sampleRate,
+				duration: length / sampleRate,
+				getChannelData: () => {
+					return new Float32Array(length);
+				},
+			};
+		}
+		createBufferSource() {
+			const source = Object.assign(new Node(), {
+				buffer: null,
+				loop: false,
+				loopStart: 0,
+				loopEnd: 0,
+				playbackRate: param(1),
+				onended: null,
+				start() {
+					audioLog.started++;
+				},
+				stop() {
+					if (typeof source.onended === "function") {
+						source.onended();
+					}
+				},
+			});
+			return source;
+		}
+		decodeAudioData(data) {
+			audioLog.decoded++;
+			return Promise.resolve(this.createBuffer(2, 48000, 48000));
+		}
+		createPanner = notImplemented;
+		createOscillator = notImplemented;
+		createBiquadFilter = notImplemented;
+	}
+	g.AudioContext = AudioContext;
+	// nx.js's `Audio` has no `canPlayType`
+	g.Audio = class Audio extends EventTarget {};
+}
+
+/** count the pixels of a rectangle of the display brighter than `min` */
+async function countBrightPixels(x, y, w, h, min = 200) {
+	const blob = await globalThis.screen.convertToBlob({ type: "image/png" });
+	const bitmap = await createImageBitmap(blob);
+	const copy = new OffscreenCanvas(bitmap.width, bitmap.height);
+	const ctx = copy.getContext("2d");
+	ctx.drawImage(bitmap, 0, 0);
+	const data = ctx.getImageData(x, y, w, h).data;
+	let count = 0;
+	for (let i = 0; i < data.length; i += 4) {
+		if (data[i] > min && data[i + 1] > min && data[i + 2] > min) {
+			count++;
+		}
+	}
+	return count;
 }
 
 /** read one pixel of the display, as [r, g, b, a] */
@@ -182,7 +310,33 @@ async function readScreenPixel(x, y) {
 	return Array.from(ctx.getImageData(x, y, 1, 1).data);
 }
 
-self.onmessage = async ({ data: { renderer } }) => {
+/**
+ * A runtime with no DOM and no OffscreenCanvas either: the engine cannot make
+ * a canvas there, and says so.
+ */
+async function runWithoutOffscreenCanvas() {
+	const report = { errors: [] };
+	try {
+		delete globalThis.OffscreenCanvas;
+		globalThis.window = globalThis;
+		const me = await import("../../src/index.js");
+		try {
+			me.Renderer.createCanvas(4, 4);
+			report.createCanvasError = null;
+		} catch (e) {
+			report.createCanvasError = e.message;
+		}
+	} catch (e) {
+		report.errors.push(String(e.stack ?? e));
+	}
+	return report;
+}
+
+self.onmessage = async ({ data: { renderer, mode } }) => {
+	if (mode === "no-offscreen-canvas") {
+		postMessage(await runWithoutOffscreenCanvas());
+		return;
+	}
 	const report = { steps: [], errors: [] };
 	let step = "install nx.js globals";
 	const done = (name) => {
@@ -214,9 +368,24 @@ self.onmessage = async ({ data: { renderer } }) => {
 		report.parentElement = typeof app.getParentElement();
 		done(step);
 
+		step = "device helpers without a DOM";
+		// a mobile web view calls this at boot; without a DOM it does nothing
+		me.device.enableSwipe(false);
+		me.device.enableSwipe(true);
+		report.elements = {
+			// nx.js's screen reports `nodeType` 1, as an element does
+			screen: me.device.getElement(globalThis.screen) === globalThis.screen,
+			parentOfScreen:
+				me.device.getParentElement(globalThis.screen) === globalThis.screen,
+			byName: typeof me.device.getElement("screen"),
+		};
+		done(step);
+
 		step = "preload an image and a JSON Tiled map";
 		await me.loader.preload([
-			// the map's tileset: a 32x64 strip, an orange tile over a green one
+			// the map's tilesets: a 32x64 strip, an orange tile over a green
+			// one, and an image collection whose one tile is the strip's green
+			// half, cut out through a scratch canvas
 			{ name: "tiles", type: "image", src: "/data/nxjs/tiles.png" },
 			{ name: "map", type: "tmx", src: "/data/nxjs/map.tmj" },
 		]);
@@ -242,15 +411,15 @@ self.onmessage = async ({ data: { renderer } }) => {
 				game.world.addChild(new me.ColorLayer("bg", "#203040"), -1);
 				// text is drawn through a scratch canvas: the engine has to
 				// make one, which without a DOM can only be an OffscreenCanvas
-				game.world.addChild(
-					new me.Text(20, 20, {
-						font: "sans-serif",
-						size: 32,
-						fillStyle: "#ffffff",
-						text: "melonJS on nx.js",
-					}),
-					10,
-				);
+				const text = new me.Text(20, 20, {
+					font: "sans-serif",
+					size: 32,
+					fillStyle: "#ffffff",
+					text: "melonJS on nx.js",
+				});
+				// in screen coordinates: the centred level offsets the world
+				text.floating = true;
+				game.world.addChild(text, 10);
 			}
 		}
 		me.state.set(me.state.PLAY, new Play());
@@ -275,7 +444,13 @@ self.onmessage = async ({ data: { renderer } }) => {
 			await readScreenPixel(576 + 16, 328 + 16),
 			await readScreenPixel(576 + 48, 328 + 16),
 		];
+		// the image-collection tile, last cell of the second row; the cell
+		// before it is orange
+		report.croppedTilePixel = await readScreenPixel(576 + 112, 328 + 48);
+		report.beforeCroppedTilePixel = await readScreenPixel(576 + 80, 328 + 48);
 		report.bgPixel = await readScreenPixel(640, 600);
+		// the white text, over the dark background
+		report.textPixels = await countBrightPixels(20, 20, 300, 40);
 		done(step);
 
 		step = "touch input";
@@ -284,15 +459,17 @@ self.onmessage = async ({ data: { renderer } }) => {
 		me.input.registerPointerEvent("pointerdown", app.viewport, (pointer) => {
 			report.touch = { x: pointer.gameScreenX, y: pointer.gameScreenY };
 		});
-		// as nx.js reports a finger on the touchscreen
+		// as nx.js reports a finger on the touchscreen: client and screen
+		// coordinates, no page ones
 		const finger = {
 			identifier: 0,
 			clientX: 150,
 			clientY: 160,
-			pageX: 150,
-			pageY: 160,
 			screenX: 150,
 			screenY: 160,
+			radiusX: 10,
+			radiusY: 10,
+			rotationAngle: 0,
 		};
 		globalThis.screen.dispatchEvent(
 			new TouchEvent("touchstart", {
@@ -302,7 +479,15 @@ self.onmessage = async ({ data: { renderer } }) => {
 				changedTouches: [finger],
 			}),
 		);
+		done(step);
 
+		step = "audio";
+		me.audio.init("ogg");
+		await me.loader.preload([
+			{ name: "silence", type: "audio", src: "/data/sfx/" },
+		]);
+		me.audio.play("silence");
+		report.audio = { ...audioLog };
 		done(step);
 	} catch (e) {
 		report.errors.push(`${step}: ${e.stack ?? e}`);

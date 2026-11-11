@@ -3,6 +3,7 @@ import { Rect } from "./../geometries/rectangle.ts";
 import type { Vector2d } from "../math/vector2d.ts";
 import { vector2dPool } from "../math/vector2d.ts";
 import * as device from "./../system/device.js";
+import { hasDOM } from "./../system/dom.ts";
 import {
 	emit,
 	GAME_INIT,
@@ -673,10 +674,15 @@ function normalizeEvent(originalEvent: any): Pointer[] {
 		for (let i = 0, l = originalEvent.changedTouches.length; i < l; i++) {
 			const touchEvent = originalEvent.changedTouches[i];
 			_pointer = T_POINTERS.pop()!;
+			// Without a DOM there is no page to scroll, so page and client
+			// coordinates are the same, and a runtime may only report the
+			// client ones: nx.js's touches have no `pageX` / `pageY` at all,
+			// which read as (0, 0) for every finger.
+			const noPage = !hasDOM();
 			_pointer.setEvent(
 				originalEvent,
-				touchEvent.pageX,
-				touchEvent.pageY,
+				noPage ? touchEvent.clientX : touchEvent.pageX,
+				noPage ? touchEvent.clientY : touchEvent.pageY,
 				touchEvent.clientX,
 				touchEvent.clientY,
 				touchEvent.identifier,

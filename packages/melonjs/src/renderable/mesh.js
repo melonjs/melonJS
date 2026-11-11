@@ -15,6 +15,7 @@ import {
 	projectVertices,
 } from "../math/vertex.ts";
 import { AABB3d } from "../physics/broadphase/aabb3d.ts";
+import { hasDOM } from "../system/dom.ts";
 import { createCanvas } from "./../video/canvas_factory.js";
 import Renderer from "./../video/renderer.js";
 import { TextureAtlas } from "./../video/texture/atlas.js";
@@ -2817,7 +2818,14 @@ export default class Mesh extends Renderable {
 		this._projectVertices(0, 0, false);
 
 		// render to offscreen canvas using affine texture mapping
-		const canvas = createCanvas(w, h);
+		// a <canvas> where there is a page, as before (it also takes a
+		// 0-sized mesh); the factory's OffscreenCanvas where there is none
+		const canvas = hasDOM()
+			? Object.assign(document.createElement("canvas"), {
+					width: w,
+					height: h,
+				})
+			: createCanvas(w, h);
 		const ctx = canvas.getContext("2d");
 
 		const image = this.texture.getTexture();

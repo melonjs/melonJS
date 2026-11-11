@@ -1,4 +1,5 @@
 // Import helper functions directly for better tree-shaking
+import { hasDOM } from "../../system/dom.ts";
 import { AudioContextOwner } from "../context.ts";
 import type { Sound } from "./sound.ts";
 import { installSpatialOnEngine } from "./spatial.ts";
@@ -7,6 +8,28 @@ import {
 	isHTMLAudioElement,
 	type WindowWithAudio,
 } from "./types.ts";
+
+/**
+ * every format `_setupCodecs` asks `canPlayType` about
+ * @ignore
+ */
+const AUDIO_FORMATS = [
+	"mp3",
+	"mpeg",
+	"opus",
+	"ogg",
+	"oga",
+	"wav",
+	"aac",
+	"caf",
+	"m4a",
+	"m4b",
+	"mp4",
+	"weba",
+	"webm",
+	"dolby",
+	"flac",
+];
 
 export class AudioEngine {
 	/**
@@ -304,6 +327,16 @@ export class AudioEngine {
 		}
 
 		if (!audioTest || typeof audioTest.canPlayType !== "function") {
+			// A runtime with no DOM may decode audio without being able to say
+			// which formats it takes: nx.js's `Audio` has no `canPlayType`
+			// (FFmpeg decodes behind it). With no answer, every clip would be
+			// refused before even trying, so assume each format and let
+			// decoding report the ones that fail. Browsers all answer.
+			if (!hasDOM() && audioTest) {
+				for (const ext of AUDIO_FORMATS) {
+					this._codecs[ext] = true;
+				}
+			}
 			return this;
 		}
 
