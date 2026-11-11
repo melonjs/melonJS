@@ -349,6 +349,28 @@ Transpiling costs some size and speed: private class members become `WeakMap`
 lookups, which are on hot paths in the renderer. Only reach for it if you have
 users on browsers that need it.
 
+### Running without a DOM (experimental)
+
+melonJS also runs where there is no `document` to put a canvas in: on
+[nx.js](https://github.com/TooTallNate/nx.js), JavaScript homebrew for the
+Nintendo Switch, or rendering in a Web Worker. Hand the Application the canvas
+to draw to:
+
+```javascript
+const app = new Application(1280, 720, {
+    canvas: screen, // nx.js's display; an OffscreenCanvas in a worker
+    renderer: video.AUTO,
+    scale: 1,
+});
+await app.init();
+```
+
+This is tested against a simulation of nx.js built from its source, not yet on
+Switch hardware. Some things differ there: Tiled maps must be JSON, sizing is
+fixed rather than fitted to a page, and a worker gets no input or sound of its
+own. The [deployment skill](https://github.com/melonjs/melonJS/blob/master/packages/melonjs/skills/melonjs-deployment/SKILL.md#runtimes-with-no-dom-nxjs-web-workers)
+lists them.
+
 Building with AI agents
 -------------------------------------------------------------------------------
 
