@@ -46,6 +46,13 @@ export function createCanvas(width, height, returnOffscreenCanvas = false) {
 		}
 		return c;
 	}
+	if (!hasDOM()) {
+		throw new Error(
+			"melonJS cannot create a canvas here: there is no `document` to " +
+				"create a <canvas> in, and no usable `OffscreenCanvas`. Run it " +
+				"in a runtime that provides one of the two.",
+		);
+	}
 	const c = globalThis.document.createElement("canvas");
 	c.width = width;
 	c.height = height;

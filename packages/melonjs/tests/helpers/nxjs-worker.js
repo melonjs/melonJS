@@ -58,6 +58,18 @@ function installNxGlobals() {
 
 	// nx.js `screen`: the display, as a canvas with DOM-compat metrics
 	const screen = new OffscreenCanvas(1280, 720);
+
+	// nx.js refuses a canvas with no pixels: `new OffscreenCanvas(0, 0)`
+	// throws there, where Chromium allows it
+	const NativeOffscreenCanvas = g.OffscreenCanvas;
+	g.OffscreenCanvas = class OffscreenCanvas extends NativeOffscreenCanvas {
+		constructor(width, height) {
+			if (!(width > 0) || !(height > 0)) {
+				throw new RangeError(`Invalid canvas dimensions: ${width}x${height}`);
+			}
+			super(width, height);
+		}
+	};
 	Object.defineProperties(screen, {
 		className: { value: "", writable: true },
 		nodeType: {
@@ -228,6 +240,17 @@ self.onmessage = async ({ data: { renderer } }) => {
 				// loading a level empties its container: the background after
 				me.level.load("map", { container: game.world });
 				game.world.addChild(new me.ColorLayer("bg", "#203040"), -1);
+				// text is drawn through a scratch canvas: the engine has to
+				// make one, which without a DOM can only be an OffscreenCanvas
+				game.world.addChild(
+					new me.Text(20, 20, {
+						font: "sans-serif",
+						size: 32,
+						fillStyle: "#ffffff",
+						text: "melonJS on nx.js",
+					}),
+					10,
+				);
 			}
 		}
 		me.state.set(me.state.PLAY, new Play());

@@ -73,9 +73,11 @@ function hasOffscreenCanvas() {
 	try {
 		// some browser (e.g. Safari) implements WebGL1 and WebGL2 contexts only
 		// https://bugzilla.mozilla.org/show_bug.cgi?id=801176
+		// 1x1, not 0x0: some runtimes (nx.js) refuse a canvas with no pixels,
+		// which would read as no OffscreenCanvas at all
 		return (
 			typeof globalThis.OffscreenCanvas !== "undefined" &&
-			new globalThis.OffscreenCanvas(0, 0).getContext("2d") !== null
+			new globalThis.OffscreenCanvas(1, 1).getContext("2d") !== null
 		);
 	} catch {
 		return false;
