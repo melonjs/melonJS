@@ -180,8 +180,8 @@ between, which reads as a bad texture rather than as a transform bug.
 - On top of that, the **built-in physics adapter** gates body integration and
   narrow-phase collision on the same `inViewport || alwaysUpdate` — so an
   off-screen body stops simulating even if something else calls its `update`.
-  The planck and matter adapters have no such gate: they step the whole world
-  regardless of the camera.
+  The planck, matter and Rapier adapters have no such gate: they step the
+  whole world regardless of the camera.
 - Set `alwaysUpdate = true` on anything that must keep moving off-screen, and
   accept the cost. On many objects it removes the saving entirely.
 - `floating = true` does **not** disable culling — it moves the test into screen

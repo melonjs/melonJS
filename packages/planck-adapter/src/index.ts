@@ -8,7 +8,6 @@ import {
 	Line,
 	version as melonjsVersion,
 	type PhysicsAdapter,
-	type PhysicsAdapterClass,
 	type PhysicsBody,
 	Polygon,
 	type RaycastHit,
@@ -302,7 +301,12 @@ export class PlanckAdapter implements PhysicsAdapter {
 	 * });
 	 */
 	static async create<T extends PhysicsAdapter>(
-		this: PhysicsAdapterClass<T, PlanckAdapterOptions>,
+		// the shape of `PhysicsAdapterClass`, spelled out so this package
+		// still type-checks against a melonJS older than the one defining it
+		this: Pick<typeof PlanckAdapter, "load"> &
+			(new (
+				options?: PlanckAdapterOptions,
+			) => T),
 		options?: PlanckAdapterOptions,
 	): Promise<T> {
 		await this.load();

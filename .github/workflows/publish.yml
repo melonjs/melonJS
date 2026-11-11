@@ -14,6 +14,7 @@ on:
           - spine-plugin
           - matter-adapter
           - planck-adapter
+          - rapier2d-adapter
           - capacitor-plugin
           - gamepad-plugin
           - create-melonjs
@@ -71,6 +72,9 @@ jobs:
             echo "build_cmd=pnpm clean && pnpm build" >> "$GITHUB_OUTPUT"
           elif [ "${{ inputs.package }}" = "planck-adapter" ]; then
             echo "dir=packages/planck-adapter" >> "$GITHUB_OUTPUT"
+            echo "build_cmd=pnpm clean && pnpm build" >> "$GITHUB_OUTPUT"
+          elif [ "${{ inputs.package }}" = "rapier2d-adapter" ]; then
+            echo "dir=packages/rapier2d-adapter" >> "$GITHUB_OUTPUT"
             echo "build_cmd=pnpm clean && pnpm build" >> "$GITHUB_OUTPUT"
           elif [ "${{ inputs.package }}" = "capacitor-plugin" ]; then
             echo "dir=packages/capacitor-plugin" >> "$GITHUB_OUTPUT"

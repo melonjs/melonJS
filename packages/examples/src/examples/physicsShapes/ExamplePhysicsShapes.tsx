@@ -3,7 +3,7 @@
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  *
- * One shape file, one body definition, three solvers. The buttons along the
+ * One shape file, one body definition, four solvers. The buttons along the
  * top switch backend with `world.setAdapter()`, then build the same scene
  * again on it; nothing else changes.
  *
@@ -14,6 +14,7 @@
 import { DebugPanelPlugin } from "@melonjs/debug-plugin";
 import { MatterAdapter } from "@melonjs/matter-adapter";
 import { PlanckAdapter } from "@melonjs/planck-adapter";
+import { RapierAdapter } from "@melonjs/rapier2d-adapter";
 import {
 	Application,
 	BuiltinAdapter,
@@ -60,7 +61,7 @@ const BACKENDS = [
 	{
 		id: "builtin",
 		label: "built-in",
-		note: "arcade SAT. The outlines are tilted here because the example calls `body.rotate()`, which turns the shape points themselves: `setAngle` would turn the sprite alone, since the SAT never reads `body.angle`. So rotation is a one-time bake, not a tracked angle, and nothing tumbles on impact. Stacked bodies also rest overlapping. Use matter or planck to rotate and stack for real",
+		note: "arcade SAT. The outlines are tilted here because the example calls `body.rotate()`, which turns the shape points themselves: `setAngle` would turn the sprite alone, since the SAT never reads `body.angle`. So rotation is a one-time bake, not a tracked angle, and nothing tumbles on impact. Stacked bodies also rest overlapping. A rigid-body backend rotates and stacks for real",
 	},
 	{
 		id: "matter",
@@ -71,6 +72,11 @@ const BACKENDS = [
 		id: "planck",
 		label: "planck",
 		note: "full rigid body (Box2D): compound shapes rotate and stack for real",
+	},
+	{
+		id: "rapier",
+		label: "rapier",
+		note: "full rigid body (Rapier, WebAssembly): compound shapes rotate and stack for real",
 	},
 ] as const;
 
@@ -91,6 +97,10 @@ const createAdapter = (id: string): Promise<PhysicsAdapter> => {
 	}
 	if (id === "matter") {
 		return MatterAdapter.create(); // the reference: its own default
+	}
+	if (id === "rapier") {
+		// downloads and compiles Rapier's WebAssembly the first time
+		return RapierAdapter.create({ gravity: { x: 0, y: GRAVITY_PX_S2 } });
 	}
 	return BuiltinAdapter.create({
 		gravity: new Vector2d(0, (GRAVITY_PX_S2 / 3600) * 0.98),
@@ -256,12 +266,12 @@ class BackendButton extends UIBaseElement {
 	private readonly target: string;
 
 	constructor(x: number, y: number, label: string, target: string) {
-		super(x, y, 108, 30);
+		super(x, y, 96, 30);
 		this.target = target;
 		this.active = target === backend;
 		this.anchorPoint.set(0, 0);
 
-		const text = new Text(54, 15, {
+		const text = new Text(48, 15, {
 			font: "monospace",
 			size: 14,
 			fillStyle: this.active ? "#10121c" : INK,
@@ -384,14 +394,14 @@ class PlayScreen extends Stage {
 			font: "monospace",
 			size: 15,
 			fillStyle: INK,
-			text: "One shape file, one bodyDef, three physics backends",
+			text: "One shape file, one bodyDef, four physics backends",
 		});
 		title.isKinematic = true;
 		game.world.addChild(title, 100);
 
 		BACKENDS.forEach((backend, i) => {
 			game.world.addChild(
-				new BackendButton(40 + i * 120, 46, backend.label, backend.id),
+				new BackendButton(40 + i * 104, 46, backend.label, backend.id),
 				100,
 			);
 		});
@@ -408,7 +418,7 @@ class PlayScreen extends Stage {
 		legend.isKinematic = true;
 		game.world.addChild(legend, 100);
 
-		const note = new Text(408, 50, {
+		const note = new Text(464, 50, {
 			font: "monospace",
 			size: 12,
 			fillStyle: DIM,
@@ -416,7 +426,7 @@ class PlayScreen extends Stage {
 				BACKENDS.find((b) => {
 					return b.id === backend;
 				})?.note ?? "",
-			wordWrapWidth: VIEWPORT_W - 448,
+			wordWrapWidth: VIEWPORT_W - 504,
 		});
 		note.isKinematic = true;
 		game.world.addChild(note, 100);
@@ -478,6 +488,13 @@ const createGame = async () => {
 
 	state.set(state.PLAY, new PlayScreen());
 	state.change(state.PLAY);
+
+	// Compile Rapier's WebAssembly in the background, so switching to it is
+	// instant. `load()` is shared: the switch awaits this same promise, and a
+	// load that failed here is tried again, and reported, by the switch.
+	RapierAdapter.load().catch(() => {
+		// reported by the switch, if it is ever asked for
+	});
 };
 
 export const ExamplePhysicsShapes = createExampleComponent(createGame);

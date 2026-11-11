@@ -49,7 +49,7 @@ loader.preload([{ name: "player", type: "image", src: "player.png" }], () => {
 | **3D** | Perspective {@link Camera3d | Camera3d}, mesh instancing, ground shadows, distance fog, point and spot lights, glTF/GLB and OBJ/MTL loading |
 | **Tiled Maps** | First-class [Tiled](https://www.mapeditor.org/) map editor support (TMX/JSON), with GPU-accelerated tile rendering for orthogonal maps |
 | **Sprites** | Texture atlas, animation, TexturePacker & Aseprite support |
-| **Physics** | Built-in SAT collision with gravity and friction, shape-level collision events, and a {@link PhysicsAdapter | PhysicsAdapter} interface for Box2D (planck) or Matter.js |
+| **Physics** | Built-in SAT collision with gravity and friction, shape-level collision events, and a {@link PhysicsAdapter | PhysicsAdapter} interface for Box2D (planck), Matter.js or Rapier |
 | **Audio** | Web Audio API with format fallback, plus procedural tone and noise generation |
 | **Input** | Keyboard, mouse, touch, gamepad |
 | **Particles** | Configurable {@link ParticleEmitter | ParticleEmitter}, with a reference space so particles can be measured from the emitter, the world, or any container |
@@ -67,6 +67,7 @@ engine, and each entry carries that package's own README.
 |--------|---------|-----------|
 | **Matter physics** | `@melonjs/matter-adapter` | {@link MatterAdapter | MatterAdapter} |
 | **Box2D physics** | `@melonjs/planck-adapter` | {@link PlanckAdapter | PlanckAdapter} |
+| **Rapier physics** | `@melonjs/rapier2d-adapter` | {@link RapierAdapter | RapierAdapter} |
 | **Spine animation** | `@melonjs/spine-plugin` | {@link SpinePlugin | SpinePlugin} |
 | **Debug panel** | `@melonjs/debug-plugin` | {@link DebugPanelPlugin | DebugPanelPlugin} |
 | **Touch controls** | `@melonjs/gamepad-plugin` | {@link GamepadPlugin | GamepadPlugin} |

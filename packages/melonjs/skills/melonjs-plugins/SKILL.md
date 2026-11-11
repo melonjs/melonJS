@@ -132,18 +132,20 @@ game the player had paused stays paused.
 
 ## Physics adapters
 
-`@melonjs/planck-adapter` and `@melonjs/matter-adapter` swap the physics world
-wholesale. Pick **one** per game (`app.world.setAdapter()` can switch it
-later). The portable surface — the declarative
-`renderable.bodyDef`, `world.adapter.queryAABB(rect)` and
+`@melonjs/planck-adapter`, `@melonjs/matter-adapter` and
+`@melonjs/rapier2d-adapter` swap the physics world wholesale. Pick **one** per
+game (`app.world.setAdapter()` can switch it later). The portable surface — the
+declarative `renderable.bodyDef`, `world.adapter.queryAABB(rect)` and
 `world.adapter.raycast(from, to)` — works unchanged across the built-in world and
-both adapters, so entity code does not have to branch. The exceptions are in
+every adapter, so entity code does not have to branch. The exceptions are in
 `melonjs-physics`: `Box3d`, `Sphere` and `Point` shapes are built-in only,
-`type: "kinematic"` is planck only, and the adapters' `queryAABB` returns only
-renderables with a body.
+`type: "kinematic"` is planck and Rapier only, and the adapters' `queryAABB`
+returns only renderables with a body. The Rapier adapter's WebAssembly loads
+asynchronously, so it must be made with `await RapierAdapter.create()`.
 
 Two queries are **not** portable: `querySphere` and `raycast3d` exist only on the
-built-in adapter (planck and matter are 2D-only and deliberately omit them).
+built-in adapter (planck, matter and Rapier are 2D-only and deliberately omit
+them).
 `queryAABB` is the one region query every adapter must implement, so call the
 others optionally — `app.world.adapter.querySphere?.(center, radius)`. For rays
 there is a real flag: `app.world.adapter.capabilities.raycasts3d`.
@@ -208,7 +210,7 @@ or a `Stage` is simpler and easier to test.
 | `Plugin version mismatch` | the plugin's `version` floor is above the running engine |
 | `Plugin should extend the BasePlugin Class !` | the class does not extend `plugin.BasePlugin` |
 | the panel reports another app's numbers | `app` defaulted to `game`, the last Application to finish `init()` |
-| `world.adapter.querySphere is not a function` | built-in adapter only; planck and matter are 2D-only |
+| `world.adapter.querySphere is not a function` | built-in adapter only; planck, matter and Rapier are 2D-only |
 | a Tiled map opens in Tiled but not melonJS | compressed layers, tiled-inflate plugin missing |
 | plugin setup never runs | setup written in an `init()` method — there is no such hook |
 | `plugin.register` for an adapter does nothing | adapters are a construction setting, not a plugin |

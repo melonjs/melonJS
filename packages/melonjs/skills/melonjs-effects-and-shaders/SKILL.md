@@ -229,7 +229,7 @@ squish.setBulge(1 - scaleY);
 ```
 
 Apply that from the sprite's own `update()`, not from a tween's `onUpdate`. A
-physics adapter that mirrors a body's angle (matter and planck do, and so does
+physics adapter that mirrors a body's angle (matter, planck and Rapier do, and so does
 the built-in once a body has an angle or angular velocity) rewrites
 `currentTransform` on every step, before the renderables update, so a scale set
 anywhere else is gone by the time the sprite is drawn. Let the tween animate a
@@ -770,7 +770,7 @@ same question after construction.
 | frame rate collapses with many blended sprites | an *advanced* mode (overlay, darken, …) — each draw is a capture plus a composite |
 | many sprites with the same effect still cost a draw each | an effect instance per sprite, or a uniform set to a different value per sprite — share one instance and group sprites by value |
 | animated shader never moves | `setTime` fed milliseconds, or the shader declares no `uTime` |
-| squash and stretch only bulges, the height never changes, under matter or planck (or a rotating built-in body) | the adapter rewrites `currentTransform` every step; set the scale from the sprite's `update()` |
+| squash and stretch only bulges, the height never changes, under matter, planck or Rapier (or a rotating built-in body) | the adapter rewrites `currentTransform` every step; set the scale from the sprite's `update()` |
 | `SquishEffect` squishes the whole screen instead of the sprite | it is chained with another effect, or on the camera; give the sprite it alone |
 | syntax error in a file whose shader you just edited, pointing at a line of GLSL | a backtick in the shader body ended the template literal — most often one wrapped around an identifier in a comment |
 

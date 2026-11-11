@@ -35,7 +35,7 @@ dependencies.
 | [melonjs-renderables](../melonjs-renderables/SKILL.md) | Subclassing `Renderable`, custom `draw()`, draw order, anchors, `floating`, post effects on an object. |
 | [melonjs-sprites-and-animation](../melonjs-sprites-and-animation/SKILL.md) | `Sprite`, frame animation, texture atlases (TexturePacker / Aseprite / ShoeBox), tint, flip, pooling. |
 | [melonjs-input](../melonjs-input/SKILL.md) | Keyboard actions, pointer and touch handling, drag, gamepad, virtual controls (fixed or floating sticks and buttons, tap to act). |
-| [melonjs-physics](../melonjs-physics/SKILL.md) | Collision, bodies, movement, spatial queries, and the planck / matter adapters. |
+| [melonjs-physics](../melonjs-physics/SKILL.md) | Collision, bodies, movement, spatial queries, and the planck / matter / Rapier adapters. |
 | [melonjs-math](../melonjs-math/SKILL.md) | Vectors and matrices: what mutates, what allocates, and interpolating with lerp, slerp, damp or moveTowards. |
 | [melonjs-tilemaps](../melonjs-tilemaps/SKILL.md) | Tiled maps — TMX/TSX loading, spawning entities from objects, collision layers, isometric maps, reading and changing tiles at run time (a tile layer as the game board). |
 | [melonjs-audio](../melonjs-audio/SKILL.md) | Sound effects, music, audio sprites, spatial audio, procedural tone and noise. |
@@ -109,6 +109,7 @@ Tiled inflate plugin are *required* for their use cases, not merely convenient.
 |---|---|
 | [`@melonjs/planck-adapter`](https://www.npmjs.com/package/@melonjs/planck-adapter) | You want full rigid-body dynamics — stacking, joints, realistic restitution. Pass it as the Application's `physic` setting; the portable `raycast` and `queryAABB` calls work unchanged across adapters (`querySphere` and `raycast3d` are built-in-adapter only). |
 | [`@melonjs/matter-adapter`](https://www.npmjs.com/package/@melonjs/matter-adapter) | Same, backed by matter-js. Choose one adapter per game. |
+| [`@melonjs/rapier2d-adapter`](https://www.npmjs.com/package/@melonjs/rapier2d-adapter) | Same again, backed by Rapier compiled to WebAssembly: many bodies, per-body continuous collision, a character controller. About 3 MB loaded on demand, so make it with `await RapierAdapter.create()`. |
 | [`@melonjs/tiled-inflate-plugin`](https://www.npmjs.com/package/@melonjs/tiled-inflate-plugin) | **Required** to load gzip-, zlib- or zstd-compressed Tiled maps. Without it, parsing such a map throws `No inflate function set`. |
 | [`@melonjs/spine-plugin`](https://www.npmjs.com/package/@melonjs/spine-plugin) | Skeletal animation authored in Spine, as a melonJS renderable. |
 | [`@melonjs/debug-plugin`](https://www.npmjs.com/package/@melonjs/debug-plugin) | An in-game debug panel — FPS, draw counts, collision-shape and bounds overlays. Register it after `app.init()`. |

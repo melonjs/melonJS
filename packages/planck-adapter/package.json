@@ -53,6 +53,7 @@
 	},
 	"devDependencies": {
 		"@melonjs/matter-adapter": "workspace:*",
+		"@melonjs/rapier2d-adapter": "workspace:*",
 		"concurrently": "^9.2.1",
 		"esbuild": "^0.28.0",
 		"melonjs": "workspace:*",

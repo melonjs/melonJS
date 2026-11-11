@@ -78,8 +78,8 @@ The same flag has a second, less obvious effect: it is also the opt-in to the
 world **broadphase**. The quadtree/octree insert skips any child with
 `isKinematic === true`, so body-less objects you want `adapter.queryAABB` /
 `querySphere` to find need `isKinematic = false` as well. That is the built-in
-adapter; matter's and planck's `queryAABB` only ever return renderables with a
-body. The builtin
+adapter; the `queryAABB` of matter, planck and Rapier only ever returns
+renderables with a body. The builtin
 narrowphase likewise requires *both* partners to be non-kinematic.
 
 ## 3. Draw order: only `addChild(child, z)` works

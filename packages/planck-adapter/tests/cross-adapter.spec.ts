@@ -1,5 +1,5 @@
 /**
- * The same scenes, run on the built-in, matter and planck adapters.
+ * The same scenes, run on the built-in, matter, planck and Rapier adapters.
  *
  * Each case states what the `PhysicsAdapter` contract promises on every
  * backend, so a case that passes on one adapter and fails on another is a
@@ -29,6 +29,7 @@
  */
 
 import { MatterAdapter } from "@melonjs/matter-adapter";
+import { RapierAdapter } from "@melonjs/rapier2d-adapter";
 import {
 	Application,
 	BuiltinAdapter,
@@ -46,7 +47,11 @@ import {
 import { beforeAll, describe, expect, it } from "vitest";
 import { PlanckAdapter } from "../src/index";
 
-type AnyAdapter = BuiltinAdapter | MatterAdapter | PlanckAdapter;
+type AnyAdapter =
+	| BuiltinAdapter
+	| MatterAdapter
+	| PlanckAdapter
+	| RapierAdapter;
 
 interface Backend {
 	name: string;
@@ -93,6 +98,22 @@ const BACKENDS: Backend[] = [
 		options: { gravity: { x: 0, y: 500 } },
 		bodyCount: (adapter) => {
 			return (adapter as PlanckAdapter).world.getBodyCount();
+		},
+	},
+	{
+		name: "rapier",
+		// Rapier is loaded in `beforeAll`, so the constructor can be used
+		make: () => {
+			return new RapierAdapter();
+		},
+		klass: RapierAdapter,
+		options: { gravity: { x: 0, y: 500 } },
+		bodyCount: (adapter) => {
+			// a destroyed adapter has freed its Rapier world, bodies and all
+			const bodies = (adapter as RapierAdapter).world.bodies as
+				| { len(): number }
+				| undefined;
+			return bodies === undefined ? 0 : bodies.len();
 		},
 	},
 ];
@@ -164,6 +185,8 @@ const expectLanded = (box: Renderable) => {
 };
 
 beforeAll(async () => {
+	// Rapier's WebAssembly, compiled once for the whole file
+	await RapierAdapter.load();
 	boot();
 	const app = new Application(800, 600, {
 		parent: "screen",

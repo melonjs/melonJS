@@ -18,7 +18,6 @@ import {
 	Line,
 	version as melonjsVersion,
 	type PhysicsAdapter,
-	type PhysicsAdapterClass,
 	type PhysicsBody,
 	Polygon,
 	type RaycastHit,
@@ -261,7 +260,12 @@ export class MatterAdapter implements PhysicsAdapter {
 	 * });
 	 */
 	static async create<T extends PhysicsAdapter>(
-		this: PhysicsAdapterClass<T, MatterAdapterOptions>,
+		// the shape of `PhysicsAdapterClass`, spelled out so this package
+		// still type-checks against a melonJS older than the one defining it
+		this: Pick<typeof MatterAdapter, "load"> &
+			(new (
+				options?: MatterAdapterOptions,
+			) => T),
 		options?: MatterAdapterOptions,
 	): Promise<T> {
 		await this.load();
