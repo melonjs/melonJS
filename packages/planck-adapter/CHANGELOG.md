@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.7.0 - _unreleased_
+## 1.7.0 - _2026-11-12_
 
 ### Added
 - `PlanckAdapter.load()` and `PlanckAdapter.create(options)`, the static API every melonJS physics adapter shares; `new PlanckAdapter(options)` is unchanged
