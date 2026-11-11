@@ -78,7 +78,7 @@ Physics
 - Collision lifecycle hooks on every `Renderable`
 - Collision filtering for optimized automatic collision detection
 - Multiple shapes per body for complex hitboxes
-- Pluggable `PhysicsAdapter` interface for custom physics via official adapters
+- Pluggable `PhysicsAdapter` interface, with three official rigid-body adapters: [matter](https://github.com/melonjs/melonJS/tree/master/packages/matter-adapter), [planck (Box2D)](https://github.com/melonjs/melonJS/tree/master/packages/planck-adapter) and [Rapier](https://github.com/melonjs/melonJS/tree/master/packages/rapier2d-adapter), switchable while the game runs with `world.setAdapter()` (see [Physics Adapters](#physics-adapters))
 
 Input
 - Mouse and Touch device support (with mouse emulation)
@@ -260,7 +260,9 @@ Since 19.5, melonJS exposes a `PhysicsAdapter` interface so the same game code c
 
 - **[@melonjs/matter-adapter](https://github.com/melonjs/melonJS/tree/master/packages/matter-adapter)** — [matter-js](https://brm.io/matter-js/) integration. Rotational dynamics, constraints (springs / hinges / pins), sleeping bodies, raycasts. Showcased by the [Matter Platformer](https://melonjs.github.io/melonJS/examples/#/platformer-matter) and [Pool (Matter)](https://melonjs.github.io/melonJS/examples/#/pool-matter) examples.
 - **[@melonjs/planck-adapter](https://github.com/melonjs/melonJS/tree/master/packages/planck-adapter)** — [planck.js](https://piqnt.com/planck.js/) integration (faithful Box2D 2.3.0 port). Native joints, CCD bullet flag, sleeping bodies, native raycasts, per-body gravity scale. Showcased by the [Neon Plinko (Planck)](https://melonjs.github.io/melonJS/examples/#/plinko-planck) example.
-- **[@melonjs/rapier2d-adapter](https://github.com/melonjs/melonJS/tree/master/packages/rapier2d-adapter)** — [Rapier](https://rapier.rs) 2D integration, compiled to WebAssembly. Many bodies at once, per-body continuous collision detection, joints, a character controller, native raycasts. Selectable in the [Physics Shapes](https://melonjs.github.io/melonJS/examples/#/physics-shapes) example.
+- **[@melonjs/rapier2d-adapter](https://github.com/melonjs/melonJS/tree/master/packages/rapier2d-adapter)** — [Rapier](https://rapier.rs) 2D integration, compiled to WebAssembly. Many bodies at once, per-body continuous collision detection, joints, a character controller, native raycasts. Selectable in the [Physics Shapes](https://melonjs.github.io/melonJS/examples/#/physics-shapes) and [Line Collision](https://melonjs.github.io/melonJS/examples/#/line-collision) examples.
+
+Not sure which one fits your game? Stay on the built-in physics for platformers, top-down games, shoot-'em-ups and 2.5D with height; reach for an adapter when the game needs rotation that collides, stacking, joints or real friction. The [physics skill](https://github.com/melonjs/melonJS/blob/master/packages/melonjs/skills/melonjs-physics/SKILL.md#picking-one) has the table, game type by game type.
 
 See the [Migrating to the Physics Adapter API](https://github.com/melonjs/melonJS/wiki/Migrating-to-the-Physics-Adapter-API), [Switching Physics Adapters](https://github.com/melonjs/melonJS/wiki/Switching-Physics-Adapters), and [BuiltinAdapter Quirks](https://github.com/melonjs/melonJS/wiki/BuiltinAdapter-Quirks) wiki pages for migration guides and the per-adapter behaviour table.
 
