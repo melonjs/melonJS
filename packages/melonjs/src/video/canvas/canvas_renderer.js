@@ -860,14 +860,18 @@ export default class CanvasRenderer extends Renderer {
 	}
 
 	/**
-	 * Draw a textured triangle mesh.
+	 * Draw a textured triangle mesh: the Canvas fallback for a {@link Mesh}
+	 * under a 2D camera, for a device with no GPU backend. Meshes are built
+	 * for WebGL 2 and WebGPU; this keeps one visible without them, and is
+	 * not a target to design for.
 	 * Uses per-triangle affine texture mapping with back-to-front depth
 	 * sorting (painter's algorithm) and optional backface culling.
 	 * Note: the painter's algorithm works well for convex shapes but
 	 * may produce visual artifacts with concave or self-overlapping
 	 * geometry (e.g. a torus), as Canvas 2D has no hardware depth
-	 * buffer. Use the WebGL renderer for correct depth ordering on
-	 * complex meshes.
+	 * buffer, and the cost grows with the triangle count. A triangle whose
+	 * UVs collapse to a line (a palette model) is filled with the texels
+	 * along that line, as the GPU renderers interpolate them.
 	 *
 	 * A mesh with baked material colors (`mesh.vertexColors`, from an
 	 * MTL) draws its texture multiplied by each triangle's color and by

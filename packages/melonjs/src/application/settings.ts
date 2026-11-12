@@ -73,8 +73,10 @@ export type ApplicationSettings = {
 	 *   GPU, perf-caveat failure, etc.) — fail fast rather than render a
 	 *   stuck blank canvas.
 	 * - {@link CANVAS} — the HTML5 Canvas backend. No programmable
-	 *   pipeline: no shaders/lighting, no Camera3d/depth path (meshes
-	 *   only render on the CPU-projected 2D-camera path).
+	 *   pipeline: no shaders/lighting, no Camera3d/depth path. A mesh
+	 *   under a 2D camera still renders, CPU-projected, as a last-resort
+	 *   fallback; anything built on meshes should target WebGL 2 or
+	 *   WebGPU.
 	 *
 	 * Or pass a custom `Renderer` subclass instance for full control.
 	 * @default AUTO

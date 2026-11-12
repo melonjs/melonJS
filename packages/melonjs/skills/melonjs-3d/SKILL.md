@@ -1119,11 +1119,17 @@ animation (and the skinning that is out of scope), and OBJ/MTL.
 
 ## Requires a GPU backend
 
-The whole 3D tier needs WebGPU or WebGL 2. The Canvas renderer has no depth
-buffer and no perspective path, so a `Camera3d` scene does not render
-correctly there — usually a black canvas. `Light3d` and shader effects are
-inert too. A `Mesh` under a *2D* camera still renders, textured, CPU-projected
-and sorted back to front by painter's algorithm, and unlit.
+The 3D tier is built for WebGPU or WebGL 2: target one of them. The Canvas
+renderer has no depth buffer and no perspective path, so a `Camera3d` scene
+does not render there — usually a black canvas. `Light3d` and shader effects
+are inert too.
+
+A `Mesh` under a *2D* camera does render on Canvas, but only as a last resort:
+textured, CPU-projected, sorted back to front a triangle at a time (painter's
+algorithm) and unlit. Overlapping parts can show slivers of the wrong
+triangle, large textured faces are mapped without perspective correction, and
+it slows down as the triangle count grows. It keeps a 2D-camera game from going
+blank on a device with no GPU backend; do not design for it or tune on it.
 
 `Application` does warn: `await app.init()` with a `cameraClass` whose
 `defaultSortOn` is `"depth"`, on a renderer with no depth buffer, logs a
@@ -1141,7 +1147,18 @@ await app.init();
 ```
 
 To branch rather than fail, read `app.renderer.supportsDepthBuffer` after
-`init()`.
+`init()`: a `Camera3d` game should refuse Canvas there with a message, while a
+game whose meshes sit under a 2D camera can let it through as the fallback.
+
+```js
+const app = new Application(1024, 768, { parent: "screen", renderer: video.AUTO });
+await app.init();
+if (!app.renderer.supportsDepthBuffer) {
+    // the Canvas fallback: no GPU backend on this device. Meshes under the
+    // 2D camera still draw (CPU-projected, unlit); keep the scene small, or
+    // tell the player the game needs WebGL 2 or WebGPU.
+}
+```
 
 ## Symptom → cause
 
@@ -1165,6 +1182,7 @@ To branch rather than fail, read `app.renderer.supportsDepthBuffer` after
 | distant objects vanish or warp | scene exceeds the default far plane; `setClipPlanes` |
 | distant surfaces z-fight | `near` too small for the scene scale |
 | black canvas under `Camera3d` | Canvas renderer (no depth buffer) — check the `console.warn` |
+| a 2D-camera mesh shows slivers where it overlaps itself, or slows with many triangles | the Canvas fallback, a last resort: ask for `video.WEBGL` or `video.WEBGPU` |
 | everything flat and unlit | `lit: true` with no `Light3d` in the world (falls back to fullbright), or a mesh under a 2D camera |
 | a faded mesh goes dark instead of see-through | `transparent: false` on it, or a 2D camera — the transparent pass needs a `Camera3d` |
 | a soft-edged glow has hard edges | `alphaCutoff` discarded the soft texels; lower it |

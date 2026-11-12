@@ -44,7 +44,7 @@ the slow context instead.
 | shaders and post effects | ✅ | ✅ | ❌ inert |
 | `Light2d` glow (`drawLight`) | ✅ | ✅ | ✅ cached radial gradient |
 | normal-map lighting, `Light3d` | ✅ | ✅ | ❌ inert |
-| `Mesh` | ✅ | ✅ | ⚠️ CPU-projected, no depth |
+| `Mesh` | ✅ | ✅ | ⚠️ last resort: 2D camera only, CPU-projected, no depth, unlit |
 | `Camera3d` / depth sorting | ✅ | ✅ | ❌ warns, renders wrong |
 | `InstancedMesh` | ✅ | ✅ | ⚠️ one draw per instance |
 | GPU tilemap rendering | ✅ | ✅ | ❌ per-tile CPU path |
@@ -61,9 +61,11 @@ Two Canvas rows are worth spelling out because they are easy to misread as total
 failures. A `Light2d` still *draws* — the Canvas renderer bakes a radial gradient
 per light and blits it — what disappears is per-pixel normal-map shading, which
 warns once (`Light2d normal-map lighting requires a GPU backend`), the first time
-a normal-mapped sprite is drawn under a light, and then renders sprites unlit. A `Mesh` still draws too, textured, sorted with the
-painter's algorithm and no depth buffer, so convex models look right and a
-self-overlapping one can draw a few triangles over the wrong ones. `"none"` (replace, alpha included) is the one blend
+a normal-mapped sprite is drawn under a light, and then renders sprites unlit. A `Mesh` under a 2D camera still draws too, textured,
+sorted with the painter's algorithm and no depth buffer, so convex models look
+right and a self-overlapping one can draw a few triangles over the wrong ones.
+That is a last resort so a game does not go blank, not a target: anything
+built on meshes should run on WebGPU or WebGL 2. `"none"` (replace, alpha included) is the one blend
 mode Canvas cannot express — there is no `globalCompositeOperation` that
 disables blending for the drawn area alone — so it resolves to `"normal"`, and
 `setBlendMode` reports that back.

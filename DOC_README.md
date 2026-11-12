@@ -45,8 +45,8 @@ loader.preload([{ name: "player", type: "image", src: "player.png" }], () => {
 
 | Feature | Description |
 |---------|-------------|
-| **Rendering** | WebGPU, WebGL 2 and Canvas 2D with automatic fallback — the same feature set on both GPU backends, with Canvas as the fallback (custom shaders, HDR and the pixelate transition need a GPU backend) |
-| **3D** | Perspective {@link Camera3d | Camera3d} with distance fog, meshes with normal maps, emissive and transparent materials, mesh instancing, `Sprite3d` billboards, ground shadows, point and spot lights, glTF/GLB and OBJ/MTL loading |
+| **Rendering** | WebGPU, WebGL 2 and Canvas 2D with automatic fallback — the same feature set on both GPU backends, with Canvas as the fallback (3D, custom shaders, HDR and the pixelate transition need a GPU backend) |
+| **3D** | On WebGL 2 or WebGPU: perspective {@link Camera3d | Camera3d} with distance fog, meshes with normal maps, emissive and transparent materials, mesh instancing, `Sprite3d` billboards, ground shadows, point and spot lights, glTF/GLB and OBJ/MTL loading |
 | **Tiled Maps** | First-class [Tiled](https://www.mapeditor.org/) map editor support (TMX/JSON): orthogonal, isometric and hexagonal maps, with GPU-accelerated tile rendering for orthogonal maps |
 | **Sprites** | Texture atlas, animation with frame callbacks, nine-slice scaling, TexturePacker & Aseprite support, automatic depth sorting |
 | **Text** | `Text` and `BitmapText`, with a typewriter effect, per-glyph wave, shake and color effects, gradient fills and outlines |

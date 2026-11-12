@@ -21,11 +21,6 @@ import Renderable from "./renderable.js";
  */
 
 /**
- * Trigger an event when colliding with another object.
- * Supports both fade and mask-based transitions when loading a new level.
- * @category Game Objects
- */
-/**
  * What a trigger carries from its own settings into `level.load()`.
  *
  * Derived from {@link LEVEL_LOAD_OPTIONS} rather than restated, which is the
@@ -64,6 +59,11 @@ const getForwardedSettings = () => {
 	return forwardedSettings;
 };
 
+/**
+ * Trigger an event when colliding with another object.
+ * Supports both fade and mask-based transitions when loading a new level.
+ * @category Game Objects
+ */
 export default class Trigger extends Renderable {
 	/**
 	 * @param {number} x - the x coordinates of the trigger area

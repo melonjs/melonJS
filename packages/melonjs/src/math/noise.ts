@@ -1,20 +1,3 @@
-/**
- * Coherent value/gradient noise with fractal (fBm / ridged) layering.
- *
- * `Noise` is the renderer-free *algorithm*: a CPU-samplable field you can read
- * directly with {@link Noise#getNoise2d} / {@link Noise#getNoise3d} for gameplay
- * (heightmaps, terrain, spawn jitter, flow fields), or feed to a
- * {@link NoiseTexture2d} to bake it into a drawable texture.
- *
- * Each sample returns a value in the `[-1, 1]` range. The field is fully
- * deterministic for a given `seed`, so the same parameters always reproduce the
- * same field.
- * @category Math
- * @example
- * const noise = new me.Noise({ type: "simplex", seed: 1337, frequency: 0.02, octaves: 4 });
- * const h = noise.getNoise2d(x, y); // -1 .. 1
- */
-
 export type NoiseType =
 	| "simplex"
 	| "perlin"
@@ -111,6 +94,22 @@ const cubic = (a: number, b: number, c: number, d: number, t: number) => {
 	);
 };
 
+/**
+ * Coherent value/gradient noise with fractal (fBm / ridged) layering.
+ *
+ * `Noise` is the renderer-free *algorithm*: a CPU-samplable field you can read
+ * directly with {@link Noise#getNoise2d} / {@link Noise#getNoise3d} for gameplay
+ * (heightmaps, terrain, spawn jitter, flow fields), or feed to a
+ * {@link NoiseTexture2d} to bake it into a drawable texture.
+ *
+ * Each sample returns a value in the `[-1, 1]` range. The field is fully
+ * deterministic for a given `seed`, so the same parameters always reproduce the
+ * same field.
+ * @category Math
+ * @example
+ * const noise = new me.Noise({ type: "simplex", seed: 1337, frequency: 0.02, octaves: 4 });
+ * const h = noise.getNoise2d(x, y); // -1 .. 1
+ */
 export class Noise {
 	type: NoiseType;
 	seed: number;
