@@ -26,6 +26,29 @@ import WGSLEffectRealization from "./wgsl_realization.js";
 const UNBOUNDED_FRAME = [-1e6, -1e6, 1e6, 1e6];
 
 /**
+ * whether `values` already sit in the float mirror at `at`, as the mirror
+ * holds them (32-bit floats)
+ * @ignore
+ * @internal
+ */
+function sameFloats(mirror, at, values) {
+	for (let i = 0; i < values.length; i++) {
+		if (mirror[at + i] !== Math.fround(values[i])) {
+			return false;
+		}
+	}
+	return true;
+}
+
+/**
+ * monotonic id, so a mesh batcher can key its spliced program on the effect
+ * that produced it without holding a reference in the cache key (#1658)
+ * @ignore
+ * @internal
+ */
+let _nextEffectId = 0;
+
+/**
  * A simplified shader class for applying custom fragment effects to renderables.
  * Only requires a fragment `apply()` function — the vertex shader, uniforms, and
  * texture sampling boilerplate are handled automatically.
@@ -152,29 +175,6 @@ const UNBOUNDED_FRAME = [-1e6, -1e6, 1e6, 1e6];
  * `);
  * water.setTexture("uNoise", noiseTexture.getTexture(), "repeat");
  */
-/**
- * whether `values` already sit in the float mirror at `at`, as the mirror
- * holds them (32-bit floats)
- * @ignore
- * @internal
- */
-function sameFloats(mirror, at, values) {
-	for (let i = 0; i < values.length; i++) {
-		if (mirror[at + i] !== Math.fround(values[i])) {
-			return false;
-		}
-	}
-	return true;
-}
-
-/**
- * monotonic id, so a mesh batcher can key its spliced program on the effect
- * that produced it without holding a reference in the cache key (#1658)
- * @ignore
- * @internal
- */
-let _nextEffectId = 0;
-
 export default class ShaderEffect {
 	/**
 	 * whether this effect is active (false in Canvas mode, false after

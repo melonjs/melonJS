@@ -1,0 +1,14 @@
+# a quad facing +Z in two groups of the same material, its UVs all on one
+# line across the texture (u 0.125 to 0.875 at v 0.5), as in a palette model.
+# Two groups make the Mesh bake its material colors into vertexColors.
+mtllib palette.mtl
+v -0.5 -0.5 0
+v 0.5 -0.5 0
+v 0.5 0.5 0
+v -0.5 0.5 0
+vt 0.125 0.5
+vt 0.875 0.5
+usemtl palette
+f 1/1 2/2 3/2
+usemtl palette
+f 1/1 3/2 4/1

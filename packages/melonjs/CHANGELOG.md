@@ -20,6 +20,9 @@
 - 3D: lit meshes in a moved or rotated container are lit where they are
 - 3D: `Camera3d` no longer culls a frame late after the camera moves
 - 3D: a normalized `Mesh` no longer rewrites the vertex array it was given, which shrank later meshes and scenes of the same model
+- 3D: on the Canvas renderer, a textured mesh with an MTL material draws its texture instead of a white silhouette
+- 3D: on the Canvas renderer, a mesh's near side is drawn over its far side, not the other way round
+- 3D: on the Canvas renderer, low-poly palette models are shaded along their texture as on the GPU renderers, with no seams between triangles
 - Sprite: `addAnimation()` skips frames the texture lacks, with a warning, instead of crashing later
 - UI: a widget removed while hovered gets its `onOut()`
 - Input: keys held when the window loses the focus are released

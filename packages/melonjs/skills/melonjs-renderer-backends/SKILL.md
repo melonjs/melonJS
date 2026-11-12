@@ -44,7 +44,7 @@ the slow context instead.
 | shaders and post effects | ✅ | ✅ | ❌ inert |
 | `Light2d` glow (`drawLight`) | ✅ | ✅ | ✅ cached radial gradient |
 | normal-map lighting, `Light3d` | ✅ | ✅ | ❌ inert |
-| `Mesh` | ✅ | ✅ | ⚠️ CPU-projected, no depth |
+| `Mesh` | ✅ | ✅ | ⚠️ last resort: 2D camera only, CPU-projected, no depth, unlit |
 | `Camera3d` / depth sorting | ✅ | ✅ | ❌ warns, renders wrong |
 | `InstancedMesh` | ✅ | ✅ | ⚠️ one draw per instance |
 | GPU tilemap rendering | ✅ | ✅ | ❌ per-tile CPU path |
@@ -61,9 +61,11 @@ Two Canvas rows are worth spelling out because they are easy to misread as total
 failures. A `Light2d` still *draws* — the Canvas renderer bakes a radial gradient
 per light and blits it — what disappears is per-pixel normal-map shading, which
 warns once (`Light2d normal-map lighting requires a GPU backend`), the first time
-a normal-mapped sprite is drawn under a light, and then renders sprites unlit. A `Mesh` still draws too, sorted with the painter's
-algorithm and no depth buffer, so convex models look right and anything
-self-overlapping does not. `"none"` (replace, alpha included) is the one blend
+a normal-mapped sprite is drawn under a light, and then renders sprites unlit. A `Mesh` under a 2D camera still draws too, textured,
+sorted with the painter's algorithm and no depth buffer, so convex models look
+right and a self-overlapping one can draw a few triangles over the wrong ones.
+That is a last resort so a game does not go blank, not a target: anything
+built on meshes should run on WebGPU or WebGL 2. `"none"` (replace, alpha included) is the one blend
 mode Canvas cannot express — there is no `globalCompositeOperation` that
 disables blending for the drawn area alone — so it resolves to `"normal"`, and
 `setBlendMode` reports that back.
@@ -190,7 +192,10 @@ or the `#webgpu` / `#webgl` URI fragment on a page you can open by hand.
 |---|---|
 | effect works locally, not for a user | they got the Canvas fallback, or a different GPU backend |
 | sprites render unlit though lights are in the scene | Canvas fallback — normal-map shading is inert (check the console) |
-| mesh looks inside-out where it overlaps itself | Canvas fallback — painter's algorithm, no depth buffer |
+| a few triangles of a mesh drawn over the wrong ones where it overlaps itself | Canvas fallback — painter's algorithm sorts whole triangles, no depth buffer |
+| a mesh shows its far side through its near one (looks inside-out) on Canvas | melonJS older than 20.14 sorted the triangles the wrong way round; update |
+| a textured OBJ + MTL mesh is a white silhouette on Canvas | melonJS older than 20.14 filled it with its material color and skipped the texture; update |
+| a low-poly (palette) model looks faceted on Canvas, with faint lines between its triangles | melonJS older than 20.14 filled each of its triangles with one texel; update |
 | shader works on one machine only | GLSL-only effect, AUTO chose WebGPU elsewhere — the console carries the warning |
 | a solid box where an effect should be | carrier drawn while the effect is disabled |
 | nothing renders at all on an old device | `video.WEBGL` pinned; WebGL 1 is rejected, not downgraded |

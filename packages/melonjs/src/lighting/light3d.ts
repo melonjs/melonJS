@@ -64,6 +64,28 @@ export interface Light3dOptions {
 }
 
 /**
+ * Read an `[x, y, z]` array or a {@link Vector3d} into `out`.
+ *
+ * Both forms are accepted for the same reason `color` accepts a {@link Color},
+ * a CSS string or an array: a `Vector3d` is the obvious thing to reach for when
+ * an option is named `direction`, and index-reading one silently produces
+ * `NaN`. The value is copied, never retained.
+ * @param out - the vector the light owns
+ * @param value - what the caller passed
+ * @returns `out`
+ * @ignore
+ * @internal
+ */
+function readVector(
+	out: Vector3d,
+	value: [number, number, number] | Vector3d,
+): Vector3d {
+	return Array.isArray(value)
+		? out.set(value[0], value[1], value[2])
+		: out.set(value.x, value.y, value.z);
+}
+
+/**
  * A 3D light source for the mesh lighting path — the 3D counterpart of
  * {@link Light2d}. Like `Light2d`, a `Light3d` is a world {@link Renderable}:
  * add it to a container with `app.world.addChild(light)` and it auto-registers
@@ -118,28 +140,6 @@ export interface Light3dOptions {
  * // a positive Y is a sun overhead; a negative one lights from underneath.
  * sun.direction.set(Math.sin(t), 1, Math.cos(t)).normalize();
  */
-/**
- * Read an `[x, y, z]` array or a {@link Vector3d} into `out`.
- *
- * Both forms are accepted for the same reason `color` accepts a {@link Color},
- * a CSS string or an array: a `Vector3d` is the obvious thing to reach for when
- * an option is named `direction`, and index-reading one silently produces
- * `NaN`. The value is copied, never retained.
- * @param out - the vector the light owns
- * @param value - what the caller passed
- * @returns `out`
- * @ignore
- * @internal
- */
-function readVector(
-	out: Vector3d,
-	value: [number, number, number] | Vector3d,
-): Vector3d {
-	return Array.isArray(value)
-		? out.set(value[0], value[1], value[2])
-		: out.set(value.x, value.y, value.z);
-}
-
 export class Light3d extends Renderable {
 	/** `"directional"`, `"ambient"`, `"point"` or `"spot"`. */
 	override type: "directional" | "ambient" | "point" | "spot";

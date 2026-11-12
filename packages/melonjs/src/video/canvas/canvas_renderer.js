@@ -46,6 +46,53 @@ function maskBox(mask) {
 }
 
 /**
+ * Below this, a mesh triangle's UVs cover no area worth mapping an image
+ * onto: twice the UV triangle's area, in texels², so a quarter of a texel.
+ * Mapping one would scale the image by its inverse, smearing a few texels
+ * across the triangle.
+ */
+const UV_DEGENERATE = 0.5;
+
+/**
+ * The CSS color of the texel at (`u`, `v`), in texels, as the nearest
+ * sampler reads it: clamped to the edge.
+ * @param {{width: number, height: number, data: Uint8ClampedArray, css: string[]}} texels - from `CanvasRenderer#_texels`
+ * @param {number} u - x, in texels
+ * @param {number} v - y, in texels
+ * @returns {string} an `rgba()` color
+ */
+function texelColor(texels, u, v) {
+	const x = Math.min(Math.max(Math.floor(u), 0), texels.width - 1);
+	const y = Math.min(Math.max(Math.floor(v), 0), texels.height - 1);
+	const i = y * texels.width + x;
+	let css = texels.css[i];
+	if (css === undefined) {
+		const d = texels.data;
+		const p = i * 4;
+		css = `rgba(${d[p]},${d[p + 1]},${d[p + 2]},${d[p + 3] / 255})`;
+		texels.css[i] = css;
+	}
+	return css;
+}
+
+/**
+ * Fill the current mesh triangle path. Both neighbours of a shared edge
+ * antialias it, so the background shows through as a faint line between
+ * them: an opaque triangle also strokes its edge in its own fill, which
+ * covers that. A translucent one does not, as the stroke would darken it.
+ * @param {CanvasRenderingContext2D} context - the target context
+ * @param {boolean} opaque - whether the fill color itself is opaque
+ */
+function fillTriangle(context, opaque) {
+	context.fill();
+	if (opaque && context.globalAlpha === 1) {
+		context.strokeStyle = context.fillStyle;
+		context.lineWidth = 1;
+		context.stroke();
+	}
+}
+
+/**
  * additional import for TypeScript
  * @import {Rect} from "./../../geometries/rectangle.ts";
  * @import {RoundRect} from "./../../geometries/roundrect.ts";
@@ -813,22 +860,26 @@ export default class CanvasRenderer extends Renderer {
 	}
 
 	/**
-	 * Draw a textured triangle mesh.
+	 * Draw a textured triangle mesh: the Canvas fallback for a {@link Mesh}
+	 * under a 2D camera, for a device with no GPU backend. Meshes are built
+	 * for WebGL 2 and WebGPU; this keeps one visible without them, and is
+	 * not a target to design for.
 	 * Uses per-triangle affine texture mapping with back-to-front depth
 	 * sorting (painter's algorithm) and optional backface culling.
 	 * Note: the painter's algorithm works well for convex shapes but
 	 * may produce visual artifacts with concave or self-overlapping
 	 * geometry (e.g. a torus), as Canvas 2D has no hardware depth
-	 * buffer. Use the WebGL renderer for correct depth ordering on
-	 * complex meshes.
+	 * buffer, and the cost grows with the triangle count. A triangle whose
+	 * UVs collapse to a line (a palette model) is filled with the texels
+	 * along that line, as the GPU renderers interpolate them.
 	 *
-	 * Multi-material meshes (`mesh.vertexColors` present) render here
-	 * via per-triangle solid fill — each triangle's three vertices
-	 * share one baked material color, so we read `vertexColors[v0]`
-	 * and use it as the triangle's fillStyle, multiplied by
-	 * `currentTint`. The single shared texture (typically the 1×1
-	 * white-pixel fallback for Kd-only models) is bypassed in that
-	 * path. Canvas can't do per-material textures; if you need that,
+	 * A mesh with baked material colors (`mesh.vertexColors`, from an
+	 * MTL) draws its texture multiplied by each triangle's color and by
+	 * `currentTint`, as the GPU backends do; the three vertices of a
+	 * triangle share one material color, so `vertexColors[v0]` is read.
+	 * A mesh with no texture (Kd-only materials, which carry the 1×1
+	 * white-pixel fallback) is filled with that color per triangle
+	 * instead. Canvas can't do per-material textures; if you need that,
 	 * use the WebGL renderer.
 	 * @param {Mesh} mesh - a Mesh renderable or compatible object
 	 */
@@ -842,9 +893,8 @@ export default class CanvasRenderer extends Renderer {
 		const indices = mesh.indices;
 		const vertexColors = mesh.vertexColors;
 
-		// apply tint if set. When `vertexColors` is present the solid-
-		// fill path below reads color from the baked buffer per
-		// triangle and never samples the image, so skip the tint cache
+		// apply tint if set. With `vertexColors` the tint is folded into
+		// each triangle's color below instead, so skip the tint cache
 		// allocation entirely in that case.
 		let image = mesh.texture.getTexture();
 		const tint = this.currentTint.toArray();
@@ -856,41 +906,28 @@ export default class CanvasRenderer extends Renderer {
 		}
 		const imgW = image.width;
 		const imgH = image.height;
-		// Solid-fill fast path: kicks in for either (a) per-vertex
-		// color meshes (multi-material) where each triangle's color
-		// comes from the baked `vertexColors`, or (b) Kd-only single-
-		// material meshes where the texture is the 1×1 white-pixel
-		// fallback. Both bypass Canvas's per-triangle affine drawImage
-		// (which produces sub-pixel artifacts mapping a 1×1 source
-		// onto large triangles) and fall back to `fill()`.
+		// Solid-fill path: a mesh with no texture to draw, whose Kd-only
+		// materials carry the 1×1 white-pixel fallback. Its color comes
+		// from the baked `vertexColors` (multi-material) or from that
+		// pixel. It bypasses Canvas's per-triangle affine drawImage
+		// (which produces sub-pixel artifacts mapping a 1×1 source onto
+		// large triangles) and falls back to `fill()`. A textured mesh
+		// always draws its texture, modulated by `vertexColors` if any.
 		const solidFillKd = imgW === 1 && imgH === 1;
-		const solidFill = solidFillKd || vertexColors !== undefined;
+		const solidFill = solidFillKd;
+		const modulate = !solidFill && vertexColors !== undefined;
 		// pre-extract tint as 0..1 floats for per-vertex color modulation
 		const tintR = tint[0];
 		const tintG = tint[1];
 		const tintB = tint[2];
 		let solidFillStyle = null;
+		let solidFillOpaque = true;
 		if (solidFillKd && !vertexColors) {
 			// Single-material 1×1 path — one fill color for the whole
-			// mesh, sampled from the pre-tinted image. Routes through
-			// `Renderer.createCanvas` for `OffscreenCanvas` / worker
-			// safety.
-			if (!this._meshColorCanvas) {
-				/**
-				 * @ignore
-				 * @internal
-				 */
-				this._meshColorCanvas = Renderer.createCanvas(1, 1, true);
-				/**
-				 * @ignore
-				 * @internal
-				 */
-				this._meshColorCtx = this._meshColorCanvas.getContext("2d");
-			}
-			this._meshColorCtx.clearRect(0, 0, 1, 1);
-			this._meshColorCtx.drawImage(image, 0, 0);
-			const pixel = this._meshColorCtx.getImageData(0, 0, 1, 1).data;
-			solidFillStyle = `rgb(${pixel[0]},${pixel[1]},${pixel[2]})`;
+			// mesh, the pixel of the pre-tinted image (read once, cached)
+			const texels = this._texels(image);
+			solidFillStyle = texelColor(texels, 0, 0);
+			solidFillOpaque = texels.data[3] === 255;
 		}
 		const cullBack = mesh.cullBackFaces === true;
 		const triCount = indices.length / 3;
@@ -925,22 +962,25 @@ export default class CanvasRenderer extends Renderer {
 				}
 			}
 
-			// store maxZ as sort key and triangle start index
+			// store the triangle's farthest point as sort key, and its start
+			// index. The projected Z grows toward the viewer
+			// (`projectVertices` puts the far plane at -zScale and the near
+			// plane at +zScale), so the farthest point is the smallest Z.
 			const z0 = vertices[i0 * 3 + 2];
 			const z1 = vertices[i1 * 3 + 2];
 			const z2 = vertices[i2 * 3 + 2];
 			const idx = visCount * 2;
-			sortBuf[idx] = z0 > z1 ? (z0 > z2 ? z0 : z2) : z1 > z2 ? z1 : z2;
+			sortBuf[idx] = z0 < z1 ? (z0 < z2 ? z0 : z2) : z1 < z2 ? z1 : z2;
 			sortBuf[idx + 1] = j; // original index into indices array
 			visCount++;
 		}
 
-		// sort back-to-front (largest Z = farthest = drawn first)
+		// sort back-to-front (smallest Z = farthest = drawn first)
 		for (let i = 1; i < visCount; i++) {
 			const keyZ = sortBuf[i * 2];
 			const keyJ = sortBuf[i * 2 + 1];
 			let k = i - 1;
-			while (k >= 0 && sortBuf[k * 2] < keyZ) {
+			while (k >= 0 && sortBuf[k * 2] > keyZ) {
 				sortBuf[(k + 1) * 2] = sortBuf[k * 2];
 				sortBuf[(k + 1) * 2 + 1] = sortBuf[k * 2 + 1];
 				k--;
@@ -984,6 +1024,24 @@ export default class CanvasRenderer extends Renderer {
 			const cy = (y0 + y1 + y2) * 0.333333;
 
 			context.save();
+
+			// the texture this triangle samples: multiplied by its baked
+			// material color (and the tint), unless that is white
+			let src = image;
+			if (modulate) {
+				const c = vertexColors[i0];
+				const cr = Math.round(((c >>> 16) & 0xff) * tintR);
+				const cg = Math.round(((c >>> 8) & 0xff) * tintG);
+				const cb = Math.round((c & 0xff) * tintB);
+				if (cr !== 255 || cg !== 255 || cb !== 255) {
+					src = this.cache.tint(image, `rgb(${cr},${cg},${cb})`);
+				}
+				const ca = (c >>> 24) & 0xff;
+				if (ca !== 0xff) {
+					context.globalAlpha *= ca / 255;
+				}
+			}
+
 			context.beginPath();
 			context.moveTo(
 				x0 + (x0 > cx ? 0.5 : x0 < cx ? -0.5 : 0),
@@ -1005,6 +1063,7 @@ export default class CanvasRenderer extends Renderer {
 				// — read color from `vertexColors[v0]` since all 3
 				// vertices of a triangle share a material color).
 				context.closePath();
+				let opaque;
 				if (vertexColors) {
 					// ARGB-packed: A R G B in 4 bytes MSB→LSB. Carries
 					// the per-material opacity (MTL `d`) baked at
@@ -1017,27 +1076,36 @@ export default class CanvasRenderer extends Renderer {
 					const cb = Math.round((c & 0xff) * tintB);
 					const ca = ((c >>> 24) & 0xff) / 255;
 					context.fillStyle = `rgba(${cr},${cg},${cb},${ca})`;
+					opaque = ca === 1;
 				} else {
 					context.fillStyle = solidFillStyle;
+					opaque = solidFillOpaque;
 				}
-				context.fill();
-			} else if (rawDet === 0) {
-				// degenerate UV triangle — sample a solid color from
-				// the texture (common with color-palette models where
-				// all 3 UVs map to the same point). Routes through
-				// `Renderer.createCanvas` for worker / `OffscreenCanvas`
-				// safety, matching the `solidFillKd` path above.
+				fillTriangle(context, opaque);
+			} else if (rawDet > -UV_DEGENERATE && rawDet < UV_DEGENERATE) {
+				// The UVs collapse to a line or a point, as in most
+				// low-poly palette models (each face maps onto a strip of a
+				// color swatch). There is no area to map the image onto, so
+				// fill the triangle with what the GPU interpolates there:
+				// the texels along that line, as a gradient across it.
 				context.closePath();
-				if (!this._meshColorCanvas) {
-					this._meshColorCanvas = Renderer.createCanvas(1, 1, true);
-					this._meshColorCtx = this._meshColorCanvas.getContext("2d");
-				}
-				const sx = Math.min(Math.max(Math.round(u0), 0), imgW - 1);
-				const sy = Math.min(Math.max(Math.round(v0), 0), imgH - 1);
-				this._meshColorCtx.drawImage(image, sx, sy, 1, 1, 0, 0, 1, 1);
-				const pixel = this._meshColorCtx.getImageData(0, 0, 1, 1).data;
-				context.fillStyle = `rgb(${pixel[0]},${pixel[1]},${pixel[2]})`;
-				context.fill();
+				context.fillStyle = this._uvLineFill(
+					context,
+					src,
+					x0,
+					y0,
+					x1,
+					y1,
+					x2,
+					y2,
+					u0,
+					v0,
+					u1,
+					v1,
+					u2,
+					v2,
+				);
+				fillTriangle(context, true);
 			} else {
 				const dx1 = x1 - x0;
 				const dy1 = y1 - y0;
@@ -1058,10 +1126,129 @@ export default class CanvasRenderer extends Renderer {
 					x0 - a * u0 - c * v0,
 					y0 - b * u0 - d * v0,
 				);
-				context.drawImage(image, 0, 0);
+				context.drawImage(src, 0, 0);
 			}
 			context.restore();
 		}
+	}
+
+	/**
+	 * The fill for a mesh triangle whose UVs lie on a line (or a point):
+	 * a linear gradient through the texels along that line, laid across
+	 * the triangle the way the UVs vary over it, or one color for a point.
+	 * Coordinates are in pixels: screen for `x`/`y`, texels for `u`/`v`.
+	 * @ignore
+	 * @internal
+	 */
+	_uvLineFill(context, src, x0, y0, x1, y1, x2, y2, u0, v0, u1, v1, u2, v2) {
+		const texels = this._texels(src);
+
+		// the line: through the two UVs that are farthest apart
+		let bu = u0;
+		let bv = v0;
+		let au = u1 - u0;
+		let av = v1 - v0;
+		let len2 = au * au + av * av;
+		const l02 = (u2 - u0) * (u2 - u0) + (v2 - v0) * (v2 - v0);
+		if (l02 > len2) {
+			au = u2 - u0;
+			av = v2 - v0;
+			len2 = l02;
+		}
+		const l12 = (u2 - u1) * (u2 - u1) + (v2 - v1) * (v2 - v1);
+		if (l12 > len2) {
+			bu = u1;
+			bv = v1;
+			au = u2 - u1;
+			av = v2 - v1;
+			len2 = l12;
+		}
+		const cu = (u0 + u1 + u2) / 3;
+		const cv = (v0 + v1 + v2) / 3;
+		if (len2 < 1) {
+			// a point, or less than a texel apart: one color
+			return texelColor(texels, cu, cv);
+		}
+
+		// where each vertex sits along the line, and the screen direction in
+		// which that changes (it is affine over the triangle)
+		const t0 = ((u0 - bu) * au + (v0 - bv) * av) / len2;
+		const t1 = ((u1 - bu) * au + (v1 - bv) * av) / len2;
+		const t2 = ((u2 - bu) * au + (v2 - bv) * av) / len2;
+		const ex1 = x1 - x0;
+		const ey1 = y1 - y0;
+		const ex2 = x2 - x0;
+		const ey2 = y2 - y0;
+		const area = ex1 * ey2 - ey1 * ex2;
+		if (area === 0) {
+			return texelColor(texels, cu, cv);
+		}
+		const gx = ((t1 - t0) * ey2 - (t2 - t0) * ey1) / area;
+		const gy = ((t2 - t0) * ex1 - (t1 - t0) * ex2) / area;
+		const g2 = gx * gx + gy * gy;
+		const tMin = Math.min(t0, t1, t2);
+		const tMax = Math.max(t0, t1, t2);
+		if (g2 === 0 || tMax === tMin) {
+			return texelColor(texels, cu, cv);
+		}
+
+		// the gradient runs from where the line's first texel lands on screen
+		// to where its last one does, one stop per texel crossed (at most 16)
+		const s = (tMin - t0) / g2;
+		const e = (tMax - t0) / g2;
+		const gradient = context.createLinearGradient(
+			x0 + gx * s,
+			y0 + gy * s,
+			x0 + gx * e,
+			y0 + gy * e,
+		);
+		const steps = Math.min(
+			16,
+			Math.max(1, Math.ceil(Math.sqrt(len2) * (tMax - tMin))),
+		);
+		for (let i = 0; i <= steps; i++) {
+			const f = i / steps;
+			const t = tMin + f * (tMax - tMin);
+			gradient.addColorStop(f, texelColor(texels, bu + au * t, bv + av * t));
+		}
+		return gradient;
+	}
+
+	/**
+	 * The pixels of a mesh texture, read once and kept for as long as the
+	 * image lives. Like the tint cache, it treats a texture as unchanging.
+	 * @ignore
+	 * @internal
+	 */
+	_texels(src) {
+		if (this._texelCache === undefined) {
+			/**
+			 * @ignore
+			 * @internal
+			 */
+			this._texelCache = new WeakMap();
+		}
+		let entry = this._texelCache.get(src);
+		if (
+			entry === undefined ||
+			entry.width !== src.width ||
+			entry.height !== src.height
+		) {
+			const width = src.width;
+			const height = src.height;
+			const canvas = Renderer.createCanvas(width, height, true);
+			const ctx = canvas.getContext("2d", { willReadFrequently: true });
+			ctx.drawImage(src, 0, 0);
+			entry = {
+				width,
+				height,
+				data: ctx.getImageData(0, 0, width, height).data,
+				// the CSS color of each texel, made when first used
+				css: [],
+			};
+			this._texelCache.set(src, entry);
+		}
+		return entry;
 	}
 
 	/**

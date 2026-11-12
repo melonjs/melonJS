@@ -44,6 +44,20 @@ const _instanceBounds = new AABB3d();
 const _dirtySpan = [0, 0];
 
 /**
+ * Everything {@link InstancedMesh} takes: the instancing settings, plus every
+ * {@link MeshSettings} — they are handed to {@link Mesh} whole, so the type
+ * says so by intersection rather than by copying the list.
+ * @typedef {object} InstancedMeshOwnSettings
+ * @property {number} [instanceCount=0] - number of instances to pre-allocate. Instances start at the group origin (identity transform) until placed; `addInstance` grows past this.
+ * @property {boolean} [instanceColors=false] - give each instance its own colour (16 bytes per instance), multiplied into the mesh tint
+ * @property {boolean} [instanceData=false] - give each instance an opaque `vec4` (16 bytes per instance). Read as emissive by the built-in lit shading, or as anything at all by a custom mesh shader.
+ */
+
+/**
+ * @typedef {InstancedMeshOwnSettings & import("./mesh.js").MeshSettings} InstancedMeshSettings
+ */
+
+/**
  * A {@link Mesh} drawn many times from one copy of its geometry.
  *
  * Ordinary meshes pay for every repeat: a forest of five thousand trees is
@@ -71,8 +85,10 @@ const _dirtySpan = [0, 0];
  * instance with one uniform write and re-uploads nothing.
  *
  * Requires a GPU backend (`renderer.supportsInstancing`). Under the Canvas
- * renderer the instances are drawn one at a time through the ordinary CPU
- * mesh path — correct, but without any of the benefit.
+ * renderer (2D camera only) the instances are drawn one at a time through
+ * the ordinary CPU mesh path: a last-resort fallback that keeps them
+ * visible, without any of the benefit, and whose cost grows with every
+ * instance.
  *
  * ### When a plain {@link Mesh} each is the better answer
  *
@@ -124,20 +140,6 @@ const _dirtySpan = [0, 0];
  * forest.visibleInstanceCount = 1200;
  * app.world.addChild(forest, 10);
  */
-/**
- * Everything {@link InstancedMesh} takes: the instancing settings, plus every
- * {@link MeshSettings} — they are handed to {@link Mesh} whole, so the type
- * says so by intersection rather than by copying the list.
- * @typedef {object} InstancedMeshOwnSettings
- * @property {number} [instanceCount=0] - number of instances to pre-allocate. Instances start at the group origin (identity transform) until placed; `addInstance` grows past this.
- * @property {boolean} [instanceColors=false] - give each instance its own colour (16 bytes per instance), multiplied into the mesh tint
- * @property {boolean} [instanceData=false] - give each instance an opaque `vec4` (16 bytes per instance). Read as emissive by the built-in lit shading, or as anything at all by a custom mesh shader.
- */
-
-/**
- * @typedef {InstancedMeshOwnSettings & import("./mesh.js").MeshSettings} InstancedMeshSettings
- */
-
 export default class InstancedMesh extends Mesh {
 	/**
 	 * @param {number} x - the x coordinate of the group origin

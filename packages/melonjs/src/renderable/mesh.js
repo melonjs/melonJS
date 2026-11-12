@@ -408,43 +408,6 @@ function buildTextureGroups(
 }
 
 /**
- * A renderable object for displaying textured triangle meshes.
- * Supports loading from Wavefront OBJ models (via `loader.preload` with type "obj")
- * or from raw geometry data (vertices, uvs, indices).
- * Includes a built-in perspective projection and supports 3D transforms
- * through the standard Renderable API (`rotate`, `scale`, `translate`).
- * Works on both GPU backends — WebGL 2 and WebGPU, with hardware depth
- * testing — and on the Canvas renderer via the CPU-projected 2D-camera
- * path (painter's algorithm, no depth buffer).
- *
- * **Retained rendering** — under a {@link Camera3d} on a GPU backend
- * (`renderer.supportsRetainedMesh`), the mesh's model-space geometry is
- * uploaded to GPU buffers **once** and every frame just draws it by
- * reference: placement, camera, tint, alpha and emissive all ride
- * per-draw uniforms, so moving, rotating, scaling or re-tinting a mesh
- * never re-uploads geometry (near-zero per-frame allocation). Editing
- * the geometry itself in place is still possible — signal it with
- * {@link Mesh#needsUpdate} and the GPU copy refreshes on the next draw.
- * Under a 2D camera (or on Canvas) the mesh instead re-projects its
- * vertices on the CPU each frame — same API, the camera and backend
- * decide the path.
- *
- * **Pivot — transforms are applied about the mesh's local origin `(0, 0, 0)`,
- * NOT a normalized anchor point.** Unlike a {@link Sprite} (whose
- * {@link Renderable#anchorPoint} recenters a `width`×`height` box), a mesh has
- * real vertex coordinates, so rotation and scale pivot around the model origin
- * the geometry is authored against — the standard convention for 3D meshes.
- * Place the origin where you want the pivot at authoring time (or nest the
- * mesh under a transformed parent to pivot elsewhere). Consequently, on the
- * `Camera3d` world-space path the mesh opts out of the anchor offset entirely
- * (see {@link Renderable#applyAnchorTransform}); the legacy 2D path still
- * honors `anchorPoint` for backward compatibility. Subclasses that bake the
- * anchor into their vertex data instead (e.g. {@link Sprite3d}, via the
- * internal `_anchorBaked` flag) opt out on **both** paths — for those, the
- * vertex bake is the single anchoring mechanism.
- * @category Game Objects
- */
-/**
  * Everything {@link Mesh} takes.
  *
  * Split out of the constructor's own `@param` list so a subclass that
@@ -558,6 +521,61 @@ function declaredSize(settings) {
 	];
 }
 
+/**
+ * A renderable object for displaying textured triangle meshes.
+ * Supports loading from Wavefront OBJ models (via `loader.preload` with type "obj")
+ * or from raw geometry data (vertices, uvs, indices).
+ * Includes a built-in perspective projection and supports 3D transforms
+ * through the standard Renderable API (`rotate`, `scale`, `translate`).
+ * Built for the GPU backends, WebGL 2 and WebGPU, with hardware depth
+ * testing, lighting and the full material set: target one of them. The
+ * Canvas renderer still draws a mesh under a 2D camera, as a last-resort
+ * fallback rather than a target: CPU-projected, sorted a triangle at a time
+ * (painter's algorithm, no depth buffer), unlit, one texture per mesh, and
+ * slower as the triangle count grows. It does not draw under a
+ * {@link Camera3d}, which needs a depth buffer.
+ *
+ * **Retained rendering** — under a {@link Camera3d} on a GPU backend
+ * (`renderer.supportsRetainedMesh`), the mesh's model-space geometry is
+ * uploaded to GPU buffers **once** and every frame just draws it by
+ * reference: placement, camera, tint, alpha and emissive all ride
+ * per-draw uniforms, so moving, rotating, scaling or re-tinting a mesh
+ * never re-uploads geometry (near-zero per-frame allocation). Editing
+ * the geometry itself in place is still possible — signal it with
+ * {@link Mesh#needsUpdate} and the GPU copy refreshes on the next draw.
+ * Under a 2D camera (or on Canvas) the mesh instead re-projects its
+ * vertices on the CPU each frame — same API, the camera and backend
+ * decide the path.
+ *
+ * **Pivot — transforms are applied about the mesh's local origin `(0, 0, 0)`,
+ * NOT a normalized anchor point.** Unlike a {@link Sprite} (whose
+ * {@link Renderable#anchorPoint} recenters a `width`×`height` box), a mesh has
+ * real vertex coordinates, so rotation and scale pivot around the model origin
+ * the geometry is authored against — the standard convention for 3D meshes.
+ * Place the origin where you want the pivot at authoring time (or nest the
+ * mesh under a transformed parent to pivot elsewhere). Consequently, on the
+ * `Camera3d` world-space path the mesh opts out of the anchor offset entirely
+ * (see {@link Renderable#applyAnchorTransform}); the legacy 2D path still
+ * honors `anchorPoint` for backward compatibility. Subclasses that bake the
+ * anchor into their vertex data instead (e.g. {@link Sprite3d}, via the
+ * internal `_anchorBaked` flag) opt out on **both** paths — for those, the
+ * vertex bake is the single anchoring mechanism.
+ * @example
+ * // meshes are built for the GPU backends: AUTO picks WebGPU or WebGL 2,
+ * // and only falls back to Canvas on a device with neither
+ * const app = new Application(1024, 768, {
+ *     parent: "screen",
+ *     renderer: video.AUTO,
+ *     cameraClass: Camera3d,
+ * });
+ * await app.init();
+ * if (!app.renderer.supportsDepthBuffer) {
+ *     // the Canvas fallback: a Camera3d scene cannot draw there, so say so
+ *     // (a game whose meshes sit under a 2D camera could carry on instead)
+ *     throw new Error("this game needs WebGL 2 or WebGPU");
+ * }
+ * @category Game Objects
+ */
 export default class Mesh extends Renderable {
 	/**
 	 * @param {number} x - the x screen position of the mesh object
@@ -1496,9 +1514,10 @@ export default class Mesh extends Renderable {
 		 * model needs. An explicit `settings.texture` suppresses the split
 		 * entirely — asking for one texture is asking for one texture.
 		 *
-		 * The Canvas renderer ignores this: a multi-material mesh takes its
-		 * per-triangle solid-fill path there and never samples a texture at
-		 * all.
+		 * The Canvas renderer ignores this: it draws the mesh's one texture
+		 * (the first `map_Kd` its material groups name) over the whole
+		 * model, multiplied by each triangle's material color, and has no
+		 * per-material textures.
 		 * @type {Array<{texture: TextureAtlas, start: number, count: number, normalMap: TextureAtlas|undefined}>|undefined}
 		 */
 		this.textureGroups =
@@ -2662,8 +2681,9 @@ export default class Mesh extends Renderable {
 	 * Multi-material meshes need no extra `drawMesh` calls per material vs
 	 * single-material — each material's diffuse color is baked into
 	 * `vertexColors` at construction time and pushed through the renderer's
-	 * per-vertex `aColor` (GPU backends) or per-triangle solid-fill (Canvas)
-	 * path. The GPU batchers may still chunk very large meshes across multiple
+	 * per-vertex `aColor` (GPU backends), or multiplied into the texture one
+	 * triangle at a time on the Canvas fallback (a solid fill when there is
+	 * no texture). The GPU batchers may still chunk very large meshes across multiple
 	 * `drawElements` calls to fit its vertex/index buffer limits, and split the
 	 * draw once per entry in {@link Mesh#textureGroups} when the materials
 	 * carry different diffuse textures (#1573).
