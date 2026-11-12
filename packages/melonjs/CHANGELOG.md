@@ -1,6 +1,6 @@
 # Changelog
 
-## [20.14.0] (melonJS 2) - _unreleased_
+## [20.14.0] (melonJS 2) - _2026-11-12_
 
 ### Added
 - Loader: asset bundles, to load and free a level's assets together: `loader.preload({ common: […], level1: […] })`, then `loader.load("level1")` / `loader.unload("level1")`; an asset shared by several bundles is fetched once and freed with the last ([#1656](https://github.com/melonjs/melonJS/issues/1656))
