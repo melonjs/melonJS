@@ -662,8 +662,26 @@ export class RapierAdapter implements PhysicsAdapter {
 		const linvel = oldBody?.linvel();
 		const angvel = oldBody?.angvel() ?? 0;
 		const angle = oldBody?.rotation() ?? 0;
+		const position = oldBody?.translation();
+		const oldOrigin = this.bodyOrigins.get(renderable);
 		this.removeBody(renderable);
 		const body = this.addBody(renderable, { ...oldDef, shapes });
+		const newOrigin = this.bodyOrigins.get(renderable);
+		if (position && oldOrigin && newOrigin) {
+			// the new centre where it lies on the turned body, so the body
+			// stays where it stood
+			const dx = newOrigin.x - oldOrigin.x;
+			const dy = newOrigin.y - oldOrigin.y;
+			const cos = Math.cos(angle);
+			const sin = Math.sin(angle);
+			body.setTranslation(
+				{
+					x: position.x + this.px2m(dx * cos - dy * sin),
+					y: position.y + this.px2m(dx * sin + dy * cos),
+				},
+				true,
+			);
+		}
 		body.setRotation(angle, true);
 		if (linvel) {
 			body.setLinvel(linvel, true);
@@ -705,6 +723,11 @@ export class RapierAdapter implements PhysicsAdapter {
 				x: this.m2px(anchorA.x) + origin.x,
 				y: this.m2px(anchorA.y) + origin.y,
 			};
+		}
+		if (def.anchorB === undefined) {
+			// b's centre now, which a new shape would move
+			const origin = this.bodyOrigins.get(def.b) ?? { x: 0, y: 0 };
+			def.anchorB = { x: origin.x, y: origin.y };
 		}
 		let data: RAPIER.JointData;
 		switch (def.type) {

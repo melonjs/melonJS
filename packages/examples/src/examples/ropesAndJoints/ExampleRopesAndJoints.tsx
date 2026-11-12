@@ -10,9 +10,8 @@
  * and links are ordinary bodies, so the rope and the bridge collide like
  * anything else.
  *
- * The buttons switch adapter with `world.setAdapter()` and leave the scene
- * alone: every body, and every joint, is built again where it stands.
- * Clicking a joint removes it with `world.removeJoint()`.
+ * The buttons switch adapter with `world.setAdapter()`, then build the same
+ * scene again on it. Clicking a joint removes it with `world.removeJoint()`.
  */
 import { DebugPanelPlugin } from "@melonjs/debug-plugin";
 import { PlanckAdapter } from "@melonjs/planck-adapter";
@@ -76,7 +75,7 @@ let backend = PARAMS.get("physics") === "rapier" ? "rapier" : "planck";
 
 /**
  * The adapters that have joints (`capabilities.constraints`). The built-in
- * and matter adapters have none: `world.addJoint()` returns `null` there.
+ * and matter adapters have none: `world.addJoint()` throws there.
  */
 const BACKENDS = [
 	{
@@ -85,7 +84,7 @@ const BACKENDS = [
 	},
 	{
 		id: "rapier",
-		note: "rapier: the same joints, built again by world.setAdapter()",
+		note: "rapier: each hinge is a revolute impulse joint, the rope a rope joint",
 	},
 ] as const;
 
@@ -366,14 +365,18 @@ class PlayScreen extends Stage {
 		// grabs the ball. Asked before every other region, so it lets the
 		// buttons' clicks through by returning nothing
 		input.registerPointerEvent("pointerdown", app.viewport, this.onDown);
-		input.registerPointerEvent("pointerup", app.viewport, this.onUp);
 		event.on(event.POINTERMOVE, this.onMove);
+		// let go anywhere: a region only hears a release over the canvas, so
+		// a ball dragged out of it and let go there would stay held
+		globalThis.addEventListener("pointerup", this.onUp);
+		globalThis.addEventListener("pointercancel", this.onUp);
 	}
 
 	override onDestroyEvent() {
 		input.releasePointerEvent("pointerdown", this.app.viewport);
-		input.releasePointerEvent("pointerup", this.app.viewport);
 		event.off(event.POINTERMOVE, this.onMove);
+		globalThis.removeEventListener("pointerup", this.onUp);
+		globalThis.removeEventListener("pointercancel", this.onUp);
 	}
 
 	/** The cliffs, the bridge, the wrecking ball, the stack and the header. */
@@ -641,8 +644,9 @@ class PlayScreen extends Stage {
 	}
 
 	/**
-	 * Switch adapter and keep the scene: `setAdapter()` builds every body
-	 * again where it stands, then every joint between them.
+	 * Switch adapter and start the scene again on it. Emptying the world
+	 * first removes every joint with its bodies, so `setAdapter()` has
+	 * nothing to carry over.
 	 * @param id - the adapter to switch to
 	 */
 	private async switchBackend(id: string) {
@@ -651,8 +655,9 @@ class PlayScreen extends Stage {
 		}
 		const adapter = await createAdapter(id);
 		backend = id;
+		this.app.world.reset();
 		this.app.world.setAdapter(adapter);
-		this.showBackend();
+		this.build();
 	}
 
 	override update(dt: number) {

@@ -517,9 +517,9 @@ export interface BodyDefinitionInit extends Omit<BodyDefinition, "shapes"> {
 export interface AdapterCapabilities {
 	/**
 	 * supports {@link World#addJoint}: hinge, rope, weld and slider joints.
-	 * `true` on the planck and Rapier adapters. On the others
-	 * `world.addJoint()` throws, so code meant to run on any adapter checks
-	 * this first.
+	 * `true` on the planck and Rapier adapters; `false` on the built-in and
+	 * matter adapters, where `world.addJoint()` throws. Code meant to run on
+	 * any adapter checks this first.
 	 */
 	constraints: boolean;
 	/** supports continuous collision detection for fast-moving bodies */

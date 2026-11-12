@@ -219,7 +219,16 @@ A body with no `collisionType` is `PLAYER_OBJECT`, as on the matter and planck a
 
 ## Joints
 
-`app.world.addJoint()` joins two bodies the same way on this adapter and on `@melonjs/planck-adapter` (melonJS 20.15 and later). Each joint is a Rapier impulse joint underneath:
+`app.world.addJoint()` (melonJS 20.15 and later) joins two bodies the same way on the two adapters that have joints:
+
+| adapter | `world.addJoint()` |
+|---|---|
+| `@melonjs/planck-adapter` | ✅ hinge, rope, weld, slider |
+| `@melonjs/rapier2d-adapter` (this one) | ✅ hinge, rope, weld, slider |
+| built-in | ❌ throws |
+| `@melonjs/matter-adapter` | ❌ throws (matter's own constraints, through `adapter.matter`) |
+
+On this adapter each joint is a Rapier impulse joint underneath:
 
 | `type` | Rapier joint | settings |
 |---|---|---|
@@ -255,7 +264,7 @@ app.world.removeJoint(lift); // later
   app.world.setAdapter(await MatterAdapter.create());
   ```
 - **Limits are soft.** A body moving fast can pass a hinge or slider limit by a few pixels for a frame before Rapier pushes it back.
-- **The world keeps the joint.** It is removed when either body leaves the world, and built again by `world.setAdapter()` and by `updateShape()`. Its WebAssembly memory is freed with it.
+- **The world keeps the joint.** It is removed when either body leaves the world (moving it to another container of the same world is not leaving), and built again by `world.setAdapter()` and by `updateShape()`. Its WebAssembly memory is freed with it.
 - **Motors and the rest of Rapier's joint settings** are on the Rapier joint itself, `joint.native` (a `RevoluteImpulseJoint`, …). That code is Rapier-only, and the setting is lost when the joint is built again.
 
 ## Rapier features

@@ -424,6 +424,7 @@ export default class World extends Container {
 		// that body; on an adapter without joints, they all go
 		let withBody = 0;
 		let unsupported = 0;
+		const failed = [];
 		for (const joint of joints) {
 			const { a, b } = joint.definition;
 			if (!hasRegisteredBody(a, this) || !hasRegisteredBody(b, this)) {
@@ -431,7 +432,14 @@ export default class World extends Container {
 				withBody++;
 				continue;
 			}
-			joint.native = adapter.addJoint?.(joint.definition) ?? null;
+			try {
+				joint.native = adapter.addJoint?.(joint.definition) ?? null;
+			} catch (error) {
+				// as a refused body: the swap goes on, and says so at the end
+				joint.native = null;
+				failed.push(error);
+				continue;
+			}
 			if (joint.native !== null) {
 				this._joints.add(joint);
 			} else {
@@ -464,6 +472,11 @@ export default class World extends Container {
 				`dropped ${jointCount(withBody)} on a body it could not build.`,
 			);
 		}
+		if (failed.length > 0) {
+			problems.push(
+				`could not build ${jointCount(failed.length)}. The first: ${failed[0].message}`,
+			);
+		}
 		if (problems.length > 0) {
 			throw new Error(`melonJS: setAdapter() ${problems.join(" It also ")}`);
 		}
@@ -472,11 +485,17 @@ export default class World extends Container {
 
 	/**
 	 * Join two bodies with a joint: a `"hinge"`, `"rope"`, `"weld"` or
-	 * `"slider"` (see {@link JointType}). It works the same on every adapter
-	 * that has joints (`capabilities.constraints`: the planck and Rapier
-	 * adapters), each building its engine's own joint. On an adapter without
-	 * joints, the built-in and matter ones, it throws: check
-	 * `capabilities.constraints` first in code meant to run on any adapter.
+	 * `"slider"` (see {@link JointType}), built as the engine's own joint.
+	 * Only two adapters have joints:
+	 *
+	 * | adapter | `addJoint()` | `capabilities.constraints` |
+	 * |---|---|---|
+	 * | `@melonjs/planck-adapter` | yes, all four types | `true` |
+	 * | `@melonjs/rapier2d-adapter` | yes, all four types | `true` |
+	 * | built-in | no, throws | `false` |
+	 * | `@melonjs/matter-adapter` | no, throws | `false` |
+	 *
+	 * Code meant to run on any adapter checks `capabilities.constraints` first.
 	 *
 	 * Both renderables need a body in this world first, so add them with
 	 * {@link Container#addChild} before joining them. The world keeps the

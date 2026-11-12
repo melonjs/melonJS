@@ -7,6 +7,7 @@
 
 ### Fixed
 - Physics: `world.setAdapter()` builds each body again at the angle it had; a turned body came back upright
+- Physics: a renderable moved to another container of the same world keeps its body as it was; on matter, planck and Rapier the body was built again, at rest and upright
 
 ## [20.14.0] (melonJS 2) - _2026-11-12_
 

@@ -368,6 +368,9 @@ function unregisterBody(node, root) {
 			} else if (node.body instanceof Body) {
 				registeredWith.removeBody?.(node.body);
 			}
+			// and any made while it went: removing a body ends its contacts,
+			// and a collision-end handler can join it again
+			registeredWith._removeJointsOf?.(node);
 			// kept, as `null`, so a second route to the same removal (a
 			// group's `destroy()` emptying it after the group was taken
 			// out) knows the body is already gone
@@ -387,6 +390,8 @@ function unregisterBody(node, root) {
 		world?._removeJointsOf?.(node);
 		if (world?.adapter?.removeBody) {
 			world.adapter.removeBody(node);
+			// and any a collision-end handler made while it went
+			world._removeJointsOf?.(node);
 		} else if (node.body instanceof Body) {
 			// Container detached from the world tree — fall back to the
 			// legacy `world.removeBody(body)` path if available. This only
@@ -416,6 +421,37 @@ export function unregisterTreeBodies(node, root) {
 		node.forEach((child) => {
 			unregisterTreeBodies(child, root);
 		});
+	}
+}
+
+/**
+ * The child {@link moveChild} is taking from one container to another of the
+ * same world, while it is between the two: its bodies stay in the simulation.
+ * @ignore
+ * @internal
+ */
+let movingWithinWorld = null;
+
+/**
+ * Take a child out of its container to add it to another. Within one world
+ * its bodies, and everything below it, stay in the simulation as they are:
+ * moving, turned, and joined to other bodies. Taken to another world, or out
+ * of one, they are removed and built again on the way in.
+ * @ignore
+ * @internal
+ * @param {Renderable} child - the child being moved
+ * @param {Container} to - the container it is moving to
+ */
+function moveChild(child, to) {
+	const from = child.ancestor;
+	const world = to.getRootAncestor();
+	movingWithinWorld =
+		world !== undefined && world === from.getRootAncestor() ? child : null;
+	try {
+		// kept alive: the child is moved, not disposed of
+		from.removeChildNow(child, true);
+	} finally {
+		movingWithinWorld = null;
 	}
 }
 
@@ -747,8 +783,9 @@ export default class Container extends Renderable {
 	 * (its `bodyDef`, or a pre-built `Body`) is registered with the world's
 	 * physics adapter, and so is the body of every renderable below it if it is
 	 * a container, at any depth. They are taken out again when the child leaves
-	 * the world, so moving a whole group from one container to another keeps
-	 * its bodies simulated, once each.
+	 * the world. A child moved here from another container of the same world
+	 * keeps its bodies as they are: moving, turned, and joined to other bodies
+	 * (see {@link World#addJoint}).
 	 * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child - Child to be added
 	 * @param {number} [z] - forces the z index of the child to the specified
 	 * value. This depth is scoped to THIS container: it orders the child among
@@ -771,7 +808,7 @@ export default class Container extends Renderable {
 			// instances are a real-world example) — which nulls
 			// `child.pos` and crashes the very next `updateBounds`
 			// call below. We're moving the child, not disposing of it.
-			child.ancestor.removeChildNow(child, true);
+			moveChild(child, this);
 		} else {
 			// only allocate a GUID if the object has no previous ancestor
 			// (e.g. move one child from one container to another)
@@ -845,9 +882,9 @@ export default class Container extends Renderable {
 		}
 		if (index >= 0 && index <= this.getChildren().length) {
 			if (child.ancestor instanceof Container) {
-				// Reparenting — see Container.addChild for why
-				// `keepalive=true` is required here.
-				child.ancestor.removeChildNow(child, true);
+				// Reparenting — see Container.addChild for why the child is
+				// kept alive here.
+				moveChild(child, this);
 			} else {
 				// only allocate a GUID if the object has no previous ancestor
 				// (e.g. move one child from one container to another)
@@ -1231,8 +1268,11 @@ export default class Container extends Renderable {
 			// simulation by a renderable leaving the world: the child's, and
 			// — if it is a container — those of everything below it, at any
 			// depth, whether it is destroyed, pooled or kept alive (moved by
-			// `addChild`, or removed to be added again later).
-			unregisterTreeBodies(child, root);
+			// `addChild` to another world, or removed to be added again
+			// later). A move within this world leaves them in.
+			if (child !== movingWithinWorld) {
+				unregisterTreeBodies(child, root);
+			}
 
 			if (!keepalive) {
 				// Back to whichever pool built it, if any. A container holds a

@@ -266,6 +266,11 @@ export class PlanckAdapter implements PhysicsAdapter {
 	private readonly joints = new Set<planck.Joint>();
 	/** joints made while the world was locked, created after the step */
 	private readonly lockedJoints: planck.Joint[] = [];
+	/** shape changes asked for during a step, made once it ends */
+	private readonly lockedShapeUpdates: {
+		renderable: Renderable;
+		shapes: BodyShape[];
+	}[] = [];
 	/** joints removed while the world was locked, destroyed after the step */
 	private readonly lockedJointRemovals: planck.Joint[] = [];
 	/**
@@ -449,6 +454,7 @@ export class PlanckAdapter implements PhysicsAdapter {
 		this.joints.clear();
 		this.lockedJoints.length = 0;
 		this.lockedJointRemovals.length = 0;
+		this.lockedShapeUpdates.length = 0;
 		this.bodyOrigins.clear();
 		this.bodyMap.clear();
 		this.renderableMap.clear();
@@ -509,6 +515,14 @@ export class PlanckAdapter implements PhysicsAdapter {
 				this.world.createJoint(joint);
 			}
 			this.lockedJoints.length = 0;
+		}
+		if (this.lockedShapeUpdates.length > 0) {
+			// a body removed since is skipped: updateShape() ignores a
+			// renderable without one
+			const updates = this.lockedShapeUpdates.splice(0);
+			for (const { renderable, shapes } of updates) {
+				this.updateShape(renderable, shapes);
+			}
 		}
 	}
 
@@ -920,15 +934,40 @@ export class PlanckAdapter implements PhysicsAdapter {
 		if (!oldDef) {
 			return;
 		}
+		if (this.world.isLocked()) {
+			// inside a step (a contact event handler): planck refuses to make
+			// a body there. Reshape it once the step ends
+			this.lockedShapeUpdates.push({ renderable, shapes });
+			return;
+		}
 		const oldBody = this.bodyMap.get(renderable);
 		const savedVel = oldBody
 			? { x: oldBody.getLinearVelocity().x, y: oldBody.getLinearVelocity().y }
 			: undefined;
 		const savedAngVel = oldBody?.getAngularVelocity() ?? 0;
 		const savedAngle = oldBody?.getAngle() ?? 0;
+		const savedPos = oldBody
+			? { x: oldBody.getPosition().x, y: oldBody.getPosition().y }
+			: undefined;
+		const oldOrigin = this.bodyOrigins.get(renderable);
 		this.removeBody(renderable);
 		const newBody = this.addBody(renderable, { ...oldDef, shapes });
-		newBody.setTransform(newBody.getPosition(), savedAngle);
+		const newOrigin = this.bodyOrigins.get(renderable);
+		if (savedPos && oldOrigin && newOrigin) {
+			// the new centre where it lies on the turned body, so the body
+			// stays where it stood
+			const dx = newOrigin.x - oldOrigin.x;
+			const dy = newOrigin.y - oldOrigin.y;
+			const cos = Math.cos(savedAngle);
+			const sin = Math.sin(savedAngle);
+			newBody.setTransform(
+				{
+					x: savedPos.x + this.px2m(dx * cos - dy * sin),
+					y: savedPos.y + this.px2m(dx * sin + dy * cos),
+				},
+				savedAngle,
+			);
+		}
 		if (savedVel) {
 			newBody.setLinearVelocity(new planck.Vec2(savedVel.x, savedVel.y));
 			newBody.setAngularVelocity(savedAngVel);
@@ -976,6 +1015,11 @@ export class PlanckAdapter implements PhysicsAdapter {
 				x: this.m2px(base.localAnchorA.x) + origin.x,
 				y: this.m2px(base.localAnchorA.y) + origin.y,
 			};
+		}
+		if (def.anchorB === undefined) {
+			// b's centre now, which a new shape would move
+			const origin = this.bodyOrigins.get(def.b) ?? { x: 0, y: 0 };
+			def.anchorB = { x: origin.x, y: origin.y };
 		}
 		const limited = def.limits !== undefined;
 		let joint: planck.Joint;

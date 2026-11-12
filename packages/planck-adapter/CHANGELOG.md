@@ -7,6 +7,7 @@
 
 ### Fixed
 - `updateShape()` keeps the body's angle; the new body was built upright
+- `updateShape()` called from a collision handler no longer crashes: the new shape takes effect when the step ends
 
 ## 1.7.0 - _2026-11-12_
 

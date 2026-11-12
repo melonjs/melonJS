@@ -13,12 +13,12 @@ license: MIT
 
 ## Choosing a world
 
-| | when |
-|---|---|
-| **built-in** (default) | Arcade-style: platformers, top-down games. Fast, position-based, not Newtonian. |
-| **`@melonjs/planck-adapter`** | Full rigid-body dynamics — stacking, joints, realistic restitution. |
-| **`@melonjs/matter-adapter`** | Same class of thing, backed by matter-js. |
-| **`@melonjs/rapier2d-adapter`** | Same again, backed by Rapier compiled to WebAssembly: many bodies, per-body continuous collision, a character controller. Loaded asynchronously. |
+| | when | joints (`world.addJoint()`) |
+|---|---|---|
+| **built-in** (default) | Arcade-style: platformers, top-down games. Fast, position-based, not Newtonian. | ❌ throws |
+| **`@melonjs/planck-adapter`** | Full rigid-body dynamics: stacking, realistic restitution. | ✅ hinge, rope, weld, slider |
+| **`@melonjs/matter-adapter`** | Same class of thing, backed by matter-js. | ❌ throws (matter's own constraints, through `adapter.matter`) |
+| **`@melonjs/rapier2d-adapter`** | Same again, backed by Rapier compiled to WebAssembly: many bodies, per-body continuous collision, a character controller. Loaded asynchronously. | ✅ hinge, rope, weld, slider |
 
 ### Picking one
 
@@ -318,7 +318,8 @@ Rapier read it only when the body is built, so after changing it call
 `app.world.adapter.updateShape(renderable, renderable.bodyDef.shapes)`, which
 works on every adapter. On those three `updateShape()` builds a new body: its
 velocity carries over, and on planck and Rapier its angle and the joints
-`world.addJoint()` made too; on matter the angle does not. The built-in also
+`world.addJoint()` made too; on matter the angle does not. On planck, called
+from a collision handler, it takes effect when the step ends. The built-in also
 reads `isActive` live, from the shapes the body holds; those are not always
 the ones you authored, since a `Rect` is stored as a converted `Polygon`, so
 toggle `body.getShape(i)` there.
@@ -584,12 +585,17 @@ survives but fights collision resolution and jitters. To teleport, go through
 
 ## Joints: hinges, ropes, welds and sliders
 
-`app.world.addJoint(definition)` joins two bodies, the same way on the planck
-and Rapier adapters (`capabilities.constraints` is `true`); each builds its
-engine's own joint. On the built-in and matter adapters it throws, naming the
-adapter: code meant to run on any adapter checks `capabilities.constraints`
-first. matter's own constraints are still there through `adapter.matter`, but
-that code is matter-only.
+`app.world.addJoint(definition)` joins two bodies. Only two adapters have
+joints:
+
+| adapter | `world.addJoint()` | `capabilities.constraints` |
+|---|---|---|
+| planck | ✅ hinge, rope, weld, slider, each a planck joint | `true` |
+| Rapier | ✅ the same four, each a Rapier joint | `true` |
+| built-in | ❌ throws, naming the adapter | `false` |
+| matter | ❌ throws, naming the adapter. matter's own constraints are still there through `adapter.matter`, in matter-only code | `false` |
+
+Code meant to run on any adapter checks `capabilities.constraints` first:
 
 ```ts
 if (app.world.adapter.capabilities.constraints) {
@@ -650,7 +656,9 @@ through itself.
 The world keeps the joints it made:
 
 - a joint is removed when either body leaves the world, and re-adding the
-  body does not bring it back;
+  body does not bring it back. Moving a body to another container of the
+  same world (for its draw order) is not leaving: the body, its motion and
+  its joints stay as they are;
 - `world.setAdapter()` builds every joint again on the new adapter, after the
   bodies; `updateShape()`, which rebuilds the body on planck and Rapier,
   builds its joints again too;

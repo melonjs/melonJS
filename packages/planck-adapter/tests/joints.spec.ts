@@ -10,13 +10,19 @@
  *   keeps its axis, angle and limits
  * - anchors are in the renderable's own space, whatever its anchorPoint
  * - `collideConnected` decides whether the joined bodies collide
- * - the world removes a joint with either body, and `removeJoint()` is safe
- *   to repeat
- * - `updateShape()` and `world.setAdapter()` rebuild the joints, at the
- *   angle each body had, and the handle game code holds gets the new engine
- *   joint; switching to an adapter without joints drops them, then throws
+ * - default anchors hold the bodies as they stand, turned or not, whatever
+ *   the shape, and are kept: a rebuild makes the same joint
+ * - the world removes a joint with either body, however it leaves (removed,
+ *   in a removed container, `world.reset()`, even joined again by a
+ *   collision-end handler on its way out), and `removeJoint()` is safe to
+ *   repeat; a body moved to another container of the world keeps its joints
+ * - `updateShape()` and `world.setAdapter()` rebuild the joints, with each
+ *   body where it stood and at its angle, and the handle game code holds gets
+ *   the new engine joint; switching to an adapter without joints drops them,
+ *   then throws, and so does one that refuses a body or fails a joint
  * - planck refuses to change its world during a step: a joint made or
- *   removed from a collision handler takes effect when the step ends
+ *   removed, or a shape changed, from a collision handler takes effect when
+ *   the step ends
  */
 
 import { MatterAdapter } from "@melonjs/matter-adapter";
@@ -25,6 +31,7 @@ import {
 	Application,
 	BuiltinAdapter,
 	boot,
+	Container,
 	type JointDefinition,
 	type PhysicsAdapter,
 	type PhysicsJoint,
@@ -63,7 +70,17 @@ const JOINT_BACKENDS: JointBackend[] = [
 			return new PlanckAdapter({ gravity: GRAVITY });
 		},
 		jointCount: (adapter) => {
-			return (adapter as PlanckAdapter).world.getJointCount();
+			// walked rather than getJointCount(): a joint destroyed before it
+			// was ever created, then created, is listed but not counted
+			let count = 0;
+			for (
+				let joint = (adapter as PlanckAdapter).world.getJointList();
+				joint;
+				joint = joint.getNext()
+			) {
+				count++;
+			}
+			return count;
 		},
 		pose: (r) => {
 			const body = r.body as PlanckAdapter.Body;
@@ -125,6 +142,30 @@ const worldPoint = (
 	const cos = Math.cos(angle);
 	const sin = Math.sin(angle);
 	return { x: x + dx * cos - dy * sin, y: y + dx * sin + dy * cos };
+};
+
+// the same for any renderable, given the centre of its body in its own space
+const worldPointOf = (
+	backend: JointBackend,
+	r: Renderable,
+	p: { x: number; y: number },
+	centre: { x: number; y: number },
+) => {
+	const { x, y, angle } = backend.pose(r);
+	const dx = p.x - centre.x;
+	const dy = p.y - centre.y;
+	const cos = Math.cos(angle);
+	const sin = Math.sin(angle);
+	return { x: x + dx * cos - dy * sin, y: y + dx * sin + dy * cos };
+};
+
+const otherBackend = (backend: JointBackend) => {
+	return backend === JOINT_BACKENDS[0] ? JOINT_BACKENDS[1] : JOINT_BACKENDS[0];
+};
+
+type Handled = Renderable & {
+	onCollisionStart?: () => void;
+	onCollisionEnd?: () => void;
 };
 
 const distance = (p: { x: number; y: number }, q: { x: number; y: number }) => {
@@ -460,6 +501,356 @@ describe.each(JOINT_BACKENDS)("$name: world.addJoint()", (backend) => {
 		expect(tether.native).toBeNull();
 		expect(backend.jointCount(world.adapter)).toBe(1);
 	});
+	it("a default anchorA is the point under b's anchor on turned, off-centre bodies, and is kept", () => {
+		const other = otherBackend(backend);
+		const world = new World(0, 0, 800, 600, backend.make());
+		// the hook's one shape sits 8 px in from its frame's left edge: the
+		// centre of its body is (16, 8) in its own space
+		const hook = new Renderable(380, 100, 32, 32);
+		hook.anchorPoint.set(0, 0);
+		hook.bodyDef = { type: "static", shapes: [new Rect(8, 0, 16, 16)] };
+		const link = box(396, 130, 8, 40, "dynamic");
+		world.addChild(hook);
+		world.addChild(link);
+		world.adapter.setAngle?.(hook, 0.7);
+		world.adapter.setAngle?.(link, 0.3);
+		const top = (be: JointBackend) => {
+			return worldPointOf(be, link, { x: 4, y: 0 }, { x: 4, y: 20 });
+		};
+		const pin = top(backend);
+		const joint = world.addJoint({
+			type: "hinge",
+			a: hook,
+			b: link,
+			anchorB: { x: 4, y: 0 },
+		});
+		// written back in the hook's own space: the point of it under the
+		// link's top
+		const anchorA = joint.definition.anchorA ?? { x: Number.NaN, y: 0 };
+		expect(
+			distance(worldPointOf(backend, hook, anchorA, { x: 16, y: 8 }), pin),
+		).toBeLessThan(0.01);
+		let gap = 0;
+		run(world, 30, () => {
+			gap = Math.max(gap, distance(top(backend), pin));
+		});
+		expect(gap).toBeLessThan(1.5);
+		// built again from it on the other adapter: pinned at the same point
+		world.setAdapter(other.make());
+		gap = 0;
+		run(world, 30, () => {
+			gap = Math.max(gap, distance(top(other), pin));
+		});
+		expect(gap).toBeLessThan(1.5);
+	});
+
+	it("a default anchorB stays where it was made when updateShape() moves b's centre", () => {
+		const world = new World(0, 0, 800, 600, backend.make());
+		const hook = box(392, 100, 16, 16, "static");
+		const link = box(396, 116, 8, 40, "dynamic");
+		world.addChild(hook);
+		world.addChild(link);
+		// no anchors: held at the link's centre, (400, 136) in the world
+		const joint = world.addJoint({ type: "hinge", a: hook, b: link });
+		expect(joint.definition.anchorB?.x).toBeCloseTo(4, 5);
+		expect(joint.definition.anchorB?.y).toBeCloseTo(20, 5);
+		// the link becomes its top half: the centre of its body moves up to
+		// (4, 10), and the joint still holds (4, 20)
+		world.adapter.updateShape?.(link, [new Rect(0, 0, 8, 20)]);
+		let gap = 0;
+		run(world, 30, () => {
+			const held = worldPointOf(
+				backend,
+				link,
+				{ x: 4, y: 20 },
+				{ x: 4, y: 10 },
+			);
+			gap = Math.max(gap, distance(held, { x: 400, y: 136 }));
+		});
+		expect(gap).toBeLessThan(1.5);
+	});
+
+	it("updateShape() leaves a turned body where it stood when the new shape moves its centre", () => {
+		const world = new World(0, 0, 800, 600, backend.make());
+		const crate = box(300, 300, 32, 32, "dynamic");
+		world.addChild(crate);
+		world.adapter.setAngle?.(crate, 0.8);
+		// its top-left corner, before and after: the centre of the new 16 px
+		// shape is (8, 8) rather than (16, 16)
+		const corner = worldPointOf(
+			backend,
+			crate,
+			{ x: 0, y: 0 },
+			{ x: 16, y: 16 },
+		);
+		world.adapter.updateShape?.(crate, [new Rect(0, 0, 16, 16)]);
+		const after = worldPointOf(backend, crate, { x: 0, y: 0 }, { x: 8, y: 8 });
+		expect(distance(after, corner)).toBeLessThan(0.01);
+		expect(backend.pose(crate).angle).toBeCloseTo(0.8, 5);
+	});
+
+	it("updateShape() from a collision handler reshapes the body", () => {
+		const world = new World(0, 0, 800, 600, backend.make());
+		const floor = box(200, 400, 400, 32, "static");
+		const ball = box(392, 300, 16, 16, "dynamic") as Handled;
+		world.addChild(floor);
+		world.addChild(ball);
+		let reshaped = false;
+		ball.onCollisionStart = () => {
+			if (!reshaped) {
+				reshaped = true;
+				// its top half only
+				world.adapter.updateShape?.(ball, [new Rect(0, 0, 16, 8)]);
+			}
+		};
+		expect(() => {
+			run(world, 90);
+		}).not.toThrow();
+		expect(reshaped).toBe(true);
+		// it landed again, on the bottom of its new shape
+		expect(ball.pos.y + 8).toBeGreaterThan(397);
+		expect(ball.pos.y + 8).toBeLessThan(403);
+	});
+
+	it("a slider rebuilt after travelling keeps its limits; with no axis nor limits it slides freely along x", () => {
+		const other = otherBackend(backend);
+		const world = new World(0, 0, 800, 600, backend.make());
+		const shaft = box(392, 100, 16, 16, "static");
+		const cabin = box(384, 200, 32, 16, "dynamic");
+		world.addChild(shaft);
+		world.addChild(cabin);
+		world.addJoint({
+			type: "slider",
+			a: shaft,
+			b: cabin,
+			axis: { x: 0, y: 1 },
+			limits: { min: -60, max: 60 },
+		});
+		// down at its far limit when the adapter changes
+		run(world, 90);
+		world.setAdapter(other.make());
+		let longest = 0;
+		run(world, 60, () => {
+			longest = Math.max(longest, other.pose(cabin).y - 108);
+		});
+		// still counted from where it started: about 220 px if counted from
+		// where it was at the switch
+		expect(longest).toBeLessThan(161.5);
+
+		const rail = box(100, 400, 16, 16, "static");
+		const cart = box(200, 400, 16, 16, "dynamic");
+		world.addChild(rail);
+		world.addChild(cart);
+		world.addJoint({ type: "slider", a: rail, b: cart });
+		world.adapter.setVelocity(cart, new Vector2d(300, 0));
+		run(world, 30);
+		expect(other.pose(cart).x - 208).toBeGreaterThan(100);
+		expect(Math.abs(other.pose(cart).y - 408)).toBeLessThan(1);
+	});
+
+	it("addJoint() throws for a renderable without a body, and for an unknown type", () => {
+		const world = new World(0, 0, 800, 600, backend.make());
+		const hook = box(392, 100, 16, 16, "static");
+		const link = box(396, 116, 8, 40, "dynamic");
+		const stray = box(500, 116, 8, 40, "dynamic");
+		world.addChild(hook);
+		world.addChild(link);
+		expect(() => {
+			world.addJoint({ type: "hinge", a: hook, b: stray });
+		}).toThrow(/needs both renderables to have a body/);
+		expect(() => {
+			world.addJoint({
+				type: "spring" as JointDefinition["type"],
+				a: hook,
+				b: link,
+			});
+		}).toThrow(/unknown joint type "spring"/);
+		expect(backend.jointCount(world.adapter)).toBe(0);
+		// and the world kept neither: nothing to drop on a switch to matter
+		expect(() => {
+			world.setAdapter(new MatterAdapter());
+		}).not.toThrow();
+	});
+
+	it("removing a, a nested body, a body with two joints, or reset(), removes their joints", () => {
+		const other = otherBackend(backend);
+		const world = new World(0, 0, 800, 600, backend.make());
+		const hook = box(392, 100, 16, 16, "static");
+		const l1 = box(396, 116, 8, 40, "dynamic");
+		const l2 = box(396, 156, 8, 40, "dynamic");
+		const group = new Container(0, 0, 800, 600);
+		const l3 = box(396, 196, 8, 40, "dynamic");
+		group.addChild(l3);
+		for (const r of [hook, l1, l2, group]) {
+			world.addChild(r);
+		}
+		const hinge = (a: Renderable, b: Renderable, y: number) => {
+			return world.addJoint({
+				type: "hinge",
+				a,
+				b,
+				anchorA: { x: a === hook ? 8 : 4, y },
+				anchorB: { x: 4, y: 0 },
+			});
+		};
+		const j1 = hinge(hook, l1, 16);
+		const j2 = hinge(l1, l2, 40);
+		const j3 = hinge(l2, l3, 40);
+		// a body in a container that leaves
+		world.removeChildNow(group, true);
+		expect(j3.native).toBeNull();
+		// the `a` side
+		world.removeChildNow(hook, true);
+		expect(j1.native).toBeNull();
+		// a body holding two joints
+		const l0 = box(396, 76, 8, 40, "dynamic");
+		world.addChild(l0);
+		const j0 = hinge(l0, l1, 40);
+		world.removeChildNow(l1, true);
+		expect([j0.native, j2.native]).toEqual([null, null]);
+		expect(backend.jointCount(world.adapter)).toBe(0);
+
+		// reset(): what stays keeps its joints, what goes takes its own
+		const p1 = box(100, 100, 16, 16, "static");
+		const p2 = box(100, 160, 16, 16, "dynamic");
+		const q = box(300, 160, 16, 16, "dynamic");
+		p1.isPersistent = true;
+		p2.isPersistent = true;
+		for (const r of [p1, p2, q]) {
+			world.addChild(r);
+		}
+		const kept = world.addJoint({ type: "rope", a: p1, b: p2 });
+		const lost = world.addJoint({ type: "rope", a: p1, b: q });
+		world.reset();
+		expect(lost.native).toBeNull();
+		expect(kept.native).not.toBeNull();
+		expect(() => {
+			world.setAdapter(other.make());
+		}).not.toThrow();
+		expect(other.jointCount(world.adapter)).toBe(1);
+		expect(() => {
+			world.destroy();
+		}).not.toThrow();
+	});
+
+	it("a body moved to another container of the world keeps its joints, its motion and its angle", () => {
+		const world = new World(0, 0, 800, 600, backend.make());
+		const { link, joint } = hangingLink(world);
+		const layer = new Container(0, 0, 800, 600);
+		world.addChild(layer);
+		world.adapter.setVelocity(link, new Vector2d(200, 0));
+		run(world, 6);
+		const native = joint.native;
+		const body = link.body;
+		const angle = backend.pose(link).angle;
+		const speed = world.adapter.getVelocity(link).length();
+		expect(Math.abs(angle)).toBeGreaterThan(0.2);
+		layer.addChild(link);
+		expect(link.ancestor).toBe(layer);
+		// the same body, still swinging, on the same joint
+		expect(link.body).toBe(body);
+		expect(joint.native).toBe(native);
+		expect(backend.pose(link).angle).toBeCloseTo(angle, 5);
+		expect(world.adapter.getVelocity(link).length()).toBeCloseTo(speed, 3);
+		expect(backend.jointCount(world.adapter)).toBe(1);
+		let gap = 0;
+		run(world, 30, () => {
+			const top = worldPoint(backend, link, { x: 4, y: 0 });
+			gap = Math.max(gap, distance(top, { x: 400, y: 116 }));
+		});
+		expect(gap).toBeLessThan(1.5);
+		// and back, by index
+		world.addChildAt(link, 0);
+		expect(joint.native).toBe(native);
+		// out of the world, it goes
+		const offstage = new Container(0, 0, 800, 600);
+		offstage.addChild(link);
+		expect(joint.native).toBeNull();
+		expect(backend.jointCount(world.adapter)).toBe(0);
+	});
+
+	it("a joint a collision-end handler makes as its body leaves goes with the body", () => {
+		const world = new World(0, 0, 800, 600, backend.make());
+		const floor = box(200, 400, 400, 32, "static") as Handled;
+		const hook = box(392, 100, 16, 16, "static");
+		const ball = box(392, 370, 16, 16, "dynamic");
+		world.addChild(floor);
+		world.addChild(hook);
+		world.addChild(ball);
+		// resting on the floor
+		run(world, 30);
+		// removing the ball ends its contact with the floor, whose handler
+		// joins it again on its way out
+		const made: PhysicsJoint[] = [];
+		floor.onCollisionEnd = () => {
+			if (made.length === 0) {
+				made.push(world.addJoint({ type: "rope", a: hook, b: ball }));
+			}
+		};
+		world.removeChildNow(ball, true);
+		expect(made.length).toBe(1);
+		expect(made[0].native).toBeNull();
+		expect(backend.jointCount(world.adapter)).toBe(0);
+		// and the world holds no joint: nothing to drop on a switch to matter
+		expect(() => {
+			world.setAdapter(new MatterAdapter());
+		}).not.toThrow();
+	});
+
+	it("in a collision handler, a joint added then removed never exists, and a body removed takes its joints", () => {
+		const world = new World(0, 0, 800, 600, backend.make());
+		const floor = box(100, 400, 600, 32, "static");
+		const top = box(400, 100, 16, 16, "static");
+		const a = box(200, 300, 16, 16, "dynamic") as Handled;
+		const b = box(400, 300, 16, 16, "dynamic") as Handled;
+		const c = box(600, 300, 16, 16, "dynamic") as Handled;
+		for (const r of [floor, top, a, b, c]) {
+			world.addChild(r);
+		}
+		const live = world.addJoint({
+			type: "rope",
+			a: top,
+			b: c,
+			maxLength: 1000,
+		});
+		const made: PhysicsJoint[] = [];
+		const done = new Set<Renderable>();
+		const once = (r: Renderable, f: () => void) => {
+			return () => {
+				if (!done.has(r)) {
+					done.add(r);
+					f();
+				}
+			};
+		};
+		a.onCollisionStart = once(a, () => {
+			const joint = world.addJoint({
+				type: "rope",
+				a: floor,
+				b: a,
+				maxLength: 1000,
+			});
+			world.removeJoint(joint);
+			made.push(joint);
+		});
+		b.onCollisionStart = once(b, () => {
+			made.push(world.addJoint({ type: "weld", a: floor, b }));
+			world.removeChildNow(b, true);
+		});
+		c.onCollisionStart = once(c, () => {
+			world.removeChildNow(c, true);
+		});
+		run(world, 90);
+		expect(done.size).toBe(3);
+		for (const joint of [...made, live]) {
+			expect(joint.native).toBeNull();
+		}
+		expect(backend.jointCount(world.adapter)).toBe(0);
+		// no stale joint left in the world
+		expect(() => {
+			world.setAdapter(new MatterAdapter());
+		}).not.toThrow();
+	});
 });
 
 describe("world.setAdapter() and joints", () => {
@@ -535,12 +926,86 @@ describe("world.setAdapter() and joints", () => {
 				return JOINT_BACKENDS[1].make();
 			},
 			() => {
+				return new BuiltinAdapter();
+			},
+			() => {
 				return JOINT_BACKENDS[0].make();
 			},
 		]) {
 			world.setAdapter(next());
 			expect(world.adapter.getAngle?.(plank)).toBeCloseTo(0.5, 5);
 		}
+	});
+
+	it.each([
+		{ from: JOINT_BACKENDS[0], to: JOINT_BACKENDS[1] },
+		{ from: JOINT_BACKENDS[1], to: JOINT_BACKENDS[0] },
+	])(
+		"$from.name to $to.name: a joint on a body it refuses is dropped, and said so",
+		({ from, to }) => {
+			const world = new World(0, 0, 800, 600, from.make());
+			const { link, joint } = hangingLink(world);
+			const picky: PhysicsAdapter = to.make();
+			const addBody = picky.addBody.bind(picky);
+			picky.addBody = (renderable, def) => {
+				if (renderable === link) {
+					throw new Error("not this one");
+				}
+				return addBody(renderable, def);
+			};
+			expect(() => {
+				world.setAdapter(picky);
+			}).toThrow(
+				/could not build 1 body[\s\S]*It also dropped 1 joint on a body it could not build/,
+			);
+			expect(world.adapter).toBe(picky);
+			expect(joint.native).toBeNull();
+			expect(to.jointCount(world.adapter)).toBe(0);
+		},
+	);
+
+	it.each([
+		{ from: JOINT_BACKENDS[0], to: JOINT_BACKENDS[1] },
+		{ from: JOINT_BACKENDS[1], to: JOINT_BACKENDS[0] },
+	])(
+		"$from.name to $to.name: a joint it fails to build does not stop the switch",
+		({ from, to }) => {
+			const world = new World(0, 0, 800, 600, from.make());
+			const { link, joint } = hangingLink(world);
+			const broken: PhysicsAdapter = to.make();
+			broken.addJoint = () => {
+				throw new Error("no joints today");
+			};
+			expect(() => {
+				world.setAdapter(broken);
+			}).toThrow(/could not build 1 joint\. The first: no joints today/);
+			// the switch went through: the bodies are built, the joint is gone
+			expect(world.adapter).toBe(broken);
+			expect(world.adapter.getVelocity(link)).toBeDefined();
+			expect(link.body).toBeDefined();
+			expect(joint.native).toBeNull();
+			expect(() => {
+				world.setAdapter(new MatterAdapter());
+			}).not.toThrow();
+		},
+	);
+
+	it("a turned body the new adapter refuses is reported, not turned", () => {
+		const world = new World(0, 0, 800, 600, JOINT_BACKENDS[0].make());
+		const plank = box(300, 300, 80, 10, "static");
+		world.addChild(plank);
+		world.adapter.setAngle?.(plank, 0.5);
+		const picky: PhysicsAdapter = new BuiltinAdapter();
+		const addBody = picky.addBody.bind(picky);
+		picky.addBody = (renderable, def) => {
+			if (renderable === plank) {
+				throw new Error("not this one");
+			}
+			return addBody(renderable, def);
+		};
+		expect(() => {
+			world.setAdapter(picky);
+		}).toThrow(/could not build 1 body/);
 	});
 
 	it("to an adapter without joints: the switch completes, then throws", () => {

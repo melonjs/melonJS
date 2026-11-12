@@ -209,7 +209,16 @@ Return every renderable whose body bounds overlap the given rectangle. Useful fo
 
 ## Joints
 
-`app.world.addJoint()` joins two bodies the same way on this adapter and on `@melonjs/rapier2d-adapter` (melonJS 20.15 and later). Each joint is a Box2D joint underneath:
+`app.world.addJoint()` (melonJS 20.15 and later) joins two bodies the same way on the two adapters that have joints:
+
+| adapter | `world.addJoint()` |
+|---|---|
+| `@melonjs/planck-adapter` (this one) | ✅ hinge, rope, weld, slider |
+| `@melonjs/rapier2d-adapter` | ✅ hinge, rope, weld, slider |
+| built-in | ❌ throws |
+| `@melonjs/matter-adapter` | ❌ throws (matter's own constraints, through `adapter.matter`) |
+
+On this adapter each joint is a Box2D joint underneath:
 
 | `type` | planck joint | settings |
 |---|---|---|
@@ -246,7 +255,7 @@ app.world.removeJoint(hinge); // later
   app.world.setAdapter(await MatterAdapter.create());
   ```
 - **From a collision handler, a joint waits for the step to end.** Box2D's world is locked while it steps, so a joint made or removed in `onCollisionStart` takes effect when the step is over.
-- **The world keeps the joint.** It is removed when either body leaves the world, and built again by `world.setAdapter()` and by `updateShape()`.
+- **The world keeps the joint.** It is removed when either body leaves the world (moving it to another container of the same world is not leaving), and built again by `world.setAdapter()` and by `updateShape()`.
 - **Motors and the rest of Box2D's joint settings** are on the planck joint itself, `joint.native` (a `planck.RevoluteJoint`, …). That code is planck-only, and the setting is lost when the joint is built again.
 
 ## Direct engine access
@@ -328,7 +337,7 @@ A body with no `collisionType` is in category `0x0001` (`collision.types.PLAYER_
 - **Forces act on a body's real mass.** `applyForce(x, y)` accelerates a body by `(x, y) / mass` px/s². The mass is the density times the area in m², so a 32×32 box weighs 1 at the default density and scale. The builtin adapter adds a force to the velocity every frame, so on that box the same number is about 3600 times stronger there. For jumps and dashes use `setVelocity` (immediate) or `applyImpulse` (`Δv = J / m`, in px/s) instead.
 - **A legacy `onCollision` cannot skip the push-out.** It is called each step while two bodies touch, when the renderable has no `onCollisionActive`. Its return value is ignored, and its response is the one above, without `overlapV` or `overlapN`. Use `isSensor` or `setSensor` for one-way platforms and triggers.
 - **Move a body with `adapter.setPosition()`.** The adapter writes `renderable.pos` from the planck body after every step, so a value written to `pos` directly is undone on the next frame.
-- **`updateShape()` builds a new body.** Box2D cannot change a fixture in place, so the adapter rebuilds the body from its `bodyDef` with the new shapes. The angle and the velocity carry over, and the world builds the joints `world.addJoint()` made on the body again; joints made with `adapter.planck` and anything set on the old body at run time (`setBullet`, `setMass`, a collision filter) are lost.
+- **`updateShape()` builds a new body.** Box2D cannot change a fixture in place, so the adapter rebuilds the body from its `bodyDef` with the new shapes. The angle, the position and the velocity carry over (called from a collision handler, it waits for the step to end), and the world builds the joints `world.addJoint()` made on the body again; joints made with `adapter.planck` and anything set on the old body at run time (`setBullet`, `setMass`, a collision filter) are lost.
 
 ## Behavioural notes when porting from `@melonjs/matter-adapter`
 
