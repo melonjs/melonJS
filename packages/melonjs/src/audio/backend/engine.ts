@@ -469,7 +469,7 @@ export class AudioEngine {
 				this._audioUnlocked = true;
 				source.disconnect(0);
 
-				if (typeof document !== "undefined") {
+				if (hasDOM()) {
 					document.removeEventListener("touchstart", unlock, true);
 					document.removeEventListener("touchend", unlock, true);
 					document.removeEventListener("click", unlock, true);
@@ -493,7 +493,7 @@ export class AudioEngine {
 		// No DOM (nx.js, a Web Worker): no page for a gesture to land on, and
 		// no autoplay policy waiting for one. Unlock straight away instead of
 		// listening on a `document` that does not exist.
-		if (typeof document === "undefined") {
+		if (!hasDOM()) {
 			unlock();
 			return;
 		}

@@ -6,7 +6,7 @@
 - Loader: asset bundles, to load and free a level's assets together: `loader.preload({ common: […], level1: […] })`, then `loader.load("level1")` / `loader.unload("level1")`; an asset shared by several bundles is fetched once and freed with the last ([#1656](https://github.com/melonjs/melonJS/issues/1656))
 - Physics: `world.setAdapter()` switches the physics adapter of a running game, rebuilding every body from its `bodyDef`
 - Physics: every adapter class has `load()` and `create()` (`PhysicsAdapterClass`), so `await X.create(options)` makes any adapter the same way
-- NX.js compatibility (experimental): melonJS runs where there is no DOM, as on [nx.js](https://github.com/TooTallNate/nx.js) (JavaScript homebrew for the Nintendo Switch) or rendering in a Web Worker. Pass the display canvas as `settings.canvas` (`screen` on nx.js) and the Canvas and WebGL 2 renderers, the loader, JSON Tiled maps, touch input and audio work; there, `app.parentElement` is `undefined`, and `scale: "auto"` draws at the given size. Tested against a simulation of nx.js, not yet on Switch hardware. Browsers are unaffected
+- [nx.js](https://github.com/TooTallNate/nx.js) (the Nintendo Switch homebrew framework) and Web Workers (experimental): melonJS runs with no DOM, drawing to a canvas passed as `settings.canvas`; JSON Tiled maps, touch and audio work
 - Loader: the error a failed asset rejects `preload()` with keeps the parser's own error as its `cause`
 
 ### Changed

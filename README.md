@@ -352,9 +352,9 @@ users on browsers that need it.
 ### Running without a DOM (experimental)
 
 melonJS also runs where there is no `document` to put a canvas in: on
-[nx.js](https://github.com/TooTallNate/nx.js), JavaScript homebrew for the
-Nintendo Switch, or rendering in a Web Worker. Hand the Application the canvas
-to draw to:
+[nx.js](https://github.com/TooTallNate/nx.js) (the Nintendo Switch homebrew
+framework), or rendering in a Web Worker. Hand the Application the canvas to
+draw to:
 
 ```javascript
 const app = new Application(1280, 720, {

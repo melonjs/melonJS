@@ -32,6 +32,8 @@
  *    healthy context underneath.
  */
 
+import { hasDOM } from "../system/dom.ts";
+
 /**
  * What the owner needs from whoever is using the context, so it never has to
  * know what a `Sound` is.
@@ -146,7 +148,7 @@ export class AudioContextOwner {
 	 * cannot strand them.
 	 */
 	#arm(): void {
-		if (this.#armed || typeof document === "undefined") {
+		if (this.#armed || !hasDOM()) {
 			return;
 		}
 		this.#armed = true;

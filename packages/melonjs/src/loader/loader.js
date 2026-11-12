@@ -101,6 +101,7 @@
 import { warnOnce } from "../lang/console.js";
 import { level } from "../level/level.js";
 import state from "./../state/state.ts";
+import { hasDOM } from "../system/dom.ts";
 import {
 	emit,
 	GAME_INIT,
@@ -1700,10 +1701,7 @@ function freeAsset(asset) {
 			if (!hasAsset("fontface", asset.name)) {
 				return false;
 			}
-			if (
-				typeof globalThis.document !== "undefined" &&
-				typeof globalThis.document.fonts !== "undefined"
-			) {
+			if (hasDOM() && typeof globalThis.document.fonts !== "undefined") {
 				globalThis.document.fonts.delete(getFont(asset.name));
 				return deleteAsset("fontface", asset.name);
 			}

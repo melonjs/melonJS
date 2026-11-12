@@ -167,15 +167,13 @@ export const maxTouchPoints = touch
  * W3C standard wheel events
  */
 export const wheel =
-	typeof globalThis.document !== "undefined" &&
-	"onwheel" in globalThis.document.createElement("div");
+	hasDOM() && "onwheel" in globalThis.document.createElement("div");
 
 /**
  * Browser pointerlock api support
  */
 export const hasPointerLockSupport =
-	typeof globalThis.document !== "undefined" &&
-	typeof globalThis.document.pointerLockElement !== "undefined";
+	hasDOM() && typeof globalThis.document.pointerLockElement !== "undefined";
 
 /**
  * Browser device orientation
@@ -223,8 +221,7 @@ export const sound = hasWebAudio || hasHTML5Audio;
  * Device Video Support
  */
 export const hasVideo =
-	typeof globalThis.document !== "undefined" &&
-	!!globalThis.document.createElement("video").canPlayType;
+	hasDOM() && !!globalThis.document.createElement("video").canPlayType;
 
 /**
  * Browser Local Storage capabilities <br>
