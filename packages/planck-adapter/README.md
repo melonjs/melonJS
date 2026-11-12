@@ -207,9 +207,51 @@ adapter.queryAABB(rect: Rect) → Renderable[]
 
 Return every renderable whose body bounds overlap the given rectangle. Useful for area-of-effect damage, mouse / touch picking, trigger-zone sweeps, AI awareness checks. Portable — same call under builtin, matter, and planck. Under planck the implementation uses Box2D's native AABB query, which tests each fixture's broadphase box: that box is padded by 0.1 m, about 3 px at the default scale, so a body just outside the rectangle can be returned.
 
+## Joints
+
+`app.world.addJoint()` joins two bodies the same way on this adapter and on `@melonjs/rapier2d-adapter` (melonJS 20.15 and later). Each joint is a Box2D joint underneath:
+
+| `type` | planck joint | settings |
+|---|---|---|
+| `"hinge"` | `RevoluteJoint` | `limits`: radians, b's angle minus a's |
+| `"rope"` | `RopeJoint` | `maxLength`: pixels |
+| `"weld"` | `WeldJoint` | |
+| `"slider"` | `PrismaticJoint` | `axis`, and `limits`: pixels along the axis |
+
+```ts
+// a door hinged at its top-left corner, opening up to 90 degrees
+const hinge = app.world.addJoint({
+    type: "hinge",
+    a: frame,                 // both have a bodyDef and are in the world
+    b: door,
+    anchorA: { x: 4, y: 0 },  // pixels, in each renderable's own space (its bodyDef shapes' space)
+    anchorB: { x: 0, y: 0 },
+    limits: { min: 0, max: Math.PI / 2 },
+});
+
+app.world.removeJoint(hinge); // later
+```
+
+- **Pixels in, meters inside.** Anchors, lengths and slider limits are in pixels; the adapter converts them with `pixelsPerMeter`.
+- **Default anchors hold the bodies where they are.** `anchorB` defaults to the centre of `b`'s body, and `anchorA` to the point of `a` under it; a rope joins the two centres.
+- **The built-in and matter adapters have no joints.** There `addJoint()` throws, naming the adapter, and `capabilities.constraints` is `false`. Code meant to run on any adapter checks the flag first; a game switching to one of them with `world.setAdapter()` removes its joints before, or the switch throws once it is complete:
+
+  ```ts
+  if (app.world.adapter.capabilities.constraints) {
+      app.world.addJoint({ type: "rope", a: hook, b: lantern });
+  }
+
+  // before moving to matter, which has no joints
+  app.world.removeJoint(hinge);
+  app.world.setAdapter(await MatterAdapter.create());
+  ```
+- **From a collision handler, a joint waits for the step to end.** Box2D's world is locked while it steps, so a joint made or removed in `onCollisionStart` takes effect when the step is over.
+- **The world keeps the joint.** It is removed when either body leaves the world, and built again by `world.setAdapter()` and by `updateShape()`.
+- **Motors and the rest of Box2D's joint settings** are on the planck joint itself, `joint.native` (a `planck.RevoluteJoint`, …). That code is planck-only, and the setting is lost when the joint is built again.
+
 ## Direct engine access
 
-For planck-specific features that don't fit the portable `PhysicsAdapter` surface, such as joints and raw events, the adapter exposes two escape hatches:
+For planck-specific features that don't fit the portable `PhysicsAdapter` surface, such as joint motors, the other Box2D joints and raw events, the adapter exposes two escape hatches:
 
 ```ts
 const adapter = app.world.adapter as PlanckAdapter;
@@ -217,14 +259,13 @@ const adapter = app.world.adapter as PlanckAdapter;
 // The whole planck namespace. Modules are named exactly as in planck's docs
 // (planck.RevoluteJoint, planck.DistanceJoint, planck.Box, planck.Circle, ...).
 adapter.planck;          // typeof planck
-const bodyA = a.body as PlanckAdapter.Body;
-const joint = new adapter.planck.RevoluteJoint(
-    { collideConnected: false },
-    bodyA,
-    b.body as PlanckAdapter.Body,
-    bodyA.getPosition(),  // the pin, a world point in meters
-);
-adapter.world.createJoint(joint);
+
+// a motor on a hinge made with world.addJoint()
+const axle = app.world.addJoint({ type: "hinge", a: car, b: wheel });
+const revolute = axle.native as InstanceType<typeof adapter.planck.RevoluteJoint>;
+revolute.enableMotor(true);
+revolute.setMotorSpeed(10);
+revolute.setMaxMotorTorque(50);
 
 // The underlying planck.World instance.
 adapter.world;           // planck.World — full body / fixture / joint / contact APIs
@@ -287,7 +328,7 @@ A body with no `collisionType` is in category `0x0001` (`collision.types.PLAYER_
 - **Forces act on a body's real mass.** `applyForce(x, y)` accelerates a body by `(x, y) / mass` px/s². The mass is the density times the area in m², so a 32×32 box weighs 1 at the default density and scale. The builtin adapter adds a force to the velocity every frame, so on that box the same number is about 3600 times stronger there. For jumps and dashes use `setVelocity` (immediate) or `applyImpulse` (`Δv = J / m`, in px/s) instead.
 - **A legacy `onCollision` cannot skip the push-out.** It is called each step while two bodies touch, when the renderable has no `onCollisionActive`. Its return value is ignored, and its response is the one above, without `overlapV` or `overlapN`. Use `isSensor` or `setSensor` for one-way platforms and triggers.
 - **Move a body with `adapter.setPosition()`.** The adapter writes `renderable.pos` from the planck body after every step, so a value written to `pos` directly is undone on the next frame.
-- **`updateShape()` builds a new body.** Box2D cannot change a fixture in place, so the adapter rebuilds the body from its `bodyDef` with the new shapes. The velocity carries over; the angle resets to 0, and joints and anything set on the old body at run time (`setBullet`, `setMass`, a collision filter) are lost.
+- **`updateShape()` builds a new body.** Box2D cannot change a fixture in place, so the adapter rebuilds the body from its `bodyDef` with the new shapes. The angle and the velocity carry over, and the world builds the joints `world.addJoint()` made on the body again; joints made with `adapter.planck` and anything set on the old body at run time (`setBullet`, `setMass`, a collision filter) are lost.
 
 ## Behavioural notes when porting from `@melonjs/matter-adapter`
 
@@ -370,28 +411,50 @@ onCollisionStart(_response, _other) {
 }
 ```
 
-### Spring / hinge between two bodies (Planck-only)
+### A rope that collides (Portable)
+
+A rope that wraps around posts and drapes over crates is a chain of small bodies, each hinged to the next. The links collide like any body; a rope joint from the hook to the last link stops the chain stretching.
+
+```ts
+class Link extends Renderable {
+    constructor(x: number, y: number) {
+        super(x, y, 6, 16);
+        this.bodyDef = { type: "dynamic", shapes: [new Rect(0, 0, 6, 16)] };
+    }
+}
+
+// `hook` has a static bodyDef and is already in the world
+let previous: Renderable = hook;
+for (let i = 0; i < 12; i++) {
+    const link = app.world.addChild(new Link(hook.pos.x, hook.pos.y + 8 + i * 16));
+    app.world.addJoint({ type: "hinge", a: previous, b: link, anchorB: { x: 3, y: 0 } });
+    previous = link;
+}
+app.world.addJoint({ type: "rope", a: hook, b: previous, anchorB: { x: 3, y: 16 } });
+```
+
+Joined links do not collide with each other (`collideConnected` is `false`). Links further apart still do: give the links a `collisionType` that their `collisionMask` leaves out if the rope should pass through itself.
+
+### Spring between two bodies (Planck-only)
 
 ```ts
 const adapter = app.world.adapter as PlanckAdapter;
-if (adapter.capabilities.constraints) {
-    const anchorBody = anchor.body as PlanckAdapter.Body;
-    const playerBody = player.body as PlanckAdapter.Body;
-    const joint = adapter.world.createJoint(new adapter.planck.DistanceJoint(
-        {
-            length: 80 / adapter.pixelsPerMeter,  // remember: planck wants meters
-            frequencyHz: 4,                       // 0 = rigid, higher = stiffer
-            dampingRatio: 0.5,
-        },
-        anchorBody,
-        playerBody,
-        anchorBody.getPosition(),             // world points, in meters
-        playerBody.getPosition(),
-    ));
-}
+const anchorBody = anchor.body as PlanckAdapter.Body;
+const playerBody = player.body as PlanckAdapter.Body;
+const joint = adapter.world.createJoint(new adapter.planck.DistanceJoint(
+    {
+        length: 80 / adapter.pixelsPerMeter,  // remember: planck wants meters
+        frequencyHz: 4,                       // 0 = rigid, higher = stiffer
+        dampingRatio: 0.5,
+    },
+    anchorBody,
+    playerBody,
+    anchorBody.getPosition(),             // world points, in meters
+    playerBody.getPosition(),
+));
 ```
 
-For a revolute (pin) joint use `planck.RevoluteJoint`; for a prismatic (slider) joint use `planck.PrismaticJoint`. The full Box2D joint set is exposed via `adapter.planck.*`.
+A hinge, a rope, a weld and a slider are portable through `world.addJoint()` (see [Joints](#joints)). The rest of the Box2D joint set (distance, wheel, pulley, gear, motor, mouse, friction) is exposed via `adapter.planck.*`; the world does not keep those joints, so remove them yourself with `adapter.world.destroyJoint()` when you no longer need them.
 
 ### CCD for fast objects (Planck-only)
 

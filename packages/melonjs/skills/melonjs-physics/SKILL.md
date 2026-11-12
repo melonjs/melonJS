@@ -1,6 +1,6 @@
 ---
 name: melonjs-physics
-description: "Use this skill for collision, physics bodies, movement, and spatial queries in melonJS — the built-in SAT world and the planck, matter and Rapier adapters. Covers bodyDef vs Body, collision types and masks, the collision callback family and their firing rules, raycast/queryAABB/querySphere, the behaviour differences between adapters, and which one to pick for a given game. Triggers on: which physics engine, choosing an adapter, switching adapters, setAdapter, PhysicsAdapterClass, create, rotation collision, rotating body, torque, joints, stacking, Body, bodyDef, collision, collisionType, collisionMask, onCollision, onCollisionStart, onCollisionActive, raycast, queryAABB, querySphere, raycast3d, PlanckAdapter, MatterAdapter, RapierAdapter, rapier2d, enableCcd, gravity, velocity, applyForce, isGrounded, isSensor, isTrigger, onShapeCollisionStart, kinematic, subSteps, pixelsPerMeter, Box3d, Sphere, getBodyShapes, hitbox offset, slope, SAT."
+description: "Use this skill for collision, physics bodies, movement, and spatial queries in melonJS — the built-in SAT world and the planck, matter and Rapier adapters. Covers bodyDef vs Body, collision types and masks, the collision callback family and their firing rules, raycast/queryAABB/querySphere, the behaviour differences between adapters, and which one to pick for a given game. Triggers on: which physics engine, choosing an adapter, switching adapters, setAdapter, PhysicsAdapterClass, create, rotation collision, rotating body, torque, joints, addJoint, removeJoint, hinge, rope, weld, slider, stacking, Body, bodyDef, collision, collisionType, collisionMask, onCollision, onCollisionStart, onCollisionActive, raycast, queryAABB, querySphere, raycast3d, PlanckAdapter, MatterAdapter, RapierAdapter, rapier2d, enableCcd, gravity, velocity, applyForce, isGrounded, isSensor, isTrigger, onShapeCollisionStart, kinematic, subSteps, pixelsPerMeter, Box3d, Sphere, getBodyShapes, hitbox offset, slope, SAT."
 license: MIT
 ---
 
@@ -94,7 +94,7 @@ an import change and a gravity re-tune.
 | stacking, towers, catapult and destruction puzzles | planck, or Rapier for many pieces | an iterative solver keeps a pile crisp; Rapier is built for many bodies at once |
 | pool, billiards, mini-golf: few bodies, a capped top speed | any rigid-body adapter, matter included | give matter enough `subSteps` that a ball moves less than its radius per sub-step: the `pool-matter` example's break, about 30 px a frame on 16 px balls, runs on 2 |
 | pinball, physical bullets: bodies much faster than their own size, with no useful cap | planck or Rapier | continuous collision (planck's `setBullet`, Rapier's `enableCcd`); matter has none, and each sub-step is a full extra solve |
-| vehicles, ragdolls, ropes, chains | planck or Rapier | joint solvers; on every adapter a joint is made through the engine's own API |
+| vehicles, ragdolls, ropes, chains, doors, lifts | planck or Rapier | `world.addJoint()` makes hinge, rope, weld and slider joints the same way on both; matter has only its own constraints, through `adapter.matter` |
 | casual physics toy, prototype, game jam | matter | it works in pixels, so there is nothing to convert; its softer stacking does not show |
 | sandbox with lots of debris | Rapier | many bodies at once, concave pieces simulated exactly |
 | playable ad, size-capped portal, instant load | built-in, not Rapier | Rapier downloads and compiles about 3 MB of WebAssembly |
@@ -206,12 +206,18 @@ app.world.setAdapter(await MatterAdapter.create({ gravity: { x: 0, y: 1 } }));
 ```
 
 The old adapter is destroyed, and the new one builds every body in the world
-again from its renderable's `bodyDef`, where the renderable stands.
+again from its renderable's `bodyDef`, where the renderable stands and at
+the angle its body had.
 `world.physic` takes the new adapter's label.
 
-- Nothing else carries over: velocities, forces, contacts and joints start
-  from rest, and gravity is the new adapter's own, in its own unit (see the
-  table above).
+- The joints `world.addJoint()` made are built again too, after the bodies,
+  and the handles keep working (see [Joints](#joints-hinges-ropes-welds-and-sliders)).
+  Switching to an adapter without joints (built-in, matter) drops them, and
+  `setAdapter()` throws once the switch is complete; remove them first with
+  `world.removeJoint()` when the switch is meant.
+- Nothing else carries over: velocities, forces and contacts start from rest,
+  and gravity is the new adapter's own, in its own unit (see the table
+  above).
 - A body added with a direct `adapter.addBody()` call rather than a `bodyDef`
   is not built again. A legacy `Body` without a `bodyDef` works on the
   built-in adapter only.
@@ -311,7 +317,8 @@ without shrinking the body's bounds, on every backend. matter, planck and
 Rapier read it only when the body is built, so after changing it call
 `app.world.adapter.updateShape(renderable, renderable.bodyDef.shapes)`, which
 works on every adapter. On those three `updateShape()` builds a new body: its
-velocity carries over, its angle and any joints do not. The built-in also
+velocity carries over, and on planck and Rapier its angle and the joints
+`world.addJoint()` made too; on matter the angle does not. The built-in also
 reads `isActive` live, from the shapes the body holds; those are not always
 the ones you authored, since a `Rect` is stored as a converted `Polygon`, so
 toggle `body.getShape(i)` there.
@@ -574,6 +581,93 @@ back onto `renderable.pos` after every step, so a direct write is simply erased
 — no error. The built-in world integrates `pos` in place instead, so a write
 survives but fights collision resolution and jitters. To teleport, go through
 `adapter.setPosition(renderable, p)` so the engine body moves with it.
+
+## Joints: hinges, ropes, welds and sliders
+
+`app.world.addJoint(definition)` joins two bodies, the same way on the planck
+and Rapier adapters (`capabilities.constraints` is `true`); each builds its
+engine's own joint. On the built-in and matter adapters it throws, naming the
+adapter: code meant to run on any adapter checks `capabilities.constraints`
+first. matter's own constraints are still there through `adapter.matter`, but
+that code is matter-only.
+
+```ts
+if (app.world.adapter.capabilities.constraints) {
+    app.world.addJoint({ type: "rope", a: hook, b: lantern });
+} else {
+    // the built-in or matter adapter: hang the lantern some other way
+}
+```
+
+| `type` | what it does | settings |
+|---|---|---|
+| `"hinge"` | the bodies share a point and turn about it: chain links, doors, wheels | `limits`: b's angle minus a's, in radians |
+| `"rope"` | the anchors stay within `maxLength` of each other, and can come closer | `maxLength` in pixels; default the distance when made |
+| `"weld"` | the bodies move as one, in the pose they had when joined | |
+| `"slider"` | b slides along `axis` and keeps a's angle: lifts, pistons | `axis` in a's space; `limits` in pixels along it |
+
+- **Add both renderables first.** The joint needs their bodies, which
+  `addChild()` builds; `addJoint()` throws for a renderable not in the world,
+  and for an unknown `type`.
+- **Anchors are in pixels, in each renderable's own space**: the space its
+  `bodyDef` shapes are written in, so `{ x: 0, y: 0 }` is the top-left of its
+  drawn frame whatever its `anchorPoint`.
+- **Default anchors hold the bodies where they stand.** `anchorB` defaults to
+  the centre of b's body and `anchorA` to the point of a under it; a rope
+  joins the two centres. A slider's `limits` then count from where b starts.
+- **`collideConnected`** defaults to `false`: the two joined bodies pass
+  through each other.
+
+```ts
+// a chain of 6 x 16 links hanging from a static hook, all with a bodyDef
+app.world.addChild(hook);
+let previous = hook;
+for (let i = 0; i < 8; i++) {
+    const link = app.world.addChild(new Link(x, y + 8 + i * 16));
+    app.world.addJoint({ type: "hinge", a: previous, b: link, anchorB: { x: 3, y: 0 } });
+    previous = link;
+}
+// a rope from the hook to the last link keeps the chain from stretching
+app.world.addJoint({ type: "rope", a: hook, b: previous, anchorB: { x: 3, y: 16 } });
+
+// a door that opens up to 90 degrees, hinged at its top-left corner
+app.world.addJoint({
+    type: "hinge", a: frame, b: door,
+    anchorB: { x: 0, y: 0 }, limits: { min: 0, max: Math.PI / 2 },
+});
+
+// a plank glued to a wall, that breaks off
+const glue = app.world.addJoint({ type: "weld", a: wall, b: plank });
+app.world.removeJoint(glue);
+```
+
+A rope that collides is the chain above: each link is an ordinary body, so it
+collides with whatever its `collisionMask` allows and fires the usual hooks.
+Joined links do not collide with each other; links further apart do, so give
+the links a collision type their mask leaves out if the rope should pass
+through itself.
+
+The world keeps the joints it made:
+
+- a joint is removed when either body leaves the world, and re-adding the
+  body does not bring it back;
+- `world.setAdapter()` builds every joint again on the new adapter, after the
+  bodies; `updateShape()`, which rebuilds the body on planck and Rapier,
+  builds its joints again too;
+- the handle (`PhysicsJoint`) stays the same object throughout. Its `native`
+  is the engine's joint (a `planck.RevoluteJoint`, a Rapier `ImpulseJoint`),
+  replaced on each rebuild, and `null` once the joint is removed.
+  `removeJoint()` is safe to call twice, or on a joint its body took with it.
+
+The engines differ at the edges. On planck, a joint made or removed in a
+collision handler takes effect when the step ends, as Box2D locks its world
+while it steps. On Rapier, limits are soft: a fast body passes a hinge or
+slider limit by a few pixels for a frame before it is pushed back.
+
+What `addJoint()` does not wrap (motors, springs, the other Box2D joints) is
+the engine's own API, through `joint.native` or `adapter.planck` /
+`adapter.rapier`. That code is engine-specific, and a setting made on
+`joint.native` is lost when the joint is built again.
 
 ## Collision callbacks — which one to use
 
@@ -1016,16 +1110,18 @@ Rapier's escapes are `adapter.rapier` (the Rapier module) and `adapter.world`
 const adapter = app.world.adapter as RapierAdapter;
 const { rapier, world } = adapter;
 (bullet.body as RapierAdapter.Body).enableCcd(true);    // continuous collision
-const hinge = rapier.JointData.revolute({ x: 0, y: 0 }, { x: 0, y: 0 }); // metres, body-local
-world.createImpulseJoint(hinge, door.body as RapierAdapter.Body, frame.body as RapierAdapter.Body, true);
+const spring = rapier.JointData.spring(2.5, 50, 1, { x: 0, y: 0 }, { x: 0, y: 0 }); // metres, body-local
+world.createImpulseJoint(spring, anchor.body as RapierAdapter.Body, player.body as RapierAdapter.Body, true);
 const controller = world.createCharacterController(0.01);   // 0.01 m skin
 ```
 
-The other joints are `JointData.fixed`, `spring`, `rope` and `prismatic`.
+A hinge, rope, weld or slider is portable through `world.addJoint()` (see
+[Joints](#joints-hinges-ropes-welds-and-sliders)); a spring is Rapier's own.
 Rapier's objects live in WebAssembly memory, which the garbage collector does
 not reclaim. The adapter's `destroy()`, which `setAdapter()` calls on the
-adapter it replaces, frees its world; free a joint or a character controller
-you made yourself with `world.removeImpulseJoint()` /
+adapter it replaces, frees its world, and the joints `world.addJoint()` made
+are freed with their bodies; free a joint or a character controller you made
+yourself through `adapter.world` with `world.removeImpulseJoint()` /
 `world.removeCharacterController()`.
 
 ## Symptom → cause
@@ -1035,6 +1131,14 @@ you made yourself with `world.removeImpulseJoint()` /
 | entity jitters or does not move | assigning `pos` instead of applying force |
 | `world.adapter = …` throws a `TypeError` | `world.adapter` is read-only; call `world.setAdapter(adapter)` |
 | a body stops simulating after `world.setAdapter()` | it was added with a direct `adapter.addBody()`; give it a `bodyDef` |
+| `addJoint()` throws "the builtin adapter has none" (or matter) | the adapter has no joints (`capabilities.constraints` is `false`); use planck or Rapier, or check the flag first |
+| `setAdapter()` throws "dropped N joints" | the new adapter has no joints; the switch went through without them. Remove them with `world.removeJoint()` before switching |
+| `addJoint()` throws "needs both renderables to have a body" | a renderable is not in the world yet: `addChild()` both first |
+| two bodies jump together, or swing about the wrong point, when joined | anchors given in the wrong space: they are pixels in each renderable's own (`bodyDef` shape) space; leave `anchorA` out to join at b's anchor where it stands |
+| a weld pulls the two bodies onto each other | both anchors given as each body's centre; leave `anchorA` out |
+| a joint motor or a setting on `joint.native` stops working after `setAdapter()` or `updateShape()` | the joint was built again, with a new `native`; set it again |
+| the links of a rope push each other apart or tangle | links that are not joined still collide; give them a collision type their mask leaves out |
+| a matter constraint outlives its body, or is gone after `setAdapter()` | it is matter's own, not the world's; remove it with `adapter.matter.Composite.remove()` |
 | collision handler runs twice per frame | legacy `onCollision` on a dynamic pair (built-in) — use `onCollisionActive` |
 | `return false` from a handler does nothing | return values are only honoured by legacy `onCollision` — use `isSensor` / `isTrigger` |
 | crash or a null body when spawning from `onCollisionStart` | world mutated during contact dispatch (locked world under planck) |

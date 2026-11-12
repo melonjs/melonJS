@@ -335,6 +335,19 @@ export function registerTreeBodies(node, worldContainer, refused) {
 }
 
 /**
+ * Whether the engine registered a body for this renderable with the given
+ * world, from its `bodyDef` or legacy `Body`.
+ * @ignore
+ * @internal
+ * @param {Renderable} node - the renderable
+ * @param {Container} worldContainer - the root world container
+ * @returns {boolean}
+ */
+export function hasRegisteredBody(node, worldContainer) {
+	return registeredBodies.get(node) === worldContainer;
+}
+
+/**
  * Take a renderable's physics body out of the simulation: from the world the
  * engine registered it with, or — for a body registered some other way, such
  * as a direct `adapter.addBody()` call — from the world the renderable is
@@ -348,6 +361,8 @@ function unregisterBody(node, root) {
 	if (registeredBodies.has(node)) {
 		const registeredWith = registeredBodies.get(node);
 		if (registeredWith) {
+			// its joints first: they hold the body
+			registeredWith._removeJointsOf?.(node);
 			if (registeredWith.adapter?.removeBody) {
 				registeredWith.adapter.removeBody(node);
 			} else if (node.body instanceof Body) {
@@ -367,8 +382,9 @@ function unregisterBody(node, root) {
 	// either way the adapter knows how to clean it up by renderable identity
 	// (and does nothing for one it does not hold).
 	if (node.body) {
-		/** @type {{ adapter?: { removeBody?: (r: object) => void } }} */
+		/** @type {{ adapter?: { removeBody?: (r: object) => void }, _removeJointsOf?: (r: object) => void }} */
 		const world = root;
+		world?._removeJointsOf?.(node);
 		if (world?.adapter?.removeBody) {
 			world.adapter.removeBody(node);
 		} else if (node.body instanceof Body) {

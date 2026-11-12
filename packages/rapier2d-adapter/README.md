@@ -217,6 +217,47 @@ app.world.adapter.setCollisionMask(renderable, collision.types.ENEMY_OBJECT | co
 
 A body with no `collisionType` is `PLAYER_OBJECT`, as on the matter and planck adapters, where the built-in adapter defaults to `ENEMY_OBJECT`: set it on any body whose filtering matters.
 
+## Joints
+
+`app.world.addJoint()` joins two bodies the same way on this adapter and on `@melonjs/planck-adapter` (melonJS 20.15 and later). Each joint is a Rapier impulse joint underneath:
+
+| `type` | Rapier joint | settings |
+|---|---|---|
+| `"hinge"` | revolute | `limits`: radians, b's angle minus a's |
+| `"rope"` | rope | `maxLength`: pixels |
+| `"weld"` | fixed | |
+| `"slider"` | prismatic | `axis`, and `limits`: pixels along the axis |
+
+```ts
+// a lift that only moves up and down, at most 200 px above where it starts
+const lift = app.world.addJoint({
+    type: "slider",
+    a: shaft,                // both have a bodyDef and are in the world
+    b: cabin,
+    axis: { x: 0, y: 1 },
+    limits: { min: -200, max: 0 },
+});
+
+app.world.removeJoint(lift); // later
+```
+
+- **Pixels in, meters inside.** Anchors, lengths and slider limits are in pixels, anchors in each renderable's own space (its `bodyDef` shapes' space); the adapter converts them with `pixelsPerMeter`.
+- **Default anchors hold the bodies where they are.** `anchorB` defaults to the centre of `b`'s body, and `anchorA` to the point of `a` under it; a rope joins the two centres.
+- **The built-in and matter adapters have no joints.** There `addJoint()` throws, naming the adapter, and `capabilities.constraints` is `false`. Code meant to run on any adapter checks the flag first; a game switching to one of them with `world.setAdapter()` removes its joints before, or the switch throws once it is complete:
+
+  ```ts
+  if (app.world.adapter.capabilities.constraints) {
+      app.world.addJoint({ type: "rope", a: hook, b: lantern });
+  }
+
+  // before moving to matter, which has no joints
+  app.world.removeJoint(lift);
+  app.world.setAdapter(await MatterAdapter.create());
+  ```
+- **Limits are soft.** A body moving fast can pass a hinge or slider limit by a few pixels for a frame before Rapier pushes it back.
+- **The world keeps the joint.** It is removed when either body leaves the world, and built again by `world.setAdapter()` and by `updateShape()`. Its WebAssembly memory is freed with it.
+- **Motors and the rest of Rapier's joint settings** are on the Rapier joint itself, `joint.native` (a `RevoluteImpulseJoint`, …). That code is Rapier-only, and the setting is lost when the joint is built again.
+
 ## Rapier features
 
 For what the portable interface does not cover, the adapter exposes Rapier itself: `adapter.rapier` is the Rapier module, and `adapter.world` the Rapier world. Code that uses them is Rapier-only; to branch without importing the class, test `app.world.physic === "rapier"`.
@@ -229,12 +270,12 @@ const { rapier, world } = adapter;
 // through a thin one
 (bullet.body as RapierAdapter.Body).enableCcd(true);
 
-// a hinge between two bodies, at their centres (in meters, body-local)
-const params = rapier.JointData.revolute({ x: 0, y: 0 }, { x: 0, y: 0 });
-world.createImpulseJoint(
+// a spring between two bodies, at their centres (in meters, body-local)
+const params = rapier.JointData.spring(2.5, 50, 1, { x: 0, y: 0 }, { x: 0, y: 0 });
+const spring = world.createImpulseJoint(
     params,
-    door.body as RapierAdapter.Body,
-    frame.body as RapierAdapter.Body,
+    anchor.body as RapierAdapter.Body,
+    player.body as RapierAdapter.Body,
     true,
 );
 
@@ -242,9 +283,9 @@ world.createImpulseJoint(
 const controller = world.createCharacterController(0.01);
 ```
 
-Rapier's other joint types are `JointData.fixed`, `spring`, `rope` and `prismatic`. Bodies sleep when they come to rest and wake on contact; `body.sleep()` and `body.wakeUp()` force it. Rapier gives the same simulation for the same inputs on the same build and platform; bit-identical results across platforms need Rapier's separate `-deterministic` build, which this adapter does not use.
+A hinge, a rope, a weld and a slider are portable through `world.addJoint()` (see [Joints](#joints)); a spring is Rapier's own. Bodies sleep when they come to rest and wake on contact; `body.sleep()` and `body.wakeUp()` force it. Rapier gives the same simulation for the same inputs on the same build and platform; bit-identical results across platforms need Rapier's separate `-deterministic` build, which this adapter does not use.
 
-Rapier's objects live in WebAssembly memory, which the garbage collector does not reclaim. The adapter frees them in `destroy()`, which `app.world.setAdapter()` calls on the adapter it replaces. Free a joint or a character controller you created yourself with `world.removeImpulseJoint()` / `world.removeCharacterController()`.
+Rapier's objects live in WebAssembly memory, which the garbage collector does not reclaim. The adapter frees them in `destroy()`, which `app.world.setAdapter()` calls on the adapter it replaces. Free a joint or a character controller you created yourself through `adapter.world` with `world.removeImpulseJoint()` / `world.removeCharacterController()`; the joints `app.world.addJoint()` made are freed for you.
 
 ## Porting from the other adapters
 
@@ -256,7 +297,7 @@ The `bodyDef`s and hooks carry over. What changes:
 - **Concave polygons are exact**, where planck replaces one with its convex hull.
 - **`isGrounded`** counts a touching contact that pushes the body up: slopes up to about 84° count, walls do not. A sensor contact counts when the sensor's centre is below the body's.
 - **Pausing stops the whole simulation**, as on matter and planck; the built-in adapter keeps moving a renderable with `updateWhenPaused`.
-- **`updateShape()` builds a new body** from the `bodyDef`: the velocity carries over; the angle, joints and anything changed at run time do not.
+- **`updateShape()` builds a new body** from the `bodyDef`: the angle and the velocity carry over, and the world builds the joints `world.addJoint()` made on the body again; joints made through `adapter.world` and anything changed at run time do not.
 
 ## Examples
 

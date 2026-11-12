@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.8.0 - _unreleased_
+
+### Added
+- Joints through `world.addJoint()` (melonJS 20.15): a `"hinge"` is a `RevoluteJoint`, a `"rope"` a `RopeJoint`, a `"weld"` a `WeldJoint` and a `"slider"` a `PrismaticJoint`, in pixels and radians. A joint made or removed during a step, from a collision handler, takes effect when the step ends; `updateShape()` keeps a body's joints
+
+### Fixed
+- `updateShape()` keeps the body's angle; the new body was built upright
+
 ## 1.7.0 - _2026-11-12_
 
 ### Added

@@ -52,7 +52,7 @@ loader.preload([{ name: "player", type: "image", src: "player.png" }], () => {
 | **Text** | `Text` and `BitmapText`, with a typewriter effect, per-glyph wave, shake and color effects, gradient fills and outlines |
 | **Camera** | Several cameras at once (split screen, minimaps) with per-camera visibility layers, follow with a deadzone and damping, shake, fade and flash, and screen transitions (fade, mask, pixelate) |
 | **Lighting** | `Light2d` with normal-mapped sprites, and `Light3d` directional, point, spot and ambient lights, up to 32 at once |
-| **Physics** | Built-in SAT collision with gravity, per-shape collision settings and shape-level collision events, and a {@link PhysicsAdapter | PhysicsAdapter} interface for Box2D (planck), Matter.js or Rapier, switchable while the game runs with `world.setAdapter()` |
+| **Physics** | Built-in SAT collision with gravity, per-shape collision settings and shape-level collision events, and a {@link PhysicsAdapter | PhysicsAdapter} interface for Box2D (planck), Matter.js or Rapier, switchable while the game runs with `world.setAdapter()`, and hinge, rope, weld and slider joints with {@link World#addJoint | world.addJoint()} on planck and Rapier |
 | **Audio** | Web Audio API with format fallback, spatial audio that follows a renderable, audio sprites, plus procedural tone and noise generation |
 | **Input** | Keyboard, mouse, touch, gamepad (with vibration), drag and drop |
 | **Assets** | An awaitable loader with progress, asset bundles loaded and freed together, and custom asset types |

@@ -515,7 +515,12 @@ export interface BodyDefinitionInit extends Omit<BodyDefinition, "shapes"> {
  * a feature isn't available under the active adapter.
  */
 export interface AdapterCapabilities {
-	/** supports joints, springs, hinges, etc. */
+	/**
+	 * supports {@link World#addJoint}: hinge, rope, weld and slider joints.
+	 * `true` on the planck and Rapier adapters. On the others
+	 * `world.addJoint()` throws, so code meant to run on any adapter checks
+	 * this first.
+	 */
 	constraints: boolean;
 	/** supports continuous collision detection for fast-moving bodies */
 	continuousCollisionDetection: boolean;
@@ -585,15 +590,104 @@ export interface RaycastHit3d {
 }
 
 /**
+ * The kinds of joint {@link World#addJoint} makes. Each maps to the same
+ * joint in every engine that has joints:
+ * - `"hinge"`: the two bodies share a point and turn freely about it (a
+ *   chain link, a door, a wheel). Optional `limits` bound the angle.
+ * - `"rope"`: the anchors stay within `maxLength` of each other, and can
+ *   come closer (a pendulum, a grappling hook, a cap on a chain's length).
+ * - `"weld"`: the two bodies move and turn as one, as they stand when the
+ *   joint is made (parts glued together that can break apart).
+ * - `"slider"`: the second body slides along `axis` and keeps its angle (a
+ *   lift, a piston). Optional `limits` bound the travel.
+ */
+export type JointType = "hinge" | "rope" | "weld" | "slider";
+
+/**
+ * What {@link World#addJoint} joins, and how. Distances are in pixels and
+ * angles in radians, as everywhere else in melonJS; the adapter converts them
+ * to its engine's units. Anchors are points in each renderable's own space,
+ * the space its `bodyDef` shapes are written in.
+ * @example
+ * // a door that opens up to 90 degrees, hinged at its top-left corner
+ * app.world.addJoint({
+ *     type: "hinge",
+ *     a: frame,
+ *     b: door,
+ *     anchorA: { x: 4, y: 0 },
+ *     anchorB: { x: 0, y: 0 },
+ *     limits: { min: 0, max: Math.PI / 2 },
+ * });
+ */
+export interface JointDefinition {
+	/** the kind of joint */
+	type: JointType;
+	/** the first body: a renderable with a body in the world */
+	a: Renderable;
+	/**
+	 * the second body. To pin `a` to a fixed point, join it to a renderable
+	 * with a `"static"` body.
+	 */
+	b: Renderable;
+	/**
+	 * where the joint holds `a`, in `a`'s own space. Default: the point of
+	 * `a` under `b`'s anchor when the joint is made, so nothing moves; for a
+	 * `"rope"`, the centre of `a`'s body.
+	 */
+	anchorA?: { x: number; y: number };
+	/** where the joint holds `b`, in `b`'s own space; default: the centre of its body */
+	anchorB?: { x: number; y: number };
+	/** whether `a` and `b` still collide with each other; default `false` */
+	collideConnected?: boolean;
+	/**
+	 * `"hinge"`: the range of `b`'s angle minus `a`'s, in radians.
+	 * `"slider"`: the range of travel along `axis`, in pixels, measured
+	 * between the two anchors: from where `b` starts, when `anchorA` is left
+	 * out. Unbounded when left out.
+	 */
+	limits?: { min: number; max: number };
+	/** `"rope"`: the most the anchors can be apart, in pixels; default: their distance when the joint is made */
+	maxLength?: number;
+	/** `"slider"`: the direction `b` slides in, in `a`'s own space; default: along x */
+	axis?: { x: number; y: number };
+}
+
+/**
+ * A joint {@link World#addJoint} made. Keep it to remove the joint with
+ * {@link World#removeJoint}.
+ * @example
+ * const rope = app.world.addJoint({ type: "rope", a: hook, b: lantern });
+ * rope.definition.maxLength; // the length it was given, or the distance when it was made
+ * app.world.removeJoint(rope);
+ * rope.native; // null once removed
+ */
+export interface PhysicsJoint {
+	/**
+	 * what the joint was made from: a copy of the definition given, with the
+	 * defaults filled in (`anchorA`, a rope's `maxLength`).
+	 * {@link World#setAdapter} rebuilds the joint from it.
+	 */
+	readonly definition: JointDefinition;
+	/**
+	 * The engine's own joint: a `planck.Joint` or a Rapier `ImpulseJoint`,
+	 * for what the shared definition does not cover (a motor, for example).
+	 * Changes made to it are not kept when {@link World#setAdapter} rebuilds
+	 * the joint, and it is `null` once the joint is removed.
+	 */
+	readonly native: unknown;
+}
+
+/**
  * Swappable physics engine integration. `BuiltinAdapter` ships with
  * melonjs and wraps the engine's native SAT-based physics; third-party
  * adapters (e.g. `@melonjs/matter-adapter`) implement this interface to
  * plug a different engine in.
  *
- * **Lifecycle contract:** one adapter per {@link World}, instantiated and
- * passed to `Application` at construction, never swapped at runtime.
- * Adapter state (bodies, constraints, sleeping flags, etc.) does not
- * migrate between adapters.
+ * **Lifecycle contract:** one adapter per {@link World} at a time, passed
+ * to `Application` at construction or swapped in later with
+ * {@link World#setAdapter}. A swap rebuilds every body from its `bodyDef`
+ * and every joint from its {@link JointDefinition}; the rest of an
+ * adapter's state (velocities, contacts, sleeping flags) does not carry over.
  *
  * **Body handle convention:** {@link PhysicsAdapter.addBody} returns an
  * opaque handle that becomes `renderable.body`. Each adapter chooses its
@@ -713,6 +807,25 @@ export interface PhysicsAdapter {
 
 	/** Replace the body's collision geometry without re-creating the body. */
 	updateShape?(renderable: Renderable, shapes: BodyShape[]): void;
+
+	/**
+	 * Make a joint between the bodies of `def.a` and `def.b` and return the
+	 * engine's own joint, or `null` when this adapter has no joints
+	 * (`capabilities.constraints` is `false`), which makes
+	 * {@link World#addJoint} throw. Called by
+	 * {@link World#addJoint}, which game code uses instead: the world keeps
+	 * the joint, rebuilds it on {@link World#setAdapter} and removes it with
+	 * its bodies. The adapter writes the defaults it resolves (`anchorA`, a
+	 * rope's `maxLength`) onto `def`, the world's own copy, so that a rebuild
+	 * makes the same joint.
+	 */
+	addJoint?(def: JointDefinition): unknown;
+
+	/**
+	 * Remove a joint {@link PhysicsAdapter.addJoint} made. Does nothing on an
+	 * adapter without joints. Called by {@link World#removeJoint}.
+	 */
+	removeJoint?(joint: unknown): void;
 
 	/**
 	 * Portable velocity / force / position API. Every adapter implements

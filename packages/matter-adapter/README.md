@@ -320,18 +320,18 @@ Matter constraints are reached via the adapter's `matter` escape hatch — no ne
 
 ```ts
 const adapter = app.world.adapter as MatterAdapter;
-if (adapter.capabilities.constraints) {
-    const spring = adapter.matter.Constraint.create({
-        bodyA: anchor.body as MatterAdapter.Body,
-        bodyB: player.body as MatterAdapter.Body,
-        stiffness: 0.04,    // 0 = floppy rope, 1 = rigid rod
-        length: 80,
-    });
-    adapter.matter.Composite.add(adapter.engine.world, spring);
-}
+const spring = adapter.matter.Constraint.create({
+    bodyA: anchor.body as MatterAdapter.Body,
+    bodyB: player.body as MatterAdapter.Body,
+    stiffness: 0.04,    // 0 = floppy rope, 1 = rigid rod
+    length: 80,
+});
+adapter.matter.Composite.add(adapter.engine.world, spring);
 ```
 
 Use `stiffness: 1` for a rigid hinge, low `stiffness` (~0.01–0.05) for spring-like behaviour. Set `pointA` / `pointB` to attach the constraint at a point offset from each body's centre.
+
+melonJS's shared joints, `app.world.addJoint()`, are not supported on matter: there it throws, and `capabilities.constraints` is `false`. They need `@melonjs/planck-adapter` or `@melonjs/rapier2d-adapter`; a game moving to matter with `world.setAdapter()` removes its joints first, or the switch throws once it is complete. A matter constraint like the one above is matter's own: the world does not keep it, so `world.setAdapter()` does not carry it over, and it is not removed with its bodies (remove it with `adapter.matter.Composite.remove()`).
 
 ### Sleeping bodies (Matter-only)
 
@@ -631,7 +631,8 @@ class Player extends Sprite {
 | `fixedRotation` default | n/a (SAT bodies don't rotate) | `false` — matches matter. Set `true` for bodies that must stay upright |
 | Continuous collision detection | ❌ | ❌ (raise `subSteps` for fast bodies) |
 | Sleeping bodies | ❌ | ✅ |
-| Constraints (springs, joints) | ❌ | ✅ via `Matter.Constraint` (reach via `adapter.matter`) |
+| Joints through `world.addJoint()` | ❌ (throws) | ❌ (throws); use planck or Rapier |
+| Constraints (springs, hinges) | ❌ | ✅ via `Matter.Constraint` (reach via `adapter.matter`) |
 | `applyForce` units | px/frame² | matter Newtonian |
 | Default `collisionType` | `ENEMY_OBJECT` | `PLAYER_OBJECT` (matter's category `0x0001`) |
 | `updateWhenPaused` under `state.pause()` | the renderable keeps moving | ignored: the whole simulation stops |
