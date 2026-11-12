@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.10" orientation="orthogonal" renderorder="right-down" width="1" height="1" tilewidth="32" tileheight="32" infinite="0" nextlayerid="2" nextobjectid="1">
+ <layer id="1" name="ground" width="1" height="1">
+  <data encoding="csv">0</data>
+ </layer>
+</map>

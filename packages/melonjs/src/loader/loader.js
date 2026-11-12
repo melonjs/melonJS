@@ -101,6 +101,7 @@
 import { warnOnce } from "../lang/console.js";
 import { level } from "../level/level.js";
 import state from "./../state/state.ts";
+import { hasDOM } from "../system/dom.ts";
 import {
 	emit,
 	GAME_INIT,
@@ -746,14 +747,19 @@ function onResourceLoaded(res, counts) {
  * @param {object} call - the preload call it belonged to
  * @param {{pin: boolean, bundles: Map<string, number>}} [owner] - who asked
  * for it, so a successful {@link loader.reload} hands it to them
+ * @param {*} [cause] - the parser's own error, kept as the thrown error's
+ * `cause`: the message only names the asset, the cause says what went wrong
  * @ignore
  * @internal
  */
-function onLoadingError(res, call, owner) {
+function onLoadingError(res, call, owner, cause) {
 	failureLoadedAssets[res.src] = { asset: res, call, owner };
 	call.failed.add(res.src);
 	emit(LOADER_ERROR, res);
-	throw new Error("Failed loading resource " + res.src);
+	throw new Error(
+		"Failed loading resource " + res.src,
+		cause !== undefined ? { cause } : undefined,
+	);
 }
 
 /** a src that is already a bare path needs no unwrapping @ignore @internal */
@@ -1191,7 +1197,7 @@ export function preload(assets, onloadcb, switchToLoadState = true) {
 				// re-rejects → Promise.all (and the returned promise) reject and
 				// `await loader.preload(...)` surfaces the failure. The trailing
 				// throw keeps the rejection meaningful should it ever stop throwing.
-				onLoadingError(asset, call, entry);
+				onLoadingError(asset, call, entry, err);
 				throw err;
 			});
 	});
@@ -1296,7 +1302,7 @@ export function reload(src) {
 			(err) => {
 				// still failing: recorded again against the same call
 				try {
-					onLoadingError(assetToReload, call);
+					onLoadingError(assetToReload, call, undefined, err);
 				} catch {
 					// the error is reported through LOADER_ERROR
 				}
@@ -1695,10 +1701,7 @@ function freeAsset(asset) {
 			if (!hasAsset("fontface", asset.name)) {
 				return false;
 			}
-			if (
-				typeof globalThis.document !== "undefined" &&
-				typeof globalThis.document.fonts !== "undefined"
-			) {
+			if (hasDOM() && typeof globalThis.document.fonts !== "undefined") {
 				globalThis.document.fonts.delete(getFont(asset.name));
 				return deleteAsset("fontface", asset.name);
 			}

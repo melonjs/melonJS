@@ -406,6 +406,14 @@ a gate screen — a splash, a "press any key", or a health/photosensitivity noti
 unconditionally. Note the unlock listens for `keydown` too, so a keyboard-only
 player is covered.
 
+Where there is no DOM (nx.js on the Nintendo Switch, see `melonjs-deployment`)
+there is no page to gesture at and no autoplay policy: audio unlocks as soon as
+the engine has its context, and music can start on load. nx.js's Web Audio has
+buffer sources, gain and stereo panning, but not the `PannerNode`,
+`OscillatorNode` and `BiquadFilterNode` behind 3D `position()` / `panner()` and
+`tone()` / `noise()`, nor the reverb, echo and compressor nodes: those throw
+"Method not implemented" there.
+
 ### The context can stop again, long after it was unlocked
 
 Unlocking is only the first half. A context that has been running can be
@@ -518,6 +526,7 @@ either way — blank screen, empty console.
 | audio assets 404 | `src` given as a full filename instead of a directory prefix |
 | `preload()` rejects with `Failed loading resource data/sfx/` (or `audio.load()` throws `target audio extension(s) should be set...`) | `audio.init()` not called before preloading |
 | `audio clip X does not exist` | the clip was never preloaded, or the name is mis-cased — every per-clip call throws this |
+| "Method not implemented" from `position()`, `panner()`, `tone()`, `noise()` or an effect, on nx.js | nx.js's Web Audio lacks the node it needs (panner, oscillator, filter, convolver...): use `stereo()` and recorded sounds there |
 | nothing plays until the user clicks | browser autoplay policy — expected, design around it |
 | `playing()` is false right after `play()` | playback starts asynchronously |
 | music keeps playing after leaving a scene | used `play` instead of `playTrack`, or no `stopTrack` in teardown |

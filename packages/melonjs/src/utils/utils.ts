@@ -1,3 +1,4 @@
+import { hasDOM } from "../system/dom.ts";
 import { compare } from "./semver.js";
 import { toHex } from "./string.js";
 
@@ -64,7 +65,7 @@ export function getUriFragment(url?: string) {
 	const hash: Record<string, string | boolean> = {};
 
 	if (typeof url === "undefined") {
-		if (typeof globalThis.document !== "undefined") {
+		if (hasDOM()) {
 			const location = globalThis.document.location;
 
 			if (location && location.hash) {

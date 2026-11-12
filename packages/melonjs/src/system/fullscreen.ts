@@ -8,6 +8,8 @@
 // `fullscreenElement` fields; older WebKit / Gecko / IE-derived engines
 // still surface state via vendor-prefixed variants. The intersection type
 // below is local + un-exported; consumers cast through it.
+import { hasDOM } from "./dom.ts";
+
 type DocumentLegacy = Document & {
 	mozFullScreenEnabled?: boolean;
 	mozFullScreenElement?: Element;
@@ -22,7 +24,7 @@ type DocumentLegacy = Document & {
  * unprefixed `fullscreenEnabled` field with vendor-prefixed fallbacks.
  */
 export const hasFullscreenSupport =
-	typeof globalThis.document !== "undefined" &&
+	hasDOM() &&
 	!!(
 		globalThis.document.fullscreenEnabled ||
 		(globalThis.document as DocumentLegacy).webkitFullscreenEnabled ||

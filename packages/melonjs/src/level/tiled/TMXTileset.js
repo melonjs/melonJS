@@ -2,6 +2,7 @@ import { game } from "../../application/application.ts";
 import { getImage, getJSON, getTMX } from "../../loader/loader.js";
 import { Matrix2d } from "../../math/matrix2d.ts";
 import { Vector2d } from "../../math/vector2d.ts";
+import { hasDOM } from "../../system/dom.ts";
 import timer from "../../system/timer.ts";
 import { getBasename, getExtension } from "../../utils/file.ts";
 import { createCanvas } from "../../video/canvas_factory.js";
@@ -477,9 +478,15 @@ export default class TMXTileset {
 						sw !== image.width ||
 						sh !== image.height
 					) {
-						const canvas = document.createElement("canvas");
-						canvas.width = sw;
-						canvas.height = sh;
+						// a <canvas> where there is a page, as before (it also
+						// takes a 0-sized region); the factory's OffscreenCanvas
+						// where there is none
+						const canvas = hasDOM()
+							? Object.assign(document.createElement("canvas"), {
+									width: sw,
+									height: sh,
+								})
+							: createCanvas(sw, sh);
 						canvas
 							.getContext("2d")
 							.drawImage(image, sx, sy, sw, sh, 0, 0, sw, sh);

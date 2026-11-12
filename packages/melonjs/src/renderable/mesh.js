@@ -15,6 +15,8 @@ import {
 	projectVertices,
 } from "../math/vertex.ts";
 import { AABB3d } from "../physics/broadphase/aabb3d.ts";
+import { hasDOM } from "../system/dom.ts";
+import { createCanvas } from "./../video/canvas_factory.js";
 import Renderer from "./../video/renderer.js";
 import { TextureAtlas } from "./../video/texture/atlas.js";
 import Texture2d from "./../video/texture/texture2d.ts";
@@ -2816,9 +2818,14 @@ export default class Mesh extends Renderable {
 		this._projectVertices(0, 0, false);
 
 		// render to offscreen canvas using affine texture mapping
-		const canvas = document.createElement("canvas");
-		canvas.width = w;
-		canvas.height = h;
+		// a <canvas> where there is a page, as before (it also takes a
+		// 0-sized mesh); the factory's OffscreenCanvas where there is none
+		const canvas = hasDOM()
+			? Object.assign(document.createElement("canvas"), {
+					width: w,
+					height: h,
+				})
+			: createCanvas(w, h);
 		const ctx = canvas.getContext("2d");
 
 		const image = this.texture.getTexture();
@@ -2886,9 +2893,7 @@ export default class Mesh extends Renderable {
 			if (rawDet === 0) {
 				// degenerate UV — fill with sampled solid color
 				ctx.closePath();
-				const tmpCanvas = document.createElement("canvas");
-				tmpCanvas.width = 1;
-				tmpCanvas.height = 1;
+				const tmpCanvas = createCanvas(1, 1);
 				const tmpCtx = tmpCanvas.getContext("2d");
 				const sx = Math.min(Math.max(Math.round(u0), 0), imgW - 1);
 				const sy = Math.min(Math.max(Math.round(v0), 0), imgH - 1);

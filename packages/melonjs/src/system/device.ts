@@ -1,5 +1,5 @@
 import { prefixed } from "./../utils/agent.ts";
-import { DOMContentLoaded } from "./dom.ts";
+import { DOMContentLoaded, hasDOM } from "./dom.ts";
 import { BLUR, emit, FOCUS } from "./event.ts";
 import * as device_platform from "./platform.ts";
 import save from "./save.ts";
@@ -69,13 +69,27 @@ function hasLocalStorage() {
 	}
 }
 
+function hasScreenOrientation() {
+	try {
+		return (
+			typeof screen !== "undefined" && typeof screen.orientation !== "undefined"
+		);
+	} catch {
+		// nx.js implements `screen.orientation` as a getter that throws "not
+		// implemented": read at import, that failed `import "melonjs"` itself
+		return false;
+	}
+}
+
 function hasOffscreenCanvas() {
 	try {
 		// some browser (e.g. Safari) implements WebGL1 and WebGL2 contexts only
 		// https://bugzilla.mozilla.org/show_bug.cgi?id=801176
+		// 1x1, not 0x0: some runtimes (nx.js) refuse a canvas with no pixels,
+		// which would read as no OffscreenCanvas at all
 		return (
 			typeof globalThis.OffscreenCanvas !== "undefined" &&
-			new globalThis.OffscreenCanvas(0, 0).getContext("2d") !== null
+			new globalThis.OffscreenCanvas(1, 1).getContext("2d") !== null
 		);
 	} catch {
 		return false;
@@ -114,9 +128,16 @@ export function onDeviceRotate(e: DeviceOrientationEvent) {
 export const platform = device_platform;
 
 /**
- * True if the browser supports Touch Events
+ * True if the browser supports Touch Events.
+ *
+ * Without a DOM (nx.js on the Nintendo Switch, for example), a global
+ * `TouchEvent` also counts: such a runtime has no `ontouchstart` property to
+ * detect, but dispatches touch events on the display canvas. Browsers, which
+ * all have a DOM, are detected exactly as before.
  */
-export const touchEvent = "ontouchstart" in globalThis;
+export const touchEvent =
+	"ontouchstart" in globalThis ||
+	(!hasDOM() && typeof globalThis.TouchEvent === "function");
 
 /**
  * True if the browser supports Pointer Events
@@ -146,15 +167,13 @@ export const maxTouchPoints = touch
  * W3C standard wheel events
  */
 export const wheel =
-	typeof globalThis.document !== "undefined" &&
-	"onwheel" in globalThis.document.createElement("div");
+	hasDOM() && "onwheel" in globalThis.document.createElement("div");
 
 /**
  * Browser pointerlock api support
  */
 export const hasPointerLockSupport =
-	typeof globalThis.document !== "undefined" &&
-	typeof globalThis.document.pointerLockElement !== "undefined";
+	hasDOM() && typeof globalThis.document.pointerLockElement !== "undefined";
 
 /**
  * Browser device orientation
@@ -165,8 +184,7 @@ export const hasDeviceOrientation = !!globalThis.DeviceOrientationEvent;
  * Supports the ScreenOrientation API
  * @see https://developer.mozilla.org/en-US/docs/Web/API/ScreenOrientation/onchange
  */
-export const screenOrientation =
-	typeof screen !== "undefined" && typeof screen.orientation !== "undefined";
+export const screenOrientation = hasScreenOrientation();
 
 /**
  * Browser accelerometer capabilities
@@ -203,8 +221,7 @@ export const sound = hasWebAudio || hasHTML5Audio;
  * Device Video Support
  */
 export const hasVideo =
-	typeof globalThis.document !== "undefined" &&
-	!!globalThis.document.createElement("video").canPlayType;
+	hasDOM() && !!globalThis.document.createElement("video").canPlayType;
 
 /**
  * Browser Local Storage capabilities <br>
@@ -376,6 +393,10 @@ export function initVisibilityEvents() {
  * @category Application
  */
 export function enableSwipe(enable?: boolean) {
+	// no document to scroll, and nothing to listen on
+	if (!hasDOM()) {
+		return;
+	}
 	const moveEvent = pointerEvent
 		? "pointermove"
 		: touchEvent
@@ -534,7 +555,8 @@ export function getStorage(type: string = "local") {
 export function getParentElement(element: string | HTMLElement) {
 	let target: HTMLElement | (Node & ParentNode) = getElement(element);
 
-	if (target.parentNode !== null) {
+	// no DOM: there is no element, and so no parent either
+	if (hasDOM() && target.parentNode !== null) {
 		target = target.parentNode;
 	}
 
@@ -544,7 +566,7 @@ export function getParentElement(element: string | HTMLElement) {
 /**
  * return the DOM element for the given element name or HTMLElement object
  * @param element - the parent element name or a HTMLElement object
- * @returns the corresponding DOM Element (falls back to `document.body` when the lookup fails or the input isn't an HTMLElement)
+ * @returns the corresponding DOM Element (falls back to `document.body` when the lookup fails or the input isn't an HTMLElement). In a runtime with no DOM (a Web Worker, nx.js), a name finds nothing and there is no `document.body`, so the result is `undefined` unless an element object was given.
  * @category Application
  */
 export function getElement(element: string | HTMLElement): HTMLElement {
@@ -552,10 +574,11 @@ export function getElement(element: string | HTMLElement): HTMLElement {
 
 	if (typeof element !== "undefined") {
 		if (typeof element === "string") {
-			target = globalThis.document.getElementById(element);
+			target = hasDOM() ? globalThis.document.getElementById(element) : null;
 		} else if (
 			typeof element === "object" &&
-			element.nodeType === Node.ELEMENT_NODE
+			// `Node.ELEMENT_NODE`, spelled out: `Node` is not defined without a DOM
+			element.nodeType === 1
 		) {
 			target = element;
 		}
@@ -563,8 +586,8 @@ export function getElement(element: string | HTMLElement): HTMLElement {
 
 	// fallback, if invalid target or non HTMLElement object
 	if (!target) {
-		//default to document.body
-		target = globalThis.document.body;
+		// default to document.body (undefined without a DOM, see above)
+		target = (hasDOM() ? globalThis.document.body : undefined) as HTMLElement;
 	}
 
 	return target;
@@ -579,13 +602,32 @@ export function getElement(element: string | HTMLElement): HTMLElement {
  * @category Application
  */
 export function getElementBounds(element: string | HTMLElement): DOMRect {
-	if (
+	if (typeof element === "object" && !hasDOM()) {
+		// No DOM, so no layout: the element (in practice the display canvas,
+		// as on nx.js) IS the screen. It sits at the origin, at the size it
+		// reports — its `offset*` metrics when it has them, its backing size
+		// otherwise.
+		const el = element as Partial<HTMLElement> & {
+			width?: number;
+			height?: number;
+		};
+		domRect.left = domRect.x = el.offsetLeft ?? 0;
+		domRect.top = domRect.y = el.offsetTop ?? 0;
+		domRect.width = el.offsetWidth ?? el.width ?? 0;
+		domRect.height = el.offsetHeight ?? el.height ?? 0;
+		domRect.right = domRect.left + domRect.width;
+		domRect.bottom = domRect.top + domRect.height;
+		return domRect as DOMRect;
+	} else if (
 		typeof element === "object" &&
 		element !== globalThis.document.body &&
 		typeof element.getBoundingClientRect !== "undefined"
 	) {
 		return element.getBoundingClientRect();
 	} else {
+		// the window: always at the origin (reset, as the branch above can
+		// move this shared rect)
+		domRect.left = domRect.x = domRect.top = domRect.y = 0;
 		domRect.width = domRect.right = globalThis.innerWidth;
 		domRect.height = domRect.bottom = globalThis.innerHeight;
 		return domRect as DOMRect;
@@ -613,12 +655,25 @@ export function getParentBounds(element: string | HTMLElement) {
  * renderer and `renderer: video.WEBGL` throws at construction time.
  * @param [options] - context creation options
  * @param [options.failIfMajorPerformanceCaveat=true] - if true, report WebGL as unsupported when the browser warns that a context would perform dramatically worse than a native application (e.g. a software rasterizer). Set false to accept WebGL on blocklisted drivers or software renderers.
+ *
+ * Without a DOM (a Web Worker, nx.js) there is no canvas to probe, so this
+ * returns whether the runtime exposes WebGL 2 at all, and creating the
+ * renderer is the real test.
  * @returns true if WebGL 2 is supported
  * @category Application
  */
 export function isWebGLSupported(options?: {
 	failIfMajorPerformanceCaveat?: boolean;
 }): boolean {
+	// Without a DOM there is no scratch canvas to probe, and on nx.js only
+	// the display canvas can hold a WebGL context at all. Probing that canvas
+	// would fix its context attributes before the renderer asks for its own,
+	// so report what the runtime exposes and let renderer construction
+	// decide: a WebGL renderer that gets no context throws, and `video.AUTO`
+	// catches it to fall back to Canvas. Not cached, as it decides nothing.
+	if (!hasDOM()) {
+		return typeof globalThis.WebGL2RenderingContext === "function";
+	}
 	if (WebGLSupport === -1) {
 		try {
 			const canvas = globalThis.document.createElement("canvas");

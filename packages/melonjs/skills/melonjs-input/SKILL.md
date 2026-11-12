@@ -380,6 +380,7 @@ input.triggerKeyEvent(input.KEY.LEFT, false);   // release
 | symptom | cause |
 |---|---|
 | pointer handler never fires | `isKinematic` left at its `true` default |
+| touches never arrive where there is no DOM (nx.js, a Web Worker) | melonJS older than 20.14 listened for mouse events there; update. Touch is then read from `TouchEvent`s dispatched on the canvas given as `settings.canvas` |
 | handlers fire twice, or on dead objects | registered in the constructor instead of `onActivateEvent` |
 | camera drag jumps around | using world coordinates instead of `gameScreenX`/`gameScreenY` |
 | `gameX` holds screen coords where world coords were expected | read on `event.POINTERMOVE`, or on a floating region — use `gameWorldX`/`gameWorldY` |

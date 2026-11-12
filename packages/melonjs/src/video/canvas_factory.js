@@ -1,4 +1,5 @@
 import * as device from "../system/device.js";
+import { hasDOM } from "../system/dom.ts";
 
 /**
  * Create and return a new Canvas element (or `OffscreenCanvas` when
@@ -30,7 +31,13 @@ export function createCanvas(width, height, returnOffscreenCanvas = false) {
 			"width or height was zero, Canvas could not be initialized !",
 		);
 	}
-	if (returnOffscreenCanvas === true && device.offscreenCanvas === true) {
+	// Without a DOM there is no `<canvas>` element to create, so an
+	// `OffscreenCanvas` is the only canvas there is (a Web Worker, nx.js),
+	// whatever the caller asked for. With a DOM nothing changes.
+	if (
+		(returnOffscreenCanvas === true || !hasDOM()) &&
+		device.offscreenCanvas === true
+	) {
 		const c = new globalThis.OffscreenCanvas(width, height);
 		// stub `style` for compatibility — OffscreenCanvas is detached
 		// from the DOM but downstream code may read it
@@ -38,6 +45,13 @@ export function createCanvas(width, height, returnOffscreenCanvas = false) {
 			c.style = {};
 		}
 		return c;
+	}
+	if (!hasDOM()) {
+		throw new Error(
+			"melonJS cannot create a canvas here: there is no `document` to " +
+				"create a <canvas> in, and no usable `OffscreenCanvas`. Run it " +
+				"in a runtime that provides one of the two.",
+		);
 	}
 	const c = globalThis.document.createElement("canvas");
 	c.width = width;

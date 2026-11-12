@@ -6,6 +6,8 @@
 - Loader: asset bundles, to load and free a level's assets together: `loader.preload({ common: […], level1: […] })`, then `loader.load("level1")` / `loader.unload("level1")`; an asset shared by several bundles is fetched once and freed with the last ([#1656](https://github.com/melonjs/melonJS/issues/1656))
 - Physics: `world.setAdapter()` switches the physics adapter of a running game, rebuilding every body from its `bodyDef`
 - Physics: every adapter class has `load()` and `create()` (`PhysicsAdapterClass`), so `await X.create(options)` makes any adapter the same way
+- [nx.js](https://github.com/TooTallNate/nx.js) (the Nintendo Switch homebrew framework) and Web Workers (experimental): melonJS runs with no DOM, drawing to a canvas passed as `settings.canvas`; JSON Tiled maps, touch and audio work
+- Loader: the error a failed asset rejects `preload()` with keeps the parser's own error as its `cause`
 
 ### Changed
 - Physics: `world.adapter` is read-only; switch adapters with `world.setAdapter()`
@@ -34,6 +36,7 @@
 - Tiled: tile layers use the map's render order
 - Tiled: the camera reaches every painted tile of an infinite map
 - Tiled: the isometric `drawTile()` places tiles where the layer does
+- Tiled: an XML map (`.tmx`, `.tsx`) loaded where there is no `DOMParser` fails with an error saying to export it as JSON (`.tmj`, `.tsj`), instead of "DOMParser is not defined"
 - Loader: unloading an image also frees its GPU texture
 - Physics: a renderable with a `bodyDef` receives pointer events under the matter and planck adapters, as on the built-in
 - Physics: the built-in `isGrounded()` needs a surface under the body; one never stepped, or held in mid-air, read as grounded
