@@ -1,0 +1,4 @@
+# a palette material, as low-poly model kits ship them: white Kd, every
+# face's color looked up in one shared texture
+newmtl palette
+Kd 1 1 1

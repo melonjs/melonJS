@@ -1120,10 +1120,10 @@ animation (and the skinning that is out of scope), and OBJ/MTL.
 ## Requires a GPU backend
 
 The whole 3D tier needs WebGPU or WebGL 2. The Canvas renderer has no depth
-buffer, no perspective path and no `drawMesh`, so a `Camera3d` scene does not
-render correctly there — usually a black canvas. `Light3d` and shader effects
-are inert too. A `Mesh` under a *2D* camera still renders, CPU-projected by
-painter's algorithm and unlit.
+buffer and no perspective path, so a `Camera3d` scene does not render
+correctly there — usually a black canvas. `Light3d` and shader effects are
+inert too. A `Mesh` under a *2D* camera still renders, textured, CPU-projected
+and sorted back to front by painter's algorithm, and unlit.
 
 `Application` does warn: `await app.init()` with a `cameraClass` whose
 `defaultSortOn` is `"depth"`, on a renderer with no depth buffer, logs a
