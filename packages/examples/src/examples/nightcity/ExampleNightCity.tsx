@@ -115,6 +115,10 @@ const createGame = async () => {
 			textureFilter: "nearest",
 		});
 		await app.init();
+		// Camera3d needs a depth buffer, which the Canvas fallback lacks
+		if (!app.renderer.supportsDepthBuffer) {
+			throw new Error("no GPU backend available (Canvas fallback)");
+		}
 	} catch (err) {
 		const reason = err instanceof Error ? err.message : String(err);
 		globalThis.alert(
