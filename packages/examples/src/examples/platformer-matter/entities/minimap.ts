@@ -5,8 +5,12 @@
  */
 import { Camera2d, event, game, level, VignetteEffect } from "melonjs";
 
-const MINIMAP_WIDTH = 180;
-const MINIMAP_HEIGHT = 100;
+// the minimap's width as a share of the canvas width, so it scales with the
+// display and leaves room for the buttons on a narrow (portrait) screen
+const MINIMAP_SCALE = 0.18;
+// height / width
+const MINIMAP_ASPECT = 100 / 180;
+const MARGIN = 10;
 
 /**
  * A minimap camera that shows a zoomed-out view of the entire level
@@ -14,33 +18,50 @@ const MINIMAP_HEIGHT = 100;
  */
 export class MinimapCamera extends Camera2d {
 	private boundOnResize: (w: number) => void;
+	private levelWidth = 0;
+	private levelHeight = 0;
 
 	constructor() {
-		super(0, 0, MINIMAP_WIDTH, MINIMAP_HEIGHT);
+		super(0, 0, 1, 1);
 		this.name = "minimap";
-		this.screenX = game.viewport.width - MINIMAP_WIDTH - 10;
-		this.screenY = 10;
 
-		// prevent canvas resize from resetting this camera's dimensions/bounds
+		// the canvas resize must not reset this camera: it sizes itself below
 		this.autoResize = false;
-
-		// reposition on canvas resize (keep anchored to top-right)
-		this.boundOnResize = (w: number) => {
-			this.screenX = w - MINIMAP_WIDTH - 10;
-		};
-		event.on(event.CANVAS_ONRESIZE, this.boundOnResize);
-
-		// apply subtle vignette post-process effect on the minimap
-		this.addPostEffect(new VignetteEffect(game.renderer));
 
 		const currentLevel = level.getCurrentLevel();
 		if (currentLevel) {
 			const lw = currentLevel.cols * currentLevel.tilewidth;
 			const lh = currentLevel.rows * currentLevel.tileheight;
 			if (lw > 0 && lh > 0) {
+				this.levelWidth = lw;
+				this.levelHeight = lh;
 				this.setBounds(0, 0, lw, lh);
-				this.zoom = Math.min(MINIMAP_WIDTH / lw, MINIMAP_HEIGHT / lh);
 			}
+		}
+
+		// size to the canvas now, and again whenever it is resized (a window
+		// resize or an orientation change)
+		this.fit(game.viewport.width);
+		this.boundOnResize = (w: number) => {
+			this.fit(w);
+		};
+		event.on(event.CANVAS_ONRESIZE, this.boundOnResize);
+
+		// apply subtle vignette post-process effect on the minimap
+		this.addPostEffect(new VignetteEffect(game.renderer));
+	}
+
+	/**
+	 * Size the minimap to its share of the canvas width, in the top-right
+	 * corner, zoomed to show the whole level.
+	 * @param canvasWidth - the canvas width, in pixels
+	 */
+	private fit(canvasWidth: number) {
+		const w = Math.round(canvasWidth * MINIMAP_SCALE);
+		const h = Math.round(w * MINIMAP_ASPECT);
+		this.setViewport(canvasWidth - w - MARGIN, MARGIN, w, h);
+		if (this.levelWidth > 0 && this.levelHeight > 0) {
+			this.zoom = Math.min(w / this.levelWidth, h / this.levelHeight);
 		}
 	}
 
@@ -80,12 +101,7 @@ export class MinimapCamera extends Camera2d {
 		renderer.setGlobalAlpha(0.8);
 		renderer.setColor("#ffffff");
 		renderer.lineWidth = 2 * screenPx;
-		renderer.strokeRect(
-			0,
-			0,
-			MINIMAP_WIDTH / this.zoom,
-			MINIMAP_HEIGHT / this.zoom,
-		);
+		renderer.strokeRect(0, 0, this.width / this.zoom, this.height / this.zoom);
 
 		// restore renderer state
 		renderer.lineWidth = savedLineWidth;
