@@ -43,7 +43,7 @@ of a Tiled JSON export (not an XML string).
 
 **Prefer JSON where there is no DOM.** XML maps and tilesets are parsed with
 `DOMParser`, which only a page has: in a Web Worker, or on nx.js (the Nintendo
-Switch, see `melonjs-deployment`), loading one fails, and `preload()` rejects
+Switch, see `melonjs-platforms`), loading one fails, and `preload()` rejects
 with "Failed loading resource …" whose `cause` (also logged to the console)
 says to export it as JSON. Export the map *and* its external tilesets as
 `.tmj` / `.tsj` (Tiled: File → Export As, or set JSON as the format in the

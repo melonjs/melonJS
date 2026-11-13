@@ -138,8 +138,8 @@ plugin.register(CapacitorPlugin, "capacitor", options);
 ```
 
 It also exports helpers usable on their own: `onBackButton`, `bindStageBack`,
-`lockOrientation` / `unlockOrientation`, `hideSplash`. See `melonjs-deployment`
-for the wider packaging picture.
+`lockOrientation` / `unlockOrientation`, `hideSplash`. See `melonjs-platforms`
+for native apps and the other platforms.
 
 With `pauseOnBackground` (the default), going to the background pauses the
 game and coming back resumes it, but only if this pause was the plugin's: a
@@ -245,5 +245,5 @@ or a `Stage` is simpler and easier to test.
 - `melonjs-physics` — the adapters and their behavioural differences
 - `melonjs-tilemaps` — where the inflate plugin becomes mandatory
 - `melonjs-performance` — using the debug panel to measure
-- `melonjs-deployment` — Capacitor and native packaging
+- `melonjs-platforms` — Capacitor and native packaging, and the other platforms
 - `melonjs-3d-assets` — why skeletal characters go through Spine
