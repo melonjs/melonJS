@@ -321,12 +321,15 @@ export function setAutoFocus(enable: boolean): void {
 }
 
 /**
- * Whether the engine follows the browser window's focus: its `blur`, `focus`
- * and `visibilitychange` events, turned into the engine's own `event.BLUR`
- * and `event.FOCUS`. Those are what pause the game when the player switches
- * away (the application's `pauseOnBlur`, `stopOnBlur` and `resumeOnFocus`),
- * silence its sound effects and release its held keys, and what undoes it
- * when they come back.
+ * Whether the browser window reports the game's focus: its `blur`, `focus`
+ * and `visibilitychange` events are what emit the engine's `event.BLUR` and
+ * `event.FOCUS`.
+ *
+ * This decides WHO reports that the player switched away. What the game DOES
+ * then is decided by the application's `pauseOnBlur`, `stopOnBlur` and
+ * `resumeOnFocus` flags: pause or stop the game, silence its sound effects,
+ * release its held keys, and undo it on focus. See {@link setFocusEvents} for
+ * when to turn this off rather than the flags.
  *
  * Read this binding to inspect the current value; the write surface is
  * {@link setFocusEvents}.
@@ -415,16 +418,31 @@ function listenToWindowFocus(listen: boolean): void {
 }
 
 /**
- * Follow the browser window's focus, or not (see {@link focusEvents}).
+ * Let the browser window report the game's focus, or leave it to the game's
+ * host (see {@link focusEvents}).
  *
- * Turned off, switching tab or app no longer pauses the game, silences it
- * nor releases its keys: for a game whose host says when it is in the
- * foreground instead, such as a web game portal's SDK or a native wrapper.
- * The host's own callbacks then emit `event.BLUR` and `event.FOCUS`, and the
- * game reacts to them exactly as it reacted to the window: the application's
- * `pauseOnBlur`, `stopOnBlur` and `resumeOnFocus` still decide what happens,
- * and only a pause the engine applied is undone. It can be called before or
- * after the application is created.
+ * Two separate settings decide what happens when the player switches away:
+ *
+ * - WHO reports it: the browser window by default, whose `blur`, `focus` and
+ *   `visibilitychange` events the engine turns into `event.BLUR` and
+ *   `event.FOCUS`. This function turns that on or off.
+ * - WHAT the game does then: the application's `pauseOnBlur`, `stopOnBlur`
+ *   and `resumeOnFocus` flags. They apply to every `event.BLUR` and
+ *   `event.FOCUS`, wherever it comes from.
+ *
+ * To keep a game running while the player is away, turn the flags off
+ * (`app.pauseOnBlur = false`): the window still reports, and nothing pauses.
+ *
+ * To let a host decide when the game runs, such as a web game portal's SDK
+ * (YouTube Playables forbids pausing on the page's visibility) or a native
+ * wrapper, turn this off instead and keep the flags: the window then reports
+ * nothing, the host's callbacks emit `event.BLUR` and `event.FOCUS`, and the
+ * flags react to them exactly as they did to the window, silencing the sound
+ * effects, releasing held keys and undoing only a pause the engine applied.
+ * Turning the flags off would not do it: they cannot tell the window's events
+ * from the host's, so the host's pause would do nothing either.
+ *
+ * It can be called before or after the application is created.
  * @param enable - `true` (the default) to follow the browser window, `false`
  * to leave the focus to the game's host
  * @example

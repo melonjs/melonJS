@@ -196,11 +196,24 @@ On focus, `resumeOnFocus` (default `true`) undoes only the pause the
 application applied on blur. A game the player paused from its own menu stays
 paused when the window comes back; before 20.9 it resumed underneath the menu.
 
+**Who reports the focus, and what the game does.** Two separate settings:
+
+| setting | decides | default |
+|---|---|---|
+| `device.setFocusEvents()` | **who** reports that the player switched away: the browser window (`blur`, `focus`, `visibilitychange` become `event.BLUR` / `event.FOCUS`), or nobody, leaving it to the game's host | the window |
+| `app.pauseOnBlur`, `stopOnBlur`, `resumeOnFocus` | **what** the game does on every `event.BLUR` / `event.FOCUS`, wherever it comes from | pause on blur, resume on focus |
+
+- **To keep the game running while the player is away**, turn the flags off
+  (`app.pauseOnBlur = false`). The window still reports; nothing pauses.
+- **To let a host decide when the game runs**, turn the window off and keep the
+  flags. Turning the flags off would not do it: they cannot tell the window's
+  `event.BLUR` from the host's, so the host's pause would do nothing either.
+
 **When a host decides, not the window.** A game embedded by a host that says
 when it runs, such as a web game portal's SDK (YouTube Playables forbids
-pausing on the page's visibility) or a native wrapper, stops following the
-window with `device.setFocusEvents(false)` and emits the engine's own events
-from the host's callbacks:
+pausing on the page's visibility) or a native wrapper, stops the window
+reporting with `device.setFocusEvents(false)` and emits the engine's own
+events from the host's callbacks:
 
 ```js
 device.setFocusEvents(false);   // the window's blur, focus and visibilitychange no longer count
@@ -493,6 +506,7 @@ save.add({ hiscore: 0 });      // the cloud value, or 0 the first time
 | a saved key is gone after `save.setStorage()` | only keys registered with `save.add()` are carried over to the new storage; register it (before or after) |
 | the game pauses or goes quiet when the tab is hidden, on a portal that must decide that itself | the window still drives the focus: `device.setFocusEvents(false)`, then emit `event.BLUR` / `event.FOCUS` from the portal's callbacks |
 | a host's pause stops the game's updates but it keeps drawing | `pauseOnBlur` keeps drawing; set `stopOnBlur = true` and `pauseOnBlur = false` |
+| a host's pause does nothing, after turning `pauseOnBlur` off so the tab would not pause the game | the flags apply to every `event.BLUR`, the host's included; keep them, and stop the window reporting with `device.setFocusEvents(false)` |
 | `Undefined Stage for state 'N'` thrown | no `state.set` for that id first |
 | `state.change(state.PLAY)` from `PLAY` does nothing ("Retry" ignored) | a change to the current state is a no-op — `level.reload()`, or go through another state |
 | a level change through a `Trigger` ignores `state.transition` | it is a level change, not a state change: set `color` and `duration` (and `transition`) on the trigger |

@@ -231,9 +231,13 @@ export default class Application {
 	 * Specify whether to pause this app when losing focus. A paused game is
 	 * still drawn; see {@link Application.stopOnBlur} to stop drawing too.
 	 *
-	 * The focus is the browser window's, unless `device.setFocusEvents(false)`
-	 * leaves it to the game's host (a web game portal's SDK, a native
-	 * wrapper), whose callbacks then emit `event.BLUR` and `event.FOCUS`.
+	 * This flag, `stopOnBlur` and `resumeOnFocus` decide WHAT the game does
+	 * on every `event.BLUR` and `event.FOCUS`. WHO emits those is
+	 * `device.setFocusEvents()`: the browser window by default, or the game's
+	 * host (a web game portal's SDK, a native wrapper) once it is turned off.
+	 * Turn this flag off to keep the game running while the player is away;
+	 * to let a host decide when it runs, keep the flags and turn the window
+	 * off with `device.setFocusEvents(false)`.
 	 * @default true
 	 * @example
 	 *  // keep the default game instance running even when losing focus
@@ -253,14 +257,17 @@ export default class Application {
 	_pausedOnBlur: boolean;
 
 	/**
-	 * Specify whether to unpause this app when gaining back focus
+	 * Specify whether to unpause this app when gaining back focus. Only a
+	 * pause this application applied is undone. See
+	 * {@link Application.pauseOnBlur} for where the focus comes from.
 	 * @default true
 	 */
 	resumeOnFocus: boolean;
 
 	/**
 	 * Specify whether to stop this app when losing focus: updates and drawing
-	 * both stop, and start again on focus.
+	 * both stop, and start again on focus. See {@link Application.pauseOnBlur}
+	 * for where the focus comes from.
 	 * @default false
 	 */
 	stopOnBlur: boolean;

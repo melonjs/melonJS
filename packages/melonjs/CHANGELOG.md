@@ -5,7 +5,7 @@
 ### Added
 - Physics: `world.addJoint()` and `world.removeJoint()` join two bodies with a hinge, rope, weld or slider joint, the same way on every adapter that has joints (planck and Rapier); joints are rebuilt by `world.setAdapter()` and removed with their bodies. On an adapter without joints (the built-in and matter) `addJoint()` throws
 - Save: `save.setStorage()` keeps the saved keys somewhere other than `localStorage`, which stays the default: a game portal's cloud save, for example. It takes anything with `getItem`, `setItem` and `removeItem`
-- Device: `device.setFocusEvents(false)` stops the engine following the browser window's focus, for a game whose host says when it runs (a web game portal's SDK, a native wrapper): the host's callbacks emit `event.BLUR` and `event.FOCUS`, and the game pauses and resumes as it did with the window
+- Device: `device.setFocusEvents(false)` stops the browser window reporting the game's focus, for a game whose host says when it runs (a web game portal's SDK, a native wrapper): the host's callbacks emit `event.BLUR` and `event.FOCUS` instead, and `pauseOnBlur`, `stopOnBlur` and `resumeOnFocus` still decide what the game does
 
 ### Fixed
 - Physics: `world.setAdapter()` builds each body again at the angle it had; a turned body came back upright
