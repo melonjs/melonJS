@@ -11,6 +11,8 @@
 - Physics: `world.setAdapter()` builds each body again at the angle it had; a turned body came back upright
 - Physics: a renderable moved to another container of the same world keeps its body as it was; on matter, planck and Rapier the body was built again, at rest and upright
 - Save: a page whose `localStorage` is `null`, as in some sandboxed frames (YouTube Playables' SDK Test Suite runs games in one), no longer stops melonJS at boot; `save` keeps its keys in memory there, as where cookies are blocked
+- Platforms: melonJS runs on WeChat Mini Games: images load through the runtime's `Image` where `createImageBitmap` is missing, WebGL is found without a global `WebGL2RenderingContext`, and pausing or muting no longer throws where `HTMLAudioElement` is not defined
+- Rendering: the canvas given in the application's `canvas` setting is the one drawn to, even on a page with a `<canvas id="canvas">`, which was used instead
 
 ## [20.14.0] (melonJS 2) - _2026-11-12_
 

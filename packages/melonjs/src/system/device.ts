@@ -787,10 +787,9 @@ export function isWebGLSupported(options?: {
 			// the context actually created by the WebGL renderer (which
 			// requests "webgl2"), so AUTO falls back to Canvas exactly when
 			// renderer construction would fail
-			const _supported = !!(
-				globalThis.WebGL2RenderingContext &&
-				canvas.getContext("webgl2", ctxOptions)
-			);
+			// the context itself, not the `WebGL2RenderingContext` global:
+			// WeChat Mini Games give a WebGL 2 context but not the global
+			const _supported = !!canvas.getContext("webgl2", ctxOptions);
 			WebGLSupport = _supported ? 1 : 0;
 		} catch {
 			WebGLSupport = 0;
