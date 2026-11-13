@@ -321,6 +321,128 @@ export function setAutoFocus(enable: boolean): void {
 }
 
 /**
+ * Whether the engine follows the browser window's focus: its `blur`, `focus`
+ * and `visibilitychange` events, turned into the engine's own `event.BLUR`
+ * and `event.FOCUS`. Those are what pause the game when the player switches
+ * away (the application's `pauseOnBlur`, `stopOnBlur` and `resumeOnFocus`),
+ * silence its sound effects and release its held keys, and what undoes it
+ * when they come back.
+ *
+ * Read this binding to inspect the current value; the write surface is
+ * {@link setFocusEvents}.
+ * @default true
+ */
+export let focusEvents = true;
+
+/**
+ * Whether boot has asked for the window focus listeners: until it has,
+ * {@link setFocusEvents} only records what it is told.
+ */
+let focusListenersWanted = false;
+
+/** Whether the window focus listeners are attached. */
+let focusListening = false;
+
+/**
+ * The window lost the focus.
+ * @ignore
+ * @internal
+ */
+function onWindowBlur(): void {
+	emit(BLUR);
+}
+
+/**
+ * The window got the focus back.
+ * @ignore
+ * @internal
+ */
+function onWindowFocus(): void {
+	emit(FOCUS);
+	if (autoFocus) {
+		focus();
+	}
+}
+
+/**
+ * The page was hidden, or shown again.
+ * @ignore
+ * @internal
+ */
+function onVisibilityChange(): void {
+	if (globalThis.document.visibilityState === "visible") {
+		onWindowFocus();
+	} else {
+		emit(BLUR);
+	}
+}
+
+/**
+ * Attach or detach the window focus listeners, once each.
+ * @ignore
+ * @internal
+ * @param listen - whether to listen
+ */
+function listenToWindowFocus(listen: boolean): void {
+	if (listen === focusListening) {
+		return;
+	}
+	focusListening = listen;
+	if (typeof globalThis.addEventListener === "function") {
+		if (listen) {
+			globalThis.addEventListener("blur", onWindowBlur, false);
+			globalThis.addEventListener("focus", onWindowFocus, false);
+		} else {
+			globalThis.removeEventListener("blur", onWindowBlur, false);
+			globalThis.removeEventListener("focus", onWindowFocus, false);
+		}
+	}
+	if (globalThis.document?.addEventListener) {
+		if (listen) {
+			globalThis.document.addEventListener(
+				"visibilitychange",
+				onVisibilityChange,
+				false,
+			);
+		} else {
+			globalThis.document.removeEventListener(
+				"visibilitychange",
+				onVisibilityChange,
+				false,
+			);
+		}
+	}
+}
+
+/**
+ * Follow the browser window's focus, or not (see {@link focusEvents}).
+ *
+ * Turned off, switching tab or app no longer pauses the game, silences it
+ * nor releases its keys: for a game whose host says when it is in the
+ * foreground instead, such as a web game portal's SDK or a native wrapper.
+ * The host's own callbacks then emit `event.BLUR` and `event.FOCUS`, and the
+ * game reacts to them exactly as it reacted to the window: the application's
+ * `pauseOnBlur`, `stopOnBlur` and `resumeOnFocus` still decide what happens,
+ * and only a pause the engine applied is undone. It can be called before or
+ * after the application is created.
+ * @param enable - `true` (the default) to follow the browser window, `false`
+ * to leave the focus to the game's host
+ * @example
+ * // YouTube Playables: only YouTube's own events pause and resume the game
+ * me.device.setFocusEvents(false);
+ * app.stopOnBlur = true; // a pause stops the rendering too
+ * app.pauseOnBlur = false;
+ * ytgame.system.onPause(() => me.event.emit(me.event.BLUR));
+ * ytgame.system.onResume(() => me.event.emit(me.event.FOCUS));
+ */
+export function setFocusEvents(enable: boolean): void {
+	focusEvents = enable;
+	if (focusListenersWanted) {
+		listenToWindowFocus(enable);
+	}
+}
+
+/**
  * specify a function to execute when the Device is fully loaded and ready
  * @param fn - the function to be executed
  * @example
@@ -337,46 +459,14 @@ export function onReady(fn: () => void) {
 /**
  * Register blur/focus and visibility change event handlers.
  * Called once during boot to emit BLUR/FOCUS events when the
- * window or tab gains/loses focus.
+ * window or tab gains/loses focus, unless {@link setFocusEvents} turned
+ * that off.
  * @ignore
  * @internal
  */
 export function initVisibilityEvents() {
-	if (typeof globalThis.addEventListener === "function") {
-		globalThis.addEventListener(
-			"blur",
-			() => {
-				emit(BLUR);
-			},
-			false,
-		);
-		globalThis.addEventListener(
-			"focus",
-			() => {
-				emit(FOCUS);
-				if (autoFocus) {
-					focus();
-				}
-			},
-			false,
-		);
-	}
-	if (globalThis.document?.addEventListener) {
-		globalThis.document.addEventListener(
-			"visibilitychange",
-			() => {
-				if (globalThis.document.visibilityState === "visible") {
-					emit(FOCUS);
-					if (autoFocus) {
-						focus();
-					}
-				} else {
-					emit(BLUR);
-				}
-			},
-			false,
-		);
-	}
+	focusListenersWanted = true;
+	listenToWindowFocus(focusEvents);
 }
 
 /**

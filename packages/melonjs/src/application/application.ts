@@ -228,7 +228,12 @@ export default class Application {
 	settings: ResolvedApplicationSettings;
 
 	/**
-	 * Specify whether to pause this app when losing focus
+	 * Specify whether to pause this app when losing focus. A paused game is
+	 * still drawn; see {@link Application.stopOnBlur} to stop drawing too.
+	 *
+	 * The focus is the browser window's, unless `device.setFocusEvents(false)`
+	 * leaves it to the game's host (a web game portal's SDK, a native
+	 * wrapper), whose callbacks then emit `event.BLUR` and `event.FOCUS`.
 	 * @default true
 	 * @example
 	 *  // keep the default game instance running even when losing focus
@@ -254,7 +259,8 @@ export default class Application {
 	resumeOnFocus: boolean;
 
 	/**
-	 * Specify whether to stop this app when losing focus
+	 * Specify whether to stop this app when losing focus: updates and drawing
+	 * both stop, and start again on focus.
 	 * @default false
 	 */
 	stopOnBlur: boolean;

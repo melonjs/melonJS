@@ -1,6 +1,6 @@
 ---
 name: melonjs-scenes-and-state
-description: "Use this skill for scene structure and game flow in melonJS — Stage subclasses, the state manager, transitions, pausing, the update loop, timers and tweens. Covers onResetEvent versus the constructor, state.set before state.change, the camera and world lifecycle per stage, and pause-aware timing. Triggers on: Tween, easing, fade out, flash, pulse, punch, shrink back, ease in, ease out, animate over time, countdown in update, Stage, state, state.set, state.change, state.transition, pixelate, Trigger transition, retry level, state.pause, pauseOnBlur, resumeOnFocus, onResetEvent, onDestroyEvent, onActivateEvent, onDeactivateEvent, PLAY, MENU, LOADING, update loop, GAME_UPDATE, timer, setTimeout, setInterval, Tween, freeze, save, save.add, setStorage, localStorage, cloud save, high score persistence."
+description: "Use this skill for scene structure and game flow in melonJS — Stage subclasses, the state manager, transitions, pausing, the update loop, timers and tweens. Covers onResetEvent versus the constructor, state.set before state.change, the camera and world lifecycle per stage, and pause-aware timing. Triggers on: Tween, easing, fade out, flash, pulse, punch, shrink back, ease in, ease out, animate over time, countdown in update, Stage, state, state.set, state.change, state.transition, pixelate, Trigger transition, retry level, state.pause, pauseOnBlur, resumeOnFocus, onResetEvent, onDestroyEvent, onActivateEvent, onDeactivateEvent, PLAY, MENU, LOADING, update loop, GAME_UPDATE, timer, setTimeout, setInterval, Tween, freeze, setFocusEvents, focusEvents, host or portal pause, YouTube Playables onPause, save, save.add, setStorage, localStorage, cloud save, high score persistence."
 license: MIT
 ---
 
@@ -195,6 +195,25 @@ triggers it while the canvas is still fully visible.
 On focus, `resumeOnFocus` (default `true`) undoes only the pause the
 application applied on blur. A game the player paused from its own menu stays
 paused when the window comes back; before 20.9 it resumed underneath the menu.
+
+**When a host decides, not the window.** A game embedded by a host that says
+when it runs, such as a web game portal's SDK (YouTube Playables forbids
+pausing on the page's visibility) or a native wrapper, stops following the
+window with `device.setFocusEvents(false)` and emits the engine's own events
+from the host's callbacks:
+
+```js
+device.setFocusEvents(false);   // the window's blur, focus and visibilitychange no longer count
+app.stopOnBlur = true;          // a pause stops drawing too; pauseOnBlur keeps drawing
+app.pauseOnBlur = false;
+ytgame.system.onPause(() => event.emit(event.BLUR));
+ytgame.system.onResume(() => event.emit(event.FOCUS));
+```
+
+Everything else is as with the window: `pauseOnBlur`, `stopOnBlur` and
+`resumeOnFocus` decide what happens, the sound effects are silenced and held
+keys released, and only a pause the engine applied is undone. It can be called
+before or after creating the application.
 
 ## The update loop
 
@@ -472,6 +491,8 @@ save.add({ hiscore: 0 });      // the cloud value, or 0 the first time
 | scene builds once and is empty on return | content created in the constructor, not `onResetEvent` |
 | a cloud save behind `save.setStorage()` comes back with the defaults | the storage answered before its data had loaded; await the load, then call `setStorage()` |
 | a saved key is gone after `save.setStorage()` | only keys registered with `save.add()` are carried over to the new storage; register it (before or after) |
+| the game pauses or goes quiet when the tab is hidden, on a portal that must decide that itself | the window still drives the focus: `device.setFocusEvents(false)`, then emit `event.BLUR` / `event.FOCUS` from the portal's callbacks |
+| a host's pause stops the game's updates but it keeps drawing | `pauseOnBlur` keeps drawing; set `stopOnBlur = true` and `pauseOnBlur = false` |
 | `Undefined Stage for state 'N'` thrown | no `state.set` for that id first |
 | `state.change(state.PLAY)` from `PLAY` does nothing ("Retry" ignored) | a change to the current state is a no-op — `level.reload()`, or go through another state |
 | a level change through a `Trigger` ignores `state.transition` | it is a level change, not a state change: set `color` and `duration` (and `transition`) on the trigger |
