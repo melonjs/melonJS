@@ -66,6 +66,12 @@ const PLANK_LENGTH = 40;
 const LINKS = 11;
 const LINK_LENGTH = 16;
 const BALL_RADIUS = 24;
+/**
+ * The fastest a dragged ball moves, in pixels per second: about as fast as it
+ * swings. Its velocity is set every frame, over what its joints ask of it, so
+ * a hard pull with no cap tears the chain open
+ */
+const DRAG_SPEED = 700;
 /** where the chain hangs from */
 const HOOK = { x: 680, y: 112 };
 
@@ -243,6 +249,10 @@ class Ball extends Renderable {
 		if (this.held !== null) {
 			const { x, y } = this.centre;
 			this.push.set((this.held.x - x) * 8, (this.held.y - y) * 8);
+			const speed = this.push.length();
+			if (speed > DRAG_SPEED) {
+				this.push.scale(DRAG_SPEED / speed);
+			}
 			this.parentApp?.world.adapter.setVelocity(this, this.push);
 		}
 		return super.update(dt);

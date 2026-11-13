@@ -1139,6 +1139,7 @@ yourself through `adapter.world` with `world.removeImpulseJoint()` /
 | entity jitters or does not move | assigning `pos` instead of applying force |
 | `world.adapter = …` throws a `TypeError` | `world.adapter` is read-only; call `world.setAdapter(adapter)` |
 | a body stops simulating after `world.setAdapter()` | it was added with a direct `adapter.addBody()`; give it a `bodyDef` |
+| a dragged body tears its joints apart, and other bodies pass through the gap | `setVelocity()` every frame overrides what the joints ask of the body; cap the speed (the Ropes & Joints example caps its ball at 700 px/s, about its swinging speed) |
 | `addJoint()` throws "the builtin adapter has none" (or matter) | the adapter has no joints (`capabilities.constraints` is `false`); use planck or Rapier, or check the flag first |
 | `setAdapter()` throws "dropped N joints" | the new adapter has no joints; the switch went through without them. Remove them with `world.removeJoint()` before switching |
 | `addJoint()` throws "needs both renderables to have a body" | a renderable is not in the world yet: `addChild()` both first |
