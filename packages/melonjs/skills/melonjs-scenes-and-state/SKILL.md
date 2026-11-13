@@ -1,6 +1,6 @@
 ---
 name: melonjs-scenes-and-state
-description: "Use this skill for scene structure and game flow in melonJS — Stage subclasses, the state manager, transitions, pausing, the update loop, timers and tweens. Covers onResetEvent versus the constructor, state.set before state.change, the camera and world lifecycle per stage, and pause-aware timing. Triggers on: Tween, easing, fade out, flash, pulse, punch, shrink back, ease in, ease out, animate over time, countdown in update, Stage, state, state.set, state.change, state.transition, pixelate, Trigger transition, retry level, state.pause, pauseOnBlur, resumeOnFocus, onResetEvent, onDestroyEvent, onActivateEvent, onDeactivateEvent, PLAY, MENU, LOADING, update loop, GAME_UPDATE, timer, setTimeout, setInterval, Tween, freeze."
+description: "Use this skill for scene structure and game flow in melonJS — Stage subclasses, the state manager, transitions, pausing, the update loop, timers and tweens. Covers onResetEvent versus the constructor, state.set before state.change, the camera and world lifecycle per stage, and pause-aware timing. Triggers on: Tween, easing, fade out, flash, pulse, punch, shrink back, ease in, ease out, animate over time, countdown in update, Stage, state, state.set, state.change, state.transition, pixelate, Trigger transition, retry level, state.pause, pauseOnBlur, resumeOnFocus, onResetEvent, onDestroyEvent, onActivateEvent, onDeactivateEvent, PLAY, MENU, LOADING, update loop, GAME_UPDATE, timer, setTimeout, setInterval, Tween, freeze, save, save.add, setStorage, localStorage, cloud save, high score persistence."
 license: MIT
 ---
 
@@ -437,11 +437,41 @@ if (score > store.hiscore) { /* ... */ }
 Chained calls accumulate, so `save.add({ a: 0 }).add({ b: "" })` is typed with
 both.
 
+**Somewhere other than `localStorage`.** `save.setStorage(storage)` keeps the
+keys in anything with `getItem`, `setItem` and `removeItem` (the
+`SaveStorage` type): a game portal's cloud save, a native wrapper's storage.
+`localStorage` stays the default, and `save.setStorage(localStorage)` goes
+back to it. The storage is handed the same items `localStorage` would hold
+(`me.save.<key>` with the value as JSON, and `me.save`, the list of keys).
+
+```js
+// a cloud save that loads and saves its data as one string: load it first,
+// then serve the keys from memory and save on every change
+const held = JSON.parse((await portal.loadData()) || "{}");
+save.setStorage({
+    getItem: (key) => held[key] ?? null,
+    setItem: (key, value) => { held[key] = value; portal.saveData(JSON.stringify(held)); },
+    removeItem: (key) => { delete held[key]; portal.saveData(JSON.stringify(held)); },
+});
+save.add({ hiscore: 0 });      // the cloud value, or 0 the first time
+```
+
+- `save` calls the storage synchronously, as it calls `localStorage`. A cloud
+  save that loads asynchronously is loaded **before** `setStorage()`, then
+  answered from memory; saving can happen in the background.
+- What the new storage holds is read at once and wins. A key registered with
+  `add()` that it does not hold keeps its value and is written to it, so
+  `setStorage()` works before or after `add()`. A key that was only read from
+  the previous storage, never registered, is not carried over.
+- Nothing is copied back to the previous storage, nor removed from it.
+
 ## Symptom → cause
 
 | symptom | cause |
 |---|---|
 | scene builds once and is empty on return | content created in the constructor, not `onResetEvent` |
+| a cloud save behind `save.setStorage()` comes back with the defaults | the storage answered before its data had loaded; await the load, then call `setStorage()` |
+| a saved key is gone after `save.setStorage()` | only keys registered with `save.add()` are carried over to the new storage; register it (before or after) |
 | `Undefined Stage for state 'N'` thrown | no `state.set` for that id first |
 | `state.change(state.PLAY)` from `PLAY` does nothing ("Retry" ignored) | a change to the current state is a no-op — `level.reload()`, or go through another state |
 | a level change through a `Trigger` ignores `state.transition` | it is a level change, not a state change: set `color` and `duration` (and `transition`) on the trigger |
