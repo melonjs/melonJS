@@ -1,6 +1,6 @@
 ---
 name: melonjs-scenes-and-state
-description: "Use this skill for scene structure and game flow in melonJS — Stage subclasses, the state manager, transitions, pausing, the update loop, timers and tweens. Covers onResetEvent versus the constructor, state.set before state.change, the camera and world lifecycle per stage, and pause-aware timing. Triggers on: Tween, easing, fade out, flash, pulse, punch, shrink back, ease in, ease out, animate over time, countdown in update, Stage, state, state.set, state.change, state.transition, pixelate, Trigger transition, retry level, state.pause, pauseOnBlur, resumeOnFocus, onResetEvent, onDestroyEvent, onActivateEvent, onDeactivateEvent, PLAY, MENU, LOADING, update loop, GAME_UPDATE, timer, setTimeout, setInterval, Tween, freeze, setFocusEvents, focusEvents, host or portal pause, YouTube Playables onPause, save, save.add, setStorage, localStorage, cloud save, high score persistence."
+description: "Use this skill for scene structure and game flow in melonJS — Stage subclasses, the state manager, transitions, pausing, the update loop, timers and tweens. Covers onResetEvent versus the constructor, state.set before state.change, the camera and world lifecycle per stage, and pause-aware timing. Triggers on: Tween, easing, fade out, flash, pulse, punch, shrink back, ease in, ease out, animate over time, countdown in update, Stage, state, state.set, state.change, state.transition, pixelate, Trigger transition, retry level, state.pause, pauseOnBlur, resumeOnFocus, onResetEvent, onDestroyEvent, onActivateEvent, onDeactivateEvent, PLAY, MENU, LOADING, update loop, GAME_UPDATE, timer, setTimeout, setInterval, Tween, freeze, setFocusEvents, focusEvents, host or portal pause, YouTube Playables onPause, save, save.add, setStorage, createCloudStorage, flush, localStorage, cloud save, high score persistence."
 license: MIT
 ---
 
@@ -469,28 +469,69 @@ if (score > store.hiscore) { /* ... */ }
 Chained calls accumulate, so `save.add({ a: 0 }).add({ b: "" })` is typed with
 both.
 
-**Somewhere other than `localStorage`.** `save.setStorage(storage)` keeps the
-keys in anything with `getItem`, `setItem` and `removeItem` (the
-`SaveStorage` type): a game portal's cloud save, a native wrapper's storage.
-`localStorage` stays the default, and `save.setStorage(localStorage)` goes
-back to it. The storage is handed the same items `localStorage` would hold
-(`me.save.<key>` with the value as JSON, and `me.save`, the list of keys).
+**Somewhere other than `localStorage`.** Two calls, one for each kind of
+storage:
+
+| call | for |
+|---|---|
+| `save.setStorage(storage)` | keeping the keys in anything with `getItem`, `setItem` and `removeItem` (the `SaveStorage` type), called synchronously, as `localStorage` is |
+| `save.createCloudStorage({ data, write })` | making such a storage out of a platform's cloud save (YouTube Playables, Facebook Instant Games), which loads and saves asynchronously |
+
+`localStorage` stays the default, and `save.setStorage(localStorage)` goes back
+to it. A storage is handed the same items `localStorage` would hold:
+`me.save.<key>` with the key's value as JSON, and `me.save`, the list of keys.
+
+A platform's cloud save: load it before the game reads `save`, then hand it
+over. `data` is what the platform loaded (an object, its JSON, or nothing the
+first time); `write(items)` saves every item back:
 
 ```js
-// a cloud save that loads and saves its data as one string: load it first,
-// then serve the keys from memory and save on every change
-const held = JSON.parse((await portal.loadData()) || "{}");
-save.setStorage({
-    getItem: (key) => held[key] ?? null,
-    setItem: (key, value) => { held[key] = value; portal.saveData(JSON.stringify(held)); },
-    removeItem: (key) => { delete held[key]; portal.saveData(JSON.stringify(held)); },
+// YouTube Playables: the save is one string
+const cloud = save.createCloudStorage({
+    data: await ytgame.game.loadData(),
+    write: (items) => ytgame.game.saveData(JSON.stringify(items)),
 });
-save.add({ hiscore: 0 });      // the cloud value, or 0 the first time
+save.setStorage(cloud);
+ytgame.system.onPause(() => cloud.flush());   // save at once when the game is paused
+
+// Facebook Instant Games: the save is a key of the player's data
+const { save: data } = await FBInstant.player.getDataAsync(["save"]);
+save.setStorage(save.createCloudStorage({
+    data,
+    write: (items) => FBInstant.player.setDataAsync({ save: items }),
+}));
+
+// either way, the game then just uses save
+const progress = save.add({ hiscore: 0 });     // the cloud value, or 0 the first time
+progress.hiscore = 4200;                       // saved to the cloud
 ```
 
-- `save` calls the storage synchronously, as it calls `localStorage`. A cloud
-  save that loads asynchronously is loaded **before** `setStorage()`, then
-  answered from memory; saving can happen in the background.
+What `createCloudStorage()` does for you:
+
+- It keeps every item in memory, so `save` never waits on the network.
+- The changes made together (a key and the list of keys) go in one `write()`.
+  Writes are made **one at a time**: what changes during a write goes in the
+  next one, with the latest values. A platform that refuses a save while one is
+  pending (Facebook's `PENDING_REQUEST`) never sees two.
+- A write that fails is logged, and everything is saved again with the next
+  change or `flush()`.
+- `flush()` saves now and resolves once everything is saved: call it on the
+  platform's pause or close.
+
+A storage of your own, such as a native wrapper's, only needs the three calls,
+synchronous:
+
+```js
+save.setStorage({
+    getItem: (key) => native.read(key) ?? null,
+    setItem: (key, value) => native.write(key, value),
+    removeItem: (key) => native.erase(key),
+});
+save.setStorage(localStorage);                 // and back to the default
+```
+
+When `setStorage()` switches storage:
+
 - What the new storage holds is read at once and wins. A key registered with
   `add()` that it does not hold keeps its value and is written to it, so
   `setStorage()` works before or after `add()`. A key that was only read from
@@ -502,7 +543,9 @@ save.add({ hiscore: 0 });      // the cloud value, or 0 the first time
 | symptom | cause |
 |---|---|
 | scene builds once and is empty on return | content created in the constructor, not `onResetEvent` |
-| a cloud save behind `save.setStorage()` comes back with the defaults | the storage answered before its data had loaded; await the load, then call `setStorage()` |
+| a cloud save behind `save.setStorage()` comes back with the defaults | the storage answered before its data had loaded; await the platform's load, then `save.createCloudStorage({ data, write })` |
+| the platform refuses saves (Facebook's `PENDING_REQUEST`), or the game floods it with them | a hand-written storage saving on every `setItem()`; `save.createCloudStorage()` saves the changes together, one write at a time |
+| progress made just before the player left is lost | the last save was still waiting; call the cloud storage's `flush()` on the platform's pause |
 | a saved key is gone after `save.setStorage()` | only keys registered with `save.add()` are carried over to the new storage; register it (before or after) |
 | the game pauses or goes quiet when the tab is hidden, on a portal that must decide that itself | the window still drives the focus: `device.setFocusEvents(false)`, then emit `event.BLUR` / `event.FOCUS` from the portal's callbacks |
 | a host's pause stops the game's updates but it keeps drawing | `pauseOnBlur` keeps drawing; set `stopOnBlur = true` and `pauseOnBlur = false` |

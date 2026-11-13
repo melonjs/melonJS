@@ -15,6 +15,135 @@ import { BOOT, once } from "./event.js";
  */
 export type SaveStorage = Pick<Storage, "getItem" | "setItem" | "removeItem">;
 
+/**
+ * What {@link SaveAPI.createCloudStorage | save.createCloudStorage()} takes.
+ */
+export interface CloudStorageOptions {
+	/**
+	 * What the platform loaded: the items a previous session saved, as an
+	 * object or as that object in JSON. Nothing (`undefined`, `null` or an
+	 * empty string) the first time.
+	 */
+	data?: Record<string, unknown> | string | null;
+	/**
+	 * Save every item back to the platform. Called with all of them, one call
+	 * at a time: the next call waits for the promise this one returns.
+	 */
+	write: (items: Record<string, string>) => unknown;
+}
+
+/**
+ * A storage for {@link SaveAPI.setStorage | save.setStorage()} that keeps the
+ * items in memory and saves them to a platform's cloud save, made by
+ * {@link SaveAPI.createCloudStorage | save.createCloudStorage()}.
+ */
+export interface CloudStorage extends SaveStorage {
+	/**
+	 * Save what has changed now, rather than with the next change, and
+	 * resolve once every change made so far is saved: before the game is
+	 * paused or closed, for example. A write that fails is logged, and the
+	 * promise still resolves.
+	 */
+	flush(): Promise<void>;
+}
+
+/**
+ * The items a platform loaded, as strings: an object, or that object in JSON.
+ * @ignore
+ * @internal
+ * @param loaded - what the platform loaded
+ * @returns the items
+ */
+function cloudItems(
+	loaded: CloudStorageOptions["data"],
+): Record<string, string> {
+	let parsed: unknown = loaded;
+	if (typeof loaded === "string") {
+		try {
+			parsed = loaded.length > 0 ? JSON.parse(loaded) : {};
+		} catch {
+			console.error(
+				"melonJS: save.createCloudStorage(): data is not valid JSON",
+			);
+			parsed = {};
+		}
+	}
+	const items: Record<string, string> = {};
+	if (typeof parsed === "object" && parsed !== null) {
+		for (const [key, value] of Object.entries(parsed)) {
+			// what `save` wrote is a string; a platform may hand it back parsed
+			items[key] = typeof value === "string" ? value : JSON.stringify(value);
+		}
+	}
+	return items;
+}
+
+/**
+ * Make a {@link CloudStorage}.
+ * @ignore
+ * @internal
+ * @param options - what was loaded, and how to save
+ * @returns the storage
+ */
+function createCloudStorage(options: CloudStorageOptions): CloudStorage {
+	const items = cloudItems(options.data);
+	// a change not saved yet
+	let changed = false;
+	// the saving under way, until everything changed is saved
+	let saving: Promise<void> | undefined;
+
+	const saveChanges = async (): Promise<void> => {
+		// changes made together (a key and the list of keys) are saved together
+		await Promise.resolve();
+		try {
+			while (changed) {
+				changed = false;
+				try {
+					await options.write({ ...items });
+				} catch (error) {
+					// kept, and saved again with the next change or flush()
+					changed = true;
+					console.error(
+						"melonJS: save.createCloudStorage(): write failed",
+						error,
+					);
+					break;
+				}
+			}
+		} finally {
+			saving = undefined;
+		}
+	};
+
+	const startSaving = (): Promise<void> => {
+		saving ??= saveChanges();
+		return saving;
+	};
+
+	return {
+		getItem: (key) => {
+			return Object.hasOwn(items, key) ? items[key] : null;
+		},
+		setItem: (key, value) => {
+			items[key] = value;
+			changed = true;
+			void startSaving();
+		},
+		removeItem: (key) => {
+			if (Object.hasOwn(items, key)) {
+				delete items[key];
+				changed = true;
+				void startSaving();
+			}
+		},
+		flush: () => {
+			return changed || saving !== undefined
+				? startSaving()
+				: Promise.resolve();
+		},
+	};
+}
+
 // Variable to hold the object data
 const data: Record<string, unknown> = {};
 
@@ -36,7 +165,12 @@ let storage: SaveStorage | undefined = getLocalStorage();
  * @internal
  */
 function isReserved(key: string) {
-	return key === "add" || key === "remove" || key === "setStorage";
+	return (
+		key === "add" ||
+		key === "remove" ||
+		key === "setStorage" ||
+		key === "createCloudStorage"
+	);
 }
 
 /**
@@ -150,34 +284,71 @@ export interface SaveAPI {
 	 *   values read from the previous one. A key registered with
 	 *   {@link SaveAPI.add | add()} that it does not hold keeps its value, and
 	 *   is written to it. So it can be called before or after `add()`.
-	 * - The calls are synchronous, as `localStorage`'s are. A storage that
-	 *   loads and saves asynchronously, as a cloud save does, loads its data
-	 *   first, then answers from memory and saves in the background, as in
-	 *   the example.
+	 * - The calls are synchronous, as `localStorage`'s are. For a cloud save,
+	 *   which loads and saves asynchronously, use
+	 *   {@link SaveAPI.createCloudStorage | createCloudStorage()}: it holds
+	 *   the items in memory once they are loaded, and saves in the background.
 	 * - Nothing is copied to the previous storage, nor removed from it.
 	 * @param storage - where the keys are kept from now on
 	 * @example
-	 * // a cloud save that loads and saves its data as one string: load it
-	 * // first, then serve the keys from memory and save on every change
-	 * const held = JSON.parse((await portal.loadData()) || "{}");
-	 * me.save.setStorage({
-	 *     getItem: (key) => held[key] ?? null,
-	 *     setItem: (key, value) => {
-	 *         held[key] = value;
-	 *         portal.saveData(JSON.stringify(held));
-	 *     },
-	 *     removeItem: (key) => {
-	 *         delete held[key];
-	 *         portal.saveData(JSON.stringify(held));
-	 *     },
-	 * });
+	 * // a platform's cloud save: load it first, then hand it to save
+	 * const data = await portal.loadData();
+	 * me.save.setStorage(me.save.createCloudStorage({
+	 *     data,
+	 *     write: (items) => portal.saveData(JSON.stringify(items)),
+	 * }));
 	 * // the value in the cloud save, or 0 the first time
 	 * me.save.add({ hiscore : 0 });
+	 * @example
+	 * // a storage of your own, such as a native wrapper's: three synchronous calls
+	 * me.save.setStorage({
+	 *     getItem: (key) => native.read(key) ?? null,
+	 *     setItem: (key, value) => native.write(key, value),
+	 *     removeItem: (key) => native.erase(key),
+	 * });
 	 * @example
 	 * // back to the browser's localStorage
 	 * me.save.setStorage(localStorage);
 	 */
 	setStorage(storage: SaveStorage): void;
+
+	/**
+	 * Make a storage for {@link SaveAPI.setStorage | setStorage()} out of a
+	 * platform's cloud save, such as YouTube Playables' or Facebook Instant
+	 * Games': the save is loaded once, before the game starts, and everything
+	 * is saved back in one piece.
+	 *
+	 * - `data` is what the platform loaded: an object, or that object in JSON,
+	 *   or nothing the first time. The storage starts from it and keeps every
+	 *   item in memory, so `save` reads and writes without waiting.
+	 * - `write(items)` saves every item back to the platform. Changes made
+	 *   together are saved in one call, and calls are made one at a time:
+	 *   changes made while one is in progress go in the next one, with the
+	 *   latest values. A platform that refuses a save while another is
+	 *   pending, as Facebook's does, never sees two.
+	 * - A write that fails (its promise rejects) is logged, and the items are
+	 *   saved again with the next change, or by `flush()`.
+	 * - `flush()` saves at once and resolves when everything is saved: call it
+	 *   when the platform pauses or closes the game.
+	 * @param options - what the platform loaded, and how to save
+	 * @returns the storage, to hand to `setStorage()`
+	 * @example
+	 * // YouTube Playables
+	 * const cloud = me.save.createCloudStorage({
+	 *     data: await ytgame.game.loadData(),
+	 *     write: (items) => ytgame.game.saveData(JSON.stringify(items)),
+	 * });
+	 * me.save.setStorage(cloud);
+	 * ytgame.system.onPause(() => cloud.flush());
+	 * @example
+	 * // Facebook Instant Games
+	 * const { save: data } = await FBInstant.player.getDataAsync(["save"]);
+	 * me.save.setStorage(me.save.createCloudStorage({
+	 *     data,
+	 *     write: (items) => FBInstant.player.setDataAsync({ save: items }),
+	 * }));
+	 */
+	createCloudStorage(options: CloudStorageOptions): CloudStorage;
 
 	/** keys registered through {@link SaveAPI.add} */
 	[key: string]: unknown;
@@ -187,7 +358,9 @@ export interface SaveAPI {
  * Keep game data, such as a high score or how far the player got, from one
  * session to the next. The keys are kept in the browser's `localStorage` by
  * default; {@link SaveAPI.setStorage | save.setStorage()} keeps them somewhere
- * else, such as a game portal's cloud save.
+ * else, and {@link SaveAPI.createCloudStorage | save.createCloudStorage()}
+ * makes that somewhere a platform's cloud save, such as YouTube Playables' or
+ * Facebook Instant Games'.
  * @example
  * // Initialize "score" and "lives" with default values
  * // This loads the properties from localStorage if they exist, else it sets the given defaults
@@ -306,6 +479,15 @@ const save: SaveAPI = {
 			}
 		}
 		saveIndex();
+	},
+
+	/**
+	 * Make a storage out of a platform's cloud save
+	 * @param options - what the platform loaded, and how to save
+	 * @returns the storage
+	 */
+	createCloudStorage(options: CloudStorageOptions) {
+		return createCloudStorage(options);
 	},
 };
 
