@@ -30,6 +30,32 @@ declare const __VERSION__: string;
 export const REQUIRED_MELONJS_VERSION = "20.0.0";
 
 /**
+ * What `world.addJoint()` passes to {@link PlanckAdapter.addJoint}: melonJS's
+ * `JointDefinition`, spelled out so this package still type-checks against a
+ * melonJS older than the one defining it.
+ */
+export interface PlanckJointDefinition {
+	type: "hinge" | "rope" | "weld" | "slider";
+	a: Renderable;
+	b: Renderable;
+	anchorA?: { x: number; y: number };
+	anchorB?: { x: number; y: number };
+	collideConnected?: boolean;
+	limits?: { min: number; max: number };
+	maxLength?: number;
+	axis?: { x: number; y: number };
+}
+
+/**
+ * The world's internal hook that builds a renderable's joints again after
+ * `updateShape()` rebuilt its body. Internal, so not in melonJS's published
+ * types, and absent before melonJS 20.15, which has no joints.
+ */
+type WorldJointHook = {
+	_rebuildJointsOf?: (renderable: Renderable) => void;
+};
+
+/**
  * Options accepted by the {@link PlanckAdapter} constructor.
  */
 export interface PlanckAdapterOptions {
@@ -236,6 +262,26 @@ export class PlanckAdapter implements PhysicsAdapter {
 	 * See {@link PlanckAdapter.removeBody}.
 	 */
 	private readonly lockedRemovals: planck.Body[] = [];
+	/** the joints {@link PlanckAdapter.addJoint} made that are still alive */
+	private readonly joints = new Set<planck.Joint>();
+	/** joints made while the world was locked, created after the step */
+	private readonly lockedJoints: planck.Joint[] = [];
+	/** shape changes asked for during a step, made once it ends */
+	private readonly lockedShapeUpdates: {
+		renderable: Renderable;
+		shapes: BodyShape[];
+	}[] = [];
+	/** joints removed while the world was locked, destroyed after the step */
+	private readonly lockedJointRemovals: planck.Joint[] = [];
+	/**
+	 * Each body's origin in its renderable's own space, in pixels: the shape
+	 * centroid it is registered at. A joint anchor, given in that space, is
+	 * this far from the body origin.
+	 */
+	private readonly bodyOrigins = new Map<
+		Renderable,
+		{ x: number; y: number }
+	>();
 	private readonly renderableMap = new Map<planck.Body, Renderable>();
 	/**
 	 * planck fixture -> the melonJS shape it was built from, and that shape's
@@ -404,6 +450,12 @@ export class PlanckAdapter implements PhysicsAdapter {
 			body = next;
 		}
 		this.lockedRemovals.length = 0;
+		// destroying the bodies destroyed their joints
+		this.joints.clear();
+		this.lockedJoints.length = 0;
+		this.lockedJointRemovals.length = 0;
+		this.lockedShapeUpdates.length = 0;
+		this.bodyOrigins.clear();
 		this.bodyMap.clear();
 		this.renderableMap.clear();
 		this.fixtureShapeMap.clear();
@@ -439,17 +491,38 @@ export class PlanckAdapter implements PhysicsAdapter {
 	}
 
 	/**
-	 * One `world.step`, then the bodies removed while it ran: the world is
-	 * unlocked again, so planck destroys them now.
+	 * One `world.step`, then the joints and bodies added or removed while it
+	 * ran: the world is unlocked again, so planck acts on them now. Joints
+	 * removed first, as destroying a body destroys its joints too.
 	 * @param seconds the time to advance the world by
 	 */
 	private _stepWorld(seconds: number): void {
 		this.world.step(seconds, this.velocityIterations, this.positionIterations);
+		if (this.lockedJointRemovals.length > 0) {
+			for (const joint of this.lockedJointRemovals) {
+				this.world.destroyJoint(joint);
+			}
+			this.lockedJointRemovals.length = 0;
+		}
 		if (this.lockedRemovals.length > 0) {
 			for (const body of this.lockedRemovals) {
 				this.world.destroyBody(body);
 			}
 			this.lockedRemovals.length = 0;
+		}
+		if (this.lockedJoints.length > 0) {
+			for (const joint of this.lockedJoints) {
+				this.world.createJoint(joint);
+			}
+			this.lockedJoints.length = 0;
+		}
+		if (this.lockedShapeUpdates.length > 0) {
+			// a body removed since is skipped: updateShape() ignores a
+			// renderable without one
+			const updates = this.lockedShapeUpdates.splice(0);
+			for (const { renderable, shapes } of updates) {
+				this.updateShape(renderable, shapes);
+			}
 		}
 	}
 
@@ -629,6 +702,7 @@ export class PlanckAdapter implements PhysicsAdapter {
 			x: anchorX - centroid.x,
 			y: anchorY - centroid.y,
 		});
+		this.bodyOrigins.set(renderable, { x: centroid.x, y: centroid.y });
 
 		// Helper methods spliced onto the planck body so user code can
 		// write `renderable.body.setVelocity(x, y)` regardless of which
@@ -811,6 +885,22 @@ export class PlanckAdapter implements PhysicsAdapter {
 	removeBody(renderable: Renderable): void {
 		const body = this.bodyMap.get(renderable);
 		if (body) {
+			// destroying the body destroys its joints: forget them, and drop
+			// any still waiting for the step to end
+			for (let edge = body.getJointList(); edge; edge = edge.next) {
+				if (edge.joint) {
+					this.joints.delete(edge.joint);
+				}
+			}
+			for (const queue of [this.lockedJoints, this.lockedJointRemovals]) {
+				for (let i = queue.length - 1; i >= 0; i--) {
+					if (queue[i].getBodyA() === body || queue[i].getBodyB() === body) {
+						this.joints.delete(queue[i]);
+						queue.splice(i, 1);
+					}
+				}
+			}
+			this.bodyOrigins.delete(renderable);
 			if (this.world.isLocked()) {
 				// inside a step (a contact event handler): planck ignores
 				// `destroyBody` there without a word, which left a body that
@@ -837,10 +927,17 @@ export class PlanckAdapter implements PhysicsAdapter {
 
 	updateShape(renderable: Renderable, shapes: BodyShape[]): void {
 		// Box2D doesn't support live shape mutation; rebuild the body and
-		// carry forward linear + angular velocity state so a moving body
-		// whose shape changes mid-flight doesn't stop dead.
+		// carry forward its angle and its linear + angular velocity, so a
+		// moving body whose shape changes mid-flight doesn't stop dead or
+		// snap upright.
 		const oldDef = this.defMap.get(renderable);
 		if (!oldDef) {
+			return;
+		}
+		if (this.world.isLocked()) {
+			// inside a step (a contact event handler): planck refuses to make
+			// a body there. Reshape it once the step ends
+			this.lockedShapeUpdates.push({ renderable, shapes });
 			return;
 		}
 		const oldBody = this.bodyMap.get(renderable);
@@ -848,12 +945,177 @@ export class PlanckAdapter implements PhysicsAdapter {
 			? { x: oldBody.getLinearVelocity().x, y: oldBody.getLinearVelocity().y }
 			: undefined;
 		const savedAngVel = oldBody?.getAngularVelocity() ?? 0;
+		const savedAngle = oldBody?.getAngle() ?? 0;
+		const savedPos = oldBody
+			? { x: oldBody.getPosition().x, y: oldBody.getPosition().y }
+			: undefined;
+		const oldOrigin = this.bodyOrigins.get(renderable);
 		this.removeBody(renderable);
 		const newBody = this.addBody(renderable, { ...oldDef, shapes });
+		const newOrigin = this.bodyOrigins.get(renderable);
+		if (savedPos && oldOrigin && newOrigin) {
+			// the new centre where it lies on the turned body, so the body
+			// stays where it stood
+			const dx = newOrigin.x - oldOrigin.x;
+			const dy = newOrigin.y - oldOrigin.y;
+			const cos = Math.cos(savedAngle);
+			const sin = Math.sin(savedAngle);
+			newBody.setTransform(
+				{
+					x: savedPos.x + this.px2m(dx * cos - dy * sin),
+					y: savedPos.y + this.px2m(dx * sin + dy * cos),
+				},
+				savedAngle,
+			);
+		}
 		if (savedVel) {
 			newBody.setLinearVelocity(new planck.Vec2(savedVel.x, savedVel.y));
 			newBody.setAngularVelocity(savedAngVel);
 		}
+		// the old body took its joints with it: the world builds them again
+		(this.melonWorld as WorldJointHook)._rebuildJointsOf?.(renderable);
+	}
+
+	/**
+	 * Make a joint between two bodies: what `world.addJoint()` calls, which
+	 * game code uses instead. A `"hinge"` is a planck `RevoluteJoint`, a
+	 * `"rope"` a `RopeJoint`, a `"weld"` a `WeldJoint` and a `"slider"` a
+	 * `PrismaticJoint`. Made during a step (from a collision handler), the
+	 * joint takes effect once the step ends: planck refuses to change its
+	 * world while it steps.
+	 * @param def - what to join, and how, in pixels and radians
+	 * @returns the planck joint
+	 */
+	addJoint(def: PlanckJointDefinition): planck.Joint {
+		const bodyA = this.bodyMap.get(def.a);
+		const bodyB = this.bodyMap.get(def.b);
+		if (bodyA === undefined || bodyB === undefined) {
+			throw new Error(
+				"@melonjs/planck-adapter: addJoint() needs both renderables to have a body in the world; add them with addChild() first.",
+			);
+		}
+		const localAnchorB = this._localAnchor(def.b, def.anchorB);
+		const base = {
+			bodyA,
+			bodyB,
+			// no anchor on `a`: the point of `a` under b's anchor, so nothing
+			// moves when the joint is made; a rope joins the two centres
+			localAnchorA:
+				def.anchorA === undefined && def.type !== "rope"
+					? bodyA.getLocalPoint(bodyB.getWorldPoint(localAnchorB))
+					: this._localAnchor(def.a, def.anchorA),
+			localAnchorB,
+			collideConnected: def.collideConnected === true,
+		};
+		// the defaults resolved here are written back, so the same joint is
+		// made again when the world rebuilds it (`setAdapter`, `updateShape`)
+		if (def.anchorA === undefined) {
+			const origin = this.bodyOrigins.get(def.a) ?? { x: 0, y: 0 };
+			def.anchorA = {
+				x: this.m2px(base.localAnchorA.x) + origin.x,
+				y: this.m2px(base.localAnchorA.y) + origin.y,
+			};
+		}
+		if (def.anchorB === undefined) {
+			// b's centre now, which a new shape would move
+			const origin = this.bodyOrigins.get(def.b) ?? { x: 0, y: 0 };
+			def.anchorB = { x: origin.x, y: origin.y };
+		}
+		const limited = def.limits !== undefined;
+		let joint: planck.Joint;
+		switch (def.type) {
+			case "hinge":
+				joint = new planck.RevoluteJoint({
+					...base,
+					// the angle is b's minus a's, as on Rapier
+					referenceAngle: 0,
+					enableLimit: limited,
+					lowerAngle: def.limits?.min ?? 0,
+					upperAngle: def.limits?.max ?? 0,
+				});
+				break;
+			case "rope":
+				if (def.maxLength === undefined) {
+					const pa = bodyA.getWorldPoint(base.localAnchorA);
+					const pb = bodyB.getWorldPoint(base.localAnchorB);
+					def.maxLength = this.m2px(Math.hypot(pb.x - pa.x, pb.y - pa.y));
+				}
+				joint = new planck.RopeJoint({
+					...base,
+					maxLength: this.px2m(def.maxLength),
+				});
+				break;
+			case "weld":
+				joint = new planck.WeldJoint({
+					...base,
+					// welded as they stand
+					referenceAngle: bodyB.getAngle() - bodyA.getAngle(),
+				});
+				break;
+			case "slider": {
+				const axis = def.axis ?? { x: 1, y: 0 };
+				const length = Math.hypot(axis.x, axis.y);
+				joint = new planck.PrismaticJoint({
+					...base,
+					localAxisA: new planck.Vec2(axis.x / length, axis.y / length),
+					referenceAngle: 0,
+					enableLimit: limited,
+					lowerTranslation: this.px2m(def.limits?.min ?? 0),
+					upperTranslation: this.px2m(def.limits?.max ?? 0),
+				});
+				break;
+			}
+			default:
+				throw new Error(
+					`@melonjs/planck-adapter: unknown joint type "${String((def as { type: unknown }).type)}"; use "hinge", "rope", "weld" or "slider".`,
+				);
+		}
+		if (this.world.isLocked()) {
+			this.lockedJoints.push(joint);
+		} else {
+			this.world.createJoint(joint);
+		}
+		this.joints.add(joint);
+		return joint;
+	}
+
+	/**
+	 * Remove a joint {@link PlanckAdapter.addJoint} made: what
+	 * `world.removeJoint()` calls. A joint already gone, with one of its
+	 * bodies, is ignored.
+	 * @param joint - the planck joint
+	 */
+	removeJoint(joint: planck.Joint): void {
+		if (!this.joints.delete(joint)) {
+			return;
+		}
+		const queued = this.lockedJoints.indexOf(joint);
+		if (queued !== -1) {
+			// never made: nothing to destroy
+			this.lockedJoints.splice(queued, 1);
+		} else if (this.world.isLocked()) {
+			this.lockedJointRemovals.push(joint);
+		} else {
+			this.world.destroyJoint(joint);
+		}
+	}
+
+	/**
+	 * A joint anchor, given in the renderable's own space in pixels, as a
+	 * point on its body in meters. No anchor is the body's origin.
+	 * @param renderable - the renderable owning the body
+	 * @param anchor - the anchor in pixels, or undefined
+	 * @returns the body-local anchor
+	 */
+	private _localAnchor(
+		renderable: Renderable,
+		anchor?: planck.Vec2Value,
+	): planck.Vec2Value {
+		if (anchor === undefined) {
+			return { x: 0, y: 0 };
+		}
+		const origin = this.bodyOrigins.get(renderable) ?? { x: 0, y: 0 };
+		return this.vec2InMeters(anchor.x - origin.x, anchor.y - origin.y);
 	}
 
 	// -------------------------------------------------------------------

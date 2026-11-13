@@ -223,6 +223,11 @@ const ExamplePhysicsShapes = lazy(() =>
 		default: m.ExamplePhysicsShapes,
 	})),
 );
+const ExampleRopesAndJoints = lazy(() =>
+	import("./examples/ropesAndJoints/ExampleRopesAndJoints").then((m) => ({
+		default: m.ExampleRopesAndJoints,
+	})),
+);
 const ExamplePlinkoPlanck = lazy(() =>
 	import("./examples/plinko-planck/ExamplePlinko").then((m) => ({
 		default: m.ExamplePlinkoPlanck,
@@ -620,6 +625,13 @@ const examples: {
 		sourceDir: "physicsShapes",
 		description:
 			"Collision shapes from a shape editor, the same body definition on every physics backend.",
+	},
+	{
+		component: <ExampleRopesAndJoints />,
+		label: "Ropes & Joints",
+		path: "ropes-and-joints",
+		sourceDir: "ropesAndJoints",
+		description: "A rope bridge and a wrecking ball, with `world.addJoint()`.",
 	},
 	{
 		component: <ExamplePlinkoPlanck />,

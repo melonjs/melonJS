@@ -30,6 +30,32 @@ declare const __VERSION__: string;
 export const REQUIRED_MELONJS_VERSION = "20.0.0";
 
 /**
+ * What `world.addJoint()` passes to {@link RapierAdapter.addJoint}: melonJS's
+ * `JointDefinition`, spelled out so this package still type-checks against a
+ * melonJS older than the one defining it.
+ */
+export interface RapierJointDefinition {
+	type: "hinge" | "rope" | "weld" | "slider";
+	a: Renderable;
+	b: Renderable;
+	anchorA?: { x: number; y: number };
+	anchorB?: { x: number; y: number };
+	collideConnected?: boolean;
+	limits?: { min: number; max: number };
+	maxLength?: number;
+	axis?: { x: number; y: number };
+}
+
+/**
+ * The world's internal hook that builds a renderable's joints again after
+ * `updateShape()` rebuilt its body. Internal, so not in melonJS's published
+ * types, and absent before melonJS 20.15, which has no joints.
+ */
+type WorldJointHook = {
+	_rebuildJointsOf?: (renderable: Renderable) => void;
+};
+
+/**
  * Options accepted by the {@link RapierAdapter} constructor and by
  * {@link RapierAdapter.create}.
  */
@@ -216,6 +242,17 @@ export class RapierAdapter implements PhysicsAdapter {
 	private readonly hooks: RAPIER.PhysicsHooks;
 
 	private readonly bodyMap = new Map<Renderable, RAPIER.RigidBody>();
+	/** the joints {@link RapierAdapter.addJoint} made that are still alive */
+	private readonly joints = new Set<RAPIER.ImpulseJoint>();
+	/**
+	 * Each body's origin in its renderable's own space, in pixels: the shape
+	 * centroid it is registered at. A joint anchor, given in that space, is
+	 * this far from the body origin.
+	 */
+	private readonly bodyOrigins = new Map<
+		Renderable,
+		{ x: number; y: number }
+	>();
 	private readonly collidersOf = new Map<Renderable, RAPIER.Collider[]>();
 	/** collider handle -> its renderable, shape and outline */
 	private readonly colliderMap = new Map<number, ColliderEntry>();
@@ -383,6 +420,9 @@ export class RapierAdapter implements PhysicsAdapter {
 		// collector does not reclaim: they are freed here
 		this.eventQueue.free();
 		this.world.free();
+		// freed with the world
+		this.joints.clear();
+		this.bodyOrigins.clear();
 		this.bodyMap.clear();
 		this.collidersOf.clear();
 		this.colliderMap.clear();
@@ -555,6 +595,7 @@ export class RapierAdapter implements PhysicsAdapter {
 			x: anchorX - centroid.x,
 			y: anchorY - centroid.y,
 		});
+		this.bodyOrigins.set(renderable, { x: centroid.x, y: centroid.y });
 
 		this._spliceHelpers(renderable, body, colliders);
 
@@ -589,6 +630,16 @@ export class RapierAdapter implements PhysicsAdapter {
 			this.colliderMap.delete(handle);
 			this.filters.delete(handle);
 		}
+		// Rapier removes the body's joints with it
+		for (const joint of this.joints) {
+			if (
+				joint.body1().handle === body.handle ||
+				joint.body2().handle === body.handle
+			) {
+				this.joints.delete(joint);
+			}
+		}
+		this.bodyOrigins.delete(renderable);
 		// removes the body's colliders with it
 		this.world.removeRigidBody(body);
 		this.forced.delete(body);
@@ -601,7 +652,8 @@ export class RapierAdapter implements PhysicsAdapter {
 	}
 
 	updateShape(renderable: Renderable, shapes: BodyShape[]): void {
-		// rebuild the body with the new shapes, carrying its velocity over
+		// rebuild the body with the new shapes, carrying its angle and its
+		// velocity over
 		const oldDef = this.defMap.get(renderable);
 		if (!oldDef) {
 			return;
@@ -609,12 +661,186 @@ export class RapierAdapter implements PhysicsAdapter {
 		const oldBody = this.bodyMap.get(renderable);
 		const linvel = oldBody?.linvel();
 		const angvel = oldBody?.angvel() ?? 0;
+		const angle = oldBody?.rotation() ?? 0;
+		const position = oldBody?.translation();
+		const oldOrigin = this.bodyOrigins.get(renderable);
 		this.removeBody(renderable);
 		const body = this.addBody(renderable, { ...oldDef, shapes });
+		const newOrigin = this.bodyOrigins.get(renderable);
+		if (position && oldOrigin && newOrigin) {
+			// the new centre where it lies on the turned body, so the body
+			// stays where it stood
+			const dx = newOrigin.x - oldOrigin.x;
+			const dy = newOrigin.y - oldOrigin.y;
+			const cos = Math.cos(angle);
+			const sin = Math.sin(angle);
+			body.setTranslation(
+				{
+					x: position.x + this.px2m(dx * cos - dy * sin),
+					y: position.y + this.px2m(dx * sin + dy * cos),
+				},
+				true,
+			);
+		}
+		body.setRotation(angle, true);
 		if (linvel) {
 			body.setLinvel(linvel, true);
 			body.setAngvel(angvel, true);
 		}
+		// the old body took its joints with it: the world builds them again
+		(this.melonWorld as WorldJointHook)._rebuildJointsOf?.(renderable);
+	}
+
+	/**
+	 * Make a joint between two bodies: what `world.addJoint()` calls, which
+	 * game code uses instead. A `"hinge"` is a Rapier revolute joint, a
+	 * `"rope"` a rope joint, a `"weld"` a fixed joint and a `"slider"` a
+	 * prismatic joint.
+	 * @param def - what to join, and how, in pixels and radians
+	 * @returns the Rapier joint
+	 */
+	addJoint(def: RapierJointDefinition): RAPIER.ImpulseJoint {
+		const bodyA = this.bodyMap.get(def.a);
+		const bodyB = this.bodyMap.get(def.b);
+		if (bodyA === undefined || bodyB === undefined) {
+			throw new Error(
+				"@melonjs/rapier2d-adapter: addJoint() needs both renderables to have a body in the world; add them with addChild() first.",
+			);
+		}
+		const { JointData } = this.rapier;
+		const anchorB = this._localAnchor(def.b, def.anchorB);
+		// no anchor on `a`: the point of `a` under b's anchor, so nothing
+		// moves when the joint is made; a rope joins the two centres
+		const anchorA =
+			def.anchorA === undefined && def.type !== "rope"
+				? this._localPoint(bodyA, this._worldPoint(bodyB, anchorB))
+				: this._localAnchor(def.a, def.anchorA);
+		// the defaults resolved here are written back, so the same joint is
+		// made again when the world rebuilds it (`setAdapter`, `updateShape`)
+		if (def.anchorA === undefined) {
+			const origin = this.bodyOrigins.get(def.a) ?? { x: 0, y: 0 };
+			def.anchorA = {
+				x: this.m2px(anchorA.x) + origin.x,
+				y: this.m2px(anchorA.y) + origin.y,
+			};
+		}
+		if (def.anchorB === undefined) {
+			// b's centre now, which a new shape would move
+			const origin = this.bodyOrigins.get(def.b) ?? { x: 0, y: 0 };
+			def.anchorB = { x: origin.x, y: origin.y };
+		}
+		let data: RAPIER.JointData;
+		switch (def.type) {
+			case "hinge":
+				data = JointData.revolute(anchorA, anchorB);
+				break;
+			case "rope": {
+				if (def.maxLength === undefined) {
+					const pa = this._worldPoint(bodyA, anchorA);
+					const pb = this._worldPoint(bodyB, anchorB);
+					def.maxLength = this.m2px(Math.hypot(pb.x - pa.x, pb.y - pa.y));
+				}
+				data = JointData.rope(this.px2m(def.maxLength), anchorA, anchorB);
+				break;
+			}
+			case "weld":
+				// welded as they stand
+				data = JointData.fixed(
+					anchorA,
+					0,
+					anchorB,
+					bodyA.rotation() - bodyB.rotation(),
+				);
+				break;
+			case "slider": {
+				const axis = def.axis ?? { x: 1, y: 0 };
+				const length = Math.hypot(axis.x, axis.y);
+				data = JointData.prismatic(anchorA, anchorB, {
+					x: axis.x / length,
+					y: axis.y / length,
+				});
+				break;
+			}
+			default:
+				throw new Error(
+					`@melonjs/rapier2d-adapter: unknown joint type "${String((def as { type: unknown }).type)}"; use "hinge", "rope", "weld" or "slider".`,
+				);
+		}
+		const joint = this.world.createImpulseJoint(data, bodyA, bodyB, true);
+		joint.setContactsEnabled(def.collideConnected === true);
+		if (
+			def.limits !== undefined &&
+			(def.type === "hinge" || def.type === "slider")
+		) {
+			// radians for a hinge, meters along the axis for a slider
+			const scale = def.type === "slider" ? 1 / this.pixelsPerMeter : 1;
+			(joint as RAPIER.UnitImpulseJoint).setLimits(
+				def.limits.min * scale,
+				def.limits.max * scale,
+			);
+		}
+		this.joints.add(joint);
+		return joint;
+	}
+
+	/**
+	 * Remove a joint {@link RapierAdapter.addJoint} made: what
+	 * `world.removeJoint()` calls. A joint already gone, with one of its
+	 * bodies, is ignored.
+	 * @param joint - the Rapier joint
+	 */
+	removeJoint(joint: RAPIER.ImpulseJoint): void {
+		if (this.joints.delete(joint) && joint.isValid()) {
+			this.world.removeImpulseJoint(joint, true);
+		}
+	}
+
+	/**
+	 * A joint anchor, given in the renderable's own space in pixels, as a
+	 * point on its body in meters. No anchor is the body's origin.
+	 * @param renderable - the renderable owning the body
+	 * @param anchor - the anchor in pixels, or undefined
+	 * @returns the body-local anchor
+	 */
+	private _localAnchor(renderable: Renderable, anchor?: XY): XY {
+		if (anchor === undefined) {
+			return { x: 0, y: 0 };
+		}
+		const origin = this.bodyOrigins.get(renderable) ?? { x: 0, y: 0 };
+		return this.vecInMeters(anchor.x - origin.x, anchor.y - origin.y);
+	}
+
+	/**
+	 * A world point as a point on a body, both in meters.
+	 * @param body - the body
+	 * @param world - the point in the world
+	 * @returns the point on the body
+	 */
+	private _localPoint(body: RAPIER.RigidBody, world: XY): XY {
+		const t = body.translation();
+		const angle = body.rotation();
+		const cos = Math.cos(angle);
+		const sin = Math.sin(angle);
+		const dx = world.x - t.x;
+		const dy = world.y - t.y;
+		return { x: dx * cos + dy * sin, y: -dx * sin + dy * cos };
+	}
+
+	/**
+	 * A body-local point in world space, both in meters.
+	 * @param body - the body
+	 * @param local - the point on the body
+	 * @returns the point in the world
+	 */
+	private _worldPoint(body: RAPIER.RigidBody, local: XY): XY {
+		const t = body.translation();
+		const angle = body.rotation();
+		const cos = Math.cos(angle);
+		const sin = Math.sin(angle);
+		return {
+			x: t.x + local.x * cos - local.y * sin,
+			y: t.y + local.x * sin + local.y * cos,
+		};
 	}
 
 	// -------------------------------------------------------------------

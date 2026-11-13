@@ -1,6 +1,7 @@
 import { consolePhysics } from "../application/header.ts";
 import { hasRegisteredEvents } from "../input/pointerevent.ts";
 import Container, {
+	hasRegisteredBody,
 	registerTreeBodies,
 	unregisterTreeBodies,
 } from "../renderable/container.js";
@@ -20,7 +21,7 @@ import BuiltinAdapter from "./builtin/builtin-adapter.ts";
  * @import Application from "./../application/application.ts";
  * @import Detector from "./builtin/detector.js";
  * @import { Vector2d } from "../math/vector2d.ts";
- * @import { PhysicsAdapter } from "./adapter.ts";
+ * @import { JointDefinition, PhysicsAdapter, PhysicsJoint } from "./adapter.ts";
  */
 
 /**
@@ -79,6 +80,31 @@ function releaseDefinedBodies(node) {
 	}
 	if (node instanceof Container) {
 		node.forEach(releaseDefinedBodies);
+	}
+}
+
+/**
+ * The angle of every body {@link World#setAdapter} is about to build again,
+ * at any depth, read from the outgoing adapter: a body is built at angle 0,
+ * and is turned back to this once it is.
+ * @ignore
+ * @internal
+ * @param {object} node - a renderable leaving the outgoing adapter
+ * @param {PhysicsAdapter} adapter - the outgoing adapter
+ * @param {Map<object, number>} out - receives each turned body's angle
+ */
+function collectBodyAngles(node, adapter, out) {
+	const shapes = node.bodyDef?.shapes;
+	if (node.body !== undefined && shapes !== undefined && shapes.length > 0) {
+		const angle = adapter.getAngle?.(node) ?? 0;
+		if (angle !== 0) {
+			out.set(node, angle);
+		}
+	}
+	if (node instanceof Container) {
+		node.forEach((child) => {
+			collectBodyAngles(child, adapter, out);
+		});
 	}
 }
 
@@ -201,6 +227,14 @@ export default class World extends Container {
 		 */
 		this._stepping = false;
 
+		/**
+		 * the joints {@link World#addJoint} made, kept to rebuild them on
+		 * {@link World#setAdapter} and to remove them with their bodies
+		 * @ignore
+		 * @type {Set<{ definition: JointDefinition, native: unknown }>}
+		 */
+		this._joints = new Set();
+
 		this.setAdapter(adapter ?? new BuiltinAdapter());
 
 		/**
@@ -304,29 +338,46 @@ export default class World extends Container {
 	 * game from `@melonjs/planck-adapter` to `@melonjs/matter-adapter`. The
 	 * previous adapter is destroyed, and the new one builds every physics
 	 * body in the world again, from each renderable's `bodyDef`, where the
-	 * renderable stands.
+	 * renderable stands and at the angle its body had.
 	 *
-	 * Nothing else carries over: velocities, forces, contacts and joints
-	 * start again from rest, and gravity is the new adapter's own, in its
-	 * own units. A body added with a direct `adapter.addBody()` call rather
-	 * than a `bodyDef` is not built again, and a legacy `Body` without a
-	 * `bodyDef` only works with the {@link BuiltinAdapter}.
+	 * The joints {@link World#addJoint} made are built again too, from their
+	 * definitions, once their bodies are; a {@link PhysicsJoint} handle stays
+	 * the same object and gets the new engine's joint as its `native`. A
+	 * joint the new adapter cannot build is dropped and reported with the
+	 * refused bodies below: all of them under an adapter without joints
+	 * (`capabilities.constraints` is `false`), so remove them with
+	 * {@link World#removeJoint} before switching to one.
+	 *
+	 * Nothing else carries over: velocities, forces and contacts start again
+	 * from rest, and gravity is the new adapter's own, in its own units. A
+	 * body added with a direct `adapter.addBody()` call rather than a
+	 * `bodyDef` is not built again, and a legacy `Body` without a `bodyDef`
+	 * only works with the {@link BuiltinAdapter}.
 	 *
 	 * Called during a physics step, from a collision handler for example,
 	 * the swap happens as soon as that step ends; called more than once in
 	 * one step, the last adapter asked for is installed.
 	 *
 	 * A body the new adapter cannot build (a `Box3d`, `Sphere` or `Point`
-	 * moving to a 2D adapter) does not stop the swap: every other body is
-	 * moved, the refused ones are left without a body, and this throws once
-	 * the swap is complete, naming the first refusal. Called during a step,
-	 * that error is reported with `console.error` instead, so the game loop
-	 * keeps running.
+	 * moving to a 2D adapter), or a joint, does not stop the swap: every
+	 * other body and joint is moved, the refused bodies are left without a
+	 * body, and this throws once the swap is complete, naming the first
+	 * refusal and counting the joints dropped. Called during a step, that
+	 * error is reported with `console.error` instead, so the game loop keeps
+	 * running.
 	 * @param {PhysicsAdapter} adapter - the adapter to use from now on
 	 * @returns {World} this world
+	 * @throws {Error} once the swap is complete, when a body or a joint could
+	 * not be built on the new adapter
 	 * @example
 	 * import { MatterAdapter } from "@melonjs/matter-adapter";
 	 * app.world.setAdapter(await MatterAdapter.create({ gravity: { x: 0, y: 1 } }));
+	 * @example
+	 * // matter has no joints: remove them before switching to it
+	 * for (const joint of ropeJoints) {
+	 *     app.world.removeJoint(joint);
+	 * }
+	 * app.world.setAdapter(await MatterAdapter.create());
 	 */
 	setAdapter(adapter) {
 		if (this._stepping) {
@@ -340,10 +391,16 @@ export default class World extends Container {
 		if (adapter === previous) {
 			return this;
 		}
+		// taking the bodies out below removes their joints: keep the list to
+		// build them again on the new adapter
+		const joints = [...this._joints];
+		// and the bodies' angles: each is built again as it stands, turned
+		const angles = new Map();
 		if (previous !== undefined) {
 			// take every body out of the outgoing simulation, at any depth,
 			// and drop the handles it built: each is built again, at rest
 			this.forEach((child) => {
+				collectBodyAngles(child, previous, angles);
 				unregisterTreeBodies(child, this);
 				releaseDefinedBodies(child);
 			});
@@ -358,19 +415,179 @@ export default class World extends Container {
 		this.forEach((child) => {
 			registerTreeBodies(child, this, refused);
 		});
+		for (const [node, angle] of angles) {
+			if (hasRegisteredBody(node, this)) {
+				adapter.setAngle?.(node, angle);
+			}
+		}
+		// then the joints between them. One whose body was refused goes with
+		// that body; on an adapter without joints, they all go
+		let withBody = 0;
+		let unsupported = 0;
+		const failed = [];
+		for (const joint of joints) {
+			const { a, b } = joint.definition;
+			if (!hasRegisteredBody(a, this) || !hasRegisteredBody(b, this)) {
+				joint.native = null;
+				withBody++;
+				continue;
+			}
+			try {
+				joint.native = adapter.addJoint?.(joint.definition) ?? null;
+			} catch (error) {
+				// as a refused body: the swap goes on, and says so at the end
+				joint.native = null;
+				failed.push(error);
+				continue;
+			}
+			if (joint.native !== null) {
+				this._joints.add(joint);
+			} else {
+				unsupported++;
+			}
+		}
 		// the start-up banner names the adapter of the moment; a later switch
 		// is named too, so the console never lists an adapter no longer in use
 		if (this.app?.isInitialized === true && this.app.settings.consoleHeader) {
 			consolePhysics(this);
 		}
+		const problems = [];
 		if (refused.length > 0) {
 			const count =
 				refused.length === 1 ? "1 body" : `${refused.length} bodies`;
-			throw new Error(
-				`melonJS: setAdapter() could not build ${count} on the new adapter, which now runs without ${refused.length === 1 ? "it" : "them"}. The first: ${refused[0].message}`,
+			problems.push(
+				`could not build ${count} on the new adapter, which now runs without ${refused.length === 1 ? "it" : "them"}. The first: ${refused[0].message}`,
 			);
 		}
+		const jointCount = (n) => {
+			return n === 1 ? "1 joint" : `${n} joints`;
+		};
+		if (unsupported > 0) {
+			problems.push(
+				`dropped ${jointCount(unsupported)}: the ${this.physic} adapter has none (capabilities.constraints is false). Remove them with removeJoint() before switching to it.`,
+			);
+		}
+		if (withBody > 0) {
+			problems.push(
+				`dropped ${jointCount(withBody)} on a body it could not build.`,
+			);
+		}
+		if (failed.length > 0) {
+			problems.push(
+				`could not build ${jointCount(failed.length)}. The first: ${failed[0].message}`,
+			);
+		}
+		if (problems.length > 0) {
+			throw new Error(`melonJS: setAdapter() ${problems.join(" It also ")}`);
+		}
 		return this;
+	}
+
+	/**
+	 * Join two bodies with a joint: a `"hinge"`, `"rope"`, `"weld"` or
+	 * `"slider"` (see {@link JointType}), built as the engine's own joint.
+	 * Only two adapters have joints:
+	 *
+	 * | adapter | `addJoint()` | `capabilities.constraints` |
+	 * |---|---|---|
+	 * | `@melonjs/planck-adapter` | yes, all four types | `true` |
+	 * | `@melonjs/rapier2d-adapter` | yes, all four types | `true` |
+	 * | built-in | no, throws | `false` |
+	 * | `@melonjs/matter-adapter` | no, throws | `false` |
+	 *
+	 * Code meant to run on any adapter checks `capabilities.constraints` first.
+	 *
+	 * Both renderables need a body in this world first, so add them with
+	 * {@link Container#addChild} before joining them. The world keeps the
+	 * joint: {@link World#setAdapter} builds it again on the new adapter, and
+	 * it is removed when either body leaves the world.
+	 * @param {JointDefinition} definition - what to join, and how
+	 * @returns {PhysicsJoint} the joint, to remove it later with
+	 * {@link World#removeJoint}
+	 * @throws {Error} on an adapter without joints, or (from the adapter) when
+	 * a renderable has no body in the world or the `type` is unknown
+	 * @example
+	 * // code meant to run on any adapter checks first
+	 * if (app.world.adapter.capabilities.constraints) {
+	 *     app.world.addJoint({ type: "rope", a: hook, b: lantern });
+	 * }
+	 * @example
+	 * // a chain of links hanging from a hook (all three have a bodyDef)
+	 * app.world.addChild(hook);
+	 * app.world.addChild(link1);
+	 * app.world.addChild(link2);
+	 * app.world.addJoint({ type: "hinge", a: hook, b: link1, anchorA: { x: 4, y: 8 }, anchorB: { x: 3, y: 0 } });
+	 * app.world.addJoint({ type: "hinge", a: link1, b: link2, anchorA: { x: 3, y: 16 }, anchorB: { x: 3, y: 0 } });
+	 * @example
+	 * // a plank glued to a wall, that breaks off when removed
+	 * const glue = app.world.addJoint({ type: "weld", a: wall, b: plank });
+	 * // later
+	 * app.world.removeJoint(glue);
+	 */
+	addJoint(definition) {
+		// a copy, which the adapter completes with the defaults it resolved:
+		// the definition given is left as it is, and a rebuild makes the same
+		// joint
+		const resolved = { ...definition };
+		const native = this.adapter.addJoint?.(resolved) ?? null;
+		if (native === null) {
+			throw new Error(
+				`melonJS: addJoint() needs a physics adapter with joints, and the ${this.physic} adapter has none (capabilities.constraints is false). Use @melonjs/planck-adapter or @melonjs/rapier2d-adapter.`,
+			);
+		}
+		const joint = { definition: resolved, native };
+		this._joints.add(joint);
+		return joint;
+	}
+
+	/**
+	 * Remove a joint {@link World#addJoint} made; its two bodies move apart
+	 * freely from then on. Removing a joint twice, or one already removed with
+	 * its body, does nothing.
+	 * @param {PhysicsJoint} joint - the joint to remove
+	 * @returns {World} this world
+	 */
+	removeJoint(joint) {
+		if (this._joints.delete(joint)) {
+			this.adapter.removeJoint?.(joint.native);
+			/** @type {{ native: unknown }} */ (joint).native = null;
+		}
+		return this;
+	}
+
+	/**
+	 * Remove the joints holding a renderable whose body leaves the world.
+	 * @ignore
+	 * @param {object} renderable - the renderable leaving the world
+	 */
+	_removeJointsOf(renderable) {
+		for (const joint of this._joints) {
+			if (
+				joint.definition.a === renderable ||
+				joint.definition.b === renderable
+			) {
+				this.removeJoint(joint);
+			}
+		}
+	}
+
+	/**
+	 * Build a renderable's joints again on the active adapter. Called by an
+	 * adapter whose `updateShape()` rebuilt the body: the old body took its
+	 * joints with it, and the handles game code holds get the new ones.
+	 * @ignore
+	 * @param {object} renderable - the renderable whose body was rebuilt
+	 */
+	_rebuildJointsOf(renderable) {
+		for (const joint of this._joints) {
+			const { a, b } = joint.definition;
+			if (a === renderable || b === renderable) {
+				joint.native = this.adapter.addJoint?.(joint.definition) ?? null;
+				if (joint.native === null) {
+					this._joints.delete(joint);
+				}
+			}
+		}
 	}
 
 	/**

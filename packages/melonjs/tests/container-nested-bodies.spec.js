@@ -159,7 +159,7 @@ describe("Container: physics bodies of nested children", () => {
 			expect(adapter.bodies.size).toEqual(1);
 		});
 
-		it("moves a three-level tree between containers, keeping every body once", () => {
+		it("moves a three-level tree between containers of one world, keeping every body as it is", () => {
 			const a = group("a");
 			const b = group("b");
 			const leaf = withBodyDef("leaf");
@@ -174,6 +174,9 @@ describe("Container: physics bodies of nested children", () => {
 			left.addChild(a);
 			expect(adapter.bodies.size).toEqual(2);
 
+			const leafBody = leaf.body;
+			const midBody = mid.body;
+			leafBody.vel.set(3, -2);
 			const added = spy(adapter, "addBody");
 			const removed = spy(adapter, "removeBody");
 			right.addChildAt(a, 0);
@@ -181,9 +184,14 @@ describe("Container: physics bodies of nested children", () => {
 			expect(adapter.bodies.has(leaf.body)).toEqual(true);
 			expect(adapter.bodies.has(mid.body)).toEqual(true);
 			expect(adapter.bodies.size).toEqual(2);
-			// out and back in, once per body per move
-			expect(added.length).toEqual(4);
-			expect(removed.length).toEqual(4);
+			// within one world, a move leaves the bodies alone: the same ones,
+			// still moving, never taken out nor built again
+			expect(leaf.body).toBe(leafBody);
+			expect(mid.body).toBe(midBody);
+			expect(leaf.body.vel.x).toEqual(3);
+			expect(leaf.body.vel.y).toEqual(-2);
+			expect(added.length).toEqual(0);
+			expect(removed.length).toEqual(0);
 		});
 
 		it("moving a group out of the world takes its bodies out; moving it back puts them back", () => {

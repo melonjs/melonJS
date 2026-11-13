@@ -55,7 +55,10 @@ describe("MatterAdapter — feature parity with BuiltinAdapter", () => {
 		});
 
 		it("declares richer capabilities than BuiltinAdapter", () => {
-			expect(adapter.capabilities.constraints).toEqual(true);
+			// melonJS's shared joints need planck or Rapier: `addJoint()`
+			// returns null here, and matter's own constraints are reached
+			// through `adapter.matter`
+			expect(adapter.capabilities.constraints).toEqual(false);
 			// matter-js steps discretely; it has no continuous detection
 			expect(adapter.capabilities.continuousCollisionDetection).toEqual(false);
 			expect(adapter.capabilities.sleepingBodies).toEqual(true);

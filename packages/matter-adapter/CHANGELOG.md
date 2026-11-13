@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.7.0 - _unreleased_
+
+### Changed
+- `capabilities.constraints` is `false`: melonJS's shared joints (`world.addJoint()`, melonJS 20.15) are not supported on matter, and `world.addJoint()` throws there (the adapter's own `addJoint()` returns `null`). matter's own constraints are still reached through `adapter.matter`
+
 ## 1.6.0 - _2026-11-12_
 
 ### Added

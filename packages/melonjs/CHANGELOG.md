@@ -1,5 +1,14 @@
 # Changelog
 
+## [20.15.0] (melonJS 2) - _unreleased_
+
+### Added
+- Physics: `world.addJoint()` and `world.removeJoint()` join two bodies with a hinge, rope, weld or slider joint, the same way on every adapter that has joints (planck and Rapier); joints are rebuilt by `world.setAdapter()` and removed with their bodies. On an adapter without joints (the built-in and matter) `addJoint()` throws
+
+### Fixed
+- Physics: `world.setAdapter()` builds each body again at the angle it had; a turned body came back upright
+- Physics: a renderable moved to another container of the same world keeps its body as it was; on matter, planck and Rapier the body was built again, at rest and upright
+
 ## [20.14.0] (melonJS 2) - _2026-11-12_
 
 ### Added

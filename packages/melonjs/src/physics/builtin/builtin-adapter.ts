@@ -583,6 +583,21 @@ export default class BuiltinAdapter implements PhysicsAdapter {
 		}
 	}
 
+	/**
+	 * The built-in physics has no joints (`capabilities.constraints` is
+	 * `false`): always returns `null`, which makes {@link World#addJoint}
+	 * throw.
+	 * @returns `null`
+	 */
+	addJoint(): null {
+		return null;
+	}
+
+	/**
+	 * Does nothing: the built-in physics has no joints to remove.
+	 */
+	removeJoint(): void {}
+
 	updateShape(renderable: Renderable, shapes: BodyShape[]): void {
 		const body = renderable.body;
 		if (!(body instanceof Body)) {

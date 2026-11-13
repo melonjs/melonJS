@@ -118,8 +118,10 @@ function unsupportedShapeMessage(adapter: string, shape: BodyShape): string {
  * Implements the full {@link PhysicsAdapter} interface so the same game
  * code that runs on the built-in SAT physics also runs under Matter —
  * with the upgrade in capabilities Matter brings (real rotational
- * dynamics, restitution-based stacking, constraints, sleeping bodies,
- * native raycasts).
+ * dynamics, restitution-based stacking, sleeping bodies, native raycasts).
+ * melonJS's shared joints (`world.addJoint()`) are not supported here: they
+ * need the planck or Rapier adapter. matter's own constraints are reached
+ * through {@link MatterAdapter.matter}.
  * @example
  * import { Application } from "melonjs";
  * import { MatterAdapter } from "@melonjs/matter-adapter";
@@ -138,7 +140,9 @@ export class MatterAdapter implements PhysicsAdapter {
 	readonly url = "https://www.npmjs.com/package/@melonjs/matter-adapter";
 
 	readonly capabilities: AdapterCapabilities = {
-		constraints: true,
+		// melonJS's shared joints (`world.addJoint()`) are not supported;
+		// matter's own constraints are reached through `adapter.matter`
+		constraints: false,
 		// matter-js steps discretely: a fast body can pass through a thin
 		// one. `subSteps` is the remedy, not a capability to branch on.
 		continuousCollisionDetection: false,
@@ -766,6 +770,23 @@ export class MatterAdapter implements PhysicsAdapter {
 			this.bodyGravityScale.delete(body);
 		}
 	}
+
+	/**
+	 * Not supported: melonJS's shared joints (`world.addJoint()`) need the
+	 * planck or Rapier adapter, so this always returns `null`
+	 * (`capabilities.constraints` is `false`), which makes `world.addJoint()`
+	 * throw. matter's own constraints are
+	 * still there, through {@link MatterAdapter.matter}.
+	 * @returns `null`
+	 */
+	addJoint(): null {
+		return null;
+	}
+
+	/**
+	 * Does nothing: see {@link MatterAdapter.addJoint}.
+	 */
+	removeJoint(): void {}
 
 	updateShape(renderable: Renderable, shapes: BodyShape[]): void {
 		// matter-js doesn't support live shape mutation cleanly — the

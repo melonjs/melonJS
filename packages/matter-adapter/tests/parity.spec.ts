@@ -87,7 +87,7 @@ const factories: AdapterFactory[] = [
 		name: "MatterAdapter",
 		rayPrecision: 0,
 		expectedCapabilities: {
-			constraints: true,
+			constraints: false,
 			continuousCollisionDetection: false,
 			sleepingBodies: true,
 			raycasts: true,
