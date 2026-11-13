@@ -1,5 +1,6 @@
 import { Jsonifiable } from "type-fest";
 import { isStringArray } from "../utils/utils.js";
+import { getLocalStorage } from "./dom.ts";
 import { BOOT, once } from "./event.js";
 
 /**
@@ -24,26 +25,10 @@ const data: Record<string, unknown> = {};
 const registered = new Set<string>();
 
 /**
- * The browser's `localStorage`, or undefined where there is none.
- * @ignore
- * @internal
- */
-function browserStorage(): SaveStorage | undefined {
-	try {
-		return typeof globalThis.localStorage !== "undefined"
-			? globalThis.localStorage
-			: undefined;
-	} catch {
-		// reading it throws when cookies are blocked
-		return undefined;
-	}
-}
-
-/**
  * Where the keys are kept; undefined keeps them in memory only, for this
  * session.
  */
-let storage: SaveStorage | undefined = browserStorage();
+let storage: SaveStorage | undefined = getLocalStorage();
 
 /**
  * a function to check if the given key is a reserved word

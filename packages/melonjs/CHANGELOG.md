@@ -9,6 +9,7 @@
 ### Fixed
 - Physics: `world.setAdapter()` builds each body again at the angle it had; a turned body came back upright
 - Physics: a renderable moved to another container of the same world keeps its body as it was; on matter, planck and Rapier the body was built again, at rest and upright
+- Save: a page whose `localStorage` is `null`, as in some sandboxed frames (YouTube Playables' SDK Test Suite runs games in one), no longer stops melonJS at boot; `save` keeps its keys in memory there, as where cookies are blocked
 
 ## [20.14.0] (melonJS 2) - _2026-11-12_
 

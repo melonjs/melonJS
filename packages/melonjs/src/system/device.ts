@@ -1,5 +1,5 @@
 import { prefixed } from "./../utils/agent.ts";
-import { DOMContentLoaded, hasDOM } from "./dom.ts";
+import { DOMContentLoaded, getLocalStorage, hasDOM } from "./dom.ts";
 import { BLUR, emit, FOCUS } from "./event.ts";
 import * as device_platform from "./platform.ts";
 import save from "./save.ts";
@@ -58,15 +58,6 @@ function disableSwipeFn(e: Event) {
 		globalThis.scroll(0, 0);
 	}
 	return false;
-}
-
-function hasLocalStorage() {
-	try {
-		return !!globalThis.localStorage;
-	} catch {
-		// the above generates an exception when cookies are blocked
-		return false;
-	}
 }
 
 function hasScreenOrientation() {
@@ -224,10 +215,11 @@ export const hasVideo =
 	hasDOM() && !!globalThis.document.createElement("video").canPlayType;
 
 /**
- * Browser Local Storage capabilities <br>
- * (this flag will be set to false if cookies are blocked)
+ * Whether the browser's `localStorage` can be used: false where there is
+ * none, where cookies are blocked, and where it is `null`, as in some
+ * sandboxed frames. `save` keeps its keys in memory then.
  */
-export const localStorage = hasLocalStorage();
+export const localStorage = getLocalStorage() !== undefined;
 
 /**
  * equals to true if the device browser supports OffScreenCanvas.
