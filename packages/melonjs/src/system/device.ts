@@ -1,5 +1,5 @@
 import { prefixed } from "./../utils/agent.ts";
-import { DOMContentLoaded, hasDOM } from "./dom.ts";
+import { DOMContentLoaded, getLocalStorage, hasDOM } from "./dom.ts";
 import { BLUR, emit, FOCUS } from "./event.ts";
 import * as device_platform from "./platform.ts";
 import save from "./save.ts";
@@ -58,15 +58,6 @@ function disableSwipeFn(e: Event) {
 		globalThis.scroll(0, 0);
 	}
 	return false;
-}
-
-function hasLocalStorage() {
-	try {
-		return !!globalThis.localStorage;
-	} catch {
-		// the above generates an exception when cookies are blocked
-		return false;
-	}
 }
 
 function hasScreenOrientation() {
@@ -224,10 +215,11 @@ export const hasVideo =
 	hasDOM() && !!globalThis.document.createElement("video").canPlayType;
 
 /**
- * Browser Local Storage capabilities <br>
- * (this flag will be set to false if cookies are blocked)
+ * Whether the browser's `localStorage` can be used: false where there is
+ * none, where cookies are blocked, and where it is `null`, as in some
+ * sandboxed frames. `save` keeps its keys in memory then.
  */
-export const localStorage = hasLocalStorage();
+export const localStorage = getLocalStorage() !== undefined;
 
 /**
  * equals to true if the device browser supports OffScreenCanvas.
@@ -329,6 +321,146 @@ export function setAutoFocus(enable: boolean): void {
 }
 
 /**
+ * Whether the browser window reports the game's focus: its `blur`, `focus`
+ * and `visibilitychange` events are what emit the engine's `event.BLUR` and
+ * `event.FOCUS`.
+ *
+ * This decides WHO reports that the player switched away. What the game DOES
+ * then is decided by the application's `pauseOnBlur`, `stopOnBlur` and
+ * `resumeOnFocus` flags: pause or stop the game, silence its sound effects,
+ * release its held keys, and undo it on focus. See {@link setFocusEvents} for
+ * when to turn this off rather than the flags.
+ *
+ * Read this binding to inspect the current value; the write surface is
+ * {@link setFocusEvents}.
+ * @default true
+ */
+export let focusEvents = true;
+
+/**
+ * Whether boot has asked for the window focus listeners: until it has,
+ * {@link setFocusEvents} only records what it is told.
+ */
+let focusListenersWanted = false;
+
+/** Whether the window focus listeners are attached. */
+let focusListening = false;
+
+/**
+ * The window lost the focus.
+ * @ignore
+ * @internal
+ */
+function onWindowBlur(): void {
+	emit(BLUR);
+}
+
+/**
+ * The window got the focus back.
+ * @ignore
+ * @internal
+ */
+function onWindowFocus(): void {
+	emit(FOCUS);
+	if (autoFocus) {
+		focus();
+	}
+}
+
+/**
+ * The page was hidden, or shown again.
+ * @ignore
+ * @internal
+ */
+function onVisibilityChange(): void {
+	if (globalThis.document.visibilityState === "visible") {
+		onWindowFocus();
+	} else {
+		emit(BLUR);
+	}
+}
+
+/**
+ * Attach or detach the window focus listeners, once each.
+ * @ignore
+ * @internal
+ * @param listen - whether to listen
+ */
+function listenToWindowFocus(listen: boolean): void {
+	if (listen === focusListening) {
+		return;
+	}
+	focusListening = listen;
+	if (typeof globalThis.addEventListener === "function") {
+		if (listen) {
+			globalThis.addEventListener("blur", onWindowBlur, false);
+			globalThis.addEventListener("focus", onWindowFocus, false);
+		} else {
+			globalThis.removeEventListener("blur", onWindowBlur, false);
+			globalThis.removeEventListener("focus", onWindowFocus, false);
+		}
+	}
+	if (globalThis.document?.addEventListener) {
+		if (listen) {
+			globalThis.document.addEventListener(
+				"visibilitychange",
+				onVisibilityChange,
+				false,
+			);
+		} else {
+			globalThis.document.removeEventListener(
+				"visibilitychange",
+				onVisibilityChange,
+				false,
+			);
+		}
+	}
+}
+
+/**
+ * Let the browser window report the game's focus, or leave it to the game's
+ * host (see {@link focusEvents}).
+ *
+ * Two separate settings decide what happens when the player switches away:
+ *
+ * - WHO reports it: the browser window by default, whose `blur`, `focus` and
+ *   `visibilitychange` events the engine turns into `event.BLUR` and
+ *   `event.FOCUS`. This function turns that on or off.
+ * - WHAT the game does then: the application's `pauseOnBlur`, `stopOnBlur`
+ *   and `resumeOnFocus` flags. They apply to every `event.BLUR` and
+ *   `event.FOCUS`, wherever it comes from.
+ *
+ * To keep a game running while the player is away, turn the flags off
+ * (`app.pauseOnBlur = false`): the window still reports, and nothing pauses.
+ *
+ * To let a host decide when the game runs, such as a web game portal's SDK
+ * (YouTube Playables forbids pausing on the page's visibility) or a native
+ * wrapper, turn this off instead and keep the flags: the window then reports
+ * nothing, the host's callbacks emit `event.BLUR` and `event.FOCUS`, and the
+ * flags react to them exactly as they did to the window, silencing the sound
+ * effects, releasing held keys and undoing only a pause the engine applied.
+ * Turning the flags off would not do it: they cannot tell the window's events
+ * from the host's, so the host's pause would do nothing either.
+ *
+ * It can be called before or after the application is created.
+ * @param enable - `true` (the default) to follow the browser window, `false`
+ * to leave the focus to the game's host
+ * @example
+ * // YouTube Playables: only YouTube's own events pause and resume the game
+ * me.device.setFocusEvents(false);
+ * app.stopOnBlur = true; // a pause stops the rendering too
+ * app.pauseOnBlur = false;
+ * ytgame.system.onPause(() => me.event.emit(me.event.BLUR));
+ * ytgame.system.onResume(() => me.event.emit(me.event.FOCUS));
+ */
+export function setFocusEvents(enable: boolean): void {
+	focusEvents = enable;
+	if (focusListenersWanted) {
+		listenToWindowFocus(enable);
+	}
+}
+
+/**
  * specify a function to execute when the Device is fully loaded and ready
  * @param fn - the function to be executed
  * @example
@@ -345,46 +477,14 @@ export function onReady(fn: () => void) {
 /**
  * Register blur/focus and visibility change event handlers.
  * Called once during boot to emit BLUR/FOCUS events when the
- * window or tab gains/loses focus.
+ * window or tab gains/loses focus, unless {@link setFocusEvents} turned
+ * that off.
  * @ignore
  * @internal
  */
 export function initVisibilityEvents() {
-	if (typeof globalThis.addEventListener === "function") {
-		globalThis.addEventListener(
-			"blur",
-			() => {
-				emit(BLUR);
-			},
-			false,
-		);
-		globalThis.addEventListener(
-			"focus",
-			() => {
-				emit(FOCUS);
-				if (autoFocus) {
-					focus();
-				}
-			},
-			false,
-		);
-	}
-	if (globalThis.document?.addEventListener) {
-		globalThis.document.addEventListener(
-			"visibilitychange",
-			() => {
-				if (globalThis.document.visibilityState === "visible") {
-					emit(FOCUS);
-					if (autoFocus) {
-						focus();
-					}
-				} else {
-					emit(BLUR);
-				}
-			},
-			false,
-		);
-	}
+	focusListenersWanted = true;
+	listenToWindowFocus(focusEvents);
 }
 
 /**
@@ -687,10 +787,9 @@ export function isWebGLSupported(options?: {
 			// the context actually created by the WebGL renderer (which
 			// requests "webgl2"), so AUTO falls back to Canvas exactly when
 			// renderer construction would fail
-			const _supported = !!(
-				globalThis.WebGL2RenderingContext &&
-				canvas.getContext("webgl2", ctxOptions)
-			);
+			// the context itself, not the `WebGL2RenderingContext` global:
+			// WeChat Mini Games give a WebGL 2 context but not the global
+			const _supported = !!canvas.getContext("webgl2", ctxOptions);
 			WebGLSupport = _supported ? 1 : 0;
 		} catch {
 			WebGLSupport = 0;

@@ -4,6 +4,36 @@ import { imgList } from "../cache.js";
 import { parseCompressedImage } from "./compressed_textures/compressed_image.js";
 
 /**
+ * load an image through an `Image` element, for a runtime without
+ * `createImageBitmap`
+ * @param {string} imgPath - the image path
+ * @param {string} imgName - the image name (cache key)
+ * @param {Object} [settings] - fetch settings
+ * @returns {Promise} resolves once the image is decoded and cached
+ * @ignore
+ * @internal
+ */
+function loadImageElement(imgPath, imgName, settings = {}) {
+	return new Promise((resolve, reject) => {
+		const image = new Image();
+		// a CORS request, as `fetchData` always makes one
+		image.crossOrigin =
+			settings.withCredentials === true ||
+			settings.crossOrigin === "use-credentials"
+				? "use-credentials"
+				: "anonymous";
+		image.onload = () => {
+			imgList[imgName] = image;
+			resolve();
+		};
+		image.onerror = () => {
+			reject(new Error(`Failed to load image "${imgPath}"`));
+		};
+		image.src = imgPath;
+	});
+}
+
+/**
  * try to load a single image source
  * @param {string} imgPath - the image path
  * @param {string} imgName - the image name (cache key)
@@ -46,6 +76,11 @@ function tryLoadSource(imgPath, imgName, settings) {
 
 		// default is regular images (jpg, png and friends)
 		default:
+			// a runtime without `createImageBitmap` (WeChat Mini Games) decodes
+			// images through its `Image`, which also reads the file itself
+			if (typeof globalThis.createImageBitmap !== "function") {
+				return loadImageElement(imgPath, imgName, settings);
+			}
 			return fetchData(imgPath, "blob", settings).then((blob) => {
 				return globalThis.createImageBitmap(blob).then((bitmap) => {
 					imgList[imgName] = bitmap;

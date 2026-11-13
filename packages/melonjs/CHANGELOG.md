@@ -4,10 +4,15 @@
 
 ### Added
 - Physics: `world.addJoint()` and `world.removeJoint()` join two bodies with a hinge, rope, weld or slider joint, the same way on every adapter that has joints (planck and Rapier); joints are rebuilt by `world.setAdapter()` and removed with their bodies. On an adapter without joints (the built-in and matter) `addJoint()` throws
+- Save: `save.setStorage()` keeps the saved keys somewhere other than `localStorage`, which stays the default, in anything with `getItem`, `setItem` and `removeItem`; `save.createCloudStorage()` makes one out of a platform's cloud save (YouTube Playables, Facebook Instant Games), held in memory and saved back one write at a time
+- Device: `device.setFocusEvents(false)` stops the browser window reporting the game's focus, for a game whose host says when it runs (a web game portal's SDK, a native wrapper): the host's callbacks emit `event.BLUR` and `event.FOCUS` instead, and `pauseOnBlur`, `stopOnBlur` and `resumeOnFocus` still decide what the game does
 
 ### Fixed
 - Physics: `world.setAdapter()` builds each body again at the angle it had; a turned body came back upright
 - Physics: a renderable moved to another container of the same world keeps its body as it was; on matter, planck and Rapier the body was built again, at rest and upright
+- Save: a page whose `localStorage` is `null`, as in some sandboxed frames (YouTube Playables' SDK Test Suite runs games in one), no longer stops melonJS at boot; `save` keeps its keys in memory there, as where cookies are blocked
+- Platforms: fixed a regression where melonJS no longer ran on WeChat Mini Games: images load through the runtime's `Image` where `createImageBitmap` is missing, WebGL is found without a global `WebGL2RenderingContext`, and pausing or muting no longer throws where `HTMLAudioElement` is not defined
+- Rendering: the canvas given in the application's `canvas` setting is the one drawn to, even on a page with a `<canvas id="canvas">`, which was used instead
 
 ## [20.14.0] (melonJS 2) - _2026-11-12_
 

@@ -406,7 +406,7 @@ a gate screen — a splash, a "press any key", or a health/photosensitivity noti
 unconditionally. Note the unlock listens for `keydown` too, so a keyboard-only
 player is covered.
 
-Where there is no DOM (nx.js on the Nintendo Switch, see `melonjs-deployment`)
+Where there is no DOM (nx.js on the Nintendo Switch, see `melonjs-platforms`)
 there is no page to gesture at and no autoplay policy: audio unlocks as soon as
 the engine has its context, and music can start on load. nx.js's Web Audio has
 buffer sources, gain and stereo panning, but not the `PannerNode`,

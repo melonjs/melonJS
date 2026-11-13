@@ -16,6 +16,26 @@ import { nodeJS } from "./platform.ts";
 export const hasDOM = (): boolean => typeof globalThis.document !== "undefined";
 
 /**
+ * The browser's `localStorage`, or undefined where there is none to use: this
+ * runtime has no Web Storage, reading it throws (cookies blocked), or it is
+ * `null`, as in some sandboxed frames (YouTube Playables' SDK Test Suite runs a
+ * game in one). The one check the engine makes: `device.localStorage` and the
+ * default storage of `save` both come from it.
+ * @returns the storage, or undefined
+ * @ignore
+ * @internal
+ */
+export const getLocalStorage = (): Storage | undefined => {
+	try {
+		// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- typed non-null, null in some frames
+		return globalThis.localStorage ?? undefined;
+	} catch {
+		// reading it throws when cookies are blocked
+		return undefined;
+	}
+};
+
+/**
  * Execute a callback when the DOM is ready.
  * In Node.js, when there is no DOM, or when the DOM is already parsed,
  * the callback is deferred to the next microtask.

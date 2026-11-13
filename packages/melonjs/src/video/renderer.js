@@ -63,8 +63,11 @@ export default class Renderer {
 		this.renderTarget = new CanvasRenderTarget(
 			options.width,
 			options.height,
-			// support case when a global canvas is available, e.g. webapp adapter for wechat
-			typeof globalThis.canvas !== "undefined"
+			// with no canvas given, a global one is used: WeChat's adapter has
+			// its on-screen canvas there. A given canvas wins, as a page's
+			// `<canvas id="canvas">` is a global `canvas` too
+			typeof options.canvas === "undefined" &&
+				typeof globalThis.canvas !== "undefined"
 				? Object.assign(options, { canvas: globalThis.canvas })
 				: options,
 		);

@@ -369,7 +369,7 @@ await app.init();
 This is tested against a simulation of nx.js built from its source, not yet on
 Switch hardware. Some things differ there: Tiled maps must be JSON, sizing is
 fixed rather than fitted to a page, and a worker gets no input or sound of its
-own. The [deployment skill](https://github.com/melonjs/melonJS/blob/master/packages/melonjs/skills/melonjs-deployment/SKILL.md#runtimes-with-no-dom-nxjs-web-workers)
+own. The [platforms skill](https://github.com/melonjs/melonJS/blob/master/packages/melonjs/skills/melonjs-platforms/SKILL.md#runtimes-with-no-dom-nxjs-web-workers)
 lists them.
 
 Building with AI agents

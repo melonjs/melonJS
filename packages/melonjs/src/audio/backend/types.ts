@@ -159,6 +159,8 @@ export interface GainNodeWithBufferSource extends GainNode {
 /**
  * Type guard to check if a node is an HTMLAudioElement.
  * This specifically excludes HTMLVideoElement by checking for the absence of videoWidth.
+ * Checked by its members rather than with `instanceof`: a runtime whose
+ * `Audio` is not a DOM element (WeChat Mini Games) has no `HTMLAudioElement`.
  * @param node - The node to check
  * @returns True if the node is an HTMLAudioElement
  * @example
@@ -172,11 +174,7 @@ export function isHTMLAudioElement(
 	node: HTMLAudioElementWithUnlocked | GainNodeWithBufferSource | null,
 ): node is HTMLAudioElementWithUnlocked {
 	return (
-		node !== null &&
-		node instanceof HTMLAudioElement &&
-		"src" in node &&
-		"play" in node &&
-		!("videoWidth" in node)
+		node !== null && "src" in node && "play" in node && !("videoWidth" in node)
 	);
 }
 
