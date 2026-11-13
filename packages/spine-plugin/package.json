@@ -31,9 +31,6 @@
 	"license": "MIT",
 	"author": "AltByte Pte Ltd",
 	"funding": "https://github.com/sponsors/melonjs",
-	"engines": {
-		"node": ">=24.0.0"
-	},
 	"exports": {
 		".": "./build/index.js"
 	},
