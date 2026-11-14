@@ -85,8 +85,23 @@ export class PathfindingPlugin extends plugin.BasePlugin {
 			return this.grid;
 		}
 		const map = level.getCurrentLevel() as
-			| { cols: number; rows: number; tilewidth: number; tileheight: number }
+			| {
+					cols: number;
+					rows: number;
+					tilewidth: number;
+					tileheight: number;
+					orientation: string;
+			  }
 			| undefined;
+		if (
+			map !== undefined &&
+			map.orientation !== "orthogonal" &&
+			map.orientation !== "isometric"
+		) {
+			throw new RangeError(
+				`pathfinding: a "${map.orientation}" map is not supported (orthogonal and isometric maps are)`,
+			);
+		}
 		this.grid =
 			map === undefined
 				? null
@@ -95,6 +110,7 @@ export class PathfindingPlugin extends plugin.BasePlugin {
 						rows: map.rows,
 						tileWidth: map.tilewidth,
 						tileHeight: map.tileheight,
+						cellShape: map.orientation === "isometric" ? "isometric" : "square",
 					});
 		return this.grid;
 	}

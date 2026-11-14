@@ -1,4 +1,9 @@
-import { type CanvasRenderer, Renderable, type WebGLRenderer } from "melonjs";
+import {
+	type CanvasRenderer,
+	Polygon,
+	Renderable,
+	type WebGLRenderer,
+} from "melonjs";
 import type { Grid, PathResult } from "./grid.ts";
 
 /** a path for {@link PathfindingDebug} to draw */
@@ -42,36 +47,68 @@ export class PathfindingDebug extends Renderable {
 	 */
 	showTrace = true;
 
+	/** a diamond, moved to each cell drawn on an isometric grid */
+	private readonly diamond = new Polygon(0, 0, [
+		{ x: 0, y: 0 },
+		{ x: 1, y: 0 },
+		{ x: 1, y: 1 },
+	]);
+	private diamondOf: Grid | null = null;
+
 	constructor(grid: Grid) {
-		super(
-			grid.x,
-			grid.y,
-			grid.cols * grid.tileWidth,
-			grid.rows * grid.tileHeight,
-		);
+		super(grid.x, grid.y, 1, 1);
 		this.anchorPoint.set(0, 0);
 		this.grid = grid;
 		this.alwaysUpdate = true;
+		this.fit();
 	}
 
-	override update() {
-		// follow the grid if it moved
+	/** cover the grid: its box, and its place */
+	private fit() {
 		const { grid } = this;
+		const across =
+			grid.cellShape === "isometric" ? (grid.cols + grid.rows) / 2 : 0;
+		const width =
+			across > 0 ? across * grid.tileWidth : grid.cols * grid.tileWidth;
+		const height =
+			across > 0 ? across * grid.tileHeight : grid.rows * grid.tileHeight;
+		if (this.width !== width || this.height !== height) {
+			this.resize(width, height);
+		}
 		if (this.pos.x !== grid.x || this.pos.y !== grid.y) {
 			this.pos.set(grid.x, grid.y);
 		}
+	}
+
+	override update() {
+		// follow the grid if it moved, or was swapped for another
+		this.fit();
 		return true;
 	}
 
 	override draw(renderer: CanvasRenderer | WebGLRenderer) {
-		const { grid } = this;
+		const { grid, diamond } = this;
 		const w = grid.tileWidth;
 		const h = grid.tileHeight;
-		const cellX = (col: number) => {
-			return grid.x + col * w;
-		};
-		const cellY = (row: number) => {
-			return grid.y + row * h;
+		const isometric = grid.cellShape === "isometric";
+		if (isometric && this.diamondOf !== grid) {
+			this.diamondOf = grid;
+			diamond.setShape(0, 0, [
+				{ x: 0, y: 0 },
+				{ x: w / 2, y: h / 2 },
+				{ x: 0, y: h },
+				{ x: -w / 2, y: h / 2 },
+			]);
+		}
+		const fillCell = (col: number, row: number) => {
+			// the corner: the top left of a square, the top of a diamond
+			const corner = grid.getPointPosition(col, row).sub(grid.offset);
+			if (isometric) {
+				diamond.pos.set(corner.x, corner.y);
+				renderer.fillPolygon(diamond);
+			} else {
+				renderer.fillRect(corner.x, corner.y, w, h);
+			}
 		};
 
 		if (this.showTrace) {
@@ -79,7 +116,7 @@ export class PathfindingDebug extends Renderable {
 			renderer.setColor("#3fa9ff");
 			for (const { result } of this.paths) {
 				for (const cell of result.trace ?? []) {
-					renderer.fillRect(cellX(cell.x), cellY(cell.y), w, h);
+					fillCell(cell.x, cell.y);
 				}
 			}
 		}
@@ -89,13 +126,13 @@ export class PathfindingDebug extends Renderable {
 				if (this.showSolid && grid.isSolid(col, row)) {
 					renderer.setGlobalAlpha(0.35);
 					renderer.setColor("#ff3b5c");
-					renderer.fillRect(cellX(col), cellY(row), w, h);
+					fillCell(col, row);
 				} else if (this.showWeight) {
 					const weight = grid.getWeight(col, row);
 					if (weight > 1) {
 						renderer.setGlobalAlpha(Math.min(0.6, 0.12 * weight));
 						renderer.setColor("#ff9f1a");
-						renderer.fillRect(cellX(col), cellY(row), w, h);
+						fillCell(col, row);
 					}
 				}
 			}

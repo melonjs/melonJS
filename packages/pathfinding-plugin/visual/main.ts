@@ -2,7 +2,8 @@
  * The pathfinding plugin's visual test page, for developers. A 20 x 15 grid
  * to paint walls and mud on, three agents chasing a target, and toggles for
  * each option of the search, with the debug overlay. The "shapes" source
- * builds the grid from static collision bodies instead of painted cells.
+ * builds the grid from static collision bodies instead of painted cells,
+ * and "cells: isometric" lays the same grid out as diamonds.
  * `?renderer=canvas|webgl|webgpu` picks the renderer.
  */
 import {
@@ -10,12 +11,12 @@ import {
 	collision,
 	input,
 	Polygon,
-	Rect,
 	Renderable,
 	type Renderer,
 	video,
 } from "melonjs";
 import {
+	type CellShape,
 	type DiagonalMode,
 	Grid,
 	PathfindingDebug,
@@ -26,6 +27,8 @@ import {
 const COLS = 20;
 const ROWS = 15;
 const TILE = 32;
+const WIDTH = COLS * TILE;
+const HEIGHT = ROWS * TILE;
 const SPEED = 110; // px per second
 const REPLAN = 250; // ms
 
@@ -39,7 +42,7 @@ const rendererName =
 	location.hash.slice(1) ||
 	(new URLSearchParams(location.search).get("renderer") ?? "auto");
 
-const app = new Application(COLS * TILE, ROWS * TILE, {
+const app = new Application(WIDTH, HEIGHT, {
 	parent: "screen",
 	scaleMethod: "fit",
 	renderer: renderers[rendererName] ?? video.AUTO,
@@ -66,12 +69,42 @@ for (let row = 9; row < 14; row++) {
 	}
 }
 
+/** where the cells are: squares filling the screen, or diamonds across it */
+const layouts: Record<
+	CellShape,
+	{ tileWidth: number; tileHeight: number; x: number; y: number }
+> = {
+	square: { tileWidth: TILE, tileHeight: TILE, x: 0, y: 0 },
+	// 36 x 18 diamonds: a box of 630 x 315, in the middle of the screen
+	isometric: {
+		tileWidth: 36,
+		tileHeight: 18,
+		x: (WIDTH - ((COLS + ROWS) * 36) / 2) / 2,
+		y: (HEIGHT - ((COLS + ROWS) * 18) / 2) / 2,
+	},
+};
+let cellShape: CellShape = "square";
+
+/**
+ * a point of the grid, in cells (fractions too), to world units: for the
+ * shapes, which are drawn in cells
+ * @param col - columns from the grid's corner
+ * @param row - rows from the grid's corner
+ * @returns the point
+ */
+const project = (col: number, row: number) => {
+	const { tileWidth: w, tileHeight: h, x, y } = layouts[cellShape];
+	return cellShape === "isometric"
+		? { x: x + ((ROWS + col - row) * w) / 2, y: y + ((col + row) * h) / 2 }
+		: { x: x + col * w, y: y + row * h };
+};
+
 const paintedGrid = () => {
 	return new Grid({
 		cols: COLS,
 		rows: ROWS,
-		tileWidth: TILE,
-		tileHeight: TILE,
+		cellShape,
+		...layouts[cellShape],
 		solid: (col, row) => {
 			return cells[row * COLS + col] === WALL;
 		},
@@ -81,11 +114,24 @@ const paintedGrid = () => {
 	});
 };
 
-/** a static wall body, as a Tiled collision layer makes */
-const wall = (x: number, y: number, shape: Polygon | Rect) => {
-	const r = new Renderable(x, y, 1, 1) as Renderable & {
-		shape: Polygon | Rect;
-	};
+/**
+ * a static wall body, as a Tiled collision layer makes
+ * @param corners - its outline, in cells
+ * @returns the body
+ */
+const wall = (
+	corners: [
+		[number, number],
+		[number, number],
+		[number, number],
+		[number, number],
+	],
+) => {
+	const [a, b, c, d] = corners.map(([col, row]) => {
+		return project(col, row);
+	});
+	const shape = new Polygon(0, 0, [a, b, c, d]);
+	const r = new Renderable(0, 0, 1, 1) as Renderable & { shape: Polygon };
 	r.shape = shape;
 	r.anchorPoint.set(0, 0);
 	r.bodyDef = {
@@ -96,43 +142,64 @@ const wall = (x: number, y: number, shape: Polygon | Rect) => {
 	r.alwaysUpdate = true;
 	return r;
 };
-const shapes = [
-	wall(5 * TILE, 3 * TILE, new Rect(0, 0, TILE, 9 * TILE)),
-	// a diagonal slab
-	wall(
-		9 * TILE,
-		2 * TILE,
-		new Polygon(0, 0, [
-			{ x: 0, y: 0 },
-			{ x: TILE, y: 0 },
-			{ x: 6 * TILE, y: 8 * TILE },
-			{ x: 5 * TILE, y: 8 * TILE },
+const makeShapes = () => {
+	return [
+		// a post
+		wall([
+			[5, 3],
+			[6, 3],
+			[6, 12],
+			[5, 12],
 		]),
-	),
-];
+		// a diagonal slab
+		wall([
+			[9, 2],
+			[10, 2],
+			[15, 10],
+			[14, 10],
+		]),
+	];
+};
+let shapes: ReturnType<typeof wall>[] = [];
 
 let source: "painted" | "shapes" = "painted";
 let grid = paintedGrid();
 
+/**
+ * build the grid again, from the painted cells or the shapes, in the
+ * current cell shape
+ * @param next - where the grid comes from
+ */
 const useSource = (next: "painted" | "shapes") => {
 	source = next;
 	for (const shape of shapes) {
-		if (next === "shapes" && !shape.ancestor) {
-			app.world.addChild(shape, 1);
-		} else if (next === "painted" && shape.ancestor) {
-			app.world.removeChild(shape);
-		}
+		app.world.removeChild(shape);
 	}
+	shapes = next === "shapes" ? makeShapes() : [];
+	for (const shape of shapes) {
+		app.world.addChild(shape, 1);
+	}
+	const before = grid;
 	grid =
 		next === "shapes"
 			? Grid.fromBodies(app.world, {
 					cols: COLS,
 					rows: ROWS,
-					tileWidth: TILE,
-					tileHeight: TILE,
+					cellShape,
+					...layouts[cellShape],
 				})
 			: paintedGrid();
 	overlay.grid = grid;
+	// keep the agents and the target on the same cells
+	for (const point of [target, ...agents.map((agent) => agent.pos)]) {
+		const cell = before.cellAt(point.x, point.y) ?? { x: 0, y: 0 };
+		const moved = grid.getPointPosition(cell.x, cell.y);
+		point.x = moved.x;
+		point.y = moved.y;
+	}
+	for (const agent of agents) {
+		agent.result = null;
+	}
 };
 
 // ---------------------------------------------------------------------------
@@ -173,8 +240,14 @@ const overlay = new PathfindingDebug(grid);
 class Scene extends Renderable {
 	private replan = 0;
 
+	private readonly diamond = new Polygon(0, 0, [
+		{ x: 0, y: 0 },
+		{ x: 1, y: 0 },
+		{ x: 1, y: 1 },
+	]);
+
 	constructor() {
-		super(0, 0, COLS * TILE, ROWS * TILE);
+		super(0, 0, WIDTH, HEIGHT);
 		this.anchorPoint.set(0, 0);
 		this.alwaysUpdate = true;
 	}
@@ -240,15 +313,33 @@ class Scene extends Renderable {
 	}
 
 	override draw(r: Renderer) {
+		r.setColor("#0b0c18");
+		r.fillRect(0, 0, WIDTH, HEIGHT);
+		// the cells: floor, then walls and mud a little inside their outline
+		const { diamond } = this;
+		const cell = (col: number, row: number, inset: number) => {
+			const a = project(col + inset, row + inset);
+			const b = project(col + 1 - inset, row + inset);
+			const c = project(col + 1 - inset, row + 1 - inset);
+			const d = project(col + inset, row + 1 - inset);
+			diamond.setShape(0, 0, [a, b, c, d]);
+			r.fill(diamond);
+		};
 		r.setColor("#15172a");
-		r.fillRect(0, 0, COLS * TILE, ROWS * TILE);
+		diamond.setShape(0, 0, [
+			project(0, 0),
+			project(COLS, 0),
+			project(COLS, ROWS),
+			project(0, ROWS),
+		]);
+		r.fill(diamond);
 		if (source === "painted") {
 			for (let row = 0; row < ROWS; row++) {
 				for (let col = 0; col < COLS; col++) {
 					const kind = cells[row * COLS + col];
 					if (kind !== OPEN) {
 						r.setColor(kind === WALL ? "#5a5f86" : "#5b4126");
-						r.fillRect(col * TILE + 1, row * TILE + 1, TILE - 2, TILE - 2);
+						cell(col, row, 0.04);
 					}
 				}
 			}
@@ -256,21 +347,11 @@ class Scene extends Renderable {
 			r.setColor("#8a8fbf");
 			r.lineWidth = 2;
 			for (const shape of shapes) {
-				const def = shape.shape;
-				if (def instanceof Rect) {
-					r.strokeRect(shape.pos.x, shape.pos.y, def.width, def.height);
-				} else if (def instanceof Polygon) {
-					const p = def.points;
-					for (let i = 0; i < p.length; i++) {
-						const a = p[i];
-						const b = p[(i + 1) % p.length];
-						r.strokeLine(
-							shape.pos.x + a.x,
-							shape.pos.y + a.y,
-							shape.pos.x + b.x,
-							shape.pos.y + b.y,
-						);
-					}
+				const p = shape.shape.points;
+				for (let i = 0; i < p.length; i++) {
+					const a = p[i];
+					const b = p[(i + 1) % p.length];
+					r.strokeLine(a.x, a.y, b.x, b.y);
 				}
 			}
 		}
@@ -392,6 +473,10 @@ select("tool", ["target", "wall", "mud", "erase"], (value) => {
 });
 select("grid", ["painted", "shapes"], (value) => {
 	useSource(value as "painted" | "shapes");
+});
+select("cells", ["square", "isometric"], (value) => {
+	cellShape = value as CellShape;
+	useSource(source);
 });
 select(
 	"diagonal",

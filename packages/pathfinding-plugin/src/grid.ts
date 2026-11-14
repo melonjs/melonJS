@@ -37,6 +37,20 @@ export type Heuristic =
 	| "euclidean"
 	| ((dx: number, dy: number) => number);
 
+/**
+ * How cells sit in the world:
+ * - `"square"`: side by side in columns and rows, an orthogonal map
+ * - `"isometric"`: as diamonds, columns running down to the right and rows
+ *   down to the left, a Tiled "isometric" map. The grid's `x` and `y` are
+ *   the top left corner of the box around every diamond, the first column's
+ *   diamond is at the top, and `tileWidth` and `tileHeight` are a diamond's
+ *   width and height.
+ *
+ * The search is the same for both: only where a cell is in the world
+ * differs.
+ */
+export type CellShape = "square" | "isometric";
+
 /** how a search goes, for {@link Grid#findPath}, {@link Grid#getIdPath} and {@link Grid#getPointPath} */
 export interface PathOptions {
 	/**
@@ -122,6 +136,11 @@ export interface GridSettings {
 	/** a cell's height, in world units */
 	tileHeight: number;
 	/**
+	 * how cells sit in the world
+	 * @default "square"
+	 */
+	cellShape?: CellShape;
+	/**
 	 * where the grid's top left corner is in the world
 	 * @default 0
 	 */
@@ -181,6 +200,11 @@ export interface BodiesOptions {
 	/** a cell's height, in world units */
 	tileHeight: number;
 	/**
+	 * how cells sit in the world: `"isometric"` for an isometric map
+	 * @default "square"
+	 */
+	cellShape?: CellShape;
+	/**
 	 * where the grid's top left corner is in the world
 	 * @default 0
 	 */
@@ -219,6 +243,54 @@ export interface CellRegion {
 	width: number;
 	height: number;
 }
+
+/** where cells sit in the world, as a grid or its settings hold it */
+interface Layout {
+	cellShape?: CellShape | undefined;
+	x?: number | undefined;
+	y?: number | undefined;
+	rows: number;
+	tileWidth: number;
+	tileHeight: number;
+}
+
+/**
+ * a point of the grid, in cells (fractions too), to world units
+ * @param layout - where the cells are
+ * @param col - columns from the grid's corner
+ * @param row - rows from the grid's corner
+ * @returns the point in world units
+ */
+const cellToWorld = (layout: Layout, col: number, row: number) => {
+	const { tileWidth: w, tileHeight: h } = layout;
+	const x = layout.x ?? 0;
+	const y = layout.y ?? 0;
+	return layout.cellShape === "isometric"
+		? new Vector2d(
+				x + ((layout.rows + col - row) * w) / 2,
+				y + ((col + row) * h) / 2,
+			)
+		: new Vector2d(x + col * w, y + row * h);
+};
+
+/**
+ * a point in world units to the grid's cells (with fractions)
+ * @param layout - where the cells are
+ * @param px - in world units
+ * @param py - in world units
+ * @returns the point, `x` in columns and `y` in rows
+ */
+const worldToCell = (layout: Layout, px: number, py: number) => {
+	const u = (px - (layout.x ?? 0)) / layout.tileWidth;
+	const v = (py - (layout.y ?? 0)) / layout.tileHeight;
+	if (layout.cellShape === "isometric") {
+		const across = u - layout.rows / 2;
+		return new Vector2d(v + across, v - across);
+	}
+	return new Vector2d(u, v);
+};
+
+const CELL_SHAPES: readonly string[] = ["square", "isometric"];
 
 /** where a cell is sampled for walls, as fractions of its size */
 const SAMPLES = [0.125, 0.5, 0.875];
@@ -288,11 +360,11 @@ interface Search {
  * {@link Grid#findPath}.
  *
  * Cells are `Vector2d`s, `x` the column and `y` the row. Points in world
- * units are each cell's position: its top left corner plus
- * {@link Grid#offset}, half a cell by default, so its centre.
+ * units are each cell's position: its corner plus {@link Grid#offset},
+ * which is its centre by default.
  *
- * Only square-cell (orthogonal) grids for now: isometric and hexagonal maps
- * are not supported.
+ * Cells are square (an orthogonal map) or diamonds (an isometric map), see
+ * {@link CellShape}. Staggered and hexagonal maps are not supported.
  * @example
  * const grid = new Grid({ cols: 20, rows: 15, tileWidth: 32, tileHeight: 32 });
  * grid.diagonalMode = "onlyIfNoObstacles";
@@ -309,14 +381,17 @@ export class Grid {
 	readonly tileWidth: number;
 	/** a cell's height, in world units */
 	readonly tileHeight: number;
+	/** how cells sit in the world */
+	readonly cellShape: CellShape;
 	/** where the grid's top left corner is in the world */
 	x: number;
 	/** where the grid's top left corner is in the world */
 	y: number;
 	/**
-	 * where a cell's position is, from its top left corner: the points of a
-	 * path are cell positions
-	 * @default half a cell, the centre
+	 * where a cell's position is, from its corner (the top left of a square,
+	 * the top of a diamond): the points of a path are cell positions
+	 * @default the centre: half a cell across and down for a square, half a
+	 * cell down for a diamond
 	 */
 	offset: Vector2d;
 	/**
@@ -362,14 +437,22 @@ export class Grid {
 				);
 			}
 		}
+		const shape = settings.cellShape ?? "square";
+		if (!CELL_SHAPES.includes(shape)) {
+			throw new RangeError(`pathfinding: unknown cellShape "${shape}"`);
+		}
 		this.settings = settings;
+		this.cellShape = shape;
 		this.cols = settings.cols;
 		this.rows = settings.rows;
 		this.tileWidth = settings.tileWidth;
 		this.tileHeight = settings.tileHeight;
 		this.x = settings.x ?? 0;
 		this.y = settings.y ?? 0;
-		this.offset = new Vector2d(this.tileWidth / 2, this.tileHeight / 2);
+		this.offset = new Vector2d(
+			shape === "isometric" ? 0 : this.tileWidth / 2,
+			this.tileHeight / 2,
+		);
 		const n = this.cols * this.rows;
 		this.solid = new Uint8Array(n);
 		this.weights = new Float32Array(n);
@@ -384,7 +467,9 @@ export class Grid {
 	}
 
 	/**
-	 * A grid over a Tiled tile layer: one cell per tile. By default a cell
+	 * A grid over a Tiled tile layer: one cell per tile, square on an
+	 * orthogonal map and diamonds on an isometric one (staggered and
+	 * hexagonal maps throw a `RangeError`). By default a cell
 	 * holding a tile is solid and an empty one is open (a layer of walls);
 	 * pass `solid` to decide from the tile instead (a tile property, its
 	 * id). A tile's `weight` property sets what crossing it costs.
@@ -406,9 +491,25 @@ export class Grid {
 	 * @returns a grid with one cell per tile
 	 */
 	static fromTileLayer(layer: TMXLayer, options: TileLayerOptions = {}) {
+		const orientation =
+			(layer as { orientation?: string }).orientation ?? "orthogonal";
+		if (orientation !== "orthogonal" && orientation !== "isometric") {
+			throw new RangeError(
+				`pathfinding: a "${orientation}" map is not supported (orthogonal and isometric maps are)`,
+			);
+		}
+		const isometric = orientation === "isometric";
 		// not yet in a container: its own position
 		const parent = layer.ancestor as Container | undefined;
 		const at = parent === undefined ? layer.pos : layer.getAbsolutePosition();
+		// an isometric map's diamonds start from its own number of rows, which
+		// a layer of an infinite map can outgrow
+		const mapRows =
+			(layer.getRenderer() as { rows?: number } | undefined)?.rows ??
+			layer.rows;
+		const shift = isometric
+			? ((mapRows - layer.rows) * layer.tilewidth) / 2
+			: 0;
 		const { solid, weight } = options;
 		const props = (tile: Tile | null) => {
 			return tile === null
@@ -422,7 +523,8 @@ export class Grid {
 			rows: layer.rows,
 			tileWidth: layer.tilewidth,
 			tileHeight: layer.tileheight,
-			x: options.x ?? at.x,
+			cellShape: isometric ? "isometric" : "square",
+			x: options.x ?? at.x + shift,
 			y: options.y ?? at.y,
 			solid: (col, row) => {
 				// null for an empty cell, whatever its type says
@@ -468,6 +570,14 @@ export class Grid {
 		const { cols, rows, tileWidth, tileHeight } = options;
 		const x0 = options.x ?? 0;
 		const y0 = options.y ?? 0;
+		const layout: Layout = {
+			cellShape: options.cellShape,
+			x: x0,
+			y: y0,
+			rows,
+			tileWidth,
+			tileHeight,
+		};
 		const isWall = options.solid ?? isWorldShape;
 		const walls = new Uint8Array(cols * rows);
 
@@ -493,10 +603,27 @@ export class Grid {
 					bottom = Math.max(bottom, at.y + b.bottom);
 				}
 			}
-			const c0 = Math.max(0, Math.floor((left - x0) / tileWidth));
-			const r0 = Math.max(0, Math.floor((top - y0) / tileHeight));
-			const c1 = Math.min(cols - 1, Math.floor((right - x0) / tileWidth));
-			const r1 = Math.min(rows - 1, Math.floor((bottom - y0) / tileHeight));
+			// the cells under the area's four corners, and those between
+			let c0 = Infinity;
+			let r0 = Infinity;
+			let c1 = -Infinity;
+			let r1 = -Infinity;
+			for (const [cx, cy] of [
+				[left, top],
+				[right, top],
+				[left, bottom],
+				[right, bottom],
+			]) {
+				const cell = worldToCell(layout, cx, cy);
+				c0 = Math.min(c0, Math.floor(cell.x));
+				r0 = Math.min(r0, Math.floor(cell.y));
+				c1 = Math.max(c1, Math.floor(cell.x));
+				r1 = Math.max(r1, Math.floor(cell.y));
+			}
+			c0 = Math.max(0, c0);
+			r0 = Math.max(0, r0);
+			c1 = Math.min(cols - 1, c1);
+			r1 = Math.min(rows - 1, r1);
 			for (let row = r0; row <= r1; row++) {
 				for (let col = c0; col <= c1; col++) {
 					const i = row * cols + col;
@@ -505,8 +632,7 @@ export class Grid {
 					}
 					for (const fy of SAMPLES) {
 						for (const fx of SAMPLES) {
-							const px = x0 + (col + fx) * tileWidth;
-							const py = y0 + (row + fy) * tileHeight;
+							const { x: px, y: py } = cellToWorld(layout, col + fx, row + fy);
 							const inside =
 								shapes === undefined || shapes.length === 0
 									? bounds.contains(px, py)
@@ -538,6 +664,9 @@ export class Grid {
 			rows,
 			tileWidth,
 			tileHeight,
+			...(options.cellShape !== undefined
+				? { cellShape: options.cellShape }
+				: {}),
 			x: x0,
 			y: y0,
 			prepare: () => {
@@ -672,23 +801,20 @@ export class Grid {
 	 * @returns the cell (`x` the column, `y` the row), or null off the grid
 	 */
 	cellAt(x: number, y: number) {
-		const col = Math.floor((x - this.x) / this.tileWidth);
-		const row = Math.floor((y - this.y) / this.tileHeight);
-		return this.isInBounds(col, row) ? new Vector2d(col, row) : null;
+		const cell = worldToCell(this, x, y);
+		cell.set(Math.floor(cell.x), Math.floor(cell.y));
+		return this.isInBounds(cell.x, cell.y) ? cell : null;
 	}
 
 	/**
-	 * a cell's position in the world: its top left corner plus
-	 * {@link Grid#offset}
+	 * a cell's position in the world: its corner (the top left of a square,
+	 * the top of a diamond) plus {@link Grid#offset}
 	 * @param col - the cell's column
 	 * @param row - the cell's row
 	 * @returns the point, in world units
 	 */
 	getPointPosition(col: number, row: number) {
-		return new Vector2d(
-			this.x + col * this.tileWidth + this.offset.x,
-			this.y + row * this.tileHeight + this.offset.y,
-		);
+		return cellToWorld(this, col, row).add(this.offset);
 	}
 
 	// ---------------------------------------------------------------------
@@ -834,10 +960,8 @@ export class Grid {
 	}
 
 	private indexOfPosition(point: Readonly<{ x: number; y: number }>) {
-		return this.clampedIndex(
-			Math.floor((point.x - this.x) / this.tileWidth),
-			Math.floor((point.y - this.y) / this.tileHeight),
-		);
+		const cell = worldToCell(this, point.x, point.y);
+		return this.clampedIndex(Math.floor(cell.x), Math.floor(cell.y));
 	}
 
 	private heuristicOf(heuristic: Heuristic | undefined, mode: DiagonalMode) {
