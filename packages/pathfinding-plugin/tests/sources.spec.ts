@@ -18,7 +18,7 @@ import {
 	video,
 } from "melonjs";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { Grid, PathfindingPlugin } from "../src/index.ts";
+import { Grid, PathfindingDebug, PathfindingPlugin } from "../src/index.ts";
 
 const T = 16;
 
@@ -274,13 +274,150 @@ describe("grids from a level", () => {
 			});
 			expect(picture(grid)).toEqual(["......", ".###..", "......", "......"]);
 		});
+
+		/**
+		 * a wall body, as code adds one
+		 * @param x - where the renderable is
+		 * @param y - where the renderable is
+		 * @param shapes - its shapes, none for its bounding box
+		 * @returns the wall
+		 */
+		const wall = (x: number, y: number, shapes: Rect[]) => {
+			const r = new Renderable(x, y, T, T);
+			r.bodyDef = {
+				type: "static",
+				shapes,
+				collisionType: collision.types.WORLD_SHAPE,
+			};
+			return r;
+		};
+		const size = { cols: 6, rows: 4, tileWidth: T, tileHeight: T };
+
+		it("places a shape from the renderable's anchor, as the engine does", () => {
+			const container = new Container(0, 0, 6 * T, 4 * T);
+			// the default anchor, the centre: the renderable at (2.5, 1.5)
+			// cells is drawn over the cell (2, 1), and its shape with it
+			const w = wall(2.5 * T, 1.5 * T, [new Rect(0, 0, T, T)]);
+			container.addChild(w);
+			expect(w.getBounds().left).toBe(2 * T);
+			expect(w.getBounds().top).toBe(T);
+			const grid = Grid.fromBodies(container, size);
+			expect(picture(grid)).toEqual(["......", "..#...", "......", "......"]);
+		});
+
+		it("uses a wall's bounding box when it has no shape", () => {
+			const container = new Container(0, 0, 6 * T, 4 * T);
+			const box = wall(4 * T, 3 * T, []);
+			box.anchorPoint.set(0, 0);
+			container.addChild(box);
+			expect(picture(Grid.fromBodies(container, size))).toEqual([
+				"......",
+				"......",
+				"......",
+				"....#.",
+			]);
+		});
+
+		it("finds walls in nested containers, and only those it is told to", () => {
+			const outer = new Container(0, 0, 6 * T, 4 * T);
+			const inner = new Container(T, T, 4 * T, 2 * T);
+			const a = wall(0, 0, [new Rect(0, 0, T, T)]);
+			a.anchorPoint.set(0, 0);
+			a.name = "a";
+			const b = wall(2 * T, T, [new Rect(0, 0, T, T)]);
+			b.anchorPoint.set(0, 0);
+			inner.addChild(a);
+			inner.addChild(b);
+			outer.addChild(inner);
+			expect(picture(Grid.fromBodies(outer, size))).toEqual([
+				"......",
+				".#....",
+				"...#..",
+				"......",
+			]);
+			const only = Grid.fromBodies(outer, {
+				...size,
+				solid: (r) => {
+					return r.name === "a";
+				},
+				weight: (col) => {
+					return col === 5 ? 3 : 1;
+				},
+			});
+			expect(picture(only)).toEqual(["......", ".#....", "......", "......"]);
+			expect(only.getWeight(5, 0)).toBe(3);
+		});
+
+		it("scans again where the grid now is, on refresh", () => {
+			const container = new Container(0, 0, 8 * T, 4 * T);
+			const w = wall(2 * T, T, [new Rect(0, 0, T, T)]);
+			w.anchorPoint.set(0, 0);
+			container.addChild(w);
+			// a grid starting one cell in
+			const grid = Grid.fromBodies(container, { ...size, x: T });
+			expect(grid.isSolid(1, 1)).toBe(true);
+			// moved a cell further: the wall is in its first column
+			grid.x = 2 * T;
+			grid.refresh();
+			expect(grid.isSolid(0, 1)).toBe(true);
+			expect(grid.isSolid(1, 1)).toBe(false);
+			// a wall taken away, another added
+			container.removeChildNow(w);
+			const other = wall(6 * T, 2 * T, [new Rect(0, 0, T, T)]);
+			other.anchorPoint.set(0, 0);
+			container.addChild(other);
+			grid.refresh();
+			expect(picture(grid)).toEqual(["......", "......", "....#.", "......"]);
+		});
+	});
+
+	describe("PathfindingDebug", () => {
+		it("paints solid and heavy cells, each part when asked", () => {
+			const grid = Grid.fromTileLayer(wallsLayer(), {
+				solid: (tile) => {
+					return tile !== null && tile.tileId === 1;
+				},
+			});
+			const overlay = new PathfindingDebug(grid);
+			expect([overlay.width, overlay.height]).toEqual([6 * T, 4 * T]);
+			const renderer = app?.renderer as Parameters<typeof overlay.draw>[0];
+			const canvas = renderer.getCanvas();
+			const context = canvas.getContext("2d") as CanvasRenderingContext2D;
+			const pixel = (col: number, row: number) => {
+				return Array.from(
+					context.getImageData(col * T + T / 2, row * T + T / 2, 1, 1).data,
+				);
+			};
+			const draw = () => {
+				context.clearRect(0, 0, canvas.width, canvas.height);
+				overlay.update();
+				overlay.draw(renderer);
+			};
+			draw();
+			// a wall red, mud orange, an open cell left alone
+			const [wr, wg] = pixel(2, 0);
+			expect(wr).toBeGreaterThan(wg);
+			expect(pixel(4, 1)[0]).toBeGreaterThan(0);
+			expect(pixel(0, 0)[3]).toBe(0);
+			overlay.showSolid = false;
+			overlay.showWeight = false;
+			draw();
+			expect(pixel(2, 0)[3]).toBe(0);
+			expect(pixel(4, 1)[3]).toBe(0);
+			// it follows the grid when it moves
+			grid.x = T;
+			overlay.update();
+			expect(overlay.pos.x).toBe(T);
+		});
 	});
 
 	describe("PathfindingPlugin", () => {
 		it("builds a grid for each level loaded, from a layer or the shapes", async () => {
 			const byLayer = new PathfindingPlugin({ layer: "walls" }, app);
 			const byShapes = new PathfindingPlugin({}, app);
-			expect(byLayer.grid).toBe(null);
+			// a level is already loaded: its grid is built at once
+			const first = byLayer.grid;
+			expect(first?.isSolid(2, 0)).toBe(true);
 			await level.load("pf-map", {
 				container: world(),
 				setViewportBounds: false,
@@ -289,8 +426,59 @@ describe("grids from a level", () => {
 			expect(byLayer.grid?.isSolid(2, 0)).toBe(true);
 			expect(byShapes.grid?.isSolid(4, 0)).toBe(true);
 			expect(byShapes.grid?.isSolid(2, 0)).toBe(false);
+			// a new grid for the new level
+			expect(byLayer.grid).not.toBe(first);
 			byLayer.destroy();
 			byShapes.destroy();
+		});
+
+		it("builds the grid with build, or keeps none", async () => {
+			const built = new Grid({ cols: 1, rows: 1, tileWidth: T, tileHeight: T });
+			let given: Container | undefined;
+			const custom = new PathfindingPlugin(
+				{
+					build: (container) => {
+						given = container;
+						return built;
+					},
+				},
+				app,
+			);
+			expect(custom.grid).toBe(built);
+			expect(given).toBe(world());
+			const none = new PathfindingPlugin({ build: () => null }, app);
+			const missing = new PathfindingPlugin({ layer: "no such layer" }, app);
+			await level.load("pf-map", {
+				container: world(),
+				setViewportBounds: false,
+				async: true,
+			});
+			expect(none.grid).toBe(null);
+			expect(missing.grid).toBe(null);
+			for (const p of [custom, none, missing]) {
+				p.destroy();
+			}
+		});
+
+		it("stops following level loads once destroyed", async () => {
+			let builds = 0;
+			const p = new PathfindingPlugin(
+				{
+					build: () => {
+						builds++;
+						return null;
+					},
+				},
+				app,
+			);
+			p.destroy();
+			await level.load("pf-map", {
+				container: world(),
+				setViewportBounds: false,
+				async: true,
+			});
+			expect(builds).toBe(1);
+			expect(p.grid).toBe(null);
 		});
 
 		it("registers through the plugin API", () => {

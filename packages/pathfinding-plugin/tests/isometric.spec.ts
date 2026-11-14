@@ -12,7 +12,7 @@ import {
 	type TMXLayer,
 	video,
 } from "melonjs";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { Grid, PathfindingDebug, PathfindingPlugin } from "../src/index.ts";
 
 const W = 32;
@@ -220,6 +220,18 @@ describe("grids from an isometric level", () => {
 				// an inline map, which the loader takes though `Asset.data` is
 				// typed for shader sources
 				{ name: "pf-iso-map", type: "tmx", data: map as unknown as string },
+				// the same map, staggered, which no grid is built for
+				{
+					name: "pf-stagger-map",
+					type: "tmx",
+					data: {
+						...map,
+						orientation: "staggered",
+						staggeraxis: "y",
+						staggerindex: "odd",
+						layers: [map.layers[0]],
+					} as unknown as string,
+				},
 			],
 			undefined,
 			false,
@@ -304,6 +316,50 @@ describe("grids from an isometric level", () => {
 		expect(byLayer.grid?.cellShape).toBe("isometric");
 		byShapes.destroy();
 		byLayer.destroy();
+	});
+
+	it("keeps no grid for a staggered level, which still loads", async () => {
+		const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+		const byShapes = new PathfindingPlugin({}, app);
+		const byLayer = new PathfindingPlugin({ layer: "walls" }, app);
+		expect(byShapes.grid).not.toBe(null);
+		let loaded = false;
+		await level.load("pf-stagger-map", {
+			container: world(),
+			setViewportBounds: false,
+			async: true,
+			onLoaded: () => {
+				loaded = true;
+			},
+		});
+		expect(loaded).toBe(true);
+		expect(level.getCurrentLevelId()).toBe("pf-stagger-map");
+		expect(byShapes.grid).toBe(null);
+		expect(byLayer.grid).toBe(null);
+		expect(warn).toHaveBeenCalledTimes(2);
+		// called directly, rebuild says why
+		expect(() => {
+			return byLayer.rebuild();
+		}).toThrow(RangeError);
+		byShapes.destroy();
+		byLayer.destroy();
+		warn.mockRestore();
+		// back to the isometric level for the tests after this one
+		await level.load("pf-iso-map", {
+			container: world(),
+			setViewportBounds: false,
+			async: true,
+		});
+	});
+
+	it("gives the points of a path at the diamonds' centres", () => {
+		const grid = Grid.fromTileLayer(wallsLayer());
+		const points = grid.getPointPath({ x: 0, y: 0 }, { x: 4, y: 0 });
+		const cells = grid.getIdPath({ x: 0, y: 0 }, { x: 4, y: 0 });
+		expect(points.length).toBe(cells.length);
+		for (let i = 0; i < cells.length; i++) {
+			expect(points[i]).toEqual(grid.getPointPosition(cells[i].x, cells[i].y));
+		}
 	});
 
 	it("refuses a staggered or hexagonal layer", () => {
