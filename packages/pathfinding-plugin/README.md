@@ -181,7 +181,7 @@ plugin.register(PathfindingPlugin, "pathfinding", { layer: "walls" });
 const { grid } = plugin.cache.pathfinding;
 ```
 
-With `layer`, the grid comes from that tile layer (and takes the same `solid` and `weight` as `Grid.fromTileLayer`); without it, from the level's collision shapes. `build: (container) => grid` builds it yourself. `rebuild()` builds it again, and `destroy()` stops following level loads. Registered once a level is loaded, it builds that level's grid at once. A level it cannot build a grid for (a staggered or hexagonal map) still loads: the plugin warns and its `grid` is `null` (`rebuild()` called directly throws). A `Grid` works without the plugin: use the plugin only when the grid comes from the level.
+With `layer`, the grid comes from that tile layer (and takes the same `solid` and `weight` as `Grid.fromTileLayer`); without it, from the level's collision shapes. `build: (container) => grid` builds it yourself. `rebuild()` builds it again, and `destroy()` stops following level loads. Registered once a level is loaded, it builds that level's grid at once. It only follows levels loaded in its container (`container`, or the application's world), so a level another application loads leaves its grid alone. Built from the collision shapes, the grid covers the whole level, on an infinite map from its first column and row, which can be left of or above the map's origin. A level it cannot build a grid for (a staggered or hexagonal map) still loads: the plugin warns and its `grid` is `null` (`rebuild()` called directly throws). A `Grid` works without the plugin: use the plugin only when the grid comes from the level.
 
 ## Debug overlay
 

@@ -663,7 +663,10 @@ export class Grid {
 			const r = wall as unknown as WithBody;
 			const shapes = r.body?.shapes ?? r.bodyDef?.shapes;
 			// shapes are placed from the renderable's drawn corner
-			const at = wall.getAbsolutePosition().sub(anchorOffset(wall, anchor));
+			// (a copy: the renderable keeps its absolute position in a vector of
+			// its own)
+			const abs = wall.getAbsolutePosition();
+			const at = anchor.set(abs.x, abs.y).sub(anchorOffset(wall, point));
 			const bounds = wall.getBounds();
 			const cells = built.grid ?? first;
 			// the area to scan: the shapes' own, which can reach past the
