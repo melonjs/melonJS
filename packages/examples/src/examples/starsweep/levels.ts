@@ -10,14 +10,15 @@
  * - The `station` tile layer is the board. Each board tile in the tileset
  *   has a `kind` property: `wall`, `floor`, `ice`, `arrow-up` / `-right` /
  *   `-down` / `-left`, `crack`, `portal` (monsters come out, an animated
- *   tile) and `start` (where Bolt begins, exactly one). An empty cell is
- *   open space.
+ *   tile), `start` (where Bolt begins, exactly one), `goo` (monsters avoid
+ *   it and wade through it slowly), `gate` (shut until a `switch` is lit)
+ *   and `gate-open`. An empty cell is open space.
  * - The `power` tile layer starts empty: the game lights a panel by
  *   setting the tile whose `lit` property names its kind there, and
  *   tints the layer with the level's colour (see `field.ts`).
  * - The map's custom properties set the rest: `title`, `hint`, `theme`
  *   (one of {@link THEMES}), `enemies` (the order monsters come out in,
- *   comma separated: `wobbler`, `muncher`, `chaser`), `maxEnemies`,
+ *   comma separated: `wobbler`, `muncher`, `chaser`, `drone`), `maxEnemies`,
  *   `spawnEvery` (seconds) and `par` (seconds, for the time bonus).
  *
  * The engine draws the maps. Their `station` layer is also turned into the
@@ -33,7 +34,7 @@
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
 
-export type EnemyKind = "wobbler" | "muncher" | "chaser";
+export type EnemyKind = "wobbler" | "muncher" | "chaser" | "drone";
 
 export interface Theme {
 	/** lit tile face */
@@ -125,6 +126,9 @@ export const LEVEL_FILES = [
 	"level05",
 	"level06",
 	"level07",
+	// goo and gates, then drones, before the final station
+	"level09",
+	"level10",
 	"level08",
 ] as const;
 
@@ -162,9 +166,18 @@ const KIND_CHARS: Record<string, string> = {
 	crack: "%",
 	portal: "E",
 	start: "P",
+	goo: "g",
+	gate: "D",
+	"gate-open": "O",
+	switch: "S",
 };
 
-const ENEMY_KINDS: readonly EnemyKind[] = ["wobbler", "muncher", "chaser"];
+const ENEMY_KINDS: readonly EnemyKind[] = [
+	"wobbler",
+	"muncher",
+	"chaser",
+	"drone",
+];
 
 // Tiled keeps flip and rotation flags in the top bits of a gid
 const GID_MASK = 0x0fffffff;

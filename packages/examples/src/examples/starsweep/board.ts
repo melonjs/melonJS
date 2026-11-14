@@ -19,6 +19,13 @@ export const Tile = {
 	ARROW_LEFT: 7,
 	CRACK: 8,
 	NEST: 9,
+	/** sticky: monsters avoid it, and wade through it slowly */
+	GOO: 10,
+	/** a wall until a switch is lit, then a floor */
+	GATE: 11,
+	GATE_OPEN: 12,
+	/** lighting it opens every gate */
+	SWITCH: 13,
 } as const;
 export type Tile = (typeof Tile)[keyof typeof Tile];
 
@@ -43,6 +50,10 @@ const CHARS: Record<string, Tile> = {
 	"<": Tile.ARROW_LEFT,
 	"%": Tile.CRACK,
 	E: Tile.NEST,
+	g: Tile.GOO,
+	D: Tile.GATE,
+	O: Tile.GATE_OPEN,
+	S: Tile.SWITCH,
 };
 
 export interface ParsedMap {
@@ -89,11 +100,19 @@ export const parseMap = (rows: readonly string[]): ParsedMap => {
 	return { tiles, start, nests };
 };
 
-/** Tiles that count towards clearing the level. */
+/** Tiles that count towards clearing the level (a gate, once it opens). */
 export const isPaintable = (t: Tile) => t !== Tile.VOID && t !== Tile.WALL;
 
 /** Tiles anyone can stand on. */
-export const isSolidGround = (t: Tile) => t !== Tile.VOID && t !== Tile.WALL;
+export const isSolidGround = (t: Tile) =>
+	t !== Tile.VOID && t !== Tile.WALL && t !== Tile.GATE;
+
+/** Tiles that stop a move: walls, and gates still shut. */
+export const isBlocking = (t: Tile) => t === Tile.WALL || t === Tile.GATE;
+
+/** The same map with every gate open, as after a switch is lit. */
+export const withGatesOpen = (tiles: readonly Tile[]) =>
+	tiles.map((t) => (t === Tile.GATE ? Tile.GATE_OPEN : t));
 
 /** Direction a tile pushes you in when you land on it, or -1. */
 export const arrowDir = (t: Tile): Dir | -1 =>
@@ -154,7 +173,7 @@ export const traceMove = (
 		const tx = nx + DX[f];
 		const ty = ny + DY[f];
 		const next = at(tx, ty);
-		if (next === Tile.WALL) {
+		if (isBlocking(next)) {
 			return { path, end: { x: nx, y: ny }, fell: false, loops: false };
 		}
 		if (next === Tile.VOID) {

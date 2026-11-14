@@ -9,15 +9,32 @@
  * `clearTile`). Bursts come from a `ParticleEmitter`, spark trails are
  * `Trail`s, one-shot animations are `Tween`s, and pausing is the engine's
  * `state.pause()`. Movement is tile-to-tile: an actor is always between a
- * `from` tile and a `to` tile, with `t` going 0 → 1.
+ * `from` tile and a `to` tile, with `t` going 0 → 1, except for drones,
+ * which fly freely.
+ *
+ * Monsters find their way with `@melonjs/pathfinding-plugin`: chasers plan
+ * across a grid read from the station layer (walls, gates and fallen cracks
+ * block it, goo costs more, and they keep off each other's cells, so they
+ * flank Bolt), and drones across a second grid where holes are open too,
+ * diagonally, along smoothed straight lines. When Bolt is out of reach,
+ * they head for the nearest point. A force-field blocks cells for a while,
+ * and the scanner shows every plan with the plugin's debug overlay.
  *
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
+
+import {
+	Grid,
+	PathfindingDebug,
+	type PathPoint,
+	type PathResult,
+} from "@melonjs/pathfinding-plugin";
 import {
 	type Container,
 	event,
 	game,
+	type Tile as MapTile,
 	Renderable,
 	save,
 	Text,
@@ -33,6 +50,7 @@ import {
 	DY,
 	forcedDir,
 	inBounds,
+	isBlocking,
 	isPaintable,
 	isSolidGround,
 	opposite,
@@ -81,22 +99,36 @@ const REGROW_TIME = 6;
 const INVULN_TIME = 2.5;
 const POWER_EVERY = [9, 14] as const;
 const POWER_LIFE = 9;
-type TimedPower = "freeze" | "shield" | "burst";
+type TimedPower = "freeze" | "shield" | "burst" | "field" | "scan";
 const POWER_TIME: Record<TimedPower, number> = {
 	freeze: 5,
 	shield: 7,
 	burst: 9,
+	field: 6,
+	scan: 7,
 };
 const ENEMY_SPEED: Record<EnemyKind, number> = {
 	wobbler: 3.1,
 	muncher: 2.7,
 	chaser: 3.3,
+	drone: 1.9,
 };
 const ENEMY_SCORE: Record<EnemyKind, number> = {
 	wobbler: 100,
 	muncher: 150,
 	chaser: 200,
+	drone: 250,
 };
+/** what crossing goo costs a monster's search */
+const GOO_COST = 4;
+/** how fast a monster wades through goo */
+const GOO_SLOW = 0.45;
+/** what another monster's cell costs a chaser's search: they spread out */
+const FLANK_COST = 4;
+/** the most cells one search may look at */
+const SEARCH_CAP = 400;
+/** seconds between two plans of a drone */
+const DRONE_REPLAN = 0.4;
 
 export const HISCORE_KEY = "starsweepHiscore";
 
@@ -122,6 +154,10 @@ interface Enemy extends Mover {
 	speed: number;
 	spawning: number; // > 0 while still coming out of the nest
 	falling: number;
+	/** a flying drone's free position and route, not tied to tiles */
+	air?: { x: number; y: number; path: PathPoint[]; replan: number };
+	/** the last route planned (chasers and drones), for the scanner */
+	plan?: PathResult;
 }
 
 interface Spark {
@@ -174,6 +210,8 @@ const tileY = (y: number) => OY + y * TILE;
 const moverX = (m: Mover) => tileX(m.fx + (m.tx - m.fx) * m.t) + TILE / 2;
 const moverY = (m: Mover) => tileY(m.fy + (m.ty - m.fy) * m.t) + TILE / 2 - 4;
 const idx = (x: number, y: number) => y * COLS + x;
+const enemyX = (e: Enemy) => (e.air ? e.air.x : moverX(e));
+const enemyY = (e: Enemy) => (e.air ? e.air.y : moverY(e));
 const rand = (a: number, b: number) => a + Math.random() * (b - a);
 const pick = <T>(list: readonly T[]) =>
 	list[Math.floor(Math.random() * list.length)];
@@ -231,8 +269,15 @@ export class Field extends Renderable {
 	private freeze = 0;
 	private shield = 0;
 	private burst = 0;
-	private chase: Int16Array = new Int16Array(COLS * ROWS);
-	private chaseTimer = 0;
+	/** where monsters walk, read from the station layer by the plugin */
+	private walkGrid: Grid | null = null;
+	/** where drones fly: anywhere but walls and shut gates */
+	private airGrid: Grid | null = null;
+	/** force-field cells, and the time each has left */
+	private fields = new Map<number, number>();
+	private scan = 0;
+	/** the scanner: the plugin's debug overlay, showing only the plans */
+	private scanner: PathfindingDebug | null = null;
 	private bonus = 0;
 	/** > 0 while Bolt is pleased with itself */
 	private cheer = 0;
@@ -405,7 +450,12 @@ export class Field extends Renderable {
 		this.levelTime = 0;
 		this.spawnCount = 0;
 		this.powerTimer = rand(...POWER_EVERY);
-		this.freeze = this.shield = this.burst = 0;
+		this.freeze = this.shield = this.burst = this.scan = 0;
+		this.fields.clear();
+		if (this.scanner?.ancestor) {
+			this.host.actors.removeChild(this.scanner, true);
+		}
+		this.buildGrids(board.station);
 		this.levelText.setText(
 			`${i + 1} / ${LEVELS.length}  ·  ${this.level.name.toUpperCase()}`,
 		);
@@ -452,6 +502,95 @@ export class Field extends Renderable {
 					| undefined;
 				this.kinds.push(props?.kind ?? null);
 			}
+		}
+	}
+
+	/**
+	 * The two grids the monsters plan across, from the pathfinding plugin.
+	 * Walkers: the station layer itself, each tile's kind read from the
+	 * tileset, so a tile set or cleared on the layer is seen by refreshing
+	 * its cell. Drones: anywhere but walls and shut gates, holes included.
+	 */
+	private buildGrids(station: TMXLayer) {
+		const kindOf = (tile: MapTile | null) => {
+			return tile === null
+				? undefined
+				: (
+						tile.tileset.getTileProperties(tile.tileId) as
+							| { kind?: string }
+							| undefined
+					)?.kind;
+		};
+		this.walkGrid = Grid.fromTileLayer(station, {
+			walkable: (tile) => {
+				const kind = kindOf(tile);
+				return kind !== undefined && kind !== "wall" && kind !== "gate";
+			},
+			cost: (tile) => {
+				return kindOf(tile) === "goo" ? GOO_COST : 1;
+			},
+		});
+		this.airGrid = new Grid({
+			cols: COLS,
+			rows: ROWS,
+			tileWidth: TILE,
+			tileHeight: TILE,
+			x: OX,
+			y: OY,
+			walkable: (col, row) => {
+				return !isBlocking(this.tiles[idx(col, row)]);
+			},
+		});
+		if (this.scanner) {
+			this.scanner.grid = this.walkGrid;
+		} else {
+			this.scanner = new PathfindingDebug(this.walkGrid);
+			this.scanner.showBlocked = false;
+			this.scanner.showCost = false;
+			this.scanner.showTrace = false;
+			this.scanner.isPersistent = true;
+		}
+	}
+
+	/** a cell changed on the station layer, or by a force-field: re-read it */
+	private refreshCell(x: number, y: number) {
+		this.walkGrid?.refreshCell(x, y);
+		this.airGrid?.refreshCell(x, y);
+		if (this.fields.has(idx(x, y))) {
+			this.walkGrid?.setWalkable(x, y, false);
+			this.airGrid?.setWalkable(x, y, false);
+		}
+	}
+
+	/** a switch is lit: every gate slides open */
+	private openGates() {
+		const station = this.board?.station;
+		const gid = this.kindGid.get("gate-open");
+		let opened = 0;
+		for (let i = 0; i < this.tiles.length; i++) {
+			if (this.tiles[i] !== Tile.GATE) {
+				continue;
+			}
+			const x = i % COLS;
+			const y = Math.floor(i / COLS);
+			this.tiles[i] = Tile.GATE_OPEN;
+			this.kinds[i] = "gate-open";
+			if (station && gid !== undefined) {
+				station.setTile(station.getTileById(gid, x, y), x, y);
+			}
+			this.refreshCell(x, y);
+			this.fx.burst(
+				tileX(x) + TILE / 2,
+				tileY(y) + TILE / 2,
+				"#ff3b5c",
+				10,
+				120,
+			);
+			opened++;
+		}
+		if (opened > 0) {
+			sfx.sfxPickup();
+			this.host.space?.burst("#ff5d7a", 0.6);
 		}
 	}
 
@@ -551,6 +690,9 @@ export class Field extends Renderable {
 		this.lit[i] = true;
 		this.setLit(x, y, true);
 		this.paintCount++;
+		if (this.tiles[i] === Tile.SWITCH) {
+			this.openGates();
+		}
 		if (!silent) {
 			this.addScore(10);
 			sfx.sfxPaint(this.streak);
@@ -615,6 +757,7 @@ export class Field extends Renderable {
 				this.updateEnemies(dt);
 				this.updateSparks(dt);
 				this.updatePowers(dt);
+				this.updateFields(dt);
 				this.checkHits();
 				break;
 			case "dying":
@@ -673,7 +816,7 @@ export class Field extends Renderable {
 		this.host.space?.burst(this.level.theme.litHi, 0.8);
 		// every enemy pops in celebration
 		for (const e of this.enemies) {
-			this.fx.burst(moverX(e), moverY(e), "#ffffff", 14, 160);
+			this.fx.burst(enemyX(e), enemyY(e), "#ffffff", 14, 160);
 		}
 		this.enemies = [];
 		this.clearSparks();
@@ -715,6 +858,7 @@ export class Field extends Renderable {
 					const y = Math.floor(i / COLS);
 					this.board?.station.clearTile(x, y);
 					this.board?.power.clearTile(x, y);
+					this.refreshCell(x, y);
 					sfx.sfxCrumble();
 					this.fx.burst(
 						tileX(x) + TILE / 2,
@@ -730,6 +874,7 @@ export class Field extends Renderable {
 					}
 					for (const e of this.enemies) {
 						if (
+							!e.air &&
 							e.spawning <= 0 &&
 							e.falling <= 0 &&
 							this.nearestTile(e) === i
@@ -758,6 +903,7 @@ export class Field extends Renderable {
 		const x = i % COLS;
 		const y = Math.floor(i / COLS);
 		station.setTile(station.getTileById(gid, x, y), x, y);
+		this.refreshCell(x, y);
 		this.setLit(x, y, this.lit[i]);
 		this.fx.burst(tileX(x) + TILE / 2, tileY(y) + TILE / 2, "#8a7a6a", 6, 40);
 	}
@@ -823,6 +969,8 @@ export class Field extends Renderable {
 		const here = idx(p.tx, p.ty);
 		if (this.tiles[here] === Tile.CRACK && this.gone[here] <= 0) {
 			this.crumble[here] = CRUMBLE_DELAY;
+			// monsters keep off a tile about to crumble
+			this.walkGrid?.setWalkable(p.tx, p.ty, false);
 		}
 		p.fx = p.tx;
 		p.fy = p.ty;
@@ -914,12 +1062,6 @@ export class Field extends Renderable {
 			this.spawnEnemy();
 		}
 
-		this.chaseTimer -= dt;
-		if (this.chaseTimer <= 0) {
-			this.chaseTimer = 0.25;
-			this.buildChaseMap();
-		}
-
 		for (const e of this.enemies) {
 			if (e.falling !== 0) {
 				continue; // falling away, tweened
@@ -934,8 +1076,15 @@ export class Field extends Renderable {
 			if (this.freeze > 0) {
 				continue;
 			}
+			if (e.air) {
+				this.updateDrone(e, dt);
+				continue;
+			}
 			let time = dt;
-			const speed = e.speed * (1 + this.levelIndex * 0.03);
+			// wading through goo
+			const goo = this.tiles[this.nearestTile(e)] === Tile.GOO;
+			const speed =
+				e.speed * (1 + this.levelIndex * 0.03) * (goo ? GOO_SLOW : 1);
 			while (time > 0 && e.falling === 0) {
 				if (!e.moving) {
 					if (!this.chooseDir(e)) {
@@ -961,7 +1110,7 @@ export class Field extends Renderable {
 		const kind = kinds[this.spawnCount % kinds.length];
 		this.spawnCount++;
 		this.spawnTimer = this.level.spawnEvery;
-		this.enemies.push({
+		const enemy: Enemy = {
 			fx: nest.x,
 			fy: nest.y,
 			tx: nest.x,
@@ -973,14 +1122,127 @@ export class Field extends Renderable {
 			speed: ENEMY_SPEED[kind],
 			spawning: 1,
 			falling: 0,
-		});
+		};
+		if (kind === "drone") {
+			enemy.air = {
+				x: tileX(nest.x) + TILE / 2,
+				y: tileY(nest.y) + TILE / 2 - 4,
+				path: [],
+				replan: 0,
+			};
+		}
+		this.enemies.push(enemy);
 		sfx.sfxSpawn();
 	}
 
 	private enemyCanEnter(x: number, y: number) {
 		const i = idx(x, y);
-		// enemies keep off a tile that is about to crumble
-		return isSolidGround(this.ground(x, y)) && this.crumble[i] <= 0;
+		// enemies keep off a tile that is about to crumble, and force-fields
+		return (
+			isSolidGround(this.ground(x, y)) &&
+			this.crumble[i] <= 0 &&
+			!this.fields.has(i)
+		);
+	}
+
+	/**
+	 * A chaser plans the cheapest way to Bolt with the plugin: round walls,
+	 * shut gates, fallen floor and goo, and off the cells of the other
+	 * monsters, so they come at Bolt from different sides. Out of reach, the
+	 * plan leads as near as it can.
+	 * @returns the first step, or -1 to wander
+	 */
+	private chaseStep(e: Enemy): Dir | -1 {
+		const grid = this.walkGrid;
+		if (!grid) {
+			return -1;
+		}
+		const p = this.player;
+		const others = this.enemies
+			.filter((o) => {
+				return o !== e && !o.air && o.falling === 0 && o.spawning <= 0;
+			})
+			.map((o) => {
+				return { x: o.tx, y: o.ty };
+			});
+		const plan = grid.findPath(
+			{ x: e.tx, y: e.ty },
+			{ x: p.t < 0.5 ? p.fx : p.tx, y: p.t < 0.5 ? p.fy : p.ty },
+			{
+				tiles: true,
+				avoid: others,
+				avoidCost: FLANK_COST,
+				maxNodes: SEARCH_CAP,
+			},
+		);
+		e.plan = plan;
+		const next = plan.cells[0];
+		if (next === undefined) {
+			return -1;
+		}
+		const dx = next.col - e.tx;
+		const dy = next.row - e.ty;
+		return dx > 0 ? 1 : dx < 0 ? 3 : dy > 0 ? 2 : 0;
+	}
+
+	/**
+	 * A drone flies: it plans across the air grid (holes are open to it),
+	 * diagonally, along smoothed straight lines, and heads for each point in
+	 * turn, planning again a few times a second as Bolt moves.
+	 */
+	private updateDrone(e: Enemy, dt: number) {
+		const air = e.air;
+		const grid = this.airGrid;
+		if (!air || !grid) {
+			return;
+		}
+		air.replan -= dt;
+		if (air.replan <= 0) {
+			air.replan = DRONE_REPLAN;
+			const p = this.player;
+			const others = this.enemies
+				.filter((o) => {
+					return o !== e && o.air !== undefined && o.falling === 0;
+				})
+				.map((o) => {
+					return { x: enemyX(o), y: enemyY(o) };
+				});
+			e.plan = grid.findPath(
+				{ x: air.x, y: air.y + 4 },
+				{ x: moverX(p), y: moverY(p) + 4 },
+				{
+					diagonal: true,
+					smooth: true,
+					avoid: others,
+					avoidCost: FLANK_COST,
+					maxNodes: SEARCH_CAP,
+				},
+			);
+			air.path = e.plan.path.map((point) => {
+				return { x: point.x, y: point.y - 4 };
+			});
+		}
+		let step = e.speed * TILE * dt;
+		while (step > 0 && air.path.length > 0) {
+			const to = air.path[0];
+			const dx = to.x - air.x;
+			const dy = to.y - air.y;
+			const d = Math.hypot(dx, dy);
+			if (d > 0.5) {
+				// look the way it flies
+				e.dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 1 : 3) : dy > 0 ? 2 : 0;
+			}
+			if (d <= step) {
+				air.x = to.x;
+				air.y = to.y;
+				air.path.shift();
+				step -= d;
+			} else {
+				air.x += (dx / d) * step;
+				air.y += (dy / d) * step;
+				step = 0;
+			}
+		}
 	}
 
 	private chooseDir(e: Enemy) {
@@ -996,13 +1258,10 @@ export class Field extends Renderable {
 		const forward = options.filter((d) => d !== opposite(e.dir));
 		const choices = forward.length > 0 ? forward : options;
 		let d: Dir;
-		if (e.kind === "chaser" && Math.random() > 0.15) {
-			d = choices.reduce((best, c) =>
-				this.chase[idx(e.tx + DX[c], e.ty + DY[c])] <
-				this.chase[idx(e.tx + DX[best], e.ty + DY[best])]
-					? c
-					: best,
-			);
+		const chase =
+			e.kind === "chaser" && Math.random() > 0.1 ? this.chaseStep(e) : -1;
+		if (chase !== -1 && options.includes(chase)) {
+			d = chase;
 		} else if (e.kind === "muncher" && Math.random() < 0.75) {
 			const onLit = choices.filter(
 				(c) => this.lit[idx(e.tx + DX[c], e.ty + DY[c])],
@@ -1045,36 +1304,6 @@ export class Field extends Renderable {
 		sfx.sfxFall();
 	}
 
-	/** breadth-first distance from Bolt to every tile, for the hunters */
-	private buildChaseMap() {
-		this.chase.fill(32767);
-		const p = this.player;
-		const sx = p.t < 0.5 ? p.fx : p.tx;
-		const sy = p.t < 0.5 ? p.fy : p.ty;
-		if (!inBounds(sx, sy)) {
-			return;
-		}
-		const queue = [idx(sx, sy)];
-		this.chase[queue[0]] = 0;
-		for (let q = 0; q < queue.length; q++) {
-			const i = queue[q];
-			const x = i % COLS;
-			const y = (i - x) / COLS;
-			for (let d = 0; d < 4; d++) {
-				const nx = x + DX[d];
-				const ny = y + DY[d];
-				if (!inBounds(nx, ny) || !isSolidGround(this.ground(nx, ny))) {
-					continue;
-				}
-				const n = idx(nx, ny);
-				if (this.chase[n] > this.chase[i] + 1) {
-					this.chase[n] = this.chase[i] + 1;
-					queue.push(n);
-				}
-			}
-		}
-	}
-
 	// --- sparks, power-ups, hits -------------------------------------------
 
 	private updateSparks(dt: number) {
@@ -1093,7 +1322,7 @@ export class Field extends Renderable {
 					(e) =>
 						e.spawning <= 0 &&
 						e.falling === 0 &&
-						Math.hypot(moverX(e) - at.x, moverY(e) - at.y) < TILE * 0.55,
+						Math.hypot(enemyX(e) - at.x, enemyY(e) - at.y) < TILE * 0.55,
 				);
 				if (e) {
 					this.popEnemy(e);
@@ -1117,7 +1346,7 @@ export class Field extends Renderable {
 				: e.kind === "muncher"
 					? "#3cf0c8"
 					: "#9a6bff";
-		this.fx.burst(moverX(e), moverY(e), color, 22, 200, 260);
+		this.fx.burst(enemyX(e), enemyY(e), color, 22, 200, 260);
 		this.host.space?.burst(color, 0.35);
 		this.enemies = this.enemies.filter((o) => o !== e);
 	}
@@ -1141,7 +1370,7 @@ export class Field extends Renderable {
 			for (let x = 0; x < COLS; x++) {
 				const t = this.tiles[idx(x, y)];
 				if (
-					(t === Tile.FLOOR || t === Tile.ICE) &&
+					(t === Tile.FLOOR || t === Tile.ICE || t === Tile.GOO) &&
 					Math.abs(x - p.tx) + Math.abs(y - p.ty) >= 3 &&
 					!this.powers.some((pw) => pw.x === x && pw.y === y)
 				) {
@@ -1152,18 +1381,27 @@ export class Field extends Renderable {
 		if (spots.length === 0) {
 			return;
 		}
-		const roll = Math.random();
-		let kind: PowerKind;
-		if (roll < 0.08 && this.lives < MAX_LIVES) {
-			kind = "life";
-		} else if (roll < 0.35) {
-			kind = "gem";
-		} else if (roll < 0.55) {
-			kind = "freeze";
-		} else if (roll < 0.78) {
-			kind = "shield";
-		} else {
-			kind = "burst";
+		// the scanner only where some monster plans a route
+		const planners = this.level.enemies.some((k) => {
+			return k === "chaser" || k === "drone";
+		});
+		const odds: [PowerKind, number][] = [
+			["life", this.lives < MAX_LIVES ? 0.08 : 0],
+			["gem", 0.22],
+			["freeze", 0.16],
+			["shield", 0.16],
+			["burst", 0.14],
+			["field", 0.12],
+			["scan", planners ? 0.12 : 0],
+		];
+		let roll = Math.random() * odds.reduce((sum, [, w]) => sum + w, 0);
+		let kind: PowerKind = "gem";
+		for (const [k, w] of odds) {
+			roll -= w;
+			if (roll < 0) {
+				kind = k;
+				break;
+			}
 		}
 		this.powers.push({ ...pick(spots), kind, life: POWER_LIFE });
 	}
@@ -1195,6 +1433,85 @@ export class Field extends Renderable {
 			case "burst":
 				this.burst = POWER_TIME.burst;
 				break;
+			case "field":
+				this.raiseFields();
+				break;
+			case "scan":
+				this.scan = POWER_TIME.scan;
+				break;
+		}
+	}
+
+	/**
+	 * A force-field on every open cell around Bolt: monsters cannot go
+	 * through it, so their plans go round. Bolt can.
+	 */
+	private raiseFields() {
+		const p = this.player;
+		const cx = p.t < 0.5 ? p.fx : p.tx;
+		const cy = p.t < 0.5 ? p.fy : p.ty;
+		const taken = new Set(
+			this.enemies.map((e) => {
+				return e.air
+					? idx(
+							Math.floor((e.air.x - OX) / TILE),
+							Math.floor((e.air.y + 4 - OY) / TILE),
+						)
+					: this.nearestTile(e);
+			}),
+		);
+		for (let dy = -1; dy <= 1; dy++) {
+			for (let dx = -1; dx <= 1; dx++) {
+				const x = cx + dx;
+				const y = cy + dy;
+				const i = idx(x, y);
+				if (
+					(dx === 0 && dy === 0) ||
+					!inBounds(x, y) ||
+					!isSolidGround(this.ground(x, y)) ||
+					taken.has(i)
+				) {
+					continue;
+				}
+				this.fields.set(i, POWER_TIME.field);
+				this.walkGrid?.setWalkable(x, y, false);
+				this.airGrid?.setWalkable(x, y, false);
+			}
+		}
+	}
+
+	/** count the force-fields and the scanner down */
+	private updateFields(dt: number) {
+		for (const [i, left] of this.fields) {
+			if (left - dt <= 0) {
+				this.fields.delete(i);
+				this.refreshCell(i % COLS, Math.floor(i / COLS));
+			} else {
+				this.fields.set(i, left - dt);
+			}
+		}
+		this.scan = Math.max(0, this.scan - dt);
+		const scanner = this.scanner;
+		if (!scanner) {
+			return;
+		}
+		if (this.scan > 0 && this.phase === "play") {
+			if (!scanner.ancestor) {
+				this.host.actors.addChild(scanner, -1);
+			}
+			scanner.paths = this.enemies
+				.filter((e) => {
+					return e.plan !== undefined && e.falling === 0 && e.spawning <= 0;
+				})
+				.map((e) => {
+					return {
+						result: e.plan as PathResult,
+						from: { x: enemyX(e), y: enemyY(e) },
+						color: GLOW[e.kind],
+					};
+				});
+		} else if (scanner.ancestor) {
+			this.host.actors.removeChild(scanner, true);
 		}
 	}
 
@@ -1221,7 +1538,7 @@ export class Field extends Renderable {
 			if (e.spawning > 0 || e.falling !== 0) {
 				continue;
 			}
-			if (Math.hypot(moverX(e) - px, moverY(e) - py) < TILE * 0.62) {
+			if (Math.hypot(enemyX(e) - px, enemyY(e) - py) < TILE * 0.62) {
 				if (this.shield > 0) {
 					this.popEnemy(e);
 				} else if (p.invuln <= 0) {
@@ -1243,6 +1560,20 @@ export class Field extends Renderable {
 			return;
 		}
 		this.drawTopBar(r);
+
+		// force-fields: a pulsing barrier on each cell, fading as it runs out
+		for (const [i, left] of this.fields) {
+			const x = tileX(i % COLS);
+			const y = tileY(Math.floor(i / COLS));
+			const fade = Math.min(1, left / 1.5);
+			const pulse = 0.55 + 0.25 * Math.sin(this.time * 9 + i);
+			drawGlow(r, x + TILE / 2, y + TILE / 2 - 4, 30, POWER_COLORS.field, fade);
+			r.setGlobalAlpha(pulse * fade);
+			r.setColor(POWER_COLORS.field);
+			r.lineWidth = 3;
+			r.strokeRoundRect(x + 5, y + 3, TILE - 10, TILE - 14, 8);
+			r.setGlobalAlpha(1);
+		}
 
 		for (const pw of this.powers) {
 			const blink = pw.life < 2 && Math.floor(pw.life * 8) % 2 === 0 ? 0.3 : 1;
@@ -1323,6 +1654,8 @@ export class Field extends Renderable {
 				["burst", this.burst],
 				["shield", this.shield],
 				["freeze", this.freeze],
+				["field", Math.max(0, ...this.fields.values())],
+				["scan", this.scan],
 			] as [TimedPower, number][]
 		).filter(([, left]) => left > 0);
 		let ix = WIDTH / 2 - ((timers.length - 1) * 40) / 2;
@@ -1412,8 +1745,8 @@ export class Field extends Renderable {
 	}
 
 	private placeMonster(e: Enemy, sprite: Actor) {
-		const x = moverX(e);
-		const y = moverY(e);
+		const x = enemyX(e);
+		const y = enemyY(e);
 		if (e.falling > 0) {
 			sprite.play(monsterAnimation(e.kind, -1));
 			sprite.place(x, y + (1 - e.falling) * 20, e.falling, e.falling);

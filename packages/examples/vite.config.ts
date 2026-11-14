@@ -35,6 +35,7 @@ export default defineConfig({
 			"melonjs",
 			"@melonjs/debug-plugin",
 			"@melonjs/gamepad-plugin",
+			"@melonjs/pathfinding-plugin",
 			"@melonjs/tiled-inflate-plugin",
 		],
 	},

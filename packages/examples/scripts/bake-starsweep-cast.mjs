@@ -110,12 +110,13 @@ ANIMS.push({
 	ms: 70,
 	pose: (a) => ({ who: "shield", turn: a / 3 }),
 });
-for (const kind of ["wobbler", "muncher", "chaser"]) {
+for (const kind of ["wobbler", "muncher", "chaser", "drone"]) {
 	DIRS.forEach((dir, d) => {
 		ANIMS.push({
 			name: `${kind}-walk-${dir}`,
 			frames: 8,
-			ms: 56,
+			// the drone's rotor spins faster than legs step
+			ms: kind === "drone" ? 40 : 56,
 			pose: (a) => ({ who: kind, dir: d, step: a }),
 		});
 	});
@@ -294,7 +295,60 @@ const bakeInPage = async ({
 		}
 	};
 
+	/** the drone: a flying saucer with a spinning rotor and one big eye */
+	const drone = (p) => {
+		const u = SCALE;
+		const cx = ANCHOR.x;
+		const t = p.step ?? p.idle ?? 0;
+		const spin = p.frozen ? 0.6 : t;
+		const by = ANCHOR.y - 4 * u + (p.frozen ? 0 : Math.sin(t) * 1.5 * u);
+		const lx = p.dir === -1 ? 0 : DX[p.dir] * 3 * u;
+		const ly = p.dir === -1 ? 0 : DY[p.dir] * 2 * u;
+		// the rotor: two blades seen edge-on as they turn
+		g.fillStyle = "#c9cfe0";
+		for (const k of [Math.cos(spin), Math.sin(spin)]) {
+			const rx = Math.max(1.5 * u, 19 * u * Math.abs(k));
+			g.beginPath();
+			g.ellipse(cx, by - 17 * u, rx, 2 * u, 0, 0, Math.PI * 2);
+			g.fill();
+		}
+		roundRect(cx - 1.5 * u, by - 17 * u, 3 * u, 7 * u, u, "#8a8fbf");
+		ellipse(cx, by - 17 * u, 3 * u, 2.5 * u, "#8a8fbf");
+		// the hull, its dark rim and a glass dome
+		ellipse(cx, by + 5 * u, 17 * u, 6 * u, "#1b2140");
+		ellipse(cx, by, 15 * u, 11 * u, "#3a7bd5");
+		g.globalAlpha = 0.35;
+		ellipse(cx - 5 * u, by - 5 * u, 6 * u, 3.5 * u, "#ffffff");
+		g.globalAlpha = 1;
+		// lights round the rim, blinking in turn
+		const blink = Math.sin(t * 2) > 0;
+		ellipse(
+			cx - 13 * u,
+			by + 5 * u,
+			2 * u,
+			2 * u,
+			blink ? "#5dff9a" : "#1f5a35",
+		);
+		ellipse(
+			cx + 13 * u,
+			by + 5 * u,
+			2 * u,
+			2 * u,
+			blink ? "#1f5a35" : "#5dff9a",
+		);
+		part("eye_cute_light", cx + lx, by + ly, 0.42 * u);
+		if (p.frozen) {
+			g.globalAlpha = 0.45;
+			ellipse(cx, by, 18 * u, 14 * u, "#bff4ff");
+			g.globalAlpha = 1;
+		}
+	};
+
 	const monster = (p) => {
+		if (p.who === "drone") {
+			drone(p);
+			return;
+		}
 		const u = SCALE;
 		const cx = ANCHOR.x;
 		const cy = ANCHOR.y;

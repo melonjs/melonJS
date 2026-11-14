@@ -9,7 +9,10 @@
  *
  * The levels are Tiled maps (`public/assets/starsweep/levels/*.tmj`),
  * loaded with the engine's Tiled loader: see `levels.ts` for how to edit
- * them. Portrait, for phones held upright. On touch screens the
+ * them. The monsters find their way with `@melonjs/pathfinding-plugin`:
+ * chasers plan round walls, gates and goo and flank Bolt, drones fly
+ * straight over the gaps, and the scanner power-up shows their plans
+ * (see `field.ts`). Portrait, for phones held upright. On touch screens the
  * `@melonjs/gamepad-plugin` virtual gamepad (a stick and a ZAP button)
  * sits under the board and presses the same keys as the keyboard.
  *

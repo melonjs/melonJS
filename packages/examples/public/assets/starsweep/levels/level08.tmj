@@ -367,7 +367,7 @@
 		{
 			"name": "enemies",
 			"type": "string",
-			"value": "chaser,muncher,wobbler,muncher"
+			"value": "chaser,muncher,drone,wobbler,muncher"
 		},
 		{
 			"name": "hint",

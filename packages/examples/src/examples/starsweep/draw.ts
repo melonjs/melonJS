@@ -181,7 +181,14 @@ export const drawGlow = (
 	r.setGlobalAlpha(1);
 };
 
-export type PowerKind = "gem" | "freeze" | "shield" | "burst" | "life";
+export type PowerKind =
+	| "gem"
+	| "freeze"
+	| "shield"
+	| "burst"
+	| "life"
+	| "field"
+	| "scan";
 
 export const POWER_COLORS: Record<PowerKind, string> = {
 	gem: "#5cf2ff",
@@ -189,6 +196,8 @@ export const POWER_COLORS: Record<PowerKind, string> = {
 	shield: "#7ff7ff",
 	burst: "#ffd23d",
 	life: "#ff6aa2",
+	field: "#7ff7c8",
+	scan: "#ffb45c",
 };
 
 export const drawPower = (
@@ -249,6 +258,37 @@ export const drawPower = (
 				r.fillEllipse(cx + DX[i] * 8, y + DY[i] * 8, 3, 3);
 			}
 			break;
+		case "field": {
+			// a hexagon of force
+			r.setColor("#1f6f5a");
+			r.fillEllipse(cx, y, 13, 13);
+			r.setColor(color);
+			r.lineWidth = 3;
+			for (let i = 0; i < 6; i++) {
+				const a = (i * Math.PI) / 3 + Math.PI / 6;
+				const b = a + Math.PI / 3;
+				r.strokeLine(
+					cx + Math.cos(a) * 9,
+					y + Math.sin(a) * 9,
+					cx + Math.cos(b) * 9,
+					y + Math.sin(b) * 9,
+				);
+			}
+			break;
+		}
+		case "scan": {
+			// a radar sweep
+			r.setColor("#7a4a12");
+			r.fillEllipse(cx, y, 13, 13);
+			r.setColor(color);
+			r.lineWidth = 2;
+			r.strokeArc(cx, y, 9, 0, Math.PI * 2);
+			r.strokeArc(cx, y, 5, 0, Math.PI * 2);
+			const a = time * 4;
+			r.lineWidth = 3;
+			r.strokeLine(cx, y, cx + Math.cos(a) * 10, y + Math.sin(a) * 10);
+			break;
+		}
 		case "life":
 			r.setColor(color);
 			r.fillEllipse(cx - 5.5, y - 3, 6.5, 6.5);

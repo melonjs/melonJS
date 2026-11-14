@@ -14,6 +14,7 @@
 		"@melonjs/debug-plugin": "workspace:*",
 		"@melonjs/gamepad-plugin": "workspace:*",
 		"@melonjs/matter-adapter": "workspace:*",
+		"@melonjs/pathfinding-plugin": "workspace:*",
 		"@melonjs/planck-adapter": "workspace:*",
 		"@melonjs/rapier2d-adapter": "workspace:*",
 		"@melonjs/spine-plugin": "workspace:*",

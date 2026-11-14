@@ -8,7 +8,8 @@
  *
  * - `bolt-idle-<dir>`, `bolt-walk-<dir>`, `bolt-cheer`, `bolt-ko`
  * - `<kind>-walk-<dir>`, `<kind>-idle`, `<kind>-frozen`, for the wobbler,
- *   muncher and chaser
+ *   muncher, chaser and drone (whose "walk" is its rotor spinning, looking
+ *   the way it flies)
  * - `shield`, the ring around Bolt while a shield is up
  *
  * where `<dir>` is `up`, `right`, `down` or `left`.
@@ -36,6 +37,7 @@ export const GLOW: Record<EnemyKind | "bolt", string> = {
 	wobbler: "#5dff9a",
 	muncher: "#ffcf3d",
 	chaser: "#ff5d7a",
+	drone: "#5fb8ff",
 };
 
 let atlas: TextureAtlas | null = null;

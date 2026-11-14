@@ -9,7 +9,9 @@
  * the same ice and arrow rules as the game (`traceMove`), and checks:
  * - every paintable tile is passed over by some move,
  * - no move goes round forever,
- * - every resting spot has at least one move that does not fall off.
+ * - every resting spot has at least one move that does not fall off,
+ * - with gates, a switch can be reached while they are still shut (the rest
+ *   is then checked with them open).
  *
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
@@ -22,7 +24,9 @@ import {
 	isPaintable,
 	parseMap,
 	ROWS,
+	Tile,
 	traceMove,
+	withGatesOpen,
 } from "./board.ts";
 import {
 	LEVEL_FILES,
@@ -61,41 +65,58 @@ for (const [i, level] of LEVELS.entries()) {
 		console.error(`FAIL ${label}: ${(e as Error).message}`);
 		continue;
 	}
-	const { tiles, start } = parsed;
+	const { start } = parsed;
 	const key = (x: number, y: number) => y * COLS + x;
 
-	const touched = new Set<number>([key(start.x, start.y)]);
-	const rested = new Set<number>([key(start.x, start.y)]);
-	const queue = [start];
-	for (let q = 0; q < queue.length; q++) {
-		const at = queue[q];
-		let safeMoves = 0;
-		for (const dir of [0, 1, 2, 3] as Dir[]) {
-			const move = traceMove(tiles, at.x, at.y, dir);
-			if (!move) {
-				continue;
+	/** every tile some move passes over, from the start */
+	const explore = (tiles: readonly Tile[]) => {
+		const touched = new Set<number>([key(start.x, start.y)]);
+		const rested = new Set<number>([key(start.x, start.y)]);
+		const queue = [start];
+		for (let q = 0; q < queue.length; q++) {
+			const at = queue[q];
+			let safeMoves = 0;
+			for (const dir of [0, 1, 2, 3] as Dir[]) {
+				const move = traceMove(tiles, at.x, at.y, dir);
+				if (!move) {
+					continue;
+				}
+				if (move.loops) {
+					errors.push(`move ${dir} from ${at.x},${at.y} never stops`);
+					continue;
+				}
+				for (const p of move.path) {
+					touched.add(key(p.x, p.y));
+				}
+				if (move.fell) {
+					continue;
+				}
+				safeMoves++;
+				const k = key(move.end.x, move.end.y);
+				if (!rested.has(k)) {
+					rested.add(k);
+					queue.push(move.end);
+				}
 			}
-			if (move.loops) {
-				errors.push(`move ${dir} from ${at.x},${at.y} never stops`);
-				continue;
-			}
-			for (const p of move.path) {
-				touched.add(key(p.x, p.y));
-			}
-			if (move.fell) {
-				continue;
-			}
-			safeMoves++;
-			const k = key(move.end.x, move.end.y);
-			if (!rested.has(k)) {
-				rested.add(k);
-				queue.push(move.end);
+			if (safeMoves === 0) {
+				errors.push(`stuck at ${at.x},${at.y}: every move falls off`);
 			}
 		}
-		if (safeMoves === 0) {
-			errors.push(`stuck at ${at.x},${at.y}: every move falls off`);
+		return touched;
+	};
+
+	let tiles = parsed.tiles;
+	if (tiles.includes(Tile.GATE)) {
+		const shut = explore(tiles);
+		const switches = tiles
+			.map((t, i) => (t === Tile.SWITCH ? i : -1))
+			.filter((i) => i !== -1);
+		if (!switches.some((i) => shut.has(i))) {
+			errors.push("gates, but no switch can be reached while they are shut");
 		}
+		tiles = withGatesOpen(tiles);
 	}
+	const touched = explore(tiles);
 
 	for (let y = 0; y < ROWS; y++) {
 		for (let x = 0; x < COLS; x++) {

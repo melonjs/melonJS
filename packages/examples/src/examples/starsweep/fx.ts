@@ -17,6 +17,7 @@
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
 import {
+	type Application,
 	BloomEffect,
 	Camera3d,
 	ChromaticAberrationEffect,
@@ -227,37 +228,39 @@ export class NebulaBackdrop extends Sprite {
 // camera post-processing
 // ---------------------------------------------------------------------------
 
-/** the aberration of the screen on now, for `aberrationBurst` */
+let bloom: BloomEffect | null = null;
 let aberration: ChromaticAberrationEffect | null = null;
+let vignette: VignetteEffect | null = null;
 
 /**
- * Bloom and the chromatic aberration of hits, on the container that holds a
- * screen's game. They go on the container rather than on the camera: a
- * camera's post-effect pass replaces the whole frame, which would wipe out
- * the space the 3D camera drew before it, while a renderable's pass is
- * blended over what is behind it.
+ * Bloom and the chromatic aberration of hits on the game's camera, and a
+ * vignette on the camera that draws first (the space camera, when there is
+ * one). Built once, and added again after a screen change, which can bring
+ * a new camera.
  *
- * Each screen makes its own: a container destroys its effects with it.
+ * The game's camera draws after the space camera, and its post-effect pass
+ * is blended over what that one drew, so the space shows through around the
+ * game (melonJS 20.15 and later).
+ * @param app - the application
+ * @param first - the camera that draws first, if not the game's
  */
-export const addLayerFx = (layer: Renderable) => {
-	const renderer = game.renderer;
-	layer.addPostEffect(
-		new BloomEffect(renderer, { threshold: 0.72, intensity: 0.55, radius: 3 }),
-	);
-	aberration = new ChromaticAberrationEffect(renderer, { offset: 0 });
-	layer.addPostEffect(aberration);
-};
-
-/**
- * A vignette, on the camera that draws first. A stage's own camera lives as
- * long as the stage, so it is added once.
- */
-export const addVignette = (target: Renderable) => {
-	if (!target.postEffects.some((fx) => fx instanceof VignetteEffect)) {
-		target.addPostEffect(
-			new VignetteEffect(game.renderer, { strength: 0.22, size: 22 }),
-		);
-	}
+export const setupScreenFx = (app: Application, first?: Camera3d | null) => {
+	const renderer = app.renderer;
+	bloom ??= new BloomEffect(renderer, {
+		threshold: 0.72,
+		intensity: 0.55,
+		radius: 3,
+	});
+	aberration ??= new ChromaticAberrationEffect(renderer, { offset: 0 });
+	vignette ??= new VignetteEffect(renderer, { strength: 0.22, size: 22 });
+	const add = (camera: Renderable, effect: ShaderEffect) => {
+		if (!camera.postEffects.includes(effect)) {
+			camera.addPostEffect(effect);
+		}
+	};
+	add(app.viewport, bloom);
+	add(app.viewport, aberration);
+	add(first ?? app.viewport, vignette);
 };
 
 /** a short colour-split shudder, for hits */
@@ -285,16 +288,6 @@ export const aberrationBurst = (peak = 7, duration = 450) => {
  * draws it, and the game's own camera leaves it out.
  */
 export const SPACE_LAYER = 2;
-/**
- * The visibility layer of the container that holds the game, which the
- * space camera leaves out.
- *
- * Particles are on the default layer (1) whatever their emitter is on, and
- * a camera draws something only if it AND every container above it are on
- * a layer the camera draws. So the space camera draws layer 1 too, and the
- * game is kept out of it by its container's layer instead.
- */
-export const GAME_LAYER = 4;
 
 /**
  * A second camera, a perspective `Camera3d`, that draws only the space
@@ -315,7 +308,7 @@ export const makeSpaceCamera = (w: number, h: number) => {
 		far: 6000,
 	});
 	camera.name = "space";
-	camera.cullMask = SPACE_LAYER | 1;
+	camera.cullMask = SPACE_LAYER;
 	return camera;
 };
 

@@ -31,15 +31,13 @@ import {
 } from "./draw";
 import { Field, HEIGHT, HISCORE_KEY, OX, OY, WIDTH } from "./field";
 import {
-	addLayerFx,
-	addVignette,
 	DeepSpace,
 	Effects,
-	GAME_LAYER,
 	makeSpaceCamera,
 	NebulaBackdrop,
 	SPACE_LAYER,
 	SpaceBackdrop,
+	setupScreenFx,
 } from "./fx";
 import * as sfx from "./sfx";
 
@@ -53,9 +51,8 @@ export const controls = new Controls();
  *   the star dust and novas. These are on the space visibility layer, which
  *   only the space camera (a `Camera3d`) draws, and it draws first.
  * - **The game**, in front: a container for everything else, drawn by the
- *   stage's ordinary 2D camera, which leaves the space layer out. The bloom
- *   and the hit aberration are on this container, so the space shows
- *   through around the game (see `addLayerFx`).
+ *   stage's ordinary 2D camera, which leaves the space layer out. Its bloom
+ *   is blended over the space (see `setupScreenFx`).
  * @returns the game's container, the nebula (null when the drawn sky should
  * be used instead), and the 3D space (null without a 3D camera)
  */
@@ -64,14 +61,12 @@ const setUpLayers = (app: Application, camera: Camera3d | null) => {
 	const game = new Container(0, 0, WIDTH, HEIGHT);
 	game.name = "game";
 	world.addChild(game, 0);
-	addLayerFx(game);
-	addVignette(camera ?? game);
+	setupScreenFx(app, camera);
 
 	let deep: DeepSpace | null = null;
 	if (camera) {
-		// the world is on every layer, so each camera walks into it
-		world.visibilityLayer = 1 | SPACE_LAYER | GAME_LAYER;
-		game.visibilityLayer = GAME_LAYER;
+		// the world is on both layers, so each camera walks into it
+		world.visibilityLayer = 1 | SPACE_LAYER;
 		app.viewport.cullMask = ~SPACE_LAYER;
 		deep = new DeepSpace(world, camera);
 		world.addChild(deep, 0);
@@ -333,9 +328,6 @@ export class PlayScreen extends Stage {
 					setViewportBounds: false,
 					async: true,
 				});
-				// the reset inside level.load drops a z-sort still pending
-				// for the objects kept above: sort the world again
-				world.sort();
 				const layer = (name: string) =>
 					board.getChildByName(name)[0] as unknown as TMXLayer;
 				return { station: layer("station"), power: layer("power") };

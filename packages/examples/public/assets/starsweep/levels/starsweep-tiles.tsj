@@ -1,12 +1,12 @@
 {
 	"columns": 5,
 	"image": "starsweep-tiles.png",
-	"imageheight": 240,
+	"imageheight": 336,
 	"imagewidth": 240,
 	"margin": 0,
 	"name": "starsweep",
 	"spacing": 0,
-	"tilecount": 25,
+	"tilecount": 32,
 	"tiledversion": "1.11.2",
 	"tileheight": 48,
 	"tiles": [
@@ -233,6 +233,76 @@
 					"name": "lit",
 					"type": "string",
 					"value": "start"
+				}
+			]
+		},
+		{
+			"id": 25,
+			"properties": [
+				{
+					"name": "kind",
+					"type": "string",
+					"value": "goo"
+				}
+			]
+		},
+		{
+			"id": 26,
+			"properties": [
+				{
+					"name": "kind",
+					"type": "string",
+					"value": "gate"
+				}
+			]
+		},
+		{
+			"id": 27,
+			"properties": [
+				{
+					"name": "kind",
+					"type": "string",
+					"value": "gate-open"
+				}
+			]
+		},
+		{
+			"id": 28,
+			"properties": [
+				{
+					"name": "kind",
+					"type": "string",
+					"value": "switch"
+				}
+			]
+		},
+		{
+			"id": 29,
+			"properties": [
+				{
+					"name": "lit",
+					"type": "string",
+					"value": "goo"
+				}
+			]
+		},
+		{
+			"id": 30,
+			"properties": [
+				{
+					"name": "lit",
+					"type": "string",
+					"value": "gate-open"
+				}
+			]
+		},
+		{
+			"id": 31,
+			"properties": [
+				{
+					"name": "lit",
+					"type": "string",
+					"value": "switch"
 				}
 			]
 		}
