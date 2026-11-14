@@ -1,6 +1,6 @@
 ---
 name: melonjs-platforms
-description: "Use this skill when a melonJS game runs somewhere other than a plain browser tab: a game portal (YouTube Playables, Facebook Instant Games), a mini-game runtime (WeChat Mini Games), a native app wrapper (Capacitor, Cordova), or a runtime with no DOM (nx.js on the Nintendo Switch, a Web Worker). Covers loading a portal's SDK, handing pausing to the platform (device.setFocusEvents versus the pauseOnBlur / stopOnBlur flags), saving to its cloud (save.createCloudStorage, save.setStorage), following its mute, its loading and ready signals, a frame that starts with no size, and the canvas setting with no page. Triggers on: YouTube Playables, ytgame, firstFrameReady, gameReady, Facebook Instant Games, FBInstant, Messenger, startGameAsync, WeChat mini game, wx, weapp-adapter, Capacitor, Cordova, native app, iOS, Android, nx.js, Nintendo Switch, Web Worker, OffscreenCanvas, no DOM, game portal, cloud save, platform pause, setFocusEvents, createCloudStorage."
+description: "Use this skill when a melonJS game runs somewhere other than a plain browser tab: a game portal (YouTube Playables, Facebook Instant Games, Poki, CrazyGames), a mini-game runtime (WeChat Mini Games), a native app wrapper (Capacitor, Cordova), or a runtime with no DOM (nx.js on the Nintendo Switch, a Web Worker). Covers a portal's SDK, handing pausing to the platform (device.setFocusEvents versus the pauseOnBlur / stopOnBlur flags), saving to its cloud (save.createCloudStorage, save.setStorage), following its mute, pausing for its ads, its loading and ready signals, a frame with no size yet, and the canvas setting with no page. Triggers on: YouTube Playables, ytgame, firstFrameReady, gameReady, Facebook Instant Games, FBInstant, Messenger, startGameAsync, Poki, PokiSDK, commercialBreak, CrazyGames, requestAd, WeChat mini game, wx, weapp-adapter, Capacitor, Cordova, iOS, Android, nx.js, Nintendo Switch, Web Worker, OffscreenCanvas, no DOM, game portal, cloud save, setFocusEvents, createCloudStorage."
 license: MIT
 ---
 
@@ -12,6 +12,8 @@ A melonJS game is a web page, so it runs anywhere a browser does. Beyond that:
 |---|---|---|---|
 | YouTube Playables | game portal (SDK) | 20.15+ for the integration below | [YouTube Playables](#youtube-playables) |
 | Facebook Instant Games | game portal (SDK), also reached from Messenger | 20.15+ for the integration below | [Facebook Instant Games](#facebook-instant-games) |
+| Poki | game portal (SDK) | 20.15+ | [Poki](#poki) |
+| CrazyGames | game portal (SDK) | 20.15+ for `save.setStorage()` | [CrazyGames](#crazygames) |
 | WeChat Mini Games | mini-game runtime; WeChat's adapter stands in for the DOM | 20.15+ | [WeChat Mini Games](#wechat-mini-games) |
 | Capacitor, Cordova | native app wrapper (WebView) | any 20.x | [Native apps](#native-apps-capacitor-and-cordova) |
 | nx.js (Nintendo Switch), Web Workers | runtime with no DOM | 20.14+, experimental | [Runtimes with no DOM](#runtimes-with-no-dom-nxjs-web-workers) |
@@ -77,6 +79,50 @@ elsewhere, and the game keeps using `save` as usual:
 - A **storage that answers at once**, such as a native wrapper's, plugs into
   `setStorage()` directly, with its own `getItem`, `setItem` and `removeItem`.
   WeChat needs neither: its adapter's `localStorage` is WeChat's storage.
+
+### Ads
+
+While an ad plays the game must be paused and silent, and its buttons must not
+answer. A portal that leaves it to the game (Poki, CrazyGames) says when the ad
+starts and when it ends; undo only what the ad did:
+
+```js
+let before;   // set while an ad holds the game
+function adStarted() {
+    before = { muted: audio.muted(), paused: state.isPaused(), focus: UIBaseElement.focusOwner };
+    audio.muteAll();
+    state.pause(true);
+    before.focus?.blur();   // a paused game still takes Enter / Space on its focused button
+}
+function adEnded() {
+    if (before === undefined) {
+        return;   // no ad started (none available, an ad blocker): nothing to undo
+    }
+    if (!before.paused) {
+        state.resume(true);   // a game paused by its own menu stays paused
+    }
+    if (!before.muted) {
+        audio.unmuteAll();
+    }
+    before.focus?.focus();
+    before = undefined;
+}
+```
+
+A tab switch during the ad does not resume the game under it: on focus,
+melonJS only resumes a pause it made itself.
+
+### Keys and the page around the game
+
+A portal shows the game in a frame on a page that scrolls, and the arrow keys
+and Space must not scroll it. melonJS stops the browser's action for keys bound
+with `input.bindKey()`, and (20.15.1+) for the keys the UI focus takes while a
+widget has it and for a button's own `bindKey` key; before 20.15.1, bind the
+arrows and Space. A key the game reads from `event.KEYDOWN` without binding it
+still scrolls the page: bind it. The wheel over the canvas is already prevented
+once UI widgets or pointer events listen. Leave `input.setPreventDefault()` at
+its default, `true`: with it off, the focus keys, a button's `bindKey` key and
+the keys bound after it scroll the page.
 
 ### Sound
 
@@ -194,6 +240,71 @@ state.change(state.PLAY, true);
 - Real tests run in Facebook's player:
   `https://www.facebook.com/embed/instantgames/APP_ID/player?game_url=https://localhost:8080`,
   served over HTTPS, logged in with a role on the app.
+
+## Poki
+
+Poki (poki.com) hand-picks its games and asks for web exclusivity (other web
+portals no; Steam, stores and consoles yes). SDK v2:
+`<script src="https://game-cdn.poki.com/scripts/v2/poki-sdk.js"></script>`
+before the game; calls made before it loads are queued. `await PokiSDK.init()`
+in a `try`: start the game even when it fails (an ad blocker). On `localhost`
+the SDK runs in debug mode and logs every call.
+
+- Events: `gameLoadingFinished()` after `loader.preload()`; `gameplayStart()` on
+  the player's first input (not on load) and on every resume; `gameplayStop()`
+  at every break. Never the same one twice in a row, none during an ad. A
+  keyboard game pauses and resumes on Escape or Space (listen to `event.KEYUP`:
+  `KEYDOWN` repeats while held), with `commercialBreak()` before resuming.
+- Ads: `commercialBreak(adStarted)` and `rewardedBreak(adStarted)` (resolves
+  `true` when the player earned the reward), then `adEnded()` once it resolves
+  (see [Ads](#ads)). The callback runs only if an ad really starts, and most
+  `commercialBreak()` calls show none. Poki never mutes the game itself.
+- Save: the default `localStorage` `save` works in Poki's frame; Poki's User
+  Accounts copy `localStorage` to a logged-in player's account (1 MB gzipped).
+  No `setStorage()`.
+- Size: on desktop, 16:9 frames (640x360, 836x470, 1031x580) that a 16:9 game
+  with `"fit"` fills; filling a phone held upright needs a resizing scale method
+  such as `"flex"`. 5 MB initial, 8 MB total recommended; bundle everything,
+  requests to other sites are blocked. `PokiSDK.getLanguage()` gives `"fr"`.
+- Test in the Poki Inspector (<https://inspector.poki.dev>, no account): drop the
+  build folder, tick "Force show ads", read the Event Log, the QA Modules, the
+  Scaling Tests and the Warnings. On `localhost` ads mostly do not play.
+
+## CrazyGames
+
+A website of browser games (desktop, mobile, the CrazyGames app); developers
+submit through the Developer Portal, a Basic Launch (ads off, SDK optional)
+first, then a Full Launch (SDK required). HTML5 SDK v3:
+`<script src="https://sdk.crazygames.com/crazygames-sdk-v3.js"></script>`
+before the game; `await CrazyGames.SDK.init()` before any other call.
+`sdk.environment` is `"local"` on localhost (a 5 s text stands in for each ad,
+every call logged), `"crazygames"`, or `"disabled"` elsewhere (`init()` resolves
+after about 7 s, then every call throws `sdkDisabled`).
+
+```js
+const sdk = window.CrazyGames.SDK;
+await sdk.init();
+save.setStorage(sdk.data);   // the Data module has localStorage's calls, synchronous
+const followMute = ({ muteAudio }) => (muteAudio ? audio.muteAll() : audio.unmuteAll());
+followMute(sdk.game.settings);
+sdk.game.addSettingsChangeListener(followMute);
+sdk.game.loadingStart();
+await loader.preload(resources);
+sdk.game.loadingStop();
+// gameplayStart() when play starts or resumes, gameplayStop() at each break (not on a tab switch)
+```
+
+- Ads: `sdk.ad.requestAd("midgame" | "rewarded", { adStarted, adFinished, adError })`,
+  with [Ads](#ads)' `adStarted()`, and `adEnded()` on `adFinished` or
+  `adError`, but no unmute while `sdk.game.settings.muteAudio` is on. `adError`
+  usually comes with no ad started (`unfilled`, `adCooldown`, `adblock`,
+  `adsDisabled`). Reward only on `adFinished`.
+- Keep melonJS's own pause on blur: no `setFocusEvents(false)`.
+- Data module: turn on "Progress Save" in the submission, or it is disabled
+  (`dataModuleDisabled`); 1 MB at most. The `muteAudio` setting is required for
+  a Full Launch. `sdk.user.systemInfo.locale` gives `"en-US"`; English required.
+- 50 MB initial download (20 MB for the mobile home page), 250 MB total, 1500
+  files, relative paths. No fullscreen button of the game's own.
 
 ## WeChat Mini Games
 
@@ -395,6 +506,10 @@ to work, not a test on Switch hardware.
 | a file is not found on WeChat | a `./` path, or a type WeChat does not package (`.tmj`): rename maps to `.json` |
 | a WeChat game is distorted and touches land beside the finger | `scaleMethod` `"fit"` or `"stretch"`: use a `"flex"` or `"fill"` method |
 | a WeChat game keeps running when the player leaves | nothing emits `BLUR` there: emit it from `wx.onHide()`, `FOCUS` from `wx.onShow()` |
+| the game's buttons answer Enter or Space during an ad | a paused game still takes key presses: blur `UIBaseElement.focusOwner` when the ad starts, focus it back after |
+| a game paused by its own menu is running again after an ad | the ad's end resumed a pause it did not make: remember `state.isPaused()` when the ad starts |
+| the arrow keys scroll the portal's page while they move the UI focus | melonJS before 20.15.1 stopped the browser's action only for bound keys: update, or `input.bindKey()` the arrows and Space; from 20.15.1, `input.setPreventDefault(false)` was called: leave it on |
+| `sdkDisabled` on every CrazyGames call | not on CrazyGames or `localhost`: check `sdk.environment`, or add `?useLocalSdk=true` to test elsewhere |
 
 ## Related skills
 

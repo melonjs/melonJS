@@ -1,9 +1,9 @@
 # Changelog
 
-## [20.15.1] (melonJS 2) - _unreleased_
+## [20.15.1] (melonJS 2) - _2026-11-14_
 
 ### Fixed
-- Package: installing melonJS no longer asks for Node 24. Its `package.json` declared `engines: { node: ">=24.0.0" }`, so npm warned on an older Node and Yarn 1 refused to install it; melonJS runs in the browser, and Node 24 is only needed to build melonJS itself
+- UI: the arrow keys, Enter and Space no longer scroll the page around the game while a widget has the keyboard focus, nor does the key of a button's `bindKey`; in a game embedded in a page that scrolls, such as a game portal's frame, they moved the focus and scrolled the page at the same time
 
 ## [20.15.0] (melonJS 2) - _2026-11-13_
 

@@ -19,6 +19,10 @@ const _preventDefaultForKeys: Record<number, boolean> = {};
 // list of binded keys
 const _keyBindings: Record<number, string> = {};
 
+// the browser's event for a key with no binding, while the KEYDOWN listeners
+// run: one of them that uses the key can stop its default action
+let _unboundKeyDown: KeyboardEvent | undefined;
+
 type KeyEventHandler = (
 	options:
 		| { keyCode: number; mouseButton?: number | undefined }
@@ -30,7 +34,16 @@ const keyDownEvent: KeyEventHandler = (options) => {
 	const { keyCode } = options;
 	const action = _keyBindings[keyCode];
 
-	emit(KEYDOWN, action, keyCode, action ? !_keyLocked[action] : true);
+	// a bound key follows its binding's preventDefault; an unbound one is left
+	// to the listener that uses it, through preventKeyDefault()
+	const outer = _unboundKeyDown;
+	_unboundKeyDown =
+		!action && "preventDefault" in options ? options : undefined;
+	try {
+		emit(KEYDOWN, action, keyCode, action ? !_keyLocked[action] : true);
+	} finally {
+		_unboundKeyDown = outer;
+	}
 
 	if (action) {
 		if (!_keyLocked[action]) {
@@ -121,6 +134,20 @@ export function initKeyboardEvent() {
 	}
 	// emitted on the window's blur and when the page is hidden
 	on(BLUR, releaseHeldKeys);
+}
+
+/**
+ * Stop the browser's own action, such as scrolling the page, for the key
+ * press a `KEYDOWN` listener is handling, when that listener uses it. Only
+ * for a key with no binding: a bound key follows its binding's
+ * `preventDefault`. Nothing is stopped when `input.preventDefault` is off.
+ * @ignore
+ * @internal
+ */
+export function preventKeyDefault(): void {
+	if (_unboundKeyDown !== undefined && preventDefaultAction) {
+		_unboundKeyDown.preventDefault();
+	}
 }
 
 /**

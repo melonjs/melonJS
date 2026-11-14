@@ -891,7 +891,11 @@ There is nothing to turn on. Until a widget has the focus the arrow keys and
 the pad are left to the game, and `widget.blur()`, or the focused widget
 leaving the scene, gives them back. `UIBaseElement.focusOwner` is the widget
 with the focus. The pad is read directly, so the game's own pad bindings
-are untouched.
+are untouched. The keys the focus takes, and a button's own `bindKey`, do not
+scroll the page around the game, which matters in a portal's frame (20.15.1;
+before, `input.bindKey` the arrows and Space). A key the game bound itself
+follows its binding's `preventDefault`, and `input.setPreventDefault(false)`
+leaves the focus keys to the browser as well.
 
 Buttons, checkboxes and sliders are `focusable`. A widget of your own sets
 `focusable = true`, and overrides `onNavigate(direction)` (return `true` for
@@ -1338,6 +1342,7 @@ City and Instanced Forest examples park a floating sky at `-10000` or `100000`.
 | a layout ignores a label that changed size | layout runs on add, remove and resize only | call `panel.relayout()` |
 | the arrow keys or the pad do nothing in a menu | no widget has the focus: nothing listens until one does | call `firstWidget.focus()` when the menu opens |
 | the arrow keys stop moving the player after a menu | a widget still has the focus | `UIBaseElement.focusOwner?.blur()`, or remove the menu: a focused widget leaving the scene gives the keys back |
+| the arrow keys scroll the page around the game while they move the focus, in a portal's frame | melonJS before 20.15.1 stopped the page scrolling only for keys bound with `input.bindKey`; from 20.15.1, `input.setPreventDefault(false)` | update, or `input.bindKey` the arrows and Space; leave `input.setPreventDefault` on |
 | a `bindKey: ENTER` button does not fire while another widget is focused | Enter and Space go to the focused widget, ring shown or not, so one press never clicks both | focus that button, `blur()` the focused one, or bind another key |
 | a tooltip or highlight shown in `onOver` stays after its widget is removed (before 20.14) | the pointer's leave never reaches a removed widget | update: a widget removed while hovered now gets `onOut()`, with no event |
 | an `onOut` sound or tween plays when a menu closes or the scene changes (since 20.14) | a widget removed while hovered gets `onOut()` | keep pointer-only effects out of `onOut`, or skip them when its `event` is `undefined` |

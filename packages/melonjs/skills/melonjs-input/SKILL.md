@@ -64,9 +64,13 @@ every frame.
 
 The full signature is `bindKey(keyCode, action, lock?, preventDefault?)`;
 `preventDefault` defaults to `input.preventDefault` (itself `true`). Pass the
-fourth argument per binding, or change the global default with
-`input.setPreventDefault(false)` — **assigning `input.preventDefault = false`
-does not work**, it is a read-only module binding.
+fourth argument per binding, or change the global default, for the keys bound
+after it, with `input.setPreventDefault(false)` — **assigning
+`input.preventDefault = false` does not work**, it is a read-only module
+binding. The same flag covers the keys the UI focus takes while a widget has
+it, and a button's own `bindKey` key (20.15.1, read on each press): with it
+off, the browser keeps its action for them too, such as scrolling the page
+around the game.
 
 ### A mouse button as a key
 
@@ -387,6 +391,7 @@ input.triggerKeyEvent(input.KEY.LEFT, false);   // release
 | drag stops when leaving the object | region events end at the region — use `event.POINTERMOVE` |
 | release never detected outside the region | no global pointer-up event — add a raw listener |
 | jump fires every frame while held | `bindKey` without its third `lock` argument |
+| the arrow keys or Space scroll the page around the game, in a portal's frame | the key is read from `event.KEYDOWN` without a binding, bound with `preventDefault` `false`, or bound after `input.setPreventDefault(false)`; before 20.15.1, also the keys the UI focus takes: bind the key, leaving its `preventDefault` and `input.setPreventDefault` on |
 | the hero keeps walking after an Alt-Tab, until the key is pressed again (before 20.14) | the key's release went to another window: update, held keys are now released on blur |
 | a region with only a `"pointerup"` callback never gets it, or the first finger's release is lost with two on one region (before 20.14) | the release was only delivered to the last pointer to press the region: update |
 | a key bound with `bindPointer` never fires once the mouse has entered the canvas (before 20.12) | the pointer's button bindings were replaced on each event: update |
