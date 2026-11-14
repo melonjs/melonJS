@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.1 - _unreleased_
+
+### Fixed
+- Installing the adapter no longer asks for Node 24. Its `package.json` declared `engines: { node: ">=24.0.0" }`, so npm warned on an older Node and Yarn 1 refused to install it; the adapter runs in the browser
+
 ## 1.1.0 - _2026-11-13_
 
 ### Added

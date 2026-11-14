@@ -32,9 +32,6 @@
 	"license": "MIT",
 	"author": "Olivier Biot (AltByte Pte Ltd)",
 	"funding": "https://github.com/sponsors/melonjs",
-	"engines": {
-		"node": ">=24.0.0"
-	},
 	"types": "./build/index.d.ts",
 	"exports": {
 		".": "./build/index.js"
