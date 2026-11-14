@@ -47,7 +47,7 @@ dependencies.
 | [melonjs-particles-and-trails](../melonjs-particles-and-trails/SKILL.md) | `ParticleEmitter`, burst versus stream, `referenceSpace`, and the `Trail` renderable. |
 | [melonjs-lighting](../melonjs-lighting/SKILL.md) | 2D dynamic lighting — `Light2d`, stage ambient, normal-mapped sprites. |
 | [melonjs-deployment](../melonjs-deployment/SKILL.md) | Scaffolding a project, building, browser support and transpiling, bundle size. |
-| [melonjs-platforms](../melonjs-platforms/SKILL.md) | Running inside YouTube Playables, Facebook Instant Games or WeChat Mini Games, as a Capacitor or Cordova app, or with no DOM (nx.js on the Nintendo Switch, Web Workers): handing pausing, saving and sound to the platform. |
+| [melonjs-platforms](../melonjs-platforms/SKILL.md) | Running inside YouTube Playables, Facebook Instant Games, Poki, CrazyGames or WeChat Mini Games, as a Capacitor or Cordova app, or with no DOM (nx.js on the Nintendo Switch, Web Workers): handing pausing, saving and sound to the platform. |
 | [melonjs-loading-assets](../melonjs-loading-assets/SKILL.md) | Resource descriptors, the asset type list, a multi-level game's assets as bundles (`common` + one per level), loading and freeing a level's assets, base URLs, cross-origin, progress events. |
 | [melonjs-renderer-backends](../melonjs-renderer-backends/SKILL.md) | A feature works on one machine but not another; choosing or pinning a backend; degrading gracefully. |
 | [melonjs-display-and-scaling](../melonjs-display-and-scaling/SKILL.md) | Blurry, soft or cropped output; the design resolution, how the canvas fills its page, and pixel-perfect integer scaling. |

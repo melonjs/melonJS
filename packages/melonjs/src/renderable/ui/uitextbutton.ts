@@ -1,5 +1,6 @@
 import type Camera2d from "../../camera/camera2d.ts";
 import { RoundRect } from "../../geometries/roundrect.ts";
+import { preventKeyDefault } from "../../input/keyboard.ts";
 import type Pointer from "../../input/pointer.ts";
 import { getImage } from "../../loader/loader.js";
 import type { Bounds } from "../../physics/bounds.ts";
@@ -290,6 +291,10 @@ export default class UITextButton extends UIBaseElement {
 	 * focused widget that is disabled or hidden does not keep them. Call
 	 * `blur()` on the focused widget to give Enter back to the shortcut.
 	 *
+	 * The key does not scroll the page around the game, unless
+	 * {@link input.setPreventDefault} is off. A key or an action bound with
+	 * `input.bindKey` follows its binding's `preventDefault` instead.
+	 *
 	 * Setting `enabled` to `false` while the key is held calls the press off.
 	 * Clearing only `isClickable` blocks new presses but still lets a held key
 	 * release, so the button is not left stuck down.
@@ -345,6 +350,9 @@ export default class UITextButton extends UIBaseElement {
 			}
 			shortcutTookAccept(keyCode);
 		}
+		// the button took the key: the page around the game does not scroll
+		// as well (a key bound with input.bindKey follows its binding)
+		preventKeyDefault();
 		this.keyboardKey = keyCode;
 		this.released = false;
 		this.isDirty = true;

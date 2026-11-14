@@ -193,6 +193,9 @@ function offerPressToScroller(element: UIBaseElement, event: Pointer) {
  * - a ring in {@link UIBaseElement.focusRingColor} shows the focus while the
  *   keyboard or a pad is used, and hides when the mouse moves;
  * - a focused widget inside a scrolling {@link UIPanel} is scrolled into view;
+ * - the keys it takes do not scroll the page around the game as well; a key
+ *   the game bound itself follows its binding's `preventDefault`, and
+ *   {@link input.setPreventDefault} turns this off;
  * - {@link UIBaseElement#blur}, or removing the widget, gives the keys and
  *   the pad back to the game.
  *

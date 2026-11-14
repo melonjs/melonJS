@@ -1,5 +1,6 @@
 import { GAMEPAD, readGamepads } from "../../input/gamepad.ts";
 import { KEY } from "../../input/key.ts";
+import { preventKeyDefault } from "../../input/keyboard.ts";
 import {
 	BLUR,
 	GAME_BEFORE_UPDATE,
@@ -462,12 +463,17 @@ function onKeyDown(_action: string | undefined, keyCode: number): void {
 		}
 		if (owner !== undefined && isCandidate(owner)) {
 			claimKey(keyCode, "focus");
+			// the key is the focus's: the page around the game does not
+			// scroll as well
+			preventKeyDefault();
 		}
 		acceptDown("key");
 		return;
 	}
 	for (const action of Object.keys(KEYS) as UINavAction[]) {
 		if (KEYS[action] === keyCode) {
+			// also at the last widget that way, where the focus stays put
+			preventKeyDefault();
 			navigate(action);
 		}
 	}
