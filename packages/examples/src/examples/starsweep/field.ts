@@ -12,13 +12,15 @@
  * `from` tile and a `to` tile, with `t` going 0 → 1, except for drones,
  * which fly freely.
  *
- * Monsters find their way with `@melonjs/pathfinding-plugin`: chasers plan
- * across a grid read from the station layer (walls, gates and fallen cracks
- * block it, goo costs more, and they keep off each other's cells, so they
- * flank Bolt), and drones across a second grid where holes are open too,
- * diagonally, along smoothed straight lines. When Bolt is out of reach,
- * they head for the nearest point. A force-field blocks cells for a while,
- * and the scanner shows every plan with the plugin's debug overlay.
+ * Monsters find their way with `@melonjs/pathfinding-plugin`: wobblers
+ * walk to a panel they picked, chasers plan across a grid read from the
+ * station layer (walls, gates and fallen cracks block it, goo costs more,
+ * and they keep off each other's cells, so they flank Bolt), and drones
+ * across a second grid where holes are open too, diagonally, along
+ * smoothed straight lines. When their goal is out of reach, they head for
+ * the nearest point. A force-field blocks cells for a while, and the
+ * scanner shows every plan with the plugin's debug overlay (all the time
+ * on a level with `routes`, like the first).
  *
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
@@ -128,6 +130,10 @@ const FLANK_COST = 4;
 const SEARCH_CAP = 400;
 /** seconds between two plans of a drone */
 const DRONE_REPLAN = 0.4;
+/** how often a wobbler takes a random step instead of its route */
+const WOBBLE = 0.15;
+/** how far off, in steps, a wobbler picks the panel it walks to */
+const WANDER_MIN = 5;
 
 export const HISCORE_KEY = "starsweepHiscore";
 
@@ -160,8 +166,10 @@ interface Enemy extends Mover {
 		path: { x: number; y: number }[];
 		replan: number;
 	};
-	/** the last route planned (chasers and drones), for the scanner */
+	/** the last route planned, for the scanner */
 	plan?: PathResult;
+	/** the panel a wobbler is walking to */
+	goal?: { x: number; y: number };
 }
 
 interface Spark {
@@ -1191,6 +1199,60 @@ export class Field extends Renderable {
 	}
 
 	/**
+	 * A wobbler walks to a panel it picked, some way off, along the route
+	 * the plugin plans round walls and holes, then picks another. Out of
+	 * reach, it goes as near as it can, then gives up on that panel.
+	 * @returns the first step, or -1 to wander
+	 */
+	private wanderStep(e: Enemy): Dir | -1 {
+		const grid = this.walkGrid;
+		if (!grid) {
+			return -1;
+		}
+		if (e.goal === undefined || (e.goal.x === e.tx && e.goal.y === e.ty)) {
+			e.goal = this.pickGoal(e);
+			if (e.goal === undefined) {
+				return -1;
+			}
+		}
+		const plan = grid.findPath(
+			grid.getPointPosition(e.tx, e.ty),
+			grid.getPointPosition(e.goal.x, e.goal.y),
+			{ maxNodes: SEARCH_CAP, allowPartialPath: true },
+		);
+		e.plan = plan;
+		// cells[0] is where it stands
+		const next = plan.cells[1];
+		if (next === undefined) {
+			// as near as it gets: another panel next time
+			e.goal = undefined;
+			return -1;
+		}
+		const dx = next.x - e.tx;
+		const dy = next.y - e.ty;
+		return dx > 0 ? 1 : dx < 0 ? 3 : dy > 0 ? 2 : 0;
+	}
+
+	/**
+	 * a panel for a wobbler to walk to, some way off
+	 * @returns the panel, or undefined if none was found
+	 */
+	private pickGoal(e: Enemy) {
+		for (let tries = 0; tries < 30; tries++) {
+			const x = Math.floor(Math.random() * COLS);
+			const y = Math.floor(Math.random() * ROWS);
+			if (
+				Math.abs(x - e.tx) + Math.abs(y - e.ty) >= WANDER_MIN &&
+				this.enemyCanEnter(x, y) &&
+				this.walkGrid?.isSolid(x, y) === false
+			) {
+				return { x, y };
+			}
+		}
+		return undefined;
+	}
+
+	/**
 	 * A drone flies: it plans across the air grid (holes are open to it),
 	 * diagonally, along smoothed straight lines, and heads for each point in
 	 * turn, planning again a few times a second as Bolt moves.
@@ -1266,7 +1328,11 @@ export class Field extends Renderable {
 		const choices = forward.length > 0 ? forward : options;
 		let d: Dir;
 		const chase =
-			e.kind === "chaser" && Math.random() > 0.1 ? this.chaseStep(e) : -1;
+			e.kind === "chaser" && Math.random() > 0.1
+				? this.chaseStep(e)
+				: e.kind === "wobbler" && Math.random() > WOBBLE
+					? this.wanderStep(e)
+					: -1;
 		if (chase !== -1 && options.includes(chase)) {
 			d = chase;
 		} else if (e.kind === "muncher" && Math.random() < 0.75) {
@@ -1388,10 +1454,9 @@ export class Field extends Renderable {
 		if (spots.length === 0) {
 			return;
 		}
-		// the scanner only where some monster plans a route
-		const planners = this.level.enemies.some((k) => {
-			return k === "chaser" || k === "drone";
-		});
+		// every monster plans a route; a level showing them all along needs
+		// no scanner
+		const planners = !this.level.routes;
 		const odds: [PowerKind, number][] = [
 			["life", this.lives < MAX_LIVES ? 0.08 : 0],
 			["gem", 0.22],
@@ -1502,7 +1567,7 @@ export class Field extends Renderable {
 		if (!scanner) {
 			return;
 		}
-		if (this.scan > 0 && this.phase === "play") {
+		if ((this.scan > 0 || this.level.routes) && this.phase === "play") {
 			if (!scanner.ancestor) {
 				this.host.actors.addChild(scanner, -1);
 			}
@@ -1580,6 +1645,23 @@ export class Field extends Renderable {
 			r.lineWidth = 3;
 			r.strokeRoundRect(x + 5, y + 3, TILE - 10, TILE - 14, 8);
 			r.setGlobalAlpha(1);
+		}
+
+		// while the routes show, the panel each wobbler is walking to
+		if (this.scanner?.ancestor) {
+			r.lineWidth = 2;
+			for (const e of this.enemies) {
+				if (e.goal === undefined || e.falling > 0 || e.spawning > 0) {
+					continue;
+				}
+				const x = tileX(e.goal.x) + TILE / 2;
+				const y = tileY(e.goal.y) + TILE / 2 - 4;
+				const pulse = 0.5 + 0.3 * Math.sin(this.time * 6);
+				r.setGlobalAlpha(pulse);
+				r.setColor(GLOW[e.kind]);
+				r.strokeEllipse(x, y, 11, 7);
+				r.setGlobalAlpha(1);
+			}
 		}
 
 		for (const pw of this.powers) {

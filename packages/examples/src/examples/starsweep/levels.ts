@@ -19,7 +19,8 @@
  * - The map's custom properties set the rest: `title`, `hint`, `theme`
  *   (one of {@link THEMES}), `enemies` (the order monsters come out in,
  *   comma separated: `wobbler`, `muncher`, `chaser`, `drone`), `maxEnemies`,
- *   `spawnEvery` (seconds) and `par` (seconds, for the time bonus).
+ *   `spawnEvery` (seconds), `par` (seconds, for the time bonus) and
+ *   `routes` (a bool: show every monster's planned route all level long).
  *
  * The engine draws the maps. Their `station` layer is also turned into the
  * text rows the game's rules run on (see `board.ts` for the characters),
@@ -64,6 +65,8 @@ export interface LevelDef {
 	spawnEvery: number;
 	/** clear the board within this many seconds for a time bonus */
 	par: number;
+	/** show every monster's planned route for the whole level */
+	routes: boolean;
 }
 
 export const THEMES = {
@@ -276,6 +279,7 @@ export const levelFromTiled = (
 		maxEnemies: num("maxEnemies", 3),
 		spawnEvery: num("spawnEvery", 5),
 		par: num("par", 80),
+		routes: prop(props, "routes") === true,
 	};
 };
 
