@@ -29,5 +29,8 @@ What to look for:
   and a diagonal slab) with `Grid.fromBodies`; the overlay shows the cells
   they block, the slab as a staircase. Painting then changes the grid's cells
   directly
+- **cells: isometric**: the same grid as diamonds, the way an isometric map
+  lays it out; painting, the shapes and the agents work the same, and a
+  diagonal step goes straight across the screen
 - **overlay**: blocked cells in red, mud in orange, the cells each search
   looked at in blue, and each agent's path

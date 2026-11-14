@@ -15,9 +15,10 @@ A* pathfinding on a grid for [melonJS](https://melonjs.org/) games.
 - partial paths: when the goal cannot be reached, the way to the nearest point
 - points to avoid for one search only: other agents, a hazard
 - path smoothing, so an agent heads straight across open ground instead of stepping tile by tile
+- square cells (orthogonal maps) or diamonds (isometric maps)
 - a debug overlay: solid and heavy cells, the cells a search looked at, the paths
 
-Square-cell (orthogonal) maps only for now: isometric and hexagonal maps are not supported.
+Staggered and hexagonal maps are not supported.
 
 ## Install
 
@@ -47,7 +48,7 @@ const { path, found } = grid.findPath(enemy.pos, player.pos);
 // path[0] is where the enemy stands: head for path[1]
 ```
 
-Cells are `Vector2d`s, `x` the column and `y` the row. A path runs from the start to the goal, both included, and is empty when there is none (see `allowPartialPath`). Its points are each cell's position: its top left corner plus `grid.offset`, half a cell by default, so its centre.
+Cells are `Vector2d`s, `x` the column and `y` the row. A path runs from the start to the goal, both included, and is empty when there is none (see `allowPartialPath`). Its points are each cell's position: its corner (the top left of a square, the top of a diamond) plus `grid.offset`, which is the centre by default.
 
 ## Building a grid
 
@@ -83,6 +84,24 @@ const grid = Grid.fromBodies(app.world, {
 The walls are the bodies of type `WORLD_SHAPE`: the shapes of a Tiled map's collision layer, and any body declared that way (pass `solid: (renderable) => ...` to choose others). A cell is solid when a wall covers any of nine points spread over it, so a sloped or rotated wall makes solid the cells it really covers. Shapes are read from the built-in physics body or the `bodyDef`, and from a wall's bounding box otherwise.
 
 The shapes are scanned when the grid is built, so it works right after a level loads, before the physics world has stepped. `grid.refresh()` scans them again.
+
+### Isometric maps
+
+On an isometric map the cells are diamonds: columns run down to the right and rows down to the left. `Grid.fromTileLayer` sees it from the layer, so nothing changes in your code; the search is the same, only where a cell sits in the world differs. Elsewhere, pass `cellShape: "isometric"`:
+
+```ts
+const grid = Grid.fromBodies(app.world, {
+	cols: map.cols,
+	rows: map.rows,
+	tileWidth: map.tilewidth,
+	tileHeight: map.tileheight,
+	cellShape: "isometric",
+});
+
+const grid = new Grid({ cols: 20, rows: 15, tileWidth: 64, tileHeight: 32, cellShape: "isometric" });
+```
+
+The grid's `x` and `y` are the top left corner of the box around every diamond, as for an isometric Tiled layer, and `tileWidth` and `tileHeight` are a diamond's width and height. `cellAt` finds the diamond under a world position, `getPointPosition` gives its centre, and the debug overlay draws diamonds. A diagonal step on an isometric grid goes straight across the screen, sideways or up and down. Staggered and hexagonal maps, whose neighbours change from row to row, are not supported: `fromTileLayer` throws on them.
 
 ### From your own callbacks
 
@@ -192,12 +211,13 @@ The grid does not use the physics engine: `Grid.fromBodies` reads the bodies' sh
 | The path is empty | The goal is walled off, solid, or further than `maxNodes` lets the search look. `allowPartialPath: true` returns the way to the nearest point instead |
 | The agent turns back at the start | `path[0]` is where it stands: head for `path[1]` |
 | Agents bunch up in a line | Pass the others' positions as `avoid`, with a finite `avoidWeight` |
+| The path is offset from an isometric map | The grid is square: built with `new Grid` or `Grid.fromBodies` without `cellShape: "isometric"` |
 | The path is offset from the map | The grid's `x` / `y` are not the layer's: the layer was not in its container yet when the grid was built, or the container moved since; set `grid.x` and `grid.y`. Points at a cell's corner rather than its centre come from `grid.offset` |
 | `a cell's weight must be a finite number of 1 or more` | A weight below 1, or `Infinity`; make a cell impassable with `setSolid` |
 
 ## Developing
 
-`pnpm -F @melonjs/pathfinding-plugin visual` serves a visual test page: a grid to paint walls and mud on, agents chasing a target, a grid built from collision shapes, and a toggle for each option. See [`visual/README.md`](visual/README.md). `pnpm -F @melonjs/pathfinding-plugin test` runs the tests.
+`pnpm -F @melonjs/pathfinding-plugin visual` serves a visual test page: a grid to paint walls and mud on, agents chasing a target, a grid built from collision shapes, square or isometric cells, and a toggle for each option. See [`visual/README.md`](visual/README.md). `pnpm -F @melonjs/pathfinding-plugin test` runs the tests.
 
 ## Credits
 

@@ -1,6 +1,6 @@
 ---
 name: melonjs-plugins
-description: "Use this skill when adding a melonJS plugin or adapter — the debug panel, Spine skeletal animation, compressed Tiled map support, on-screen touch controls, A* pathfinding, Capacitor packaging — or when writing your own plugin. Covers plugin.register and its version gate, plugin.cache, plugin.patch, and why physics adapters are not plugins. Triggers on: plugin, plugin.register, plugin.cache, plugin.get, plugin.patch, BasePlugin, debug-plugin, DebugPanelPlugin, SpinePlugin, TiledInflatePlugin, GamepadPlugin, gamepad-plugin, touch controls, virtual joystick, floating joystick, floating button, pathfinding, A*, astar, path finding, Grid, findPath, enemy AI chase, CapacitorPlugin, adapter, custom plugin, plugin version mismatch, already registered."
+description: "Use this skill when adding a melonJS plugin or adapter — the debug panel, Spine skeletal animation, compressed Tiled map support, on-screen touch controls, A* pathfinding, Capacitor packaging — or when writing your own plugin. Covers plugin.register and its version gate, plugin.cache, plugin.patch, and why physics adapters are not plugins. Triggers on: plugin, plugin.register, plugin.cache, plugin.get, plugin.patch, BasePlugin, debug-plugin, DebugPanelPlugin, SpinePlugin, TiledInflatePlugin, GamepadPlugin, gamepad-plugin, touch controls, virtual joystick, floating joystick, floating button, pathfinding, A*, astar, path finding, Grid, findPath, isometric pathfinding, enemy AI chase, CapacitorPlugin, adapter, custom plugin, plugin version mismatch, already registered."
 license: MIT
 ---
 
@@ -172,7 +172,10 @@ const { path, found } = grid.findPath(enemy.pos, player.pos, {
   works on its own.
 - `PathfindingDebug` draws solid and heavy cells, the cells a search looked
   at (`trace: true`) and the paths.
-- Orthogonal maps only: isometric and hexagonal grids are not supported.
+- **Isometric maps work**: `fromTileLayer` (and the plugin) sees an isometric
+  layer and lays the cells out as diamonds; for `new Grid` or `fromBodies`,
+  pass `cellShape: "isometric"`. Staggered and hexagonal maps are not
+  supported (`fromTileLayer` throws).
 
 ### `@melonjs/capacitor-plugin`
 
@@ -282,6 +285,7 @@ or a `Stage` is simpler and easier to test.
 | no path found (empty path, `found` false) | the goal is walled off, solid, or past `maxNodes`; `allowPartialPath: true` returns the way to the nearest point |
 | everything is solid on a `fromTileLayer` grid | a floor layer, where every cell has a tile: pass `solid` |
 | an agent turns back at the start | `path[0]` is where it stands: head for `path[1]` |
+| a path is offset from an isometric map | the grid is square: `new Grid` / `fromBodies` without `cellShape: "isometric"` |
 | a path is offset from the map | the grid's `x` / `y` are not the layer's: built before the layer was in its container, or the container moved since |
 | plugin setup never runs | setup written in an `init()` method — there is no such hook |
 | `Plugin should extend the BasePlugin Class !` when registering an adapter | adapters are a construction setting (or `world.setAdapter()`), not a plugin |

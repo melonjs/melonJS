@@ -11,6 +11,7 @@ export { type DebugPath, PathfindingDebug } from "./debug.ts";
 export {
 	type BodiesOptions,
 	type CellRegion,
+	type CellShape,
 	type DiagonalMode,
 	Grid,
 	type GridSettings,
