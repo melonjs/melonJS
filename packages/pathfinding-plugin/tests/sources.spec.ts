@@ -460,6 +460,48 @@ describe("grids from a level", () => {
 			}
 		});
 
+		it("leaves its grid alone for a level loaded elsewhere", async () => {
+			// as with a level loaded by another application, or after this
+			// one was destroyed: the level registry is shared
+			const elsewhere = new Container(0, 0, 6 * T, 4 * T);
+			let builds = 0;
+			const own = new Grid({ cols: 1, rows: 1, tileWidth: T, tileHeight: T });
+			const p = new PathfindingPlugin(
+				{
+					container: elsewhere,
+					build: () => {
+						builds++;
+						return own;
+					},
+				},
+				app,
+			);
+			// the loaded level is in the world, not in its container
+			expect(builds).toBe(0);
+			await level.load("pf-map", {
+				container: world(),
+				setViewportBounds: false,
+				async: true,
+			});
+			expect(builds).toBe(0);
+			expect(p.grid).toBe(null);
+			// loaded into its own container, it builds
+			await level.load("pf-map", {
+				container: elsewhere,
+				setViewportBounds: false,
+				async: true,
+			});
+			expect(builds).toBe(1);
+			expect(p.grid).toBe(own);
+			p.destroy();
+			// back in the world, for the tests after this one
+			await level.load("pf-map", {
+				container: world(),
+				setViewportBounds: false,
+				async: true,
+			});
+		});
+
 		it("stops following level loads once destroyed", async () => {
 			let builds = 0;
 			const p = new PathfindingPlugin(

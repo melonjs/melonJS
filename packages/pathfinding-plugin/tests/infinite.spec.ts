@@ -16,7 +16,7 @@ import {
 	video,
 } from "melonjs";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { Grid } from "../src/index.ts";
+import { Grid, PathfindingPlugin } from "../src/index.ts";
 
 /**
  * an infinite map with one tile layer, "walls", in two 4 x 4 chunks
@@ -25,6 +25,8 @@ import { Grid } from "../src/index.ts";
  * @param height - the tiles' height
  * @param chunks - each chunk's position (in tiles) and its walls (in its
  * own cells)
+ * @param box - a collision box over one tile of the map, in its tile
+ * coordinates
  * @returns the map, as Tiled saves it in JSON
  */
 const infiniteMap = (
@@ -32,7 +34,14 @@ const infiniteMap = (
 	width: number,
 	height: number,
 	chunks: { x: number; y: number; walls: [number, number][] }[],
+	box: [number, number],
 ) => {
+	// Tiled places an isometric map's objects in tile heights along both
+	// of its axes
+	const unit =
+		orientation === "isometric"
+			? { x: height, y: height }
+			: { x: width, y: height };
 	return {
 		type: "map",
 		version: "1.10",
@@ -81,35 +90,69 @@ const infiniteMap = (
 					return { x: c.x, y: c.y, width: 4, height: 4, data };
 				}),
 			},
+			{
+				id: 2,
+				name: "collision",
+				type: "objectgroup",
+				visible: true,
+				opacity: 1,
+				x: 0,
+				y: 0,
+				objects: [
+					{
+						id: 1,
+						name: "",
+						type: "",
+						x: box[0] * unit.x,
+						y: box[1] * unit.y,
+						width: unit.x,
+						height: unit.y,
+						rotation: 0,
+						visible: true,
+					},
+				],
+			},
 		],
 	};
 };
 
 const maps = {
 	// a chunk left of the map's origin, and one on it
-	orthogonal: infiniteMap("orthogonal", 16, 16, [
-		{ x: -4, y: 0, walls: [[1, 1]] },
-		{
-			x: 0,
-			y: 0,
-			walls: [
-				[2, 2],
-				[3, 0],
-			],
-		},
-	]),
+	orthogonal: infiniteMap(
+		"orthogonal",
+		16,
+		16,
+		[
+			{ x: -4, y: 0, walls: [[1, 1]] },
+			{
+				x: 0,
+				y: 0,
+				walls: [
+					[2, 2],
+					[3, 0],
+				],
+			},
+		],
+		[-3, 2],
+	),
 	// a chunk above the map's origin, and one on it
-	isometric: infiniteMap("isometric", 32, 16, [
-		{ x: 0, y: -4, walls: [[1, 1]] },
-		{
-			x: 0,
-			y: 0,
-			walls: [
-				[2, 2],
-				[0, 3],
-			],
-		},
-	]),
+	isometric: infiniteMap(
+		"isometric",
+		32,
+		16,
+		[
+			{ x: 0, y: -4, walls: [[1, 1]] },
+			{
+				x: 0,
+				y: 0,
+				walls: [
+					[2, 2],
+					[0, 3],
+				],
+			},
+		],
+		[2, -3],
+	),
 };
 
 describe("grids over an infinite map's tile layer", () => {
@@ -192,6 +235,27 @@ describe("grids over an infinite map's tile layer", () => {
 				}
 			}
 			expect(walls).toBe(3);
+
+			// the plugin's grid, from the collision shapes, covers the whole
+			// level and lines up with the layer's
+			const byShapes = new PathfindingPlugin({}, app);
+			const shapes = byShapes.grid as Grid;
+			expect([shapes.cols, shapes.rows]).toEqual([grid.cols, grid.rows]);
+			expect([shapes.x, shapes.y]).toEqual([grid.x, grid.y]);
+			const [bx, by] = name === "orthogonal" ? [-3, 2] : [2, -3];
+			// the box, left of or above the map's origin, blocks its cell
+			const boxCell = { x: bx - layer.startx, y: by - layer.starty };
+			let solid = 0;
+			for (let row = 0; row < shapes.rows; row++) {
+				for (let col = 0; col < shapes.cols; col++) {
+					if (shapes.isSolid(col, row)) {
+						solid++;
+						expect({ x: col, y: row }).toEqual(boxCell);
+					}
+				}
+			}
+			expect(solid).toBe(1);
+			byShapes.destroy();
 		});
 	}
 });
