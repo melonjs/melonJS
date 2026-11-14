@@ -12,7 +12,7 @@ export interface DebugPath {
 }
 
 /**
- * A debug view of a {@link Grid}: blocked cells, costly cells, the cells a
+ * A debug view of a {@link Grid}: solid cells, heavy cells, the cells a
  * search looked at (with `trace: true`) and the paths it found. Add it to the
  * world over the level while working on movement.
  * @example
@@ -27,15 +27,15 @@ export class PathfindingDebug extends Renderable {
 	/** the paths drawn, each with the cells its search looked at */
 	paths: DebugPath[] = [];
 	/**
-	 * draw blocked cells
+	 * draw solid cells
 	 * @default true
 	 */
-	showBlocked = true;
+	showSolid = true;
 	/**
-	 * draw cells that cost more than 1, darker the costlier
+	 * draw cells that weigh more than 1, darker the heavier
 	 * @default true
 	 */
-	showCost = true;
+	showWeight = true;
 	/**
 	 * draw the cells each search looked at, when it kept them
 	 * @default true
@@ -79,21 +79,21 @@ export class PathfindingDebug extends Renderable {
 			renderer.setColor("#3fa9ff");
 			for (const { result } of this.paths) {
 				for (const cell of result.trace ?? []) {
-					renderer.fillRect(cellX(cell.col), cellY(cell.row), w, h);
+					renderer.fillRect(cellX(cell.x), cellY(cell.y), w, h);
 				}
 			}
 		}
 
 		for (let row = 0; row < grid.rows; row++) {
 			for (let col = 0; col < grid.cols; col++) {
-				if (this.showBlocked && !grid.isWalkable(col, row)) {
+				if (this.showSolid && grid.isSolid(col, row)) {
 					renderer.setGlobalAlpha(0.35);
 					renderer.setColor("#ff3b5c");
 					renderer.fillRect(cellX(col), cellY(row), w, h);
-				} else if (this.showCost) {
-					const cost = grid.getCost(col, row);
-					if (cost > 1) {
-						renderer.setGlobalAlpha(Math.min(0.6, 0.12 * cost));
+				} else if (this.showWeight) {
+					const weight = grid.getWeight(col, row);
+					if (weight > 1) {
+						renderer.setGlobalAlpha(Math.min(0.6, 0.12 * weight));
 						renderer.setColor("#ff9f1a");
 						renderer.fillRect(cellX(col), cellY(row), w, h);
 					}

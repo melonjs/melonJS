@@ -22,7 +22,7 @@ import { Grid, PathfindingPlugin } from "../src/index.ts";
 
 const T = 16;
 
-/** a 2-tile tileset: tile 1 a wall, tile 2 mud (cost 3) */
+/** a 2-tile tileset: tile 1 a wall, tile 2 mud (weight 3) */
 const tileset = {
 	firstgid: 1,
 	name: "pf-tiles",
@@ -35,7 +35,7 @@ const tileset = {
 	image: "pf-tiles.png",
 	imagewidth: 2 * T,
 	imageheight: T,
-	tiles: [{ id: 1, properties: [{ name: "cost", type: "int", value: 3 }] }],
+	tiles: [{ id: 1, properties: [{ name: "weight", type: "int", value: 3 }] }],
 };
 
 /**
@@ -129,7 +129,7 @@ const picture = (grid: Grid) => {
 	for (let row = 0; row < grid.rows; row++) {
 		let line = "";
 		for (let col = 0; col < grid.cols; col++) {
-			line += grid.isWalkable(col, row) ? "." : "#";
+			line += grid.isSolid(col, row) ? "#" : ".";
 		}
 		rows.push(line);
 	}
@@ -187,44 +187,47 @@ describe("grids from a level", () => {
 	describe("Grid.fromTileLayer", () => {
 		it("blocks the cells with a tile, by default", () => {
 			const grid = Grid.fromTileLayer(wallsLayer(), {
-				walkable: (tile) => {
-					return tile === null || tile.tileId !== 1;
+				solid: (tile) => {
+					return tile !== null && tile.tileId === 1;
 				},
 			});
 			expect(picture(grid)).toEqual(["..#...", "..#...", "..#...", "......"]);
 			const plain = Grid.fromTileLayer(wallsLayer());
-			expect(plain.isWalkable(4, 1)).toBe(false);
-			expect(plain.isWalkable(2, 0)).toBe(false);
-			expect(plain.isWalkable(0, 0)).toBe(true);
+			expect(plain.isSolid(4, 1)).toBe(true);
+			expect(plain.isSolid(2, 0)).toBe(true);
+			expect(plain.isSolid(0, 0)).toBe(false);
 		});
 
-		it("takes a cell's cost from its tile's cost property", () => {
+		it("takes a cell's weight from its tile's weight property", () => {
 			const grid = Grid.fromTileLayer(wallsLayer(), {
-				walkable: (tile) => {
-					return tile === null || tile.tileId !== 1;
+				solid: (tile) => {
+					return tile !== null && tile.tileId === 1;
 				},
 			});
-			expect(grid.getCost(4, 1)).toBe(3);
-			expect(grid.getCost(0, 0)).toBe(1);
+			expect(grid.getWeight(4, 1)).toBe(3);
+			expect(grid.getWeight(0, 0)).toBe(1);
 		});
 
 		it("finds a way round the wall", () => {
 			const grid = Grid.fromTileLayer(wallsLayer());
-			const r = grid.findPath(grid.cellCenter(0, 0), grid.cellCenter(3, 0));
+			const r = grid.findPath(
+				grid.getPointPosition(0, 0),
+				grid.getPointPosition(3, 0),
+			);
 			expect(r.found).toBe(true);
-			expect(r.cells.some((c) => c.row === 3)).toBe(true);
+			expect(r.cells.some((c) => c.y === 3)).toBe(true);
 		});
 
 		it("sees a changed tile once refreshed", () => {
 			const layer = wallsLayer();
 			const grid = Grid.fromTileLayer(layer);
 			layer.clearTile(2, 1);
-			expect(grid.isWalkable(2, 1)).toBe(false);
+			expect(grid.isSolid(2, 1)).toBe(true);
 			grid.refreshCell(2, 1);
-			expect(grid.isWalkable(2, 1)).toBe(true);
+			expect(grid.isSolid(2, 1)).toBe(false);
 			layer.setTile(layer.getTileById(1, 2, 1), 2, 1);
 			grid.refresh();
-			expect(grid.isWalkable(2, 1)).toBe(false);
+			expect(grid.isSolid(2, 1)).toBe(true);
 		});
 	});
 
@@ -247,7 +250,7 @@ describe("grids from a level", () => {
 				tileHeight: T,
 			});
 			// the triangle's box covers (1, 2), the triangle barely does
-			expect(grid.isWalkable(1, 2)).toBe(true);
+			expect(grid.isSolid(1, 2)).toBe(false);
 		});
 	});
 
@@ -283,9 +286,9 @@ describe("grids from a level", () => {
 				setViewportBounds: false,
 				async: true,
 			});
-			expect(byLayer.grid?.isWalkable(2, 0)).toBe(false);
-			expect(byShapes.grid?.isWalkable(4, 0)).toBe(false);
-			expect(byShapes.grid?.isWalkable(2, 0)).toBe(true);
+			expect(byLayer.grid?.isSolid(2, 0)).toBe(true);
+			expect(byShapes.grid?.isSolid(4, 0)).toBe(true);
+			expect(byShapes.grid?.isSolid(2, 0)).toBe(false);
 			byLayer.destroy();
 			byShapes.destroy();
 		});

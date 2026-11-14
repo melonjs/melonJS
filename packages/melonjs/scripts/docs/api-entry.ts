@@ -44,15 +44,15 @@ export {
 } from "../../../matter-adapter/src/index.ts";
 export {
 	type BodiesOptions,
-	type Cell,
-	type FindPathOptions,
+	type CellRegion,
+	type DiagonalMode,
 	Grid,
 	type GridSettings,
 	type Heuristic,
 	PathfindingPlugin,
 	type PathfindingPluginOptions,
+	type PathOptions,
 	type PathResult,
-	type PathPoint,
 	type TileLayerOptions,
 } from "../../../pathfinding-plugin/src/index.ts";
 export {

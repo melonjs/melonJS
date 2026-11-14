@@ -10,12 +10,12 @@
 export { type DebugPath, PathfindingDebug } from "./debug.ts";
 export {
 	type BodiesOptions,
-	type Cell,
-	type FindPathOptions,
+	type CellRegion,
+	type DiagonalMode,
 	Grid,
 	type GridSettings,
 	type Heuristic,
-	type PathPoint,
+	type PathOptions,
 	type PathResult,
 	type TileLayerOptions,
 } from "./grid.ts";
