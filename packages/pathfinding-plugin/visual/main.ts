@@ -16,10 +16,10 @@ import {
 	video,
 } from "melonjs";
 import {
-	type FindPathOptions,
+	type DiagonalMode,
 	Grid,
 	PathfindingDebug,
-	type PathPoint,
+	type PathOptions,
 	type PathResult,
 } from "../src/index.ts";
 
@@ -72,10 +72,10 @@ const paintedGrid = () => {
 		rows: ROWS,
 		tileWidth: TILE,
 		tileHeight: TILE,
-		walkable: (col, row) => {
-			return cells[row * COLS + col] !== WALL;
+		solid: (col, row) => {
+			return cells[row * COLS + col] === WALL;
 		},
-		cost: (col, row) => {
+		weight: (col, row) => {
 			return cells[row * COLS + col] === MUD ? 4 : 1;
 		},
 	});
@@ -139,11 +139,16 @@ const useSource = (next: "painted" | "shapes") => {
 // the agents and the target
 // ---------------------------------------------------------------------------
 
+interface Point {
+	x: number;
+	y: number;
+}
+
 interface Agent {
-	pos: PathPoint;
+	pos: Point;
 	color: string;
 	result: PathResult | null;
-	from: PathPoint;
+	from: Point;
 	next: number;
 }
 const agents: Agent[] = [
@@ -153,10 +158,10 @@ const agents: Agent[] = [
 ].map((a) => {
 	return { ...a, result: null, from: { ...a.pos }, next: 0 };
 });
-const target: PathPoint = { x: 560, y: 240 };
+const target: Point = { x: 560, y: 240 };
 
-const options: FindPathOptions & { avoidOthers: boolean } = {
-	diagonal: false,
+const options: PathOptions & { avoidOthers: boolean } = {
+	allowPartialPath: true,
 	smooth: false,
 	maxNodes: Infinity,
 	trace: true,
@@ -191,11 +196,12 @@ class Scene extends Renderable {
 									.map((other) => {
 										return other.pos;
 									}),
-								avoidCost: 6,
+								avoidWeight: 6,
 							}
 						: {}),
 				});
-				agent.next = 0;
+				// the first point is the agent's own cell
+				agent.next = 1;
 			}
 			overlay.paths = agents.map((agent) => {
 				return {
@@ -216,7 +222,7 @@ class Scene extends Renderable {
 				const d = Math.hypot(dx, dy);
 				// slower through mud
 				const cell = grid.cellAt(agent.pos.x, agent.pos.y);
-				const slow = cell ? grid.getCost(cell.col, cell.row) : 1;
+				const slow = cell ? grid.getWeight(cell.x, cell.y) : 1;
 				const move = step / slow;
 				if (d <= move) {
 					agent.pos.x = to.x;
@@ -302,12 +308,12 @@ const apply = (x: number, y: number) => {
 	}
 	const kind = tool === "wall" ? WALL : tool === "mud" ? MUD : OPEN;
 	if (source === "painted") {
-		cells[cell.row * COLS + cell.col] = kind;
-		grid.refreshCell(cell.col, cell.row);
+		cells[cell.y * COLS + cell.x] = kind;
+		grid.refreshCell(cell.x, cell.y);
 	} else {
 		// on a grid built from shapes, change the cell itself
-		grid.setWalkable(cell.col, cell.row, kind !== WALL);
-		grid.setCost(cell.col, cell.row, kind === MUD ? 4 : 1);
+		grid.setSolid(cell.x, cell.y, kind === WALL);
+		grid.setWeight(cell.x, cell.y, kind === MUD ? 4 : 1);
 	}
 };
 
@@ -337,7 +343,7 @@ const report = () => {
 			const r = agent.result;
 			return r === null
 				? `agent ${i + 1}: -`
-				: `agent ${i + 1}: ${r.found ? "found" : "closest"}, ${r.path.length} points, cost ${r.cost.toFixed(1)}, explored ${r.explored}`;
+				: `agent ${i + 1}: ${r.found ? "found" : "partial"}, ${r.path.length} points, cost ${r.cost.toFixed(1)}, explored ${r.explored}`;
 		})
 		.join("\n");
 };
@@ -387,13 +393,11 @@ select("tool", ["target", "wall", "mud", "erase"], (value) => {
 select("grid", ["painted", "shapes"], (value) => {
 	useSource(value as "painted" | "shapes");
 });
-toggle(
+select(
 	"diagonal",
-	() => {
-		return options.diagonal === true;
-	},
-	(on) => {
-		options.diagonal = on;
+	["never", "onlyIfNoObstacles", "atLeastOneWalkable", "always"],
+	(value) => {
+		options.diagonalMode = value as DiagonalMode;
 	},
 );
 toggle(

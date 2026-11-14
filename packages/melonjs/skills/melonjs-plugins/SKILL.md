@@ -129,43 +129,48 @@ for the bindings, the layouts and the overlap rules.
 
 ### `@melonjs/pathfinding-plugin`
 
-A* on a grid of open and blocked cells, each with a cost to cross. The grid is
-the part to get right; the search is one call:
+A* on a grid of open and solid cells, each with a weight to cross. The grid
+is the part to get right; the search is one call:
 
 ```js
 import { Grid } from "@melonjs/pathfinding-plugin";
 
-// a layer of walls: a tile blocks its cell (a tile's `cost` property sets its cost)
+// a layer of walls: a tile makes its cell solid (a tile's `weight` property sets its weight)
 const grid = Grid.fromTileLayer(app.world.getChildByName("walls")[0]);
 // a floor layer: decide from the tile instead
-Grid.fromTileLayer(floor, { walkable: (tile) => tile !== null && !isWall(tile) });
+Grid.fromTileLayer(floor, { solid: (tile) => tile === null || isWall(tile) });
 // or the level's collision shapes (WORLD_SHAPE bodies, a Tiled collision layer)
 Grid.fromBodies(app.world, { cols, rows, tileWidth, tileHeight });
 
+grid.diagonalMode = "onlyIfNoObstacles";    // never cut a corner past a wall
+grid.getIdPath(fromCell, toCell);           // cells (Vector2d, x the column)
+grid.getPointPath(fromCell, toCell);        // world points (cell centre + grid.offset)
 const { path, found } = grid.findPath(enemy.pos, player.pos, {
-    diagonal: true,      // 8 directions, never cutting a corner past a wall
-    smooth: true,        // straight lines across open ground
-    maxNodes: 300,       // a cap, so an unreachable goal cannot stall a frame
-    avoid: others.map((o) => o.pos), avoidCost: 6,   // spread out, this search only
+    smooth: true,                // straight lines across open ground
+    maxNodes: 300,               // a cap, so an unreachable goal cannot stall a frame
+    allowPartialPath: true,      // unreachable: the way to the nearest cell (found false)
+    avoid: others.map((o) => o.pos), avoidWeight: 6,   // spread out, this search only
 });
-// path: world-unit points after the start; found is false when it leads to the
-// nearest reachable cell instead (closest: false for no path at all)
+// path[0] is the start: head for path[1]
 ```
 
 - **The grid is a snapshot.** A tile changed with `setTile` / `clearTile`, or
   a wall body added, is not seen until `grid.refreshCell(col, row)` or
-  `grid.refresh()`; `setWalkable` / `setCost` change one cell directly.
-- **`fromTileLayer` blocks every non-empty cell by default** (a walls layer).
-  On a floor layer, where every cell has a tile, pass `walkable`, or nothing is
-  walkable.
+  `grid.refresh()`; `setSolid` / `setWeight` (and `fillSolidRegion` /
+  `fillWeightRegion`) change cells directly.
+- **`fromTileLayer` makes every non-empty cell solid by default** (a walls
+  layer). On a floor layer, where every cell has a tile, pass `solid`, or
+  everything is solid.
+- **Paths include the start**, and are empty when the goal cannot be reached
+  unless `allowPartialPath` is set.
 - **Build `fromBodies` after the level loads.** It scans the shapes, not a
   physics query, so it works before the world first steps; it reads `bodyDef`
   shapes too, so it is the same on every adapter.
-- A cost is 1 or more and finite: block with `setWalkable`, not `Infinity`.
+- A weight is 1 or more and finite: block with `setSolid`, not `Infinity`.
 - `PathfindingPlugin` (`plugin.register(PathfindingPlugin, "pathfinding",
   { layer: "walls" })`) only rebuilds the grid when a level loads; a `Grid`
   works on its own.
-- `PathfindingDebug` draws blocked and costly cells, the cells a search looked
+- `PathfindingDebug` draws solid and heavy cells, the cells a search looked
   at (`trace: true`) and the paths.
 - Orthogonal maps only: isometric and hexagonal grids are not supported.
 
@@ -272,9 +277,11 @@ or a `Stage` is simpler and easier to test.
 | the panel reports another app's numbers | `app` defaulted to `game`, the last Application to finish `init()` |
 | `world.adapter.querySphere is not a function` | built-in adapter only; planck, matter and Rapier are 2D-only |
 | a Tiled map opens in Tiled but not melonJS | compressed layers, tiled-inflate plugin missing |
-| a path goes through walls | the grid does not know them: a floor layer needs `walkable`, a changed tile needs `refreshCell`, `fromBodies` walls must be `WORLD_SHAPE` bodies (or pass `solid`) |
-| no path found (`found` false) | the goal is walled off, on a wall, or past `maxNodes`; the path leads as near as it could |
-| everything is blocked on a `fromTileLayer` grid | a floor layer, where every cell has a tile: pass `walkable` |
+| a path goes through walls | the grid does not know them: a floor layer needs `solid`, a changed tile needs `refreshCell`, `fromBodies` walls must be `WORLD_SHAPE` bodies (or pass `solid`) |
+| a path cuts across a wall corner | `diagonalMode` is `"always"` or `"atLeastOneWalkable"`: use `"onlyIfNoObstacles"` |
+| no path found (empty path, `found` false) | the goal is walled off, solid, or past `maxNodes`; `allowPartialPath: true` returns the way to the nearest point |
+| everything is solid on a `fromTileLayer` grid | a floor layer, where every cell has a tile: pass `solid` |
+| an agent turns back at the start | `path[0]` is where it stands: head for `path[1]` |
 | a path is offset from the map | the grid's `x` / `y` are not the layer's: built before the layer was in its container, or the container moved since |
 | plugin setup never runs | setup written in an `init()` method — there is no such hook |
 | `Plugin should extend the BasePlugin Class !` when registering an adapter | adapters are a construction setting (or `world.setAdapter()`), not a plugin |

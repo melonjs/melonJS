@@ -4,20 +4,24 @@ import {
 	type Renderable,
 	type Tile,
 	type TMXLayer,
+	Vector2d,
 } from "melonjs";
 import { IndexHeap } from "./heap.ts";
 
-/** a point in world units */
-export interface PathPoint {
-	x: number;
-	y: number;
-}
-
-/** a cell of the grid, by column and row */
-export interface Cell {
-	col: number;
-	row: number;
-}
+/**
+ * When a path may move diagonally:
+ * - `"never"`: up, down, left and right only
+ * - `"always"`: diagonally too, even between two walls
+ * - `"atLeastOneWalkable"`: diagonally past a corner, when one of the two
+ *   cells beside the step is open
+ * - `"onlyIfNoObstacles"`: diagonally only when both cells beside the step
+ *   are open, so a path never cuts a corner
+ */
+export type DiagonalMode =
+	| "never"
+	| "always"
+	| "atLeastOneWalkable"
+	| "onlyIfNoObstacles";
 
 /**
  * How far a cell looks from the goal, from the column and row distances:
@@ -33,63 +37,55 @@ export type Heuristic =
 	| "euclidean"
 	| ((dx: number, dy: number) => number);
 
-/** how {@link Grid#findPath} searches */
-export interface FindPathOptions {
+/** how a search goes, for {@link Grid#findPath}, {@link Grid#getIdPath} and {@link Grid#getPointPath} */
+export interface PathOptions {
 	/**
-	 * Move diagonally as well. A diagonal step never cuts a corner: both
-	 * cells beside it must be open.
+	 * When the goal cannot be reached (blocked, walled off, or past
+	 * `maxNodes`), return the path to the cell nearest to it instead of an
+	 * empty one.
 	 * @default false
 	 */
-	diagonal?: boolean;
+	allowPartialPath?: boolean;
 	/**
-	 * The estimate of the distance left.
-	 * @default "manhattan", or "octile" with `diagonal`
+	 * when the path may move diagonally, for this search
+	 * @default the grid's {@link Grid#diagonalMode}
+	 */
+	diagonalMode?: DiagonalMode;
+	/**
+	 * the estimate of the distance left, for this search
+	 * @default the grid's {@link Grid#heuristic}
 	 */
 	heuristic?: Heuristic;
 	/**
 	 * The most cells the search looks at before it gives up, so a goal that
-	 * cannot be reached does not stall a frame. With `closest`, the path
-	 * then leads as near as it got.
+	 * cannot be reached does not stall a frame.
 	 * @default Infinity
 	 */
 	maxNodes?: number;
 	/**
-	 * When the goal cannot be reached (blocked, walled off, or past
-	 * `maxNodes`), return the path to the cell nearest to it instead of no
-	 * path at all. `found` tells the two apart.
-	 * @default true
-	 */
-	closest?: boolean;
-	/**
 	 * Straighten the path: drop the points between two that can see each
 	 * other in a straight line over open cells, so an agent heads straight
 	 * there instead of stepping tile by tile. The line keeps to cells no
-	 * costlier than the ones it replaces, so it never cuts through mud the
+	 * heavier than the ones it replaces, so it never cuts through mud the
 	 * search went around.
 	 * @default false
 	 */
 	smooth?: boolean;
 	/**
-	 * Points (in world units, or cells with `tiles`) to keep away from for
-	 * this search only: other agents, a hazard. Their cells cost
-	 * `avoidCost` more to enter. The start and the goal are never avoided.
+	 * Points to keep away from, for this search only: other agents, a
+	 * hazard. In world units for {@link Grid#findPath}, in cells for the
+	 * others. The start and the goal are never avoided.
 	 */
-	avoid?: Iterable<PathPoint>;
+	avoid?: Iterable<Readonly<{ x: number; y: number }>>;
 	/**
-	 * What entering an avoided cell costs on top of its own cost.
+	 * What entering an avoided cell costs on top of its own weight.
 	 * `Infinity` blocks it.
 	 * @default Infinity
 	 */
-	avoidCost?: number;
-	/**
-	 * `from`, `to` and `avoid` are cells (`x` the column, `y` the row)
-	 * rather than world positions.
-	 * @default false
-	 */
-	tiles?: boolean;
+	avoidWeight?: number;
 	/**
 	 * Keep the cells the search looked at, in order, in `result.trace`: for
-	 * a debug view.
+	 * a debug view ({@link Grid#findPath} only).
 	 * @default false
 	 */
 	trace?: boolean;
@@ -100,19 +96,19 @@ export interface PathResult {
 	/** whether the path reaches the goal (otherwise it leads as near as it could) */
 	found: boolean;
 	/**
-	 * the points to go through, in world units: the centre of each cell after
-	 * the start, the last one the goal's (or the nearest cell's). Empty when
-	 * already there, or when there is nowhere to go.
+	 * the points of the path, in world units, from the start to the goal (or
+	 * to the nearest cell): each cell's position, see {@link Grid#offset}.
+	 * Empty when there is no path.
 	 */
-	path: PathPoint[];
-	/** the same steps, as cells */
-	cells: Cell[];
-	/** what the path costs, in steps weighted by each cell's cost */
+	path: Vector2d[];
+	/** the same steps, as cells (`x` the column, `y` the row) */
+	cells: Vector2d[];
+	/** what the path costs: its steps, each weighted by the cell it enters */
 	cost: number;
 	/** how many cells the search looked at */
 	explored: number;
 	/** the cells the search looked at, in order, with `trace` */
-	trace?: Cell[];
+	trace?: Vector2d[];
 }
 
 /** how to build a {@link Grid} */
@@ -133,19 +129,19 @@ export interface GridSettings {
 	/** @default 0 */
 	y?: number;
 	/**
-	 * whether a cell can be walked on, read for every cell when the grid
-	 * is built and on {@link Grid#refresh}
-	 * @default every cell is open
+	 * whether a cell is solid (a wall), read for every cell when the grid is
+	 * built and on {@link Grid#refresh}
+	 * @default no cell is solid
 	 */
-	walkable?: (col: number, row: number) => boolean;
+	solid?: (col: number, row: number) => boolean;
 	/**
 	 * what entering a cell costs, 1 or more (mud 3, a road 1), read with
-	 * `walkable`
+	 * `solid`
 	 * @default 1
 	 */
-	cost?: (col: number, row: number) => number;
+	weight?: (col: number, row: number) => number;
 	/**
-	 * called before `walkable` and `cost` are read for every cell (when the
+	 * called before `solid` and `weight` are read for every cell (when the
 	 * grid is built, and on each {@link Grid#refresh}): to gather what they
 	 * read, once
 	 */
@@ -155,16 +151,16 @@ export interface GridSettings {
 /** how {@link Grid.fromTileLayer} reads a layer */
 export interface TileLayerOptions {
 	/**
-	 * whether a cell is open, from the tile in it (null for an empty cell)
-	 * @default an empty cell is open, a cell with a tile is blocked
+	 * whether a cell is solid, from the tile in it (null for an empty cell)
+	 * @default a cell with a tile is solid, an empty one is open
 	 */
-	walkable?: (tile: Tile | null, col: number, row: number) => boolean;
+	solid?: (tile: Tile | null, col: number, row: number) => boolean;
 	/**
 	 * what entering a cell costs, 1 or more
-	 * @default the tile's `cost` custom property (set in Tiled's tileset
+	 * @default the tile's `weight` custom property (set in Tiled's tileset
 	 * editor), or 1
 	 */
-	cost?: (tile: Tile | null, col: number, row: number) => number;
+	weight?: (tile: Tile | null, col: number, row: number) => number;
 	/**
 	 * where the layer's top left corner is in the world
 	 * @default the layer's own position, its containers' included
@@ -201,7 +197,7 @@ export interface BodiesOptions {
 	 * what entering a cell costs, 1 or more
 	 * @default 1
 	 */
-	cost?: (col: number, row: number) => number;
+	weight?: (col: number, row: number) => number;
 }
 
 /** a renderable's body, as the built-in physics or a `bodyDef` holds it */
@@ -214,6 +210,14 @@ interface WithBody {
 interface Shape {
 	contains(x: number, y: number): boolean;
 	getBounds(): { left: number; top: number; right: number; bottom: number };
+}
+
+/** a rectangle of cells, `x` and `y` its top left column and row */
+export interface CellRegion {
+	x: number;
+	y: number;
+	width: number;
+	height: number;
 }
 
 /** where a cell is sampled for walls, as fractions of its size */
@@ -245,30 +249,56 @@ const HEURISTICS = {
 	},
 };
 
-const checkCost = (cost: number) => {
-	if (!(cost >= 1) || cost === Infinity) {
+const DIAGONAL_MODES: readonly string[] = [
+	"never",
+	"always",
+	"atLeastOneWalkable",
+	"onlyIfNoObstacles",
+];
+
+const checkWeight = (weight: number) => {
+	if (!(weight >= 1) || weight === Infinity) {
 		throw new RangeError(
-			`pathfinding: a cell's cost must be a finite number of 1 or more (got ${cost}); make a cell impassable with setWalkable(col, row, false)`,
+			`pathfinding: a cell's weight must be a finite number of 1 or more (got ${weight}); make a cell impassable with setSolid(col, row)`,
 		);
 	}
-	return cost;
+	return weight;
 };
+
+/** what one search found, before it is turned into points */
+interface Search {
+	reached: boolean;
+	/** the cell the path ends on, or -1 for no path */
+	end: number;
+	start: number;
+	explored: number;
+	trace: number[] | undefined;
+	mode: DiagonalMode;
+}
 
 /**
  * A grid of cells a path can be found across, with A*.
  *
- * Each cell is open or blocked and has a cost (1 or more) to enter. Build
+ * Each cell is open or solid and has a weight (1 or more) to enter. Build
  * one from a Tiled tile layer ({@link Grid.fromTileLayer}), from a level's
  * collision shapes ({@link Grid.fromBodies}), or from your own callbacks;
- * change cells as the game goes on with {@link Grid#setWalkable} and
- * {@link Grid#setCost}, and search it with {@link Grid#findPath}.
+ * change cells as the game goes on with {@link Grid#setSolid} and
+ * {@link Grid#setWeight}, and search it by cell with {@link Grid#getIdPath}
+ * and {@link Grid#getPointPath}, or by world position with
+ * {@link Grid#findPath}.
+ *
+ * Cells are `Vector2d`s, `x` the column and `y` the row. Points in world
+ * units are each cell's position: its top left corner plus
+ * {@link Grid#offset}, half a cell by default, so its centre.
  *
  * Only square-cell (orthogonal) grids for now: isometric and hexagonal maps
  * are not supported.
  * @example
  * const grid = new Grid({ cols: 20, rows: 15, tileWidth: 32, tileHeight: 32 });
- * grid.setWalkable(5, 3, false);
- * const { path, found } = grid.findPath(enemy.pos, player.pos, { diagonal: true });
+ * grid.diagonalMode = "onlyIfNoObstacles";
+ * grid.setSolid(5, 3);
+ * const cells = grid.getIdPath(new Vector2d(0, 0), new Vector2d(10, 8));
+ * const { path, found } = grid.findPath(enemy.pos, player.pos);
  */
 export class Grid {
 	/** columns */
@@ -283,10 +313,26 @@ export class Grid {
 	x: number;
 	/** where the grid's top left corner is in the world */
 	y: number;
+	/**
+	 * where a cell's position is, from its top left corner: the points of a
+	 * path are cell positions
+	 * @default half a cell, the centre
+	 */
+	offset: Vector2d;
+	/**
+	 * when a path may move diagonally
+	 * @default "never"
+	 */
+	diagonalMode: DiagonalMode = "never";
+	/**
+	 * the estimate of the distance left
+	 * @default "manhattan" when `diagonalMode` is `"never"`, "octile" otherwise
+	 */
+	heuristic: Heuristic | undefined = undefined;
 
 	private readonly settings: GridSettings;
-	private readonly open: Uint8Array;
-	private readonly costs: Float32Array;
+	private readonly solid: Uint8Array;
+	private readonly weights: Float32Array;
 
 	// search state, kept between searches so a search allocates nothing
 	// but its result. A cell belongs to the current search when its mark
@@ -323,9 +369,10 @@ export class Grid {
 		this.tileHeight = settings.tileHeight;
 		this.x = settings.x ?? 0;
 		this.y = settings.y ?? 0;
+		this.offset = new Vector2d(this.tileWidth / 2, this.tileHeight / 2);
 		const n = this.cols * this.rows;
-		this.open = new Uint8Array(n);
-		this.costs = new Float32Array(n);
+		this.solid = new Uint8Array(n);
+		this.weights = new Float32Array(n);
 		this.g = new Float64Array(n);
 		this.f = new Float64Array(n);
 		this.h = new Float64Array(n);
@@ -338,9 +385,9 @@ export class Grid {
 
 	/**
 	 * A grid over a Tiled tile layer: one cell per tile. By default a cell
-	 * holding a tile is a wall and an empty one is open (a layer of walls);
-	 * pass `walkable` to decide from the tile instead (a tile property, its
-	 * id). A tile's `cost` property sets what crossing it costs.
+	 * holding a tile is solid and an empty one is open (a layer of walls);
+	 * pass `solid` to decide from the tile instead (a tile property, its
+	 * id). A tile's `weight` property sets what crossing it costs.
 	 *
 	 * The layer is read again on {@link Grid#refresh}, so after changing
 	 * tiles with `setTile` / `clearTile`, refresh the grid (or just the
@@ -349,10 +396,10 @@ export class Grid {
 	 * const walls = app.world.getChildByName("walls")[0];
 	 * const grid = Grid.fromTileLayer(walls);
 	 * @example
-	 * // a floor layer: walkable where the tile is not a wall
+	 * // a floor layer: solid where the tile is a wall, or missing
 	 * const grid = Grid.fromTileLayer(floor, {
-	 *     walkable: (tile) =>
-	 *         tile !== null && tile.tileset.getTileProperties(tile.tileId)?.kind !== "wall",
+	 *     solid: (tile) =>
+	 *         tile === null || tile.tileset.getTileProperties(tile.tileId)?.kind === "wall",
 	 * });
 	 * @param layer - the tile layer, once its level is loaded
 	 * @param options - how to read it
@@ -362,12 +409,12 @@ export class Grid {
 		// not yet in a container: its own position
 		const parent = layer.ancestor as Container | undefined;
 		const at = parent === undefined ? layer.pos : layer.getAbsolutePosition();
-		const { walkable, cost } = options;
+		const { solid, weight } = options;
 		const props = (tile: Tile | null) => {
 			return tile === null
 				? undefined
 				: (tile.tileset.getTileProperties(tile.tileId) as
-						| { cost?: unknown }
+						| { weight?: unknown }
 						| undefined);
 		};
 		return new Grid({
@@ -377,20 +424,18 @@ export class Grid {
 			tileHeight: layer.tileheight,
 			x: options.x ?? at.x,
 			y: options.y ?? at.y,
-			walkable: (col, row) => {
+			solid: (col, row) => {
 				// null for an empty cell, whatever its type says
 				const tile = layer.cellAt(col, row) as Tile | null;
-				return walkable === undefined
-					? tile === null
-					: walkable(tile, col, row);
+				return solid === undefined ? tile !== null : solid(tile, col, row);
 			},
-			cost: (col, row) => {
+			weight: (col, row) => {
 				// null for an empty cell, whatever its type says
 				const tile = layer.cellAt(col, row) as Tile | null;
-				if (cost !== undefined) {
-					return cost(tile, col, row);
+				if (weight !== undefined) {
+					return weight(tile, col, row);
 				}
-				const value = props(tile)?.cost;
+				const value = props(tile)?.weight;
 				return typeof value === "number" ? value : 1;
 			},
 		});
@@ -398,11 +443,11 @@ export class Grid {
 
 	/**
 	 * A grid over a level's collision shapes: the walls drawn in a Tiled
-	 * map's collision layer, or any static body. A cell is blocked when a
+	 * map's collision layer, or any static body. A cell is solid when a
 	 * wall's shape covers any of nine points spread over it (a wall thinner
 	 * than an eighth of a cell can slip between them). Cells are read from
-	 * the shapes themselves on the built-in physics, and from each wall's
-	 * bounding box otherwise.
+	 * the shapes themselves, from the body or the `bodyDef`, and from each
+	 * wall's bounding box when it has none.
 	 *
 	 * Build it once the level is loaded (the shapes are scanned then, not
 	 * found by a physics query, so it works before the world first steps);
@@ -423,89 +468,87 @@ export class Grid {
 		const { cols, rows, tileWidth, tileHeight } = options;
 		const x0 = options.x ?? 0;
 		const y0 = options.y ?? 0;
-		const solid = options.solid ?? isWorldShape;
-		const blocked = new Uint8Array(cols * rows);
+		const isWall = options.solid ?? isWorldShape;
+		const walls = new Uint8Array(cols * rows);
 
-		const scan = () => {
-			blocked.fill(0);
-			const visit = (parent: Container) => {
-				for (const child of parent.getChildren()) {
-					if (solid(child)) {
-						mark(child);
-					}
-					const inner = child as unknown as Partial<Container>;
-					if (typeof inner.getChildren === "function") {
-						visit(child as unknown as Container);
-					}
+		const mark = (wall: Renderable) => {
+			const r = wall as unknown as WithBody;
+			const shapes = r.body?.shapes ?? r.bodyDef?.shapes;
+			const at = wall.getAbsolutePosition();
+			const bounds = wall.getBounds();
+			// the area to scan: the shapes' own, which can reach past the
+			// renderable they belong to
+			let left = bounds.left;
+			let top = bounds.top;
+			let right = bounds.right;
+			let bottom = bounds.bottom;
+			if (shapes !== undefined && shapes.length > 0) {
+				left = top = Infinity;
+				right = bottom = -Infinity;
+				for (const shape of shapes) {
+					const b = shape.getBounds();
+					left = Math.min(left, at.x + b.left);
+					top = Math.min(top, at.y + b.top);
+					right = Math.max(right, at.x + b.right);
+					bottom = Math.max(bottom, at.y + b.bottom);
 				}
-			};
-			const mark = (wall: Renderable) => {
-				const r = wall as unknown as WithBody;
-				const shapes = r.body?.shapes ?? r.bodyDef?.shapes;
-				const at = wall.getAbsolutePosition();
-				const bounds = wall.getBounds();
-				// the area to scan: the shapes' own, which can reach past the
-				// renderable they belong to
-				let left = bounds.left;
-				let top = bounds.top;
-				let right = bounds.right;
-				let bottom = bounds.bottom;
-				if (shapes !== undefined && shapes.length > 0) {
-					left = top = Infinity;
-					right = bottom = -Infinity;
-					for (const shape of shapes) {
-						const b = shape.getBounds();
-						left = Math.min(left, at.x + b.left);
-						top = Math.min(top, at.y + b.top);
-						right = Math.max(right, at.x + b.right);
-						bottom = Math.max(bottom, at.y + b.bottom);
+			}
+			const c0 = Math.max(0, Math.floor((left - x0) / tileWidth));
+			const r0 = Math.max(0, Math.floor((top - y0) / tileHeight));
+			const c1 = Math.min(cols - 1, Math.floor((right - x0) / tileWidth));
+			const r1 = Math.min(rows - 1, Math.floor((bottom - y0) / tileHeight));
+			for (let row = r0; row <= r1; row++) {
+				for (let col = c0; col <= c1; col++) {
+					const i = row * cols + col;
+					if (walls[i] === 1) {
+						continue;
 					}
-				}
-				const c0 = Math.max(0, Math.floor((left - x0) / tileWidth));
-				const r0 = Math.max(0, Math.floor((top - y0) / tileHeight));
-				const c1 = Math.min(cols - 1, Math.floor((right - x0) / tileWidth));
-				const r1 = Math.min(rows - 1, Math.floor((bottom - y0) / tileHeight));
-				for (let row = r0; row <= r1; row++) {
-					for (let col = c0; col <= c1; col++) {
-						const i = row * cols + col;
-						if (blocked[i] === 1) {
-							continue;
-						}
-						for (const fy of SAMPLES) {
-							for (const fx of SAMPLES) {
-								const px = x0 + (col + fx) * tileWidth;
-								const py = y0 + (row + fy) * tileHeight;
-								const inside =
-									shapes === undefined || shapes.length === 0
-										? bounds.contains(px, py)
-										: shapes.some((shape) => {
-												return shape.contains(px - at.x, py - at.y);
-											});
-								if (inside) {
-									blocked[i] = 1;
-								}
+					for (const fy of SAMPLES) {
+						for (const fx of SAMPLES) {
+							const px = x0 + (col + fx) * tileWidth;
+							const py = y0 + (row + fy) * tileHeight;
+							const inside =
+								shapes === undefined || shapes.length === 0
+									? bounds.contains(px, py)
+									: shapes.some((shape) => {
+											return shape.contains(px - at.x, py - at.y);
+										});
+							if (inside) {
+								walls[i] = 1;
 							}
 						}
 					}
 				}
-			};
-			visit(container);
+			}
+		};
+		const visit = (parent: Container) => {
+			for (const child of parent.getChildren()) {
+				if (isWall(child)) {
+					mark(child);
+				}
+				const inner = child as unknown as Partial<Container>;
+				if (typeof inner.getChildren === "function") {
+					visit(child as unknown as Container);
+				}
+			}
 		};
 
-		const grid = new Grid({
+		return new Grid({
 			cols,
 			rows,
 			tileWidth,
 			tileHeight,
 			x: x0,
 			y: y0,
-			prepare: scan,
-			walkable: (col, row) => {
-				return blocked[row * cols + col] === 0;
+			prepare: () => {
+				walls.fill(0);
+				visit(container);
 			},
-			...(options.cost !== undefined ? { cost: options.cost } : {}),
+			solid: (col, row) => {
+				return walls[row * cols + col] === 1;
+			},
+			...(options.weight !== undefined ? { weight: options.weight } : {}),
 		});
-		return grid;
 	}
 
 	// ---------------------------------------------------------------------
@@ -513,9 +556,9 @@ export class Grid {
 	// ---------------------------------------------------------------------
 
 	/**
-	 * Read every cell again from the `walkable` and `cost` the grid was
-	 * built with: after the map changed in a way the grid did not see.
-	 * Undoes {@link Grid#setWalkable} and {@link Grid#setCost}.
+	 * Read every cell again from the `solid` and `weight` the grid was built
+	 * with: after the map changed in a way the grid did not see. Undoes
+	 * {@link Grid#setSolid} and {@link Grid#setWeight}.
 	 */
 	refresh() {
 		this.settings.prepare?.();
@@ -532,13 +575,13 @@ export class Grid {
 	 * @param row - the cell's row
 	 */
 	refreshCell(col: number, row: number) {
-		if (!this.contains(col, row)) {
+		if (!this.isInBounds(col, row)) {
 			return;
 		}
 		const i = row * this.cols + col;
-		const { walkable, cost } = this.settings;
-		this.open[i] = walkable === undefined || walkable(col, row) ? 1 : 0;
-		this.costs[i] = cost === undefined ? 1 : checkCost(cost(col, row));
+		const { solid, weight } = this.settings;
+		this.solid[i] = solid !== undefined && solid(col, row) ? 1 : 0;
+		this.weights[i] = weight === undefined ? 1 : checkWeight(weight(col, row));
 	}
 
 	/**
@@ -547,78 +590,105 @@ export class Grid {
 	 * @param row - the cell's row
 	 * @returns true if it is
 	 */
-	contains(col: number, row: number) {
+	isInBounds(col: number, row: number) {
 		return col >= 0 && row >= 0 && col < this.cols && row < this.rows;
 	}
 
 	/**
-	 * whether a cell can be walked on (off the grid, it cannot)
+	 * whether a cell is solid (off the grid, it is)
 	 * @param col - the cell's column
 	 * @param row - the cell's row
-	 * @returns true if it can
+	 * @returns true if it is
 	 */
-	isWalkable(col: number, row: number) {
-		return this.contains(col, row) && this.open[row * this.cols + col] === 1;
+	isSolid(col: number, row: number) {
+		return (
+			!this.isInBounds(col, row) || this.solid[row * this.cols + col] === 1
+		);
 	}
 
 	/**
-	 * open or block a cell: a door, a wall knocked down, a floor fallen away
+	 * make a cell solid or open: a door, a wall knocked down, a floor fallen
+	 * away
 	 * @param col - the cell's column
 	 * @param row - the cell's row
-	 * @param walkable - false to block it
+	 * @param solid - false to open it
 	 */
-	setWalkable(col: number, row: number, walkable = true) {
-		if (this.contains(col, row)) {
-			this.open[row * this.cols + col] = walkable ? 1 : 0;
+	setSolid(col: number, row: number, solid = true) {
+		if (this.isInBounds(col, row)) {
+			this.solid[row * this.cols + col] = solid ? 1 : 0;
 		}
+	}
+
+	/**
+	 * make every cell of a rectangle solid or open
+	 * @param region - the cells, `x` and `y` its top left column and row
+	 * @param solid - false to open them
+	 */
+	fillSolidRegion(region: CellRegion, solid = true) {
+		this.forRegion(region, (col, row) => {
+			this.setSolid(col, row, solid);
+		});
 	}
 
 	/**
 	 * what entering a cell costs
 	 * @param col - the cell's column
 	 * @param row - the cell's row
-	 * @returns its cost, 1 or more
+	 * @returns its weight, 1 or more
 	 */
-	getCost(col: number, row: number) {
-		return this.contains(col, row) ? this.costs[row * this.cols + col] : 1;
+	getWeight(col: number, row: number) {
+		return this.isInBounds(col, row) ? this.weights[row * this.cols + col] : 1;
 	}
 
 	/**
-	 * set what entering the cell costs: 1 or more, a finite number (mud 3,
-	 * a road 1). To block it, use {@link Grid#setWalkable}.
+	 * set what entering a cell costs: 1 or more, a finite number (mud 3, a
+	 * road 1). To block it, use {@link Grid#setSolid}.
 	 * @param col - the cell's column
 	 * @param row - the cell's row
-	 * @param cost - 1 or more
+	 * @param weight - 1 or more
 	 */
-	setCost(col: number, row: number, cost: number) {
-		if (this.contains(col, row)) {
-			this.costs[row * this.cols + col] = checkCost(cost);
+	setWeight(col: number, row: number, weight: number) {
+		if (this.isInBounds(col, row)) {
+			this.weights[row * this.cols + col] = checkWeight(weight);
 		}
+	}
+
+	/**
+	 * set what entering every cell of a rectangle costs
+	 * @param region - the cells, `x` and `y` its top left column and row
+	 * @param weight - 1 or more
+	 */
+	fillWeightRegion(region: CellRegion, weight: number) {
+		checkWeight(weight);
+		this.forRegion(region, (col, row) => {
+			this.setWeight(col, row, weight);
+		});
 	}
 
 	/**
 	 * the cell under a world position
 	 * @param x - in world units
 	 * @param y - in world units
-	 * @returns the cell, or null off the grid
+	 * @returns the cell (`x` the column, `y` the row), or null off the grid
 	 */
-	cellAt(x: number, y: number): Cell | null {
+	cellAt(x: number, y: number) {
 		const col = Math.floor((x - this.x) / this.tileWidth);
 		const row = Math.floor((y - this.y) / this.tileHeight);
-		return this.contains(col, row) ? { col, row } : null;
+		return this.isInBounds(col, row) ? new Vector2d(col, row) : null;
 	}
 
 	/**
-	 * the centre of a cell
+	 * a cell's position in the world: its top left corner plus
+	 * {@link Grid#offset}
 	 * @param col - the cell's column
 	 * @param row - the cell's row
 	 * @returns the point, in world units
 	 */
-	cellCenter(col: number, row: number): PathPoint {
-		return {
-			x: this.x + (col + 0.5) * this.tileWidth,
-			y: this.y + (row + 0.5) * this.tileHeight,
-		};
+	getPointPosition(col: number, row: number) {
+		return new Vector2d(
+			this.x + col * this.tileWidth + this.offset.x,
+			this.y + row * this.tileHeight + this.offset.y,
+		);
 	}
 
 	// ---------------------------------------------------------------------
@@ -626,29 +696,233 @@ export class Grid {
 	// ---------------------------------------------------------------------
 
 	/**
-	 * Find the cheapest path from one point to another, with A*.
-	 * @param from - where to start, in world units (a cell with `tiles`).
-	 * Clamped to the grid; the start may stand on a blocked cell.
-	 * @param to - where to go, in world units (a cell with `tiles`).
-	 * Clamped to the grid.
-	 * @param options - see {@link FindPathOptions}
+	 * The cheapest path between two cells, as cells, from the start to the
+	 * goal. Empty when there is none, unless `allowPartialPath`.
+	 * @param from - the start cell (`x` the column, `y` the row)
+	 * @param to - the goal cell
+	 * @param options - `allowPartialPath`, or the search's options
+	 * @returns the cells, start and goal included
+	 */
+	getIdPath(
+		from: Readonly<{ x: number; y: number }>,
+		to: Readonly<{ x: number; y: number }>,
+		options: boolean | PathOptions = false,
+	) {
+		const opts =
+			typeof options === "boolean" ? { allowPartialPath: options } : options;
+		const search = this.search(
+			this.indexOfCell(from),
+			this.indexOfCell(to),
+			opts,
+			false,
+		);
+		return this.toCells(this.steps(search, opts));
+	}
+
+	/**
+	 * The cheapest path between two cells, as points in world units (each
+	 * cell's position, see {@link Grid#offset}), from the start to the goal.
+	 * Empty when there is none, unless `allowPartialPath`.
+	 * @param from - the start cell (`x` the column, `y` the row)
+	 * @param to - the goal cell
+	 * @param options - `allowPartialPath`, or the search's options
+	 * @returns the points, start and goal included
+	 */
+	getPointPath(
+		from: Readonly<{ x: number; y: number }>,
+		to: Readonly<{ x: number; y: number }>,
+		options: boolean | PathOptions = false,
+	) {
+		const opts =
+			typeof options === "boolean" ? { allowPartialPath: options } : options;
+		const search = this.search(
+			this.indexOfCell(from),
+			this.indexOfCell(to),
+			opts,
+			false,
+		);
+		return this.toPoints(this.steps(search, opts));
+	}
+
+	/**
+	 * Find the cheapest path between two world positions, with what the
+	 * search found: whether it reached the goal, the path as points and as
+	 * cells, its cost and how much it looked at.
+	 * @param from - where to start, in world units: a renderable's `pos`, a
+	 * `Vector2d`, any `{ x, y }`. Clamped to the grid; the start may stand on
+	 * a solid cell.
+	 * @param to - where to go, in world units. Clamped to the grid.
+	 * @param options - see {@link PathOptions}; `avoid` is in world units
 	 * @returns the path, with whether it reaches the goal
 	 */
 	findPath(
-		from: PathPoint,
-		to: PathPoint,
-		options: FindPathOptions = {},
+		from: Readonly<{ x: number; y: number }>,
+		to: Readonly<{ x: number; y: number }>,
+		options: PathOptions = {},
 	): PathResult {
-		const diagonal = options.diagonal === true;
-		const tiles = options.tiles === true;
-		const maxNodes = options.maxNodes ?? Infinity;
-		const closest = options.closest !== false;
-		const avoidCost = options.avoidCost ?? Infinity;
-		const estimate = this.heuristicOf(options.heuristic, diagonal);
-		const trace: Cell[] | undefined = options.trace === true ? [] : undefined;
+		const search = this.search(
+			this.indexOfPosition(from),
+			this.indexOfPosition(to),
+			options,
+			true,
+		);
+		const steps = this.steps(search, options);
+		const result: PathResult = {
+			found: search.reached,
+			path: this.toPoints(steps),
+			cells: this.toCells(steps),
+			cost: search.end === -1 ? 0 : this.g[search.end],
+			explored: search.explored,
+		};
+		if (search.trace !== undefined) {
+			result.trace = this.toCells(search.trace);
+		}
+		return result;
+	}
 
-		const start = this.clampedIndex(from, tiles);
-		const goal = this.clampedIndex(to, tiles);
+	/**
+	 * Whether a straight line from the centre of one cell to the centre of
+	 * another crosses only open cells, never cutting a corner between two
+	 * solid ones.
+	 * @param from - one end (`x` the column, `y` the row)
+	 * @param to - the other end
+	 * @param maxWeight - only through cells this heavy or lighter
+	 * @returns true if the line is clear
+	 */
+	lineOfSight(
+		from: Readonly<{ x: number; y: number }>,
+		to: Readonly<{ x: number; y: number }>,
+		maxWeight = Infinity,
+	) {
+		return this.clearLine(
+			from.x,
+			from.y,
+			to.x,
+			to.y,
+			maxWeight,
+			"onlyIfNoObstacles",
+		);
+	}
+
+	// ---------------------------------------------------------------------
+	// internals
+	// ---------------------------------------------------------------------
+
+	private forRegion(
+		region: CellRegion,
+		fn: (col: number, row: number) => void,
+	) {
+		const c0 = Math.max(0, Math.floor(region.x));
+		const r0 = Math.max(0, Math.floor(region.y));
+		const c1 = Math.min(this.cols, Math.floor(region.x + region.width));
+		const r1 = Math.min(this.rows, Math.floor(region.y + region.height));
+		for (let row = r0; row < r1; row++) {
+			for (let col = c0; col < c1; col++) {
+				fn(col, row);
+			}
+		}
+	}
+
+	private clampedIndex(col: number, row: number) {
+		const c = Math.min(this.cols - 1, Math.max(0, col));
+		const r = Math.min(this.rows - 1, Math.max(0, row));
+		return r * this.cols + c;
+	}
+
+	private indexOfCell(cell: Readonly<{ x: number; y: number }>) {
+		return this.clampedIndex(Math.round(cell.x), Math.round(cell.y));
+	}
+
+	private indexOfPosition(point: Readonly<{ x: number; y: number }>) {
+		return this.clampedIndex(
+			Math.floor((point.x - this.x) / this.tileWidth),
+			Math.floor((point.y - this.y) / this.tileHeight),
+		);
+	}
+
+	private heuristicOf(heuristic: Heuristic | undefined, mode: DiagonalMode) {
+		if (typeof heuristic === "function") {
+			return heuristic;
+		}
+		const name = heuristic ?? (mode === "never" ? "manhattan" : "octile");
+		// plain JavaScript can pass any name
+		const fn = HEURISTICS[name] as
+			| ((dx: number, dy: number) => number)
+			| undefined;
+		if (fn === undefined) {
+			throw new RangeError(`pathfinding: unknown heuristic "${name}"`);
+		}
+		return fn;
+	}
+
+	private nextStamp() {
+		this.stamp++;
+		if (this.stamp === 0xffffffff) {
+			// wrapped around: start the marks again
+			this.seen.fill(0);
+			this.closed.fill(0);
+			this.stamp = 1;
+		}
+		return this.stamp;
+	}
+
+	/**
+	 * whether a cell can be stepped on in the current search
+	 * @param col - the cell's column
+	 * @param row - the cell's row
+	 * @returns true if it can
+	 */
+	private passable(col: number, row: number) {
+		if (!this.isInBounds(col, row)) {
+			return false;
+		}
+		const i = row * this.cols + col;
+		return this.solid[i] === 0 && this.avoided.get(i) !== Infinity;
+	}
+
+	/**
+	 * whether a diagonal step past the two cells beside it is allowed
+	 * @param mode - the diagonal mode
+	 * @param a - whether one cell beside the step is open
+	 * @param b - whether the other is
+	 * @returns true if it is
+	 */
+	private diagonalAllowed(mode: DiagonalMode, a: boolean, b: boolean) {
+		switch (mode) {
+			case "always":
+				return true;
+			case "atLeastOneWalkable":
+				return a || b;
+			default:
+				return a && b;
+		}
+	}
+
+	/**
+	 * the A* search itself
+	 * @param start - the start cell's index
+	 * @param goal - the goal cell's index
+	 * @param options - the search's options
+	 * @param world - whether `avoid` is in world units (or cells)
+	 * @returns what it found
+	 */
+	private search(
+		start: number,
+		goal: number,
+		options: PathOptions,
+		world: boolean,
+	): Search {
+		const mode = options.diagonalMode ?? this.diagonalMode;
+		if (!DIAGONAL_MODES.includes(mode)) {
+			throw new RangeError(`pathfinding: unknown diagonalMode "${mode}"`);
+		}
+		const estimate = this.heuristicOf(
+			options.heuristic ?? this.heuristic,
+			mode,
+		);
+		const maxNodes = options.maxNodes ?? Infinity;
+		const avoidWeight = options.avoidWeight ?? Infinity;
+		const trace: number[] | undefined = options.trace === true ? [] : undefined;
 		const cols = this.cols;
 		const goalCol = goal % cols;
 		const goalRow = (goal - goalCol) / cols;
@@ -656,30 +930,20 @@ export class Grid {
 		// cells to keep away from, for this search only
 		const avoided = this.avoided;
 		avoided.clear();
-		if (options.avoid !== undefined) {
-			for (const point of options.avoid) {
-				const i = this.clampedIndex(point, tiles);
-				if (i !== start && i !== goal) {
-					avoided.set(i, avoidCost);
-				}
+		for (const point of options.avoid ?? []) {
+			const i = world ? this.indexOfPosition(point) : this.indexOfCell(point);
+			if (i !== start && i !== goal) {
+				avoided.set(i, avoidWeight);
 			}
 		}
 
 		const stamp = this.nextStamp();
-		const { g, f, h, parent, seen, closed, heap, open, costs } = this;
+		const { g, f, h, parent, seen, closed, heap, weights } = this;
 		heap.clear();
 		const heuristic = (i: number) => {
 			const col = i % cols;
 			const row = (i - col) / cols;
 			return estimate(Math.abs(col - goalCol), Math.abs(row - goalRow));
-		};
-		// whether a cell can be stepped on in this search
-		const passable = (col: number, row: number) => {
-			if (col < 0 || row < 0 || col >= cols || row >= this.rows) {
-				return false;
-			}
-			const i = row * cols + col;
-			return open[i] === 1 && avoided.get(i) !== Infinity;
 		};
 
 		g[start] = 0;
@@ -703,24 +967,29 @@ export class Grid {
 			}
 			closed[current] = stamp;
 			explored++;
-			const col = current % cols;
-			const row = (current - col) / cols;
-			trace?.push({ col, row });
+			trace?.push(current);
 			if (
 				h[current] < h[best] ||
 				(h[current] === h[best] && g[current] < g[best])
 			) {
 				best = current;
 			}
-
-			for (let d = 0, n = diagonal ? 8 : 4; d < n; d++) {
+			const col = current % cols;
+			const row = (current - col) / cols;
+			for (let d = 0, n = mode === "never" ? 4 : 8; d < n; d++) {
 				const nc = col + DX[d];
 				const nr = row + DY[d];
-				if (!passable(nc, nr)) {
+				if (!this.passable(nc, nr)) {
 					continue;
 				}
-				// a diagonal step never cuts a corner
-				if (d >= 4 && !(passable(nc, row) && passable(col, nr))) {
+				if (
+					d >= 4 &&
+					!this.diagonalAllowed(
+						mode,
+						this.passable(nc, row),
+						this.passable(col, nr),
+					)
+				) {
 					continue;
 				}
 				const next = nr * cols + nc;
@@ -728,7 +997,7 @@ export class Grid {
 					continue;
 				}
 				const step =
-					(d >= 4 ? SQRT2 : 1) * (costs[next] + (avoided.get(next) ?? 0));
+					(d >= 4 ? SQRT2 : 1) * (weights[next] + (avoided.get(next) ?? 0));
 				const cost = g[current] + step;
 				if (seen[next] !== stamp) {
 					seen[next] = stamp;
@@ -746,127 +1015,69 @@ export class Grid {
 			}
 		}
 
-		const end = reached ? goal : closest ? best : -1;
-		const path = this.result(reached, end, start, explored, trace, options);
-		// the cells avoided were for this search only
-		avoided.clear();
-		return path;
-	}
-
-	private result(
-		reached: boolean,
-		end: number,
-		start: number,
-		explored: number,
-		trace: Cell[] | undefined,
-		options: FindPathOptions,
-	) {
-		const { g, parent, cols } = this;
-		const result: PathResult = {
-			found: reached,
-			path: [],
-			cells: [],
-			cost: end === -1 ? 0 : g[end],
-			explored,
-		};
-		if (trace !== undefined) {
-			result.trace = trace;
-		}
-		if (end === -1 || end === start) {
-			return result;
-		}
-
-		const steps: number[] = [];
-		for (let i = end; i !== start; i = parent[i]) {
-			steps.push(i);
-		}
-		steps.reverse();
-		const kept = options.smooth === true ? this.smoothed(start, steps) : steps;
-		for (const i of kept) {
-			const col = i % cols;
-			const row = (i - col) / cols;
-			result.cells.push({ col, row });
-			result.path.push(this.cellCenter(col, row));
-		}
-		return result;
+		const end = reached ? goal : options.allowPartialPath === true ? best : -1;
+		return { reached, end, start, explored, trace, mode };
 	}
 
 	/**
-	 * Whether a straight line from the centre of one cell to the centre of
-	 * another crosses only open cells, never cutting a corner between two
-	 * blocked ones.
-	 * @param from - one end
-	 * @param to - the other end
-	 * @param maxCost - only through cells that cost this much or less
-	 * @returns true if the line is clear
+	 * the cells of a search's path, start first, smoothed if asked
+	 * @param search - what the search found
+	 * @param options - the search's options
+	 * @returns the cell indices
 	 */
-	lineOfSight(from: Cell, to: Cell, maxCost = Infinity) {
-		return this.clearLine(from.col, from.row, to.col, to.row, maxCost);
+	private steps(search: Search, options: PathOptions) {
+		const { end, start } = search;
+		const steps: number[] = [];
+		if (end !== -1) {
+			for (let i = end; i !== -1; i = this.parent[i]) {
+				steps.push(i);
+				if (i === start) {
+					break;
+				}
+			}
+			steps.reverse();
+		}
+		const kept =
+			options.smooth === true && steps.length > 2
+				? this.smoothed(steps, search.mode)
+				: steps;
+		// the cells avoided were for this search only
+		this.avoided.clear();
+		return kept;
 	}
 
-	// ---------------------------------------------------------------------
-	// internals
-	// ---------------------------------------------------------------------
-
-	private heuristicOf(heuristic: Heuristic | undefined, diagonal: boolean) {
-		if (typeof heuristic === "function") {
-			return heuristic;
-		}
-		const name = heuristic ?? (diagonal ? "octile" : "manhattan");
-		// plain JavaScript can pass any name
-		const fn = HEURISTICS[name] as
-			| ((dx: number, dy: number) => number)
-			| undefined;
-		if (fn === undefined) {
-			throw new RangeError(`pathfinding: unknown heuristic "${name}"`);
-		}
-		return fn;
+	private toCells(indices: readonly number[]) {
+		return indices.map((i) => {
+			const col = i % this.cols;
+			return new Vector2d(col, (i - col) / this.cols);
+		});
 	}
 
-	private clampedIndex(point: PathPoint, tiles: boolean) {
-		let col: number;
-		let row: number;
-		if (tiles) {
-			col = Math.round(point.x);
-			row = Math.round(point.y);
-		} else {
-			col = Math.floor((point.x - this.x) / this.tileWidth);
-			row = Math.floor((point.y - this.y) / this.tileHeight);
-		}
-		col = Math.min(this.cols - 1, Math.max(0, col));
-		row = Math.min(this.rows - 1, Math.max(0, row));
-		return row * this.cols + col;
-	}
-
-	private nextStamp() {
-		this.stamp++;
-		if (this.stamp === 0xffffffff) {
-			// wrapped around: start the marks again
-			this.seen.fill(0);
-			this.closed.fill(0);
-			this.stamp = 1;
-		}
-		return this.stamp;
+	private toPoints(indices: readonly number[]) {
+		return indices.map((i) => {
+			const col = i % this.cols;
+			return this.getPointPosition(col, (i - col) / this.cols);
+		});
 	}
 
 	/**
 	 * Keep only the turning points: from each kept point, go on to the
-	 * furthest later step still in a clear line over cells no costlier
-	 * than the steps it replaces.
-	 * @param start - the start cell's index
-	 * @param steps - the path's cell indices, after the start
-	 * @returns the cell indices kept
+	 * furthest later step still in a clear line over cells no heavier than
+	 * the steps it replaces.
+	 * @param steps - the path's cell indices, start first
+	 * @param mode - the search's diagonal mode, for corners
+	 * @returns the cell indices kept, start first
 	 */
-	private smoothed(start: number, steps: number[]) {
+	private smoothed(steps: number[], mode: DiagonalMode) {
 		const cols = this.cols;
-		const kept: number[] = [];
-		let anchor = start;
-		let i = 0;
+		const kept = [steps[0]];
+		let anchor = steps[0];
+		let i = 1;
 		while (i < steps.length) {
 			let reach = i;
-			let maxCost = this.costs[steps[i]];
+			let maxWeight = this.weights[steps[i]];
 			for (let j = i + 1; j < steps.length; j++) {
-				maxCost = Math.max(maxCost, this.costs[steps[j]]);
+				maxWeight = Math.max(maxWeight, this.weights[steps[j]]);
 				const ac = anchor % cols;
 				const bc = steps[j] % cols;
 				if (
@@ -875,7 +1086,8 @@ export class Grid {
 						(anchor - ac) / cols,
 						bc,
 						(steps[j] - bc) / cols,
-						maxCost,
+						maxWeight,
+						mode,
 					)
 				) {
 					break;
@@ -896,7 +1108,8 @@ export class Grid {
 	 * @param r0 - the first cell's row
 	 * @param c1 - the last cell's column
 	 * @param r1 - the last cell's row
-	 * @param maxCost - only through cells that cost this much or less
+	 * @param maxWeight - only through cells this heavy or lighter
+	 * @param mode - how a line may pass the corner between two cells
 	 * @returns true if the line is clear
 	 */
 	private clearLine(
@@ -904,19 +1117,16 @@ export class Grid {
 		r0: number,
 		c1: number,
 		r1: number,
-		maxCost: number,
+		maxWeight: number,
+		mode: DiagonalMode,
 	) {
 		const cols = this.cols;
 		const clear = (col: number, row: number) => {
-			if (!this.contains(col, row)) {
+			if (!this.passable(col, row)) {
 				return false;
 			}
 			const i = row * cols + col;
-			return (
-				this.open[i] === 1 &&
-				this.avoided.get(i) !== Infinity &&
-				this.costs[i] + (this.avoided.get(i) ?? 0) <= maxCost
-			);
+			return this.weights[i] + (this.avoided.get(i) ?? 0) <= maxWeight;
 		};
 		const dx = Math.abs(c1 - c0);
 		const dy = Math.abs(r1 - r0);
@@ -934,8 +1144,14 @@ export class Grid {
 				row += sy;
 				error += 2 * dx;
 			} else {
-				// exactly through a corner: both cells beside it must be open
-				if (!clear(col + sx, row) || !clear(col, row + sy)) {
+				// exactly through a corner, as a diagonal step would go
+				if (
+					!this.diagonalAllowed(
+						mode === "never" ? "onlyIfNoObstacles" : mode,
+						clear(col + sx, row),
+						clear(col, row + sy),
+					)
+				) {
 					return false;
 				}
 				col += sx;
