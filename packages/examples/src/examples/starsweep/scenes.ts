@@ -15,6 +15,7 @@ import {
 	state,
 	Text,
 	type TMXLayer,
+	UITextButton,
 } from "melonjs";
 import { Actor, GLOW } from "./cast";
 import { Controls } from "./controls";
@@ -115,6 +116,8 @@ class TitleBackdrop extends Renderable {
 		new Actor("chaser-walk-right"),
 	];
 
+	private started = false;
+
 	constructor(onStart: () => void) {
 		super(0, 0, WIDTH, HEIGHT);
 		this.anchorPoint.set(0, 0);
@@ -122,11 +125,19 @@ class TitleBackdrop extends Renderable {
 		this.onStart = onStart;
 	}
 
+	/** start the game, once: the start button, or a tap or a key anywhere */
+	start() {
+		if (!this.started) {
+			this.started = true;
+			this.onStart();
+		}
+	}
+
 	override update(dt: number) {
 		this.time += dt / 1000;
 		controls.poll();
 		if (this.time > 0.5 && controls.confirm()) {
-			this.onStart();
+			this.start();
 		}
 		this.nextNova -= dt / 1000;
 		if (this.nextNova <= 0) {
@@ -250,22 +261,61 @@ export class TitleScreen extends Stage {
 		text(646, 15, "#8f88c9", "ZAP: TOUCH RIGHT, SPACE OR X");
 		const best = (save as unknown as Record<string, number>)[HISCORE_KEY] ?? 0;
 		text(740, 22, "#ffd23d", `HI ${best.toString().padStart(6, "0")}`);
-		const prompt = text(840, 24, "#ffffff", "TAP TO START");
-		prompt.alpha = 1;
-		const blink = new (class extends Renderable {
+		// the start button, with a beacon pulsing out of it (a tap or a key
+		// anywhere starts too)
+		const button = { x: WIDTH / 2 - 140, y: 812, w: 280, h: 68 };
+		const beacon = new (class extends Renderable {
 			private t = 0;
 			constructor() {
-				super(0, 0, 1, 1);
+				super(0, 0, WIDTH, HEIGHT);
+				this.anchorPoint.set(0, 0);
 				this.alwaysUpdate = true;
+				this.floating = true;
 			}
 			override update(dt: number) {
-				this.t += dt / 1000;
-				prompt.alpha = 0.55 + 0.45 * Math.sin(this.t * 4);
+				this.t = (this.t + dt / 1000) % 1.4;
 				return true;
 			}
-			override draw() {}
+			override draw(r: Renderer) {
+				const k = this.t / 1.4;
+				const grow = 4 + k * 22;
+				r.setGlobalAlpha(0.7 * (1 - k));
+				r.setColor("#ff5fb8");
+				r.lineWidth = 3;
+				r.strokeRoundRect(
+					button.x - grow,
+					button.y - grow,
+					button.w + grow * 2,
+					button.h + grow * 2,
+					18 + grow,
+				);
+				r.setGlobalAlpha(1);
+			}
 		})();
-		game.addChild(blink, 0);
+		game.addChild(beacon, 9);
+		const play = new UITextButton(button.x, button.y, {
+			text: "TAP TO START",
+			font: FONT,
+			fontSize: 26,
+			width: button.w,
+			height: button.h,
+			labelFillStyle: "#ffffff",
+			hoverOffColor: "#e8459f",
+			hoverOnColor: "#ff6fbd",
+			pressedColor: "#b52f7c",
+			borderColor: "#fff2a8",
+			hoverScale: 1.05,
+			pressScale: 0.94,
+			onClick: () => {
+				this.backdrop?.start();
+			},
+		});
+		play.floating = true;
+		game.addChild(play, 10);
+		// the credits (see packages/examples/LICENSE.md)
+		text(928, 13, "#a59ee0", "MADE WITH MELONJS");
+		text(952, 11, "#6f69a8", "CHARACTERS: KENNEY MONSTER BUILDER PACK (CC0)");
+		text(970, 11, "#6f69a8", "FONT: KENNEY FUTURE (CC0)");
 	}
 
 	override onDestroyEvent() {
