@@ -168,8 +168,9 @@ const { path, found } = grid.findPath(enemy.pos, player.pos, {
   shapes too, so it is the same on every adapter.
 - A weight is 1 or more and finite: block with `setSolid`, not `Infinity`.
 - `PathfindingPlugin` (`plugin.register(PathfindingPlugin, "pathfinding",
-  { layer: "walls" })`) only rebuilds the grid when a level loads; a `Grid`
-  works on its own.
+  { layer: "walls" })`) only rebuilds the grid when a level loads (and at
+  once if one is loaded); a `Grid` works on its own. On a level it cannot
+  build for it warns and keeps `grid` null.
 - `PathfindingDebug` draws solid and heavy cells, the cells a search looked
   at (`trace: true`) and the paths.
 - **Isometric maps work**: `fromTileLayer` (and the plugin) sees an isometric
@@ -286,6 +287,7 @@ or a `Stage` is simpler and easier to test.
 | everything is solid on a `fromTileLayer` grid | a floor layer, where every cell has a tile: pass `solid` |
 | an agent turns back at the start | `path[0]` is where it stands: head for `path[1]` |
 | a path is offset from an isometric map | the grid is square: `new Grid` / `fromBodies` without `cellShape: "isometric"` |
+| `plugin.cache.pathfinding.grid` is null, with a warning | a staggered or hexagonal level, or `layer` names no layer of it |
 | a path is offset from the map | the grid's `x` / `y` are not the layer's: built before the layer was in its container, or the container moved since |
 | plugin setup never runs | setup written in an `init()` method — there is no such hook |
 | `Plugin should extend the BasePlugin Class !` when registering an adapter | adapters are a construction setting (or `world.setAdapter()`), not a plugin |

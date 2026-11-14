@@ -2,6 +2,7 @@ import {
 	type CanvasRenderer,
 	Polygon,
 	Renderable,
+	Vector2d,
 	type WebGLRenderer,
 } from "melonjs";
 import type { Grid, PathResult } from "./grid.ts";
@@ -54,6 +55,8 @@ export class PathfindingDebug extends Renderable {
 		{ x: 1, y: 1 },
 	]);
 	private diamondOf: Grid | null = null;
+	/** the corner of the cell being drawn */
+	private readonly corner = new Vector2d();
 
 	constructor(grid: Grid) {
 		super(grid.x, grid.y, 1, 1);
@@ -100,9 +103,10 @@ export class PathfindingDebug extends Renderable {
 				{ x: -w / 2, y: h / 2 },
 			]);
 		}
+		const corner = this.corner;
 		const fillCell = (col: number, row: number) => {
 			// the corner: the top left of a square, the top of a diamond
-			const corner = grid.getPointPosition(col, row).sub(grid.offset);
+			grid.getPointPosition(col, row, corner).sub(grid.offset);
 			if (isometric) {
 				diamond.pos.set(corner.x, corner.y);
 				renderer.fillPolygon(diamond);

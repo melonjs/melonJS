@@ -50,7 +50,15 @@ export class PathfindingPlugin extends plugin.BasePlugin {
 
 	private readonly options: PathfindingPluginOptions;
 	private readonly onLevelLoaded = () => {
-		this.rebuild();
+		// a level the grid cannot be built for still loads: warn, and keep
+		// no grid rather than the last level's
+		try {
+			this.rebuild();
+		} catch (error) {
+			console.warn(
+				`pathfinding: no grid for this level: ${(error as Error).message}`,
+			);
+		}
 	};
 
 	/**
@@ -62,14 +70,24 @@ export class PathfindingPlugin extends plugin.BasePlugin {
 		this.version = "20.12.0";
 		this.options = options;
 		event.on(event.LEVEL_LOADED, this.onLevelLoaded);
+		// registered once a level is already loaded: build its grid now
+		// (undefined before the first level, whatever its type says)
+		if ((level.getCurrentLevel() as unknown) !== undefined) {
+			this.onLevelLoaded();
+		}
 	}
 
 	/**
 	 * build the grid of the current level again: after the map changed in a
 	 * way the grid did not see
-	 * @returns the new grid
+	 * @returns the new grid, or null with no level, no such layer, or a
+	 * `build` that returned null
+	 * @throws {RangeError} on a staggered or hexagonal map (on a level load,
+	 * a warning instead, and no grid)
 	 */
 	rebuild() {
+		// nothing from the last level, whatever happens here
+		this.grid = null;
 		const { build, layer: name, container: given } = this.options;
 		const container = given ?? this.app.world;
 		if (build !== undefined) {

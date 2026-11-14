@@ -64,7 +64,7 @@ const grid = Grid.fromTileLayer(floor, {
 });
 ```
 
-A tile's `weight` custom property, set in Tiled's tileset editor, is what crossing it costs (1 by default). Pass `weight: (tile, col, row) => ...` to decide it yourself. The grid sits where the layer is, its containers included.
+A tile's `weight` custom property, set in Tiled's tileset editor, is what crossing it costs (1 by default). Pass `weight: (tile, col, row) => ...` to decide it yourself. The grid sits where the layer is, its containers included, on an infinite map too, whose layers can start left of or above the map's origin.
 
 The layer is read when the grid is built. After changing tiles with `setTile` / `clearTile`, call `grid.refreshCell(col, row)`, or `grid.refresh()` for the whole map.
 
@@ -81,9 +81,9 @@ const grid = Grid.fromBodies(app.world, {
 });
 ```
 
-The walls are the bodies of type `WORLD_SHAPE`: the shapes of a Tiled map's collision layer, and any body declared that way (pass `solid: (renderable) => ...` to choose others). A cell is solid when a wall covers any of nine points spread over it, so a sloped or rotated wall makes solid the cells it really covers. Shapes are read from the built-in physics body or the `bodyDef`, and from a wall's bounding box otherwise.
+The walls are the bodies of type `WORLD_SHAPE`: the shapes of a Tiled map's collision layer, and any body declared that way (pass `solid: (renderable) => ...` to choose others). A cell is solid when a wall covers any of nine points spread over it, so a sloped or rotated wall makes solid the cells it really covers. Shapes are read from the built-in physics body or the `bodyDef`, placed from the renderable's anchor point as the engine places them, and from a wall's bounding box otherwise.
 
-The shapes are scanned when the grid is built, so it works right after a level loads, before the physics world has stepped. `grid.refresh()` scans them again.
+The shapes are scanned when the grid is built, so it works right after a level loads, before the physics world has stepped. `grid.refresh()` scans them again, where the grid now is if you moved it.
 
 ### Isometric maps
 
@@ -157,15 +157,15 @@ const result = grid.findPath(enemy.pos, player.pos, {
 | `allowPartialPath` | `false` | when the goal cannot be reached (walled off, solid, or past `maxNodes`), return the path to the nearest cell instead of an empty one; `found` is then false |
 | `diagonalMode` | the grid's, `"never"` | `"never"`; `"onlyIfNoObstacles"` (both cells beside a diagonal step open: never cuts a corner); `"atLeastOneWalkable"` (one of them open); `"always"` (even between two walls). A diagonal step costs √2 |
 | `heuristic` | the grid's: `"manhattan"`, or `"octile"` with diagonals | the estimate of the distance left: `"manhattan"`, `"octile"`, `"chebyshev"`, `"euclidean"`, or `(dx, dy) => number`. An estimate that never exceeds the real cost finds the cheapest path; a higher one searches less |
-| `maxNodes` | `Infinity` | the most cells one search looks at |
+| `maxNodes` | `Infinity` | the most cells one search looks at, 0 or more |
 | `smooth` | `false` | keep only the turning points: an agent goes straight between two points that see each other over open cells. The line never crosses a cell heavier than the ones it replaces, so it does not cut through mud the search went round |
-| `avoid` | none | points to keep away from for this search only (world positions for `findPath`, cells for the others); the start and the goal are never avoided |
-| `avoidWeight` | `Infinity` | what an avoided cell costs on top of its weight: `Infinity` makes it solid, a number makes agents spread out without ever trapping each other |
+| `avoid` | none | points to keep away from for this search only (world positions for `findPath`, cells for the others); the start and the goal are never avoided, nor is a point off the grid |
+| `avoidWeight` | `Infinity` | what an avoided cell costs on top of its weight, 0 or more: `Infinity` makes it solid, a number makes agents spread out without ever trapping each other |
 | `trace` | `false` | `findPath` keeps the cells the search looked at, in order, in `result.trace` |
 
 `grid.diagonalMode` and `grid.heuristic` set the defaults for every search. A search allocates nothing but its result.
 
-The other methods: `isSolid`, `getWeight`, `isInBounds(col, row)`, `cellAt(x, y)` (the cell under a world position), `getPointPosition(col, row)`, and `lineOfSight(fromCell, toCell)`, whether a straight line between two cell centres crosses only open cells, for a shot or a sight line.
+The other methods: `isSolid`, `getWeight`, `isInBounds(col, row)`, `cellAt(x, y)` (the cell under a world position), `getPointPosition(col, row, out?)` (into `out` to allocate nothing), and `lineOfSight(fromCell, toCell, maxWeight?)`, whether a straight line between two cell centres crosses only open cells, both ends included, for a shot or a sight line. A cell given with a fraction is rounded down, as `cellAt` does; a start or goal off the grid is moved onto it.
 
 ## The plugin
 
@@ -181,7 +181,7 @@ plugin.register(PathfindingPlugin, "pathfinding", { layer: "walls" });
 const { grid } = plugin.cache.pathfinding;
 ```
 
-With `layer`, the grid comes from that tile layer (and takes the same `solid` and `weight` as `Grid.fromTileLayer`); without it, from the level's collision shapes. `build: (container) => grid` builds it yourself. `rebuild()` builds it again, and `destroy()` stops following level loads. A `Grid` works without the plugin: use the plugin only when the grid comes from the level.
+With `layer`, the grid comes from that tile layer (and takes the same `solid` and `weight` as `Grid.fromTileLayer`); without it, from the level's collision shapes. `build: (container) => grid` builds it yourself. `rebuild()` builds it again, and `destroy()` stops following level loads. Registered once a level is loaded, it builds that level's grid at once. A level it cannot build a grid for (a staggered or hexagonal map) still loads: the plugin warns and its `grid` is `null` (`rebuild()` called directly throws). A `Grid` works without the plugin: use the plugin only when the grid comes from the level.
 
 ## Debug overlay
 
@@ -210,6 +210,7 @@ The grid does not use the physics engine: `Grid.fromBodies` reads the bodies' sh
 | Every cell is solid on a `fromTileLayer` grid | A floor layer: every cell has a tile, and a tile is solid by default. Pass `solid` |
 | The path is empty | The goal is walled off, solid, or further than `maxNodes` lets the search look. `allowPartialPath: true` returns the way to the nearest point instead |
 | The agent turns back at the start | `path[0]` is where it stands: head for `path[1]` |
+| `PathfindingPlugin`'s grid is `null`, with a warning | The level is a staggered or hexagonal map, or `layer` names no layer of it |
 | Agents bunch up in a line | Pass the others' positions as `avoid`, with a finite `avoidWeight` |
 | The path is offset from an isometric map | The grid is square: built with `new Grid` or `Grid.fromBodies` without `cellShape: "isometric"` |
 | The path is offset from the map | The grid's `x` / `y` are not the layer's: the layer was not in its container yet when the grid was built, or the container moved since; set `grid.x` and `grid.y`. Points at a cell's corner rather than its centre come from `grid.offset` |
