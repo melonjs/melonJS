@@ -385,11 +385,6 @@
 			"value": 60
 		},
 		{
-			"name": "routes",
-			"type": "bool",
-			"value": true
-		},
-		{
 			"name": "spawnEvery",
 			"type": "float",
 			"value": 6

@@ -18,9 +18,9 @@
  * and they keep off each other's cells, so they flank Bolt), and drones
  * across a second grid where holes are open too, diagonally, along
  * smoothed straight lines. When their goal is out of reach, they head for
- * the nearest point. A force-field blocks cells for a while, and the
- * scanner shows every plan with the plugin's debug overlay (all the time
- * on a level with `routes`, like the first).
+ * the nearest point. A force-field blocks cells for a while. Every plan
+ * is drawn on the board with the plugin's debug overlay, with a ring on
+ * the panel each wobbler is heading for.
  *
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
@@ -100,13 +100,12 @@ const REGROW_TIME = 6;
 const INVULN_TIME = 2.5;
 const POWER_EVERY = [9, 14] as const;
 const POWER_LIFE = 9;
-type TimedPower = "freeze" | "shield" | "burst" | "field" | "scan";
+type TimedPower = "freeze" | "shield" | "burst" | "field";
 const POWER_TIME: Record<TimedPower, number> = {
 	freeze: 5,
 	shield: 7,
 	burst: 9,
 	field: 6,
-	scan: 7,
 };
 const ENEMY_SPEED: Record<EnemyKind, number> = {
 	wobbler: 3.1,
@@ -166,7 +165,7 @@ interface Enemy extends Mover {
 		path: { x: number; y: number }[];
 		replan: number;
 	};
-	/** the last route planned, for the scanner */
+	/** the last route planned, drawn on the board */
 	plan?: PathResult;
 	/** the panel a wobbler is walking to */
 	goal?: { x: number; y: number };
@@ -287,9 +286,8 @@ export class Field extends Renderable {
 	private airGrid: Grid | null = null;
 	/** force-field cells, and the time each has left */
 	private fields = new Map<number, number>();
-	private scan = 0;
-	/** the scanner: the plugin's debug overlay, showing only the plans */
-	private scanner: PathfindingDebug | null = null;
+	/** the monsters' routes: the plugin's debug overlay, showing only the plans */
+	private routes: PathfindingDebug | null = null;
 	private bonus = 0;
 	/** > 0 while Bolt is pleased with itself */
 	private cheer = 0;
@@ -462,10 +460,10 @@ export class Field extends Renderable {
 		this.levelTime = 0;
 		this.spawnCount = 0;
 		this.powerTimer = rand(...POWER_EVERY);
-		this.freeze = this.shield = this.burst = this.scan = 0;
+		this.freeze = this.shield = this.burst = 0;
 		this.fields.clear();
-		if (this.scanner?.ancestor) {
-			this.host.actors.removeChild(this.scanner, true);
+		if (this.routes?.ancestor) {
+			this.host.actors.removeChild(this.routes, true);
 		}
 		this.buildGrids(board.station);
 		this.levelText.setText(
@@ -553,14 +551,14 @@ export class Field extends Renderable {
 				return isBlocking(this.tiles[idx(col, row)]);
 			},
 		});
-		if (this.scanner) {
-			this.scanner.grid = this.walkGrid;
+		if (this.routes) {
+			this.routes.grid = this.walkGrid;
 		} else {
-			this.scanner = new PathfindingDebug(this.walkGrid);
-			this.scanner.showSolid = false;
-			this.scanner.showWeight = false;
-			this.scanner.showTrace = false;
-			this.scanner.isPersistent = true;
+			this.routes = new PathfindingDebug(this.walkGrid);
+			this.routes.showSolid = false;
+			this.routes.showWeight = false;
+			this.routes.showTrace = false;
+			this.routes.isPersistent = true;
 		}
 	}
 
@@ -1454,9 +1452,6 @@ export class Field extends Renderable {
 		if (spots.length === 0) {
 			return;
 		}
-		// every monster plans a route; a level showing them all along needs
-		// no scanner
-		const planners = !this.level.routes;
 		const odds: [PowerKind, number][] = [
 			["life", this.lives < MAX_LIVES ? 0.08 : 0],
 			["gem", 0.22],
@@ -1464,7 +1459,6 @@ export class Field extends Renderable {
 			["shield", 0.16],
 			["burst", 0.14],
 			["field", 0.12],
-			["scan", planners ? 0.12 : 0],
 		];
 		let roll = Math.random() * odds.reduce((sum, [, w]) => sum + w, 0);
 		let kind: PowerKind = "gem";
@@ -1508,9 +1502,6 @@ export class Field extends Renderable {
 			case "field":
 				this.raiseFields();
 				break;
-			case "scan":
-				this.scan = POWER_TIME.scan;
-				break;
 		}
 	}
 
@@ -1552,7 +1543,7 @@ export class Field extends Renderable {
 		}
 	}
 
-	/** count the force-fields and the scanner down */
+	/** count the force-fields down, and show the monsters' routes */
 	private updateFields(dt: number) {
 		for (const [i, left] of this.fields) {
 			if (left - dt <= 0) {
@@ -1562,16 +1553,15 @@ export class Field extends Renderable {
 				this.fields.set(i, left - dt);
 			}
 		}
-		this.scan = Math.max(0, this.scan - dt);
-		const scanner = this.scanner;
-		if (!scanner) {
+		const routes = this.routes;
+		if (!routes) {
 			return;
 		}
-		if ((this.scan > 0 || this.level.routes) && this.phase === "play") {
-			if (!scanner.ancestor) {
-				this.host.actors.addChild(scanner, -1);
+		if (this.phase === "play") {
+			if (!routes.ancestor) {
+				this.host.actors.addChild(routes, -1);
 			}
-			scanner.paths = this.enemies
+			routes.paths = this.enemies
 				.filter((e) => {
 					return e.plan !== undefined && e.falling === 0 && e.spawning <= 0;
 				})
@@ -1582,8 +1572,8 @@ export class Field extends Renderable {
 						color: GLOW[e.kind],
 					};
 				});
-		} else if (scanner.ancestor) {
-			this.host.actors.removeChild(scanner, true);
+		} else if (routes.ancestor) {
+			this.host.actors.removeChild(routes, true);
 		}
 	}
 
@@ -1648,7 +1638,7 @@ export class Field extends Renderable {
 		}
 
 		// while the routes show, the panel each wobbler is walking to
-		if (this.scanner?.ancestor) {
+		if (this.routes?.ancestor) {
 			r.lineWidth = 2;
 			for (const e of this.enemies) {
 				if (e.goal === undefined || e.falling > 0 || e.spawning > 0) {
@@ -1744,7 +1734,6 @@ export class Field extends Renderable {
 				["shield", this.shield],
 				["freeze", this.freeze],
 				["field", Math.max(0, ...this.fields.values())],
-				["scan", this.scan],
 			] as [TimedPower, number][]
 		).filter(([, left]) => left > 0);
 		let ix = WIDTH / 2 - ((timers.length - 1) * 40) / 2;

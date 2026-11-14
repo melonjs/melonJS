@@ -187,8 +187,7 @@ export type PowerKind =
 	| "shield"
 	| "burst"
 	| "life"
-	| "field"
-	| "scan";
+	| "field";
 
 export const POWER_COLORS: Record<PowerKind, string> = {
 	gem: "#5cf2ff",
@@ -197,7 +196,6 @@ export const POWER_COLORS: Record<PowerKind, string> = {
 	burst: "#ffd23d",
 	life: "#ff6aa2",
 	field: "#7ff7c8",
-	scan: "#ffb45c",
 };
 
 export const drawPower = (
@@ -274,19 +272,6 @@ export const drawPower = (
 					y + Math.sin(b) * 9,
 				);
 			}
-			break;
-		}
-		case "scan": {
-			// a radar sweep
-			r.setColor("#7a4a12");
-			r.fillEllipse(cx, y, 13, 13);
-			r.setColor(color);
-			r.lineWidth = 2;
-			r.strokeArc(cx, y, 9, 0, Math.PI * 2);
-			r.strokeArc(cx, y, 5, 0, Math.PI * 2);
-			const a = time * 4;
-			r.lineWidth = 3;
-			r.strokeLine(cx, y, cx + Math.cos(a) * 10, y + Math.sin(a) * 10);
 			break;
 		}
 		case "life":
