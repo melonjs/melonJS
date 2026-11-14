@@ -27,7 +27,6 @@
 import {
 	Grid,
 	PathfindingDebug,
-	type PathPoint,
 	type PathResult,
 } from "@melonjs/pathfinding-plugin";
 import {
@@ -155,7 +154,12 @@ interface Enemy extends Mover {
 	spawning: number; // > 0 while still coming out of the nest
 	falling: number;
 	/** a flying drone's free position and route, not tied to tiles */
-	air?: { x: number; y: number; path: PathPoint[]; replan: number };
+	air?: {
+		x: number;
+		y: number;
+		path: { x: number; y: number }[];
+		replan: number;
+	};
 	/** the last route planned (chasers and drones), for the scanner */
 	plan?: PathResult;
 }
@@ -522,11 +526,11 @@ export class Field extends Renderable {
 					)?.kind;
 		};
 		this.walkGrid = Grid.fromTileLayer(station, {
-			walkable: (tile) => {
+			solid: (tile) => {
 				const kind = kindOf(tile);
-				return kind !== undefined && kind !== "wall" && kind !== "gate";
+				return kind === undefined || kind === "wall" || kind === "gate";
 			},
-			cost: (tile) => {
+			weight: (tile) => {
 				return kindOf(tile) === "goo" ? GOO_COST : 1;
 			},
 		});
@@ -537,16 +541,16 @@ export class Field extends Renderable {
 			tileHeight: TILE,
 			x: OX,
 			y: OY,
-			walkable: (col, row) => {
-				return !isBlocking(this.tiles[idx(col, row)]);
+			solid: (col, row) => {
+				return isBlocking(this.tiles[idx(col, row)]);
 			},
 		});
 		if (this.scanner) {
 			this.scanner.grid = this.walkGrid;
 		} else {
 			this.scanner = new PathfindingDebug(this.walkGrid);
-			this.scanner.showBlocked = false;
-			this.scanner.showCost = false;
+			this.scanner.showSolid = false;
+			this.scanner.showWeight = false;
 			this.scanner.showTrace = false;
 			this.scanner.isPersistent = true;
 		}
@@ -557,8 +561,8 @@ export class Field extends Renderable {
 		this.walkGrid?.refreshCell(x, y);
 		this.airGrid?.refreshCell(x, y);
 		if (this.fields.has(idx(x, y))) {
-			this.walkGrid?.setWalkable(x, y, false);
-			this.airGrid?.setWalkable(x, y, false);
+			this.walkGrid?.setSolid(x, y);
+			this.airGrid?.setSolid(x, y);
 		}
 	}
 
@@ -970,7 +974,7 @@ export class Field extends Renderable {
 		if (this.tiles[here] === Tile.CRACK && this.gone[here] <= 0) {
 			this.crumble[here] = CRUMBLE_DELAY;
 			// monsters keep off a tile about to crumble
-			this.walkGrid?.setWalkable(p.tx, p.ty, false);
+			this.walkGrid?.setSolid(p.tx, p.ty);
 		}
 		p.fx = p.tx;
 		p.fy = p.ty;
@@ -1163,25 +1167,26 @@ export class Field extends Renderable {
 				return o !== e && !o.air && o.falling === 0 && o.spawning <= 0;
 			})
 			.map((o) => {
-				return { x: o.tx, y: o.ty };
+				return grid.getPointPosition(o.tx, o.ty);
 			});
 		const plan = grid.findPath(
-			{ x: e.tx, y: e.ty },
-			{ x: p.t < 0.5 ? p.fx : p.tx, y: p.t < 0.5 ? p.fy : p.ty },
+			grid.getPointPosition(e.tx, e.ty),
+			grid.getPointPosition(p.t < 0.5 ? p.fx : p.tx, p.t < 0.5 ? p.fy : p.ty),
 			{
-				tiles: true,
 				avoid: others,
-				avoidCost: FLANK_COST,
+				avoidWeight: FLANK_COST,
 				maxNodes: SEARCH_CAP,
+				allowPartialPath: true,
 			},
 		);
 		e.plan = plan;
-		const next = plan.cells[0];
+		// cells[0] is where it stands
+		const next = plan.cells[1];
 		if (next === undefined) {
 			return -1;
 		}
-		const dx = next.col - e.tx;
-		const dy = next.row - e.ty;
+		const dx = next.x - e.tx;
+		const dy = next.y - e.ty;
 		return dx > 0 ? 1 : dx < 0 ? 3 : dy > 0 ? 2 : 0;
 	}
 
@@ -1211,14 +1216,16 @@ export class Field extends Renderable {
 				{ x: air.x, y: air.y + 4 },
 				{ x: moverX(p), y: moverY(p) + 4 },
 				{
-					diagonal: true,
+					diagonalMode: "onlyIfNoObstacles",
 					smooth: true,
 					avoid: others,
-					avoidCost: FLANK_COST,
+					avoidWeight: FLANK_COST,
 					maxNodes: SEARCH_CAP,
+					allowPartialPath: true,
 				},
 			);
-			air.path = e.plan.path.map((point) => {
+			// path[0] is the cell it is in: fly on from there
+			air.path = e.plan.path.slice(1).map((point) => {
 				return { x: point.x, y: point.y - 4 };
 			});
 		}
@@ -1474,8 +1481,8 @@ export class Field extends Renderable {
 					continue;
 				}
 				this.fields.set(i, POWER_TIME.field);
-				this.walkGrid?.setWalkable(x, y, false);
-				this.airGrid?.setWalkable(x, y, false);
+				this.walkGrid?.setSolid(x, y);
+				this.airGrid?.setSolid(x, y);
 			}
 		}
 	}
