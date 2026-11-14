@@ -1,6 +1,6 @@
 ---
 name: melonjs-plugins
-description: "Use this skill when adding a melonJS plugin or adapter — the debug panel, Spine skeletal animation, compressed Tiled map support, on-screen touch controls, Capacitor packaging — or when writing your own plugin. Covers plugin.register and its version gate, plugin.cache, plugin.patch, and why physics adapters are not plugins. Triggers on: plugin, plugin.register, plugin.cache, plugin.get, plugin.patch, BasePlugin, debug-plugin, DebugPanelPlugin, SpinePlugin, TiledInflatePlugin, GamepadPlugin, gamepad-plugin, touch controls, virtual joystick, floating joystick, floating button, CapacitorPlugin, adapter, custom plugin, plugin version mismatch, already registered."
+description: "Use this skill when adding a melonJS plugin or adapter — the debug panel, Spine skeletal animation, compressed Tiled map support, on-screen touch controls, A* pathfinding, Capacitor packaging — or when writing your own plugin. Covers plugin.register and its version gate, plugin.cache, plugin.patch, and why physics adapters are not plugins. Triggers on: plugin, plugin.register, plugin.cache, plugin.get, plugin.patch, BasePlugin, debug-plugin, DebugPanelPlugin, SpinePlugin, TiledInflatePlugin, GamepadPlugin, gamepad-plugin, touch controls, virtual joystick, floating joystick, floating button, pathfinding, A*, astar, path finding, Grid, findPath, enemy AI chase, CapacitorPlugin, adapter, custom plugin, plugin version mismatch, already registered."
 license: MIT
 ---
 
@@ -127,6 +127,48 @@ them from the game's own art (`base` / `thumb` regions on a stick, `region` /
 `pressed` on a button). It needs melonJS 20.12 or later. See `melonjs-input`
 for the bindings, the layouts and the overlap rules.
 
+### `@melonjs/pathfinding-plugin`
+
+A* on a grid of open and blocked cells, each with a cost to cross. The grid is
+the part to get right; the search is one call:
+
+```js
+import { Grid } from "@melonjs/pathfinding-plugin";
+
+// a layer of walls: a tile blocks its cell (a tile's `cost` property sets its cost)
+const grid = Grid.fromTileLayer(app.world.getChildByName("walls")[0]);
+// a floor layer: decide from the tile instead
+Grid.fromTileLayer(floor, { walkable: (tile) => tile !== null && !isWall(tile) });
+// or the level's collision shapes (WORLD_SHAPE bodies, a Tiled collision layer)
+Grid.fromBodies(app.world, { cols, rows, tileWidth, tileHeight });
+
+const { path, found } = grid.findPath(enemy.pos, player.pos, {
+    diagonal: true,      // 8 directions, never cutting a corner past a wall
+    smooth: true,        // straight lines across open ground
+    maxNodes: 300,       // a cap, so an unreachable goal cannot stall a frame
+    avoid: others.map((o) => o.pos), avoidCost: 6,   // spread out, this search only
+});
+// path: world-unit points after the start; found is false when it leads to the
+// nearest reachable cell instead (closest: false for no path at all)
+```
+
+- **The grid is a snapshot.** A tile changed with `setTile` / `clearTile`, or
+  a wall body added, is not seen until `grid.refreshCell(col, row)` or
+  `grid.refresh()`; `setWalkable` / `setCost` change one cell directly.
+- **`fromTileLayer` blocks every non-empty cell by default** (a walls layer).
+  On a floor layer, where every cell has a tile, pass `walkable`, or nothing is
+  walkable.
+- **Build `fromBodies` after the level loads.** It scans the shapes, not a
+  physics query, so it works before the world first steps; it reads `bodyDef`
+  shapes too, so it is the same on every adapter.
+- A cost is 1 or more and finite: block with `setWalkable`, not `Infinity`.
+- `PathfindingPlugin` (`plugin.register(PathfindingPlugin, "pathfinding",
+  { layer: "walls" })`) only rebuilds the grid when a level loads; a `Grid`
+  works on its own.
+- `PathfindingDebug` draws blocked and costly cells, the cells a search looked
+  at (`trace: true`) and the paths.
+- Orthogonal maps only: isometric and hexagonal grids are not supported.
+
 ### `@melonjs/capacitor-plugin`
 
 Bridges Capacitor's native lifecycle and hardware-back events into the engine:
@@ -230,6 +272,10 @@ or a `Stage` is simpler and easier to test.
 | the panel reports another app's numbers | `app` defaulted to `game`, the last Application to finish `init()` |
 | `world.adapter.querySphere is not a function` | built-in adapter only; planck, matter and Rapier are 2D-only |
 | a Tiled map opens in Tiled but not melonJS | compressed layers, tiled-inflate plugin missing |
+| a path goes through walls | the grid does not know them: a floor layer needs `walkable`, a changed tile needs `refreshCell`, `fromBodies` walls must be `WORLD_SHAPE` bodies (or pass `solid`) |
+| no path found (`found` false) | the goal is walled off, on a wall, or past `maxNodes`; the path leads as near as it could |
+| everything is blocked on a `fromTileLayer` grid | a floor layer, where every cell has a tile: pass `walkable` |
+| a path is offset from the map | the grid's `x` / `y` are not the layer's: built before the layer was in its container, or the container moved since |
 | plugin setup never runs | setup written in an `init()` method — there is no such hook |
 | `Plugin should extend the BasePlugin Class !` when registering an adapter | adapters are a construction setting (or `world.setAdapter()`), not a plugin |
 | `PlanckAdapter.create is not a function` (or `MatterAdapter`) | planck-adapter < 1.7 or matter-adapter < 1.6; upgrade, or `new PlanckAdapter(options)` |

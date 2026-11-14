@@ -53,7 +53,7 @@ dependencies.
 | [melonjs-display-and-scaling](../melonjs-display-and-scaling/SKILL.md) | Blurry, soft or cropped output; the design resolution, how the canvas fills its page, and pixel-perfect integer scaling. |
 | [melonjs-events](../melonjs-events/SKILL.md) | The event bus, per-frame and lifecycle events, and subscribing without leaking. |
 | [melonjs-performance](../melonjs-performance/SKILL.md) | Dropped frames, draw-call counts, pooling, batching, culling, baking, profiling. |
-| [melonjs-plugins](../melonjs-plugins/SKILL.md) | Registering the debug, Spine, Tiled-inflate, gamepad (touch controls) or Capacitor plugins, installing a physics adapter, or writing your own plugin. |
+| [melonjs-plugins](../melonjs-plugins/SKILL.md) | Registering the debug, Spine, Tiled-inflate, gamepad (touch controls), pathfinding (A*) or Capacitor plugins, installing a physics adapter, or writing your own plugin. |
 
 
 ## Escape hatch: the full API index
@@ -117,6 +117,7 @@ Tiled inflate plugin are *required* for their use cases, not merely convenient.
 | [`@melonjs/spine-plugin`](https://www.npmjs.com/package/@melonjs/spine-plugin) | Skeletal animation authored in Spine, as a melonJS renderable. |
 | [`@melonjs/debug-plugin`](https://www.npmjs.com/package/@melonjs/debug-plugin) | An in-game debug panel — FPS, draw counts, collision-shape and bounds overlays. Register it after `app.init()`. |
 | [`@melonjs/gamepad-plugin`](https://www.npmjs.com/package/@melonjs/gamepad-plugin) | On-screen touch controls for phones and tablets: sticks and buttons reported as a gamepad, so the game's `bindGamepad` bindings drive it; fixed or floating under the thumb, hidden until touched, tap to act. Use it rather than writing virtual controls. |
+| [`@melonjs/pathfinding-plugin`](https://www.npmjs.com/package/@melonjs/pathfinding-plugin) | Enemies or units that find their way: A* on a grid built from a Tiled layer or the level's collision shapes, with per-cell costs, diagonals without corner cutting, smoothing, a search cap and a debug overlay. Use it rather than writing A* or a flood fill. |
 | [`@melonjs/capacitor-plugin`](https://www.npmjs.com/package/@melonjs/capacitor-plugin) | Wrapping a game as a native iOS/Android app: it bridges Capacitor's lifecycle — pause/resume, the hardware back button, orientation lock, splash screen. |
 | [`create-melonjs`](https://www.npmjs.com/package/create-melonjs) | Scaffolding a new project — start here rather than assembling a build by hand. |
 
@@ -181,4 +182,5 @@ check for:
   level's assets.
 - **Physics and controls:** a rigid-body adapter (planck, matter or Rapier,
   switched at run time with `world.setAdapter()`) rather than a hand-written
-  solver, and `@melonjs/gamepad-plugin` rather than hand-made touch sticks.
+  solver, `@melonjs/gamepad-plugin` rather than hand-made touch sticks, and
+  `@melonjs/pathfinding-plugin` rather than a hand-written A* or flood fill.
