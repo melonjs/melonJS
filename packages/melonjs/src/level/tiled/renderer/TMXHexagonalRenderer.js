@@ -1,6 +1,5 @@
 import { Vector2d, vector2dPool } from "../../../math/vector2d.ts";
 import { boundsPool } from "../../../physics/bounds.ts";
-import TMXLayer from "./../TMXLayer.js";
 import TMXRenderer from "./TMXRenderer.js";
 
 /**
@@ -76,15 +75,19 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 	 * @internal
 	 */
 	getBounds(layer) {
-		const bounds = layer instanceof TMXLayer ? boundsPool.get() : this.bounds;
+		const isLayer = layer !== undefined;
+		const bounds = isLayer ? boundsPool.get() : this.bounds;
+		// a layer can have more cells than the map (an infinite map's)
+		const cols = isLayer ? layer.cols : this.cols;
+		const rows = isLayer ? layer.rows : this.rows;
 
 		// The map size is the same regardless of which indexes are shifted.
 		if (this.staggerX) {
 			bounds.setMinMax(
 				0,
 				0,
-				this.cols * this.columnwidth + this.sideoffsetx,
-				this.rows * (this.tileheight + this.sidelengthy),
+				cols * this.columnwidth + this.sideoffsetx,
+				rows * (this.tileheight + this.sidelengthy),
 			);
 			if (bounds.width > 1) {
 				bounds.height += this.rowheight;
@@ -93,8 +96,8 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 			bounds.setMinMax(
 				0,
 				0,
-				this.cols * (this.tilewidth + this.sidelengthx),
-				this.rows * this.rowheight + this.sideoffsety,
+				cols * (this.tilewidth + this.sidelengthx),
+				rows * this.rowheight + this.sideoffsety,
 			);
 			if (bounds.height > 1) {
 				bounds.width += this.columnwidth;
@@ -376,20 +379,19 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 	 * @internal
 	 */
 	drawTileLayer(renderer, layer, rect) {
-		// get top-left and bottom-right tile position
+		// the tile at the top-left corner of the area, rounded down to its
+		// column and row (a staggered map's renderer gives a point's place
+		// within its tile too)
 		const startTile = this.pixelToTileCoords(
 			rect.pos.x,
 			rect.pos.y,
 			vector2dPool.get(),
-		);
+		).floorSelf();
 
-		// Compensate for the layer position
-		startTile.sub(layer.pos);
-
-		// get top-left and bottom-right tile position
+		// and where it is drawn
 		let startPos = this.tileToPixelCoords(
-			startTile.x + layer.pos.x,
-			startTile.y + layer.pos.y,
+			startTile.x,
+			startTile.y,
 			vector2dPool.get(),
 		);
 
@@ -437,13 +439,17 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 			startTile.x = Math.max(0, startTile.x);
 			startTile.y = Math.max(0, startTile.y);
 
-			startPos = this.tileToPixelCoords(
-				startTile.x + layer.pos.x,
-				startTile.y + layer.pos.y,
-				startPos,
-			);
+			// the loop draws a row's shifted columns after its unshifted
+			// ones: start on an unshifted column, or the unshifted half of
+			// the first row, higher up on screen and as much in view, is
+			// skipped (one column left; a column left of 0 draws nothing)
+			if (this.doStaggerX(startTile.x)) {
+				startTile.x--;
+			}
 
-			let staggeredRow = this.doStaggerX(startTile.x + layer.pos.x);
+			startPos = this.tileToPixelCoords(startTile.x, startTile.y, startPos);
+
+			let staggeredRow = this.doStaggerX(startTile.x);
 
 			// main drawing loop
 			for (; startPos.y < rect.bottom && startTile.y < endY; ) {
@@ -491,11 +497,7 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 			startTile.x = Math.max(0, startTile.x);
 			startTile.y = Math.max(0, startTile.y);
 
-			startPos = this.tileToPixelCoords(
-				startTile.x + layer.pos.x,
-				startTile.y + layer.pos.y,
-				startPos,
-			);
+			startPos = this.tileToPixelCoords(startTile.x, startTile.y, startPos);
 
 			// Odd row shifting is applied in the rendering loop, so un-apply it here
 			if (this.doStaggerY(startTile.y)) {

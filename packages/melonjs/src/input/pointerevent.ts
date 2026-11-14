@@ -3,6 +3,7 @@ import { Rect } from "./../geometries/rectangle.ts";
 import type { Vector2d } from "../math/vector2d.ts";
 import { vector2dPool } from "../math/vector2d.ts";
 import * as device from "./../system/device.js";
+import { hasDOM } from "./../system/dom.ts";
 import {
 	emit,
 	GAME_INIT,
@@ -21,6 +22,9 @@ interface PointerHandler {
 	region: any;
 	callbacks: Record<string, Array<(pointer: Pointer) => boolean | void>>;
 	pointerId: number | null;
+	// every pointer pressed on the region that has not left it since: with
+	// several fingers on it, `pointerId` holds only the last one to touch it
+	pressed: Set<number | undefined>;
 }
 
 /**
@@ -302,6 +306,21 @@ function triggerEvent(
 }
 
 /**
+ * Whether a region has a callback for the end of a press: a release or a
+ * cancel, under whichever event names the device uses.
+ * @ignore
+ * @internal
+ */
+function listensForRelease(handlers: PointerHandler): boolean {
+	for (const type in handlers.callbacks) {
+		if (POINTER_UP.includes(type) || POINTER_CANCEL.includes(type)) {
+			return true;
+		}
+	}
+	return false;
+}
+
+/**
  * Whether a point is outside the visible area of a container above a region.
  *
  * Asks each ancestor through `clipContains`, which a `Container` answers from
@@ -363,6 +382,7 @@ function dispatchEvent(normalizedEvents: Pointer[]): boolean {
 		// spatial query below, which only finds regions near that point)
 		if (POINTER_LEAVE.includes(pointer.type)) {
 			for (const handlers of eventHandlers.values()) {
+				handlers.pressed.delete(pointer.pointerId);
 				if (handlers.pointerId === pointer.pointerId) {
 					triggerEvent(handlers, pointer.type, pointer, null);
 				}
@@ -465,6 +485,7 @@ function dispatchEvent(normalizedEvents: Pointer[]): boolean {
 				// how a button half under a panel stayed lit while the pointer
 				// sat on the panel.
 				if (occluded) {
+					handlers.pressed.delete(pointer.pointerId);
 					if (handlers.pointerId === pointer.pointerId) {
 						triggerEvent(
 							handlers,
@@ -481,6 +502,10 @@ function dispatchEvent(normalizedEvents: Pointer[]): boolean {
 					case POINTER_MOVE[1]:
 					case POINTER_MOVE[2]:
 					case POINTER_MOVE[3]:
+						// moved out of bounds: its press no longer counts here
+						if (!eventInBounds) {
+							handlers.pressed.delete(pointer.pointerId);
+						}
 						// moved out of bounds: trigger the POINTER_LEAVE callbacks
 						if (handlers.pointerId === pointer.pointerId && !eventInBounds) {
 							if (
@@ -523,23 +548,26 @@ function dispatchEvent(normalizedEvents: Pointer[]): boolean {
 					case POINTER_UP[0]:
 					case POINTER_UP[1]:
 					case POINTER_UP[2]:
-					case POINTER_UP[3]:
+					case POINTER_UP[3]: {
 						// pointer defined & inside of bounds: trigger the POINTER_UP callback.
 						// The region keeps the pointer: the press is over, but the
 						// pointer is still over it, so moving away still leaves it and
 						// moving on over it does not enter it again. A legacy
 						// `touchend` is the exception: a lifted finger is over nothing,
 						// and touch events send no leave after it, so it leaves here.
-						if (handlers.pointerId === pointer.pointerId && eventInBounds) {
+						// A pointer pressed on it is released here as well after
+						// another one took `pointerId`, which then keeps it.
+						const ours = handlers.pointerId === pointer.pointerId;
+						const pressed = handlers.pressed.delete(pointer.pointerId);
+						if ((ours || pressed) && eventInBounds) {
 							const lifted = pointer.type === POINTER_UP[2];
+							let keep = handlers.pointerId;
+							if (ours) {
+								keep = lifted ? null : (pointer.pointerId ?? null);
+							}
 							// trigger the corresponding callback
-							const stop = triggerEvent(
-								handlers,
-								pointer.type,
-								pointer,
-								lifted ? null : pointer.pointerId,
-							);
-							if (lifted) {
+							const stop = triggerEvent(handlers, pointer.type, pointer, keep);
+							if (lifted && ours) {
 								triggerEvent(
 									handlers,
 									findActiveEvent(activeEventList, POINTER_LEAVE),
@@ -553,32 +581,55 @@ function dispatchEvent(normalizedEvents: Pointer[]): boolean {
 							}
 						}
 						break;
+					}
 
 					case POINTER_CANCEL[0]:
 					case POINTER_CANCEL[1]:
 					case POINTER_CANCEL[2]:
-					case POINTER_CANCEL[3]:
+					case POINTER_CANCEL[3]: {
 						// pointer defined: trigger the POINTER_CANCEL callback, then
 						// leave: a cancelled pointer is gone, and the region forgets it
-						// here, so the browser's own leave after it would not reach it
-						if (handlers.pointerId === pointer.pointerId) {
-							const stop = triggerEvent(handlers, pointer.type, pointer, null);
-							triggerEvent(
+						// here, so the browser's own leave after it would not reach it.
+						// A pointer pressed on it is cancelled here as well after
+						// another one took `pointerId`, which then keeps it.
+						const ours = handlers.pointerId === pointer.pointerId;
+						const pressed = handlers.pressed.delete(pointer.pointerId);
+						if (ours || pressed) {
+							const stop = triggerEvent(
 								handlers,
-								findActiveEvent(activeEventList, POINTER_LEAVE),
+								pointer.type,
 								pointer,
-								null,
+								ours ? null : handlers.pointerId,
 							);
+							if (ours) {
+								triggerEvent(
+									handlers,
+									findActiveEvent(activeEventList, POINTER_LEAVE),
+									pointer,
+									null,
+								);
+							}
 							if (stop) {
 								handled = true;
 								break;
 							}
 						}
 						break;
+					}
 
 					default:
 						// event inside of bounds: trigger the POINTER_DOWN or WHEEL callback
 						if (eventInBounds) {
+							if (POINTER_DOWN.includes(pointer.type)) {
+								handlers.pressed.add(pointer.pointerId);
+								// a press takes the pointer for a region waiting
+								// for its release, even with no callback for the
+								// press itself (taken for any other region, the
+								// pointer would leave one it never entered)
+								if (listensForRelease(handlers)) {
+									handlers.pointerId = pointer.pointerId ?? null;
+								}
+							}
 							// trigger the corresponding callback
 							if (
 								triggerEvent(
@@ -623,10 +674,15 @@ function normalizeEvent(originalEvent: any): Pointer[] {
 		for (let i = 0, l = originalEvent.changedTouches.length; i < l; i++) {
 			const touchEvent = originalEvent.changedTouches[i];
 			_pointer = T_POINTERS.pop()!;
+			// Without a DOM there is no page to scroll, so page and client
+			// coordinates are the same, and a runtime may only report the
+			// client ones: nx.js's touches have no `pageX` / `pageY` at all,
+			// which read as (0, 0) for every finger.
+			const noPage = !hasDOM();
 			_pointer.setEvent(
 				originalEvent,
-				touchEvent.pageX,
-				touchEvent.pageY,
+				noPage ? touchEvent.clientX : touchEvent.pageX,
+				noPage ? touchEvent.clientY : touchEvent.pageY,
 				touchEvent.clientX,
 				touchEvent.clientY,
 				touchEvent.identifier,
@@ -697,8 +753,9 @@ function onPointerEvent(e: Event): void {
 
 	const keycode = pointer.bind[button];
 
-	// check if mapped to a key
-	if (keycode) {
+	// check if mapped to a key. Not on a wheel turn: a wheel event always
+	// reports the main button, pressed or not, and would release its key
+	if (keycode && e.type !== WHEEL[0]) {
 		triggerKeyEvent(keycode, POINTER_DOWN.includes(e.type), button + 1);
 	}
 }
@@ -763,7 +820,10 @@ export function hasRegisteredEvents(): boolean {
 export function globalToLocal(x: number, y: number, v?: Vector2d): Vector2d {
 	v = v || vector2dPool.get();
 	const rect = device.getElementBounds(_app.renderer.getCanvas());
-	const pixelRatio = globalThis.devicePixelRatio || 1;
+	// the ratio `scaleRatio` was built with, so that the two cancel out: the
+	// canvas's CSS size is its backing size times the fit factor alone, and
+	// the live ratio changes with browser zoom or another screen without it
+	const pixelRatio = device.devicePixelRatio;
 	x -= rect.left + (globalThis.pageXOffset || 0);
 	y -= rect.top + (globalThis.pageYOffset || 0);
 	const scale = _app.renderer.scaleRatio;
@@ -785,7 +845,12 @@ export function setTouchAction(
 	element: HTMLCanvasElement,
 	value?: string,
 ): void {
-	element.style["touch-action" as any] = value || "none";
+	// a canvas with no `style` (nx.js's `screen`) has no browser gestures
+	// to disable
+	const style = (element as { style?: CSSStyleDeclaration }).style;
+	if (style) {
+		style["touch-action" as any] = value || "none";
+	}
 }
 
 /**
@@ -900,6 +965,7 @@ export function registerPointerEvent(
 			region: region,
 			callbacks: {},
 			pointerId: null,
+			pressed: new Set(),
 		});
 	}
 

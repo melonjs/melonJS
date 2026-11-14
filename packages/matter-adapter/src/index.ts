@@ -32,15 +32,11 @@ import {
 declare const __VERSION__: string;
 
 /**
- * Minimum melonJS version this adapter requires. The PhysicsAdapter
- * interface, `bodyDef` auto-registration, and the resolver in
- * `Application` are part of the 19.5 work — older releases don't have
- * the plumbing for instance-based adapters. Tracks the engine version
- * actually shipping these APIs (will be bumped to "19.5.0" once the
- * engine release is cut).
+ * Minimum melonJS version this adapter requires: the lower bound of its
+ * `melonjs` peer dependency range, so the two cannot disagree.
  * @hidden
  */
-export const REQUIRED_MELONJS_VERSION = "19.5.0";
+export const REQUIRED_MELONJS_VERSION = "20.0.0";
 
 /**
  * Options accepted by the {@link MatterAdapter} constructor.
@@ -80,6 +76,15 @@ export interface MatterAdapterOptions {
 const LINE_THICKNESS = 2;
 
 /**
+ * How far UP a contact normal must point for {@link MatterAdapter.isGrounded}
+ * to count the contact as ground: the upward component of the unit normal
+ * the body is pushed along. `0.1` accepts any surface up to about 84 degrees
+ * from horizontal, so slopes stay ground, and rejects a vertical wall with a
+ * margin for float noise and a body turned by a few degrees.
+ */
+const GROUND_NORMAL_Y = 0.1;
+
+/**
  * The message for a shape this adapter cannot build a fixture from.
  *
  * Worth more than the shape's name. Both refusals are deliberate rather than
@@ -113,8 +118,10 @@ function unsupportedShapeMessage(adapter: string, shape: BodyShape): string {
  * Implements the full {@link PhysicsAdapter} interface so the same game
  * code that runs on the built-in SAT physics also runs under Matter —
  * with the upgrade in capabilities Matter brings (real rotational
- * dynamics, restitution-based stacking, constraints, sleeping bodies,
- * native raycasts).
+ * dynamics, restitution-based stacking, sleeping bodies, native raycasts).
+ * melonJS's shared joints (`world.addJoint()`) are not supported here: they
+ * need the planck or Rapier adapter. matter's own constraints are reached
+ * through {@link MatterAdapter.matter}.
  * @example
  * import { Application } from "melonjs";
  * import { MatterAdapter } from "@melonjs/matter-adapter";
@@ -133,8 +140,12 @@ export class MatterAdapter implements PhysicsAdapter {
 	readonly url = "https://www.npmjs.com/package/@melonjs/matter-adapter";
 
 	readonly capabilities: AdapterCapabilities = {
-		constraints: true,
-		continuousCollisionDetection: true,
+		// melonJS's shared joints (`world.addJoint()`) are not supported;
+		// matter's own constraints are reached through `adapter.matter`
+		constraints: false,
+		// matter-js steps discretely: a fast body can pass through a thin
+		// one. `subSteps` is the remedy, not a capability to branch on.
+		continuousCollisionDetection: false,
 		sleepingBodies: true,
 		raycasts: true,
 		// Matter.js is 2D-only; no `raycast3d` method. User code under
@@ -228,6 +239,42 @@ export class MatterAdapter implements PhysicsAdapter {
 	private readonly matterOptions: Matter.IEngineDefinition | undefined;
 
 	private readonly subSteps: number;
+
+	/**
+	 * Resolves once the adapter can be constructed. matter-js is plain JavaScript, loaded with this package, so this resolves
+	 * at once; it is here so every adapter has the same
+	 * {@link PhysicsAdapterClass} API, and code written as
+	 * `await MatterAdapter.create()` reads the same as for one that loads
+	 * WebAssembly first.
+	 * @returns a resolved promise
+	 */
+	static load(): Promise<void> {
+		return Promise.resolve();
+	}
+
+	/**
+	 * Create an adapter, the same way for every adapter: wait for
+	 * {@link MatterAdapter.load}, then construct it. Here that is the same as
+	 * `new MatterAdapter(options)`, which stays supported.
+	 * @param options - the constructor's options
+	 * @returns the new adapter, an instance of the class `create` is called on
+	 * @example
+	 * const app = new Application(800, 600, {
+	 *     physic: await MatterAdapter.create(),
+	 * });
+	 */
+	static async create<T extends PhysicsAdapter>(
+		// the shape of `PhysicsAdapterClass`, spelled out so this package
+		// still type-checks against a melonJS older than the one defining it
+		this: Pick<typeof MatterAdapter, "load"> &
+			(new (
+				options?: MatterAdapterOptions,
+			) => T),
+		options?: MatterAdapterOptions,
+	): Promise<T> {
+		await this.load();
+		return new this(options);
+	}
 
 	constructor(options: MatterAdapterOptions = {}) {
 		// Mirror the BasePlugin version-check pattern: refuse to construct
@@ -546,7 +593,10 @@ export class MatterAdapter implements PhysicsAdapter {
 			body.collisionFilter.mask = def.collisionMask;
 		}
 		if (def.isSensor) {
-			body.isSensor = true;
+			// on every part: matter's pairs are per PART and read the flag
+			// from the part, so a compound body flagged only on its parent
+			// stayed solid
+			this._setSensor(body, true);
 		}
 		// Only when asked. Matter computes a finite inertia from the body's
 		// vertices, so a body rotates by default, and an adapter that locks
@@ -619,8 +669,8 @@ export class MatterAdapter implements PhysicsAdapter {
 					y: body.velocity.y + y * invMass,
 				});
 			},
-			setSensor(isSensor = true) {
-				body.isSensor = isSensor;
+			setSensor: (isSensor = true) => {
+				this._setSensor(body, isSensor);
 			},
 			setStatic(isStatic = true) {
 				Matter.Body.setStatic(body, isStatic);
@@ -686,12 +736,28 @@ export class MatterAdapter implements PhysicsAdapter {
 		// specific code casts to `MatterAdapter.Body` to reach native
 		// fields (frictionAir, angle, …).
 		renderable.body = adapterBody;
+		// as the builtin `Body` constructor does: a renderable with a body
+		// takes part in physics and receives pointer events
+		renderable.isKinematic = false;
 		return adapterBody;
 	}
 
 	removeBody(renderable: Renderable): void {
 		const body = this.bodyMap.get(renderable);
 		if (body) {
+			// a partner still touching this body learns the contact ended, as
+			// on the other adapters: matter only reports the end of a pair
+			// whose bodies it still holds
+			const touching = this.engine.pairs.list.filter((pair: Matter.Pair) => {
+				return (
+					pair.isActive &&
+					(this._renderableForPart(pair.bodyA) === renderable ||
+						this._renderableForPart(pair.bodyB) === renderable)
+				);
+			});
+			if (touching.length > 0) {
+				this._dispatchCollisions(touching, "end");
+			}
 			Matter.Composite.remove(this.engine.world, body);
 			this.bodyMap.delete(renderable);
 			this.renderableMap.delete(body);
@@ -704,6 +770,23 @@ export class MatterAdapter implements PhysicsAdapter {
 			this.bodyGravityScale.delete(body);
 		}
 	}
+
+	/**
+	 * Not supported: melonJS's shared joints (`world.addJoint()`) need the
+	 * planck or Rapier adapter, so this always returns `null`
+	 * (`capabilities.constraints` is `false`), which makes `world.addJoint()`
+	 * throw. matter's own constraints are
+	 * still there, through {@link MatterAdapter.matter}.
+	 * @returns `null`
+	 */
+	addJoint(): null {
+		return null;
+	}
+
+	/**
+	 * Does nothing: see {@link MatterAdapter.addJoint}.
+	 */
+	removeJoint(): void {}
 
 	updateShape(renderable: Renderable, shapes: BodyShape[]): void {
 		// matter-js doesn't support live shape mutation cleanly — the
@@ -880,7 +963,29 @@ export class MatterAdapter implements PhysicsAdapter {
 	setSensor(renderable: Renderable, isSensor: boolean): void {
 		const body = this.bodyMap.get(renderable);
 		if (body) {
-			body.isSensor = isSensor;
+			this._setSensor(body, isSensor);
+		}
+	}
+
+	/**
+	 * Make a body a sensor, or solid again, including while it is already
+	 * touching something. matter reads `isSensor` from the PARTS a pair
+	 * holds, and copies it into the pair only when the pair is created, so
+	 * the flag is written on every part (`parts[0]` is the body itself) and
+	 * on the pairs the body is already in. Without the latter a one-way
+	 * platform turned into a sensor under a standing player kept holding it
+	 * up.
+	 * @param body - the body to change
+	 * @param isSensor - `true` for a sensor, `false` for a solid body
+	 */
+	private _setSensor(body: Matter.Body, isSensor: boolean): void {
+		for (const part of body.parts) {
+			part.isSensor = isSensor;
+		}
+		for (const pair of this.engine.pairs.list) {
+			if (pair.bodyA.parent === body || pair.bodyB.parent === body) {
+				pair.isSensor = pair.bodyA.isSensor || pair.bodyB.isSensor;
+			}
 		}
 	}
 
@@ -903,7 +1008,10 @@ export class MatterAdapter implements PhysicsAdapter {
 	}
 
 	getMaxVelocity(renderable: Renderable): { x: number; y: number } {
-		return this.velocityLimits.get(renderable) ?? { x: 0, y: 0 };
+		// a copy, so changing it does not change the cap; and no cap reads as
+		// Infinity, where `{ 0, 0 }` read as a cap that holds the body still
+		const limit = this.velocityLimits.get(renderable);
+		return limit ? { x: limit.x, y: limit.y } : { x: Infinity, y: Infinity };
 	}
 
 	setCollisionType(renderable: Renderable, type: number): void {
@@ -1039,18 +1147,37 @@ export class MatterAdapter implements PhysicsAdapter {
 	isGrounded(renderable: Renderable): boolean {
 		const body = this.bodyMap.get(renderable);
 		if (!body) return false;
-		// "Grounded" = at least one active contact with a body whose center
-		// is below us. Matter's `pair.collision.normal` direction depends
-		// on which body was the SAT reference (it's not stably "from A to
-		// B"), so comparing the other body's vertical position is more
-		// robust than reading the normal sign.
+		// "Grounded" = at least one active contact that pushes us UP, the
+		// rule the builtin adapter applies too: a side contact (a wall)
+		// never lands a body. Comparing the other body's centre instead
+		// made the side of a tall wall count once the player's centre was
+		// above the wall's, so a player could climb it with repeated jumps.
+		//
+		// matter's pairs hold PARTS, so a compound body (several shapes, or
+		// a concave outline matter decomposed) is matched through
+		// `parent`, which is the body itself for a simple body.
+		// `collision.normal` is the direction `bodyA` moves to separate
+		// (matter orients it away from `bodyB` and its solver pushes
+		// `bodyA` along it), so it is negated for the `bodyB` side.
 		for (const pair of this.engine.pairs.list) {
 			if (!pair.isActive) continue;
-			const isA = pair.bodyA === body;
-			const isB = pair.bodyB === body;
-			if (!isA && !isB) continue;
-			const other = isA ? pair.bodyB : pair.bodyA;
-			if (other.position.y > body.position.y) {
+			const isA = pair.bodyA.parent === body;
+			const isB = pair.bodyB.parent === body;
+			if (isA === isB) continue;
+			if (pair.isSensor) {
+				// A sensor pushes nothing, so it keeps the rule it always
+				// had: the other body's centre is below ours. Games use a
+				// sensor with a response of their own as ground (the
+				// platformer-matter example's slopes snap the player up),
+				// and rely on it to jump from there.
+				const other = isA ? pair.bodyB : pair.bodyA;
+				if (other.position.y > body.position.y) {
+					return true;
+				}
+				continue;
+			}
+			const ny = isA ? pair.collision.normal.y : -pair.collision.normal.y;
+			if (ny < -GROUND_NORMAL_Y) {
 				return true;
 			}
 		}
@@ -1082,6 +1209,11 @@ export class MatterAdapter implements PhysicsAdapter {
 
 		for (const collision of collisions) {
 			const candidate = collision.bodyA;
+			// a part the ray starts inside is not hit, as on the other
+			// adapters: a body casting from its own centre does not see itself
+			if (Matter.Vertices.contains(candidate.vertices, from)) {
+				continue;
+			}
 			// Compound bodies expose actual collision shapes in
 			// `parts[1..N]`; `parts[0]` is the parent wrapper whose
 			// vertices are the convex hull, not the per-part shapes. For
@@ -1118,7 +1250,10 @@ export class MatterAdapter implements PhysicsAdapter {
 		}
 
 		if (bestBody === null) return null;
-		const renderable = this.renderableMap.get(bestBody);
+		// `Query.ray` reports the PART it hit, which for a body made of
+		// several shapes (or a concave polygon matter split into pieces) is
+		// not the body the renderable owns: resolve it through its parent
+		const renderable = this._renderableForPart(bestBody);
 		if (!renderable) return null;
 
 		// Edge outward normal — perpendicular to the winning edge,
@@ -1263,7 +1398,8 @@ export class MatterAdapter implements PhysicsAdapter {
 				depth,
 				pair,
 			};
-			if (!aDetached) {
+			// a handler earlier in this dispatch may have removed this body
+			if (!aDetached && this.bodyMap.has(rA)) {
 				const mA = methodForSide(rA);
 				const fnA = (rA as Renderable & Record<string, unknown>)[mA];
 				if (typeof fnA === "function") {
@@ -1274,7 +1410,7 @@ export class MatterAdapter implements PhysicsAdapter {
 					);
 				}
 			}
-			if (!bDetached) {
+			if (!bDetached && this.bodyMap.has(rB)) {
 				const mB = methodForSide(rB);
 				const fnB = (rB as Renderable & Record<string, unknown>)[mB];
 				if (typeof fnB === "function") {
@@ -1330,7 +1466,8 @@ export class MatterAdapter implements PhysicsAdapter {
 	 * @param rB renderable owning part B
 	 * @param partA the matter part on A's side
 	 * @param partB the matter part on B's side
-	 * @param normal contact normal, in A -> B orientation
+	 * @param normal the pair's `collision.normal`: the direction A must move
+	 * to separate from B, as the body-level hooks hand it to A
 	 * @param normal.x normal x component
 	 * @param normal.y normal y component
 	 * @param depth penetration depth
@@ -1372,9 +1509,12 @@ export class MatterAdapter implements PhysicsAdapter {
 			ny: number,
 		): void => {
 			const fn = (receiver as Renderable & Record<string, unknown>)[method];
-			if (typeof fn !== "function") {
+			// skipped too when an earlier handler removed this body
+			if (typeof fn !== "function" || !this.bodyMap.has(receiver)) {
 				return;
 			}
+			// separated contacts carry identity only, matching the builtin
+			const d = phase === "end" ? 0 : depth;
 			(fn as (contact: unknown, other: Renderable) => unknown).call(
 				receiver,
 				{
@@ -1385,19 +1525,31 @@ export class MatterAdapter implements PhysicsAdapter {
 					indexShapeA: own.index,
 					indexShapeB: other.index,
 					isTrigger,
-					// separated contacts carry identity only, matching the builtin
-					depth: phase === "end" ? 0 : depth,
-					overlap: phase === "end" ? 0 : depth,
+					depth: d,
+					overlap: d,
 					normal: { x: nx, y: ny },
+					// the legacy SAT fields `ShapeCollisionContact` declares, in
+					// the builtin's convention: `overlapN` is the opposite of
+					// `normal`, `overlapV` is `overlapN` scaled by the depth, and
+					// a 2D engine has no Z
+					overlapN: { x: -nx, y: -ny },
+					overlapV: { x: -nx * d, y: -ny * d },
+					overlapZ: 0,
+					overlapNZ: 0,
+					normalZ: 0,
 				},
 				partner,
 			);
 		};
+		// oriented as the body-level response is: each receiver gets the
+		// direction it must move to separate. These were negated, so a
+		// shape hook pointed into the partner while `onCollisionStart`
+		// pointed away from it.
 		if (!aDetached) {
-			emit(rA, rB, entryA, entryB, -normal.x, -normal.y);
+			emit(rA, rB, entryA, entryB, normal.x, normal.y);
 		}
 		if (!bDetached) {
-			emit(rB, rA, entryB, entryA, normal.x, normal.y);
+			emit(rB, rA, entryB, entryA, -normal.x, -normal.y);
 		}
 	}
 

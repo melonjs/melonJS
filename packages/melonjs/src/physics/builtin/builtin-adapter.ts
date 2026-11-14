@@ -10,6 +10,7 @@ import type {
 	BodyDefinition,
 	BodyShape,
 	PhysicsAdapter,
+	PhysicsAdapterClass,
 	RaycastHit,
 	RaycastHit3d,
 } from "../adapter.ts";
@@ -332,8 +333,9 @@ function rayAABB3d(
  * `body.isStatic = true`) keeps working unchanged.
  *
  * Instantiated by default during `Application` construction; user code
- * only touches this directly when explicitly wiring it via
- * `new Application(w, h, { physic: { adapter: new BuiltinAdapter() } })`.
+ * only touches this directly when explicitly wiring it, for example with
+ * another gravity:
+ * `new Application(w, h, { physic: await BuiltinAdapter.create({ gravity }) })`.
  * @category Physics
  */
 export default class BuiltinAdapter implements PhysicsAdapter {
@@ -377,6 +379,37 @@ export default class BuiltinAdapter implements PhysicsAdapter {
 	 * Back-reference to the owning world, set in {@link init}.
 	 */
 	private world!: World;
+
+	/**
+	 * Resolves once the adapter can be constructed. The built-in solver is plain JavaScript, loaded with melonJS, so this resolves
+	 * at once; it is here so every adapter has the same
+	 * {@link PhysicsAdapterClass} API, and code written as
+	 * `await BuiltinAdapter.create()` reads the same as for one that loads
+	 * WebAssembly first.
+	 * @returns a resolved promise
+	 */
+	static load(): Promise<void> {
+		return Promise.resolve();
+	}
+
+	/**
+	 * Create an adapter, the same way for every adapter: wait for
+	 * {@link BuiltinAdapter.load}, then construct it. Here that is the same as
+	 * `new BuiltinAdapter(options)`, which stays supported.
+	 * @param options - the constructor's options
+	 * @returns the new adapter, an instance of the class `create` is called on
+	 * @example
+	 * const app = new Application(800, 600, {
+	 *     physic: await BuiltinAdapter.create(),
+	 * });
+	 */
+	static async create<T extends PhysicsAdapter>(
+		this: PhysicsAdapterClass<T, AdapterOptions>,
+		options?: AdapterOptions,
+	): Promise<T> {
+		await this.load();
+		return new this(options);
+	}
 
 	constructor(options: AdapterOptions = {}) {
 		this.gravity = options.gravity ?? new Vector2d(0, 0.98);
@@ -549,6 +582,21 @@ export default class BuiltinAdapter implements PhysicsAdapter {
 			this.bodies.delete(body);
 		}
 	}
+
+	/**
+	 * The built-in physics has no joints (`capabilities.constraints` is
+	 * `false`): always returns `null`, which makes {@link World#addJoint}
+	 * throw.
+	 * @returns `null`
+	 */
+	addJoint(): null {
+		return null;
+	}
+
+	/**
+	 * Does nothing: the built-in physics has no joints to remove.
+	 */
+	removeJoint(): void {}
 
 	updateShape(renderable: Renderable, shapes: BodyShape[]): void {
 		const body = renderable.body;
@@ -747,11 +795,14 @@ export default class BuiltinAdapter implements PhysicsAdapter {
 	}
 
 	isGrounded(renderable: Renderable): boolean {
-		// Derived from the SAT body's `falling` flag, updated by the
-		// detector each frame: a body is grounded when it's not currently
-		// moving downward off a surface.
+		// The interface's rule: a surface under the body, one this step's
+		// collisions pushed it up out of. The `falling` / `jumping` flags
+		// keep their say (a body rising past a ledge it grazes is still
+		// airborne), but alone they called a body grounded whenever it was
+		// not moving down: one never stepped, or held still in the air with
+		// no gravity.
 		const body = renderable.body as Body;
-		return !body.falling && !body.jumping;
+		return body.onSurface && !body.falling && !body.jumping;
 	}
 
 	raycast(from: Vector2d, to: Vector2d): RaycastHit | null {

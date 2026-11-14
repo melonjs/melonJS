@@ -228,6 +228,20 @@ export default class Camera3d extends Camera2d {
 	frustum: Frustum;
 
 	/**
+	 * The camera state the frustum planes were last built from: `pos.x`,
+	 * `pos.y`, `depth`, `pitch`, `yaw`, `roll`, then the frustum's `fov`,
+	 * `aspect`, `near` and `far`. A frame steps the world (and so culls it)
+	 * BEFORE `update()` rebuilds the planes, so a camera moved from a
+	 * `GAME_UPDATE` listener or an entity's own update would otherwise cull
+	 * against where it used to look. `isVisible` / `queryVisible` compare
+	 * against this and rebuild only when something changed. NaN until the
+	 * first build, so the first query always builds.
+	 * @ignore
+	 * @internal
+	 */
+	private _planesState = new Float64Array(10).fill(Number.NaN);
+
+	/**
 	 * the fog options as given to {@link Camera3d#setFog}, or `null` when fog
 	 * is off. Read through the {@link Camera3d#fog} accessor.
 	 * @ignore
@@ -1277,12 +1291,13 @@ export default class Camera3d extends Camera2d {
 	}
 
 	/**
-	 * Set the target-local follow offset. Called once when configuring
-	 * a follow-cam (e.g. behind-and-above third person:
-	 * `setFollowOffset(0, -2, -8)`).
-	 * @param x - target-local x offset
-	 * @param y - target-local y offset
-	 * @param z - target-local z offset
+	 * Set the follow offset, in world space: the camera sits at
+	 * `target.pos + followOffset`, whichever way the target faces. Called
+	 * once when configuring a follow-cam (e.g. behind-and-above third
+	 * person: `setFollowOffset(0, -2, -8)`).
+	 * @param x - world-space x offset
+	 * @param y - world-space y offset
+	 * @param z - world-space z offset
 	 * @returns this camera
 	 */
 	setFollowOffset(x: number, y: number, z: number): this {
@@ -1346,8 +1361,10 @@ export default class Camera3d extends Camera2d {
 	 * rotates with the camera's pitch / yaw, not a fixed axis-aligned
 	 * rect at the camera's x / y. Camera3d substitutes plane-based
 	 * frustum culling — each non-floating renderable's bounding sphere
-	 * is tested against the six frustum planes that were extracted in
-	 * the most recent `update()` call. Floating elements (HUD / UI)
+	 * is tested against the six frustum planes of the camera as it is
+	 * now: they are rebuilt in `update()`, and again here if the camera
+	 * was moved, turned or re-projected since (a frame culls the world
+	 * before it updates the camera). Floating elements (HUD / UI)
 	 * still use Camera2d's 2D rect test because their bounds are
 	 * screen-space and the perspective transform doesn't apply to them.
 	 * @param obj - the renderable to test
@@ -1361,6 +1378,7 @@ export default class Camera3d extends Camera2d {
 		if (floating || obj.floating) {
 			return super.isVisible(obj, floating);
 		}
+		this._ensureFrustumPlanes();
 		// Use the renderable's WORLD position for the frustum-sphere
 		// test, not `bounds.centerX/Y`. The bounds rect is computed
 		// with `addFrame()` and can stay in local coords when the
@@ -1442,8 +1460,36 @@ export default class Camera3d extends Camera2d {
 				out?: Renderable[],
 			) => Renderable[];
 		};
+		this._ensureFrustumPlanes();
 		broadphase.queryFrustum?.(this.frustum.planes, result);
 		return result;
+	}
+
+	/**
+	 * Rebuild the frustum planes if the camera moved, turned or changed its
+	 * projection since they were last built (see `_planesState`). Ten
+	 * comparisons when nothing changed, so it is cheap enough to run on
+	 * every visibility query.
+	 * @ignore
+	 * @internal
+	 */
+	_ensureFrustumPlanes(): void {
+		const s = this._planesState;
+		const f = this.frustum;
+		if (
+			s[0] !== this.pos.x ||
+			s[1] !== this.pos.y ||
+			s[2] !== this.depth ||
+			s[3] !== this.pitch ||
+			s[4] !== this.yaw ||
+			s[5] !== this.roll ||
+			s[6] !== f.fov ||
+			s[7] !== f.aspect ||
+			s[8] !== f.near ||
+			s[9] !== f.far
+		) {
+			this._rebuildFrustumPlanes();
+		}
 	}
 
 	/**
@@ -1524,7 +1570,8 @@ export default class Camera3d extends Camera2d {
 	/**
 	 * Recompute the frustum's six bounding planes from the current
 	 * `projectionMatrix × viewMatrix` (the world → clip matrix).
-	 * Called from {@link Camera3d#update} each frame; `isVisible`
+	 * Called from {@link Camera3d#update} each frame, and by
+	 * `_ensureFrustumPlanes` when the camera changed since; `isVisible`
 	 * then tests against the cached planes.
 	 * @ignore
 	 * @internal
@@ -1553,5 +1600,18 @@ export default class Camera3d extends Camera2d {
 		_viewProjection.multiply(_viewMatrix);
 
 		this.frustum.setFromViewProjection(_viewProjection);
+
+		// remember what these planes describe (see `_ensureFrustumPlanes`)
+		const s = this._planesState;
+		s[0] = this.pos.x;
+		s[1] = this.pos.y;
+		s[2] = this.depth;
+		s[3] = this.pitch;
+		s[4] = this.yaw;
+		s[5] = this.roll;
+		s[6] = this.frustum.fov;
+		s[7] = this.frustum.aspect;
+		s[8] = this.frustum.near;
+		s[9] = this.frustum.far;
 	}
 }

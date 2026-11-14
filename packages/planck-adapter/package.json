@@ -1,6 +1,6 @@
 {
 	"name": "@melonjs/planck-adapter",
-	"version": "1.6.2",
+	"version": "1.8.0",
 	"description": "melonJS physics adapter for planck.js (Box2D)",
 	"homepage": "https://www.npmjs.com/package/@melonjs/planck-adapter",
 	"type": "module",
@@ -31,9 +31,6 @@
 	"license": "MIT",
 	"author": "Olivier Biot (AltByte Pte Ltd)",
 	"funding": "https://github.com/sponsors/melonjs",
-	"engines": {
-		"node": ">=24.0.0"
-	},
 	"types": "./build/index.d.ts",
 	"exports": {
 		".": "./build/index.js"
@@ -49,9 +46,11 @@
 		"melonjs": ">=20.0.0"
 	},
 	"dependencies": {
-		"planck": "^1.5.0"
+		"planck": "^1.5.1"
 	},
 	"devDependencies": {
+		"@melonjs/matter-adapter": "workspace:*",
+		"@melonjs/rapier2d-adapter": "workspace:*",
 		"concurrently": "^9.2.1",
 		"esbuild": "^0.28.0",
 		"melonjs": "workspace:*",

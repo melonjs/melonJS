@@ -1,5 +1,42 @@
 # Changelog
 
+## 1.8.1 - _unreleased_
+
+### Fixed
+- Installing the adapter no longer asks for Node 24. Its `package.json` declared `engines: { node: ">=24.0.0" }`, so npm warned on an older Node and Yarn 1 refused to install it; the adapter runs in the browser
+
+## 1.8.0 - _2026-11-13_
+
+### Added
+- Joints through `world.addJoint()` (melonJS 20.15): a `"hinge"` is a `RevoluteJoint`, a `"rope"` a `RopeJoint`, a `"weld"` a `WeldJoint` and a `"slider"` a `PrismaticJoint`, in pixels and radians. A joint made or removed during a step, from a collision handler, takes effect when the step ends; `updateShape()` keeps a body's joints
+
+### Fixed
+- `updateShape()` keeps the body's angle; the new body was built upright
+- `updateShape()` called from a collision handler no longer crashes: the new shape takes effect when the step ends
+
+## 1.7.0 - _2026-11-12_
+
+### Added
+- `PlanckAdapter.load()` and `PlanckAdapter.create(options)`, the static API every melonJS physics adapter shares; `new PlanckAdapter(options)` is unchanged
+
+### Fixed
+- Collision `depth` is the overlap in pixels, in the body and shape hooks; it was always 0
+- A body removed with `removeChildNow()` from `onCollisionStart` or `onCollisionEnd` no longer stays behind as an invisible collider
+- `setFrictionAir()` damps rotation as well as movement, as `frictionAir` in a `bodyDef` does
+- A body with no `collisionMask` collides with every collision type, as on the other adapters; user types from bit 16 up were ignored
+- The start-up version check requires melonJS 20.0 or later, as the peer dependency does; it accepted 19.5
+- Requires planck 1.5.1, where a jammed body no longer makes `World.step()` throw
+- A shape contact carries `overlapN`, `overlapV` and the Z fields its type declares, as on the builtin adapter
+- `getMaxVelocity()` reads a body with no cap as `Infinity`, not `{ 0, 0 }`, and returns a copy
+- `addBody()` sets `renderable.isKinematic` to `false`, as the builtin adapter does, so a renderable with a body receives pointer events
+- `body.collisionType` and `body.collisionMask` read the first shape's values; they read the last shape's
+- A body removed by its partner's collision handler is no longer told about that contact
+
+## 1.6.3 - _2026-11-09_
+
+### Fixed
+- `isGrounded()` counts a contact only when it pushes the body up, so the side of a wall no longer counts as ground and can no longer be climbed with repeated jumps; and ground whose body starts above the player (a Tiled polyline starting on a ledge) now counts. A sensor contact keeps the old rule
+
 ## 1.6.2 - _2026-10-07_
 
 ### Changed

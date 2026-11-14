@@ -1,4 +1,5 @@
 import * as device from "./../system/device";
+import { hasDOM } from "../system/dom.ts";
 import type Application from "./application.ts";
 
 /**
@@ -21,9 +22,13 @@ function scale(game: Application, x: number, y: number): void {
 	// update the global scale variable
 	renderer.scaleRatio.set(x * pixelRatio, y * pixelRatio);
 
-	// adjust CSS style based on device pixel ratio
-	canvas.style.width = `${w / pixelRatio}px`;
-	canvas.style.height = `${h / pixelRatio}px`;
+	// adjust CSS style based on device pixel ratio (a canvas with no
+	// `style`, like nx.js's `screen`, is not displayed through CSS)
+	const style = (canvas as { style?: CSSStyleDeclaration }).style;
+	if (style) {
+		style.width = `${w / pixelRatio}px`;
+		style.height = `${h / pixelRatio}px`;
+	}
 
 	// if anti-alias and blend mode were reset (e.g. Canvas mode)
 	renderer.setAntiAlias(settings.antiAlias);
@@ -72,7 +77,9 @@ export function onresize(game: Application): void {
 		scaleY = settings.scale;
 	let nodeBounds;
 
-	if (settings.autoScale) {
+	// automatic scaling measures the page around the canvas; without a DOM
+	// there is no page, and the canvas is drawn at the scale it was given
+	if (settings.autoScale && hasDOM()) {
 		// set max the canvas max size if CSS values are defined
 		let canvasMaxWidth = Infinity;
 		let canvasMaxHeight = Infinity;

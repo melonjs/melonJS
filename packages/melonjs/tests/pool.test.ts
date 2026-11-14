@@ -93,11 +93,14 @@ test("can manually purge", () => {
 	pool.release(object2);
 	pool.purge();
 	expect(pool.size()).toBe(0);
-	expect(pool.used()).toBe(0);
+	// purge drops the idle instances only: object3 is still out
+	expect(pool.used()).toBe(1);
 	pool.release(object3);
 	expect(pool.size()).toBe(1);
-	expect(pool.size()).toBe(1);
+	expect(pool.used()).toBe(0);
 	pool.purge();
+	expect(pool.size()).toBe(0);
+	expect(pool.used()).toBe(0);
 });
 
 test("can pass arguments", () => {

@@ -151,9 +151,14 @@ export default class FrameAnimation {
 		let counter = 0;
 
 		if (typeof host.textureAtlas !== "object") {
+			this._refreshCurrent(name);
 			return 0;
 		}
 
+		// the "default" animation a sprite makes itself, over every frame of
+		// its texture: a named atlas's frames are not numbered, so that one
+		// can find none, quietly
+		const quiet = index == null;
 		if (index == null) {
 			index = [];
 			// create a default animation with all frame
@@ -162,7 +167,10 @@ export default class FrameAnimation {
 			});
 		}
 
-		// set each frame configuration (offset, size, etc..)
+		// set each frame configuration (offset, size, etc..). A frame the
+		// texture does not have is left out, so the frames that exist play in
+		// order with no empty slot between them
+		const missing = [];
 		for (let i = 0, len = index.length; i < len; i++) {
 			const frame = index[i];
 			let frameObject;
@@ -175,35 +183,84 @@ export default class FrameAnimation {
 				frameObject = frame;
 			}
 			const frameObjectName = frameObject.name;
+			let region;
 			if (typeof frameObjectName === "number") {
-				if (typeof host.textureAtlas[frameObjectName] !== "undefined") {
-					// see https://github.com/melonjs/melonJS/issues/1281
-					this.anim[name].frames[i] = Object.assign(
-						{},
-						host.textureAtlas[frameObjectName],
-						frameObject,
-					);
-					counter++;
-				}
+				region = host.textureAtlas[frameObjectName];
 			} else {
 				// string
 				if (host.source.getFormat().includes("Spritesheet")) {
 					throw new Error(
 						"string parameters for addAnimation are not allowed for standard spritesheet based Texture",
 					);
-				} else {
-					this.anim[name].frames[i] = Object.assign(
-						{},
-						host.textureAtlas[host.atlasIndices[frameObjectName]],
-						frameObject,
-					);
-					counter++;
 				}
+				const atlasIndex = host.atlasIndices?.[frameObjectName];
+				region =
+					atlasIndex === undefined ? undefined : host.textureAtlas[atlasIndex];
 			}
+			if (region === undefined) {
+				missing.push(frameObjectName);
+				continue;
+			}
+			// see https://github.com/melonjs/melonJS/issues/1281
+			this.anim[name].frames[counter] = Object.assign({}, region, frameObject);
+			counter++;
+		}
+		if (missing.length > 0 && !quiet) {
+			console.warn(
+				`melonJS: addAnimation("${name}"): no frame ${missing
+					.map((m) => {
+						return JSON.stringify(m);
+					})
+					.join(", ")} in the texture, left out of the animation`,
+			);
 		}
 		this.anim[name].length = counter;
 
+		this._refreshCurrent(name);
+
 		return counter;
+	}
+
+	/**
+	 * Re-sync the playback state after `addAnimation()` redefined `name`.
+	 *
+	 * `current.length` is copied from the definition by `setCurrentAnimation`,
+	 * and re-selecting the current id is a no-op, so redefining the animation
+	 * that is playing (the documented "slower animation" idiom re-adds an id)
+	 * left the old length behind: a shorter strip then stepped to an index
+	 * past its end and the next `update()` read `undefined.delay`.
+	 *
+	 * The playing frame is kept when it still exists and re-applied (its
+	 * region may have changed); past the new end, playback restarts on frame
+	 * 0, or holds the new last frame if a play-once run had already finished.
+	 * The timer and the `setCurrentAnimation` options are kept; `onFrame` is
+	 * not called, since redefining is not playback reaching a frame.
+	 * @ignore
+	 * @internal
+	 * @param {string} name - the animation id that was just (re)defined
+	 */
+	_refreshCurrent(name) {
+		if (!this.isCurrentAnimation(name)) {
+			return;
+		}
+		const current = this.current;
+		const length = this.anim[name].length;
+		current.length = length;
+		if (length === 0) {
+			// nothing to show or step (`_isStepping` is false): keep the last
+			// drawn region, and an index that is valid once frames come back
+			current.idx = 0;
+			this.dt = 0;
+			return;
+		}
+		if (current.idx < length) {
+			this.setAnimationFrame(current.idx);
+		} else if (this._animDone) {
+			this.setAnimationFrame(length - 1);
+		} else {
+			this.dt = 0;
+			this.setAnimationFrame(0);
+		}
 	}
 
 	/**

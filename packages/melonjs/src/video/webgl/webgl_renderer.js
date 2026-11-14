@@ -34,6 +34,7 @@ import { FrameTexture } from "./../texture/frametexture.js";
 import { dashPath, dashSegments } from "../utils/dash.js";
 import { pointsBox } from "../utils/pixel_snap.js";
 import {
+	arcSweep,
 	generateJoinCircles,
 	generateTriangleFan,
 } from "../utils/tessellation.js";
@@ -1290,6 +1291,41 @@ export default class WebGLRenderer extends Renderer {
 		}
 	}
 
+	/**
+	 * Release the GL texture uploaded from an image that is going away, and
+	 * every batcher's belief that it is bound — the colour texture the shared
+	 * store holds, and the lit batcher's copy when it was used as a normal map.
+	 * Every batcher, not just the current one: each keeps its own record of
+	 * what is bound to which unit.
+	 * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap|object} image - the image source
+	 * @ignore
+	 * @internal
+	 */
+	releaseImage(image) {
+		const record = this.textureStore?.peek(image);
+		if (this.batchers) {
+			this.batchers.forEach((batcher) => {
+				if (
+					record !== undefined &&
+					typeof batcher.unbindTexture2D === "function"
+				) {
+					// a texture can sit on several units (one per wrap mode);
+					// bounded, should a custom batcher not report -1 when done
+					const units = batcher.boundTextures?.length ?? 1;
+					for (let i = 0; i < units; i++) {
+						const unit = batcher.unbindTexture2D(record.handle);
+						if (typeof unit !== "number" || unit < 0) {
+							break;
+						}
+					}
+				}
+				batcher.evictNormalMap?.(image);
+			});
+		}
+		this.textureStore?.destroyTexture(image);
+		super.releaseImage(image);
+	}
+
 	reset() {
 		super.reset();
 
@@ -2163,7 +2199,10 @@ export default class WebGLRenderer extends Renderer {
 		this.setGlobalAlpha(1.0);
 		this.setBlendMode("normal");
 
-		if (isCamera) {
+		// a camera that starts the frame starts its pass like one (background
+		// colour, fresh stencil); one drawn over another camera, and any
+		// renderable, starts transparent so what is behind shows through
+		if (isCamera && !renderable._postEffectOver) {
 			this.clear();
 		} else {
 			this.clearRenderTarget();
@@ -2198,7 +2237,10 @@ export default class WebGLRenderer extends Renderer {
 		const isCamera = renderable._postEffectManaged;
 		const rt1 = this._renderTargetPool.getCaptureTarget();
 		const rt2 = this._renderTargetPool.getPingPongTarget();
-		const keepBlend = !isCamera;
+		// a camera that starts the frame replaces it; one drawn over another
+		// camera is blended over what that one drew
+		const over = isCamera && renderable._postEffectOver === true;
+		const keepBlend = !isCamera || over;
 		const canvas = this.getCanvas();
 		const w = canvas.width;
 		const h = canvas.height;
@@ -2251,6 +2293,10 @@ export default class WebGLRenderer extends Renderer {
 
 		// the chain's passes are told where the renderable is
 		this._beginChainSpace(renderable);
+		if (over) {
+			// whatever the camera's last draw left set
+			this.setBlendMode("normal");
+		}
 		// a renderable's chain lands at the opacity it is drawn at, by its
 		// last blit only; a camera's composites whole
 		const alpha = isCamera
@@ -3446,6 +3492,8 @@ export default class WebGLRenderer extends Renderer {
 		}
 		const result = this.renderState.restore(canvas.width, canvas.height);
 		if (result !== null) {
+			this.lineWidth = this.renderState.lineWidth;
+			this.lineJoin = this.renderState.lineJoin;
 			this.setBlendMode(result.blendMode);
 			if (scissorChanging) {
 				const gl = this.gl;
@@ -3487,6 +3535,10 @@ export default class WebGLRenderer extends Renderer {
 	 */
 	save() {
 		this.renderState.currentShader = this.customShader;
+		// line width and join are plain fields here, not context state: hand
+		// them to the stack so restore() puts them back, as on Canvas
+		this.renderState.lineWidth = this.lineWidth;
+		this.renderState.lineJoin = this.lineJoin;
 		this.renderState.save(this._scissorActive === true);
 	}
 
@@ -3652,7 +3704,9 @@ export default class WebGLRenderer extends Renderer {
 	 * @param {number} alpha - 0.0 to 1.0 values accepted.
 	 */
 	setGlobalAlpha(alpha) {
-		this.currentColor.alpha = alpha;
+		// apart from the colour's own alpha, as a 2D context keeps its
+		// globalAlpha apart from its fillStyle
+		this.renderState.globalAlpha = alpha;
 	}
 
 	/**
@@ -3660,7 +3714,7 @@ export default class WebGLRenderer extends Renderer {
 	 * @returns {number} global alpha value
 	 */
 	getGlobalAlpha() {
-		return this.currentColor.alpha;
+		return this.renderState.globalAlpha;
 	}
 
 	/**
@@ -3675,9 +3729,9 @@ export default class WebGLRenderer extends Renderer {
 		} else {
 			this.renderState.currentGradient = null;
 			this._currentGradient = null;
-			const alpha = this.currentColor.alpha;
+			// the colour keeps its own alpha: fills and strokes are drawn at
+			// it times the global alpha (see `packedFillColor`)
 			this.currentColor.copy(color);
-			this.currentColor.alpha *= alpha;
 		}
 	}
 
@@ -3712,7 +3766,9 @@ export default class WebGLRenderer extends Renderer {
 	}
 
 	/**
-	 * Fill an arc at the specified coordinates with given radius, start and end points
+	 * Fill an arc at the specified coordinates with given radius, start and end points.
+	 * The angles are read like `CanvasRenderingContext2D.arc`: an end before
+	 * the start wraps round, and a span of 2π or more is the whole circle.
 	 * @param {number} x - arc center point x-axis
 	 * @param {number} y - arc center point y-axis
 	 * @param {number} radius - arc radius
@@ -3741,27 +3797,28 @@ export default class WebGLRenderer extends Renderer {
 			radius * 2,
 		);
 		this.setBatcher("primitive");
-		let diff = Math.abs(end - start);
-		if (antiClockwise) {
-			diff = Math.PI * 2 - diff;
+		const diff = arcSweep(start, end, antiClockwise);
+		if (diff > 0) {
+			const segments = Math.max(
+				4,
+				Math.round((diff * radius) / this.path2D.arcResolution),
+			);
+			// the fan always runs clockwise: an anticlockwise arc from `start`
+			// covers the same angles as a clockwise one ending at `start`
+			const startAngle = antiClockwise ? start - diff : start;
+			this.currentBatcher.drawVertices(
+				this.gl.TRIANGLES,
+				generateTriangleFan(
+					x,
+					y,
+					radius,
+					radius,
+					startAngle,
+					startAngle + diff,
+					segments,
+				),
+			);
 		}
-		const segments = Math.max(
-			4,
-			Math.round((diff * radius) / this.path2D.arcResolution),
-		);
-		const startAngle = antiClockwise ? end : start;
-		this.currentBatcher.drawVertices(
-			this.gl.TRIANGLES,
-			generateTriangleFan(
-				x,
-				y,
-				radius,
-				radius,
-				startAngle,
-				startAngle + diff,
-				segments,
-			),
-		);
 		this._pixelSnapEnd(snapped);
 	}
 

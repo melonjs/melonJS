@@ -206,10 +206,6 @@ for (const [name, rgb] of CSS_COLORS) {
 }
 
 /**
- * A color manipulation object.
- * @category Math
- */
-/**
  * Encode one LINEAR colour channel to sRGB.
  *
  * The standard sRGB transfer function. Kept at `0..1` rather than `0..255`
@@ -229,6 +225,10 @@ export function linearToSrgb(c: number) {
 	return v <= 0.0031308 ? v * 12.92 : 1.055 * v ** (1 / 2.4) - 0.055;
 }
 
+/**
+ * A color manipulation object.
+ * @category Math
+ */
 export class Color {
 	private normalizedRGBA: Float32Array;
 

@@ -39,8 +39,11 @@ the usual arrangement: author once, scale to whatever you are given.
 
 ## `scale` and `scaleMethod`
 
-`scale: "auto"` turns on automatic scaling; a number is a fixed multiplier and
-`scaleMethod` is then ignored.
+`scale: "auto"` turns on automatic scaling, and so does naming any
+`scaleMethod` other than `"manual"`, even with no `scale` given:
+`{ scaleMethod: "flex" }` alone scales to its container. A number is a fixed
+multiplier, used only while `scaleMethod` is `"manual"` (the default); with
+automatic scaling on, the number is ignored.
 
 `scaleMethod` decides how the available space is used:
 
@@ -54,7 +57,8 @@ the usual arrangement: author once, scale to whatever you are given.
   both axes.
 - **`"stretch"`** scales each axis independently, so the aspect ratio is not
   preserved and circles become ovals.
-- **`"manual"`** does nothing automatic.
+- **`"manual"`**, the default, does nothing automatic with a numeric `scale`.
+  With `scale: "auto"` it scales as `"fit"` does.
 
 The distinction that matters: **`fit` scales a fixed frame; everything else
 changes how much of the world is visible.** A game whose layout assumes a
@@ -381,3 +385,4 @@ const app = new Application(1024, 576, {
 | `scaleRounding: "integer"` changes nothing | it applies to `scaleMethod: "fit"` only; the others resize the renderer |
 | text is soft but sprites are crisp | the glyphs were anti-aliased when `Text` baked them; use `BitmapText` (see below) |
 | the game shows more world on a bigger window | that is `fill-*` or `flex-*` doing their job; use `"fit"` to keep a fixed frame |
+| a numeric `scale` (say `2`) is ignored | a `scaleMethod` other than `"manual"` turns automatic scaling on, which ignores the number |

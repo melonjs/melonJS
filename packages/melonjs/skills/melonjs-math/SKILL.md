@@ -1,6 +1,6 @@
 ---
 name: melonjs-math
-description: "Use this skill for vector and matrix maths in melonJS — Vector2d, Vector3d, their observable variants, Matrix2d, Matrix3d, and the math utility functions. Covers which methods mutate and which allocate, the vector pool and when clone() is the wrong tool, interpolation with lerp, slerp, damp and moveTowards, and the argument defaults that silently drop a component. Triggers on: Vector2d, Vector3d, ObservableVector2d, ObservableVector3d, Matrix2d, Matrix3d, vector, vector maths, dot, cross, normalize, length, distance, angle, lerp, slerp, damp, moveTowards, project, clamp, degToRad, radToDeg, clone, vector pool, vector3dPool, setMuted, setCallback, my vector is wrong, z is zero, scale ignores z., moveTowards ignores z, projectN, currentTransform, setTransform, matrix, transform matrix, column-major, val, Float32Array, basis matrix, orientation matrix, Noise, getNoise1d, flicker, wobble."
+description: "Use this skill for vector and matrix maths in melonJS — Vector2d, Vector3d, their observable variants, Matrix2d, Matrix3d, and the math utility functions. Covers which methods mutate and which allocate, the vector pool and when clone() is the wrong tool, interpolation with lerp, slerp, damp and moveTowards, and the argument defaults that silently drop a component. Triggers on: Vector2d, Vector3d, ObservableVector2d, ObservableVector3d, Matrix2d, Matrix3d, vector, vector maths, dot, cross, normalize, length, distance, angle, lerp, slerp, damp, moveTowards, project, clamp, degToRad, radToDeg, clone, vector pool, vector3dPool, setMuted, setCallback, my vector is wrong, z is zero, scale ignores z, moveTowards ignores z, setPosition, projectN, currentTransform, setTransform, matrix, transform matrix, column-major, val, Float32Array, basis matrix, orientation matrix, Noise, getNoise1d, flicker, wobble."
 license: MIT
 ---
 
@@ -97,6 +97,9 @@ v.scale(2, 2, 2);    // (1,2,3) -> (2,4,6)   what you meant
 v.set(10, 20);       // z is now 0, whatever it was
 ```
 
+To move a renderable, `setPosition(x, y)` (20.8) is the call that keeps its
+depth: leave out `z` and it stays as it was, where `pos.set(x, y)` zeroes it.
+
 **`Vector3d.pos` on a renderable is typed `Vector2d`.** `Renderable.pos` is an
 `ObservableVector3d` at run time but is declared through `Polygon` as a
 `Vector2d`, so `.z`, `.setMuted` and `.setCallback` need a cast from
@@ -117,7 +120,7 @@ The 2D one is the z component of the 3D cross, which is the useful scalar for
 ```js
 a.lerp(b, t);            // straight line, t in 0..1
 a.slerp(b, t);           // along the ARC, constant angular rate
-a.damp(b, lambda, dt);   // frame-rate independent ease toward b
+a.damp(b, lambda, dt);   // frame-rate independent ease toward b (dt in seconds)
 a.moveTowards(b, step);  // fixed distance per call, never overshoots
 ```
 
@@ -187,13 +190,22 @@ which is how a renderable knows its bounds went stale.
 
 ```js
 v.setCallback(() => { ... });
-v.setMuted(true);     // write without firing it
+v.setMuted(x, y, z);  // write without firing it
+v.setCallback(undefined); // stop observing
 ```
 
 **`setMuted` is what you want when writing several components**, so a
 half-updated vector does not fire a callback that reads the other half.
 `set()` already does this internally: it disables the callback, writes all
-three, fires once, and re-enables.
+three, fires once, and re-enables. Every mutating method (`add`, `scale`,
+`negateSelf`, `floorSelf`, `clampSelf`, `normalize`, `lerp`, …) goes through
+`set()`, so it fires once and returns the observable vector itself. Before
+20.13 `negateSelf`, `floorSelf`, `ceilSelf` and `clampSelf` (and the 3D
+`normalize` and `perp`) fired once per component and returned the wrapped
+plain vector instead.
+
+`clone()` takes from a pool, and gets the callback you pass it or none: before
+20.13 a recycled clone kept the callback of the vector released before it.
 
 Note the observable `set(x = 0, y = 0, z = 0)` defaults EVERY argument, so
 `set(10, 20)` zeroes z exactly as the plain vector does.
@@ -283,11 +295,13 @@ math.clamp(v, lo, hi);
 math.lerp(a, b, t);              // scalars
 math.damp(a, b, lambda, dt);     // frame-rate independent
 math.degToRad(deg);  math.radToDeg(rad);
-math.random(lo, hi);             // integer
+math.random(lo, hi);             // integer, hi EXCLUDED: random(1, 6) never gives 6
 math.randomFloat(lo, hi);
-math.weightedRandom(lo, hi);     // integer, biased toward LO
-math.round(n, decimals);
+math.weightedRandom(lo, hi);     // integer, biased toward LO, hi excluded
+math.round(n, decimals);        // nearest; a tie goes up, as Math.round: -2.5 → -2
 math.pow(n);                     // n squared
+math.lerpArray([1, 0.5, 0], t);  // a value along evenly spaced samples, t in 0..1
+math.isPowerOfTwo(n);  math.nextPowerOfTwo(n);
 math.DEG_TO_RAD  math.RAD_TO_DEG  math.TAU  math.ETA  math.EPSILON
 ```
 
@@ -315,9 +329,13 @@ and `Math.random()` every frame jitters instead of drifting.
 | symptom | cause |
 |---|---|
 | z unchanged after scaling | `scale(s)` leaves z alone; pass `scale(s, s, s)` |
-| z became 0 for no reason | `set(x, y)` defaults z to 0 |
+| z became 0 for no reason | `set(x, y)` defaults z to 0; move a renderable with `setPosition(x, y)` |
 | the original vector changed | the method mutates; `copy()` into something first |
+| a position callback fires twice and sees a half-updated vector, or `pos.floorSelf()` returns something that is not `pos` | before 20.13 the observable `negateSelf` / `floorSelf` / `ceilSelf` / `clampSelf` wrote component by component; upgrade |
+| `math.round(-2.7)` is -2, or a large value comes back negative | before 20.13 `round` truncated toward zero through 32-bit integers; upgrade |
+| `math.isPowerOfTwo(0)` is true, or a fraction passes | before 20.13 it accepted zero, negative and fractional values; upgrade |
 | memory climbs in a loop | `clone()` or `negate()`/`floor()`/`ceil()` per frame |
+| memory taken by dropped `clone()`s never comes back | before 20.9 the pool kept every instance it handed out; upgrade, and release what you clone |
 | two helper results are the same object | a shared scratch vector was returned |
 | `.z` is a type error | `Renderable.pos` is declared `Vector2d` (#1510) |
 | rotation eases oddly between directions | `lerp` on directions; use `slerp` |

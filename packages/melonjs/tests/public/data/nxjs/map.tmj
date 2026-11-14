@@ -1,0 +1,78 @@
+{
+	"type": "map",
+	"version": "1.10",
+	"orientation": "orthogonal",
+	"renderorder": "right-down",
+	"width": 4,
+	"height": 2,
+	"tilewidth": 32,
+	"tileheight": 32,
+	"infinite": false,
+	"nextlayerid": 2,
+	"nextobjectid": 1,
+	"layers": [
+		{
+			"id": 1,
+			"name": "ground",
+			"type": "tilelayer",
+			"x": 0,
+			"y": 0,
+			"width": 4,
+			"height": 2,
+			"opacity": 1,
+			"visible": true,
+			"data": [
+				1,
+				2,
+				1,
+				2,
+				2,
+				1,
+				1,
+				3
+			]
+		}
+	],
+	"tilesets": [
+		{
+			"firstgid": 1,
+			"name": "tiles",
+			"image": "tiles.png",
+			"imagewidth": 32,
+			"imageheight": 64,
+			"tilewidth": 32,
+			"tileheight": 32,
+			"tilecount": 2,
+			"columns": 1,
+			"margin": 0,
+			"spacing": 0
+		},
+		{
+			"firstgid": 3,
+			"name": "crop",
+			"tilewidth": 32,
+			"tileheight": 32,
+			"tilecount": 1,
+			"columns": 0,
+			"margin": 0,
+			"spacing": 0,
+			"grid": {
+				"orientation": "orthogonal",
+				"width": 1,
+				"height": 1
+			},
+			"tiles": [
+				{
+					"id": 0,
+					"image": "tiles.png",
+					"imagewidth": 32,
+					"imageheight": 64,
+					"x": 0,
+					"y": 32,
+					"width": 32,
+					"height": 32
+				}
+			]
+		}
+	]
+}

@@ -1,4 +1,5 @@
 import { colorPool } from "../math/color.ts";
+import { Matrix3d } from "../math/matrix3d.ts";
 import Body from "../physics/builtin/body.js";
 import {
 	needsShapeResolution,
@@ -18,6 +19,82 @@ import Renderable from "./renderable.js";
  */
 function deferredRemove(child, keepalive) {
 	this.removeChildNow(child, keepalive);
+}
+
+/**
+ * The children the engine has sent `onActivateEvent` to and not yet sent the
+ * matching `onDeactivateEvent`.
+ *
+ * A child hears of a removal by two routes: its own `removeChildNow`, and its
+ * container's `onDeactivateEvent`, which forwards to every child. Removing a
+ * group walks both, one after the other — the group's `onDeactivateEvent`
+ * tells every descendant, then its `destroy()` empties it through
+ * `removeChildNow`, which told each of them again. A child that counted on
+ * the pair (a reference count, a light or a listener registered once and
+ * released once) was released twice for being added once. Each route now
+ * asks this set first, so whichever comes first is the one that is heard,
+ * however deep the child sits and whether the group is destroyed, pooled or
+ * kept alive. Weak, so a child dropped without being removed is not kept.
+ * @ignore
+ * @internal
+ */
+const activeChildren = new WeakSet();
+
+/**
+ * Scratch for {@link Container#draw}'s depth translation: an identity matrix
+ * whose z translation is rewritten per draw and consumed at once by
+ * `renderer.transform`, so one is enough.
+ * @ignore
+ * @internal
+ */
+const _depthShift = new Matrix3d();
+
+/**
+ * Whether `renderer` is drawing through a perspective projection (a
+ * {@link Camera3d}): the projection's z→w term is non-zero, the same test
+ * {@link Renderer#setDepth} makes. Orthographic (every `Camera2d`, and the
+ * screen projection floating children draw with) leaves it 0.
+ * @param {Renderer} renderer - the renderer drawing
+ * @returns {boolean} true under a perspective projection
+ * @ignore
+ * @internal
+ */
+function isPerspective(renderer) {
+	const projection = renderer.projectionMatrix;
+	return projection !== undefined && projection.val[11] !== 0;
+}
+
+/**
+ * Send `onActivateEvent` to a child that has not had one yet.
+ * @ignore
+ * @internal
+ * @param {Renderable} child - the child entering the world
+ */
+function activateChild(child) {
+	if (
+		typeof child?.onActivateEvent === "function" &&
+		!activeChildren.has(child)
+	) {
+		// marked first, so a hook that re-enters (adding the child elsewhere)
+		// does not activate it a second time
+		activeChildren.add(child);
+		child.onActivateEvent();
+	}
+}
+
+/**
+ * Send `onDeactivateEvent` to a child, once for each `onActivateEvent` it had.
+ * @ignore
+ * @internal
+ * @param {Renderable} child - the child leaving the world
+ */
+function deactivateChild(child) {
+	if (
+		activeChildren.delete(child) &&
+		typeof child.onDeactivateEvent === "function"
+	) {
+		child.onDeactivateEvent();
+	}
 }
 
 /**
@@ -163,6 +240,9 @@ function describeChild(child) {
  *  - `child.body instanceof Body`: pre-constructed legacy {@link Body}
  *    with no `bodyDef`, routed through `world.addBody(child.body)`.
  *    BuiltinAdapter-only.
+ * @param {Renderable} child - the renderable whose body to register
+ * @param {Container} worldContainer - the root world container
+ * @returns {boolean} true if the renderable had a body to register
  * @ignore
  * @internal
  */
@@ -180,8 +260,198 @@ function registerChildBody(child, worldContainer) {
 		// none exists, or re-applies def fields onto the existing one
 		// (legacy-bridge path) — see BuiltinAdapter.addBody.
 		worldContainer.adapter.addBody(child, def);
+		// a renderable with a body takes part in physics and input. Adapters
+		// say so in `addBody`, as the built-in `Body` constructor does; this
+		// covers one that does not, whose renderables would stay kinematic
+		// and be skipped by pointer events.
+		child.isKinematic = false;
 	} else if (child.body instanceof Body) {
 		worldContainer.addBody(child.body);
+	} else {
+		return false;
+	}
+	return true;
+}
+
+/**
+ * The world each renderable's body was registered with by the engine — or
+ * `null` once {@link unregisterTreeBodies} has taken it out again, until the
+ * renderable is next registered.
+ *
+ * Bodies used to be handled one level deep: adding a container registered
+ * its own children's bodies and no further, and removing one took out its
+ * own body and none of its children's. A body two levels down was never
+ * simulated, and a group detached with `keepalive` (what moving it with
+ * `addChild` does) left its children's bodies in the simulation, so adding
+ * the group again registered them a second time, which the builtin adapter
+ * refuses with a throw and the others would have duplicated. The whole
+ * subtree is now registered on the way in and unregistered on the way out,
+ * and this map is what makes both idempotent: a body is added once per
+ * stay in the world and removed once, however deep it sits and however many
+ * routes (the removed container, then its `destroy()` emptying it) reach it.
+ * Weak, so a renderable dropped without being removed is not kept.
+ * @ignore
+ * @internal
+ */
+const registeredBodies = new WeakMap();
+
+/**
+ * Register the physics body of a renderable and of everything below it, at
+ * any depth, with the given world. A renderable already registered with that
+ * world is skipped.
+ * @ignore
+ * @internal
+ * @param {Renderable} node - the renderable entering the world
+ * @param {Container} worldContainer - the root world container
+ * @param {Error[]} [refused] - when given, a body the adapter refuses to
+ * build is recorded here and the rest of the tree is still registered;
+ * otherwise the refusal is thrown
+ */
+export function registerTreeBodies(node, worldContainer, refused) {
+	if (registeredBodies.get(node) !== worldContainer) {
+		let registered;
+		try {
+			registered = registerChildBody(node, worldContainer);
+		} catch (error) {
+			if (refused === undefined) {
+				throw error;
+			}
+			refused.push(error);
+			registered = false;
+		}
+		if (registered) {
+			registeredBodies.set(node, worldContainer);
+		} else {
+			// nothing for the engine to register: a body this renderable
+			// holds was registered some other way, and is removed that way
+			registeredBodies.delete(node);
+		}
+	}
+	if (node instanceof Container) {
+		node.forEach((child) => {
+			registerTreeBodies(child, worldContainer, refused);
+		});
+	}
+}
+
+/**
+ * Whether the engine registered a body for this renderable with the given
+ * world, from its `bodyDef` or legacy `Body`.
+ * @ignore
+ * @internal
+ * @param {Renderable} node - the renderable
+ * @param {Container} worldContainer - the root world container
+ * @returns {boolean}
+ */
+export function hasRegisteredBody(node, worldContainer) {
+	return registeredBodies.get(node) === worldContainer;
+}
+
+/**
+ * Take a renderable's physics body out of the simulation: from the world the
+ * engine registered it with, or — for a body registered some other way, such
+ * as a direct `adapter.addBody()` call — from the world the renderable is
+ * being removed from.
+ * @ignore
+ * @internal
+ * @param {Renderable} node - the renderable leaving the world
+ * @param {Container} [root] - the root of the tree it is being removed from
+ */
+function unregisterBody(node, root) {
+	if (registeredBodies.has(node)) {
+		const registeredWith = registeredBodies.get(node);
+		if (registeredWith) {
+			// its joints first: they hold the body
+			registeredWith._removeJointsOf?.(node);
+			if (registeredWith.adapter?.removeBody) {
+				registeredWith.adapter.removeBody(node);
+			} else if (node.body instanceof Body) {
+				registeredWith.removeBody?.(node.body);
+			}
+			// and any made while it went: removing a body ends its contacts,
+			// and a collision-end handler can join it again
+			registeredWith._removeJointsOf?.(node);
+			// kept, as `null`, so a second route to the same removal (a
+			// group's `destroy()` emptying it after the group was taken
+			// out) knows the body is already gone
+			registeredBodies.set(node, null);
+		}
+		return;
+	}
+	// Remove the body first to avoid a condition where a body can be
+	// detached from its parent before it's removed from the game world.
+	// `node.body` may be a melonJS `Body` (legacy / builtin adapter) or an
+	// adapter-specific handle (e.g. `Matter.Body` under the matter adapter);
+	// either way the adapter knows how to clean it up by renderable identity
+	// (and does nothing for one it does not hold).
+	if (node.body) {
+		/** @type {{ adapter?: { removeBody?: (r: object) => void }, _removeJointsOf?: (r: object) => void }} */
+		const world = root;
+		world?._removeJointsOf?.(node);
+		if (world?.adapter?.removeBody) {
+			world.adapter.removeBody(node);
+			// and any a collision-end handler made while it went
+			world._removeJointsOf?.(node);
+		} else if (node.body instanceof Body) {
+			// Container detached from the world tree — fall back to the
+			// legacy `world.removeBody(body)` path if available. This only
+			// handles a legacy `Body`; an adapter-specific handle reaching
+			// this branch silently leaks (warn so it surfaces in development).
+			root?.removeBody?.(node.body);
+		} else {
+			console.warn(
+				"melonJS: removeChildNow could not clean up an adapter-specific body — the container is not attached to a world with an adapter. The body remains in the physics engine.",
+			);
+		}
+	}
+}
+
+/**
+ * Unregister the physics body of a renderable and of everything below it, at
+ * any depth: the counterpart of {@link registerTreeBodies}, run whether the
+ * renderable is destroyed, pooled or kept alive to be added again.
+ * @ignore
+ * @internal
+ * @param {Renderable} node - the renderable leaving the world
+ * @param {Container} [root] - the root of the tree it is being removed from
+ */
+export function unregisterTreeBodies(node, root) {
+	unregisterBody(node, root);
+	if (node instanceof Container) {
+		node.forEach((child) => {
+			unregisterTreeBodies(child, root);
+		});
+	}
+}
+
+/**
+ * The child {@link moveChild} is taking from one container to another of the
+ * same world, while it is between the two: its bodies stay in the simulation.
+ * @ignore
+ * @internal
+ */
+let movingWithinWorld = null;
+
+/**
+ * Take a child out of its container to add it to another. Within one world
+ * its bodies, and everything below it, stay in the simulation as they are:
+ * moving, turned, and joined to other bodies. Taken to another world, or out
+ * of one, they are removed and built again on the way in.
+ * @ignore
+ * @internal
+ * @param {Renderable} child - the child being moved
+ * @param {Container} to - the container it is moving to
+ */
+function moveChild(child, to) {
+	const from = child.ancestor;
+	const world = to.getRootAncestor();
+	movingWithinWorld =
+		world !== undefined && world === from.getRootAncestor() ? child : null;
+	try {
+		// kept alive: the child is moved, not disposed of
+		from.removeChildNow(child, true);
+	} finally {
+		movingWithinWorld = null;
 	}
 }
 
@@ -329,9 +599,13 @@ export default class Container extends Renderable {
 		};
 
 		/**
-		 * Re-measure this container's bounds from its children whenever a
-		 * child's bounds change. Expensive — every update walks the whole child
-		 * list — and off by default, because a parent almost never needs it.
+		 * Re-measure this container's bounds from its children, so they follow
+		 * the children as they move: on every update (after the children have
+		 * been updated), whenever a child is added or removed, and, while the
+		 * container is culled, before each visibility check, so a group whose
+		 * members come back into view is drawn again. Expensive — every
+		 * update walks the whole child list — and off by default, because a
+		 * parent almost never needs it.
 		 *
 		 * Enable it for a group whose extent genuinely IS its members' union
 		 * and moves as they do: a flock of birds, a squad of enemies. A
@@ -441,9 +715,20 @@ export default class Container extends Renderable {
 
 	/**
 	 * reset the container, removing all children, and resetting transforms.
+	 * Persistent children ({@link Renderable#isPersistent}) are kept, and a
+	 * sort still pending for them still happens.
 	 */
 	reset() {
+		// `clearChildren` cancels a pending sort, which is right for the
+		// children it removes and wrong for the persistent ones it keeps:
+		// added just before a reset (a `level.load` straight after setting a
+		// screen up), they would stay in the order they were added, their
+		// depth ignored, until something else sorted the container
+		const sortPending = this.pendingSort !== null;
 		this.clearChildren();
+		if (sortPending && this.getChildren().length > 0) {
+			this.sort();
+		}
 
 		this.currentTransform.identity();
 
@@ -491,7 +776,16 @@ export default class Container extends Renderable {
 	 * original container. Then when the World container reset() method is called the renderable
 	 * will not be in any container. <br>
 	 * if the given child implements an onActivateEvent method, that method will be called
-	 * once the child is added to this container.
+	 * once the child is added to this container, when this container is in the
+	 * world (or as soon as it is added to it). Each `onActivateEvent` is matched
+	 * by exactly one `onDeactivateEvent` when the child leaves the world again. <br>
+	 * Once this container is in the world, the physics body of the child
+	 * (its `bodyDef`, or a pre-built `Body`) is registered with the world's
+	 * physics adapter, and so is the body of every renderable below it if it is
+	 * a container, at any depth. They are taken out again when the child leaves
+	 * the world. A child moved here from another container of the same world
+	 * keeps its bodies as they are: moving, turned, and joined to other bodies
+	 * (see {@link World#addJoint}).
 	 * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child - Child to be added
 	 * @param {number} [z] - forces the z index of the child to the specified
 	 * value. This depth is scoped to THIS container: it orders the child among
@@ -514,7 +808,7 @@ export default class Container extends Renderable {
 			// instances are a real-world example) — which nulls
 			// `child.pos` and crashes the very next `updateBounds`
 			// call below. We're moving the child, not disposing of it.
-			child.ancestor.removeChildNow(child, true);
+			moveChild(child, this);
 		} else {
 			// only allocate a GUID if the object has no previous ancestor
 			// (e.g. move one child from one container to another)
@@ -550,24 +844,15 @@ export default class Container extends Renderable {
 		// the constructor; the order swap only matters for bodyDef.
 		if (this.isAttachedToRoot()) {
 			const worldContainer = this.getRootAncestor();
-			registerChildBody(child, worldContainer);
-			// if the child is a container
-			if (child instanceof Container) {
-				// add all container child bodies
-				child.forEach((cchild) => {
-					registerChildBody(cchild, worldContainer);
-				});
-			}
+			// the child's body and those of everything below it, at any depth
+			registerTreeBodies(child, worldContainer);
 			// it will draw from the next frame on: build what that draw needs
 			// now (honours the `prewarm` setting)
 			worldContainer?.app?.renderer?._queueWarm?.(child);
 		}
 
-		if (
-			typeof child.onActivateEvent === "function" &&
-			this.isAttachedToRoot()
-		) {
-			child.onActivateEvent();
+		if (this.isAttachedToRoot()) {
+			activateChild(child);
 		}
 
 		// force container bounds update if required
@@ -597,9 +882,9 @@ export default class Container extends Renderable {
 		}
 		if (index >= 0 && index <= this.getChildren().length) {
 			if (child.ancestor instanceof Container) {
-				// Reparenting — see Container.addChild for why
-				// `keepalive=true` is required here.
-				child.ancestor.removeChildNow(child, true);
+				// Reparenting — see Container.addChild for why the child is
+				// kept alive here.
+				moveChild(child, this);
 			} else {
 				// only allocate a GUID if the object has no previous ancestor
 				// (e.g. move one child from one container to another)
@@ -623,23 +908,14 @@ export default class Container extends Renderable {
 			// users. See addChild for the rationale.
 			if (this.isAttachedToRoot()) {
 				const worldContainer = this.getRootAncestor();
-				registerChildBody(child, worldContainer);
-				// if the child is a container
-				if (child instanceof Container) {
-					// add all container child bodies
-					child.forEach((cchild) => {
-						registerChildBody(cchild, worldContainer);
-					});
-				}
+				// see addChild
+				registerTreeBodies(child, worldContainer);
 				// see addChild
 				worldContainer?.app?.renderer?._queueWarm?.(child);
 			}
 
-			if (
-				typeof child.onActivateEvent === "function" &&
-				this.isAttachedToRoot()
-			) {
-				child.onActivateEvent();
+			if (this.isAttachedToRoot()) {
+				activateChild(child);
 			}
 
 			// force container bounds update if required
@@ -786,7 +1062,7 @@ export default class Container extends Renderable {
 	 * let allCoins = container.getChildByProp("name", /coin/i);
 	 *
 	 * // searching for numbers or other data types :
-	 * let zIndex10 = container.getChildByProp("z", 10);
+	 * let depth10 = container.getChildByProp("depth", 10);
 	 * let inViewport = container.getChildByProp("inViewport", true);
 	 */
 	getChildByProp(prop, value, objList = []) {
@@ -934,16 +1210,13 @@ export default class Container extends Renderable {
 	 *   assignable to the base Container/Renderable type.
 	 */
 	onActivateEvent(..._args) {
-		this.forEach((child) => {
-			if (typeof child.onActivateEvent === "function") {
-				child.onActivateEvent();
-			}
-		});
+		this.forEach(activateChild);
 	}
 
 	/**
 	 * Invokes the removeChildNow in a defer, to ensure the child is removed safely after the update & draw stack has completed. <br>
-	 * if the given child implements an onDeactivateEvent() method, that method will be called once the child is removed from this container.
+	 * if the given child implements an onDeactivateEvent() method, that method will be called once the child is removed from this container
+	 * (exactly once, for a child that had its `onActivateEvent`: the children of a removed container are told once, however deep they sit).
 	 * @param {Renderable|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child - Child to be removed
 	 * @param {boolean} [keepalive=false] - true to prevent calling child.destroy()
 	 */
@@ -958,15 +1231,22 @@ export default class Container extends Renderable {
 	/**
 	 * Removes (and optionally destroys) a child from the container.<br>
 	 * (removal is immediate and unconditional)<br>
+	 * A child that had its `onActivateEvent` gets one `onDeactivateEvent`, and
+	 * so does each child below it if it is a container — once, even though the
+	 * container's own `onDeactivateEvent` and its `destroy()` both reach them.<br>
+	 * The physics bodies of the child and of everything below it are taken out
+	 * of the simulation, at any depth and with or without `keepalive`; a child
+	 * kept alive and added back gets them registered again.<br>
 	 * Never use keepalive=true with objects from {@link pool}. Doing so will create a memory leak.
 	 * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child - Child to be removed
 	 * @param {boolean} [keepalive=False] - True to prevent calling child.destroy()
 	 */
 	removeChildNow(child, keepalive) {
 		if (this.hasChild(child) && this.getChildIndex(child) >= 0) {
-			if (typeof child.onDeactivateEvent === "function") {
-				child.onDeactivateEvent();
-			}
+			// once per activation: a child already told by its container's
+			// own `onDeactivateEvent` (a group being removed) is not told again
+			// here when that group's `destroy()` empties it
+			deactivateChild(child);
 
 			const root = this.getRootAncestor();
 
@@ -984,29 +1264,14 @@ export default class Container extends Renderable {
 				root.broadphase.remove(child);
 			}
 
-			// Remove the body first to avoid a condition where a body can
-			// be detached from its parent before it's removed from the
-			// game world. `child.body` may be a melonJS `Body` (legacy /
-			// builtin adapter) or an adapter-specific handle (e.g.
-			// `Matter.Body` under the matter adapter); either way the
-			// adapter knows how to clean it up by renderable identity.
-			if (child.body) {
-				/** @type {{ adapter?: { removeBody?: (r: object) => void } }} */
-				const world = root;
-				if (world?.adapter?.removeBody) {
-					world.adapter.removeBody(child);
-				} else if (child.body instanceof Body) {
-					// Container detached from the world tree — fall back to
-					// the legacy `world.removeBody(body)` path if available.
-					// This only handles a legacy `Body`; an adapter-specific
-					// handle reaching this branch silently leaks (warn so it
-					// surfaces in development).
-					root?.removeBody?.(child.body);
-				} else {
-					console.warn(
-						"melonJS: removeChildNow could not clean up an adapter-specific body — the container is not attached to a world with an adapter. The body remains in the physics engine.",
-					);
-				}
+			// Take the bodies out first, so none is left behind in the
+			// simulation by a renderable leaving the world: the child's, and
+			// — if it is a container — those of everything below it, at any
+			// depth, whether it is destroyed, pooled or kept alive (moved by
+			// `addChild` to another world, or removed to be added again
+			// later). A move within this world leaves them in.
+			if (child !== movingWithinWorld) {
+				unregisterTreeBodies(child, root);
 			}
 
 			if (!keepalive) {
@@ -1208,11 +1473,7 @@ export default class Container extends Renderable {
 	 *   assignable to the base Container/Renderable type.
 	 */
 	onDeactivateEvent(..._args) {
-		this.forEach((child) => {
-			if (typeof child.onDeactivateEvent === "function") {
-				child.onDeactivateEvent();
-			}
-		});
+		this.forEach(deactivateChild);
 	}
 
 	/**
@@ -1469,6 +1730,25 @@ export default class Container extends Renderable {
 					inViewport = true;
 				}
 			});
+			// A container measured from its children re-measures itself at
+			// the end of its own update (below), and only runs that update
+			// while it is in view. Culled, it would keep the bounds of where
+			// its children WERE, and children carried back on screen by
+			// physics, a tween or game code would never be drawn, since the
+			// update that notices they moved is the one being skipped.
+			// Re-measured here, once, before it is written off.
+			if (
+				!inViewport &&
+				obj.enableChildBoundsUpdate === true &&
+				typeof obj.updateBounds === "function"
+			) {
+				obj.updateBounds();
+				cameras.forEach((camera) => {
+					if (camera.isVisible(obj, isFloating)) {
+						inViewport = true;
+					}
+				});
+			}
 			obj.inViewport = inViewport;
 
 			// update our object
@@ -1487,6 +1767,14 @@ export default class Container extends Renderable {
 			(this.sortOn === "x" || this.sortOn === "y")
 		) {
 			this.keepSorted();
+		}
+
+		// follow the children, now that they have moved (see
+		// `enableChildBoundsUpdate`): without this the bounds only changed
+		// when a child was added or removed, and the camera culled the group
+		// by where its members started
+		if (this.enableChildBoundsUpdate === true) {
+			this.updateBounds();
 		}
 
 		// call the parent method
@@ -1558,6 +1846,24 @@ export default class Container extends Renderable {
 	}
 
 	/**
+	 * The depth {@link Container#draw} moves its children by, on top of its
+	 * `pos.x` / `pos.y`: this container's own `pos.z` under a perspective
+	 * projection (a {@link Camera3d}), where depth is a real axis, and 0 under
+	 * an orthographic one, where depth is draw order only and must stay out
+	 * of the transform (a large sort key would clip against near/far, which
+	 * is what {@link Renderer#setDepth} guards against for the same reason).
+	 * Read from the projection installed when the container draws, so a
+	 * floating container, drawn with the camera's screen projection, is 0.
+	 * @param {Renderer} renderer - the renderer drawing this container
+	 * @returns {number} the depth to translate the children by
+	 * @ignore
+	 * @internal
+	 */
+	_drawDepth(renderer) {
+		return isPerspective(renderer) ? this.pos.z : 0;
+	}
+
+	/**
 	 * draw this renderable (automatically called by melonJS)
 	 * @param {Renderer} renderer - a renderer instance
 	 * @param {Camera2d} [viewport] - the viewport to (re)draw
@@ -1574,6 +1880,29 @@ export default class Container extends Renderable {
 		// translation when the container was nested inside a translated
 		// parent.)
 		renderer.translate(this.pos.x, this.pos.y);
+		// Under a perspective projection depth is a real axis, and the
+		// children sit at this container's depth as well as at its x/y —
+		// which is where culling (`getAbsolutePosition`) and the "depth" sort
+		// already put them. See `_drawDepth`; 0, and so nothing here, under
+		// an orthographic (2D) projection.
+		const z = this._drawDepth(renderer);
+		if (z !== 0) {
+			_depthShift.val[14] = z;
+			renderer.transform(_depthShift);
+			// `preDraw` left this container's depth on the renderer for its
+			// own draw calls; it is now carried by the transform instead, so
+			// move it out of `currentDepth` or a quad drawn here (a particle
+			// reads it as its emitter's depth) would count it twice
+			renderer.setDepth(renderer.currentDepth - z);
+		}
+
+		// the world's own placement is now applied, so this is the transform
+		// its direct children draw under: the frame 3D lights are authored in,
+		// which a lit mesh further down is shaded against (see
+		// `Renderer#_lightSpaceInverse`)
+		if (this.root === true) {
+			renderer._setLightSpace?.(isPerspective(renderer));
+		}
 
 		// clip the container children to the container bounds.
 		// Container's anchorPoint is forced to (0, 0), so the local rect

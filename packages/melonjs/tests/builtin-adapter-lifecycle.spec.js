@@ -349,13 +349,12 @@ describe("Physics : BuiltinAdapter (lifecycle + pool)", () => {
 			expect(adapter.bodies.size).toEqual(2);
 
 			world.removeChildNow(inner, true);
-			// Legacy behavior — removeChildNow on a Container only removes
-			// the container's body (if any), not descendants. The two
-			// descendant bodies survive in adapter.bodies. This pins the
-			// current contract; if a future refactor walks descendants
-			// on container removal, flip this to .toEqual(0) instead of
-			// reverting the behavior silently.
-			// TODO: should be 0 once descendant cleanup is implemented.
+			// removeChildNow on a Container takes out the bodies of all its
+			// descendants, kept alive or not: a detached group's bodies are
+			// no longer simulated, and adding it back registers them again
+			// (see container-nested-bodies.spec.js)
+			expect(adapter.bodies.size).toEqual(0);
+			world.addChild(inner);
 			expect(adapter.bodies.size).toEqual(2);
 		});
 	});

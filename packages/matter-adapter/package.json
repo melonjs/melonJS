@@ -1,6 +1,6 @@
 {
 	"name": "@melonjs/matter-adapter",
-	"version": "1.5.2",
+	"version": "1.7.0",
 	"description": "melonJS physics adapter for matter-js",
 	"homepage": "https://www.npmjs.com/package/@melonjs/matter-adapter",
 	"type": "module",
@@ -29,9 +29,6 @@
 	"license": "MIT",
 	"author": "Olivier Biot (AltByte Pte Ltd)",
 	"funding": "https://github.com/sponsors/melonjs",
-	"engines": {
-		"node": ">=24.0.0"
-	},
 	"types": "./build/index.d.ts",
 	"exports": {
 		".": "./build/index.js"

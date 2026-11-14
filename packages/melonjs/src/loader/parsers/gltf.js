@@ -1,5 +1,6 @@
 import { level } from "../../level/level.js";
 import { transformedBounds } from "../../math/vertex.ts";
+import { hasDOM } from "../../system/dom.ts";
 import { fetchData } from "../../utils/fetchdata.js";
 import { gltfList } from "../cache.js";
 import { specularFromMetallicRoughness } from "./pbr.ts";
@@ -99,7 +100,7 @@ function resolveURI(uri, baseURI) {
 	// page-relative `data.src` like "assets/x.gltf" becomes absolute.
 	const absoluteBase = new URL(
 		baseURI,
-		typeof document !== "undefined" ? document.baseURI : undefined,
+		hasDOM() ? document.baseURI : undefined,
 	);
 	return new URL(uri, absoluteBase).href;
 }

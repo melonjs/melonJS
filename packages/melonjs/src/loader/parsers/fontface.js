@@ -1,3 +1,4 @@
+import { hasDOM } from "../../system/dom.ts";
 import { fontList } from "../cache.js";
 
 /**
@@ -14,10 +15,7 @@ import { fontList } from "../cache.js";
  * ]);
  */
 export function preloadFontFace(data, onload, onerror) {
-	const fontFaceSet =
-		typeof globalThis.document !== "undefined"
-			? globalThis.document.fonts
-			: undefined;
+	const fontFaceSet = hasDOM() ? globalThis.document.fonts : undefined;
 
 	// The FontFace constructor takes a CSS source descriptor: `url(...)` or
 	// `local(...)`. Wrap a bare path, and leave anything already in either form

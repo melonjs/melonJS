@@ -217,7 +217,13 @@ export default class LitMeshBatcher extends MeshBatcher {
 		this._bindLightBlock();
 
 		const stage = state.current();
-		const lit = packMeshLights(stage ? stage._activeLights3d : null);
+		// lights are authored in the world's frame; a mesh one container
+		// down is shaded in its parent's, so carry them there (null — and
+		// the lights exactly as authored — for a mesh straight in the world)
+		const lit = packMeshLights(
+			stage ? stage._activeLights3d : null,
+			this.renderer._lightSpaceInverse?.() ?? null,
+		);
 		// use the packed ambient whenever any light contributed (directional
 		// OR ambient); fall back to fullbright white only when the scene has no
 		// 3D lights at all — otherwise an ambient-only setup would be ignored.

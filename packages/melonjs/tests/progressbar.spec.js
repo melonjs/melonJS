@@ -19,15 +19,31 @@ import { colorPool } from "../src/math/color.ts";
  * recorder helper in the suite, so this is a local one.
  * @returns the stub, with every call it received
  */
+/**
+ * the alpha each shape is drawn at: the colour's own alpha times the global
+ * alpha set after it, one per `setGlobalAlpha`
+ */
+const effectiveAlphas = (r) => {
+	let colorAlpha = 1;
+	const out = [];
+	for (const c of r.calls) {
+		if (c.op === "setColor") {
+			colorAlpha = c.alpha;
+		} else if (c.op === "setGlobalAlpha") {
+			out.push(colorAlpha * c.a);
+		}
+	}
+	return out;
+};
+
 const makeRecorder = () => {
 	const calls = [];
 	return {
 		calls,
 		lineWidth: 1,
-		// The real renderers keep ONE current colour, and its alpha IS the
-		// global alpha, so `setColor` overwrites the alpha. Modelling that is
-		// the whole point: a bar that then forced the cascade back over it
-		// would render a deliberately translucent colour as opaque.
+		// The real renderers draw a fill at the colour's own alpha times the
+		// global alpha, which `setColor` leaves alone; `effectiveAlphas`
+		// below multiplies the two back together.
 		_alpha: 1,
 		globalAlpha() {
 			return this._alpha;
@@ -45,6 +61,10 @@ const makeRecorder = () => {
 				op: "setColor",
 				color,
 				hex: typeof color === "string" ? color : (color.toHex?.() ?? ""),
+				alpha:
+					typeof color === "string"
+						? new Color().parseCSS(color).alpha
+						: (color.alpha ?? 1),
 			});
 		},
 		fillRect(x, y, width, height) {
@@ -485,9 +505,7 @@ describe("ProgressBar", () => {
 		});
 
 		it("multiplies the colour's own alpha into the cascade", () => {
-			// `setColor` overwrites the global alpha with the colour's, so a
-			// bar that then forced the cascaded value back would render a
-			// deliberately translucent track as solid
+			// a translucent track stays translucent under a faded parent
 			const bar = new ProgressBar(0, 0, {
 				width: 100,
 				height: 10,
@@ -497,13 +515,7 @@ describe("ProgressBar", () => {
 			const r = makeRecorder();
 			r._alpha = 0.5; // what a half-faded parent cascaded down
 			bar.draw(r);
-			const applied = r.calls
-				.filter((c) => {
-					return c.op === "setGlobalAlpha";
-				})
-				.map((c) => {
-					return c.a;
-				});
+			const applied = effectiveAlphas(r);
 			// 0.2 from the colour, 0.5 from the cascade
 			expect(applied[0]).toBeCloseTo(0.1, 6);
 		});
@@ -524,13 +536,7 @@ describe("ProgressBar", () => {
 			});
 			const r = makeRecorder();
 			bar.draw(r);
-			const applied = r.calls
-				.filter((c) => {
-					return c.op === "setGlobalAlpha";
-				})
-				.map((c) => {
-					return c.a;
-				});
+			const applied = effectiveAlphas(r);
 			expect(applied[0]).toBeCloseTo(0.2, 6); // track
 			expect(applied[1]).toBeCloseTo(1, 6); // fill, NOT 0.2
 			expect(applied[2]).toBeCloseTo(0.5, 6); // border

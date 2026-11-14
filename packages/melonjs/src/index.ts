@@ -173,8 +173,12 @@ export type {
 	BodyShape,
 	BodyType,
 	CollisionResponse,
+	JointDefinition,
+	JointType,
 	PhysicsAdapter,
+	PhysicsAdapterClass,
 	PhysicsBody,
+	PhysicsJoint,
 	RaycastHit,
 	RaycastHit3d,
 	ShapeCollisionContact,
@@ -231,6 +235,13 @@ export * as device from "./system/device.js";
 export * as event from "./system/event.ts";
 // and the two types it names, so a game can declare a field holding one
 export type { CreatePoolOptions, Pool } from "./system/pool.ts";
+// the shape of `save`, and of the storages `save.setStorage()` takes
+export type {
+	CloudStorage,
+	CloudStorageOptions,
+	SaveAPI,
+	SaveStorage,
+} from "./system/save.ts";
 export * as utils from "./utils/utils.ts";
 export * from "./version.ts";
 export type {

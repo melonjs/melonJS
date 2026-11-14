@@ -1,5 +1,6 @@
 import { unload, unloadAll } from "../../audio/audio.ts";
 import { load } from "../../audio/playback.ts";
+import { state } from "../../audio/state.ts";
 
 /**
  * parse/preload an Audio file
@@ -32,6 +33,17 @@ export function preloadAudio(data, onload, onerror, settings) {
  */
 export function unloadAudio(name) {
 	return unload(name);
+}
+
+/**
+ * whether an audio asset is loaded (or loading) under this name
+ * @param {string} name - asset name
+ * @returns {boolean} true if the audio module holds a clip by that name
+ * @ignore
+ * @internal
+ */
+export function hasAudioAsset(name) {
+	return typeof state.tracks[name] !== "undefined";
 }
 
 /**

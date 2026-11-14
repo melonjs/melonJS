@@ -35,7 +35,7 @@ dependencies.
 | [melonjs-renderables](../melonjs-renderables/SKILL.md) | Subclassing `Renderable`, custom `draw()`, draw order, anchors, `floating`, post effects on an object. |
 | [melonjs-sprites-and-animation](../melonjs-sprites-and-animation/SKILL.md) | `Sprite`, frame animation, texture atlases (TexturePacker / Aseprite / ShoeBox), tint, flip, pooling. |
 | [melonjs-input](../melonjs-input/SKILL.md) | Keyboard actions, pointer and touch handling, drag, gamepad, virtual controls (fixed or floating sticks and buttons, tap to act). |
-| [melonjs-physics](../melonjs-physics/SKILL.md) | Collision, bodies, movement, spatial queries, and the planck / matter adapters. |
+| [melonjs-physics](../melonjs-physics/SKILL.md) | Collision, bodies, movement, spatial queries, and the planck / matter / Rapier adapters. |
 | [melonjs-math](../melonjs-math/SKILL.md) | Vectors and matrices: what mutates, what allocates, and interpolating with lerp, slerp, damp or moveTowards. |
 | [melonjs-tilemaps](../melonjs-tilemaps/SKILL.md) | Tiled maps — TMX/TSX loading, spawning entities from objects, collision layers, isometric maps, reading and changing tiles at run time (a tile layer as the game board). |
 | [melonjs-audio](../melonjs-audio/SKILL.md) | Sound effects, music, audio sprites, spatial audio, procedural tone and noise. |
@@ -43,16 +43,17 @@ dependencies.
 | [melonjs-3d](../melonjs-3d/SKILL.md) | Anything 3D or 2.5D — `Camera3d`, meshes, instancing, `Sprite3d` billboards, `Light3d`, distance fog, glTF scenes. |
 | [melonjs-3d-assets](../melonjs-3d-assets/SKILL.md) | Loading glTF/GLB or OBJ models — materials, imported lights, instancing, and what is not supported. |
 | [melonjs-camera-and-drawing](../melonjs-camera-and-drawing/SKILL.md) | Camera follow, bounds, shake and fade, coordinate conversion, and immediate-mode shape drawing. |
-| [melonjs-ui-and-text](../melonjs-ui-and-text/SKILL.md) | HUDs, buttons, menus, drag-and-drop, `Text` and `BitmapText`, web fonts, panels. |
+| [melonjs-ui-and-text](../melonjs-ui-and-text/SKILL.md) | HUDs, menus and options screens — buttons, checkboxes, sliders, progress bars, laid-out and scrolling panels — drag-and-drop, `Text` and `BitmapText`, web fonts. |
 | [melonjs-particles-and-trails](../melonjs-particles-and-trails/SKILL.md) | `ParticleEmitter`, burst versus stream, `referenceSpace`, and the `Trail` renderable. |
 | [melonjs-lighting](../melonjs-lighting/SKILL.md) | 2D dynamic lighting — `Light2d`, stage ambient, normal-mapped sprites. |
-| [melonjs-deployment](../melonjs-deployment/SKILL.md) | Scaffolding a project, building, browser support and transpiling, native and mini-game platforms. |
-| [melonjs-loading-assets](../melonjs-loading-assets/SKILL.md) | Resource descriptors, the asset type list, base URLs, cross-origin, progress events, unloading. |
+| [melonjs-deployment](../melonjs-deployment/SKILL.md) | Scaffolding a project, building, browser support and transpiling, bundle size. |
+| [melonjs-platforms](../melonjs-platforms/SKILL.md) | Running inside YouTube Playables, Facebook Instant Games, Poki, CrazyGames or WeChat Mini Games, as a Capacitor or Cordova app, or with no DOM (nx.js on the Nintendo Switch, Web Workers): handing pausing, saving and sound to the platform. |
+| [melonjs-loading-assets](../melonjs-loading-assets/SKILL.md) | Resource descriptors, the asset type list, a multi-level game's assets as bundles (`common` + one per level), loading and freeing a level's assets, base URLs, cross-origin, progress events. |
 | [melonjs-renderer-backends](../melonjs-renderer-backends/SKILL.md) | A feature works on one machine but not another; choosing or pinning a backend; degrading gracefully. |
 | [melonjs-display-and-scaling](../melonjs-display-and-scaling/SKILL.md) | Blurry, soft or cropped output; the design resolution, how the canvas fills its page, and pixel-perfect integer scaling. |
 | [melonjs-events](../melonjs-events/SKILL.md) | The event bus, per-frame and lifecycle events, and subscribing without leaking. |
 | [melonjs-performance](../melonjs-performance/SKILL.md) | Dropped frames, draw-call counts, pooling, batching, culling, baking, profiling. |
-| [melonjs-plugins](../melonjs-plugins/SKILL.md) | Registering the debug, Spine or Tiled-inflate plugins, physics adapters, or writing your own plugin. |
+| [melonjs-plugins](../melonjs-plugins/SKILL.md) | Registering the debug, Spine, Tiled-inflate, gamepad (touch controls), pathfinding (A*) or Capacitor plugins, installing a physics adapter, or writing your own plugin. |
 
 
 ## Escape hatch: the full API index
@@ -97,7 +98,9 @@ Whatever the task, these produce code that runs and is wrong:
    it after does not resort (except under `Camera3d`).
 3. **`isKinematic` defaults to `true`**, which silently excludes a renderable
    from pointer events and from the physics broadphase. Plain `Renderable` and
-   `Sprite` subclasses need `this.isKinematic = false`.
+   `Sprite` subclasses with no body need `this.isKinematic = false`; adding a
+   body sets it for you, on every adapter (matter-adapter before 1.6 and
+   planck-adapter before 1.7 did not).
 
 ## Companion packages
 
@@ -109,10 +112,12 @@ Tiled inflate plugin are *required* for their use cases, not merely convenient.
 |---|---|
 | [`@melonjs/planck-adapter`](https://www.npmjs.com/package/@melonjs/planck-adapter) | You want full rigid-body dynamics — stacking, joints, realistic restitution. Pass it as the Application's `physic` setting; the portable `raycast` and `queryAABB` calls work unchanged across adapters (`querySphere` and `raycast3d` are built-in-adapter only). |
 | [`@melonjs/matter-adapter`](https://www.npmjs.com/package/@melonjs/matter-adapter) | Same, backed by matter-js. Choose one adapter per game. |
+| [`@melonjs/rapier2d-adapter`](https://www.npmjs.com/package/@melonjs/rapier2d-adapter) | Same again, backed by Rapier compiled to WebAssembly: many bodies, per-body continuous collision, a character controller. About 3 MB loaded on demand, so make it with `await RapierAdapter.create()`. |
 | [`@melonjs/tiled-inflate-plugin`](https://www.npmjs.com/package/@melonjs/tiled-inflate-plugin) | **Required** to load gzip-, zlib- or zstd-compressed Tiled maps. Without it, parsing such a map throws `No inflate function set`. |
 | [`@melonjs/spine-plugin`](https://www.npmjs.com/package/@melonjs/spine-plugin) | Skeletal animation authored in Spine, as a melonJS renderable. |
 | [`@melonjs/debug-plugin`](https://www.npmjs.com/package/@melonjs/debug-plugin) | An in-game debug panel — FPS, draw counts, collision-shape and bounds overlays. Register it after `app.init()`. |
 | [`@melonjs/gamepad-plugin`](https://www.npmjs.com/package/@melonjs/gamepad-plugin) | On-screen touch controls for phones and tablets: sticks and buttons reported as a gamepad, so the game's `bindGamepad` bindings drive it; fixed or floating under the thumb, hidden until touched, tap to act. Use it rather than writing virtual controls. |
+| [`@melonjs/pathfinding-plugin`](https://www.npmjs.com/package/@melonjs/pathfinding-plugin) | Enemies or units that find their way: A* on a grid built from a Tiled layer or the level's collision shapes, with per-cell costs, diagonals without corner cutting, smoothing, a search cap and a debug overlay. Use it rather than writing A* or a flood fill. |
 | [`@melonjs/capacitor-plugin`](https://www.npmjs.com/package/@melonjs/capacitor-plugin) | Wrapping a game as a native iOS/Android app: it bridges Capacitor's lifecycle — pause/resume, the hardware back button, orientation lock, splash screen. |
 | [`create-melonjs`](https://www.npmjs.com/package/create-melonjs) | Scaffolding a new project — start here rather than assembling a build by hand. |
 
@@ -136,7 +141,7 @@ const app = new Application(800, 600, {
     parent: "screen",
     // gravity is in pixels/s²; pixelsPerMeter converts it to the adapter's
     // metres. Both are shown at their defaults; subSteps defaults to 1
-    physic: new PlanckAdapter({
+    physic: await PlanckAdapter.create({
         gravity: { x: 0, y: 320 },
         pixelsPerMeter: 32,
         subSteps: 2,
@@ -145,15 +150,37 @@ const app = new Application(800, 600, {
 await app.init();
 ```
 
+Every adapter is made the same way, with `await X.create(options)`. A running
+game switches adapter with `app.world.setAdapter(await X.create(options))`,
+which rebuilds every body from its `bodyDef`; `world.adapter` itself is
+read-only. `melonjs-physics` says which adapter suits which game.
+
 `melonjs-plugins` covers the registry, the version gate and writing your own.
 
 ## Prefer built-in features
 
 melonJS covers a lot that is easy to reimplement badly. Before hand-rolling,
-check for: `ParticleEmitter` and `Trail`, `Tween` with easing, the built-in
-`ShaderEffect` presets (vignette, scanline, chromatic aberration, glow, dissolve
-and more), `Light2d` / `Light3d`, `UIBaseElement` / `UISpriteElement` /
-`UITextButton`, `NineSliceSprite`, `TextureAtlas` (TexturePacker, ShoeBox,
-Aseprite), `BitmapText`, `CanvasRenderTarget` for bake-once drawing,
-`NoiseTexture2d`, `viewport.shake` / `fadeIn` / `fadeOut`, and `save` for
-localStorage-backed persistence.
+check for:
+
+- **Effects and motion:** `ParticleEmitter`, `Trail` / `Trail3d`, `Tween` with
+  easing, the built-in `ShaderEffect` presets (vignette, scanline, chromatic
+  aberration, glow, outline, dissolve, bloom and more), `Light2d` / `Light3d`,
+  `viewport.shake` / `fadeIn` / `fadeOut`.
+- **UI:** `UIPanel` (laid out, scrolling, skinnable), `UITextButton`,
+  `UICheckbox` (a radio button with a `group`), `UISlider`, `ProgressBar`,
+  `UISpriteElement`, keyboard and gamepad navigation between widgets once one
+  has `focus()`, `NineSliceSprite`, `Draggable` / `DropTarget`, `BitmapText`.
+- **Art:** `TextureAtlas` (TexturePacker, ShoeBox, Aseprite),
+  `CanvasRenderTarget` for bake-once drawing, `NoiseTexture2d`.
+- **Game flow:** `state.transition()` (`"fade"`, `"mask"` or `"pixelate"`)
+  between screens, `state.pause()` / `state.resume()` behind a pause menu,
+  `save` for localStorage-backed persistence, `createPool` / `getPool` for
+  recycling.
+- **Levels:** Tiled tile layers read and changed with `cellAt` / `setTile`,
+  and asset bundles (`loader.preload({ common: [...], level1: [...] })`, then
+  `loader.unload("level1")` / `loader.load("level1")`) to free and reload a
+  level's assets.
+- **Physics and controls:** a rigid-body adapter (planck, matter or Rapier,
+  switched at run time with `world.setAdapter()`) rather than a hand-written
+  solver, `@melonjs/gamepad-plugin` rather than hand-made touch sticks, and
+  `@melonjs/pathfinding-plugin` rather than a hand-written A* or flood fill.

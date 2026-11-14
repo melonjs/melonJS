@@ -104,6 +104,9 @@ importers:
       typescript:
         specifier: ^6.0.2
         version: 6.0.3
+      vitest:
+        specifier: ^4.1.11
+        version: 4.1.11(@types/node@25.6.2)(@vitest/browser-playwright@4.1.11)(vite@8.1.5(@types/node@25.6.2)(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
 
   packages/create-melonjs: {}
 
@@ -145,6 +148,9 @@ importers:
       '@melonjs/planck-adapter':
         specifier: workspace:*
         version: link:../planck-adapter
+      '@melonjs/rapier2d-adapter':
+        specifier: workspace:*
+        version: link:../rapier2d-adapter
       '@melonjs/spine-plugin':
         specifier: workspace:*
         version: link:../spine-plugin
@@ -288,12 +294,48 @@ importers:
         specifier: ^1.6.1
         version: 1.6.1(esbuild@0.28.1)(vite@8.1.5(@types/node@25.6.2)(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
 
+  packages/pathfinding-plugin:
+    devDependencies:
+      '@types/node':
+        specifier: ^25.6.0
+        version: 25.6.2
+      concurrently:
+        specifier: ^9.2.1
+        version: 9.2.1
+      esbuild:
+        specifier: 0.28.1
+        version: 0.28.1
+      melonjs:
+        specifier: workspace:*
+        version: link:../melonjs
+      tsconfig:
+        specifier: workspace:*
+        version: link:../tsconfig
+      tsx:
+        specifier: ^4.23.1
+        version: 4.23.12
+      typescript:
+        specifier: ^6.0.2
+        version: 6.0.3
+      vite:
+        specifier: 8.1.5
+        version: 8.1.5(@types/node@25.6.2)(esbuild@0.28.1)(tsx@4.23.12)(yaml@2.9.0)
+      vitest:
+        specifier: ^4.1.11
+        version: 4.1.11(@types/node@25.6.2)(@vitest/browser-playwright@4.1.11)(vite@8.1.5(@types/node@25.6.2)(esbuild@0.28.1)(tsx@4.23.12)(yaml@2.9.0))
+
   packages/planck-adapter:
     dependencies:
       planck:
-        specifier: ^1.5.0
-        version: 1.5.0(stage-js@1.0.2)
+        specifier: ^1.5.1
+        version: 1.5.1(stage-js@1.0.2)
     devDependencies:
+      '@melonjs/matter-adapter':
+        specifier: workspace:*
+        version: link:../matter-adapter
+      '@melonjs/rapier2d-adapter':
+        specifier: workspace:*
+        version: link:../rapier2d-adapter
       concurrently:
         specifier: ^9.2.1
         version: 9.2.1
@@ -315,6 +357,34 @@ importers:
       vitest:
         specifier: ^4.1.11
         version: 4.1.11(@types/node@25.6.2)(@vitest/browser-playwright@4.1.11)(vite@8.1.5(@types/node@25.6.2)(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
+
+  packages/rapier2d-adapter:
+    dependencies:
+      '@dimforge/rapier2d-compat':
+        specifier: ^0.21.0
+        version: 0.21.0
+    devDependencies:
+      concurrently:
+        specifier: ^9.2.1
+        version: 9.2.1
+      esbuild:
+        specifier: 0.28.1
+        version: 0.28.1
+      melonjs:
+        specifier: workspace:*
+        version: link:../melonjs
+      tsconfig:
+        specifier: workspace:*
+        version: link:../tsconfig
+      tsx:
+        specifier: ^4.23.1
+        version: 4.23.12
+      typescript:
+        specifier: ^6.0.2
+        version: 6.0.3
+      vitest:
+        specifier: ^4.1.11
+        version: 4.1.11(@types/node@25.6.2)(@vitest/browser-playwright@4.1.11)(vite@8.1.5(@types/node@25.6.2)(esbuild@0.28.1)(tsx@4.23.12)(yaml@2.9.0))
 
   packages/spine-plugin:
     dependencies:
@@ -346,6 +416,9 @@ importers:
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
+      vitest:
+        specifier: ^4.1.11
+        version: 4.1.11(@types/node@25.6.2)(@vitest/browser-playwright@4.1.11)(vite@8.1.5(@types/node@25.6.2)(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
 
   packages/tiled-inflate-plugin:
     dependencies:
@@ -456,6 +529,9 @@ packages:
     resolution: {integrity: sha512-uJXR+28cdaie7zIIUBvgkWgHim6Gr1itJym9voIMTmrjXkOaPtejwxYJsdQWPJz9zgGnSbXuC1mNNibLgv3OpQ==}
     peerDependencies:
       '@capacitor/core': ^6.0.0
+
+  '@dimforge/rapier2d-compat@0.21.0':
+    resolution: {integrity: sha512-cMStLQZbY5D/ajAPjOwTwoYuAJAungTYB45MNFEa5B+LGaMiZfxLwjHsfpxH5B0sDa+gkmcQFJJKiHNKnlpMnA==}
 
   '@emnapi/core@1.11.1':
     resolution: {integrity: sha512-RSvbQmHzdKzNsLYa/wHrbc3KN4sYLKAdPZxqiM2HATqv/SBk2/ENSHpvXGaLOMcsAyz0poEGqkmmKYG3OWiJEQ==}
@@ -1805,8 +1881,8 @@ packages:
     resolution: {integrity: sha512-RvwwcruNjI1ncT5xRakeyS9Lf8lcItv34KD+aif+VH9kduAyfYBipGh12274xtenIPZ119/R9BdTBa8gAwSh0A==}
     engines: {node: '>=12'}
 
-  planck@1.5.0:
-    resolution: {integrity: sha512-dlvqJE+FscZgrGUXJ5ybd0o5bvZ5XXyZNbm08xGsXp9WjXeAyWSFT6n9s/1PQcUBo4546fDXA5RMA4wbDyZw6g==}
+  planck@1.5.1:
+    resolution: {integrity: sha512-x3nHPSyoNTAxN0v8UXrSwP0XVTG0e7JCENBVZljZ8PZOjbOo7aRHq2+fy+DOREDhfW52aq5GiwgIm+m8kIErKQ==}
     engines: {node: '>=24.0'}
     peerDependencies:
       stage-js: ^1.0.0-alpha.12
@@ -2341,6 +2417,8 @@ snapshots:
   '@capacitor/splash-screen@6.0.4(@capacitor/core@6.2.1)':
     dependencies:
       '@capacitor/core': 6.2.1
+
+  '@dimforge/rapier2d-compat@0.21.0': {}
 
   '@emnapi/core@1.11.1':
     dependencies:
@@ -3577,7 +3655,7 @@ snapshots:
 
   picomatch@4.0.5: {}
 
-  planck@1.5.0(stage-js@1.0.2):
+  planck@1.5.1(stage-js@1.0.2):
     dependencies:
       stage-js: 1.0.2
 

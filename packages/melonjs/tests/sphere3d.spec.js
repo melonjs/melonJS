@@ -715,11 +715,12 @@ describe("Sphere — what a diagonal normal must NOT do", () => {
 		world.adapter.gravity.set(0, 0);
 
 		world.update(16);
-		// `isGrounded()` is `!falling && !jumping`, so a depth contact read as
-		// a floor or a ceiling makes a standing body report airborne
+		// a depth contact read as a floor or a ceiling flipped these flags,
+		// which `isGrounded()` reads
 		expect(mover.body.falling).toBe(false);
 		expect(mover.body.jumping).toBe(false);
-		expect(world.adapter.isGrounded(mover)).toBe(true);
+		// and it is not a surface below either, so it grounds nothing
+		expect(world.adapter.isGrounded(mover)).toBe(false);
 	});
 
 	it("still records a planar block when the contact IS planar", () => {

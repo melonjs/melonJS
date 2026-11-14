@@ -106,31 +106,37 @@ export default class TMXOrthogonalRenderer extends TMXRenderer {
 			vector2dPool.get(),
 		).ceilSelf();
 
-		//ensure we are in the valid tile range
-		end.x = Math.min(end.x, this.cols);
-		end.y = Math.min(end.y, this.rows);
+		//ensure we are in the valid tile range (the layer's: an infinite
+		// map's layer can have more cells than the map)
+		end.x = Math.min(end.x, layer.cols);
+		end.y = Math.min(end.y, layer.rows);
 
-		switch (layer.renderorder) {
-			case "right-up":
-				// swapping start.y and end.y
-				end.y = start.y + (start.y = end.y) - end.y;
-				incY = -1;
-				break;
-			case "left-down":
-				// swapping start.x and end.x
-				end.x = start.x + (start.x = end.x) - end.x;
-				incX = -1;
-				break;
-			case "left-up":
-				// swapping start.x and end.x
-				end.x = start.x + (start.x = end.x) - end.x;
-				// swapping start.y and end.y
-				end.y = start.y + (start.y = end.y) - end.y;
-				incX = -1;
-				incY = -1;
-				break;
-			default: // right-down
-				break;
+		// a view wholly outside the layer: no tile to draw (and a loop
+		// stepping toward an end it has passed would never stop)
+		if (end.x <= start.x || end.y <= start.y) {
+			vector2dPool.release(start);
+			vector2dPool.release(end);
+			return;
+		}
+
+		// the columns are start.x to end.x - 1, the rows start.y to
+		// end.y - 1: a "left" or "up" render order draws them from the last
+		// one back, stopping one before the first
+		const reverseX =
+			layer.renderorder === "left-down" || layer.renderorder === "left-up";
+		const reverseY =
+			layer.renderorder === "right-up" || layer.renderorder === "left-up";
+		if (reverseX) {
+			const first = start.x;
+			start.x = end.x - 1;
+			end.x = first - 1;
+			incX = -1;
+		}
+		if (reverseY) {
+			const first = start.y;
+			start.y = end.y - 1;
+			end.y = first - 1;
+			incY = -1;
 		}
 
 		// main drawing loop — read (gid, flipMask) straight from the typed
@@ -150,9 +156,7 @@ export default class TMXOrthogonalRenderer extends TMXRenderer {
 			for (let x = start.x; x !== end.x; x += incX) {
 				const idx = (y * cols + x) * 2;
 				const gid = data[idx];
-				// `!gid` covers both empty cells (0) and out-of-range reads
-				// (Uint16Array returns undefined for idx beyond length — happens
-				// when a non-default renderorder swap pushes start past `cols`)
+				// an empty cell
 				if (!gid) {
 					continue;
 				}

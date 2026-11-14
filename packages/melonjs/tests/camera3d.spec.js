@@ -639,11 +639,13 @@ describe("Camera3d", () => {
 			sprite.pos.z = 200;
 			expect(cam.isVisible(sprite)).toBe(true);
 
-			// move camera way off, no update yet — isVisible still sees
-			// the old planes
+			// move camera way off, no update yet. This used to pin the stale
+			// answer (the planes only rebuilt in update()), which is exactly
+			// what made culling lag a frame behind a camera moved from a
+			// GAME_UPDATE listener (see camera3d_cull_same_frame.spec.js):
+			// isVisible now rebuilds them itself once the camera has changed
 			cam.pos.set(10000, 10000, 10000);
-			// (no update call — verifies planes don't auto-rebuild)
-			expect(cam.isVisible(sprite)).toBe(true);
+			expect(cam.isVisible(sprite)).toBe(false);
 
 			// after update, planes refresh and reflect the new pose
 			cam.update();

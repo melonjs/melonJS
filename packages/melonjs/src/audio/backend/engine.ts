@@ -1,4 +1,5 @@
 // Import helper functions directly for better tree-shaking
+import { hasDOM } from "../../system/dom.ts";
 import { AudioContextOwner } from "../context.ts";
 import type { Sound } from "./sound.ts";
 import { installSpatialOnEngine } from "./spatial.ts";
@@ -7,6 +8,28 @@ import {
 	isHTMLAudioElement,
 	type WindowWithAudio,
 } from "./types.ts";
+
+/**
+ * every format `_setupCodecs` asks `canPlayType` about
+ * @ignore
+ */
+const AUDIO_FORMATS = [
+	"mp3",
+	"mpeg",
+	"opus",
+	"ogg",
+	"oga",
+	"wav",
+	"aac",
+	"caf",
+	"m4a",
+	"m4b",
+	"mp4",
+	"weba",
+	"webm",
+	"dolby",
+	"flac",
+];
 
 export class AudioEngine {
 	/**
@@ -304,6 +327,16 @@ export class AudioEngine {
 		}
 
 		if (!audioTest || typeof audioTest.canPlayType !== "function") {
+			// A runtime with no DOM may decode audio without being able to say
+			// which formats it takes: nx.js's `Audio` has no `canPlayType`
+			// (FFmpeg decodes behind it). With no answer, every clip would be
+			// refused before even trying, so assume each format and let
+			// decoding report the ones that fail. Browsers all answer.
+			if (!hasDOM() && audioTest) {
+				for (const ext of AUDIO_FORMATS) {
+					this._codecs[ext] = true;
+				}
+			}
 			return this;
 		}
 
@@ -436,10 +469,12 @@ export class AudioEngine {
 				this._audioUnlocked = true;
 				source.disconnect(0);
 
-				document.removeEventListener("touchstart", unlock, true);
-				document.removeEventListener("touchend", unlock, true);
-				document.removeEventListener("click", unlock, true);
-				document.removeEventListener("keydown", unlock, true);
+				if (hasDOM()) {
+					document.removeEventListener("touchstart", unlock, true);
+					document.removeEventListener("touchend", unlock, true);
+					document.removeEventListener("click", unlock, true);
+					document.removeEventListener("keydown", unlock, true);
+				}
 
 				for (let i = 0; i < this.sounds.length; i++) {
 					this.sounds[i]._emit("unlock");
@@ -454,6 +489,14 @@ export class AudioEngine {
 				});
 			}
 		};
+
+		// No DOM (nx.js, a Web Worker): no page for a gesture to land on, and
+		// no autoplay policy waiting for one. Unlock straight away instead of
+		// listening on a `document` that does not exist.
+		if (!hasDOM()) {
+			unlock();
+			return;
+		}
 
 		document.addEventListener("touchstart", unlock, true);
 		document.addEventListener("touchend", unlock, true);

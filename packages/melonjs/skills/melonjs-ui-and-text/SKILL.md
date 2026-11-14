@@ -1,6 +1,6 @@
 ---
 name: melonjs-ui-and-text
-description: "Use this skill for HUDs, buttons, menus, options screens, dialogue panels, progress bars and on-screen text in melonJS. Covers UIBaseElement/UISpriteElement/UITextButton, UICheckbox, UISlider, ProgressBar, UIPanel (skins, layout, scrolling), Draggable and DropTarget, the floating screen-space container pattern, which of two overlapping panels gets the pointer, Text and BitmapText, web font loading, and NineSliceSprite panels. Triggers on: UI, HUD, button, checkbox, radio button, UICheckbox, slider, UISlider, volume slider, options menu, settings screen, scrolling list, scroll panel, layout, column, grid, UI skin, UIBaseElement, UISpriteElement, UITextButton, ProgressBar, progress bar, health bar, gauge, Draggable, DropTarget, menu, dialogue, overlapping panels, moveToTop, onOver, onClick, bindKey, keyboard shortcut, button keyboard, Tween, easing, animate a label, wavy text, per-glyph effect, glyphEffect, shake text, rainbow text, Text, BitmapText, fillStyle, fillGradient, gradient text, tint, font, fontface, wordWrapWidth, NineSliceSprite, score display, floating., fullscreen, full screen, requestFullscreen, exitFullscreen, isFullscreen, fullscreen button, fullscreen option"
+description: "Use this skill for HUDs, buttons, menus, options screens, dialogue panels, progress bars and on-screen text in melonJS. Covers UIBaseElement/UISpriteElement/UITextButton, UICheckbox, UISlider, ProgressBar, UIPanel (skins, layout, scrolling), keyboard and gamepad focus, Draggable and DropTarget, the floating screen-space container pattern, which of two overlapping panels gets the pointer, Text and BitmapText, web font loading, and NineSliceSprite panels. Triggers on: UI, HUD, button, checkbox, radio button, slider, volume slider, options menu, settings screen, scrolling list, UI skin, progress bar, health bar, menu, dialogue, moveToTop, onOver, onClick, bindKey, keyboard shortcut, Tween, animate a label, wavy text, glyphEffect, rainbow text, typewriter, visibleRatio, drag and drop, isDraggable, focus, fillStyle, fillGradient, gradient text, tint, font, fontface, wordWrapWidth, score display, fullscreen, requestFullscreen, fullscreen button."
 license: MIT
 ---
 
@@ -172,9 +172,57 @@ including one it is not currently holding:
 const widest = hudScore.measureText("00:00").width;
 ```
 
+Given a string, it returns a new `TextMetrics` and leaves the label as it was;
+with no argument it returns the label's own metrics. Before 20.13 measuring
+another string overwrote the label's own metrics, so a centred or
+right-aligned label was drawn shifted until its next `setText()`.
+
 Advance widths scale linearly with the point size for one family, so measuring
 on an existing label and scaling the result is exact. For labels you genuinely
 spawn in bulk, `getPool("text")` recycles the bake.
+
+### Multi-line text: the baseline places the whole block
+
+A `\n` in the string (or an array of strings) starts a new line, on `Text` and
+`BitmapText` alike. `textBaseline` then places the block as one piece against
+`pos.y`: its top for `"top"` / `"hanging"`, its middle for `"middle"`, its
+bottom for `"alphabetic"`, `"ideographic"` and `"bottom"`. So a two-line
+`"bottom"` label in a screen corner sits wholly above `pos.y`, and a centred
+`"middle"` label centres every line, not the first. `getBounds()` is that same
+box, which is what culling and the pointer use.
+
+`wordWrapWidth` only ADDS line breaks: each `\n`-separated line is wrapped on
+its own, so explicit breaks and blank lines survive. A line breaks between
+words, never inside one, so a single word wider than `wordWrapWidth` gets a
+line of its own and overflows it:
+
+```js
+const help = new Text(8, 8, {
+    font: "sans-serif", size: 16, wordWrapWidth: 200,
+    text: "CONTROLS\nArrows move, Space jumps, Esc pauses the game.",
+});
+// "CONTROLS" on its own line, then the sentence wrapped under it
+```
+
+### Typewriter reveal: `visibleRatio`
+
+`visibleCharacters` (`-1`, the default, shows them all) and `visibleRatio`
+(0 to 1) show a label a character at a time, on `Text` and `BitmapText` alike.
+Tween the ratio: it takes the same time whatever the length of the string.
+
+```js
+line.setText("The door is locked. The keeper has the key.");
+line.visibleRatio = 0;
+new Tween(line).to({ visibleRatio: 1 }, { duration: 1500 }).start();
+```
+
+Line breaks are not counted, and the wrapping and the bounds are those of the
+whole string, so a word does not jump to the next line as it appears. The two
+classes differ in two ways. A `BitmapText` keeps each glyph where the full line
+puts it, while a centred or right-aligned `Text` aligns only the part shown so
+far, so it slides sideways as it types: left-align a `Text` you reveal. And a
+`Text` repaints and re-uploads its bake at every step, where a `BitmapText`
+just draws fewer glyphs.
 
 ### `fillStyle` means two different things
 
@@ -263,10 +311,13 @@ an amplitude around an eighth of it, a wavelength around ten times it, and a
 little under 5 radians per second. For a shake, re-target each glyph roughly
 20 to 40 times a second.
 
-`ctx.time` starts when the effect is **assigned**, so attach it at the moment
-you want to be t=0 — on the frame the hit lands, not when the label was built.
-A label reused across lives carries the old clock, so a decay attached once
-will already be spent the second time.
+`ctx.time` runs only while an effect is set and nothing resets it, so it is 0
+only when a label gets its **first** effect. A label that already had one, or
+is reused across lives, carries the old clock, and a decay measured from
+`ctx.time` itself is already spent there. Note `ctx.time` on the effect's first
+call and measure from that, as the shake below does, and attach it at the
+moment you want to be t=0: on the frame the hit lands, not when the label was
+built.
 
 Both, whole:
 
@@ -294,22 +345,28 @@ const angle = (i, tick) => {
     const h = Math.sin(i * 127.1 + tick * 311.7) * 43758.5453;
     return (h - Math.floor(h)) * Math.PI * 2;
 };
-const impact = (amplitude, durationMs, rate) => (out, ctx) => {
-    const left = 1 - ctx.time / durationMs;
-    if (left <= 0) {
-        return;                              // settled; `out` is already zeroed
-    }
-    const amp = amplitude * left * left;
-    const tick = (ctx.time / 1000) * rate;
-    const held = Math.floor(tick);
-    const k = tick - held;
-    const a = angle(ctx.index, held);
-    const b = angle(ctx.index, held + 1);
-    out.offsetX = Math.round((Math.sin(a) + (Math.sin(b) - Math.sin(a)) * k) * amp);
-    out.offsetY = Math.round((Math.cos(a) + (Math.cos(b) - Math.cos(a)) * k) * amp);
+const impact = (amplitude, durationMs, rate) => {
+    let start;                               // ctx.time on the first call
+    return (out, ctx) => {
+        start ??= ctx.time;                  // the label's clock never resets
+        const t = ctx.time - start;
+        const left = 1 - t / durationMs;
+        if (left <= 0) {
+            return;                          // settled; `out` is already zeroed
+        }
+        const amp = amplitude * left * left;
+        const tick = (t / 1000) * rate;
+        const held = Math.floor(tick);
+        const k = tick - held;
+        const a = angle(ctx.index, held);
+        const b = angle(ctx.index, held + 1);
+        out.offsetX = Math.round((Math.sin(a) + (Math.sin(b) - Math.sin(a)) * k) * amp);
+        out.offsetY = Math.round((Math.cos(a) + (Math.cos(b) - Math.cos(a)) * k) * amp);
+    };
 };
 
-// assigned at the moment of the hit, which is what makes ctx.time start here
+// a new impact at the moment of each hit: it measures from its own first call,
+// so it shakes again on a banner that has shown one before
 banner.setText("CAPSIZED!");
 banner.glyphEffect = impact(3, 650, 24);
 ```
@@ -428,10 +485,18 @@ const hp = new ProgressBar(20, 20, {
 hud.addChild(hp);
 
 hp.value -= 15;                        // clamps; `ratio` reads back 0..1
+hp.max = 50;                           // re-clamps the value into the new range
 ```
 
 `direction` takes `"left-to-right"` (the default), `"right-to-left"`,
 `"top-to-bottom"` or `"bottom-to-top"`, each growing from its own edge.
+
+`showLabel: true` writes text centred over the bar, a percentage by default:
+`` labelFormat: (value, ratio) => `${Math.round(value)} HP` `` changes what it says,
+and `font` (a CSS family), `fontSize` and `labelFillStyle` how it looks.
+`onChange(value, ratio, bar)` is called on every change of the value, from code
+too, unlike a checkbox's or a slider's: a bar has no user input to tell apart.
+Setting the value it already has calls nothing.
 
 **The colour follows the value by mutating the `Color` you passed.** This is
 the one non-obvious part, and it is deliberate: every game wants a different
@@ -638,7 +703,9 @@ scrolls with the wheel over the panel and by dragging, with momentum when
 flung. A scrollbar shows while it does not fit. `scrollTo(x, y)`,
 `scrollToChild(child)`, `scrollX` / `scrollY`, `maxScrollX` / `maxScrollY` and
 an `onScroll(x, y, panel)` setting are there to drive it from code. Scrolling
-from code stops a fling that is still coasting.
+from code stops a fling that is still coasting. `clearChildren()` empties the
+list and scrolls back to the start, ready to be filled again, and `autoSize`
+is ignored on a scrolling panel.
 
 What to know:
 
@@ -688,7 +755,7 @@ by default):
 | `onClick(event)` | pressed | `false` to stop the event propagating |
 | `onRelease(event)` | the press ends (up, left while held, or cancelled) | `false` to stop propagating |
 | `onOver(event)` | pointer enters | `false` to stop propagating |
-| `onOut(event)` | pointer leaves | — |
+| `onOut(event)` | pointer leaves, or the element is removed while hovered (no event then) | — |
 | `onHold()` | pressed and held | — |
 
 ```js
@@ -706,6 +773,12 @@ class MuteButton extends UISpriteElement {
     }
 }
 ```
+
+Undo in `onOut` whatever `onOver` set up (a tooltip, a highlight, a cursor):
+it also runs when the element leaves the world while the pointer is on it,
+removed on its own, with the panel holding it, or with the scene, so nothing
+is left behind. Keep effects that should only follow the pointer (a sound, a
+tween) out of it, or check `event`, which is `undefined` for a removal.
 
 The image is `button.sprite`: animations, tint and regions live there
 (`setRegion`, `addAnimation`, `setCurrentAnimation` and `isCurrentAnimation`
@@ -748,7 +821,11 @@ as before, for subclasses.
 
 `font` is a loaded bitmap font's name, drawn with `BitmapText` as before, or
 any other name, drawn as a CSS font with `Text`. The label is
-`button.label` (`bitmapText` is the old name for it).
+`button.label` (`bitmapText`, its old name, is deprecated since 20.13.0).
+
+With no skin it is a rounded rectangle in `hoverOffColor`, `hoverOnColor`
+under the pointer and `pressedColor` while held (`hoverOnColor` when left
+out), outlined in `borderColor`.
 
 The button takes the same names as the other widgets: `width` and `height`
 for its size, `fontSize` (pixels) and `labelFillStyle` for its text,
@@ -814,7 +891,11 @@ There is nothing to turn on. Until a widget has the focus the arrow keys and
 the pad are left to the game, and `widget.blur()`, or the focused widget
 leaving the scene, gives them back. `UIBaseElement.focusOwner` is the widget
 with the focus. The pad is read directly, so the game's own pad bindings
-are untouched.
+are untouched. The keys the focus takes, and a button's own `bindKey`, do not
+scroll the page around the game, which matters in a portal's frame (20.15.1;
+before, `input.bindKey` the arrows and Space). A key the game bound itself
+follows its binding's `preventDefault`, and `input.setPreventDefault(false)`
+leaves the focus keys to the browser as well.
 
 Buttons, checkboxes and sliders are `focusable`. A widget of your own sets
 `focusable = true`, and overrides `onNavigate(direction)` (return `true` for
@@ -850,8 +931,12 @@ class Picker extends UIBaseElement {
 Moving the focus from code is `other.focus()`; `UIBaseElement.focusOwner?.blur()`
 hands the keys back to the game, for example when gameplay resumes.
 
-Two things to know. Enter goes to the focused button, so another button
-whose `bindKey` is Enter waits while the focus ring shows elsewhere. And
+Three things to know. Enter and Space go to the focused widget, so another
+button whose `bindKey` is Enter or Space waits while any other widget has the
+focus, ring shown or hidden: one key press never clicks both. `blur()` the
+focused widget to give Enter back to the shortcut (a disabled or hidden
+focused widget does not keep it). Enter or A held while the window loses
+focus is called off (`onCancel()`, no click), as a held `bindKey` is. And
 accept calls a subclass's `onClick()` METHOD with no pointer event, as
 `bindKey` does: guard `event` there, or act in the `onClick` setting.
 
@@ -974,7 +1059,10 @@ const volume = new UISlider(40, 120, {
 ```
 
 Drag the thumb, or click the track to jump there. The drag follows the
-pointer after it leaves the track, until it is released. The mouse wheel over
+pointer after it leaves the track, until it is released. As on any widget, the
+press (`onClick`) ends in exactly one of `onRelease` (let go, before
+`onChangeEnd`) or `onCancel` (called off by `cancelPress()`, `enabled = false`
+or removal, with no `onChangeEnd`). The mouse wheel over
 the slider moves it one `step`. `value` snaps to `step` and clamps to the
 range, and setting it does not call `onChange` or `onChangeEnd`: the same rule
 as the checkbox, and neither does changing `min`, `max` or `step`, which
@@ -988,7 +1076,8 @@ from art: the track and fill as nine-slices along its length, the thumb at its
 own size.
 
 Put work that should not run 60 times a second, such as saving or playing a
-test sound, in `onChangeEnd`.
+test sound, in `onChangeEnd`, which runs once on release and after each wheel
+or key step.
 
 ```js
 // whole numbers: a step of 1 shows "7", not "7.00"
@@ -1066,6 +1155,47 @@ Fullscreen does not resize a fixed-resolution game: with
 `new Application(w, h, { scale: "auto" })` the internal resolution is
 unchanged and only the canvas scales, so a HUD built from
 `renderer.width`/`height` needs no repositioning.
+
+### Dragging: `isDraggable`, or `Draggable` and `DropTarget`
+
+Any UI element follows the pointer while held once `isDraggable` is set:
+`onClick` is the pick-up, `onMove(event)` runs after each move with `pos`
+already following, and `onRelease` is the drop. It works by touch as by
+mouse, on a floating element as on one in the world. (`UIPanel` has its own
+`draggable` setting, above.)
+
+```js
+class Token extends UISpriteElement {
+    constructor(x, y) {
+        super(x, y, { image: atlas, region: "token" });
+        this.isDraggable = true;
+    }
+    onRelease() {
+        this.pos.x = Math.round(this.pos.x / 32) * 32;   // snap to the grid
+        this.pos.y = Math.round(this.pos.y / 32) * 32;
+        return false;
+    }
+}
+```
+
+When something else has to notice the drop, `Draggable` and `DropTarget` are
+the pair. Both are plain `Renderable`s, in the world unless you make them
+`floating`, that draw nothing until you give them a `draw()`. A `Draggable`
+follows the pointer while held (`dragStart(e)` / `dragEnd(e)` to override,
+calling `super`), and when it is let go every `DropTarget` its bounds overlap
+gets `drop(draggable)`; after `setCheckMethod(target.CHECKMETHOD_CONTAINS)`
+only one it lies wholly inside does.
+
+```js
+class Slot extends DropTarget {
+    drop(card) {
+        card.pos.set(this.pos.x, this.pos.y, card.pos.z);   // settle it in
+    }
+}
+```
+
+The drop is checked on the draggable's own pointer-up (`event.DRAGEND` comes
+from it), so the release has to land on the draggable itself.
 
 ### `z` is container-local
 
@@ -1212,9 +1342,21 @@ City and Instanced Forest examples park a floating sky at `-10000` or `100000`.
 | a layout ignores a label that changed size | layout runs on add, remove and resize only | call `panel.relayout()` |
 | the arrow keys or the pad do nothing in a menu | no widget has the focus: nothing listens until one does | call `firstWidget.focus()` when the menu opens |
 | the arrow keys stop moving the player after a menu | a widget still has the focus | `UIBaseElement.focusOwner?.blur()`, or remove the menu: a focused widget leaving the scene gives the keys back |
-| a `bindKey: ENTER` button does not fire while another widget is focused | Enter goes to the focused widget while its ring shows | focus that button, or bind another key |
+| the arrow keys scroll the page around the game while they move the focus, in a portal's frame | melonJS before 20.15.1 stopped the page scrolling only for keys bound with `input.bindKey`; from 20.15.1, `input.setPreventDefault(false)` | update, or `input.bindKey` the arrows and Space; leave `input.setPreventDefault` on |
+| a `bindKey: ENTER` button does not fire while another widget is focused | Enter and Space go to the focused widget, ring shown or not, so one press never clicks both | focus that button, `blur()` the focused one, or bind another key |
+| a tooltip or highlight shown in `onOver` stays after its widget is removed (before 20.14) | the pointer's leave never reaches a removed widget | update: a widget removed while hovered now gets `onOut()`, with no event |
+| an `onOut` sound or tween plays when a menu closes or the scene changes (since 20.14) | a widget removed while hovered gets `onOut()` | keep pointer-only effects out of `onOut`, or skip them when its `event` is `undefined` |
+| a widget removed while held gets `onCancel()` and no `onRelease()` | the pointer-up never reaches a removed widget, so the press is called off (and `hover` cleared), leaving it at rest when added back | stop what `onClick()` started in `onCancel()` as well as in `onRelease()` |
+| a `ProgressBar` fill runs past its track after `max` is lowered (before 20.13) | `min` and `max` did not re-clamp the value | update: they re-clamp it now (and call `onChange` if it moved); `ratio` stays within 0..1 |
 | a skinned panel's shadow has square corners | the shadow follows `radius`, and a skin does not set it | set `radius` to the art's corner size |
+| a wrapped label lost its `\n` line breaks, or starts with a blank line (before 20.13) | word wrap joined the lines with spaces, and closed an empty line before an over-wide first word | update: each line is now wrapped on its own and an over-wide word starts the first line |
+| the second line of a multi-line `"bottom"` or `"middle"` `Text` is drawn below where you put it, or outside its bounds (before 20.13) | `Text` placed only the first line by its baseline | update: the whole block is placed by the baseline, as `BitmapText` does |
+| `setText("1,000")` leaves a label showing `["1", "000"]` on two lines, or the other way round (before 20.13) | the change test compared `toString()`, and an array's joins with commas | update |
+| a centred or right-aligned label jumps sideways, or is clipped, after `label.measureText("…")` (before 20.13) | measuring another string overwrote the label's own metrics until its next `setText()` | update, or measure on a label that is not displayed |
 | `new UITextButton` with a font name draws in a plain font | the name is not a loaded bitmap font, so it is drawn as a CSS font | load the bitmap font (image and `.fnt`) under that name, or load the web font |
+| `UI skin: no region named "…" in the atlas` thrown where a widget is made | every region a `skin` names is looked up when the widget is built | fix the name, or re-export the atlas with that image |
+| a typewriter reveal on a centred `Text` slides sideways as it types | a `Text` aligns only the part shown so far | left-align it, or reveal a `BitmapText`, which keeps each glyph in its final place |
+| a `glyphEffect` decay or intro plays the first time and never again | `ctx.time` runs while any effect is set and never resets, so a later effect starts late | note `ctx.time` on the effect's first call and measure from that |
 
 ## Related skills
 

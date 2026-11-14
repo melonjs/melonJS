@@ -1,6 +1,8 @@
 import { GAMEPAD, readGamepads } from "../../input/gamepad.ts";
 import { KEY } from "../../input/key.ts";
+import { preventKeyDefault } from "../../input/keyboard.ts";
 import {
+	BLUR,
 	GAME_BEFORE_UPDATE,
 	KEYDOWN,
 	KEYUP,
@@ -87,6 +89,83 @@ export function ringVisible(): boolean {
  */
 export function isAcceptKey(keyCode: number): boolean {
 	return ACCEPT_KEYS.includes(keyCode);
+}
+
+/**
+ * An accept key held down, and which side took it: the focus, or a button's
+ * own shortcut. Kept until that key comes up or the window loses focus, so
+ * the other side leaves the same key press alone even when the press itself
+ * moved the focus (a focused button that closes its menu, say), whichever
+ * of the two listeners hears the key first.
+ */
+let claim: { keyCode: number; by: "focus" | "shortcut" } | undefined;
+
+/**
+ * a key up, while an accept key is claimed
+ * @param _action - the action bound to it, unused
+ * @param keyCode - the key
+ */
+function onClaimedKeyUp(_action: string | undefined, keyCode: number): void {
+	if (claim?.keyCode === keyCode) {
+		releaseClaim();
+	}
+}
+
+/** forget the claim */
+function releaseClaim(): void {
+	if (claim !== undefined) {
+		claim = undefined;
+		off(KEYUP, onClaimedKeyUp);
+		off(BLUR, releaseClaim);
+	}
+}
+
+/**
+ * take an accept key press for one side
+ * @param keyCode - the key
+ * @param by - the side taking it
+ */
+function claimKey(keyCode: number, by: "focus" | "shortcut"): void {
+	if (claim === undefined) {
+		on(KEYUP, onClaimedKeyUp);
+		on(BLUR, releaseClaim);
+	}
+	claim = { keyCode, by };
+}
+
+/**
+ * Whether Enter or Space belongs to the focus rather than to an element's
+ * own shortcut: another element has the focus and can take a press (it is
+ * enabled and shown), or the focus already took this key press. Whether the
+ * ring shows does not matter, so one key press never presses both the
+ * focused element and a button bound to that key, whichever of the two
+ * hears it first.
+ * @param element - the element asking, with a shortcut of its own
+ * @param keyCode - the accept key pressed
+ * @returns true when the key goes to the focus, not to `element`
+ * @ignore
+ * @internal
+ */
+export function focusTakesAccept(
+	element: UIBaseElement,
+	keyCode: number,
+): boolean {
+	if (claim?.keyCode === keyCode && claim.by === "focus") {
+		return true;
+	}
+	return owner !== undefined && owner !== element && isCandidate(owner);
+}
+
+/**
+ * An element's own shortcut took an accept key press: the focus leaves that
+ * key press alone, even if the shortcut's press gave the focus to another
+ * element.
+ * @param keyCode - the accept key pressed
+ * @ignore
+ * @internal
+ */
+export function shortcutTookAccept(keyCode: number): void {
+	claimKey(keyCode, "shortcut");
 }
 
 /**
@@ -188,11 +267,15 @@ function listen(value: boolean): void {
 		on(KEYUP, onKeyUp);
 		on(POINTERMOVE, onPointer);
 		on(GAME_BEFORE_UPDATE, onFrame);
+		// the key-up of an accept held while the window loses the focus goes
+		// to another window: the press is called off, as a held bindKey is
+		on(BLUR, cancelAccept);
 	} else {
 		off(KEYDOWN, onKeyDown);
 		off(KEYUP, onKeyUp);
 		off(POINTERMOVE, onPointer);
 		off(GAME_BEFORE_UPDATE, onFrame);
+		off(BLUR, cancelAccept);
 	}
 }
 
@@ -374,11 +457,23 @@ function acceptUp(source: "key" | "pad"): void {
  */
 function onKeyDown(_action: string | undefined, keyCode: number): void {
 	if (isAcceptKey(keyCode)) {
+		// a button's shortcut already took this key press
+		if (claim?.keyCode === keyCode && claim.by === "shortcut") {
+			return;
+		}
+		if (owner !== undefined && isCandidate(owner)) {
+			claimKey(keyCode, "focus");
+			// the key is the focus's: the page around the game does not
+			// scroll as well
+			preventKeyDefault();
+		}
 		acceptDown("key");
 		return;
 	}
 	for (const action of Object.keys(KEYS) as UINavAction[]) {
 		if (KEYS[action] === keyCode) {
+			// also at the last widget that way, where the focus stays put
+			preventKeyDefault();
 			navigate(action);
 		}
 	}

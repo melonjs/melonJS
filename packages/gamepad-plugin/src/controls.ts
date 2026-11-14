@@ -1,4 +1,11 @@
-import { input, math, type Renderer, Text } from "melonjs";
+import {
+	input,
+	math,
+	type Renderer,
+	Sprite,
+	Text,
+	type TextureAtlas,
+} from "melonjs";
 import type { VirtualPad } from "./pad.ts";
 import type {
 	ButtonOptions,
@@ -94,10 +101,67 @@ const TAP_RING_MS = 260;
 /** how long a floating button hidden at rest takes to fade once let go, in milliseconds */
 const BUTTON_FADE_MS = 180;
 
+/**
+ * how much a skinned button without a `pressed` region shrinks while held, so
+ * a press shows even when the opacity leaves no room to brighten it (the
+ * engine's UI buttons use the same `pressScale` idea)
+ */
+const PRESS_SCALE = 0.9;
+
 /** the look shared by every control */
 export interface Look {
 	color: string;
 	opacity: number;
+}
+
+/**
+ * A control owns its sprites; the game keeps ownership of the atlas.
+ * @param skin - the game's atlas
+ * @param region - the part's optional region name
+ */
+function skinSprite(
+	skin: TextureAtlas | undefined,
+	region: string | undefined,
+): Sprite | null {
+	return skin && region !== undefined
+		? new Sprite(0, 0, { image: skin, region, anchorPoint: { x: 0.5, y: 0.5 } })
+		: null;
+}
+
+/**
+ * Draw through Sprite so packed rotation, trimming and atlas pages still work.
+ * @param renderer - the renderer drawing the controls
+ * @param sprite - the cached skin sprite, at its local origin
+ * @param x - the center in viewport pixels
+ * @param y - the center in viewport pixels
+ * @param radius - half the destination size
+ * @param alpha - the control's opacity
+ */
+function drawSkin(
+	renderer: Renderer,
+	sprite: Sprite,
+	x: number,
+	y: number,
+	radius: number,
+	alpha: number,
+): void {
+	// Keep the sprite at its local origin, including while unpacking rotation.
+	renderer.save();
+	renderer.translate(x, y);
+	renderer.scale((2 * radius) / sprite.width, (2 * radius) / sprite.height);
+	renderer.setGlobalAlpha(alpha);
+	sprite.preDraw(renderer);
+	sprite.draw(renderer);
+	sprite.postDraw(renderer);
+	renderer.restore();
+}
+
+/**
+ * These sprites are not in a container, which normally calls internal destroy.
+ * @param sprite - the part to release
+ */
+function destroySkin(sprite: Sprite | null): void {
+	(sprite as unknown as { destroy(): void } | null)?.destroy();
 }
 
 /**
@@ -130,6 +194,8 @@ export class VirtualStick {
 	tapping = false;
 
 	private readonly options: StickOptions;
+	private readonly base: Sprite | null;
+	private readonly thumbSprite: Sprite | null;
 	/** where it rests, set by the layout */
 	private readonly home = { x: 0, y: 0 };
 	private readonly deadzone: number;
@@ -159,8 +225,11 @@ export class VirtualStick {
 		options: StickOptions,
 		side: "left" | "right",
 		private readonly pad: VirtualPad,
+		skin?: TextureAtlas,
 	) {
 		this.options = options;
+		this.base = skinSprite(skin, options.base);
+		this.thumbSprite = skinSprite(skin, options.thumb);
 		this.side = options.side ?? side;
 		this.floating = options.floating ?? false;
 		this.area = options.area ?? "half";
@@ -389,12 +458,33 @@ export class VirtualStick {
 		}
 		const alpha = math.clamp(look.opacity * (held ? 2 : 1), 0, 1);
 		renderer.setColor(look.color);
-		renderer.setGlobalAlpha(alpha * 0.5);
-		renderer.fillEllipse(x, y, r, r);
-		renderer.setGlobalAlpha(alpha);
-		renderer.strokeEllipse(x, y, r, r);
+		if (this.base) {
+			drawSkin(renderer, this.base, x, y, r, alpha);
+		} else {
+			renderer.setGlobalAlpha(alpha * 0.5);
+			renderer.fillEllipse(x, y, r, r);
+			renderer.setGlobalAlpha(alpha);
+			renderer.strokeEllipse(x, y, r, r);
+		}
 		const thumb = r * THUMB;
-		renderer.fillEllipse(x + this.thumb.x, y + this.thumb.y, thumb, thumb);
+		if (this.thumbSprite) {
+			drawSkin(
+				renderer,
+				this.thumbSprite,
+				x + this.thumb.x,
+				y + this.thumb.y,
+				thumb,
+				alpha,
+			);
+		} else {
+			renderer.setGlobalAlpha(alpha);
+			renderer.fillEllipse(x + this.thumb.x, y + this.thumb.y, thumb, thumb);
+		}
+	}
+
+	destroy(): void {
+		destroySkin(this.base);
+		destroySkin(this.thumbSprite);
 	}
 }
 
@@ -431,6 +521,8 @@ export class VirtualButton {
 	readonly hideAtRest: boolean;
 
 	private readonly options: ButtonOptions;
+	private readonly region: Sprite | null;
+	private readonly pressedRegion: Sprite | null;
 	/** where it rests, set by the layout */
 	private readonly home = { x: 0, y: 0 };
 	private readonly order: number;
@@ -457,8 +549,11 @@ export class VirtualButton {
 		order: number,
 		private readonly pad: VirtualPad,
 		private readonly changed: () => void,
+		skin?: TextureAtlas,
 	) {
 		this.options = options;
+		this.region = skinSprite(skin, options.region);
+		this.pressedRegion = skinSprite(skin, options.pressed);
 		this.order = order;
 		const faces = [
 			BUTTONS.FACE_1,
@@ -714,10 +809,19 @@ export class VirtualButton {
 			1,
 		);
 		renderer.setColor(look.color);
-		renderer.setGlobalAlpha(alpha * (this.pressed ? 0.8 : 0.5));
-		renderer.fillEllipse(x, y, r, r);
-		renderer.setGlobalAlpha(alpha);
-		renderer.strokeEllipse(x, y, r, r);
+		const region = this.pressed
+			? (this.pressedRegion ?? this.region)
+			: this.region;
+		if (region) {
+			const shrink =
+				this.pressed && this.pressedRegion === null ? PRESS_SCALE : 1;
+			drawSkin(renderer, region, x, y, r * shrink, alpha);
+		} else {
+			renderer.setGlobalAlpha(alpha * (this.pressed ? 0.8 : 0.5));
+			renderer.fillEllipse(x, y, r, r);
+			renderer.setGlobalAlpha(alpha);
+			renderer.strokeEllipse(x, y, r, r);
+		}
 		if (this._label !== "") {
 			if (this.text === null) {
 				this.text = new Text(x, y, {
@@ -737,6 +841,8 @@ export class VirtualButton {
 	}
 
 	destroy(): void {
+		destroySkin(this.region);
+		destroySkin(this.pressedRegion);
 		// `Text.destroy()` is internal, as a container normally calls it, but
 		// this label is in none
 		(this.text as unknown as { destroy(): void } | null)?.destroy();

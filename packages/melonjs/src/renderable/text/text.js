@@ -6,7 +6,7 @@ import { Gradient } from "../../video/gradient.js";
 import CanvasRenderTarget from "../../video/rendertarget/canvasrendertarget.js";
 import { resolveAnchorPoint } from "../anchorPoint.ts";
 import Renderable, { resetRenderableState } from "../renderable.js";
-import TextMetrics from "./textmetrics.js";
+import TextMetrics, { sameLines, toLines } from "./textmetrics.js";
 import setContextStyle from "./textstyle.js";
 
 /**
@@ -295,6 +295,8 @@ export default class Text extends Renderable {
 		/**
 		 * Set the text baseline (e.g. the Y-coordinate for the draw operation), <br>
 		 * possible values are "top", "hanging", "middle", "alphabetic", "ideographic", "bottom"<br>
+		 * A multi-line text is placed as one block: its top, middle or bottom is at
+		 * `pos.y` ("alphabetic" and "ideographic" place it like "bottom").
 		 * @type {string}
 		 * @default "top"
 		 */
@@ -311,6 +313,8 @@ export default class Text extends Renderable {
 		/**
 		 * the maximum length in CSS pixel for a single segment of text.
 		 * (use -1 to disable word wrapping)
+		 * Each `\n`-separated line is wrapped on its own, so explicit line breaks
+		 * are kept; a word wider than this gets a line of its own.
 		 * @type {number}
 		 * @default -1
 		 */
@@ -601,18 +605,16 @@ export default class Text extends Renderable {
 	 * @returns {Text} this object for chaining
 	 */
 	setText(value = "") {
-		const bounds = this.getBounds();
-
-		// set the next text
-		if (this._text.toString() !== value.toString()) {
-			if (!Array.isArray(value)) {
-				this._text = ("" + value).split("\n");
-			} else {
-				// copy — storing the caller's array by reference would let
-				// destroy() (`_text.length = 0`) wipe it, and external
-				// mutation would change the rendered text without isDirty
-				this._text = value.slice();
-			}
+		// set the next text, compared as lines rather than through
+		// `toString()`: an array's joins with commas, so `setText("1,000")`
+		// after `["1", "000"]` (or the other way round) looked like no change
+		// and the old lines stayed. `toLines` copies an array — storing the
+		// caller's by reference would let destroy() (`_text.length = 0`) wipe
+		// it, and external mutation would change the rendered text without
+		// isDirty
+		const lines = toLines(value);
+		if (!sameLines(this._text, lines)) {
+			this._text = lines;
 		}
 
 		// word wrap if necessary
@@ -624,11 +626,12 @@ export default class Text extends Renderable {
 			);
 		}
 
-		// calculcate the text size and update the bounds accordingly
-		bounds.addBounds(
-			this.metrics.measureText(this._text, this.canvasTexture.context),
-			true,
-		);
+		// calculcate the text size, and the bounds from it the same way every
+		// later recompute does — taking them straight from `metrics` here
+		// gave a box in the parent's space, not the world's, that the next
+		// `updateBounds()` replaced
+		this.metrics.measureText(this._text, this.canvasTexture.context);
+		this.updateBounds();
 
 		// Quantize the offscreen canvas size to 32-pixel buckets: small
 		// metric changes (a score ticking, typewriter text) land on the
@@ -762,7 +765,7 @@ export default class Text extends Renderable {
 	 * @returns {Bounds} this renderable's bounding box
 	 */
 	updateBounds(absolute = true) {
-		if (typeof this.metrics !== "undefined" && this._text.length > 0) {
+		if (typeof this.metrics !== "undefined") {
 			const bounds = this.getBounds();
 			bounds.clear();
 
@@ -780,18 +783,9 @@ export default class Text extends Renderable {
 					break;
 			}
 
-			// compute y offset based on textBaseline
-			let ay = 0;
-			switch (this.textBaseline) {
-				case "middle":
-					ay = h / 2;
-					break;
-				case "ideographic":
-				case "alphabetic":
-				case "bottom":
-					ay = h;
-					break;
-			}
+			// the baseline places the whole block (see `TextMetrics#blockShift`),
+			// exactly as the draw does
+			const ay = h * this.metrics.blockShift();
 
 			bounds.addFrame(-ax, -ay, w - ax, h - ay);
 
@@ -808,8 +802,13 @@ export default class Text extends Renderable {
 	}
 
 	/**
-	 * measure the given text size in pixels
-	 * @param {string} [text] - the text to be measured
+	 * measure the given text size in pixels.
+	 *
+	 * With no argument it measures the label's own text and returns the
+	 * label's own metrics. Given another text, it measures it in this label's
+	 * style and returns a new TextMetrics for it, leaving the label's own
+	 * metrics, bounds and drawing as they were.
+	 * @param {string|string[]} [text] - the text to be measured, the label's own by default
 	 * @returns {TextMetrics} a TextMetrics object defining the dimensions of the given piece of text
 	 * @example
 	 * // size a panel around a label
@@ -821,7 +820,14 @@ export default class Text extends Renderable {
 	 * const widest = label.measureText("00:00").width;
 	 */
 	measureText(text = this._text) {
-		return this.metrics.measureText(text, this.canvasTexture.context);
+		// The label's own text refreshes the label's own metrics, which is what
+		// it is drawn and bounded with. Any other text is measured into a
+		// TextMetrics of its own: measured into `this.metrics` it replaced the
+		// label's width, height and ink padding with those of the other
+		// string, so a centred or right-aligned label was drawn shifted (and
+		// clipped) until its next `setText`.
+		const metrics = text === this._text ? this.metrics : new TextMetrics(this);
+		return metrics.measureText(text, this.canvasTexture.context);
 	}
 
 	/**
@@ -925,7 +931,15 @@ export default class Text extends Renderable {
 		 */
 		const eachLine = (paint) => {
 			let remaining = this.visibleCharacters;
-			let lineY = y;
+			// `y` is where `pos` lands, which the baseline puts somewhere on
+			// the BLOCK (see `TextMetrics#updateOrigin`). Each line is handed
+			// to the canvas at its own alignment point instead — the same
+			// share of its own line box — so the first one starts that much
+			// higher, and the block fills the box from its top.
+			let lineY =
+				y -
+				(this.metrics.height - this.metrics.lineHeight()) *
+					this.metrics.blockShift();
 
 			for (let i = 0; i < text.length; i++) {
 				let string = text[i].trimEnd();

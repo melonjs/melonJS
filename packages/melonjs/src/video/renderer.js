@@ -63,8 +63,11 @@ export default class Renderer {
 		this.renderTarget = new CanvasRenderTarget(
 			options.width,
 			options.height,
-			// support case when a global canvas is available, e.g. webapp adapter for wechat
-			typeof globalThis.canvas !== "undefined"
+			// with no canvas given, a global one is used: WeChat's adapter has
+			// its on-screen canvas there. A given canvas wins, as a page's
+			// `<canvas id="canvas">` is a global `canvas` too
+			typeof options.canvas === "undefined" &&
+				typeof globalThis.canvas !== "undefined"
 				? Object.assign(options, { canvas: globalThis.canvas })
 				: options,
 		);
@@ -333,7 +336,9 @@ export default class Renderer {
 		 * and {@link Renderer#strokeLine}. Subclasses override the
 		 * storage — `CanvasRenderer` proxies it to the underlying 2D
 		 * context via a getter/setter, while `WebGLRenderer` treats it
-		 * as a regular field consumed by its shape-stroke routines.
+		 * as a regular field consumed by its shape-stroke routines. On
+		 * every renderer it is part of the state {@link Renderer#save}
+		 * and {@link Renderer#restore} keep.
 		 * @type {number}
 		 * @default 1
 		 */
@@ -347,6 +352,28 @@ export default class Renderer {
 
 		// the projectionMatrix (set through setProjection)
 		this.projectionMatrix = new Matrix3d();
+
+		/**
+		 * The transform the world's direct children are drawn under, which
+		 * is the frame `Light3d` positions and directions are authored in.
+		 * Recorded by {@link Renderer#_setLightSpace}; see
+		 * {@link Renderer#_lightSpaceInverse}.
+		 * @ignore
+		 * @internal
+		 */
+		this._lightSpace = new Matrix3d();
+		/**
+		 * whether `_lightSpace` describes the walk being drawn
+		 * @ignore
+		 * @internal
+		 */
+		this._lightSpaceValid = false;
+		/**
+		 * scratch returned by {@link Renderer#_lightSpaceInverse}
+		 * @ignore
+		 * @internal
+		 */
+		this._lightSpaceScratch = new Matrix3d();
 
 		/**
 		 * what each nested {@link Renderer#_pixelSnapBegin} changed, to put
@@ -570,6 +597,7 @@ export default class Renderer {
 	 */
 	resetFrameState() {
 		this._screenSpaceDepth = 0;
+		this._lightSpaceValid = false;
 		// Purge anything a previous frame left queued. Only `reset()` did this,
 		// and that runs on a stage change, not per frame — so a frame abandoned
 		// between `beginPostEffect` and `endPostEffect` left entries keyed to a
@@ -587,6 +615,58 @@ export default class Renderer {
 			}
 			queue.count = 0;
 		}
+	}
+
+	/**
+	 * Record the current transform as the frame 3D lights live in. Called by
+	 * the world container ({@link Container#draw} on a `root` container) once
+	 * it has applied its own placement, so the transform is exactly the one
+	 * its direct children draw under. `false` (an orthographic projection,
+	 * which never lights a mesh) forgets it instead.
+	 * @param {boolean} enabled - whether this walk can light a mesh at all
+	 * @ignore
+	 * @internal
+	 */
+	_setLightSpace(enabled) {
+		if (enabled === true && this.currentTransform !== undefined) {
+			this._lightSpace.copy(this.currentTransform);
+			this._lightSpaceValid = true;
+		} else {
+			this._lightSpaceValid = false;
+		}
+	}
+
+	/**
+	 * The matrix taking the lights' frame (see {@link Renderer#_setLightSpace})
+	 * to the frame of the mesh being drawn now, or `null` when they are the
+	 * same frame or no world walk recorded one.
+	 *
+	 * The lit mesh shaders shade in the frame of the mesh's PARENT: they take
+	 * `uModelMatrix` as the world, and `Container#draw` folds every ancestor
+	 * into the view. That is the world itself for a mesh added straight to it,
+	 * and `null` here, which leaves its lighting exactly as authored. One
+	 * container down it is not, and lights uploaded as authored lit the mesh
+	 * as though its container had not moved or turned. Both frames draw
+	 * through the current transform, `C · p = W · q`, so `p = C⁻¹ · W · q`.
+	 * @returns {Matrix3d|null} a scratch matrix, valid until the next call
+	 * @ignore
+	 * @internal
+	 */
+	_lightSpaceInverse() {
+		if (this._lightSpaceValid !== true) {
+			return null;
+		}
+		const c = this.currentTransform.val;
+		const w = this._lightSpace.val;
+		for (let i = 0; i < 16; i++) {
+			if (c[i] !== w[i]) {
+				return this._lightSpaceScratch
+					.copy(this.currentTransform)
+					.invert()
+					.multiply(this._lightSpace);
+			}
+		}
+		return null;
 	}
 
 	/**
@@ -1052,6 +1132,7 @@ export default class Renderer {
 		// bounds an unbalanced bracket — `reset()` runs on a stage change and
 		// on context restore, NOT once per frame
 		this._screenSpaceDepth = 0;
+		this._lightSpaceValid = false;
 		this.renderState.reset(this.width, this.height);
 		this.resetTransform();
 		this.setBlendMode(this.settings.blendMode);
@@ -1067,6 +1148,22 @@ export default class Renderer {
 	 * programs, etc. Called by {@link Application#destroy}.
 	 */
 	destroy() {}
+
+	/**
+	 * Release everything this renderer derived from an image that is going
+	 * away: its texture cache entries and its tinted copies, and on a GPU
+	 * renderer (which overrides this) the texture uploaded from it. Called by
+	 * the loader when an image asset is unloaded; an image never drawn costs
+	 * nothing. Should the image be drawn again afterwards, it is simply
+	 * uploaded again.
+	 * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap|object} image - the image source
+	 * @ignore
+	 * @internal
+	 */
+	releaseImage(image) {
+		this.cache?.delete(image);
+		this.cache?.tinted?.delete(image);
+	}
 
 	/**
 	 * return a reference to the current render target corresponding canvas which this renderer draws to
@@ -1846,6 +1943,9 @@ export default class Renderer {
 	/**
 	 * Set the current fill & stroke style color.
 	 * By default, or upon reset, the value is set to #000000.
+	 * The colour's own alpha applies to fills and strokes, times the global
+	 * alpha; it does not change {@link Renderer#getGlobalAlpha}, nor how an
+	 * image is drawn.
 	 * @param {Color|string|Gradient} color - css color value or a Gradient object
 	 */
 	// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
@@ -1922,11 +2022,25 @@ export default class Renderer {
 	}
 
 	/**
-	 * return the current global alpha
+	 * return the current global alpha, the same as {@link Renderer#getGlobalAlpha}.
+	 * It is not the alpha of the current colour: as on a 2D context, a
+	 * translucent {@link Renderer#setColor} leaves it alone.
 	 * @returns {number}
 	 */
 	globalAlpha() {
-		return this.currentColor.alpha;
+		return this.getGlobalAlpha();
+	}
+
+	/**
+	 * The current colour packed for a vertex stream, at the alpha a fill or a
+	 * stroke is drawn at: the colour's own alpha times the global alpha.
+	 * @ignore
+	 * @internal
+	 * @returns {number} the colour as a 32-bit ARGB integer
+	 */
+	packedFillColor() {
+		const color = this.currentColor;
+		return color.toUint32(color.alpha * this.getGlobalAlpha());
 	}
 
 	/**
@@ -2849,12 +2963,25 @@ export default class Renderer {
 	scale(x, y) {}
 
 	/**
-	 * Set the renderer global alpha (0..1) for subsequent draw calls.
-	 * Implemented by subclasses.
+	 * Set the renderer global alpha (0..1) for subsequent draw calls. It
+	 * multiplies everything drawn, and is part of the state that
+	 * {@link Renderer#save} and {@link Renderer#restore} keep. It is
+	 * separate from the alpha of the colour given to {@link Renderer#setColor}:
+	 * a fill or a stroke is drawn at both multiplied together, and an image
+	 * at the global alpha (times the tint) alone.
 	 * @param {number} alpha - opacity value in the [0..1] range
 	 */
-	// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
-	setGlobalAlpha(alpha) {}
+	setGlobalAlpha(alpha) {
+		this.renderState.globalAlpha = alpha;
+	}
+
+	/**
+	 * Return the renderer global alpha, as set by {@link Renderer#setGlobalAlpha}.
+	 * @returns {number} global alpha value, in the [0..1] range
+	 */
+	getGlobalAlpha() {
+		return this.renderState.globalAlpha;
+	}
 
 	/**
 	 * Fill an axis-aligned rectangle with the current color.

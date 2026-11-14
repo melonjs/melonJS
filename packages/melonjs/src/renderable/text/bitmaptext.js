@@ -4,7 +4,7 @@ import { vector2dPool } from "../../math/vector2d.ts";
 import { resolveAnchorPoint } from "../anchorPoint.ts";
 import Renderable from "../renderable.js";
 import { bitmapTextDataPool } from "./bitmaptextdata.ts";
-import TextMetrics from "./textmetrics.js";
+import TextMetrics, { sameLines, toLines } from "./textmetrics.js";
 
 /**
  * additional import for TypeScript
@@ -74,6 +74,8 @@ export default class BitmapText extends Renderable {
 		/**
 		 * Set the text baseline (e.g. the Y-coordinate for the draw operation), <br>
 		 * possible values are "top", "hanging", "middle", "alphabetic", "ideographic", "bottom"<br>
+		 * A multi-line text is placed as one block: its top, middle or bottom is at
+		 * `pos.y` ("alphabetic" and "ideographic" place it like "bottom").
 		 * @public
 		 * @type {string}
 		 * @default "top"
@@ -92,6 +94,8 @@ export default class BitmapText extends Renderable {
 		/**
 		 * the maximum length in CSS pixel for a single segment of text.
 		 * (use -1 to disable word wrapping)
+		 * Each `\n`-separated line is wrapped on its own, so explicit line breaks
+		 * are kept; a word wider than this gets a line of its own.
 		 * @public
 		 * @type {number}
 		 * @default -1
@@ -211,15 +215,15 @@ export default class BitmapText extends Renderable {
 	 * @returns {BitmapText} this object for chaining
 	 */
 	setText(value = "") {
-		if (this._text.toString() !== value.toString()) {
-			if (!Array.isArray(value)) {
-				this._text = ("" + value).split("\n");
-			} else {
-				// copy — storing the caller's array by reference would let
-				// destroy() (`_text.length = 0`) wipe it, and external
-				// mutation would change the rendered text without isDirty
-				this._text = value.slice();
-			}
+		// compared as lines, not through `toString()`: an array's joins with
+		// commas, so `setText("1,000")` after `["1", "000"]` (or the other way
+		// round) looked like no change and the old lines stayed. `toLines`
+		// copies an array — storing the caller's by reference would let
+		// destroy() (`_text.length = 0`) wipe it, and external mutation would
+		// change the rendered text without isDirty
+		const lines = toLines(value);
+		if (!sameLines(this._text, lines)) {
+			this._text = lines;
 			this.isDirty = true;
 		}
 
@@ -486,8 +490,13 @@ export default class BitmapText extends Renderable {
 	}
 
 	/**
-	 * measure the given text size in pixels
-	 * @param {string} [text]
+	 * measure the given text size in pixels.
+	 *
+	 * With no argument it measures the label's own text and returns the
+	 * label's own metrics. Given another text, it measures it in this label's
+	 * font and scale and returns a new TextMetrics for it, leaving the label's
+	 * own metrics, bounds and drawing as they were.
+	 * @param {string|string[]} [text] - the text to be measured, the label's own by default
 	 * @returns {TextMetrics} a TextMetrics object with two properties: `width` and `height`, defining the output dimensions
 	 * @example
 	 * // size a panel around a label, at the label's CURRENT scale
@@ -495,7 +504,12 @@ export default class BitmapText extends Renderable {
 	 * panel.resize(size.width + 16, size.height + 16);
 	 */
 	measureText(text = this._text) {
-		return this.metrics.measureText(text);
+		// the label's own text refreshes its own metrics; any other is measured
+		// into a TextMetrics of its own, so the label's width and height — which
+		// it is aligned, drawn and bounded with — are not replaced by another
+		// string's
+		const metrics = text === this._text ? this.metrics : new TextMetrics(this);
+		return metrics.measureText(text);
 	}
 
 	/**

@@ -1,6 +1,6 @@
 ---
 name: melonjs-sprites-and-animation
-description: "Use this skill when creating sprites, playing frame animations, or working with texture atlases in melonJS. Covers Sprite construction from a plain image or an atlas region, addAnimation/setCurrentAnimation, TextureAtlas for TexturePacker/ShoeBox/Aseprite, tint, flip, NineSliceSprite, and the centred anchorPoint that offsets naive positioning. Triggers on: Sprite, new Sprite, addAnimation, setCurrentAnimation, isCurrentAnimation, TextureAtlas, TexturePacker, Aseprite, ShoeBox, atlas, region, framewidth, frameheight, tint, flipX, flipY, NineSliceSprite, animation."
+description: "Use this skill when creating sprites, playing frame animations, or working with texture atlases in melonJS. Covers Sprite construction from a plain image or an atlas region, addAnimation/setCurrentAnimation, TextureAtlas for TexturePacker/ShoeBox/Aseprite, tint, flip, NineSliceSprite, and the centred anchorPoint that offsets naive positioning. Triggers on: Sprite, new Sprite, addAnimation, setCurrentAnimation, isCurrentAnimation, onFrame, onComplete, play, pause, flicker, anchorPoint, TextureAtlas, TexturePacker, Aseprite, ShoeBox, atlas, region, framewidth, frameheight, tint, flipX, flipY, NineSliceSprite, animation."
 license: MIT
 ---
 
@@ -20,6 +20,10 @@ sprites appear to disagree.
 const s = new Sprite(100, 100, { image: "hero", framewidth: 64, frameheight: 64 });
 
 s.anchorPoint.set(0, 0);   // switch to top-left positioning if you prefer
+
+// or in the settings, by name: "top-left", "bottom" (the feet), "center",
+// "top", "left", "right", "top-right", "bottom-left", "bottom-right"
+const hero = new Sprite(x, y, { image: "hero", anchorPoint: "bottom" });
 ```
 
 Writing top-left maths against the centred default puts everything half a sprite
@@ -93,7 +97,30 @@ attack) needs no manual switch back to idle.
 
 Re-selecting the animation that is already current is a no-op, so calling
 `setCurrentAnimation` every frame is safe, and an `isCurrentAnimation` check
-around it adds nothing. An unknown id throws.
+around it adds nothing. **The exception is a `loop: false` run that has
+finished**: selecting it again plays it again, so a death animation selected
+every frame replays forever. Select a play-once animation once, on the event
+that starts it. An unknown id throws.
+
+A frame can carry its own delay, as `{ name, delay }` in place of the index or
+region name: `[{ name: 3, delay: 200 }, { name: 4, delay: 100 }]`.
+`play(name?, options?)` switches and plays (or, with no name, resumes),
+`pause()` freezes the current frame and `stop()` rewinds to the first one and
+pauses there; the options are `setCurrentAnimation`'s.
+
+`addAnimation` with an id that exists replaces it, which is how you change an
+animation's frames or speed (`hero.addAnimation("walk", [4, 5, 6, 7], 200)`).
+Redefining the one that is playing takes effect at once: the playing frame is
+kept if the new strip still has it, playback restarts on frame 0 if not, a
+finished `loop: false` run holds the new last frame, and the
+`setCurrentAnimation` options stay. Before 20.13 it kept the old frame count, so
+a shorter strip threw on the next `update()` and a longer one never reached its
+new frames.
+
+Since 20.14, a frame the texture does not have (a number past the end of the
+sheet, a name the atlas does not hold) is left out with a console warning
+naming it, and the frames that exist play in order; `addAnimation` returns how
+many it kept.
 
 ## Texture atlases
 
@@ -125,6 +152,9 @@ sprite.flipX(true);                   // mirror horizontally
 sprite.flipY(true);
 sprite.blendMode = "additive";        // see the effects skill for the full list
 sprite.scale(2, 2);                   // ← multiplicative, see below
+sprite.flicker(1000, function () {    // blink for a second, then…
+    this.ancestor.removeChild(this);  // …`this` is the sprite; the flicker has ended
+});
 ```
 
 **`scale()` is multiplicative, not absolute.** Calling it every frame compounds.
@@ -185,6 +215,11 @@ Two consequences:
 | event handlers leak on pooled objects | bound in the constructor rather than `onActivateEvent` |
 | animation never advances | no `framewidth`/`frameheight`, so the sheet is one frame |
 | animation plays once and stops | `{ loop: false }`, or a callback that returned `false` |
+| a `loop: false` animation keeps replaying | `setCurrentAnimation` called every frame: a finished play-once run is restarted by selecting it again |
+| a one-frame animation never calls its `onComplete` | a looping one-frame animation does not step; play it with `loop: false` or `next` (before 20.12 even those never completed) |
+| `TypeError` reading `offset` or `delay` in `update()` after re-adding the playing animation with fewer frames, or a longer one never shows its new frames | before 20.13 redefining the current animation kept its old frame count; upgrade |
+| a console warning `addAnimation("walk"): no frame … in the texture`, or a `TypeError` reading `delay` / `offset` on an older melonJS | a frame number or name the sheet or atlas does not have (often an atlas re-exported without one of its images): fix the frame list or re-export the atlas |
+| `this` is wrong in a `flicker(ms, callback)` callback, or a flicker started from it stops at once | before 20.13.0 the callback ran on an internal object and the flicker was stopped after it; now `this` is the sprite and the flicker has already ended |
 | sprites do not batch | more distinct textures in one frame than `renderer.maxTextures` |
 | nine-slice corners stretch anyway | `insetX`/`insetY` instead of `insetx`/`insety` |
 

@@ -88,6 +88,37 @@ export interface Poolable {
 }
 
 /**
+ * How many times each object has been handed back to its pool by
+ * {@link releaseToOwningPool}, i.e. by leaving the world.
+ *
+ * A pooled renderable is never destroyed: leaving the world sends it back to
+ * its pool, and the next `get` lends the same object out as something new.
+ * So a holder of a reference cannot tell "still the object I was given" from
+ * "recycled since" by looking at it, and asking whether it is parked is not
+ * enough either: a bullet pool lends the object out again within the frame.
+ * The count only grows, so a holder notes it once and compares.
+ *
+ * Counted here rather than in `Pool#release`, which the math and particle
+ * pools call at a far higher rate for objects no one holds this way.
+ */
+const recycled = new WeakMap<object, number>();
+
+/**
+ * How many times a container has handed an object back to the pool that
+ * built it, by removing it from the world without `keepalive`.
+ *
+ * `0` for an object no pool built or never removed. Compare a value noted
+ * earlier with the current one to tell whether it was recycled in between.
+ * @param instance - the object to ask about
+ * @returns the number of times it was recycled
+ * @internal
+ * @ignore
+ */
+export const timesRecycled = (instance: object): number => {
+	return recycled.get(instance) ?? 0;
+};
+
+/**
  * Hand an object back to whichever pool created it.
  *
  * Returns false for anything a pool did not build, which is the signal a
@@ -102,6 +133,8 @@ export const releaseToOwningPool = (instance: object): boolean => {
 	if (owner === undefined) {
 		return false;
 	}
+	// leaving the world for its pool: whoever still holds it is done with it
+	recycled.set(instance, timesRecycled(instance) + 1);
 	// already back in its pool, so the caller must not destroy it either
 	if (parked.has(instance)) {
 		return true;
@@ -196,11 +229,23 @@ export const createPool = <T extends object, A extends unknown[]>(
 			}
 		},
 		/**
-		 * purge the pool
+		 * purge the pool: drop every idle instance, so the garbage collector
+		 * can take them. Instances still in use are not the pool's to drop:
+		 * they stay counted by `used()` and can still be released.
 		 */
 		purge: () => {
+			for (const instance of available) {
+				// forgotten, not just unlisted: a purged instance is no longer
+				// this pool's, so releasing it again is ignored (as for any
+				// foreign object) instead of re-parking it and counting it
+				// back out of `used()`
+				instanceResetMethods.delete(instance);
+				instanceReleaseMethods.delete(instance);
+				parked.delete(instance);
+			}
 			available.clear();
-			inUse = 0;
+			// `inUse` is NOT reset: zeroing it here forgot the instances
+			// still out, and releasing them afterwards drove `used()` negative
 		},
 		/**
 		 * get the current size of the pool (how many objects are available)

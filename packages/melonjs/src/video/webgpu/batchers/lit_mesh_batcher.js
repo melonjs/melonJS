@@ -202,7 +202,13 @@ export default class WebGPULitMeshBatcher extends WebGPUMeshBatcher {
 	updatePassState() {
 		const renderer = this.renderer;
 		const stage = state.current();
-		const lit = packMeshLights(stage ? stage._activeLights3d : null);
+		// lights are authored in the world's frame; a mesh one container
+		// down is shaded in its parent's, so carry them there (null — and
+		// the lights exactly as authored — for a mesh straight in the world)
+		const lit = packMeshLights(
+			stage ? stage._activeLights3d : null,
+			this.renderer._lightSpaceInverse?.() ?? null,
+		);
 		const a = lit.ambient;
 		const hasLight = lit.count > 0 || a[0] > 0 || a[1] > 0 || a[2] > 0;
 		writeLight3dBlock(this.blockData, {

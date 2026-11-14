@@ -1603,7 +1603,8 @@ describe("UI widgets", () => {
 				const renderer = app.renderer;
 				const alphas = [];
 				vi.spyOn(renderer, "fillRect").mockImplementation(() => {
-					alphas.push(renderer.globalAlpha());
+					// drawn at the colour's own alpha times the global alpha
+					alphas.push(renderer.globalAlpha() * renderer.getColor().alpha);
 				});
 				let atSkin;
 				vi.spyOn(SkinDrawer.prototype, "draw").mockImplementation(() => {

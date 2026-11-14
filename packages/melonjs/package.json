@@ -1,6 +1,6 @@
 {
 	"name": "melonjs",
-	"version": "20.13.0",
+	"version": "20.15.1",
 	"description": "A modern & fully featured HTML5 game engine (2D & 3D) for JavaScript/TypeScript, with WebGL/WebGPU rendering, built-in physics, Tiled map & glTF support and WebAudio.",
 	"homepage": "https://www.melonjs.org/",
 	"type": "module",
@@ -39,9 +39,6 @@
 	"license": "MIT",
 	"author": "Olivier Biot (AltByte Pte Ltd)",
 	"funding": "https://github.com/sponsors/melonjs",
-	"engines": {
-		"node": ">=24.0.0"
-	},
 	"types": "./build/index.d.ts",
 	"module": "./build/index.js",
 	"exports": {

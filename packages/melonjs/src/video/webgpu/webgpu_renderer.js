@@ -34,6 +34,7 @@ import TextureCache from "../texture/cache.js";
 import { dashPath, dashSegments } from "../utils/dash.js";
 import { pointsBox } from "../utils/pixel_snap.js";
 import {
+	arcSweep,
 	generateJoinCircles,
 	generateTriangleFan,
 } from "../utils/tessellation.js";
@@ -1889,7 +1890,9 @@ export default class WebGPURenderer extends Renderer {
 		// retarget with the appropriate clear: a camera's offscreen pass
 		// starts like a frame (background color + fresh stencil), a
 		// sprite's starts transparent so unpainted texels stay see-through
-		if (isCamera) {
+		// (a camera drawn over another camera starts transparent too, so that
+		// one shows through: see `Camera2d#draw`)
+		if (isCamera && !renderable._postEffectOver) {
 			const [r, g, b, a] = this.backgroundColor.toArray();
 			this.setRenderTarget(rt, {
 				clear: true,
@@ -1937,7 +1940,10 @@ export default class WebGPURenderer extends Renderer {
 		const pool = this._renderTargetPool;
 		const rt1 = pool.getCaptureTarget();
 		const rt2 = pool.getPingPongTarget();
-		const keepBlend = !isCamera;
+		// a camera that starts the frame replaces it; one drawn over another
+		// camera is blended over what that one drew
+		const over = isCamera && renderable._postEffectOver === true;
+		const keepBlend = !isCamera || over;
 		const canvas = this.getCanvas();
 		const w = canvas.width;
 		const h = canvas.height;
@@ -1974,6 +1980,10 @@ export default class WebGPURenderer extends Renderer {
 
 		// the chain's passes are told where the renderable is
 		this._beginChainSpace(renderable);
+		if (over) {
+			// whatever the camera's last draw left set
+			this.setBlendMode("normal");
+		}
 		// a renderable's chain lands at the opacity it is drawn at, by its
 		// last blit only; a camera's composites whole
 		const alpha = isCamera
@@ -2934,6 +2944,9 @@ export default class WebGPURenderer extends Renderer {
 	 */
 	save() {
 		this.renderState.currentShader = this.customShader;
+		// the line width is a plain field here, not context state: hand it
+		// to the stack so restore() puts it back, as on Canvas
+		this.renderState.lineWidth = this.lineWidth;
 		this.renderState.save(this.scissorActive === true);
 	}
 
@@ -2961,6 +2974,7 @@ export default class WebGPURenderer extends Renderer {
 		}
 		const result = this.renderState.restore(canvas.width, canvas.height);
 		if (result !== null) {
+			this.lineWidth = this.renderState.lineWidth;
 			this.setBlendMode(result.blendMode);
 			if (scissorChanging) {
 				this.scissorActive = result.scissorActive === true;
@@ -2977,7 +2991,9 @@ export default class WebGPURenderer extends Renderer {
 	 * @param {number} alpha - global alpha value (0..1)
 	 */
 	setGlobalAlpha(alpha) {
-		this.currentColor.alpha = alpha;
+		// apart from the colour's own alpha, as a 2D context keeps its
+		// globalAlpha apart from its fillStyle
+		this.renderState.globalAlpha = alpha;
 	}
 
 	/**
@@ -2985,7 +3001,7 @@ export default class WebGPURenderer extends Renderer {
 	 * @returns {number} global alpha value
 	 */
 	getGlobalAlpha() {
-		return this.currentColor.alpha;
+		return this.renderState.globalAlpha;
 	}
 
 	/**
@@ -2999,9 +3015,9 @@ export default class WebGPURenderer extends Renderer {
 		} else {
 			this.renderState.currentGradient = null;
 			this.currentGradient = null;
-			const alpha = this.currentColor.alpha;
+			// the colour keeps its own alpha: fills and strokes are drawn at
+			// it times the global alpha (see `packedFillColor`)
 			this.currentColor.copy(color);
-			this.currentColor.alpha *= alpha;
 		}
 	}
 
@@ -3854,7 +3870,9 @@ export default class WebGPURenderer extends Renderer {
 	}
 
 	/**
-	 * Fill an arc at the specified coordinates with given radius, start and end points
+	 * Fill an arc at the specified coordinates with given radius, start and end points.
+	 * The angles are read like `CanvasRenderingContext2D.arc`: an end before
+	 * the start wraps round, and a span of 2π or more is the whole circle.
 	 * @param {number} x - arc center point x-axis
 	 * @param {number} y - arc center point y-axis
 	 * @param {number} radius - arc radius
@@ -3883,27 +3901,28 @@ export default class WebGPURenderer extends Renderer {
 			radius * 2,
 		);
 		this.setBatcher("primitive");
-		let diff = Math.abs(end - start);
-		if (antiClockwise) {
-			diff = Math.PI * 2 - diff;
+		const diff = arcSweep(start, end, antiClockwise);
+		if (diff > 0) {
+			const segments = Math.max(
+				4,
+				Math.round((diff * radius) / this.path2D.arcResolution),
+			);
+			// the fan always runs clockwise: an anticlockwise arc from `start`
+			// covers the same angles as a clockwise one ending at `start`
+			const startAngle = antiClockwise ? start - diff : start;
+			this.currentBatcher.drawVertices(
+				"triangle-list",
+				generateTriangleFan(
+					x,
+					y,
+					radius,
+					radius,
+					startAngle,
+					startAngle + diff,
+					segments,
+				),
+			);
 		}
-		const segments = Math.max(
-			4,
-			Math.round((diff * radius) / this.path2D.arcResolution),
-		);
-		const startAngle = antiClockwise ? end : start;
-		this.currentBatcher.drawVertices(
-			"triangle-list",
-			generateTriangleFan(
-				x,
-				y,
-				radius,
-				radius,
-				startAngle,
-				startAngle + diff,
-				segments,
-			),
-		);
 		this._pixelSnapEnd(snapped);
 	}
 
@@ -4750,6 +4769,19 @@ export default class WebGPURenderer extends Renderer {
 		if (this.settings.prewarm === true) {
 			this.prewarm().catch(() => {});
 		}
+	}
+
+	/**
+	 * Release the GPU texture uploaded from an image that is going away. The
+	 * store retires it rather than destroying it outright, so a draw already
+	 * recorded in the current frame still submits.
+	 * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap|object} image - the image source
+	 * @ignore
+	 * @internal
+	 */
+	releaseImage(image) {
+		this.textureStore?.destroyTexture(image);
+		super.releaseImage(image);
 	}
 
 	/**

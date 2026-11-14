@@ -4,6 +4,7 @@
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
 import { DebugPanelPlugin } from "@melonjs/debug-plugin";
+import { GamepadPlugin } from "@melonjs/gamepad-plugin";
 import { MatterAdapter } from "@melonjs/matter-adapter";
 import {
 	Application,
@@ -89,6 +90,10 @@ export const createGame = async () => {
 	// register the debug plugin
 	plugin.register(DebugPanelPlugin, "debugPanel");
 
+	// touch controls, on touch screens: a stick and a jump button, read
+	// through the player's gamepad bindings
+	plugin.register(GamepadPlugin, "gamepad", { buttons: [{ label: "A" }] });
+
 	// initialize the sound engine
 	audio.init("mp3,ogg");
 
@@ -135,8 +140,9 @@ export const createGame = async () => {
 
 		// Per-shape fix-ups for TMX geometry that matter handles differently
 		// from the built-in SAT solver:
-		//   - Platforms are zero-thickness polylines (matter can't make a
-		//     body from collinear vertices); swap to a thin solid rect.
+		//   - Platforms are polylines, which matter simulates as a 2px thick
+		//     rectangle per segment; rebuild them as a thicker solid rect so
+		//     a falling player cannot pass through one.
 		//   - Each platform gets a unique collision-filter bit so the
 		//     player can include/exclude individual platforms from its
 		//     mask each frame (see `oneWayPlatforms` doc above for why

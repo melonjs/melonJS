@@ -91,7 +91,12 @@ export class Draggable extends Renderable {
 	 */
 	dragMove(e) {
 		if (this.dragging === true) {
-			this.pos.set(e.gameX, e.gameY, this.pos.z);
+			// the global move carries screen coordinates in `gameX`; the
+			// grab was measured in world ones for an object in the world
+			// (`gameX` still serves an event made by hand without them)
+			const x = (this.isFloating ? e.gameScreenX : e.gameWorldX) ?? e.gameX;
+			const y = (this.isFloating ? e.gameScreenY : e.gameWorldY) ?? e.gameY;
+			this.pos.set(x, y, this.pos.z);
 			this.pos.sub(this.grabOffset);
 		}
 	}

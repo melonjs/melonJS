@@ -36,6 +36,8 @@ jobs:
         run: pnpm -F @melonjs/debug-plugin build
       - name: Build gamepad-plugin
         run: pnpm -F @melonjs/gamepad-plugin build
+      - name: Build pathfinding-plugin
+        run: pnpm -F @melonjs/pathfinding-plugin build
       - name: Build tiled-inflate-plugin
         run: pnpm -F @melonjs/tiled-inflate-plugin build
       - name: Build spine-plugin
@@ -44,6 +46,8 @@ jobs:
         run: pnpm -F @melonjs/matter-adapter build
       - name: Build planck-adapter
         run: pnpm -F @melonjs/planck-adapter build
+      - name: Build rapier2d-adapter
+        run: pnpm -F @melonjs/rapier2d-adapter build
       - name: Build API docs
         run: pnpm doc
       - name: Build examples

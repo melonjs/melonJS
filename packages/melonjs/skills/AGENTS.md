@@ -11,7 +11,7 @@
 > Gemini CLI and anything else following the `AGENTS.md` convention will read it
 > from your project root. Claude Code users should install the plugin instead —
 > `/plugin marketplace add melonjs/melonJS` — which registers the same guidance
-> as 25 routed skills.
+> as 26 routed skills.
 
 This project uses **melonJS 20.x**, an open-source HTML5 game engine covering
 2D, 2.5D and 3D, running on WebGPU, WebGL 2 or Canvas with automatic fallback.
@@ -65,4 +65,5 @@ Companion packages cover the rest: `@melonjs/planck-adapter` and
 `@melonjs/matter-adapter` (physics), `@melonjs/spine-plugin` (skeletal
 animation), `@melonjs/tiled-inflate-plugin` (**required** for compressed Tiled
 maps), `@melonjs/debug-plugin`, `@melonjs/gamepad-plugin` (touch controls
-reported as a gamepad), `@melonjs/capacitor-plugin`.
+reported as a gamepad), `@melonjs/pathfinding-plugin` (A* on a grid),
+`@melonjs/capacitor-plugin`.

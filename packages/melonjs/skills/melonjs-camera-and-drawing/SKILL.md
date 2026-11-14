@@ -1,6 +1,6 @@
 ---
 name: melonjs-camera-and-drawing
-description: "Use this skill for camera control and immediate-mode drawing in melonJS — following a target, viewport bounds, shake and fade, secondary cameras and what each one draws, and drawing shapes, lines and gradients inside a custom draw(). Covers world versus screen coordinate conversion, clipping and masking, baking with CanvasRenderTarget, and reading pixels back. Triggers on: Camera2d, viewport, follow, offset, look ahead, setBounds, minimap, second camera, split screen, cullMask, visibilityLayer, hide from a camera, shake, fadeIn, fadeOut, worldToLocal, localToWorld, colorMatrix, renderer.fill, renderer.stroke, Rect, Ellipse, Polygon, Line, Gradient, clipRect, mask, CanvasRenderTarget, NoiseTexture2d, lookAt, setBasis, toImageData, getImageData, toBlob, toDataURL, screenshot, read pixels."
+description: "Use this skill for camera control and immediate-mode drawing in melonJS — following a target, viewport bounds, shake and fade, secondary cameras and what each one draws, and drawing shapes, lines and gradients inside a custom draw(). Covers world versus screen coordinate conversion, clipping and masking, baking with CanvasRenderTarget, and reading pixels back. Triggers on: Camera2d, viewport, follow, offset, look ahead, setBounds, minimap, second camera, split screen, cullMask, visibilityLayer, hide from a camera, zoom, roll, shake, fadeIn, fadeOut, CameraEffect, addCameraEffect, MaskEffect, PixelateTransitionEffect, worldToLocal, localToWorld, colorMatrix, renderer.fill, renderer.stroke, setGlobalAlpha, fillArc, Rect, Ellipse, Polygon, Line, Path2D, SVG path, Gradient, clipRect, mask, CanvasRenderTarget, NoiseTexture2d, lookAt, setBasis, toImageData, getImageData, toBlob, toDataURL, screenshot, read pixels."
 license: MIT
 ---
 
@@ -109,6 +109,13 @@ The fade pair is named from the *colour's* point of view, not the scene's:
 (screen starts at `color` and clears). Both default to a 1000 ms duration and
 take an optional completion callback.
 
+`shake()` while a shake is still running is ignored, unless its fifth
+argument, `force`, is `true`, which replaces the running one:
+
+```js
+app.viewport.shake(8, 300, app.viewport.AXIS.BOTH, undefined, true);
+```
+
 **`fadeIn` does not HOLD the colour.** The effect completes, the camera's own
 update destroys it, and the screen snaps back — which is why the engine's
 idiom does the work in the completion callback and then calls `fadeOut`. To
@@ -136,12 +143,60 @@ non-identity, and drops it again after the frame. It is **not** shader-free —
 it is a `ColorMatrixEffect`, i.e. a `ShaderEffect`, so like every post effect it
 is inert on the Canvas renderer.
 
+### The camera effects, and your own
+
+Each is a `CameraEffect`, added with `camera.addCameraEffect(effect)` (which
+returns it), found with `getCameraEffect(Class)` and taken off with
+`removeCameraEffect(effect)`, which destroys it:
+
+| effect | options | what it does |
+|---|---|---|
+| `ShakeEffect` | `intensity`, `duration`, `axis`, `onComplete` | jitters `offset`; what `shake()` adds. Several can run at once this way |
+| `FadeEffect` | `color`, `duration` (1000), `direction: "in" \| "out"`, `onComplete` | what `fadeIn()` / `fadeOut()` add |
+| `MaskEffect` | `shape`, `color`, `duration` (500), `direction: "hide" \| "reveal"`, `onComplete` | an iris or a wipe through a unit-sized `Ellipse` or `Polygon` centred on the origin |
+| `PixelateTransitionEffect` | `renderer`, `size` (32), `duration` (500), `direction: "hide" \| "reveal"`, `onComplete` | the view breaks into blocks up to `size` screen pixels, or comes back from them. A shader: on Canvas it keeps its timing and draws nothing |
+
+`state.transition("fade" | "mask" | "pixelate", …)` drives the last three
+for a state change (see `melonjs-scenes-and-state`). A `Trigger` that loads a
+level transitions only with both a `color` and a `duration`, and takes only
+`transition: "fade"` (the default) or `"mask"` with a `shape`: anything else,
+`"pixelate"` included, is a fade.
+
+For an effect of your own, extend `CameraEffect`: `update(dt)` runs every
+frame (`dt` in ms), `draw(renderer, width, height)` draws over the camera's
+view, and `destroy()` frees what it holds. Set `isComplete = true` and the
+camera's update destroys it that frame, unless it is `isPersistent`.
+
+## Zoom and roll
+
+```js
+app.viewport.zoom = 2;              // above 1 zooms in, below 1 out
+app.viewport.roll = Math.PI / 32;   // a slight dutch angle, in radians
+```
+
+A zoomed camera follows, keeps to its bounds and centres on `focusOn` in world
+units, and `localToWorld` / `worldToLocal` count the zoom. A zoom of 0 or less
+is taken as 1.
+
+`roll` is absolute (assigning the same angle twice changes nothing), and the
+pointer conversions undo it, so picking under a rolled camera needs nothing.
+It OWNS the camera's `currentTransform`: each assignment rebuilds it, so a
+`rotate()` or `scale()` called on the camera itself is lost at the next one.
+`reset()` puts it back to 0. On a `Camera3d` the same `roll` banks the view
+(see below).
+
 ## Coordinate conversion
 
 ```js
 app.viewport.worldToLocal(x, y);   // world → screen
 app.viewport.localToWorld(x, y);   // screen → world
 ```
+
+They agree with where the camera draws: a level smaller than the view is
+centred by offsetting the world container (`world.pos`), which the default
+camera draws and a minimap, corner or zoomed camera leaves out, and each
+camera's conversions follow suit (20.13 and later; before, a minimap's were off
+by `world.pos`).
 
 Both return a `Vector2d`; with no third argument that vector comes from the
 shared pool, so in a per-frame path pass your own `v` as the third argument, or
@@ -205,6 +260,14 @@ and an overridden `postDraw`:
 this.cameras.set("minimap", new MinimapCamera());
 ```
 
+A stage's cameras draw in the order they were added, each over the ones before
+it, so a full-screen second camera is a layer: a `Camera3d` drawing a 3D
+background first, the game's own camera over it, each kept to its part of the
+world with `visibilityLayer` / `cullMask` (below). A camera's post effects
+apply to what that camera draws: the first camera's pass starts the frame, and
+a later camera's is blended over what is already there (20.13 and later;
+before, it wiped out the cameras before it).
+
 View state is per camera, not per scene: a `Camera3d` carries its own distance
 fog (`setFog`), so a minimap or split-screen view fogs independently of the main
 one — and a `Camera2d` never fogs. See `melonjs-3d`.
@@ -228,6 +291,9 @@ minimap.cullMask = ~PARTICLES;         // the minimap draws every layer but 2
   set it on an emitter and none of its particles are drawn. The world itself
   obeys it too, and so does what it contains: a child is drawn only if it and
   every container above it share a bit with the camera.
+- Particles are on their emitter's layers, and follow a change to them on the
+  emitter's next update, so a camera that draws only the emitter's layer draws
+  its particles too.
 - A renderable on layer `0` is drawn by no camera; a `cullMask` of `0` draws
   nothing.
 - It decides drawing only: what a camera leaves out still updates, collides and
@@ -256,9 +322,56 @@ draw(renderer) {
 }
 ```
 
+**The colour's alpha and the global alpha are two things**, as on a 2D
+context. A fill or a stroke is drawn at the alpha of `setColor` times
+`setGlobalAlpha` (which is where the renderable's opacity comes in), an image at
+the global alpha (times the tint) alone, and `getGlobalAlpha()` never moves with
+`setColor`. So to fade a translucent shape, lower the global alpha and keep the
+colour; folding the colour's alpha into `setGlobalAlpha` as well counts it twice.
+
+`lineWidth`, `lineJoin`, the colour and the global alpha are all part of what
+`save()` / `restore()` keep, and every renderable's `draw()` runs between the
+two, so set them freely there: the next renderable gets them back.
+
+`fillArc` / `strokeArc` read their angles like `CanvasRenderingContext2D.arc`:
+an end before the start wraps round (`end + 2π`), and a span of 2π or more in
+the arc's own direction is the whole circle. A filled part-circle differs by
+backend, though: Canvas closes it with a straight chord, the GPU renderers fill
+a pie slice from the centre.
+
 Geometry available: `Rect`, `RoundRect`, `Ellipse`, `Polygon`, `Line`, `Point`
-(and a `Bounds`). `renderer.fill(shape)` and `renderer.stroke(shape)` take any
-of them and throw `Invalid geometry for fill/stroke` for anything else.
+(and a `Bounds`), plus the 3D `Box3d` and `Sphere`, drawn as their footprint
+and their circle on the screen plane. `renderer.fill(shape)` and
+`renderer.stroke(shape)` take any of them and throw `Invalid geometry for
+fill/stroke` for anything else.
+
+### Paths and SVG strings
+
+For any other outline, build a path on the renderer's own `renderer.path2D`,
+then call `fill()` / `stroke()` with no argument:
+
+```js
+renderer.path2D.parseSVGPath("M 50 0 L 100 100 L 0 100 Z");
+renderer.setColor("#4CAF50");
+renderer.fill();
+```
+
+`renderer.path2D` also takes the methods of the browser's `Path2D`
+(`beginPath`, `moveTo`, `lineTo`, `arc`, `arcTo`, `ellipse`, `rect`,
+`roundRect`, `quadraticCurveTo`, `bezierCurveTo`, `closePath`).
+
+- **Every `moveTo`, every `M`, starts a sub-path, and filled, each one after
+  the first is a HOLE**: a donut, the counter of an "O". Wind a hole the
+  opposite way to the outline, as Canvas fills by the non-zero rule, where a
+  hole wound the same way fills in. Draw separate shapes with separate fills.
+- **`parseSVGPath` reads absolute commands only** (`M L H V Q C A Z`). A
+  lowercase, relative command is read as its absolute twin, so a path
+  exported with relative commands comes out scrambled, and `H` / `V` take an
+  OFFSET from the pen, not the coordinate SVG means. Export absolute
+  coordinates.
+- **The engine's `Path2D` class is not exported.** `new Path2D()` in a game is
+  the browser's own, which `fill()` / `stroke()` refuse as invalid geometry:
+  use `renderer.path2D`.
 
 `Gradient` gives linear and radial fills, built with
 `renderer.createLinearGradient(x0, y0, x1, y1)` /
@@ -319,10 +432,11 @@ drawable, and the engine's own bakes (the particle emitter's default texture)
 hand `.canvas` on for exactly that reason.
 
 **Create it once and keep it.** On a GPU backend, once drawn, its texture stays
-on the GPU for as long as the renderer lives: a stage change does not release
-it, and no public call does. A target made for every level, every restart or
-every spawned object leaks one texture each time, so make it once (at module
-level, say) and clear it for reuse. If you paint into it again after it has
+on the GPU until `rt.destroy(renderer)` frees it: a stage change does not, and
+`destroy()` without the renderer frees the canvas but not that copy. A target
+made for every level, every restart or every spawned object and never
+destroyed leaks one texture each time, so make it once (at module level, say)
+and clear it for reuse. If you paint into it again after it has
 been drawn, call `rt.invalidate(renderer)` before the next draw so the GPU copy
 is refreshed.
 
@@ -383,6 +497,7 @@ const data = await rt.toImageData(0, 0, w, h);
 
 | symptom | cause |
 |---|---|
+| a second camera's post effect wipes out what the first camera drew | before 20.13 a later camera's post-effect pass replaced the whole frame; update, or put the effects on a container instead of the camera |
 | `follow()` set but the view never moves | viewport bounds still at renderer size |
 | `invalid target for me.Camera2d.follow` | passed `player.pos` — pass the renderable, a `Vector2d` or a `Vector3d` |
 | camera drag jumps around | using world (`gameWorldX`) instead of screen (`gameScreenX`) coordinates |
@@ -390,12 +505,24 @@ const data = await rt.toImageData(0, 0, w, h);
 | custom drawing appears at the origin | `draw()` not reading `this.pos` |
 | custom drawing offset by half its size | centred `anchorPoint` not zeroed |
 | `setLineWidth` is not a function | it is the `lineWidth` property |
+| after a translucent `setColor`, images, later colours and the next renderables come out faded (WebGL / WebGPU) | before 20.13 the colour's alpha leaked into the global alpha; update |
+| a translucent colour comes out fainter than asked | its alpha folded into `setGlobalAlpha` as well, so it counts twice |
+| a `lineWidth` set in one `draw()` thickens everything drawn after it (WebGL / WebGPU) | before 20.13 `restore()` did not put `lineWidth` back; update, or put it back yourself |
+| `fillArc` with the end angle before the start fills the wrong part of the circle (WebGL / WebGPU) | before 20.13 the GPU renderers did not wrap the angles like Canvas; update |
+| a minimap's `worldToLocal` / `localToWorld` are off by the level's centring offset | before 20.13 they applied `world.pos`, which a non-default camera does not draw; update |
 | clipping in the wrong place inside a container | container clips in local coordinates, after its own translate |
 | `container.clipping = true` does nothing | container has no explicit size, so `width`/`height` are `Infinity` |
 | baked target draws nothing / throws | passed the `CanvasRenderTarget`, not its `.canvas` |
 | `getImageData()` throws on one machine but not another | that one is on the WebGPU renderer, which cannot read back synchronously — `await toImageData()` instead |
 | frame rate drops with many static draws | bake into a `CanvasRenderTarget` instead |
-| GPU memory grows with every level or restart | a `CanvasRenderTarget` created each time: make one and reuse it |
+| GPU memory grows with every level or restart | a `CanvasRenderTarget` created each time: make one and reuse it, or `destroy(renderer)` the old one |
+| a second `shake()` does nothing | one is still running: pass `force` (the fifth argument) to replace it |
+| a `Trigger` with `transition: "pixelate"` fades instead | a trigger takes only `"fade"` or `"mask"`; add a `PixelateTransitionEffect` yourself |
+| a `Trigger` loads its level with no transition | it needs both `color` and `duration` |
+| a `rotate()` or `scale()` on the camera is lost | `roll` owns the camera's `currentTransform` and rebuilds it; use `roll` and `zoom` |
+| an SVG path from an editor comes out scrambled | `parseSVGPath` reads absolute commands only, and `H` / `V` as offsets |
+| a hole in a path fills in, on Canvas only | it is wound the same way as the outline; wind it the opposite way |
+| `fill(new Path2D(...))` throws `Invalid geometry for fill/stroke` | that is the browser's `Path2D`; build on `renderer.path2D` and call `fill()` |
 | a repainted `CanvasRenderTarget` still shows the old pixels | call `rt.invalidate(renderer)` after painting |
 | a 3D camera cannot be given an arbitrary up | `Camera3d#lookAt(target, up)` or `setBasis(right, up, forward)`; see `melonjs-3d` |
 | particles or effects clutter a minimap | every camera draws everything: put them on their own `visibilityLayer` and leave it out of the minimap's `cullMask` |

@@ -30,7 +30,7 @@ The Debug Panel is hidden by default and can be displayed using the `S` key. It 
 The panel displays the following information across three rows:
 
 * **#objects** — number of objects currently active in the scene
-* **#draws** — number of draw operations per frame
+* **#draws** — number of the world's direct children drawn this frame (renderables, not GPU draw calls)
 * **hitbox / velocity / quadtree** — toggle checkboxes for debug overlays
 * **Update / Draw** — frame update and draw time in milliseconds, averaged over the last 30 frames (`performance.now()` is clamped to 100µs in a page that is not cross-origin isolated, so a single frame's reading cannot resolve the printed decimals)
 * **Heap** — JS heap memory usage (used/total in MB, Chrome only)

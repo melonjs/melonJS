@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.2.2] - _unreleased_
+
+### Fixed
+- Installing the plugin no longer asks for Node 24. Its `package.json` declared `engines: { node: ">=24.0.0" }`, so npm warned on an older Node and Yarn 1 refused to install it; the plugin runs in the browser
+
+## [1.2.1] - _2026-11-09_
+
+### Fixed
+- Controls are found under the finger after browser zoom, or after the window moves to a screen of another pixel density
+
+## [1.2.0] - _2026-11-07_
+
+### Added
+- Controls: an optional `skin` texture atlas, with `base` / `thumb` regions on sticks and `region` / `pressed` regions on buttons. Parts without a region keep their shapes, and a button without a `pressed` region is drawn slightly smaller while held ([#1802](https://github.com/melonjs/melonJS/issues/1802), thanks @snowyukitty)
+
 ## [1.1.0] - _2026-11-02_
 
 ### Added

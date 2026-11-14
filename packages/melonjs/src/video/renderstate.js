@@ -9,7 +9,8 @@ import { Matrix3d } from "../math/matrix3d.ts";
 /**
  * Renderer-agnostic state container with a pre-allocated save/restore stack.
  *
- * Owns the mutable rendering state (color, tint, transform, scissor, blend mode)
+ * Owns the mutable rendering state (color, global alpha, tint, transform,
+ * scissor, blend mode, line width and join)
  * and provides zero-allocation save()/restore() via index-based stacks.
  * Both CanvasRenderer and WebGLRenderer (and future WebGPU) delegate state
  * management here, keeping rendering-context-specific code in the renderers.
@@ -17,10 +18,21 @@ import { Matrix3d } from "../math/matrix3d.ts";
 export default class RenderState {
 	constructor() {
 		/**
-		 * current fill & stroke style color
+		 * current fill & stroke style color, with its own alpha. A fill or a
+		 * stroke is drawn at this alpha times {@link RenderState#globalAlpha},
+		 * as a 2D context draws its `fillStyle` under its `globalAlpha`.
 		 * @type {Color}
 		 */
 		this.currentColor = new Color(0, 0, 0, 1.0);
+
+		/**
+		 * current global alpha, applied to everything drawn: fills and
+		 * strokes (times the colour's own alpha) and images (times the tint).
+		 * Kept apart from {@link RenderState#currentColor}, so a translucent
+		 * colour does not fade the images drawn after it.
+		 * @type {number}
+		 */
+		this.globalAlpha = 1.0;
 
 		/**
 		 * current tint applied to sprites
@@ -51,6 +63,20 @@ export default class RenderState {
 		 * @type {number[]}
 		 */
 		this.lineDash = [];
+
+		/**
+		 * current line width. The GPU renderers keep theirs here so that
+		 * save()/restore() covers it, the way a 2D context's state does;
+		 * the Canvas renderer leaves it to the context itself.
+		 * @type {number}
+		 */
+		this.lineWidth = 1;
+
+		/**
+		 * current line join, saved and restored like {@link RenderState#lineWidth}
+		 * @type {string}
+		 */
+		this.lineJoin = "round";
 
 		/**
 		 * current blend mode
@@ -132,6 +158,24 @@ export default class RenderState {
 		 * @ignore
 		 * @internal
 		 */
+		this._lineWidthStack = new Float64Array(this._stackCapacity);
+
+		/**
+		 * @ignore
+		 * @internal
+		 */
+		this._globalAlphaStack = new Float64Array(this._stackCapacity);
+
+		/**
+		 * @ignore
+		 * @internal
+		 */
+		this._lineJoinStack = new Array(this._stackCapacity);
+
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._scissorActive = new Uint8Array(this._stackCapacity);
 
 		/**
@@ -171,10 +215,13 @@ export default class RenderState {
 		}
 
 		this._colorStack[depth].copy(this.currentColor);
+		this._globalAlphaStack[depth] = this.globalAlpha;
 		this._tintStack[depth].copy(this.currentTint);
 		this._matrixStack[depth].copy(this.currentTransform);
 		this._gradientStack[depth] = this.currentGradient;
 		this._lineDashStack[depth] = this.lineDash;
+		this._lineWidthStack[depth] = this.lineWidth;
+		this._lineJoinStack[depth] = this.lineJoin;
 		this._blendStack[depth] = this.currentBlendMode;
 		this._shaderStack[depth] = this.currentShader;
 		this._depthStack[depth] = this.currentDepth;
@@ -219,7 +266,7 @@ export default class RenderState {
 
 	/**
 	 * Restore state from the stack.
-	 * Color, tint, transform, and scissor are restored in place.
+	 * Color, global alpha, tint, transform, and scissor are restored in place.
 	 * Blend mode is NOT applied to `currentBlendMode` — it is returned so the
 	 * renderer can call its own `setBlendMode()` (which has context-specific side effects).
 	 * @param {number} canvasWidth - current canvas width (used when scissor was inactive)
@@ -231,10 +278,13 @@ export default class RenderState {
 			const depth = --this._stackDepth;
 
 			this.currentColor.copy(this._colorStack[depth]);
+			this.globalAlpha = this._globalAlphaStack[depth];
 			this.currentTint.copy(this._tintStack[depth]);
 			this.currentTransform.copy(this._matrixStack[depth]);
 			this.currentGradient = this._gradientStack[depth];
 			this.lineDash = this._lineDashStack[depth];
+			this.lineWidth = this._lineWidthStack[depth];
+			this.lineJoin = this._lineJoinStack[depth];
 			this.currentShader = this._shaderStack[depth];
 			this.currentDepth = this._depthStack[depth];
 			const scissorActive = !!this._scissorActive[depth];
@@ -266,6 +316,7 @@ export default class RenderState {
 		this.currentScissor[3] = height;
 		this.currentShader = undefined;
 		this.currentDepth = 0;
+		this.globalAlpha = 1.0;
 	}
 
 	/**
@@ -283,12 +334,19 @@ export default class RenderState {
 			this._scissorStack.push(new Int32Array(4));
 			this._gradientStack.push(null);
 			this._lineDashStack.push([]);
+			this._lineJoinStack.push(undefined);
 			this._blendStack.push(undefined);
 			this._shaderStack.push(undefined);
 		}
 		const newScissorActive = new Uint8Array(newCap);
 		newScissorActive.set(this._scissorActive);
 		this._scissorActive = newScissorActive;
+		const newGlobalAlphaStack = new Float64Array(newCap);
+		newGlobalAlphaStack.set(this._globalAlphaStack);
+		this._globalAlphaStack = newGlobalAlphaStack;
+		const newLineWidthStack = new Float64Array(newCap);
+		newLineWidthStack.set(this._lineWidthStack);
+		this._lineWidthStack = newLineWidthStack;
 		const newDepthStack = new Float32Array(newCap);
 		newDepthStack.set(this._depthStack);
 		this._depthStack = newDepthStack;

@@ -1,6 +1,6 @@
 ---
 name: melonjs-renderer-backends
-description: "Use this skill when a feature works on one machine and not another, when choosing or pinning a renderer, or when writing code that must degrade gracefully. Covers the WebGPU to WebGL 2 to Canvas fallback ladder, what each backend supports, capability detection, and the subsystems that warn once and then stop working on Canvas. Triggers on: video.AUTO, video.WEBGPU, video.WEBGL, video.CANVAS, renderer.type, supportsDepthBuffer, shaderLanguage, WebGPU, WebGL2, Canvas fallback, context loss, backend, works on my machine."
+description: "Use this skill when a feature works on one machine and not another, when choosing or pinning a renderer, or when writing code that must degrade gracefully. Covers the WebGPU to WebGL 2 to Canvas fallback ladder, what each backend supports, capability detection, and the subsystems that warn once and then stop working on Canvas. Triggers on: video.AUTO, video.WEBGPU, video.WEBGL, video.CANVAS, renderer.type, supportsDepthBuffer, shaderLanguage, WebGPU, WebGL2, Canvas fallback, failIfMajorPerformanceCaveat, software rendering, supportsHDR, hdrOutput, context loss, backend, works on my machine."
 license: MIT
 ---
 
@@ -27,6 +27,14 @@ await app.init();
 WebGL 1 is not in the ladder — 20.x made WebGL 2 the baseline, and pinning
 `video.WEBGL` **rejects** on a WebGL-1-only device rather than degrading.
 
+A GPU backend also counts as unavailable when the browser says it would run
+far slower than native — a software rasterizer, a blocklisted driver. The
+`failIfMajorPerformanceCaveat` setting (`true` by default, stricter than
+WebGL's own default) refuses such a context, and the WebGPU backend refuses a
+software adapter the same way: under `AUTO` that machine gets Canvas, and
+under `video.WEBGL` or `video.WEBGPU` `init()` rejects. Set it `false` to accept
+the slow context instead.
+
 ## What each backend can do
 
 | | WebGPU | WebGL 2 | Canvas |
@@ -36,21 +44,28 @@ WebGL 1 is not in the ladder — 20.x made WebGL 2 the baseline, and pinning
 | shaders and post effects | ✅ | ✅ | ❌ inert |
 | `Light2d` glow (`drawLight`) | ✅ | ✅ | ✅ cached radial gradient |
 | normal-map lighting, `Light3d` | ✅ | ✅ | ❌ inert |
-| `Mesh` | ✅ | ✅ | ⚠️ CPU-projected, no depth |
+| `Mesh` | ✅ | ✅ | ⚠️ last resort: 2D camera only, CPU-projected, no depth, unlit |
 | `Camera3d` / depth sorting | ✅ | ✅ | ❌ warns, renders wrong |
 | `InstancedMesh` | ✅ | ✅ | ⚠️ one draw per instance |
 | GPU tilemap rendering | ✅ | ✅ | ❌ per-tile CPU path |
+| `textureFilter: "linear-mipmap"` | ✅ | ✅ | ❌ no mipmaps |
+| `hdr` (headroom through the effects) | ✅ | ✅ where the driver can render and filter half-float | ❌ |
+| `hdrOutput` (HDR presentation) | ✅ with `hdr` on too | ❌ | ❌ |
+| `state.transition("pixelate", …)` | ✅ | ✅ | ❌ the state changes with no transition |
 
-The Canvas column is the problem: none of it throws. Each of those paths warns
-once and then degrades or no-ops, so the game runs and looks wrong.
+The Canvas column is the problem: none of it throws. Most of those paths warn
+once and then degrade or no-op, and some (the pixelate transition, `hdr`) do
+so without a word, so the game runs and looks wrong.
 
 Two Canvas rows are worth spelling out because they are easy to misread as total
 failures. A `Light2d` still *draws* — the Canvas renderer bakes a radial gradient
 per light and blits it — what disappears is per-pixel normal-map shading, which
 warns once (`Light2d normal-map lighting requires a GPU backend`), the first time
-a normal-mapped sprite is drawn under a light, and then renders sprites unlit. A `Mesh` still draws too, sorted with the painter's
-algorithm and no depth buffer, so convex models look right and anything
-self-overlapping does not. `"none"` (replace, alpha included) is the one blend
+a normal-mapped sprite is drawn under a light, and then renders sprites unlit. A `Mesh` under a 2D camera still draws too, textured,
+sorted with the painter's algorithm and no depth buffer, so convex models look
+right and a self-overlapping one can draw a few triangles over the wrong ones.
+That is a last resort so a game does not go blank, not a target: anything
+built on meshes should run on WebGPU or WebGL 2. `"none"` (replace, alpha included) is the one blend
 mode Canvas cannot express — there is no `globalCompositeOperation` that
 disables blending for the drawn area alone — so it resolves to `"normal"`, and
 `setBlendMode` reports that back.
@@ -65,7 +80,9 @@ app.renderer.shaderLanguage;          // "wgsl" | "glsl" | null (null on Canvas)
 
 There are narrower flags for the features that do not travel together:
 `supportsShaderTileLayers`, `supportsRetainedMesh` and `supportsInstancing` —
-all three `false` on Canvas, `true` on both GPU backends. Prefer a capability
+all three `false` on Canvas, `true` on both GPU backends. `supportsHDR` and
+`supportsHDROutput` say what the `hdr` and `hdrOutput` settings were actually
+granted, which can be less than was asked. Prefer a capability
 flag over comparing `type` against a string; `type` is an identity check for
 code coupled to one backend's machinery.
 
@@ -160,12 +177,12 @@ or the `#webgpu` / `#webgl` URI fragment on a page you can open by hand.
   `OperationError: GPUQueue.copyExternalImageToTexture: External image state is
   not valid`, from a stack that reads `drawImage → addQuad → getBinding`. WebGL
   uploads the same source without complaint, so this is a class of bug that
-  cannot appear on one backend and stops the game dead on the other. The usual
-  source is a `Text` whose string is empty or whitespace-only — it measures to
-  nothing, so its glyph canvas has no width. Give a placeholder label a real
-  glyph and hide it with `alpha`/position instead of blanking its text.
-- **3D meshes do not honour blend modes.** The mesh pass draws with its own
-  depth/blend state; asking for one of the advanced modes logs a one-time
+  cannot appear on one backend and stops the game dead on the other. Check
+  any canvas the game sizes from content that can be empty before it is drawn.
+  An empty or whitespace-only `Text` did this before 20.11; its glyph canvas
+  is now at least 32 pixels on each side.
+- **3D meshes do not honour the advanced blend modes.** The mesh pass draws
+  with its own depth/blend state; asking for one of them logs a one-time
   `blend mode "…" is not supported for 3D meshes` warning and falls back to
   `"normal"`. Gradient fills warn the same way.
 
@@ -175,14 +192,18 @@ or the `#webgpu` / `#webgl` URI fragment on a page you can open by hand.
 |---|---|
 | effect works locally, not for a user | they got the Canvas fallback, or a different GPU backend |
 | sprites render unlit though lights are in the scene | Canvas fallback — normal-map shading is inert (check the console) |
-| mesh looks inside-out where it overlaps itself | Canvas fallback — painter's algorithm, no depth buffer |
+| a few triangles of a mesh drawn over the wrong ones where it overlaps itself | Canvas fallback — painter's algorithm sorts whole triangles, no depth buffer |
+| a mesh shows its far side through its near one (looks inside-out) on Canvas | melonJS older than 20.14 sorted the triangles the wrong way round; update |
+| a textured OBJ + MTL mesh is a white silhouette on Canvas | melonJS older than 20.14 filled it with its material color and skipped the texture; update |
+| a low-poly (palette) model looks faceted on Canvas, with faint lines between its triangles | melonJS older than 20.14 filled each of its triangles with one texel; update |
 | shader works on one machine only | GLSL-only effect, AUTO chose WebGPU elsewhere — the console carries the warning |
 | a solid box where an effect should be | carrier drawn while the effect is disabled |
 | nothing renders at all on an old device | `video.WEBGL` pinned; WebGL 1 is rejected, not downgraded |
 | ported shader is vertically flipped | the WebGL capture is bottom-up, the WebGPU one top-down |
-| `copyExternalImageToTexture: External image state is not valid` | a zero-sized upload source — most often a `Text` with an empty or whitespace-only string |
+| `copyExternalImageToTexture: External image state is not valid` | a zero-sized upload source: a canvas sized from empty content (an empty `Text` before 20.11) |
+| Canvas renderer on a machine that has a GPU, or `init()` rejects with a pinned backend | software rendering or a blocklisted driver, refused by `failIfMajorPerformanceCaveat` (default `true`) |
 | runs on the test machine, dies on the dev's | the harness fell back to WebGL and never exercised WebGPU |
-| a blended mode is ignored on a mesh | meshes fall back to `"normal"`; look for the one-time warning |
+| an advanced blend mode is ignored on a mesh | meshes fall back to `"normal"` for those; look for the one-time warning |
 | textures vanish after the tab is restored | cached raw GPU handles not re-acquired on context restore |
 
 ## Related skills

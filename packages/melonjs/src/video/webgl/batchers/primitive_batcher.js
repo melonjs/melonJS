@@ -112,8 +112,8 @@ export default class PrimitiveBatcher extends WebGLBatcher {
 		}
 
 		const vertexData = this.vertexData;
-		const alpha = this.renderer.getGlobalAlpha();
-		const colorUint32 = this.renderer.currentColor.toUint32(alpha);
+		// the colour's own alpha times the global alpha
+		const colorUint32 = this.renderer.packedFillColor();
 		// z = current renderer depth (Renderable.preDraw); a no-op under ortho,
 		// consumed by perspective (Camera3d). Same value for every vertex —
 		// primitives don't have per-vertex depth.
@@ -265,7 +265,7 @@ export default class PrimitiveBatcher extends WebGLBatcher {
 			this.viewMatrix,
 			verts,
 			vertexCount,
-			this.renderer.currentColor.toUint32(this.renderer.getGlobalAlpha()),
+			this.renderer.packedFillColor(),
 			// z = current renderer depth (Renderable.preDraw); a no-op under
 			// ortho, consumed by perspective (Camera3d)
 			this.renderer.currentDepth,

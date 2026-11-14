@@ -6,6 +6,7 @@ import World from "../physics/world.js";
 import state from "../state/state.ts";
 import { boot, initialized } from "../system/bootstrap.ts";
 import * as device from "../system/device.js";
+import { hasDOM } from "../system/dom.ts";
 import {
 	BLUR,
 	emit,
@@ -37,7 +38,7 @@ import { autoDetectRenderer } from "../video/utils/autodetect.js";
 import WebGLRenderer from "../video/webgl/webgl_renderer.js";
 import WebGPURenderer from "../video/webgpu/webgpu_renderer.js";
 import { defaultApplicationSettings } from "./defaultApplicationSettings.ts";
-import { consoleHeader } from "./header.ts";
+import { consoleHeader, consolePhysics } from "./header.ts";
 import { onresize } from "./resize.ts";
 import { ScaleMethods } from "./scaleMethods.ts";
 import type {
@@ -144,7 +145,11 @@ function resolvePhysicSetting(physic: ApplicationSettings["physic"]): {
  */
 export default class Application {
 	/**
-	 * the parent HTML element holding the main canvas of this application
+	 * the parent HTML element holding the main canvas of this application.
+	 *
+	 * `undefined` in a runtime with no DOM (a Web Worker, or nx.js on the
+	 * Nintendo Switch), where the canvas given in `settings.canvas` is the
+	 * display itself and is not attached to anything.
 	 */
 	parentElement: HTMLElement;
 
@@ -223,7 +228,16 @@ export default class Application {
 	settings: ResolvedApplicationSettings;
 
 	/**
-	 * Specify whether to pause this app when losing focus
+	 * Specify whether to pause this app when losing focus. A paused game is
+	 * still drawn; see {@link Application.stopOnBlur} to stop drawing too.
+	 *
+	 * This flag, `stopOnBlur` and `resumeOnFocus` decide WHAT the game does
+	 * on every `event.BLUR` and `event.FOCUS`. WHO emits those is
+	 * `device.setFocusEvents()`: the browser window by default, or the game's
+	 * host (a web game portal's SDK, a native wrapper) once it is turned off.
+	 * Turn this flag off to keep the game running while the player is away;
+	 * to let a host decide when it runs, keep the flags and turn the window
+	 * off with `device.setFocusEvents(false)`.
 	 * @default true
 	 * @example
 	 *  // keep the default game instance running even when losing focus
@@ -243,13 +257,17 @@ export default class Application {
 	_pausedOnBlur: boolean;
 
 	/**
-	 * Specify whether to unpause this app when gaining back focus
+	 * Specify whether to unpause this app when gaining back focus. Only a
+	 * pause this application applied is undone. See
+	 * {@link Application.pauseOnBlur} for where the focus comes from.
 	 * @default true
 	 */
 	resumeOnFocus: boolean;
 
 	/**
-	 * Specify whether to stop this app when losing focus
+	 * Specify whether to stop this app when losing focus: updates and drawing
+	 * both stop, and start again on focus. See {@link Application.pauseOnBlur}
+	 * for where the focus comes from.
 	 * @default false
 	 */
 	stopOnBlur: boolean;
@@ -457,8 +475,9 @@ export default class Application {
 		this.settings = settings;
 
 		// identify parent element and/or the html target for resizing
+		// without a DOM there is nothing to mount the canvas in or measure
 		this.parentElement = device.getElement(settings.parent!);
-		if (typeof settings.scaleTarget !== "undefined") {
+		if (hasDOM() && typeof settings.scaleTarget !== "undefined") {
 			settings.scaleTarget = device.getElement(settings.scaleTarget);
 		}
 
@@ -466,6 +485,7 @@ export default class Application {
 		// a white flash before the first render frame
 		if (
 			settings.backgroundColor !== "transparent" &&
+			hasDOM() &&
 			typeof globalThis.getComputedStyle === "function"
 		) {
 			const computedBg = globalThis.getComputedStyle(
@@ -518,12 +538,13 @@ export default class Application {
 		// resolve the physic setting into (adapter, legacy-string) pair.
 		// Accepts a string ("builtin"/"none" — built-in adapters that ship
 		// in core), a {@link PhysicsAdapter} instance (e.g.
-		// `new BuiltinAdapter({ gravity })` or
-		// `new MatterAdapter()` from `@melonjs/matter-adapter`), or the
+		// `await BuiltinAdapter.create({ gravity })` or
+		// `await MatterAdapter.create()` from `@melonjs/matter-adapter`), or the
 		// explicit form `{ adapter: PhysicsAdapter }`.
 		const { adapter, physicLabel } = resolvePhysicSetting(settings.physic);
 
-		// create a new physic world wired to the resolved adapter
+		// create a new physic world; its constructor installs the resolved
+		// adapter with `world.setAdapter()`, the same path a later swap takes
 		this.world = new World(0, 0, settings.width, settings.height, adapter);
 
 		// set the reference to this application instance
@@ -732,16 +753,21 @@ export default class Application {
 		// EVERY resize event (the slow canvas-growth loop of #1231). `block`
 		// removes the gap. Only applied when the canvas carries no explicit
 		// inline display, so user styling stays authoritative.
-		if (canvas.style.display === "") {
-			canvas.style.display = "block";
+		// (a canvas with no `style`, like nx.js's `screen`, is not in a page)
+		const style = (canvas as { style?: CSSStyleDeclaration }).style;
+		if (style?.display === "") {
+			style.display = "block";
 		}
-		this.parentElement.appendChild(canvas);
+		// no DOM: the canvas is the display, there is nothing to append it to
+		if (hasDOM()) {
+			this.parentElement.appendChild(canvas);
+		}
 
 		// trigger an initial resize();
 		onresize(this);
 
 		// add an observer to detect when the dom tree is modified
-		if ("MutationObserver" in globalThis) {
+		if (hasDOM() && "MutationObserver" in globalThis) {
 			// Create an observer instance linked to the callback function
 			// (stored so destroy() can disconnect it — otherwise every
 			// discarded Application keeps re-laying-out against a parent
@@ -765,30 +791,10 @@ export default class Application {
 		// report the active physics adapter (wired in the constructor) —
 		// useful confirmation when a third-party adapter (e.g.
 		// `@melonjs/matter-adapter`) is plugged in via `settings.physic`.
-		// External adapters that set `name` / `version` / `url` get logged
-		// the same way as @melonjs/debug-plugin; BuiltinAdapter falls back
-		// to just its class name. Skipped when `consoleHeader` is disabled.
+		// `world.setAdapter()` reports a later switch the same way. Skipped
+		// when `consoleHeader` is disabled.
 		if (this.settings.consoleHeader) {
-			if (this.world.physic === "none") {
-				console.log("physics: disabled");
-			} else if (this.world.adapter) {
-				const a = this.world.adapter as {
-					constructor: { name: string };
-					name?: string;
-					physicLabel?: string;
-					version?: string;
-					url?: string;
-				};
-				// prefer the adapter's declared name, then its stable physicLabel;
-				// `constructor.name` is a last resort (it's mangled in minified
-				// builds, e.g. the built-in adapter would print "physics: ry")
-				const label = a.name ?? a.physicLabel ?? a.constructor.name;
-				const version = a.version ? ` ${a.version}` : "";
-				const url = a.url ? ` | ${a.url}` : "";
-				console.log(`physics: ${label}${version}${url}`);
-			} else {
-				console.log("physics: enabled (no adapter)");
-			}
+			consolePhysics(this.world);
 		}
 
 		// The GPU tilemap path needs a WebGL 2 renderer. The previous
@@ -903,6 +909,7 @@ export default class Application {
 
 	/**
 	 * Returns the parent HTML Element holding the main canvas of this application
+	 * (`undefined` in a runtime with no DOM, see {@link Application#parentElement})
 	 * @returns the parent HTML element
 	 */
 	getParentElement(): HTMLElement {
@@ -1232,9 +1239,17 @@ export default class Application {
 			this.accumulator = Math.min(this.accumulator, this.accumulatorMax);
 
 			this.updateDelta = timer.interpolation ? timer.getDelta() : this.stepSize;
+			// a step drains what it really cost, so a scene too heavy for real
+			// time slows down rather than spiralling; but never more than the
+			// accumulator can hold, or one update slower than that would need
+			// more saved time than it is allowed, and the world would never be
+			// stepped (nor the cost measured) again
 			this.accumulatorUpdateDelta = timer.interpolation
 				? this.updateDelta
-				: Math.max(this.updateDelta, this.lastUpdateDelta);
+				: Math.min(
+						Math.max(this.updateDelta, this.lastUpdateDelta),
+						Math.max(this.accumulatorMax, this.updateDelta),
+					);
 
 			if (stepOwed) {
 				// one step now rather than once a whole step of time has

@@ -1,6 +1,6 @@
 ---
 name: melonjs-plugins
-description: "Use this skill when adding a melonJS plugin or adapter — the debug panel, Spine skeletal animation, compressed Tiled map support, on-screen touch controls, Capacitor packaging — or when writing your own plugin. Covers plugin.register and its version gate, plugin.cache, plugin.patch, and why physics adapters are not plugins. Triggers on: plugin, plugin.register, plugin.cache, plugin.get, plugin.patch, BasePlugin, debug-plugin, DebugPanelPlugin, SpinePlugin, TiledInflatePlugin, GamepadPlugin, gamepad-plugin, touch controls, virtual joystick, floating joystick, floating button, CapacitorPlugin, adapter, custom plugin, plugin version mismatch, already registered."
+description: "Use this skill when adding a melonJS plugin or adapter — the debug panel, Spine skeletal animation, compressed Tiled map support, on-screen touch controls, A* pathfinding, Capacitor packaging — or when writing your own plugin. Covers plugin.register and its version gate, plugin.cache, plugin.patch, and why physics adapters are not plugins. Triggers on: plugin, plugin.register, plugin.cache, plugin.get, plugin.patch, BasePlugin, debug-plugin, DebugPanelPlugin, SpinePlugin, TiledInflatePlugin, GamepadPlugin, gamepad-plugin, touch controls, virtual joystick, floating joystick, floating button, pathfinding, A*, astar, path finding, Grid, findPath, enemy AI chase, CapacitorPlugin, adapter, custom plugin, plugin version mismatch, already registered."
 license: MIT
 ---
 
@@ -13,13 +13,13 @@ This trips people up, so it is worth stating first:
 | | how it is installed |
 |---|---|
 | **Plugins** | `plugin.register(Class, name?, ...args)` — after `await app.init()` |
-| **Physics adapters** | an `Application` **setting** (`physic:`), before `init()` |
+| **Physics adapters** | an `Application` **setting** (`physic:`), before `init()`; or `app.world.setAdapter()` on a running game |
 
 ```js
 // the adapter is chosen at construction …
 const app = new Application(800, 600, {
     parent: "screen",
-    physic: new PlanckAdapter({ gravity, pixelsPerMeter }),
+    physic: await PlanckAdapter.create({ gravity, pixelsPerMeter }),
 });
 
 // … the plugin is registered once the renderer exists
@@ -88,6 +88,19 @@ This is the answer for deforming animated characters — glTF import does not re
 vertex skinning. It also registers a Tiled object class, so Spine skeletons can
 be placed from a map.
 
+```js
+import Spine, { SpinePlugin } from "@melonjs/spine-plugin";
+
+await app.init();
+plugin.register(SpinePlugin);   // after init: it reads app.renderer
+// preloaded as { name: "hero.atlas", type: "spine", src: … }, and the same for
+// "hero.json" (a binary "hero.skel" also goes in jsonFile)
+const hero = new Spine(100, 100, { atlasFile: "hero.atlas", jsonFile: "hero.json" });
+```
+
+Register it after `await app.init()` like any plugin: its constructor builds
+an asset manager on the application's renderer, which does not exist before.
+
 ### `@melonjs/gamepad-plugin`
 
 On-screen touch controls, reported as a gamepad: one or two sticks and any
@@ -109,8 +122,52 @@ of a pad button. Since 1.1 a stick or button can be `floating` (shows up
 under the finger anywhere in its `area`), `hideAtRest` (drawn only while
 held), and a stick can take a `tap` (a quick touch that does not steer presses
 a key or button) — so the mobile layouts, two thumbs or one thumb with
-tap-to-act, need no code of their own. See `melonjs-input` for the bindings,
-the layouts and the overlap rules.
+tap-to-act, need no code of their own. Since 1.2 a `skin` texture atlas draws
+them from the game's own art (`base` / `thumb` regions on a stick, `region` /
+`pressed` on a button). It needs melonJS 20.12 or later. See `melonjs-input`
+for the bindings, the layouts and the overlap rules.
+
+### `@melonjs/pathfinding-plugin`
+
+A* on a grid of open and blocked cells, each with a cost to cross. The grid is
+the part to get right; the search is one call:
+
+```js
+import { Grid } from "@melonjs/pathfinding-plugin";
+
+// a layer of walls: a tile blocks its cell (a tile's `cost` property sets its cost)
+const grid = Grid.fromTileLayer(app.world.getChildByName("walls")[0]);
+// a floor layer: decide from the tile instead
+Grid.fromTileLayer(floor, { walkable: (tile) => tile !== null && !isWall(tile) });
+// or the level's collision shapes (WORLD_SHAPE bodies, a Tiled collision layer)
+Grid.fromBodies(app.world, { cols, rows, tileWidth, tileHeight });
+
+const { path, found } = grid.findPath(enemy.pos, player.pos, {
+    diagonal: true,      // 8 directions, never cutting a corner past a wall
+    smooth: true,        // straight lines across open ground
+    maxNodes: 300,       // a cap, so an unreachable goal cannot stall a frame
+    avoid: others.map((o) => o.pos), avoidCost: 6,   // spread out, this search only
+});
+// path: world-unit points after the start; found is false when it leads to the
+// nearest reachable cell instead (closest: false for no path at all)
+```
+
+- **The grid is a snapshot.** A tile changed with `setTile` / `clearTile`, or
+  a wall body added, is not seen until `grid.refreshCell(col, row)` or
+  `grid.refresh()`; `setWalkable` / `setCost` change one cell directly.
+- **`fromTileLayer` blocks every non-empty cell by default** (a walls layer).
+  On a floor layer, where every cell has a tile, pass `walkable`, or nothing is
+  walkable.
+- **Build `fromBodies` after the level loads.** It scans the shapes, not a
+  physics query, so it works before the world first steps; it reads `bodyDef`
+  shapes too, so it is the same on every adapter.
+- A cost is 1 or more and finite: block with `setWalkable`, not `Infinity`.
+- `PathfindingPlugin` (`plugin.register(PathfindingPlugin, "pathfinding",
+  { layer: "walls" })`) only rebuilds the grid when a level loads; a `Grid`
+  works on its own.
+- `PathfindingDebug` draws blocked and costly cells, the cells a search looked
+  at (`trace: true`) and the paths.
+- Orthogonal maps only: isometric and hexagonal grids are not supported.
 
 ### `@melonjs/capacitor-plugin`
 
@@ -123,19 +180,32 @@ plugin.register(CapacitorPlugin, "capacitor", options);
 ```
 
 It also exports helpers usable on their own: `onBackButton`, `bindStageBack`,
-`lockOrientation` / `unlockOrientation`, `hideSplash`. See `melonjs-deployment`
-for the wider packaging picture.
+`lockOrientation` / `unlockOrientation`, `hideSplash`. See `melonjs-platforms`
+for native apps and the other platforms.
+
+With `pauseOnBackground` (the default), going to the background pauses the
+game and coming back resumes it, but only if this pause was the plugin's: a
+game the player had paused stays paused.
 
 ## Physics adapters
 
-`@melonjs/planck-adapter` and `@melonjs/matter-adapter` swap the physics world
-wholesale. Pick **one** per game. The portable surface — the declarative
-`renderable.bodyDef`, `world.adapter.queryAABB(rect)` and
+`@melonjs/planck-adapter`, `@melonjs/matter-adapter` and
+`@melonjs/rapier2d-adapter` swap the physics world wholesale. Pick **one** per
+game (`app.world.setAdapter()` can switch it later). The portable surface — the
+declarative `renderable.bodyDef`, `world.adapter.queryAABB(rect)` and
 `world.adapter.raycast(from, to)` — works unchanged across the built-in world and
-both adapters, so entity code does not have to branch.
+every adapter, so entity code does not have to branch. The exceptions are in
+`melonjs-physics`: `Box3d`, `Sphere` and `Point` shapes are built-in only,
+`type: "kinematic"` is planck and Rapier only, and the adapters' `queryAABB`
+returns only renderables with a body. The Rapier adapter's WebAssembly loads
+asynchronously, so it must be made with `await RapierAdapter.create()`.
+`create()` is on every adapter from planck-adapter 1.7, matter-adapter 1.6 and
+rapier2d-adapter 1.0 (an older planck or matter adapter is made with
+`new X(options)`), and `world.setAdapter()` from melonJS 20.14.
 
 Two queries are **not** portable: `querySphere` and `raycast3d` exist only on the
-built-in adapter (planck and matter are 2D-only and deliberately omit them).
+built-in adapter (planck, matter and Rapier are 2D-only and deliberately omit
+them).
 `queryAABB` is the one region query every adapter must implement, so call the
 others optionally — `app.world.adapter.querySphere?.(center, radius)`. For rays
 there is a real flag: `app.world.adapter.capabilities.raycasts3d`.
@@ -200,16 +270,26 @@ or a `Stage` is simpler and easier to test.
 | `Plugin version mismatch` | the plugin's `version` floor is above the running engine |
 | `Plugin should extend the BasePlugin Class !` | the class does not extend `plugin.BasePlugin` |
 | the panel reports another app's numbers | `app` defaulted to `game`, the last Application to finish `init()` |
-| `world.adapter.querySphere is not a function` | built-in adapter only; planck and matter are 2D-only |
+| `world.adapter.querySphere is not a function` | built-in adapter only; planck, matter and Rapier are 2D-only |
 | a Tiled map opens in Tiled but not melonJS | compressed layers, tiled-inflate plugin missing |
+| a path goes through walls | the grid does not know them: a floor layer needs `walkable`, a changed tile needs `refreshCell`, `fromBodies` walls must be `WORLD_SHAPE` bodies (or pass `solid`) |
+| no path found (`found` false) | the goal is walled off, on a wall, or past `maxNodes`; the path leads as near as it could |
+| everything is blocked on a `fromTileLayer` grid | a floor layer, where every cell has a tile: pass `walkable` |
+| a path is offset from the map | the grid's `x` / `y` are not the layer's: built before the layer was in its container, or the container moved since |
 | plugin setup never runs | setup written in an `init()` method — there is no such hook |
-| `plugin.register` for an adapter does nothing | adapters are a construction setting, not a plugin |
+| `Plugin should extend the BasePlugin Class !` when registering an adapter | adapters are a construction setting (or `world.setAdapter()`), not a plugin |
+| `PlanckAdapter.create is not a function` (or `MatterAdapter`) | planck-adapter < 1.7 or matter-adapter < 1.6; upgrade, or `new PlanckAdapter(options)` |
+| `TypeError` reading `renderer` from `plugin.register(SpinePlugin)` | registered before `await app.init()`; the plugin's `app` is still unset |
 | physics behaves differently after adding an adapter | expected — units and force scales differ; re-tune |
+| a Spine object slides off screen when the camera moves, or ignores its container (WebGL / WebGPU) | spine-plugin < 4.0.1 drew without the camera's and the parents' transform; upgrade |
+| a Spine object ignores `setOpacity()` / `alpha` | spine-plugin < 4.0.1; upgrade |
+| a game paused from its menu is running again after the app comes back from the background | capacitor-plugin < 1.0.1 resumed on every return; upgrade |
+| touch controls miss the finger after browser zoom or a move to another screen | gamepad-plugin < 1.2.1; upgrade |
 
 ## Related skills
 
 - `melonjs-physics` — the adapters and their behavioural differences
 - `melonjs-tilemaps` — where the inflate plugin becomes mandatory
 - `melonjs-performance` — using the debug panel to measure
-- `melonjs-deployment` — Capacitor and native packaging
+- `melonjs-platforms` — Capacitor and native packaging, and the other platforms
 - `melonjs-3d-assets` — why skeletal characters go through Spine

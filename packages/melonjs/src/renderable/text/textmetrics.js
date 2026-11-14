@@ -30,6 +30,55 @@ const INK_SLACK = 1;
 const INK_GUESS = 0.25;
 
 /**
+ * The lines a `setText` value stands for: a string (or a number) split on
+ * `\n`, or an array's entries, each as a string, in a new array.
+ * @param {number|string|string[]|null} [value] - the text, as `setText` takes it
+ * @returns {string[]} one entry per line
+ * @ignore
+ * @internal
+ */
+export function toLines(value) {
+	if (Array.isArray(value)) {
+		return value.map((line) => {
+			return "" + line;
+		});
+	}
+	return ("" + (value ?? "")).split("\n");
+}
+
+/**
+ * Whether two line arrays hold the same text, line for line. No lines at all
+ * (a label created empty) and one empty line are the same: nothing.
+ * @param {string[]} a - lines
+ * @param {string[]} b - lines
+ * @returns {boolean} true when they are the same text
+ * @ignore
+ * @internal
+ */
+export function sameLines(a, b) {
+	if (a.length !== b.length) {
+		return isBlank(a) && isBlank(b);
+	}
+	for (let i = 0; i < a.length; i++) {
+		if (a[i] !== b[i]) {
+			return false;
+		}
+	}
+	return true;
+}
+
+/**
+ * no lines, or a single empty one
+ * @param {string[]} lines - lines
+ * @returns {boolean} true when there is no text
+ * @ignore
+ * @internal
+ */
+function isBlank(lines) {
+	return lines.length === 0 || (lines.length === 1 && lines[0] === "");
+}
+
+/**
  * a Text Metrics object that contains helper for text manipulation
  */
 class TextMetrics extends Bounds {
@@ -270,6 +319,12 @@ class TextMetrics extends Bounds {
 	 * it drops is not lost: `Text` bakes its glyphs at `pos - metrics`, so the
 	 * sub-pixel part lands in the rasterization, where the font rasterizer can
 	 * antialias it, instead of resampling the whole texture.
+	 *
+	 * The baseline places the WHOLE block, as `BitmapText` does and as the
+	 * bounds say: its top at `pos.y` for "top" / "hanging", its middle for
+	 * "middle", its bottom for the rest. It used to move the box by one line
+	 * only, so a second line of a "bottom" label was drawn below `pos.y`,
+	 * outside the bounds `updateBounds` reported for it.
 	 * @returns {TextMetrics} this instance for chaining
 	 * @ignore
 	 * @internal
@@ -282,33 +337,53 @@ class TextMetrics extends Bounds {
 					? this.ancestor.pos.x - this.width / 2
 					: this.ancestor.pos.x,
 		);
-		this.y = Math.floor(
-			this.ancestor.textBaseline.search(/^(top|hanging)$/) === 0
-				? this.ancestor.pos.y
-				: this.ancestor.textBaseline === "middle"
-					? this.ancestor.pos.y - this.lineHeight() / 2
-					: this.ancestor.pos.y - this.lineHeight(),
-		);
+		this.y = Math.floor(this.ancestor.pos.y - this.height * this.blockShift());
 		return this;
 	}
 
 	/**
-	 * wrap the given text based on the given width
+	 * The share of the block that sits above `pos.y` for the ancestor's
+	 * `textBaseline`: 0 for "top" and "hanging", 0.5 for "middle", 1 for
+	 * "alphabetic", "ideographic" and "bottom".
+	 *
+	 * The same share of ONE line is how far below the top of its own line box
+	 * each line's alignment point is, which is where `Text` hands it to the
+	 * canvas.
+	 * @returns {number} 0, 0.5 or 1
+	 * @ignore
+	 * @internal
+	 */
+	blockShift() {
+		switch (this.ancestor.textBaseline) {
+			case "top":
+			case "hanging":
+				return 0;
+			case "middle":
+				return 0.5;
+			default:
+				return 1;
+		}
+	}
+
+	/**
+	 * wrap the given text based on the given width.
+	 *
+	 * Each `\n`-separated line (each entry, for an array) is wrapped on its
+	 * own, so wrapping only ever adds line breaks: the explicit ones are kept,
+	 * blank lines included. A line breaks between words, never inside one: a
+	 * word wider than `width` is put on a line of its own and overflows it.
 	 * @param {string|string[]} text - the text to be wrapped
 	 * @param {number} width - maximum width of one segment of text in css pixel
 	 * @param {CanvasRenderingContext2D} [context] - reference to an active 2d context for canvas rendering
-	 * @returns {string[]} an array of string representing wrapped text
+	 * @returns {string[]} an array of string representing wrapped text, one entry per line
 	 */
 	wordWrap(text, width, context) {
-		let currentLine = "";
 		const output = [];
+		const paragraphs = [];
 
-		if (Array.isArray(text)) {
-			// join into a single string
-			text = text.join(" ");
+		for (const entry of Array.isArray(text) ? text : [text]) {
+			paragraphs.push(...("" + entry).split(/\r?\n/));
 		}
-		// word splitting to be improved as it replaces \n by space if present
-		const words = text.replace(/[\r\n]+/g, " ").split(" ");
 
 		if (typeof context !== "undefined") {
 			// save the previous context
@@ -318,19 +393,27 @@ class TextMetrics extends Bounds {
 			setContextStyle(context, this.ancestor);
 		}
 
-		for (let i = 0; i < words.length; i++) {
-			const word = words[i];
-			const lineWidth = this.lineWidth(currentLine + word + " ", context);
-			if (lineWidth < width) {
-				// add the word to the current line
-				currentLine += word + " ";
-			} else {
-				output.push(currentLine + "\n");
-				currentLine = word + " ";
+		for (const paragraph of paragraphs) {
+			const words = paragraph.split(" ");
+			// a line always takes its first word, however wide: closing the
+			// line first is what used to leave a blank one before it
+			let line = words[0];
+			let broken = false;
+			for (let i = 1; i < words.length; i++) {
+				const word = words[i];
+				if (broken && line === "") {
+					// spaces at a break are swallowed by it, not carried over
+					line = word;
+				} else if (this.lineWidth(line + " " + word + " ", context) < width) {
+					line += " " + word;
+				} else {
+					output.push(line.trimEnd());
+					line = word;
+					broken = true;
+				}
 			}
+			output.push(line.trimEnd());
 		}
-		// last line
-		output.push(currentLine);
 
 		if (typeof context !== "undefined") {
 			// restore the context

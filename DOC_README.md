@@ -45,18 +45,22 @@ loader.preload([{ name: "player", type: "image", src: "player.png" }], () => {
 
 | Feature | Description |
 |---------|-------------|
-| **Rendering** | WebGPU, WebGL 2 and Canvas 2D with automatic fallback — the same feature set on every backend |
-| **3D** | Perspective {@link Camera3d | Camera3d}, mesh instancing, ground shadows, distance fog, point and spot lights, glTF/GLB and OBJ/MTL loading |
-| **Tiled Maps** | First-class [Tiled](https://www.mapeditor.org/) map editor support (TMX/JSON), with GPU-accelerated tile rendering for orthogonal maps |
-| **Sprites** | Texture atlas, animation, TexturePacker & Aseprite support |
-| **Physics** | Built-in SAT collision with gravity and friction, shape-level collision events, and a {@link PhysicsAdapter | PhysicsAdapter} interface for Box2D (planck) or Matter.js |
-| **Audio** | Web Audio API with format fallback, plus procedural tone and noise generation |
-| **Input** | Keyboard, mouse, touch, gamepad |
-| **Particles** | Configurable {@link ParticleEmitter | ParticleEmitter}, with a reference space so particles can be measured from the emitter, the world, or any container |
+| **Rendering** | WebGPU, WebGL 2 and Canvas 2D with automatic fallback — the same feature set on both GPU backends, with Canvas as the fallback (3D, custom shaders, HDR and the pixelate transition need a GPU backend) |
+| **3D** | On WebGL 2 or WebGPU: perspective {@link Camera3d | Camera3d} with distance fog, meshes with normal maps, emissive and transparent materials, mesh instancing, `Sprite3d` billboards, ground shadows, point and spot lights, glTF/GLB and OBJ/MTL loading |
+| **Tiled Maps** | First-class [Tiled](https://www.mapeditor.org/) map editor support (TMX/JSON): orthogonal, isometric and hexagonal maps, with GPU-accelerated tile rendering for orthogonal maps |
+| **Sprites** | Texture atlas, animation with frame callbacks, nine-slice scaling, TexturePacker & Aseprite support, automatic depth sorting |
+| **Text** | `Text` and `BitmapText`, with a typewriter effect, per-glyph wave, shake and color effects, gradient fills and outlines |
+| **Camera** | Several cameras at once (split screen, minimaps) with per-camera visibility layers, follow with a deadzone and damping, shake, fade and flash, and screen transitions (fade, mask, pixelate) |
+| **Lighting** | `Light2d` with normal-mapped sprites, and `Light3d` directional, point, spot and ambient lights, up to 32 at once |
+| **Physics** | Built-in SAT collision with gravity, per-shape collision settings and shape-level collision events, and a {@link PhysicsAdapter | PhysicsAdapter} interface for Box2D (planck), Matter.js or Rapier, switchable while the game runs with `world.setAdapter()`, and hinge, rope, weld and slider joints with {@link World#addJoint | world.addJoint()} on planck and Rapier |
+| **Audio** | Web Audio API with format fallback, spatial audio that follows a renderable, audio sprites, plus procedural tone and noise generation |
+| **Input** | Keyboard, mouse, touch, gamepad (with vibration), drag and drop |
+| **Assets** | An awaitable loader with progress, asset bundles loaded and freed together, and custom asset types |
+| **Particles** | Configurable {@link ParticleEmitter | ParticleEmitter}: sprite-sheet frames, tint over life, 3D emission, and a reference space so particles can be measured from the emitter, the world, or any container |
 | **Effects** | All thirteen CSS blend modes on every renderer, tinting, masking, and camera post-processing chains |
 | **HDR** | Optional half-float render targets (`hdr`), {@link BloomEffect | BloomEffect} and {@link ToneMappingEffect | ToneMappingEffect}, and extended-range presentation on WebGPU (`hdrOutput`). All off by default |
-| **Custom Shaders** | Per-sprite {@link ShaderEffect | ShaderEffect} carrying both GLSL and WGSL, so one effect runs on either GPU backend |
-| **UI** | Built-in UI components (buttons, text input, containers) |
+| **Custom Shaders** | Per-sprite {@link ShaderEffect | ShaderEffect} carrying both GLSL and WGSL, so one effect runs on either GPU backend; custom mesh shaders; screen-space effects from a capture of the frame |
+| **UI** | Buttons, panels that lay out and scroll their children, checkboxes and radio buttons, sliders, progress bars, drag and drop, and keyboard and gamepad navigation between widgets |
 
 ## Official Plugins
 
@@ -67,6 +71,7 @@ engine, and each entry carries that package's own README.
 |--------|---------|-----------|
 | **Matter physics** | `@melonjs/matter-adapter` | {@link MatterAdapter | MatterAdapter} |
 | **Box2D physics** | `@melonjs/planck-adapter` | {@link PlanckAdapter | PlanckAdapter} |
+| **Rapier physics** | `@melonjs/rapier2d-adapter` | {@link RapierAdapter | RapierAdapter} |
 | **Spine animation** | `@melonjs/spine-plugin` | {@link SpinePlugin | SpinePlugin} |
 | **Debug panel** | `@melonjs/debug-plugin` | {@link DebugPanelPlugin | DebugPanelPlugin} |
 | **Touch controls** | `@melonjs/gamepad-plugin` | {@link GamepadPlugin | GamepadPlugin} |
@@ -116,21 +121,22 @@ if (input.isKeyPressed("jump")) {
 See: {@link input | input}
 
 #### Add physics and collision to a game object
-Attach a physics body with a collision shape to any renderable. The engine handles gravity, velocity, friction, and collision detection automatically.
+Declare a physics body with a collision shape on any renderable. It is built when the renderable is added to the world, by whichever physics adapter is active, and the engine handles gravity, velocity, friction, and collision detection automatically.
 ```javascript
-import { Body, Rect, collision } from "melonjs";
+import { Rect, collision } from "melonjs";
 
-// create a rectangular collision body (x, y, width, height)
-this.body = new Body(this, new Rect(0, 0, 32, 32));
-
-// set collision type so the engine knows how to handle collisions
-this.body.collisionType = collision.types.PLAYER_OBJECT;
-
-// set movement limits and friction
-this.body.setMaxVelocity(3, 15);
-this.body.setFriction(0.4, 0);
+// declare the body (built on addChild, on any physics adapter)
+this.bodyDef = {
+    type: "dynamic",
+    shapes: [new Rect(0, 0, 32, 32)],
+    // so the engine knows how to handle collisions
+    collisionType: collision.types.PLAYER_OBJECT,
+    // movement limits and friction
+    maxVelocity: { x: 3, y: 15 },
+    frictionAir: { x: 0.4, y: 0 },
+};
 ```
-See: {@link Body | Body}, {@link collision | collision}
+See: {@link BodyDefinition | BodyDefinition}, {@link collision | collision}
 
 #### Apply a custom shader effect to a sprite
 Apply a per-sprite fragment shader using `ShaderEffect`. You only need to write the color transformation — the vertex shader and texture sampling are handled automatically. Runs on both GPU backends — write the body once and it is realized as GLSL or WGSL for the active renderer — and is silently ignored in Canvas mode.

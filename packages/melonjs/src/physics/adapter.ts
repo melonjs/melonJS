@@ -14,6 +14,11 @@ import type World from "./world.js";
  * `dynamic` bodies are simulated (player, projectiles); `kinematic`
  * bodies are user-positioned but participate in collision (moving
  * platforms, elevators).
+ *
+ * The planck and Rapier adapters simulate `kinematic` as such. The builtin
+ * and matter adapters build a dynamic body, which falls under gravity; for a
+ * portable moving platform use `static` and move it with
+ * {@link PhysicsAdapter.setPosition}.
  */
 export type BodyType = "static" | "dynamic" | "kinematic";
 
@@ -24,14 +29,16 @@ export type BodyType = "static" | "dynamic" | "kinematic";
  * body's rather than replacing them — `collisionType`, `collisionMask`,
  * `isTrigger` and `isActive`. See {@link Body#addShape} for the semantics.
  *
- * Adapter support: the builtin and planck adapters honour them (planck maps
- * them onto per-fixture filters, which Box2D provides natively). The matter
+ * Adapter support: the builtin, planck and Rapier adapters honour them
+ * (planck and Rapier map them onto per-collider filters, which both engines
+ * provide natively). The matter
  * adapter does NOT — its `collisionFilter` and `isSensor` belong to a body, not
- * to the parts it is built from, so per-shape values are ignored there.
+ * to the parts it is built from, so per-shape values are ignored there, except
+ * `isActive: false`, which leaves the shape out of the body.
  *
  * **The two 3D shapes are builtin-only.** `Box3d` and `Sphere` exist because
- * the builtin solver resolves along Z; the matter and planck adapters are 2D
- * engines with no depth to resolve and THROW when handed either one. They are
+ * the builtin solver resolves along Z; the matter, planck and Rapier adapters
+ * are 2D engines with no depth to resolve and THROW when handed either one. They are
  * in this union because a body definition is otherwise portable and these are
  * body shapes, not because every adapter accepts them: a game that wants to
  * stay adapter-portable builds its bodies from the planar three.
@@ -54,11 +61,13 @@ export type BodyShape = Rect | Ellipse | Polygon | Box3d | Sphere;
  * at least one of these handlers. Declaring none costs nothing.
  *
  * **Supported on every backend.** The builtin detector enumerates shape pairs
- * directly; `@melonjs/planck-adapter` and `@melonjs/matter-adapter` map one
- * melonJS shape onto one native collider and their engines already report
- * contacts per collider pair, so both dispatch these natively. The adapters
- * supply `normal` and `depth` rather than the full SAT vector set, matching
- * what they already provide to `onCollision`.
+ * directly; `@melonjs/planck-adapter`, `@melonjs/matter-adapter` and
+ * `@melonjs/rapier2d-adapter` map one melonJS shape onto one native collider
+ * and their engines already report contacts per collider pair, so they
+ * dispatch these natively. The adapters
+ * derive the SAT fields from their `normal` and `depth`, as the builtin
+ * defines them: `overlapN` is `-normal`, `overlapV` is `overlapN * depth`, and
+ * the Z fields are 0.
  *
  * **Receiver-symmetric**, exactly like `CollisionResponse`: `a` and `shapeA`
  * are always the side whose handler is firing, `b` and `shapeB` the partner.
@@ -145,9 +154,9 @@ export interface CollisionResponse {
 	depth: number;
 	/**
 	 * Engine-native contact pair object. **Shape is adapter-specific** —
-	 * `Matter.Pair` under `@melonjs/matter-adapter`, a `ContactPair`-shaped
-	 * object under a future Rapier adapter, a `b2Contact` under a future
-	 * Box2D adapter, etc. Reading this commits your code to a specific
+	 * `Matter.Pair` under `@melonjs/matter-adapter`, a planck `Contact` under
+	 * `@melonjs/planck-adapter`, `{ collider1, collider2 }` (the two collider
+	 * handles) under `@melonjs/rapier2d-adapter`. Reading this commits your code to a specific
 	 * engine; use the portable `normal` / `depth` fields for
 	 * adapter-portable handlers.
 	 *
@@ -193,7 +202,11 @@ export interface CollisionResponse {
  * itself (e.g. `adapter.setVelocity(r, v)` always works).
  */
 export interface PhysicsBody {
-	/** Set linear velocity in viewport pixels per frame. */
+	/**
+	 * Set linear velocity, in pixels per step on the builtin and matter
+	 * adapters (a step is 1/60 s) and in pixels per second on planck and
+	 * Rapier.
+	 */
 	setVelocity(x: number, y: number): void;
 	/** Read linear velocity; writes into `out` if provided to avoid an alloc. */
 	getVelocity(out?: Vector2d): Vector2d;
@@ -314,8 +327,8 @@ export interface BodyDefinition {
 	 * Number applies uniformly; `{x, y}` damps each axis independently
 	 * (melonJS-specific — Matter only supports scalar and will average).
 	 *
-	 * It damps ROTATION as well as translation on the matter and planck
-	 * adapters, so it is also what stops a body spinning once something has
+	 * It damps ROTATION as well as translation on the matter, planck and
+	 * Rapier adapters, so it is also what stops a body spinning once something has
 	 * set it turning. Left at `0`, a spin never decays. The builtin adapter
 	 * maps it onto its per-axis `body.friction` damping vector instead, and
 	 * has no rotation to damp.
@@ -357,8 +370,8 @@ export interface BodyDefinition {
 	/**
 	 * Disable rotation simulation, so the body keeps whatever angle it has.
 	 *
-	 * Defaults to whatever the underlying engine defaults to, which for both
-	 * matter and planck is `false`: a rigid body turns when something turns
+	 * Defaults to whatever the underlying engine defaults to, which for
+	 * matter, planck and Rapier is `false`: a rigid body turns when something turns
 	 * it. Pass `true` for anything that must stay upright, such as a
 	 * platformer actor that should never tip over.
 	 *
@@ -451,7 +464,7 @@ export interface ShapeEntry {
  * shape file, which is resolved into real shapes when the renderable is added
  * to a container — so every adapter receives the same
  * {@link BodyDefinition}, and one definition works unchanged on the builtin,
- * matter and planck backends alike.
+ * matter, planck and Rapier backends alike.
  * @example
  * // preload the file the shape editor exported, like any other JSON
  * { name: "shapes", type: "json", src: "data/physics/shapes.json" }
@@ -502,7 +515,12 @@ export interface BodyDefinitionInit extends Omit<BodyDefinition, "shapes"> {
  * a feature isn't available under the active adapter.
  */
 export interface AdapterCapabilities {
-	/** supports joints, springs, hinges, etc. */
+	/**
+	 * supports {@link World#addJoint}: hinge, rope, weld and slider joints.
+	 * `true` on the planck and Rapier adapters; `false` on the built-in and
+	 * matter adapters, where `world.addJoint()` throws. Code meant to run on
+	 * any adapter checks this first.
+	 */
 	constraints: boolean;
 	/** supports continuous collision detection for fast-moving bodies */
 	continuousCollisionDetection: boolean;
@@ -512,7 +530,7 @@ export interface AdapterCapabilities {
 	raycasts: boolean;
 	/**
 	 * supports {@link PhysicsAdapter.raycast3d}. 2D-only adapters
-	 * (matter, planck) report `false` and omit the method; users can
+	 * (matter, planck, Rapier) report `false` and omit the method; users can
 	 * branch on this flag before calling
 	 * `world.adapter.raycast3d?.(...)` to skip a no-op delegation.
 	 */
@@ -572,15 +590,104 @@ export interface RaycastHit3d {
 }
 
 /**
+ * The kinds of joint {@link World#addJoint} makes. Each maps to the same
+ * joint in every engine that has joints:
+ * - `"hinge"`: the two bodies share a point and turn freely about it (a
+ *   chain link, a door, a wheel). Optional `limits` bound the angle.
+ * - `"rope"`: the anchors stay within `maxLength` of each other, and can
+ *   come closer (a pendulum, a grappling hook, a cap on a chain's length).
+ * - `"weld"`: the two bodies move and turn as one, as they stand when the
+ *   joint is made (parts glued together that can break apart).
+ * - `"slider"`: the second body slides along `axis` and keeps its angle (a
+ *   lift, a piston). Optional `limits` bound the travel.
+ */
+export type JointType = "hinge" | "rope" | "weld" | "slider";
+
+/**
+ * What {@link World#addJoint} joins, and how. Distances are in pixels and
+ * angles in radians, as everywhere else in melonJS; the adapter converts them
+ * to its engine's units. Anchors are points in each renderable's own space,
+ * the space its `bodyDef` shapes are written in.
+ * @example
+ * // a door that opens up to 90 degrees, hinged at its top-left corner
+ * app.world.addJoint({
+ *     type: "hinge",
+ *     a: frame,
+ *     b: door,
+ *     anchorA: { x: 4, y: 0 },
+ *     anchorB: { x: 0, y: 0 },
+ *     limits: { min: 0, max: Math.PI / 2 },
+ * });
+ */
+export interface JointDefinition {
+	/** the kind of joint */
+	type: JointType;
+	/** the first body: a renderable with a body in the world */
+	a: Renderable;
+	/**
+	 * the second body. To pin `a` to a fixed point, join it to a renderable
+	 * with a `"static"` body.
+	 */
+	b: Renderable;
+	/**
+	 * where the joint holds `a`, in `a`'s own space. Default: the point of
+	 * `a` under `b`'s anchor when the joint is made, so nothing moves; for a
+	 * `"rope"`, the centre of `a`'s body.
+	 */
+	anchorA?: { x: number; y: number };
+	/** where the joint holds `b`, in `b`'s own space; default: the centre of its body */
+	anchorB?: { x: number; y: number };
+	/** whether `a` and `b` still collide with each other; default `false` */
+	collideConnected?: boolean;
+	/**
+	 * `"hinge"`: the range of `b`'s angle minus `a`'s, in radians.
+	 * `"slider"`: the range of travel along `axis`, in pixels, measured
+	 * between the two anchors: from where `b` starts, when `anchorA` is left
+	 * out. Unbounded when left out.
+	 */
+	limits?: { min: number; max: number };
+	/** `"rope"`: the most the anchors can be apart, in pixels; default: their distance when the joint is made */
+	maxLength?: number;
+	/** `"slider"`: the direction `b` slides in, in `a`'s own space; default: along x */
+	axis?: { x: number; y: number };
+}
+
+/**
+ * A joint {@link World#addJoint} made. Keep it to remove the joint with
+ * {@link World#removeJoint}.
+ * @example
+ * const rope = app.world.addJoint({ type: "rope", a: hook, b: lantern });
+ * rope.definition.maxLength; // the length it was given, or the distance when it was made
+ * app.world.removeJoint(rope);
+ * rope.native; // null once removed
+ */
+export interface PhysicsJoint {
+	/**
+	 * what the joint was made from: a copy of the definition given, with the
+	 * defaults filled in (`anchorA`, a rope's `maxLength`).
+	 * {@link World#setAdapter} rebuilds the joint from it.
+	 */
+	readonly definition: JointDefinition;
+	/**
+	 * The engine's own joint: a `planck.Joint` or a Rapier `ImpulseJoint`,
+	 * for what the shared definition does not cover (a motor, for example).
+	 * Changes made to it are not kept when {@link World#setAdapter} rebuilds
+	 * the joint, and it is `null` once the joint is removed.
+	 */
+	readonly native: unknown;
+}
+
+/**
  * Swappable physics engine integration. `BuiltinAdapter` ships with
  * melonjs and wraps the engine's native SAT-based physics; third-party
  * adapters (e.g. `@melonjs/matter-adapter`) implement this interface to
  * plug a different engine in.
  *
- * **Lifecycle contract:** one adapter per {@link World}, instantiated and
- * passed to `Application` at construction, never swapped at runtime.
- * Adapter state (bodies, constraints, sleeping flags, etc.) does not
- * migrate between adapters.
+ * **Lifecycle contract:** one adapter per {@link World} at a time, passed
+ * to `Application` at construction or swapped in later with
+ * {@link World#setAdapter}. A swap rebuilds every body from its `bodyDef`
+ * and every joint from its {@link JointDefinition}; the rest of an
+ * adapter's state (velocities, contacts, sleeping flags) does not carry over.
  *
  * **Body handle convention:** {@link PhysicsAdapter.addBody} returns an
  * opaque handle that becomes `renderable.body`. Each adapter chooses its
@@ -675,7 +782,9 @@ export interface PhysicsAdapter {
 	/**
 	 * Register a body with the simulation. Returns an opaque handle that
 	 * becomes `renderable.body`. Each adapter chooses its own concrete
-	 * body type — see the class doc for the convention.
+	 * body type — see the class doc for the convention. Like the builtin
+	 * `Body` constructor, it sets `renderable.isKinematic` to `false`, so the
+	 * renderable takes part in physics and receives pointer events.
 	 *
 	 * **Prefer the declarative path.** Set `renderable.bodyDef` and call
 	 * `Container.addChild(renderable)` — the container auto-invokes
@@ -700,6 +809,25 @@ export interface PhysicsAdapter {
 	updateShape?(renderable: Renderable, shapes: BodyShape[]): void;
 
 	/**
+	 * Make a joint between the bodies of `def.a` and `def.b` and return the
+	 * engine's own joint, or `null` when this adapter has no joints
+	 * (`capabilities.constraints` is `false`), which makes
+	 * {@link World#addJoint} throw. Called by
+	 * {@link World#addJoint}, which game code uses instead: the world keeps
+	 * the joint, rebuilds it on {@link World#setAdapter} and removes it with
+	 * its bodies. The adapter writes the defaults it resolves (`anchorA`, a
+	 * rope's `maxLength`) onto `def`, the world's own copy, so that a rebuild
+	 * makes the same joint.
+	 */
+	addJoint?(def: JointDefinition): unknown;
+
+	/**
+	 * Remove a joint {@link PhysicsAdapter.addJoint} made. Does nothing on an
+	 * adapter without joints. Called by {@link World#removeJoint}.
+	 */
+	removeJoint?(joint: unknown): void;
+
+	/**
 	 * Portable velocity / force / position API. Every adapter implements
 	 * these by routing to its native engine. Use these instead of
 	 * mutating the body handle directly when writing adapter-agnostic
@@ -717,9 +845,9 @@ export interface PhysicsAdapter {
 	setAngle?(renderable: Renderable, angle: number): void;
 	/** Read absolute rotation angle (radians). Returns 0 if not tracked. */
 	getAngle?(renderable: Renderable): number;
-	/** Set angular velocity (rad / frame). */
+	/** Set angular velocity: radians per step, per second on planck and Rapier. */
 	setAngularVelocity?(renderable: Renderable, omega: number): void;
-	/** Read angular velocity (rad / frame). Returns 0 if not tracked. */
+	/** Read angular velocity, in the same unit. Returns 0 if not tracked. */
 	getAngularVelocity?(renderable: Renderable): number;
 	/** Apply an angular impulse (`Δω = τ / inertia`). */
 	applyTorque?(renderable: Renderable, torque: number): void;
@@ -741,8 +869,9 @@ export interface PhysicsAdapter {
 	/**
 	 * Read the body's current velocity cap (mirror of
 	 * {@link setMaxVelocity}). Returns plain `{x, y}` so callers don't
-	 * need to import a vector type. Optional — adapters that don't
-	 * implement velocity caps omit this method.
+	 * need to import a vector type. A body with no cap reports `Infinity`
+	 * on both axes; a builtin `Body` always has one, 490 by default. Optional — adapters that don't implement velocity caps
+	 * omit this method.
 	 */
 	getMaxVelocity?(renderable: Renderable): {
 		x: number;
@@ -868,4 +997,31 @@ export interface PhysicsAdapter {
 	 * adapter contract.
 	 */
 	getBodyShapes(renderable: Renderable): readonly BodyShape[];
+}
+
+/**
+ * The static side every physics adapter class shares, next to its
+ * constructor. `load()` resolves once the adapter can be constructed, and
+ * `create()` waits for it, then constructs: an adapter whose engine is plain
+ * JavaScript (the builtin, matter and planck adapters) resolves `load()` at
+ * once, while one built on WebAssembly downloads and compiles it there. So
+ * `await X.create(options)` is the same line for every adapter, at boot or
+ * before {@link World#setAdapter}; `new X(options)` stays available wherever
+ * the adapter needs no loading.
+ * @example
+ * const app = new Application(800, 600, {
+ *     physic: await PlanckAdapter.create({ gravity: { x: 0, y: 320 } }),
+ * });
+ * // later, between two screens
+ * app.world.setAdapter(await MatterAdapter.create());
+ */
+export interface PhysicsAdapterClass<
+	T extends PhysicsAdapter = PhysicsAdapter,
+	O = any,
+> {
+	new (options?: O): T;
+	/** Resolves once the adapter can be constructed. Every call returns the same promise. */
+	load(): Promise<void>;
+	/** Resolves with a new adapter: waits for `load()`, then constructs it. */
+	create(options?: O): Promise<T>;
 }

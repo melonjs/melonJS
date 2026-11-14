@@ -1,5 +1,47 @@
+import type World from "../physics/world.js";
 import * as device from "../system/device";
 import type Application from "./application.ts";
+
+/**
+ * The adapter packages that have already introduced themselves in the console:
+ * each prints its own line once per page, as a plugin does when registered.
+ */
+const announced = new Set<string>();
+
+/**
+ * Name the world's physics adapter in the console: at start-up, as part of the
+ * header, and again whenever {@link World#setAdapter} switches it later.
+ *
+ * Two lines. An adapter package that declares a `name` (matter, planck,
+ * Rapier, a third-party one) introduces itself the first time it is installed,
+ * with its version and URL, the way a plugin does when it is registered. Then
+ * `physics: <label>` names the adapter now in use, every time.
+ * @param world - the physics world
+ * @ignore
+ * @internal
+ */
+export function consolePhysics(world: World): void {
+	if (world.physic === "none") {
+		console.log("physics: disabled");
+		return;
+	}
+	const a = world.adapter as {
+		constructor: { name: string };
+		name?: string;
+		physicLabel?: string;
+		version?: string;
+		url?: string;
+	};
+	if (a.name !== undefined && !announced.has(a.name)) {
+		announced.add(a.name);
+		const version = a.version ? ` ${a.version}` : "";
+		const url = a.url ? ` | ${a.url}` : "";
+		console.log(`${a.name}${version}${url}`);
+	}
+	// the stable label first; `constructor.name` is a last resort, mangled
+	// in minified builds (the built-in adapter would print "physics: ry")
+	console.log(`physics: ${a.physicLabel ?? a.name ?? a.constructor.name}`);
+}
 
 /**
  * display information

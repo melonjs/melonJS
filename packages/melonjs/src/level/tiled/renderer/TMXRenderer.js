@@ -1,5 +1,4 @@
 import { Bounds, boundsPool } from "./../../../physics/bounds.ts";
-import TMXLayer from "./../TMXLayer.js";
 
 // where each Tiled `objectalignment` puts a tile object's position, as a
 // fraction of its width and height from its top left ("unspecified" is
@@ -21,6 +20,7 @@ const OBJECT_ALIGNMENT = new Map([
  * @import CanvasRenderer from "../../../video/canvas/canvas_renderer.js";
  * @import {Rect} from "../../../geometries/rectangle.ts";
  * @import TMXTileMap from "../TMXTileMap.js";
+ * @import TMXLayer from "../TMXLayer.js";
  * @import Tile from "../TMXTile.js";
  * @import {Vector2d} from "../../../math/vector2d.ts";
  * @import WebGLRenderer from "../../../video/webgl/webgl_renderer.js";
@@ -65,17 +65,16 @@ export default class TMXRenderer {
 
 	/**
 	 * return the bounding rect for this map renderer
-	 * @param {TMXLayer} [layer] - calculate the bounding rect for a specific layer (will return a new bounds object)
+	 * @param {TMXLayer|{cols: number, rows: number}} [layer] - calculate the bounding rect for a specific layer, or any area of `cols` x `rows` cells (will return a new bounds object), its grid drawn from its first cell
 	 * @returns {Bounds}
 	 */
 	getBounds(layer) {
-		const bounds = layer instanceof TMXLayer ? boundsPool.get() : this.bounds;
-		bounds.setMinMax(
-			0,
-			0,
-			this.cols * this.tilewidth,
-			this.rows * this.tileheight,
-		);
+		const isLayer = layer !== undefined;
+		const bounds = isLayer ? boundsPool.get() : this.bounds;
+		// a layer can have more cells than the map (an infinite map's)
+		const cols = isLayer ? layer.cols : this.cols;
+		const rows = isLayer ? layer.rows : this.rows;
+		bounds.setMinMax(0, 0, cols * this.tilewidth, rows * this.tileheight);
 		return bounds;
 	}
 

@@ -1,6 +1,6 @@
 ---
 name: melonjs-effects-and-shaders
-description: "Use this skill for post-processing effects, custom shaders, blend modes and colour grading in melonJS. Covers the built-in ShaderEffect presets, addPostEffect on renderables and cameras, writing a custom dual-language GLSL/WGSL effect, the screen_texture builtins, and why effects silently do nothing on the Canvas fallback. Triggers on: Tween, easing, animate an effect, ShaderEffect, addPostEffect, removePostEffect, getPostEffect, postEffectNeedsCapture, VignetteEffect, GlowEffect, BlurEffect, PixelateEffect, ScanlineEffect, shader, GLSL, WGSL, uniform, setUniform, setTexture, setTime, blendMode, colorMatrix, screen_texture, toFrameTexture, post effect, filter."
+description: "Use this skill for post-processing effects, custom shaders, blend modes and colour grading in melonJS. Covers the built-in ShaderEffect presets, addPostEffect on renderables and cameras, writing a custom dual-language GLSL/WGSL effect, the screen_texture builtins, and why effects silently do nothing on the Canvas fallback. Triggers on: Tween, easing, animate an effect, ShaderEffect, addPostEffect, removePostEffect, getPostEffect, postEffectNeedsCapture, VignetteEffect, GlowEffect, BlurEffect, PixelateEffect, ScanlineEffect, OutlineEffect, BloomEffect, ToneMappingEffect, SwayEffect, SquishEffect, hdr, tone mapping, shader, GLSL, WGSL, uniform, setUniform, setTexture, setTime, getShader, prewarm, blendMode, colorMatrix, screen_texture, screen_uv, noise_uv, toFrameTexture, pixelate transition, post effect, filter."
 license: MIT
 ---
 
@@ -88,8 +88,9 @@ class Bar extends Renderable {
 }
 ```
 
-`ProgressBar` and `Trail` set it for you, and a sprite needs nothing: the flag
-defaults to `false` and only ever changes the single-effect case.
+`ProgressBar`, `UIPanel` and `Trail` set it for you, and a sprite needs
+nothing: the flag defaults to `false` and only ever changes the single-effect
+case.
 
 ## Toggle with `enabled`, do not remove
 
@@ -229,7 +230,8 @@ squish.setBulge(1 - scaleY);
 ```
 
 Apply that from the sprite's own `update()`, not from a tween's `onUpdate`. A
-physics adapter that mirrors a body's angle (Matter does) rewrites
+physics adapter that mirrors a body's angle (matter, planck and Rapier do, and so does
+the built-in once a body has an angle or angular velocity) rewrites
 `currentTransform` on every step, before the renderables update, so a scale set
 anywhere else is gone by the time the sprite is drawn. Let the tween animate a
 plain `{ scaleY }` object and read it in `update()`.
@@ -457,8 +459,10 @@ renderer.setToneMapping("aces", { exposure: 0.4, white: 6 });
 renderer.setToneMapping("none");                       // and off again
 ```
 
-`"none"` by default. The renderer keeps the curve LAST on the camera, so
-whatever you put in front of it is mapped along with everything else. Changing
+`"none"` by default, and set at boot through the `toneMapping`,
+`toneMappingExposure` and `toneMappingWhite` application settings. The
+renderer keeps the curve LAST on the camera, so whatever you put in front of
+it is mapped along with everything else. Changing
 the mode rebuilds one shader (the curve is baked); `exposure` and `white` are
 uniform writes, so a settings screen can drive them live. `white` is the value
 that comes out as display white — the knob a "brightness" or "peak" slider
@@ -482,6 +486,13 @@ app.viewport.colorMatrix.contrast(1.1).saturate(1.1);
 It is still *implemented* as one: a non-identity matrix makes the camera append
 an internal `ColorMatrixEffect` to its post-effect chain for that frame, so it
 needs a GPU backend like everything else here.
+
+The `"pixelate"` state transition (`state.transition("pixelate", …)`, or a
+`PixelateTransitionEffect` added with `addCameraEffect`) is another such guest:
+while it runs it puts a `PixelateEffect` FIRST in the camera's chain, so a
+vignette or scanlines you added stay sharp over the blocks, and it takes the
+effect off again when it is done. Being a shader, it does nothing on Canvas,
+where `state.transition` changes the state directly instead.
 
 ## Custom effects are dual-language
 
@@ -582,8 +593,8 @@ string in your own module:
 
 ```js
 // with the level's other assets, not in the stage that uses them.
-// `preload()` rather than `load()` — preload is what warms the shaders it
-// brought in, and it can be called again per level, not just at boot
+// `preload()` or a bundle's `load(id)`, not `load(asset)`: those two warm
+// the shaders they bring in, and run again per level, not just at boot
 await loader.preload([
     { name: "ripples", type: "shader", src: {
         glsl: "assets/level2/ripples.glsl",
@@ -595,6 +606,14 @@ await loader.preload([
 
 `src` takes the dual-language pair, so one asset carries both realizations and
 the two backends cannot drift apart. `data` takes inline source the same way.
+
+A level's bundle (20.14: `loader.load("level2", [...])` declares and loads
+one, warming like `preload` but with no loading screen) is also the shader's
+lifetime. Unloading the last bundle that lists it, or `loader.unload()` of the
+shader asset itself, destroys the shared instance whatever still draws with
+it, and those renderables then draw without the effect. An effect that
+outlives a level (a HUD's, a camera's) belongs in a bundle that outlives it
+too; see `melonjs-loading-assets`.
 
 With `prewarm` on (the default since 20.6), `loader.preload()` warms on its way
 through — automatically, on every call — and compiles the GPU-side objects for
@@ -632,7 +651,9 @@ variants are covered by the loading-screen warm-up and by the per-renderable one
 For refraction, distortion and anything that samples what is already drawn:
 
 - **`screen_texture`** — a sampler kept filled with everything drawn so far
-  (GLSL: annotate the sampler `uniform sampler2D tex : screen_texture;`)
+  (GLSL: annotate the sampler `uniform sampler2D tex : screen_texture;`, or
+  `: screen_texture(repeat)` to sample it wrapping; `repeat-x` and
+  `repeat-y` work too)
 - **`screen_uv`** — this fragment's 0..1 position in that capture
 - **`noise_uv`** — 0..1 across the sprite regardless of its atlas frame, and
   across the renderable when it has several effects (it does not slide with
@@ -650,7 +671,11 @@ Two places where a straight port really does differ:
   into a `Texture2d` you hand to `setTexture` — the supported replacement for
   `readPixels` tricks. The GL capture is bottom-up (GLSL bodies sample it with
   `1.0 - uv.y`) and opaque RGB; the WebGPU capture is top-down (the WGSL twin
-  must *not* flip) and preserves alpha.
+  must *not* flip) and preserves alpha. It holds what was drawn when it was
+  called, so call it right before the draw that samples it. By default it
+  refills one shared, renderer-owned texture; `toFrameTexture({ target: null })`
+  hands back a capture of your own, for two alive at once, which you
+  `destroy()` when done.
 - **Vertical UV offsets** — a drop shadow, a directional smear. The WebGL pooled
   multi-effect path composites through bottom-up FBOs, so declare a `uUVYDir`
   uniform (initialise it to `1.0`) and multiply vertical offsets by it; the
@@ -724,10 +749,14 @@ capture plus one composite **per draw**: `difference`, `overlay`, `hard-light`,
 accents; expensive for hundreds of objects. The Canvas renderer reaches all
 eight through `globalCompositeOperation` instead, at no extra cost.
 
-Anything else collapses to `"normal"`, and so do 3D meshes and `Gradient` fills
-whatever you ask for — the latter with a one-time console warning.
-`renderer.setBlendMode(mode)` returns the mode it actually applied, so comparing
-that against your request detects the fallback.
+Anything else collapses to `"normal"`. `renderer.setBlendMode(mode)` returns
+the mode it actually applied, so comparing that against your request detects
+an unknown name, and `none` on Canvas.
+
+Two kinds of draw cannot take the eight composited modes on the GPU backends:
+a 3D mesh and a `Gradient` fill draw them as `"normal"`, with a one-time
+console warning naming which. `setBlendMode` cannot see that one, since it
+happens at the draw, and still reports the mode you asked for.
 
 ## The Canvas fallback
 
@@ -758,6 +787,7 @@ same question after construction.
 
 | symptom | cause |
 |---|---|
+| a camera's post effect hides another camera drawn before it | before 20.13 a later camera's pass replaced the whole frame; update. Since then each camera's effects apply to what it draws, over the cameras before it |
 | effect does nothing, warning in console | Canvas fallback — no programmable pipeline |
 | effect does nothing on some machines only | GLSL-only shader, `video.AUTO` chose WebGPU |
 | a white or solid box where the effect should be | carrier renderable drawn while the effect is disabled |
@@ -766,9 +796,11 @@ same question after construction.
 | ported shader renders upside down | a hand-bound `toFrameTexture()` capture — GL is bottom-up, WebGPU top-down |
 | shadow/smear offset flips on some draws | vertical UV offset not multiplied by `uUVYDir` |
 | frame rate collapses with many blended sprites | an *advanced* mode (overlay, darken, …) — each draw is a capture plus a composite |
+| `overlay` (or another composited mode) does nothing on a mesh or a gradient fill, with a console warning | those two draws take the eight composited modes as `"normal"` on the GPU backends |
+| an effect from `loader.getShader()` stops drawing after a level change | its asset, or the last bundle listing it, was unloaded, which destroys the shared instance |
 | many sprites with the same effect still cost a draw each | an effect instance per sprite, or a uniform set to a different value per sprite — share one instance and group sprites by value |
 | animated shader never moves | `setTime` fed milliseconds, or the shader declares no `uTime` |
-| squash and stretch only bulges, the height never changes, under Matter | the adapter rewrites `currentTransform` every step; set the scale from the sprite's `update()` |
+| squash and stretch only bulges, the height never changes, under matter, planck or Rapier (or a rotating built-in body) | the adapter rewrites `currentTransform` every step; set the scale from the sprite's `update()` |
 | `SquishEffect` squishes the whole screen instead of the sprite | it is chained with another effect, or on the camera; give the sprite it alone |
 | syntax error in a file whose shader you just edited, pointing at a line of GLSL | a backtick in the shader body ended the template literal — most often one wrapped around an identifier in a comment |
 

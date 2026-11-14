@@ -1,6 +1,6 @@
 ---
 name: melonjs-tilemaps
-description: "Use this skill for Tiled maps in melonJS — loading TMX/TSX levels, spawning entities from Tiled objects, collision shapes authored in Tiled, isometric and hexagonal maps, and image layers, and reading or changing tiles while the game runs. Covers registerTiledObjectClass and the pool.register name contract, camera bounds, compressed maps needing the inflate plugin, and the level director API. Triggers on: Tiled, TMX, TSX, tilemap, setTile, clearTile, cellAt, getTile, getTileById, change a tile, tile at run time, game board, grid, tile properties at run time, getTileProperties, map properties, level.load, level.load async, await level.load, tileset, ImageLayer, isometric, hexagonal, staggered, pool.register, Collectable, Trigger, object layer, collision layer, parallax, registerTiledObjectClass, registerTiledObjectFactory, TMXObject, resolvedProperty, resolvedProperties, tile class, tile properties."
+description: "Use this skill for Tiled maps in melonJS — loading TMX/TSX levels, spawning entities from Tiled objects, collision shapes authored in Tiled, isometric and hexagonal maps, and image layers, and reading or changing tiles while the game runs. Covers registerTiledObjectClass and the pool.register name contract, camera bounds, compressed maps needing the inflate plugin, and the level director API. Triggers on: Tiled, TMX, TSX, tilemap, setTile, clearTile, cellAt, getTile, getTileById, change a tile, tile at run time, game board, grid, tile properties at run time, getTileProperties, map properties, level.load, level.load async, await level.load, tileset, ImageLayer, infinite map, render order, isometric, hexagonal, staggered, pool.register, Collectable, Trigger, object layer, collision layer, parallax, registerTiledObjectClass, registerTiledObjectFactory, TMXObject, resolvedProperty, resolvedProperties, tile class, tile properties."
 license: MIT
 ---
 
@@ -25,12 +25,29 @@ await loader.preload([
 level.load("map1");           // inside Stage.onResetEvent
 ```
 
+**A game with several maps** keeps each map and the images only it uses in a
+bundle of its own, beside a `common` bundle for the shared tileset, the player
+and the sounds: an assets file exporting `{ common: [...], map1: [...],
+map2: [...] }`, passed as it is to `loader.preload()`. A map's level can then be
+freed with `loader.unload("map1")` and brought back with
+`await loader.load("map1")` before `level.load("map1")`; a game whose maps
+loop back simply keeps them all loaded. `melonjs-loading-assets` covers the
+pattern.
+
 Asset `type` is `"tmx"` for maps and `"tsx"` for external tilesets — those are
 the only two type strings the loader knows. The *file* can be `.tmx` / `.tsx`
 (XML), or `.json` / `.tmj` / `.tsj`; the parser branches on the extension, not
 on the type. `type: "tmj"` throws `unknown or invalid resource type`. You can
-also skip `src` and pass the map inline via `data` (with `format: "json"` or
-`"xml"`).
+also skip `src` and pass the map inline via `data`, as the parsed JSON object
+of a Tiled JSON export (not an XML string).
+
+**Prefer JSON where there is no DOM.** XML maps and tilesets are parsed with
+`DOMParser`, which only a page has: in a Web Worker, or on nx.js (the Nintendo
+Switch, see `melonjs-platforms`), loading one fails, and `preload()` rejects
+with "Failed loading resource …" whose `cause` (also logged to the console)
+says to export it as JSON. Export the map *and* its external tilesets as
+`.tmj` / `.tsj` (Tiled: File → Export As, or set JSON as the format in the
+project).
 
 `level.load(levelId, options)` accepts `container` (default `game.world`),
 `onLoaded` (default `game.onLevelLoaded`), `flatten` (default `game.mergeGroup`),
@@ -178,9 +195,12 @@ authored against melonJS 1.x finds them where it looks.
 
 A `Trigger` forwards a **fixed list** of settings to `level.load()` — not
 whatever you pass it. Today that list is `container`, `onLoaded`, `flatten`,
-`setViewportBounds` and the glTF scene options (`scale`, `rightHanded`,
-`lights`, `lightIntensityScale`, `castGroundShadow`, `shadowGroundY`); see the
-3D assets skill. Anything outside it is **dropped silently**, which is worth
+`setViewportBounds` and the glTF scene options: `scale`, `rightHanded`,
+`lights`, `lightIntensityScale` and the ground-shadow settings
+(`castGroundShadow`, `shadowGroundY`, `shadowOpacity`, `shadowScale`,
+`shadowOffset`, `shadowStretch`, `shadowDirectionX`, `shadowDirectionZ`,
+`shadowGroundNormal`, `shadowLight`, but not `shadowGroundPoint`); see the 3D
+assets skill. Anything outside it is **dropped silently**, which is worth
 knowing before you spend an afternoon on a map that loads at the wrong scale.
 `async` is excluded deliberately — the trigger needs to sequence its own
 transition.
@@ -208,6 +228,33 @@ Two coordinate systems, and the methods do not share one:
 | `setTile(tile, col, row)` | column and row | puts `tile` there, and returns it |
 | `clearTile(col, row)` | column and row | empties the cell: `cellAt` then returns `null` |
 | `getTileById(gid, col, row)` | a global tile id, column and row | a new `Tile`, to pass to `setTile` |
+
+Columns and rows are the map's tile coordinates, the ones Tiled shows. On an
+**infinite** map a layer can hold tiles left of or above the map's origin:
+there `board.startx` / `board.starty` are negative, its cells run from
+`startx` to `startx + cols - 1` (and `starty` to `starty + rows - 1`), and
+`cellAt(-3, -2)` is the tile Tiled shows at (-3, -2), drawn where Tiled draws
+it. On a finite map both are 0:
+
+```js
+for (let row = board.starty; row < board.starty + board.rows; row++) {
+    for (let col = board.startx; col < board.startx + board.cols; col++) {
+        const tile = board.cellAt(col, row);   // every cell, infinite maps included
+    }
+}
+```
+
+An infinite map's `getBounds()` (and its `width` / `height`) covers the map's
+own area and every painted tile, so a level loaded with `setViewportBounds`
+lets the camera reach tiles painted past the map's size, or left of or above
+its origin. Empty chunk cells past the last painted tile are not part of it.
+Size a camera you set up yourself from `map.getBounds()`, not from
+`cols * tilewidth`, which is only right for an orthogonal map:
+
+```js
+const b = level.getCurrentLevel().getBounds();
+app.viewport.setBounds(b.left, b.top, b.width, b.height);
+```
 
 A `Tile` carries `tileId` (its **global** id), `col`, `row` and `tileset`.
 Tiled shows a tile's *local* id in the tileset editor; the global id is
@@ -253,7 +300,8 @@ their own (`title`, not `name`).
 
 ## Camera bounds
 
-`level.load` sets the viewport bounds to the map size for you —
+`level.load` sets the viewport bounds to the map's bounds for you (on an
+infinite map, every painted tile, see above) —
 `setViewportBounds` defaults to `true`, and the handler is re-run on every
 viewport resize, centring the map when it is smaller than the screen. You only
 need to do it by hand when you opted out:
@@ -397,23 +445,27 @@ per-pixel GID lookup in the fragment shader. It requires **all** of:
 - `world.gpuTilemap !== false` (the `gpuTilemap` application setting, default `true`),
 - an **orthogonal** layer — isometric, hexagonal, staggered and oblique always
   fall back,
-- no collection-of-image tileset, no non-zero `tileoffset`, and tile overflow
-  within the shader's 4-cell limit.
+- no collection-of-image tileset, no non-zero `tileoffset`, a tileset tile
+  render size of "Tile size" (`tilerendersize`, not "Map grid size"), and tile
+  overflow within the shader's 4-cell limit.
 
-When a layer falls back, melonJS `console.warn`s once with the reason. Practical
-consequences: fewer tilesets means fewer batches (one packed tileset beats
-several small ones), and on the Canvas fallback large maps get noticeably
-slower. `world.preRender` (or a `preRender` layer property in Tiled) opts an
-unanimated layer into the offscreen-bake path instead.
+When a layer falls back, melonJS `console.warn`s the reason each time the
+layer is activated (once per page when the renderer has no GPU tile support at
+all), and says nothing while `gpuTilemap` is off. Practical consequences:
+fewer tilesets means fewer batches (one packed tileset beats several small
+ones), and on the Canvas fallback large maps get noticeably slower.
+`world.preRender` (or a `preRender` layer property in Tiled) opts an unanimated
+layer into the offscreen-bake path instead.
 
 ## Symptom → cause
 
 | symptom | cause |
 |---|---|
+| objects a screen added just before `level.load` draw in the order they were added (a background over everything) | before 20.13 the reset inside `level.load` dropped the sort still pending for the persistent children it kept; update, or call `sort()` on their container once the level is loaded |
 | a Tiled object becomes a plain shape with no behaviour | its class/name does not match any registered factory, or it was registered after `level.load` |
 | the world is still empty right after `level.load` | the load is deferred to a timer while the loop runs — `await level.load(id, { async: true })`, or use `onLoaded` / `LEVEL_LOADED` |
 | `await level.load(id)` returned `true` rather than a promise | without `async: true` the call returns a boolean; `await true` resolves immediately and the load has not run yet — pass the flag when you mean to await |
-| `level <id> not found` | the map was never preloaded, or the asset `name` differs from the id passed to `load` |
+| `level <id> not found` | the map was never preloaded, its bundle was unloaded (`await loader.load(bundleId)` first), or the asset `name` differs from the id passed to `load` |
 | `unknown or invalid resource type` | asset `type` set to `"tmj"` / `"tsj"` — use `"tmx"` / `"tsx"` with the `.tmj` / `.tsj` file |
 | camera will not scroll | `setViewportBounds: false`, or the map was added with `addTo()` (which defaults to `false`) |
 | `No inflate function set` at parse time | compressed layers without the tiled-inflate plugin |
@@ -427,9 +479,18 @@ unanimated layer into the offscreen-bake path instead.
 | a property set on a tile is undefined on the object's `settings` | tile properties are not copied onto `settings`: read them with `settings.resolvedProperty(name)` |
 | objects placed from a classed tile come out as plain sprites | that class is not registered, it is a built-in name, or the object has a class or a registered name of its own, which come first |
 | missing tiles or a blank map | the `.tsx` or tileset image was not preloaded |
+| a map fails to load with "needs DOMParser" (in the error's `cause` and the console) | an XML `.tmx` / `.tsx` loaded where there is no DOM (a Web Worker, nx.js): export the map and its tilesets as JSON (`.tmj` / `.tsj`) |
 | a tileset's transparent color (`trans`) still shows (the console says it could not be applied) | the image cannot be read back: an image the game made itself from another origin without CORS (an `<img>` with no `crossOrigin`) cannot be, so load it with the loader, which only loads an image another origin's server allows (its CORS headers) and can always read back; and a compressed texture cannot be changed: export it with an alpha channel instead |
 | `cellAt` returns `null` (or the wrong tile) for a cell that has one | it was given pixels: `cellAt`, `setTile` and `clearTile` take column and row, only `getTile` takes world pixels |
 | `setTile` shows the wrong tile, or nothing | it was given Tiled's local tile id: use the global id, `tileset.firstgid + localId`, through `getTileById` |
+| on an infinite map the camera stops before tiles painted past the map's size, or left of or above its origin | an older melonJS held the camera to the map's width and height from (0, 0): update; and size a camera you set up yourself from `map.getBounds()` |
+| oversized tiles overlap in the wrong order (the map's render order is not "right-down") | an older melonJS drew every layer "right-down", whatever the map's render order: update |
+| an infinite map's tiles sit in the wrong row, or tiles left of or above the origin are missing | an older melonJS ignored where the chunks start (update); and loop from `layer.startx` / `layer.starty`, not 0, to reach cells left of or above the origin |
+| on a staggered map `getTile` gives the neighbouring tile on every row but the first, or a scrolled view draws nothing | a bug of older melonJS versions in the staggered renderer: update |
+| on an isometric (or staggered, oblique) map `getTile` gives an edge tile for a point just outside the tiles | an older melonJS rounded a fractional column or row toward 0: update |
+| on an isometric map a tile drawn by hand with the map renderer's `drawTile()` lands away from where the layer draws that cell | before 20.14 the isometric `drawTile()` placed it differently from the layer: update |
+| a repeating `ImageLayer` slides off the screen once the camera has moved far enough | before 20.12 its repeat did not follow the camera: update |
+| tiles of a second tileset draw from the first tileset's image (that first one has a `margin`) | an older melonJS let its gid range overrun into the next tileset (update): the range is the `tilecount` Tiled saved |
 | a layer is `undefined` from `getChildByName(name)[0]` | the level is not in the world yet (await `level.load(id, { async: true })`), or the name differs from the layer's in Tiled |
 | a tile set or cleared at run time does not block or free movement | tile layers carry no collision: collision comes from collision object layers |
 | the level's `name` is not its id after loading | a map custom property named `name` replaced it: map properties are set over the map's own fields |

@@ -202,22 +202,47 @@ export class GamepadPlugin extends plugin.BasePlugin {
 		};
 		this.pad = new VirtualPad(options.vibrate ?? true);
 		this.haptics = options.haptics ?? 10;
+		const sticks = listOf<StickOptions>(options.sticks, 1).slice(0, 2);
+		const buttons = listOf<ButtonOptions>(options.buttons, 1);
+		// Reject a typo before allocating sprites or claiming the pad slot.
+		const regions = [
+			...sticks.flatMap((stick) => [stick.base, stick.thumb]),
+			...buttons.flatMap((button) => [button.region, button.pressed]),
+		];
+		for (const region of regions) {
+			if (region === undefined) {
+				continue;
+			}
+			const frame = options.skin?.getRegion(region);
+			if (
+				!frame ||
+				!("width" in frame) ||
+				!("height" in frame) ||
+				typeof frame.width !== "number" ||
+				typeof frame.height !== "number"
+			) {
+				throw new Error(
+					`GamepadPlugin: skin region "${region}" not found; supply a skin atlas containing it`,
+				);
+			}
+		}
 
 		const repaint = (): void => {
 			if (this.ready) {
 				this.app.repaint();
 			}
 		};
-		this.sticks = listOf<StickOptions>(options.sticks, 1)
-			.slice(0, 2)
-			.map((stick, i) => {
-				return new VirtualStick(stick, i === 0 ? "left" : "right", this.pad);
-			});
-		this.buttons = listOf<ButtonOptions>(options.buttons, 1).map(
-			(button, i) => {
-				return new VirtualButton(button, i, this.pad, repaint);
-			},
-		);
+		this.sticks = sticks.map((stick, i) => {
+			return new VirtualStick(
+				stick,
+				i === 0 ? "left" : "right",
+				this.pad,
+				options.skin,
+			);
+		});
+		this.buttons = buttons.map((button, i) => {
+			return new VirtualButton(button, i, this.pad, repaint, options.skin);
+		});
 
 		this.padsConnected = realGamepads().length > 0;
 		this.hiddenByGamepad = this.hideOnGamepad && this.padsConnected;
@@ -303,6 +328,9 @@ export class GamepadPlugin extends plugin.BasePlugin {
 		}
 		for (const button of this.buttons) {
 			button.destroy();
+		}
+		for (const stick of this.sticks) {
+			stick.destroy();
 		}
 	}
 
@@ -669,7 +697,9 @@ export class GamepadPlugin extends plugin.BasePlugin {
 	private toViewport(e: { clientX: number; clientY: number }): Vector2d {
 		const rect = this.app.renderer.getCanvas().getBoundingClientRect();
 		const scale = this.app.renderer.scaleRatio;
-		const ratio = globalThis.devicePixelRatio || 1;
+		// the ratio `scaleRatio` was built with, so that the two cancel out:
+		// the live one changes with browser zoom or another screen
+		const ratio = device.devicePixelRatio;
 		return this.point.set(
 			((e.clientX - rect.left) / scale.x) * ratio,
 			((e.clientY - rect.top) / scale.y) * ratio,

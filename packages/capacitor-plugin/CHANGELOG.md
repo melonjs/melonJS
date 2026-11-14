@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.0.2] - _unreleased_
+
+### Fixed
+- Installing the plugin no longer asks for Node 24. Its `package.json` declared `engines: { node: ">=24.0.0" }`, so npm warned on an older Node and Yarn 1 refused to install it; the plugin runs in the browser
+
+## [1.0.1] - _2026-11-09_
+
+### Fixed
+- Coming back to the app no longer resumes a game that was already paused when it left, such as one showing its pause menu
+
 ## [1.0.0] - _2026-05-10_
 
 ### Added
