@@ -166,6 +166,17 @@ const { path, found } = grid.findPath(enemy.pos, player.pos, {
 - **Build `fromBodies` after the level loads.** It scans the shapes, not a
   physics query, so it works before the world first steps; it reads `bodyDef`
   shapes too, so it is the same on every adapter.
+- **The walls are `WORLD_SHAPE` bodies that collide with something**, read
+  from the live body first: a door opened with
+  `body.setCollisionMask(collision.types.NO_OBJECT)` is open once the grid is
+  refreshed (`grid.refresh()`), with no `solid` callback.
+- **Walls off the tile grid need smaller cells.** A doorway narrower than a
+  tile, between walls part of a tile deep, is closed on a grid of whole
+  tiles: `{ subdivide: 4 }` on the plugin (or smaller `tileWidth` /
+  `tileHeight` for `fromBodies`).
+- **The grid sees an agent as a point**, and a smoothed path runs right along
+  the walls: a body with width catches on corners. When the agent stops
+  getting closer to its next point, find a new path from where it stands.
 - A weight is 1 or more and finite: block with `setSolid`, not `Infinity`.
 - `PathfindingPlugin` (`plugin.register(PathfindingPlugin, "pathfinding",
   { layer: "walls" })`) only rebuilds the grid when a level loads (and at
@@ -286,6 +297,9 @@ or a `Stage` is simpler and easier to test.
 | no path found (empty path, `found` false) | the goal is walled off, solid, or past `maxNodes`; `allowPartialPath: true` returns the way to the nearest point |
 | everything is solid on a `fromTileLayer` grid | a floor layer, where every cell has a tile: pass `solid` |
 | an agent turns back at the start | `path[0]` is where it stands: head for `path[1]` |
+| an opened door still blocks the path | pathfinding-plugin < 1.1 counted it a wall (it read the `bodyDef`, and ignored the mask): upgrade, and `grid.refresh()` once it opens |
+| every doorway is closed on the grid | doorways narrower than a cell: `subdivide` on the plugin |
+| an agent stops at a wall corner | it is not a point: on getting no closer, find a new path from where it stands |
 | a path is offset from an isometric map | the grid is square: `new Grid` / `fromBodies` without `cellShape: "isometric"` |
 | `plugin.cache.pathfinding.grid` is null, with a warning | a staggered or hexagonal level, or `layer` names no layer of it |
 | a path is offset from the map | the grid's `x` / `y` are not the layer's: built before the layer was in its container, or the container moved since |
