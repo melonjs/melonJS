@@ -1,10 +1,12 @@
 import { game } from "../application/application.ts";
 import Camera3d from "../camera/camera3d.ts";
 import { Polygon } from "../geometries/polygon.ts";
+import { createMeshHit, rayBox, rayTriangle } from "../geometries/ray3d.ts";
 import { warnOnce } from "../lang/console.js";
 import { getImage, getMTL, getOBJ } from "./../loader/loader.js";
 import { specularFromMetallicRoughness } from "./../loader/parsers/pbr.ts";
 import { Color } from "../math/color.ts";
+import { invertMatrixInto } from "../math/invert4.ts";
 import { Matrix3d } from "../math/matrix3d.ts";
 import { Vector2d } from "../math/vector2d.ts";
 import { Vector3d } from "../math/vector3d.ts";
@@ -37,6 +39,7 @@ import Renderable from "./renderable.js";
  * @import Camera2d from "../camera/camera2d.ts";
  * @import {Light3d} from "../lighting/light3d.ts";
  * @import GLShader from "../video/webgl/glshader.js";
+ * @import { MeshHit, Ray3d } from "../geometries/ray3d.ts";
  */
 
 // How far above the ground an object rises before its shadow is gone, as a
@@ -68,6 +71,11 @@ const SHADOW_SPREAD = 1.2;
 
 /** scratch for the three vectors `tiltOntoPlane` turns per shadow */
 const _tilted = new Float64Array(3);
+// picking scratch: the model → world matrix, its inverse, and the parent →
+// world matrix recovered from what the last draw captured
+const _pickWorld = new Float64Array(16);
+const _pickInverse = new Float64Array(16);
+const _parentToWorld = new Float64Array(16);
 /** scratch for one blob axis lengthened along the light */
 const _STRETCH = new Float64Array(2);
 
@@ -2082,6 +2090,18 @@ export default class Mesh extends Renderable {
 		this._lcx = Number.isFinite(minX) ? (minX + maxX) * 0.5 : 0;
 		this._lcy = Number.isFinite(minY) ? (minY + maxY) * 0.5 : 0;
 		this._lcz = Number.isFinite(minZ) ? (minZ + maxZ) * 0.5 : 0;
+		// the model-space box itself, which picking tests a ray against
+		// before walking any triangle
+		/**
+		 * @ignore
+		 * @internal
+		 */
+		this._lmin = [minX, minY, minZ];
+		/**
+		 * @ignore
+		 * @internal
+		 */
+		this._lmax = [maxX, maxY, maxZ];
 		this._lcVersion = this._geometryVersion;
 	}
 
@@ -2723,6 +2743,7 @@ export default class Mesh extends Renderable {
 				// agreeing with that, including when this instance was
 				// previously drawn through the reversing path below.
 				this.indices = this._indicesOriginal;
+				this._captureParentSpace(renderer);
 				renderer.drawMesh(this, this._composeModelMatrix());
 				if (
 					this._castsGroundShadow(renderer) === true &&
@@ -2748,6 +2769,7 @@ export default class Mesh extends Renderable {
 			// offset is suppressed for this path via `applyAnchorTransform`
 			// (set in `preDraw`), so it does not leak into the view matrix.
 			this._projectVerticesWorld(this.pos.x, this.pos.y, this.depth);
+			this._captureParentSpace(renderer);
 			// world-space normals — only when this mesh is lit (the unlit batcher
 			// never reads `normals`, so projecting them otherwise is wasted
 			// per-frame work; glTF meshes carry normals even when the scene has
@@ -2783,6 +2805,230 @@ export default class Mesh extends Renderable {
 			}
 		}
 		renderer.drawMesh(this);
+	}
+
+	/**
+	 * Remember how the space this mesh is placed in relates to the world.
+	 *
+	 * Under a `Camera3d` a mesh's model matrix places it in its PARENT's
+	 * space: every ancestor container's transform is folded into the view
+	 * matrix as the tree is drawn, not into the model matrix. Picking works in
+	 * world space, so it needs that fold, and the renderer knows it only while
+	 * drawing (the same `_lightSpaceInverse` that lights a nested mesh in the
+	 * right frame). A mesh straight in the world has nothing to remember.
+	 * @param {Renderer} renderer - the renderer drawing this mesh
+	 * @ignore
+	 * @internal
+	 */
+	_captureParentSpace(renderer) {
+		const worldToParent = renderer._lightSpaceInverse?.() ?? null;
+		if (worldToParent === null) {
+			this._hasParentSpace = false;
+			return;
+		}
+		if (this._worldToParent === undefined) {
+			/**
+			 * @ignore
+			 * @internal
+			 */
+			this._worldToParent = new Float64Array(16);
+		}
+		this._worldToParent.set(worldToParent.val);
+		/**
+		 * @ignore
+		 * @internal
+		 */
+		this._hasParentSpace = true;
+	}
+
+	/**
+	 * This mesh's model → world matrix, as last drawn: its own placement,
+	 * and the transforms of the containers above it.
+	 * @param {Float64Array} out - 16-element destination
+	 * @returns {Float64Array|null} `out`, or `null` when the containers above collapse it to nothing
+	 * @ignore
+	 * @internal
+	 */
+	_pickMatrix(out) {
+		const model = this._composeModelMatrix().val;
+		if (this._hasParentSpace !== true) {
+			out.set(model);
+			return out;
+		}
+		if (!invertMatrixInto(_parentToWorld, this._worldToParent)) {
+			return null;
+		}
+		const p = _parentToWorld;
+		for (let col = 0; col < 4; col++) {
+			const b0 = model[col * 4];
+			const b1 = model[col * 4 + 1];
+			const b2 = model[col * 4 + 2];
+			const b3 = model[col * 4 + 3];
+			for (let row = 0; row < 4; row++) {
+				out[col * 4 + row] =
+					p[row] * b0 + p[4 + row] * b1 + p[8 + row] * b2 + p[12 + row] * b3;
+			}
+		}
+		return out;
+	}
+
+	/**
+	 * Where a world-space ray first meets this mesh, tested against its
+	 * triangles (from either side). The `Camera3d` counterpart of a 2D
+	 * bounds check: {@link Camera3d#pick} and a mesh's pointer events under a
+	 * `Camera3d` are built on it.
+	 *
+	 * The mesh is tested where it is drawn: its own placement, and that of
+	 * the containers above it as of the last frame. A model-space box is tried
+	 * first, so a miss costs a matrix inverse and six divisions; a hit walks
+	 * the triangles once.
+	 * @param {Ray3d} ray - the ray, in world space (see {@link Camera3d#screenToRay})
+	 * @param {MeshHit} [out] - hit record to write into; a new one is allocated when omitted
+	 * @returns {MeshHit|null} the nearest hit, or `null` when the ray misses
+	 * @example
+	 * const ray = camera.screenToRay(pointer.gameScreenX, pointer.gameScreenY);
+	 * const hit = crate.intersectRay(ray);
+	 * if (hit !== null) {
+	 *     spark.pos.set(hit.point.x, hit.point.y);
+	 *     spark.depth = hit.point.z;
+	 * }
+	 */
+	intersectRay(ray, out) {
+		const world = this._pickMatrix(_pickWorld);
+		if (world === null) {
+			return null;
+		}
+		return this._intersectPlaced(
+			ray,
+			world,
+			-1,
+			Number.POSITIVE_INFINITY,
+			out ?? createMeshHit(),
+		);
+	}
+
+	/**
+	 * Test a ray against this mesh's geometry placed by `world`.
+	 *
+	 * The ray is carried into model space rather than every vertex into the
+	 * world. The direction is NOT renormalized there, so the parameter along
+	 * it is the same in both spaces: a world distance comes out directly, and
+	 * so does comparing it against `maxDistance`.
+	 * @param {Ray3d} ray - the world-space ray
+	 * @param {Float64Array} world - model → world matrix for this placement
+	 * @param {number} instance - the instance index to report (-1 for none)
+	 * @param {number} maxDistance - ignore hits at or beyond this distance
+	 * @param {MeshHit} out - hit record to write into
+	 * @returns {MeshHit|null} `out`, or `null` on a miss
+	 * @ignore
+	 * @internal
+	 */
+	_intersectPlaced(ray, world, instance, maxDistance, out) {
+		const inv = _pickInverse;
+		if (!invertMatrixInto(inv, world)) {
+			return null;
+		}
+		const o = ray.origin;
+		const d = ray.direction;
+		const ox = inv[0] * o.x + inv[4] * o.y + inv[8] * o.z + inv[12];
+		const oy = inv[1] * o.x + inv[5] * o.y + inv[9] * o.z + inv[13];
+		const oz = inv[2] * o.x + inv[6] * o.y + inv[10] * o.z + inv[14];
+		const dx = inv[0] * d.x + inv[4] * d.y + inv[8] * d.z;
+		const dy = inv[1] * d.x + inv[5] * d.y + inv[9] * d.z;
+		const dz = inv[2] * d.x + inv[6] * d.y + inv[10] * d.z;
+
+		this._updateLocalCenter();
+		const lo = this._lmin;
+		const hi = this._lmax;
+		if (!Number.isFinite(lo[0])) {
+			return null;
+		}
+		const enter = rayBox(
+			ox,
+			oy,
+			oz,
+			dx,
+			dy,
+			dz,
+			lo[0],
+			lo[1],
+			lo[2],
+			hi[0],
+			hi[1],
+			hi[2],
+		);
+		if (enter === null || enter >= maxDistance) {
+			return null;
+		}
+
+		const v = this.originalVertices;
+		const idx = this._indicesOriginal;
+		let best = maxDistance;
+		let tri = -1;
+		for (let i = 0; i + 2 < idx.length; i += 3) {
+			const a = idx[i] * 3;
+			const b = idx[i + 1] * 3;
+			const c = idx[i + 2] * 3;
+			const t = rayTriangle(
+				ox,
+				oy,
+				oz,
+				dx,
+				dy,
+				dz,
+				v[a],
+				v[a + 1],
+				v[a + 2],
+				v[b],
+				v[b + 1],
+				v[b + 2],
+				v[c],
+				v[c + 1],
+				v[c + 2],
+			);
+			if (t !== null && t < best) {
+				best = t;
+				tri = i / 3;
+			}
+		}
+		if (tri < 0) {
+			return null;
+		}
+
+		// the face normal in model space, carried to the world by the inverse
+		// transpose (exact under non-uniform scale), and turned to face the ray
+		const a = idx[tri * 3] * 3;
+		const b = idx[tri * 3 + 1] * 3;
+		const c = idx[tri * 3 + 2] * 3;
+		const e1x = v[b] - v[a];
+		const e1y = v[b + 1] - v[a + 1];
+		const e1z = v[b + 2] - v[a + 2];
+		const e2x = v[c] - v[a];
+		const e2y = v[c + 1] - v[a + 1];
+		const e2z = v[c + 2] - v[a + 2];
+		const lnx = e1y * e2z - e1z * e2y;
+		const lny = e1z * e2x - e1x * e2z;
+		const lnz = e1x * e2y - e1y * e2x;
+		let nx = inv[0] * lnx + inv[1] * lny + inv[2] * lnz;
+		let ny = inv[4] * lnx + inv[5] * lny + inv[6] * lnz;
+		let nz = inv[8] * lnx + inv[9] * lny + inv[10] * lnz;
+		const len = Math.hypot(nx, ny, nz) || 1;
+		nx /= len;
+		ny /= len;
+		nz /= len;
+		if (nx * d.x + ny * d.y + nz * d.z > 0) {
+			nx = -nx;
+			ny = -ny;
+			nz = -nz;
+		}
+
+		out.renderable = this;
+		ray.at(best, out.point);
+		out.normal.set(nx, ny, nz);
+		out.distance = best;
+		out.triangle = tri;
+		out.instance = instance;
+		return out;
 	}
 
 	/**

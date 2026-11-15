@@ -1,3 +1,4 @@
+import { createMeshHit } from "../../geometries/ray3d.ts";
 import {
 	composeTRS,
 	composeTRSInto,
@@ -26,6 +27,7 @@ import {
  * @import CanvasRenderer from "../../video/canvas/canvas_renderer.js";
  * @import WebGLRenderer from "../../video/webgl/webgl_renderer.js";
  * @import Renderer from "../../video/renderer.js";
+ * @import { MeshHit, Ray3d } from "../../geometries/ray3d.ts";
  */
 
 // column-major identity, the root's parent transform when the model sits
@@ -75,6 +77,8 @@ const _qpair = [0, 0, 0, 1, 0, 0, 0, 1];
 const _meshInverse = new Float64Array(16);
 // nodes driven by nothing, the FROM side of a crossfade out of the rest pose
 const NO_NODES = new Set();
+// the per-part hit `intersectRay` tests into
+const _partHit = createMeshHit();
 
 /**
  * A rig-driven 3D model loaded from an animated glTF/GLB asset. Unlike a static
@@ -787,6 +791,43 @@ export default class GLTFModel extends Container {
 	 */
 	_isLive() {
 		return this.pos !== undefined;
+	}
+
+	/**
+	 * Where a world-space ray first meets this model: the nearest hit among
+	 * its parts, tested against their triangles in the pose they were last
+	 * given (see {@link Mesh#intersectRay}). The hit's `renderable` is the
+	 * part, so `hit.renderable.name` is the glTF node that was hit — a
+	 * character's head rather than its body.
+	 *
+	 * What a pointer event registered on the model hit-tests under a
+	 * {@link Camera3d}, and what {@link Camera3d#pick} asks the model.
+	 * @param {Ray3d} ray - the ray, in world space (see {@link Camera3d#screenToRay})
+	 * @param {MeshHit} [out] - hit record to write into; a new one is allocated when omitted
+	 * @returns {MeshHit|null} the nearest hit, or `null` when the ray misses every part
+	 * @example
+	 * input.registerPointerEvent("pointerdown", hero, (pointer) => {
+	 *     console.log("clicked the", pointer.hit3d.renderable.name);
+	 * });
+	 */
+	intersectRay(ray, out) {
+		let best = null;
+		for (const child of this.getChildren()) {
+			if (typeof child.intersectRay !== "function") {
+				continue;
+			}
+			const hit = child.intersectRay(ray, _partHit);
+			if (hit !== null && (best === null || hit.distance < best.distance)) {
+				best = best ?? out ?? createMeshHit();
+				best.renderable = hit.renderable;
+				best.point.copy(hit.point);
+				best.normal.copy(hit.normal);
+				best.distance = hit.distance;
+				best.triangle = hit.triangle;
+				best.instance = hit.instance;
+			}
+		}
+		return best;
 	}
 
 	/**

@@ -1,6 +1,6 @@
 ---
 name: melonjs-3d
-description: "Use this skill for anything 3D or 2.5D in melonJS — Camera3d, Mesh, InstancedMesh, Sprite3d billboards, Light3d, ground shadows, glTF/GLB scenes, and depth sorting. Covers the Y-down/+Z-forward convention that is the inverse of OpenGL, the cameraClass opt-in, clip planes, and what does not work on the Canvas fallback. Triggers on: Camera3d, Mesh, InstancedMesh, Sprite3d, Trail3d, ribbon, exhaust trail, Light3d, billboard, glTF, glb, 3D, 2.5D, depth, cameraClass, fov, setClipPlanes, setFog, fog, distance fog, height fog, heightFalloff, transparent, transparency, alpha, blendMode, fade, castGroundShadow, shadowGroundPoint, lit, emissive, specular, shininess, normalMap, alphaCutoff, depthTest, vertexColors, worldToScreen, followOffset, setBasis, getBasis, lookAt, up vector, gimbal, slerp, great circle, turn a direction."
+description: "Use this skill for anything 3D or 2.5D in melonJS — Camera3d, Mesh, InstancedMesh, Sprite3d billboards, Light3d, ground shadows, glTF/GLB scenes, and depth sorting. Covers the Y-down/+Z-forward convention that is the inverse of OpenGL, the cameraClass opt-in, clip planes, and what does not work on the Canvas fallback. Triggers on: Camera3d, Mesh, InstancedMesh, Sprite3d, Trail3d, ribbon, exhaust trail, Light3d, billboard, glTF, glb, 3D, 2.5D, depth, cameraClass, fov, setClipPlanes, setFog, fog, distance fog, height fog, heightFalloff, transparent, transparency, alpha, blendMode, fade, castGroundShadow, shadowGroundPoint, lit, emissive, specular, shininess, normalMap, alphaCutoff, depthTest, vertexColors, worldToScreen, screenToRay, screenToWorld, pick, picking, Ray3d, intersectRay, hit3d, click a mesh, followOffset, setBasis, getBasis, lookAt, up vector, gimbal, slerp, great circle, turn a direction."
 license: MIT
 ---
 
@@ -1050,6 +1050,55 @@ shadows" — which looks like culling, an LOD stage or a fog problem, none of
 which it is. Before chasing any of those, dump `shadowGroundY` against the
 caster's own y and check which one is larger.
 
+## Picking: what is under the pointer
+
+Under a perspective camera a pixel is a line of world points, so every
+"what did I click" question is a ray (20.16). Three levels, smallest first:
+
+```js
+// where a pixel meets a level floor (Y-down: the floor is a GREATER y)
+const p = camera.screenToWorld(pointer.gameScreenX, pointer.gameScreenY, FLOOR_Y);
+if (p !== null) hero.walkTo(p.x, p.z);          // null: that pixel sees sky
+
+// the nearest mesh under a pixel, no event registered on anything
+const hit = camera.pick(pointer.gameScreenX, pointer.gameScreenY, app.world);
+if (hit !== null) select(hit.renderable);
+
+// or let the mesh answer its own pointer events, as a 2D sprite does
+crate.isKinematic = false;
+input.registerPointerEvent("pointerdown", crate, (pointer) => {
+    burst(pointer.hit3d.point);
+    return false;
+});
+```
+
+All three are built from `camera.screenToRay(x, y)`, a `Ray3d` from the eye
+through that pixel with a unit direction, so distances are from the camera.
+`Ray3d` tests planes, spheres, boxes and triangles itself, and
+`mesh.intersectRay(ray)` tests one mesh's triangles. A hit (`MeshHit`) carries
+`renderable`, `point`, `normal` (facing the ray), `distance`, `triangle` and
+`instance`.
+
+- **Pass the screen pair**, `gameScreenX` / `gameScreenY`. `gameWorldX` under a
+  `Camera3d` is a flat approximation and lands nowhere near the mesh.
+- **Triangles, not bounds**: a thin mesh is missed through its gaps, a cutout
+  (`alphaCutoff`) is not — picking does not read the texture.
+- **An `InstancedMesh` reports `hit.instance`**, the index for
+  `setInstanceColor` / `getInstance` / `removeInstance`. Only the
+  `visibleInstanceCount` drawn are tested, each costing a matrix inverse: fine
+  on a click, not something to run over 100 000 trees every frame.
+- **A `GLTFModel` answers for its parts**: `hit.renderable` is the part,
+  `hit.renderable.name` its glTF node, and a skinned part is hit in its current
+  pose.
+- **Containers count**: a mesh in a moved, turned or scaled container is hit
+  where it draws — as of the last frame, which is when the renderer learned
+  where the container put it.
+- `pick` skips `floating`, `isRenderable = false` and `alpha` 0 renderables.
+
+The physics adapter's `raycast3d(from, to)` is a different tool: a segment
+against bodies' bounding volumes, for gameplay (line of sight, ground probes),
+not against what is drawn.
+
 ## Collision in 3D
 
 Use a body with a depth shape, not a hand-rolled distance check. Two shapes
@@ -1164,6 +1213,9 @@ if (!app.renderer.supportsDepthBuffer) {
 
 | symptom | cause |
 |---|---|
+| a click on a mesh misses, or hits something beside it | the pointer's `gameWorldX`/`gameWorldY` were used; pass `gameScreenX`/`gameScreenY` to `screenToRay` / `pick` / `screenToWorld` |
+| `screenToWorld` returns `null` | that pixel looks above the horizon, or the floor's Y sign is wrong (Y-down: the floor is a greater y than the camera) |
+| a mesh in a moved container is picked where it used to be | it has not been drawn since the container moved: picking learns the container's placement from the last draw |
 | scene lit from underneath | `direction` Y sign — this is Y-down, so a sun overhead is **+Y** |
 | `model.scale(2)` throws "not a function" on a `GLTFModel` (before 20.14) | the `scale` option hid the method: update |
 | a `GLTFModel` ignores `pos` / `rotate` once its clip is paused or finished (before 20.14) | it was only re-posed while a clip played: update |

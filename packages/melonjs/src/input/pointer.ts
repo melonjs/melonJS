@@ -1,3 +1,4 @@
+import type { MeshHit } from "../geometries/ray3d.ts";
 import { Vector2d } from "../math/vector2d.ts";
 import { Bounds } from "./../physics/bounds.ts";
 import { globalToLocal } from "./input.ts";
@@ -158,6 +159,24 @@ class Pointer extends Bounds {
 	gameLocalY: number;
 
 	/**
+	 * Under a {@link Camera3d}, for a pointer event on a {@link Mesh} (or a
+	 * {@link GLTFModel}): where the ray through the pointer hit it, in world
+	 * space — the point, the surface normal, the distance from the camera, and
+	 * the triangle (and instance, for an {@link InstancedMesh}) it hit.
+	 * `null` for any other event, and on a leave, which the pointer no longer
+	 * hits.
+	 *
+	 * Valid only during the callback: the record is reused by the next event,
+	 * so copy what you need to keep.
+	 * @example
+	 * input.registerPointerEvent("pointerdown", crate, (pointer) => {
+	 *     decal.pos.set(pointer.hit3d.point.x, pointer.hit3d.point.y);
+	 *     decal.depth = pointer.hit3d.point.z;
+	 * });
+	 */
+	hit3d: MeshHit | null;
+
+	/**
 	 * The unique identifier of the contact for a touch, mouse or pen
 	 * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/PointerEvent/pointerId}
 	 */
@@ -192,6 +211,7 @@ class Pointer extends Bounds {
 		this.RIGHT = 2;
 
 		this.event = undefined;
+		this.hit3d = null;
 		this.type = "";
 		this.button = 0;
 		this.isPrimary = false;

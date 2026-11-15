@@ -163,6 +163,11 @@ const ExampleGroundShadows = lazy(() =>
 		default: m.ExampleGroundShadows,
 	})),
 );
+const ExamplePicking = lazy(() =>
+	import("./examples/picking/ExamplePicking").then((m) => ({
+		default: m.ExamplePicking,
+	})),
+);
 const ExampleSkinnedCharacter = lazy(() =>
 	import("./examples/skinnedCharacter/ExampleSkinnedCharacter").then((m) => ({
 		default: m.ExampleSkinnedCharacter,
@@ -534,6 +539,14 @@ const examples: {
 		sourceDir: "gltf",
 		description:
 			"A rigged blocky character (Kenney, CC0) loaded from GLB, using node-TRS animation over a rigid hierarchy.",
+	},
+	{
+		component: <ExamplePicking />,
+		label: "3D Picking",
+		path: "picking",
+		sourceDir: "picking",
+		description:
+			"Pointer events on meshes under a perspective camera: hover and click crates, click the floor to roll a ball there, and a ring that follows the pointer across the floor.",
 	},
 	{
 		component: <ExampleSkinnedCharacter />,

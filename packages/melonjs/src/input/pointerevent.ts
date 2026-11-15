@@ -1,4 +1,10 @@
 import type Application from "../application/application.ts";
+import {
+	copyMeshHit,
+	createMeshHit,
+	type MeshHit,
+	Ray3d,
+} from "./../geometries/ray3d.ts";
 import { Rect } from "./../geometries/rectangle.ts";
 import type { Vector2d } from "../math/vector2d.ts";
 import { vector2dPool } from "../math/vector2d.ts";
@@ -39,6 +45,79 @@ const eventHandlers: Map<any, PointerHandler> = new Map();
 
 // a cache rect represeting the current pointer area
 let currentPointer: Rect;
+
+/**
+ * A region that answers rays (a `Mesh`, its subclasses, a `GLTFModel`),
+ * hit-tested by the ray through the pointer under a `Camera3d` rather than by
+ * its 2D bounds.
+ */
+interface RayRegion {
+	intersectRay(ray: Ray3d, out?: MeshHit): MeshHit | null;
+}
+
+// the ray through the pointer, rebuilt for each pointer event under a Camera3d
+const _pointerRay = new Ray3d();
+// scratch the regions are tested into
+const _rayScratch = createMeshHit();
+// region → where the pointer's ray hit it this event (null: it missed). The
+// records are pooled across events, so a busy pointer allocates nothing.
+const _rayHits: Map<any, MeshHit | null> = new Map();
+const _rayHitPool: MeshHit[] = [];
+// the 3D regions of one event, nearest hit first, misses last
+const _rayRegions: any[] = [];
+
+/**
+ * Hit-test every region that answers rays against the ray through the
+ * pointer, filling `_rayHits` and `_rayRegions` (nearest first). Only under a
+ * camera that builds rays (`Camera3d#screenToRay`): a 2D camera leaves them
+ * on the 2D bounds test, as before.
+ * @param pointer - the pointer event being dispatched
+ * @returns whether the active camera builds rays
+ */
+function hitTestRayRegions(pointer: Pointer): boolean {
+	for (const hit of _rayHits.values()) {
+		if (hit !== null) {
+			_rayHitPool.push(hit);
+		}
+	}
+	_rayHits.clear();
+	_rayRegions.length = 0;
+	const viewport = _app.viewport as unknown as {
+		screenToRay?: (x: number, y: number, out?: Ray3d) => Ray3d;
+	};
+	if (typeof viewport.screenToRay !== "function") {
+		return false;
+	}
+	viewport.screenToRay(pointer.gameScreenX, pointer.gameScreenY, _pointerRay);
+	for (const region of eventHandlers.keys()) {
+		if (
+			typeof (region as Partial<RayRegion>).intersectRay !== "function" ||
+			region.isFloating === true ||
+			// not in a scene: nothing draws it, so nothing can be under the
+			// pointer (the 2D path gets this for free from the broadphase)
+			region.ancestor === undefined
+		) {
+			continue;
+		}
+		const hit = (region as RayRegion).intersectRay(_pointerRay, _rayScratch);
+		_rayHits.set(
+			region,
+			hit === null
+				? null
+				: copyMeshHit(_rayHitPool.pop() ?? createMeshHit(), hit),
+		);
+		_rayRegions.push(region);
+	}
+	_rayRegions.sort((a, b) => {
+		const ha = _rayHits.get(a);
+		const hb = _rayHits.get(b);
+		return (
+			(ha?.distance ?? Number.POSITIVE_INFINITY) -
+			(hb?.distance ?? Number.POSITIVE_INFINITY)
+		);
+	});
+	return true;
+}
 
 /**
  * reference to the active application instance
@@ -367,6 +446,9 @@ function dispatchEvent(normalizedEvents: Pointer[]): boolean {
 			lastTimeStamp = pointer.event!.timeStamp;
 		}
 
+		// set per region below, for the regions tested by a ray
+		pointer.hit3d = null;
+
 		const worldOffset = _app.world.pos;
 		const absoluteWorldX = pointer.gameWorldX + worldOffset.x;
 		const absoluteWorldY = pointer.gameWorldY + worldOffset.y;
@@ -429,6 +511,20 @@ function dispatchEvent(normalizedEvents: Pointer[]): boolean {
 			);
 		}
 
+		// Under a Camera3d, a region that answers rays is hit-tested by the ray
+		// through the pointer, not by its 2D bounds, which a perspective
+		// projection makes meaningless. The walk below runs from the END of
+		// the list, so they go at the front, farthest first: they are visited
+		// after the 2D candidates (screen-space UI is drawn over the scene),
+		// nearest hit first, then the ones the ray missed, which still need
+		// visiting to be left.
+		if (hitTestRayRegions(pointer)) {
+			candidates = candidates.filter((c: any) => {
+				return !_rayHits.has(c);
+			});
+			candidates = _rayRegions.slice().reverse().concat(candidates);
+		}
+
 		// add the main game viewport to the list of candidates
 		candidates = candidates.concat([_app.viewport]);
 
@@ -471,11 +567,17 @@ function dispatchEvent(normalizedEvents: Pointer[]): boolean {
 					region.isFloating === true ? pointer.gameX : absoluteWorldX;
 				const hitY =
 					region.isFloating === true ? pointer.gameY : absoluteWorldY;
+				// a region tested by the pointer's ray is under the pointer
+				// exactly when the ray hits it, and carries where to its handlers
+				const rayHit = _rayHits.get(region);
+				pointer.hit3d = rayHit ?? null;
 				// inside its bounds AND inside every clipping container above
 				// it: a child scrolled or cropped out of view is not drawn
 				// there, so it must not answer there either
 				const eventInBounds =
-					bounds.contains(hitX, hitY) && !isClippedOut(region, hitX, hitY);
+					rayHit !== undefined
+						? rayHit !== null
+						: bounds.contains(hitX, hitY) && !isClippedOut(region, hitX, hitY);
 
 				// Covered by whatever consumed the move above. Being inside its
 				// own bounds is no longer what decides it, so release the

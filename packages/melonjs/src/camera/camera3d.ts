@@ -1,3 +1,4 @@
+import { type MeshHit, pickInContainer, Ray3d } from "../geometries/ray3d.ts";
 import { Color } from "../math/color.ts";
 import { clamp, EPSILON } from "../math/math.ts";
 import { Matrix3d } from "../math/matrix3d.ts";
@@ -26,6 +27,17 @@ const _viewMatrix = new Matrix3d();
 const _viewProjection = new Matrix3d();
 // scratch point for worldToScreen, reused to avoid per-call allocation
 const _wsPoint = new Vector3d();
+// scratch for screenToRay: the inverse view-projection, and the two points it
+// unprojects (on the near and far planes)
+const _invViewProjection = new Matrix3d();
+const _nearPoint = new Vector3d();
+const _farPoint = new Vector3d();
+// the ray `screenToWorld` and `pick` cast, when the caller passes none
+const _pickRay = new Ray3d();
+// the floor normal `screenToWorld` intersects with: render space is Y-down,
+// so up is -Y
+const _groundNormal = new Vector3d(0, -1, 0);
+const _groundPoint = new Vector3d();
 // scratch reused by the orientation-basis accessors (getBasis / getRight / …),
 // to avoid per-call allocation on the billboard draw path.
 const _basis = new Matrix3d();
@@ -188,8 +200,9 @@ function rollFromLocalUp(
  * - `Light2d` is 2D-only — visible artifacts under perspective.
  *   Avoid combining with Camera3d for now.
  * - `localToWorld` / `worldToLocal` overrides fall back to the
- *   ortho-equivalent 2D projection at z=0. Full 3D unproject for
- *   arbitrary depth is future work.
+ *   ortho-equivalent 2D projection at z=0. For a 3D answer use
+ *   {@link Camera3d#screenToRay}, {@link Camera3d#screenToWorld} or
+ *   {@link Camera3d#pick}.
  * @category Camera
  * @example
  * // opt in app-wide:
@@ -1528,22 +1541,7 @@ export default class Camera3d extends Camera2d {
 		world: Vector3d,
 		out: Vector2d = new Vector2d(),
 	): Vector2d | null {
-		// projection × view — built exactly like `_rebuildFrustumPlanes`:
-		// rotate (pitch then yaw), translate by -pos, then pre-multiply by the
-		// frustum projection.
-		_viewMatrix.identity();
-		if (this.roll !== 0) {
-			_viewMatrix.rotate(-this.roll, AXIS_Z);
-		}
-		if (this.pitch !== 0) {
-			_viewMatrix.rotate(-this.pitch, AXIS_X);
-		}
-		if (this.yaw !== 0) {
-			_viewMatrix.rotate(-this.yaw, AXIS_Y);
-		}
-		_viewMatrix.translate(-this.pos.x, -this.pos.y, -this.depth);
-		_viewProjection.copy(this.frustum.projectionMatrix);
-		_viewProjection.multiply(_viewMatrix);
+		this._buildViewProjection();
 
 		// clip-space w (column-major): reject points at/behind the camera before
 		// the perspective divide would mirror them.
@@ -1565,6 +1563,136 @@ export default class Camera3d extends Camera2d {
 			(1 - (_wsPoint.y * 0.5 + 0.5)) * this.height,
 		);
 		return out;
+	}
+
+	/**
+	 * Write `projection × view` — the world → clip matrix — into the
+	 * module scratch `_viewProjection`, built exactly like
+	 * `_rebuildFrustumPlanes`: rotate (pitch then yaw), translate by -pos,
+	 * then pre-multiply by the frustum projection.
+	 * @ignore
+	 * @internal
+	 */
+	_buildViewProjection(): void {
+		_viewMatrix.identity();
+		if (this.roll !== 0) {
+			_viewMatrix.rotate(-this.roll, AXIS_Z);
+		}
+		if (this.pitch !== 0) {
+			_viewMatrix.rotate(-this.pitch, AXIS_X);
+		}
+		if (this.yaw !== 0) {
+			_viewMatrix.rotate(-this.yaw, AXIS_Y);
+		}
+		_viewMatrix.translate(-this.pos.x, -this.pos.y, -this.depth);
+		_viewProjection.copy(this.frustum.projectionMatrix);
+		_viewProjection.multiply(_viewMatrix);
+	}
+
+	/**
+	 * The ray from this camera through a screen point: every world point
+	 * that draws at that pixel lies on it. The inverse of
+	 * {@link Camera3d#worldToScreen}.
+	 *
+	 * The ray starts at the camera's eye and its direction is of unit length,
+	 * so a distance along it (from {@link Mesh#intersectRay},
+	 * {@link Camera3d#pick} or the `Ray3d` intersection methods) is a
+	 * distance from the camera.
+	 * @param x - screen x, in canvas pixels (e.g. `pointer.gameScreenX`)
+	 * @param y - screen y, in canvas pixels, top-left origin, y down (e.g. `pointer.gameScreenY`)
+	 * @param [out] - ray to write into; a new one is allocated when omitted
+	 * @returns the ray through that pixel
+	 * @example
+	 * input.registerPointerEvent("pointerdown", app.viewport, (pointer) => {
+	 *     const ray = camera.screenToRay(pointer.gameScreenX, pointer.gameScreenY);
+	 * });
+	 */
+	screenToRay(x: number, y: number, out: Ray3d = new Ray3d()): Ray3d {
+		this._buildViewProjection();
+		_invViewProjection.copy(_viewProjection).invert();
+		// screen pixels → normalized device coordinates (NDC +y is up)
+		const nx = (x / this.width) * 2 - 1;
+		const ny = 1 - (y / this.height) * 2;
+		// two points on the line through that pixel, on the near and far
+		// planes; `apply` divides by w
+		_nearPoint.set(nx, ny, -1);
+		_invViewProjection.apply(_nearPoint);
+		_farPoint.set(nx, ny, 1);
+		_invViewProjection.apply(_farPoint);
+		// every perspective ray starts at the eye
+		return out.set(
+			this.pos.x,
+			this.pos.y,
+			this.depth,
+			_farPoint.x - this.pos.x,
+			_farPoint.y - this.pos.y,
+			_farPoint.z - this.depth,
+		);
+	}
+
+	/**
+	 * Where a screen point meets a level floor: the point on the horizontal
+	 * plane at `groundY` that draws at that pixel — what a click on the
+	 * ground means in a top-down or third-person game.
+	 *
+	 * Render space is Y-down, so the floor of a scene is a GREATER y than
+	 * anything standing on it.
+	 * @param x - screen x, in canvas pixels (e.g. `pointer.gameScreenX`)
+	 * @param y - screen y, in canvas pixels (e.g. `pointer.gameScreenY`)
+	 * @param [groundY=0] - world y of the floor
+	 * @param [out] - vector to write into; a new one is allocated when omitted
+	 * @returns the world point, or `null` when that pixel does not look at the floor (the sky, or the ray runs parallel to it)
+	 * @example
+	 * // move the hero to wherever the floor was clicked
+	 * input.registerPointerEvent("pointerdown", app.viewport, (pointer) => {
+	 *     const target = camera.screenToWorld(pointer.gameScreenX, pointer.gameScreenY, FLOOR_Y);
+	 *     if (target !== null) {
+	 *         hero.walkTo(target.x, target.z);
+	 *     }
+	 * });
+	 */
+	screenToWorld(
+		x: number,
+		y: number,
+		groundY = 0,
+		out: Vector3d = new Vector3d(),
+	): Vector3d | null {
+		const ray = this.screenToRay(x, y, _pickRay);
+		_groundPoint.set(0, groundY, 0);
+		const t = ray.intersectPlane(_groundPoint, _groundNormal);
+		return t === null ? null : ray.at(t, out);
+	}
+
+	/**
+	 * The nearest mesh under a screen point, tested against its triangles:
+	 * picking without registering a pointer event on anything.
+	 *
+	 * Walks `container` and every container below it, and asks each
+	 * {@link Mesh} (including {@link Sprite3d}, {@link InstancedMesh} and the
+	 * parts of a {@link GLTFModel}) where the ray through that pixel hits
+	 * it. `floating` (screen-space) renderables are skipped, as are those
+	 * that are not visible: hidden by `alpha` 0 or `isRenderable` false.
+	 * @param x - screen x, in canvas pixels (e.g. `pointer.gameScreenX`)
+	 * @param y - screen y, in canvas pixels (e.g. `pointer.gameScreenY`)
+	 * @param container - where to look, usually `app.world`
+	 * @param [out] - hit record to write into; a new one is allocated when omitted
+	 * @returns the nearest hit, or `null` when the ray hits no mesh
+	 * @example
+	 * const hit = camera.pick(pointer.gameScreenX, pointer.gameScreenY, app.world);
+	 * if (hit !== null) {
+	 *     select(hit.renderable);   // the Mesh that was hit
+	 *     marker.pos.set(hit.point.x, hit.point.y); // where on it
+	 *     marker.depth = hit.point.z;
+	 * }
+	 */
+	pick(
+		x: number,
+		y: number,
+		container: Container,
+		out?: MeshHit,
+	): MeshHit | null {
+		const ray = this.screenToRay(x, y, _pickRay);
+		return pickInContainer(ray, container, out);
 	}
 
 	/**

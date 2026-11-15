@@ -139,6 +139,8 @@ export { Line } from "./geometries/line.ts";
 export { ObservablePoint } from "./geometries/observablePoint.ts";
 export { Point } from "./geometries/point.ts";
 export { Polygon } from "./geometries/polygon.ts";
+export type { MeshHit } from "./geometries/ray3d.ts";
+export { Ray3d } from "./geometries/ray3d.ts";
 export { Rect } from "./geometries/rectangle.ts";
 export { RoundRect } from "./geometries/roundrect.ts";
 export { Sphere } from "./geometries/sphere.ts";

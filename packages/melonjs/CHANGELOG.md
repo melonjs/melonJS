@@ -5,6 +5,9 @@
 ### Added
 - 3D: skinned glTF meshes (`JOINTS_0` / `WEIGHTS_0` with a `skin`, the format of Mixamo, Quaternius and most rigged character packs) deform with their skeleton. A skinned asset loads as a `GLTFModel`, even with no clips; the skin is deformed on the CPU, so it works the same on WebGPU, WebGL and Canvas. Up to four joints per vertex; morph targets are still not read
 - 3D: `GLTFModel#setCurrentAnimation(name, { crossfade })` blends into a clip over that many milliseconds instead of switching at once, on skinned and rigid rigs alike; switching again mid-fade blends from the pose on screen, and a clip chained with `next` is entered with the same crossfade
+- 3D: picking. `Camera3d#screenToRay(x, y)` returns the `Ray3d` through a screen point, `Camera3d#screenToWorld(x, y, groundY)` the point on a level floor under it, and `Camera3d#pick(x, y, container)` the nearest mesh under it; `Mesh#intersectRay(ray)` tests a mesh's triangles, and an `InstancedMesh` reports which instance was hit. Hits are `MeshHit` records: point, normal, distance, triangle, instance
+- Input: under a `Camera3d`, pointer events on a `Mesh`, `Sprite3d`, `InstancedMesh` or `GLTFModel` are hit-tested by the ray through the pointer against its triangles, nearest first, and `pointer.hit3d` says where it was hit; they were tested against 2D bounds that a perspective projection makes meaningless
+- `Ray3d`: a 3D ray with distance tests against a plane, a sphere, an `AABB3d` and a triangle
 - glTF: the parsed descriptor carries the asset's `skins`, and each skinned primitive its `joints`, `weights` and `skin`; `bounds` are measured on the skinned rest pose
 
 ## [20.15.1] (melonJS 2) - _2026-11-14_
