@@ -134,6 +134,7 @@ Scenes
     - Dynamic Entity loading via an extensible object factory registry — register custom handlers for any Tiled class name without modifying engine code
     - Tile objects take the class set on their tile in the tileset, and inherit its properties
     - Shape based Tile collision support
+    - [A* pathfinding](https://github.com/melonjs/melonJS/tree/master/packages/pathfinding-plugin) across a map's tile layer or its collision shapes, on orthogonal and isometric maps
 - glTF / GLB 3D scenes — load an authored 3D scene with `level.load(...)`, the same one call as a Tiled map
     - The whole scene loads at once — meshes, materials, cameras and lights — viewed under a `Camera3d`
     - Automatically lit by the scene's authored lights — the sun plus any point/spot lamps set up in the authoring tool, each keeping its authored name so `getChildByName("Sun")` finds it for runtime tuning
