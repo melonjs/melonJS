@@ -217,7 +217,7 @@ diorama game, without isometric tile maths.
 ```js
 const camera = app.viewport;              // cameraClass: Camera3d
 camera.projection = "orthographic";
-camera.orthoHeight = 900;                 // world units tall: the zoom
+camera.orthoHeight = 900;                 // world units tall, at zoom 1
 // true isometric: a quarter turn of 45°, looking down atan(1/√2) ≈ 35.26°
 const yaw = Math.PI / 4;
 const pitch = Math.atan(1 / Math.SQRT2);
@@ -230,9 +230,12 @@ camera.lookAt(0, 0, 0);
 camera.setClipPlanes(50, 6000);
 ```
 
-- **`orthoHeight` is the zoom**, the height of the view in world units (the
-  width follows the aspect). It defaults to the camera's height in pixels, one
-  unit per pixel. `fov` is ignored, and so is the camera's `zoom`.
+- **`orthoHeight` frames the view, `zoom` zooms it.** `orthoHeight` is the
+  height of the view in world units at zoom 1 (the width follows the aspect),
+  defaulting to the camera's height in pixels, one unit per pixel. `zoom`
+  divides it, as on a `Camera2d`: `zoom = 2` shows half as much world, and
+  `orthoHeight` still reads what was set. `fov` is ignored; a perspective
+  camera ignores `zoom` (narrow its `fov` instead).
 - **Still stand the camera back.** It is placed and pointed as a perspective
   one is: `near` / `far` are measured from it, so something behind it is
   clipped, and specular highlights are measured from its position.
@@ -1290,7 +1293,8 @@ if (!app.renderer.supportsDepthBuffer) {
 | an outline covers the mesh instead of ringing it | the model is wound inside out (its normals point in); the hull is pushed along them |
 | an outline is missing on an instanced scatter or a billboard | `InstancedMesh` and `Sprite3d` do not draw one |
 | an orthographic camera shows nothing, or half a scene | it sits inside the scene: stand it back like a perspective camera, since `near` / `far` are measured from its position |
-| zooming an orthographic camera does nothing | `fov` and `zoom` do not apply to it; change `orthoHeight` |
+| zooming an orthographic camera does nothing | `fov` does not apply to it: set `zoom` (or `orthoHeight`) |
+| `zoom` does nothing on a 3D camera | it is a perspective one, which ignores `zoom`: narrow `fov`, or switch to `projection: "orthographic"` |
 | a click on a mesh misses, or hits something beside it | the pointer's `gameWorldX`/`gameWorldY` were used; pass `gameScreenX`/`gameScreenY` to `screenToRay` / `pick` / `screenToWorld` |
 | `screenToWorld` returns `null` | that pixel looks above the horizon, or the floor's Y sign is wrong (Y-down: the floor is a greater y than the camera) |
 | a mesh in a moved container is picked where it used to be | it has not been drawn since the container moved: picking learns the container's placement from the last draw |

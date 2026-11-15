@@ -164,6 +164,37 @@ describe("Camera3d projection", () => {
 		const p = cam.worldToScreen(new Vector3d(600, 0, 100));
 		expect(p.x).toBeCloseTo(400, 1);
 	});
+
+	it("zoom divides orthoHeight: zoom 2 shows half as much world", () => {
+		const cam = ortho({ orthoHeight: 100 });
+		// at zoom 1, x = 100 (half the 200-wide view) is the right edge
+		expect(cam.worldToScreen(new Vector3d(100, 0, 100)).x).toBeCloseTo(W, 1);
+		cam.zoom = 2;
+		// orthoHeight keeps what was set; the view is 50 units tall
+		expect(cam.orthoHeight).toBe(100);
+		expect(cam.frustum.orthoHeight).toBe(50);
+		expect(cam.worldToScreen(new Vector3d(50, 0, 100)).x).toBeCloseTo(W, 1);
+		// and the rays agree: the right edge looks down x = 50
+		const ray = cam.screenToRay(W, H / 2);
+		expect(ray.origin.x).toBeCloseTo(50, 1);
+		// setting orthoHeight while zoomed keeps the zoom
+		cam.orthoHeight = 400;
+		expect(cam.frustum.orthoHeight).toBe(200);
+		cam.zoom = 1;
+		expect(cam.frustum.orthoHeight).toBe(400);
+	});
+
+	it("a perspective camera ignores zoom, as before", () => {
+		const cam = new Camera3d(0, 0, W, H);
+		const before = cam.projectionMatrix.clone();
+		cam.zoom = 3;
+		expect(Array.from(cam.projectionMatrix.val)).toEqual(
+			Array.from(before.val),
+		);
+		// and switching to orthographic then applies it
+		cam.projection = "orthographic";
+		expect(cam.frustum.orthoHeight).toBeCloseTo(H / 3);
+	});
 });
 
 describe("orthographic screen ↔ world", () => {
@@ -335,6 +366,12 @@ describe("drawing through an orthographic Camera3d", () => {
 		expect(near).toBeGreaterThanOrEqual(38);
 		expect(near).toBeLessThanOrEqual(42);
 		expect(far).toBe(near);
+		// zoomed in twice as close, the same quad draws twice as wide
+		cam.zoom = 2;
+		const zoomed = widthAt(100);
+		cam.zoom = 1;
+		expect(zoomed).toBeGreaterThanOrEqual(near * 2 - 2);
+		expect(zoomed).toBeLessThanOrEqual(near * 2 + 2);
 		// and the flag the draw raised is lowered again
 		expect(renderer._orthographic3d).toBe(false);
 	});

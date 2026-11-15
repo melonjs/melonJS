@@ -247,6 +247,14 @@ export default class Camera3d extends Camera2d {
 	frustum: Frustum;
 
 	/**
+	 * The orthographic view height as set (see {@link Camera3d#orthoHeight});
+	 * the frustum's own is this divided by the zoom.
+	 * @ignore
+	 * @internal
+	 */
+	_orthoHeight: number;
+
+	/**
 	 * The camera state the frustum planes were last built from: `pos.x`,
 	 * `pos.y`, `depth`, `pitch`, `yaw`, `roll`, then the frustum's `fov`,
 	 * `aspect`, `near` and `far`. A frame steps the world (and so culls it)
@@ -438,6 +446,7 @@ export default class Camera3d extends Camera2d {
 		// the camera viewport rect
 		this.frustum = new Frustum({
 			projection,
+			// the zoom is 1 here: the Camera2d constructor has just set it
 			orthoHeight,
 			fov: opts?.fov ?? Math.PI / 3,
 			aspect: opts?.aspect ?? this.width / this.height,
@@ -445,6 +454,7 @@ export default class Camera3d extends Camera2d {
 			far: opts?.far ?? 1000,
 		});
 
+		this._orthoHeight = orthoHeight;
 		this.pitch = 0;
 		this.yaw = 0;
 		this.roll = 0;
@@ -517,13 +527,13 @@ export default class Camera3d extends Camera2d {
 
 	/**
 	 * The height of the view in world units under an orthographic
-	 * projection; the width follows the aspect ratio. Smaller shows less of
-	 * the world, larger: it is the orthographic camera's zoom. Defaults to the
-	 * camera's height in pixels, one world unit per pixel. Ignored by a
-	 * perspective camera.
+	 * projection, at a {@link Camera3d#zoom} of 1; the width follows the
+	 * aspect ratio. Smaller shows less of the world. Defaults to the camera's
+	 * height in pixels, one world unit per pixel. Ignored by a perspective
+	 * camera.
 	 */
 	get orthoHeight(): number {
-		return this.frustum.orthoHeight;
+		return this._orthoHeight;
 	}
 	set orthoHeight(value: number) {
 		if (!(value > 0) || !Number.isFinite(value)) {
@@ -531,7 +541,41 @@ export default class Camera3d extends Camera2d {
 				`Camera3d: orthoHeight must be a positive finite number, got ${value}`,
 			);
 		}
-		this.frustum.orthoHeight = value;
+		this._orthoHeight = value;
+		this._applyOrthoHeight();
+	}
+
+	/**
+	 * The zoom level, as on a {@link Camera2d}: above 1 zooms in, below 1
+	 * out. Under an orthographic projection it divides
+	 * {@link Camera3d#orthoHeight}, so `orthoHeight` frames the view and
+	 * `zoom` zooms it (the world in view is `orthoHeight / zoom` tall).
+	 * A perspective camera ignores it: narrow {@link Camera3d#fov} instead.
+	 * @example
+	 * camera.projection = "orthographic";
+	 * camera.orthoHeight = 900;
+	 * camera.zoom = 2; // 450 world units in view
+	 */
+	override get zoom(): number {
+		return super.zoom;
+	}
+	override set zoom(value: number) {
+		super.zoom = value;
+		// the Camera2d constructor sets the zoom before the frustum exists
+		// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+		if (this.frustum) {
+			this._applyOrthoHeight();
+		}
+	}
+
+	/**
+	 * Give the frustum the orthographic height in view: the one set,
+	 * divided by the zoom.
+	 * @ignore
+	 * @internal
+	 */
+	_applyOrthoHeight(): void {
+		this.frustum.orthoHeight = this._orthoHeight / this.zoom;
 		this.frustum.update();
 		this.projectionMatrix.copy(this.frustum.projectionMatrix);
 	}
