@@ -1,8 +1,11 @@
 import type { Box3d } from "../geometries/box3d.ts";
+import type { Capsule3d } from "../geometries/capsule3d.ts";
+import type { ConvexHull3d } from "../geometries/convexhull3d.ts";
 import type { Ellipse } from "../geometries/ellipse.ts";
 import type { Polygon } from "../geometries/polygon.ts";
 import type { Rect } from "../geometries/rectangle.ts";
 import type { Sphere } from "../geometries/sphere.ts";
+import type { TriangleMesh3d } from "../geometries/trianglemesh3d.ts";
 import type { Vector2d } from "../math/vector2d.ts";
 import type { Vector3d } from "../math/vector3d.ts";
 import type Renderable from "../renderable/renderable.js";
@@ -36,14 +39,25 @@ export type BodyType = "static" | "dynamic" | "kinematic";
  * to the parts it is built from, so per-shape values are ignored there, except
  * `isActive: false`, which leaves the shape out of the body.
  *
- * **The two 3D shapes are builtin-only.** `Box3d` and `Sphere` exist because
- * the builtin solver resolves along Z; the matter, planck and Rapier adapters
- * are 2D engines with no depth to resolve and THROW when handed either one. They are
- * in this union because a body definition is otherwise portable and these are
- * body shapes, not because every adapter accepts them: a game that wants to
- * stay adapter-portable builds its bodies from the planar three.
+ * **The 3D shapes need a 3D adapter.** `Box3d`, `Sphere`, {@link Capsule3d},
+ * {@link TriangleMesh3d} and {@link ConvexHull3d} have depth. A 3D adapter
+ * (`@melonjs/rapier3d-adapter`) builds every one of them exactly. The builtin
+ * solver resolves `Box3d` and `Sphere` along Z, and stands the bounding
+ * `Box3d` in for the other three. The matter, planck and Rapier 2D adapters
+ * are 2D engines with no depth to resolve, and THROW when handed any of them.
+ * They are in this union because a body definition is otherwise portable, not
+ * because every adapter accepts them: a 2D game that wants to stay
+ * adapter-portable builds its bodies from the planar shapes.
  */
-export type BodyShape = Rect | Ellipse | Polygon | Box3d | Sphere;
+export type BodyShape =
+	| Rect
+	| Ellipse
+	| Polygon
+	| Box3d
+	| Sphere
+	| Capsule3d
+	| TriangleMesh3d
+	| ConvexHull3d;
 
 /**
  * One overlapping SHAPE pair, passed to the shape-level collision lifecycle

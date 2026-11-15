@@ -135,6 +135,8 @@ export type { FrustumOptions, ProjectionMode } from "./camera/frustum.ts";
 // export all public constants
 export * from "./const.ts";
 export { Box3d } from "./geometries/box3d.ts";
+export { Capsule3d } from "./geometries/capsule3d.ts";
+export { ConvexHull3d } from "./geometries/convexhull3d.ts";
 export { Ellipse } from "./geometries/ellipse.ts";
 export { Line } from "./geometries/line.ts";
 export { ObservablePoint } from "./geometries/observablePoint.ts";
@@ -145,6 +147,7 @@ export { Ray3d } from "./geometries/ray3d.ts";
 export { Rect } from "./geometries/rectangle.ts";
 export { RoundRect } from "./geometries/roundrect.ts";
 export { Sphere } from "./geometries/sphere.ts";
+export { TriangleMesh3d } from "./geometries/trianglemesh3d.ts";
 export * as input from "./input/input.ts";
 // Backward compatibility for deprecated method or properties
 export * from "./lang/deprecated.js";

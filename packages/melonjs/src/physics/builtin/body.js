@@ -1,4 +1,6 @@
 import { Box3d, box3dPool } from "../../geometries/box3d.ts";
+import { Capsule3d } from "../../geometries/capsule3d.ts";
+import { ConvexHull3d } from "../../geometries/convexhull3d.ts";
 import { Ellipse, ellipsePool } from "../../geometries/ellipse.ts";
 import { Line, linePool } from "../../geometries/line.ts";
 import { Point, pointPool } from "../../geometries/point.ts";
@@ -6,6 +8,7 @@ import { Polygon, polygonPool } from "../../geometries/polygon.ts";
 import { Rect } from "../../geometries/rectangle.ts";
 import { RoundRect, roundedRectanglePool } from "../../geometries/roundrect.ts";
 import { Sphere, spherePool } from "../../geometries/sphere.ts";
+import { TriangleMesh3d } from "../../geometries/trianglemesh3d.ts";
 import { warning } from "../../lang/console.js";
 import { clamp } from "../../math/math.ts";
 import { Vector2d, vector2dPool } from "../../math/vector2d.ts";
@@ -965,6 +968,19 @@ export default class Body {
 				shape.pos.x + r,
 				shape.pos.y + r,
 			);
+			this.hasDepth = true;
+		} else if (
+			shape instanceof Capsule3d ||
+			shape instanceof TriangleMesh3d ||
+			shape instanceof ConvexHull3d
+		) {
+			// The built-in narrowphase resolves boxes and spheres only: the
+			// shape's bounding Box3d stands in for it, as a Rect becomes a
+			// Polygon above. Exact on a 3D physics adapter.
+			const box = shape.toBox3d();
+			stored = box;
+			this.shapes.push(box);
+			this.bounds.addBounds(box.getBounds());
 			this.hasDepth = true;
 		} else if (shape instanceof Box3d) {
 			if (!this.shapes.includes(shape)) {
