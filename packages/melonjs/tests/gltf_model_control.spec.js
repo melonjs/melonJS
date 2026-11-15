@@ -672,7 +672,11 @@ describe("GLTFModel#addChildToNode", () => {
 		model.update(16);
 		model.addChildToNode(m, "hip");
 		expectClose([m.pos.x, m.pos.y, m.pos.z], [5, -100, 0]);
-		expect(model.getChildren().filter((c) => c === m).length).toBe(1);
+		expect(
+			model.getChildren().filter((c) => {
+				return c === m;
+			}).length,
+		).toBe(1);
 	});
 
 	it("stops following once removed, moved to another container or destroyed", () => {

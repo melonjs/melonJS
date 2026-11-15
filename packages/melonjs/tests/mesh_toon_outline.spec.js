@@ -529,9 +529,11 @@ describe("rim light (WebGPU, mock device)", () => {
 		});
 		// the neighbours keep their meaning
 		expect(b[36]).toBeCloseTo(0.25);
-		expect([b[40], b[41], b[42]].map((v) => Math.round(v * 10) / 10)).toEqual([
-			0.1, 0.2, 0.3,
-		]);
+		expect(
+			[b[40], b[41], b[42]].map((v) => {
+				return Math.round(v * 10) / 10;
+			}),
+		).toEqual([0.1, 0.2, 0.3]);
 		// and a mesh without one, or a plain record, writes zeros there
 		mesh.rimLight = 0;
 		batcher.setPlacementUniforms(new Matrix3d(), 0xffffffff, mesh);

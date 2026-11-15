@@ -994,12 +994,18 @@ export default class GLTFModel extends Container {
 			throw new Error(`${String(child)} is not an instance of Renderable`);
 		}
 		const idx = this._nodeIndex(name);
-		for (let a = this; a !== undefined && a !== null; a = a.ancestor) {
-			if (a === child) {
-				throw new Error(
-					"GLTFModel: a model cannot be attached to itself or inside itself",
-				);
-			}
+		let inside = child === this;
+		for (
+			let a = this.ancestor;
+			!inside && a !== undefined && a !== null;
+			a = a.ancestor
+		) {
+			inside = a === child;
+		}
+		if (inside) {
+			throw new Error(
+				"GLTFModel: a model cannot be attached to itself or inside itself",
+			);
 		}
 		const previous = this._attached.get(child);
 		if (previous !== undefined && child.ancestor === this) {
