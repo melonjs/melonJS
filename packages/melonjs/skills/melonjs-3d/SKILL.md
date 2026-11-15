@@ -1,6 +1,6 @@
 ---
 name: melonjs-3d
-description: "Use this skill for anything 3D or 2.5D in melonJS — Camera3d, Mesh, InstancedMesh, Sprite3d billboards, Light3d, ground shadows, glTF/GLB scenes, and depth sorting. Covers the Y-down/+Z-forward convention (the inverse of OpenGL), the cameraClass opt-in, orthographic (isometric) projection, clip planes, and the Canvas fallback's limits. Triggers on: Camera3d, toon, cel shading, toonBands, outlineWidth, rimLight, orthographic, isometric, orthoHeight, orthoWidth, projection, Mesh, InstancedMesh, Sprite3d, Trail3d, ribbon, exhaust trail, Light3d, billboard, glTF, glb, 3D, 2.5D, depth, cameraClass, fov, setClipPlanes, setFog, fog, height fog, heightFalloff, transparent, transparency, alpha, blendMode, fade, castGroundShadow, shadowGroundPoint, lit, emissive, specular, shininess, normalMap, alphaCutoff, depthTest, vertexColors, worldToScreen, screenToRay, screenToWorld, pick, pickable, Ray3d, intersectRay, hit3d, followOffset, setBasis, getBasis, lookAt, up vector, gimbal, slerp, great circle, turn a direction."
+description: "Use this skill for anything 3D or 2.5D in melonJS — Camera3d, Mesh, InstancedMesh, Sprite3d billboards, Light3d, ground shadows, glTF/GLB scenes, and depth sorting. Covers the Y-down/+Z-forward convention (the inverse of OpenGL), the cameraClass opt-in, orthographic (isometric) projection, clip planes, and the Canvas fallback's limits. Triggers on: Camera3d, toon, cel shading, toonBands, outlineWidth, outlineMode, rimLight, orthographic, isometric, orthoHeight, orthoWidth, projection, Mesh, InstancedMesh, Sprite3d, Trail3d, ribbon, exhaust trail, Light3d, billboard, glTF, glb, 3D, 2.5D, depth, cameraClass, fov, setClipPlanes, setFog, fog, height fog, heightFalloff, transparent, transparency, alpha, blendMode, fade, castGroundShadow, shadowGroundPoint, lit, emissive, specular, shininess, normalMap, alphaCutoff, depthTest, vertexColors, worldToScreen, screenToRay, screenToWorld, pick, pickable, Ray3d, intersectRay, hit3d, followOffset, setBasis, getBasis, lookAt, up vector, gimbal, slerp, turn a direction."
 license: MIT
 ---
 
@@ -621,6 +621,7 @@ const hero = new GLTFModel(loader.getGLTF("hero"), {
     scale, lit: true,
     toonBands: 3,            // shadow, mid-tone, lit
     outlineWidth: 3,         // world units (pixels)
+    outlineMode: "screen",   // or keep 3 pixels on screen, near or far
     outlineColor: "#1d1a2b", // Color, CSS string, or [r, g, b] in 0..1
     rimLight: 0.5,           // a glow along the silhouette
     rimColor: "#9fd8ff",     // same forms as outlineColor
@@ -641,6 +642,13 @@ crate.outlineWidth = 0;      // off
   creases inside it are not inked. Normals are averaged where vertices share
   a position, so a hard-edged model still gets a closed line, and the hull
   follows the geometry — a skinned character's outline bends with it.
+- **`outlineMode: "screen"`** measures `outlineWidth` in screen pixels
+  instead of world units: under a perspective camera a world-unit line thins
+  with distance like the mesh, a screen one stays as thick as set, and a
+  zoomed orthographic camera does not thicken it. It is measured at the
+  middle of the mesh, so a long wall seen end-on is inked thicker at its far
+  end. A mesh moving in depth rebuilds its hull when the width changes by
+  more than about 2%.
 - **`rimLight`** adds a glow along the silhouette, where the surface turns
   away from the camera, in `rimColor` (white by default) at that strength:
   `1` is the full colour, more overdrives it. It is added on top of the
@@ -652,7 +660,8 @@ crate.outlineWidth = 0;      // off
   (normals pointing in) draws its outline OVER itself**; fix the export.
 - Not drawn by an `InstancedMesh` or a `Sprite3d`; `Camera3d` only.
 - `GLTFModel`, `level.load` and `GLTFScene` take `toonBands`, `outlineWidth`,
-  `outlineColor`, `rimLight` and `rimColor` for every part at once.
+  `outlineColor`, `outlineMode`, `rimLight` and `rimColor` for every part at
+  once.
 
 ### InstancedMesh, and when it is the wrong tool
 
@@ -1323,6 +1332,7 @@ if (!app.renderer.supportsDepthBuffer) {
 | an outline covers the mesh instead of ringing it | the model is wound inside out (its normals point in); the hull is pushed along them |
 | no rim light shows | the mesh is not `lit`, or `rimLight` is 0, or its normals face the camera everywhere (a flat card) |
 | a rim light glows on the dark side too | as intended: it is added like `emissive`; lower `rimLight` or pick a dimmer `rimColor` |
+| an outline is a hairline on distant meshes and a thick band up close | `outlineWidth` is in world units; `outlineMode: "screen"` keeps it in pixels |
 | an outline is missing on an instanced scatter or a billboard | `InstancedMesh` and `Sprite3d` do not draw one |
 | an orthographic camera shows nothing, or half a scene | it sits inside the scene: stand it back like a perspective camera, since `near` / `far` are measured from its position |
 | zooming an orthographic camera does nothing | `fov` does not apply to it: set `zoom` (or `orthoHeight`) |

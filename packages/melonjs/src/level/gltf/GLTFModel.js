@@ -195,6 +195,7 @@ export default class GLTFModel extends Container {
 	 * @param {number} [options.toonBands=0] - cel-shade the lit parts into this many bands (see {@link Mesh#toonBands})
 	 * @param {number} [options.outlineWidth=0] - outline every part this many world units wide (see {@link Mesh#outlineWidth})
 	 * @param {Color|string|number[]} [options.outlineColor="#000000"] - the outline colour (see {@link Mesh#outlineColor})
+	 * @param {string} [options.outlineMode="world"] - what `outlineWidth` is measured in, world units or `"screen"` pixels (see {@link Mesh#outlineMode})
 	 * @param {number} [options.rimLight=0] - a rim light on every lit part, this strong (see {@link Mesh#rimLight})
 	 * @param {Color|string|number[]} [options.rimColor="#ffffff"] - the rim light's colour (see {@link Mesh#rimColor})
 	 * @param {number} [options.crossfade=0] - the default crossfade between clips, in milliseconds (see {@link GLTFModel#crossfade})
@@ -448,6 +449,7 @@ export default class GLTFModel extends Container {
 					toonBands: options.toonBands,
 					outlineWidth: options.outlineWidth,
 					outlineColor: options.outlineColor,
+					outlineMode: options.outlineMode,
 					rimLight: options.rimLight,
 					rimColor: options.rimColor,
 				});

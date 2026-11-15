@@ -86,7 +86,7 @@ const camera = () => {
 };
 
 /** draw `meshes` straight ahead of an unturned camera; the RGBA pixels, bottom-up */
-const render = (meshes, lights = []) => {
+const render = (meshes, lights = [], cam = camera()) => {
 	const renderer = app.renderer;
 	const stage = state.current();
 	const savedLights = stage._activeLights3d;
@@ -102,7 +102,7 @@ const render = (meshes, lights = []) => {
 		}
 		renderer.backgroundColor.setColor(0, 0, 0, 255);
 		renderer.clear();
-		camera().draw(renderer, world);
+		cam.draw(renderer, world);
 		renderer.flush();
 		const gl = renderer.gl;
 		gl.finish();
@@ -226,6 +226,120 @@ describe("toon shading (WebGL)", () => {
 	it("fewer than 2 bands is smooth shading", () => {
 		const shades = distinctAcrossMiddleRow(render([gradientQuad(1)], [sun()]));
 		expect(shades.size).toBeGreaterThan(10);
+	});
+});
+
+describe("outlineMode", () => {
+	const cube = (opts = {}) => {
+		const m = new Mesh(0, 0, {
+			...cubeGeometry(20),
+			outlineWidth: 4,
+			outlineColor: "#00ff00",
+			...opts,
+		});
+		return m;
+	};
+	// how many pixels of the middle row are the outline's green
+	const rimPixels = (px) => {
+		let n = 0;
+		for (let x = 0; x < SIZE; x++) {
+			if (green(px, x, SIZE / 2) > 200 && red(px, x, SIZE / 2) < 50) {
+				n++;
+			}
+		}
+		return n;
+	};
+	const at = (m, depth) => {
+		m.depth = depth;
+		return m;
+	};
+
+	it('is world units by default, and only an exact "screen" means pixels', () => {
+		expect(cube().outlineMode).toBe("world");
+		expect(cube({ outlineMode: "screen" }).outlineMode).toBe("screen");
+		for (const other of ["Screen", "pixels", "", null, 1]) {
+			expect(cube({ outlineMode: other }).outlineMode).toBe("world");
+		}
+	});
+
+	it("in world units the line thins with distance, as the mesh does", () => {
+		const near = rimPixels(render([at(cube({ outlineWidth: 6 }), 150)]));
+		const far = rimPixels(render([at(cube({ outlineWidth: 6 }), 450)]));
+		expect(near).toBeGreaterThan(far);
+	});
+
+	it("in screen pixels the line keeps its thickness however far the mesh is", () => {
+		const widths = [150, 300, 450].map((d) => {
+			return rimPixels(render([at(cube({ outlineMode: "screen" }), d)]));
+		});
+		// four pixels each side
+		for (const w of widths) {
+			expect(w).toBeGreaterThanOrEqual(6);
+			expect(w).toBeLessThanOrEqual(10);
+		}
+		expect(Math.max(...widths) - Math.min(...widths)).toBeLessThanOrEqual(2);
+	});
+
+	it("in screen pixels it ignores an orthographic camera's zoom too", () => {
+		const ortho = (zoom) => {
+			const cam = new Camera3d(0, 0, SIZE, SIZE, {
+				projection: "orthographic",
+				near: 1,
+				far: 5000,
+			});
+			cam.setPosition(0, 0, 0);
+			cam.zoom = zoom;
+			cam.update(0);
+			return cam;
+		};
+		const screen = [1, 2].map((z) => {
+			return rimPixels(
+				render([at(cube({ outlineMode: "screen" }), 300)], [], ortho(z)),
+			);
+		});
+		expect(Math.abs(screen[0] - screen[1])).toBeLessThanOrEqual(2);
+		const world = [1, 2].map((z) => {
+			return rimPixels(render([at(cube(), 300)], [], ortho(z)));
+		});
+		// in world units, zoomed in twice as close, the line is twice as thick
+		expect(world[1]).toBeGreaterThan(world[0] * 1.6);
+	});
+
+	it("does not rebuild the hull for a change of depth no one could see", () => {
+		const m = at(cube({ outlineMode: "screen" }), 300);
+		render([m]);
+		const offset = m._outlineOffset;
+		render([at(m, 300.3)]);
+		expect(m._outlineOffset).toBe(offset);
+		render([at(m, 600)]);
+		expect(m._outlineOffset / offset).toBeGreaterThan(1.9);
+		expect(m._outlineOffset / offset).toBeLessThan(2.1);
+	});
+
+	it("keeps the width as given where a pixel has no size", () => {
+		const m = cube({ outlineMode: "screen", outlineWidth: 5 });
+		// no camera, a 2D camera, a camera with no size
+		expect(m._outlineWorldWidth(app.renderer, undefined)).toBe(5);
+		expect(m._outlineWorldWidth(app.renderer, { height: 100 })).toBe(5);
+		expect(m._outlineWorldWidth(app.renderer, new Camera3d(0, 0, 0, 0))).toBe(
+			5,
+		);
+		// a mesh at or behind the eye
+		const behind = { currentTransform: new Matrix3d() };
+		m.depth = -50;
+		expect(m._outlineWorldWidth(behind, camera())).toBe(5);
+		m.depth = 0;
+		expect(m._outlineWorldWidth(behind, camera())).toBe(5);
+		// and world mode never looks
+		const w = cube({ outlineWidth: 5 });
+		expect(w._outlineWorldWidth(behind, camera())).toBe(5);
+	});
+
+	it("reaches every part of a GLTFModel and of a scene", async () => {
+		const data = await parseGLTF(buildBarGLB());
+		const model = new GLTFModel(data, { outlineMode: "screen" });
+		expect(model.getChildByName("bar")[0].outlineMode).toBe("screen");
+		expect(GLTFScene.loadOptions).toContain("outlineMode");
 	});
 });
 

@@ -7,6 +7,7 @@ import {
 	Container,
 	Frustum,
 	Mesh,
+	Renderable,
 	Sprite,
 	Vector3d,
 	video,
@@ -310,6 +311,51 @@ describe("Camera3d#orthoWidth: keeping the width instead", () => {
 		expect(Array.from(cam.projectionMatrix.val)).toEqual(before);
 		cam.projection = "orthographic";
 		expect(cam.frustum.orthoHeight).toBeCloseTo(999 / 2);
+	});
+});
+
+describe("a zoomed Camera3d keeps its size while it draws", () => {
+	it("is still the default camera: zoom is its projection's business", () => {
+		const cam = ortho();
+		cam.zoom = 2;
+		expect(cam.isDefault).toBe(true);
+		cam.screenX = 10;
+		expect(cam.isDefault).toBe(false);
+		// a 2D camera is unchanged: zoomed is not default
+		const flat = new Camera2d(0, 0, W, H);
+		flat.zoom = 2;
+		expect(flat.isDefault).toBe(false);
+	});
+
+	it("worldToScreen and screenToRay give the same answer during the draw as outside it", () => {
+		const renderer = app.renderer;
+		const cam = ortho();
+		cam.zoom = 2;
+		cam.update(0);
+		const point = new Vector3d(20, 10, 300);
+		const outside = cam.worldToScreen(point).clone();
+		const rayOutside = cam.screenToRay(W, H).origin.clone();
+		const seen = {};
+		const probe = new Renderable(0, 0, 1, 1);
+		probe.inViewport = true;
+		probe.alwaysUpdate = true;
+		probe.draw = () => {
+			seen.width = cam.width;
+			seen.height = cam.height;
+			seen.screen = cam.worldToScreen(point).clone();
+			seen.ray = cam.screenToRay(W, H).origin.clone();
+		};
+		const world = new Container(0, 0, Infinity, Infinity);
+		world.root = true;
+		world.addChild(probe, 0);
+		cam.draw(renderer, world);
+		renderer.flush();
+		expect(seen.width).toBe(W);
+		expect(seen.height).toBe(H);
+		expect(seen.screen.x).toBeCloseTo(outside.x, 3);
+		expect(seen.screen.y).toBeCloseTo(outside.y, 3);
+		expect(seen.ray.x).toBeCloseTo(rayOutside.x, 3);
+		expect(seen.ray.y).toBeCloseTo(rayOutside.y, 3);
 	});
 });
 

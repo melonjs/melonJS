@@ -641,6 +641,21 @@ export default class Camera3d extends Camera2d {
 	}
 
 	/**
+	 * Whether this camera is drawn with the default settings: no screen
+	 * offset. Unlike a {@link Camera2d}, its zoom does not count: a
+	 * `Camera3d` applies its zoom through its own projection (see
+	 * {@link Camera3d#zoom}), so a zoomed one must not take the 2D zoomed
+	 * camera's path, which shrinks the camera's `width` and `height` to the
+	 * zoomed world for the length of the draw. Anything reading them during
+	 * the draw, {@link Camera3d#worldToScreen} and
+	 * {@link Camera3d#screenToRay} among them, would get the wrong size.
+	 * @returns true if this camera has no screen offset
+	 */
+	override get isDefault(): boolean {
+		return this.screenX === 0 && this.screenY === 0;
+	}
+
+	/**
 	 * Give the frustum the orthographic height in view: the one set, or the
 	 * one the width set works out to at the current aspect ratio, divided by
 	 * the zoom.
