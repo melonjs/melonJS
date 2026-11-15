@@ -48,6 +48,8 @@ const HEADINGS = Object.values(HEADING);
 
 // a direction, projected between the map and the screen
 const direction = new Vector2d();
+// facing()'s own: it must not overwrite the velocity held in `direction`
+const offset = new Vector2d();
 
 // where a click was, before it becomes a path
 const clicked = new Vector2d();
@@ -55,9 +57,15 @@ const clicked = new Vector2d();
 // how close (in pixels) to a point of the path counts as reaching it: a
 // step of the walk, so the hero never overshoots and turns back
 const ARRIVE = HERO_SPEED * 1.5;
-// frames of walking without getting anywhere before the hero gives up on a
-// path (something the grid does not know about is in the way)
-const STUCK_FRAMES = 30;
+// frames of walking without getting any closer before the hero asks for a
+// new path from where it stands. The grid sees the hero as a point, and a
+// straight stretch of path runs right along the walls: at a corner the
+// hero's feet catch on the stone and slide off the line, and from there the
+// next point can be behind the corner
+const STUCK_FRAMES = 12;
+// new paths asked for after one click, before the hero gives up (something
+// the grid does not know about is in the way)
+const REPLANS = 3;
 
 // frames per animation in the atlas
 const FRAMES = { idle: 1, run: 10, pickup: 10 };
@@ -118,8 +126,11 @@ export class Hero extends Sprite {
 	private route: Vector2d[] = [];
 	// what was clicked, to use once it is in reach
 	private goal: Usable | undefined;
-	// frames spent walking without getting closer
+	// where the route leads
+	private readonly destination = new Vector2d();
+	// frames spent walking without getting closer, and new paths asked for
 	private stuck = 0;
+	private replans = 0;
 	private lastDistance = Number.POSITIVE_INFINITY;
 
 	constructor(x: number, y: number) {
@@ -183,10 +194,19 @@ export class Hero extends Sprite {
 			return;
 		}
 		this.goal = this.dungeon?.nearest(clicked.set(x, y), REACH);
-		const to = this.goal ? this.goal.spot : clicked;
+		this.destination.setV(this.goal ? this.goal.spot : clicked);
+		this.replans = 0;
+		this.plan();
+	}
+
+	/** the path from where the hero stands to the destination */
+	private plan() {
+		if (!this.grid) {
+			return;
+		}
 		const result = this.grid.findPath(
 			this.feet.set(this.feetX, this.feetY),
-			to,
+			this.destination,
 			{
 				// a corner is never cut past a wall
 				diagonalMode: "onlyIfNoObstacles",
@@ -217,10 +237,16 @@ export class Hero extends Sprite {
 				this.lastDistance = Number.POSITIVE_INFINITY;
 				continue;
 			}
-			// walled in by something the grid does not know: give up
+			// caught on a corner: a new path from here; still blocked after a
+			// few, something the grid does not know is in the way: give up
 			this.stuck = distance < this.lastDistance - 0.5 ? 0 : this.stuck + 1;
 			this.lastDistance = Math.min(this.lastDistance, distance);
 			if (this.stuck > STUCK_FRAMES) {
+				if (this.replans < REPLANS) {
+					this.replans++;
+					this.plan();
+					continue;
+				}
 				this.route = [];
 				break;
 			}
@@ -388,7 +414,7 @@ function frames(anim: keyof typeof FRAMES, heading: string) {
 // closest heading for a screen offset
 function facing(dx: number, dy: number) {
 	// screen to map
-	const { x: mx, y: my } = direction.set(dx, dy).to2d();
+	const { x: mx, y: my } = offset.set(dx, dy).to2d();
 	const step = Math.round(Math.atan2(my, mx) / (Math.PI / 4));
 	const dir = [
 		[1, 0],

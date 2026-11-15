@@ -15,7 +15,6 @@ import {
 } from "melonjs";
 import { VIEW_H, VIEW_W } from "./constants";
 import { Hero } from "./entities/Hero";
-import { dungeonGrid } from "./entities/paths";
 import { Chest, Door, Exit, Gate } from "./entities/usables";
 import { WallTorch } from "./entities/WallTorch";
 import { prepareEffects } from "./fx/effects";
@@ -44,8 +43,11 @@ export const createGame = async () => {
 	// debug panel, toggled with S
 	plugin.register(DebugPanelPlugin, "debugPanel");
 	// a pathfinding grid for each level, built from its collision shapes when
-	// it loads (see entities/paths.ts)
-	plugin.register(PathfindingPlugin, "pathfinding", { build: dungeonGrid });
+	// it loads. The walls stand on the tiles' edges, a good part of a tile
+	// deep, and a doorway is narrower than a tile: on a grid of whole tiles
+	// every doorway would be closed, on one of quarter tiles they are open
+	// (and the hero's footprint still fits in a cell)
+	plugin.register(PathfindingPlugin, "pathfinding", { subdivide: 4 });
 
 	// the classes in the map: the hero's spawn point has its own, the rest
 	// are set on tiles in the tileset, and every object placed from one of
