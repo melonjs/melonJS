@@ -166,6 +166,7 @@ export type { FractalType, NoiseSettings, NoiseType } from "./math/noise.ts";
 export { Noise } from "./math/noise.ts";
 export { ObservableVector2d } from "./math/observableVector2d.ts";
 export { ObservableVector3d } from "./math/observableVector3d.ts";
+export { Quaternion } from "./math/quaternion.ts";
 export { Vector2d } from "./math/vector2d.ts";
 export { Vector3d } from "./math/vector3d.ts";
 export type {
