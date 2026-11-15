@@ -21,11 +21,13 @@ import {
 	Application,
 	Camera3d,
 	type CanvasRenderer,
+	event,
 	GLTFModel,
 	input,
 	Light3d,
 	loader,
 	Mesh,
+	math,
 	type Pointer,
 	plugin,
 	Renderable,
@@ -276,14 +278,28 @@ const createGame = async () => {
 		world.addChild(blend, 100);
 
 		// the number keys pick a clip too
-		const onKey = (e: KeyboardEvent) => {
-			const i = Number.parseInt(e.key, 10) - 1;
-			if (i >= 0 && i < CLIPS.length && !radios[i].checked) {
+		const DIGITS = [
+			input.KEY.NUM1,
+			input.KEY.NUM2,
+			input.KEY.NUM3,
+			input.KEY.NUM4,
+			input.KEY.NUM5,
+			input.KEY.NUM6,
+			input.KEY.NUM7,
+			input.KEY.NUM8,
+			input.KEY.NUM9,
+		].slice(0, CLIPS.length);
+		DIGITS.forEach((key, i) => {
+			input.bindKey(key, `clip${i}`, true);
+		});
+		const onKey = (action?: string) => {
+			const i = CLIPS.findIndex((_, n) => action === `clip${n}`);
+			if (i >= 0 && !radios[i].checked) {
 				radios[i].checked = true;
 				play(i);
 			}
 		};
-		globalThis.addEventListener("keydown", onKey);
+		event.on(event.KEYDOWN, onKey);
 
 		// ── camera: framed on the track, drag to orbit ───────────────────
 		const camera = app.viewport as Camera3d;
@@ -293,7 +309,7 @@ const createGame = async () => {
 		const distance = TRACK_RADIUS * 3.1;
 		const target = { x: 0, y: GROUND_Y - FOX_HEIGHT * 0.4, z: 0 };
 		const updateCam = () => {
-			pitch = Math.max(0.08, Math.min(1.3, pitch));
+			pitch = math.clamp(pitch, 0.08, 1.3);
 			camera.pos.set(
 				target.x + Math.sin(yaw) * Math.cos(pitch) * distance,
 				target.y - Math.sin(pitch) * distance,
@@ -328,7 +344,10 @@ const createGame = async () => {
 			input.releasePointerEvent("pointerdown", camera);
 			input.releasePointerEvent("pointerup", camera);
 			input.releasePointerEvent("pointermove", camera);
-			globalThis.removeEventListener("keydown", onKey);
+			event.off(event.KEYDOWN, onKey);
+			for (const key of DIGITS) {
+				input.unbindKey(key);
+			}
 		};
 		return { tick, teardown };
 	};

@@ -29,6 +29,7 @@ import {
 	Camera3d,
 	type CanvasRenderer,
 	Color,
+	event,
 	GLTFModel,
 	InstancedMesh,
 	input,
@@ -36,6 +37,7 @@ import {
 	loader,
 	Matrix3d,
 	Mesh,
+	math,
 	type Pointer,
 	plugin,
 	Renderable,
@@ -461,20 +463,20 @@ const createGame = async () => {
 		};
 		input.registerPointerEvent("wheel", camera, (ev: Pointer) => {
 			const factor = ev.deltaY > 0 ? 1.1 : 1 / 1.1;
-			camera.orthoHeight = Math.min(
-				Math.max(camera.orthoHeight * factor, 300),
-				1600,
-			);
+			camera.orthoHeight = math.clamp(camera.orthoHeight * factor, 300, 1600);
 			camera.fov = 2 * Math.atan(camera.orthoHeight / 2 / DISTANCE);
 		});
-		const onKey = (e: KeyboardEvent) => {
-			if (e.key === "q" || e.key === "Q") {
+		// Q and E turn the board; locked, so holding a key turns it once
+		input.bindKey(input.KEY.Q, "turnLeft", true);
+		input.bindKey(input.KEY.E, "turnRight", true);
+		const onKey = (action?: string) => {
+			if (action === "turnLeft") {
 				turn(-1);
-			} else if (e.key === "e" || e.key === "E") {
+			} else if (action === "turnRight") {
 				turn(1);
 			}
 		};
-		globalThis.addEventListener("keydown", onKey);
+		event.on(event.KEYDOWN, onKey);
 
 		// ── controls ──────────────────────────────────────────────────────
 		const button = (x: number, text: string, onClick: () => void) => {
@@ -518,7 +520,9 @@ const createGame = async () => {
 
 		return () => {
 			input.releasePointerEvent("wheel", camera);
-			globalThis.removeEventListener("keydown", onKey);
+			event.off(event.KEYDOWN, onKey);
+			input.unbindKey(input.KEY.Q);
+			input.unbindKey(input.KEY.E);
 		};
 	};
 
