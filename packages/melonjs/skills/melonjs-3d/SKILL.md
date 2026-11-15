@@ -1,6 +1,6 @@
 ---
 name: melonjs-3d
-description: "Use this skill for anything 3D or 2.5D in melonJS — Camera3d, Mesh, InstancedMesh, Sprite3d billboards, Light3d, ground shadows, glTF/GLB scenes, and depth sorting. Covers the Y-down/+Z-forward convention (the inverse of OpenGL), the cameraClass opt-in, orthographic (isometric) projection, clip planes, and the Canvas fallback's limits. Triggers on: Camera3d, toon, cel shading, toonBands, outlineWidth, orthographic, isometric, orthoHeight, projection, Mesh, InstancedMesh, Sprite3d, Trail3d, ribbon, exhaust trail, Light3d, billboard, glTF, glb, 3D, 2.5D, depth, cameraClass, fov, setClipPlanes, setFog, fog, height fog, heightFalloff, transparent, transparency, alpha, blendMode, fade, castGroundShadow, shadowGroundPoint, lit, emissive, specular, shininess, normalMap, alphaCutoff, depthTest, vertexColors, worldToScreen, screenToRay, screenToWorld, pick, pickable, Ray3d, intersectRay, hit3d, followOffset, setBasis, getBasis, lookAt, up vector, gimbal, slerp, great circle, turn a direction."
+description: "Use this skill for anything 3D or 2.5D in melonJS — Camera3d, Mesh, InstancedMesh, Sprite3d billboards, Light3d, ground shadows, glTF/GLB scenes, and depth sorting. Covers the Y-down/+Z-forward convention (the inverse of OpenGL), the cameraClass opt-in, orthographic (isometric) projection, clip planes, and the Canvas fallback's limits. Triggers on: Camera3d, toon, cel shading, toonBands, outlineWidth, orthographic, isometric, orthoHeight, orthoWidth, projection, Mesh, InstancedMesh, Sprite3d, Trail3d, ribbon, exhaust trail, Light3d, billboard, glTF, glb, 3D, 2.5D, depth, cameraClass, fov, setClipPlanes, setFog, fog, height fog, heightFalloff, transparent, transparency, alpha, blendMode, fade, castGroundShadow, shadowGroundPoint, lit, emissive, specular, shininess, normalMap, alphaCutoff, depthTest, vertexColors, worldToScreen, screenToRay, screenToWorld, pick, pickable, Ray3d, intersectRay, hit3d, followOffset, setBasis, getBasis, lookAt, up vector, gimbal, slerp, great circle, turn a direction."
 license: MIT
 ---
 
@@ -236,6 +236,15 @@ camera.setClipPlanes(50, 6000);
   divides it, as on a `Camera2d`: `zoom = 2` shows half as much world, and
   `orthoHeight` still reads what was set. `fov` is ignored; a perspective
   camera ignores `zoom` (narrow its `fov` instead).
+- **`orthoWidth` keeps the width instead.** Set it (or pass it as an option,
+  instead of `orthoHeight`) and the view's width survives every resize while
+  the height follows the aspect: a board that must always fit across a phone
+  held upright. Whichever of the two was set last is the one kept; the other
+  reads what it works out to. `zoom` divides both.
+
+```js
+camera.orthoWidth = 1200;   // the board's width always fits, portrait or landscape
+```
 - **Still stand the camera back.** It is placed and pointed as a perspective
   one is: `near` / `far` are measured from it, so something behind it is
   clipped, and specular highlights are measured from its position.
@@ -1306,6 +1315,9 @@ if (!app.renderer.supportsDepthBuffer) {
 | an outline is missing on an instanced scatter or a billboard | `InstancedMesh` and `Sprite3d` do not draw one |
 | an orthographic camera shows nothing, or half a scene | it sits inside the scene: stand it back like a perspective camera, since `near` / `far` are measured from its position |
 | zooming an orthographic camera does nothing | `fov` does not apply to it: set `zoom` (or `orthoHeight`) |
+| on a phone held upright the sides of an orthographic view are cut off | the height is what is kept across resizes; set `orthoWidth` to keep the width instead |
+| `orthoHeight` changes by itself after a resize | `orthoWidth` was set last, so the width is kept and the height follows the aspect |
+| `new Camera3d(..., { orthoHeight, orthoWidth })` throws | give one; the other follows the aspect ratio |
 | `zoom` does nothing on a 3D camera | it is a perspective one, which ignores `zoom`: narrow `fov`, or switch to `projection: "orthographic"` |
 | a click on a mesh misses, or hits something beside it | the pointer's `gameWorldX`/`gameWorldY` were used; pass `gameScreenX`/`gameScreenY` to `screenToRay` / `pick` / `screenToWorld` |
 | `screenToWorld` returns `null` | that pixel looks above the horizon, or the floor's Y sign is wrong (Y-down: the floor is a greater y than the camera) |

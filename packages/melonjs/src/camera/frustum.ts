@@ -31,6 +31,12 @@ export interface FrustumOptions {
 	 * (default 2; a {@link Camera3d} defaults it to its own height in pixels)
 	 */
 	orthoHeight?: number;
+	/**
+	 * {@link Camera3d} only: the width of the view in world units under an
+	 * orthographic projection, kept across resizes instead of the height
+	 * (give one or the other; see {@link Camera3d#orthoWidth})
+	 */
+	orthoWidth?: number;
 	/** vertical field of view in radians (default: π / 3 = 60°) */
 	fov?: number;
 	/** aspect ratio (width / height) — default 1.0 (square) */
