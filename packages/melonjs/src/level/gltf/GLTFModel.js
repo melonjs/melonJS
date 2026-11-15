@@ -196,6 +196,7 @@ export default class GLTFModel extends Container {
 	 * @param {number} [options.outlineWidth=0] - outline every part this many world units wide (see {@link Mesh#outlineWidth})
 	 * @param {Color|string|number[]} [options.outlineColor="#000000"] - the outline colour (see {@link Mesh#outlineColor})
 	 * @param {number} [options.crossfade=0] - the default crossfade between clips, in milliseconds (see {@link GLTFModel#crossfade})
+	 * @param {boolean} [options.pickable=true] - set `false` to have {@link Camera3d#pick} pass over the whole model (see {@link GLTFModel#pickable})
 	 */
 	constructor(data, options = {}) {
 		super(0, 0);
@@ -525,6 +526,17 @@ export default class GLTFModel extends Container {
 		 * hero.setCurrentAnimation("Hit", { crossfade: 0 });  // snaps
 		 */
 		this.crossfade = options.crossfade ?? 0;
+
+		/**
+		 * Whether {@link Camera3d#pick} can return this model, as
+		 * {@link Mesh#pickable} for a mesh: `false` has the whole model passed
+		 * over. A single part, or something attached with
+		 * {@link GLTFModel#addChildToNode}, is left out by setting its own
+		 * `pickable` to `false`.
+		 * @type {boolean}
+		 * @default true
+		 */
+		this.pickable = options.pickable !== false;
 
 		/**
 		 * pause/resume the current animation without losing its pose or time.
@@ -1276,7 +1288,11 @@ export default class GLTFModel extends Container {
 	intersectRay(ray, out) {
 		let best = null;
 		for (const child of this.getChildren()) {
-			if (typeof child.intersectRay !== "function") {
+			if (
+				typeof child.intersectRay !== "function" ||
+				// a part opted out of picking (`Mesh#pickable`)
+				child.pickable === false
+			) {
 				continue;
 			}
 			const hit = child.intersectRay(ray, _partHit);

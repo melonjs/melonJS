@@ -471,6 +471,7 @@ function buildTextureGroups(
  * @property {number[]|Float32Array|undefined} [baseColorFactor] - the material's base colour factor `[r, g, b]` in 0..1, LINEAR, applied as the mesh tint. That is the form a glTF material states it in (spec 3.9.2) and the form the loader hands back, so a mesh built from a node passes the node's own field straight through. It is ENCODED rather than scaled: a linear factor pushed through `tint.setColor` by multiplying by 255 renders every untextured material 60 to 70 counts too dark in the midtones, which reads as a lighting fault and gets debugged as one. For an ordinary sRGB colour use {@link Renderable#setTint}. The type admits `undefined` deliberately: the loader declares the field optional, so `baseColorFactor: node.baseColorFactor` is the headline use and it has to compile for a consumer building under `exactOptionalPropertyTypes`.
  * @property {number[]|Float32Array} [specular] - specular color `[r, g, b]` (0..1) for the lit path. Set by the OBJ loader from MTL `Ks`, and derived from glTF metallic/roughness.
  * @property {number} [shininess=0] - specular exponent for the lit path (MTL `Ns`). `0` for a fully diffuse surface.
+ * @property {boolean} [pickable=true] - set `false` to have {@link Camera3d#pick} pass over this mesh (see {@link Mesh#pickable})
  * @property {number} [toonBands=0] - cel (toon) shading for the lit path: the light on the surface is cut into this many flat bands, from unlit to fully lit, and a specular highlight becomes a hard-edged spot. `0` (or anything under 2) is the usual smooth shading. Needs `lit` and a `Camera3d`.
  * @property {number} [outlineWidth=0] - draw an outline this many world units (pixels) wide around the mesh's silhouette, the inked edge of a cartoon look — an "inverted hull" drawn behind it. `0` for none. `Camera3d` only; not drawn by an `InstancedMesh` or a `Sprite3d`.
  * @property {Color|string|number[]} [outlineColor="#000000"] - the outline's colour: a {@link Color}, a CSS colour string, or `[r, g, b]` in 0..1.
@@ -871,6 +872,22 @@ export default class Mesh extends Renderable {
 		 */
 		this.shininess =
 			typeof settings.shininess === "number" ? settings.shininess : 0;
+
+		/**
+		 * Whether {@link Camera3d#pick} can return this mesh. `false` has it
+		 * passed over, as though it were not there, so a floor, a skybox or a
+		 * decoration does not stand in front of what is behind it. A
+		 * {@link GLTFModel} passes over such a part too. Like
+		 * {@link Mesh#fog}, it opts one mesh out of a camera feature: pointer
+		 * events (which reach only the meshes they are registered on) and
+		 * {@link Mesh#intersectRay} called directly are not affected.
+		 * @type {boolean}
+		 * @default true
+		 * @example
+		 * floor.pickable = false;
+		 * const hit = camera.pick(x, y, app.world); // the crate on the floor
+		 */
+		this.pickable = settings.pickable !== false;
 
 		/**
 		 * Cel (toon) shading on the lit path: the light on the surface is cut

@@ -1842,7 +1842,10 @@ export default class Camera3d extends Camera2d {
 	 * {@link Mesh} (including {@link Sprite3d}, {@link InstancedMesh} and the
 	 * parts of a {@link GLTFModel}) where the ray through that pixel hits
 	 * it. `floating` (screen-space) renderables are skipped, as are those
-	 * that are not visible: hidden by `alpha` 0 or `isRenderable` false.
+	 * that are not visible: hidden by `alpha` 0 or `isRenderable` false, and
+	 * those set not to be picked ({@link Mesh#pickable},
+	 * {@link GLTFModel#pickable}), so a floor does not stand in front of what
+	 * is on it.
 	 * @param x - screen x, in canvas pixels (e.g. `pointer.gameScreenX`)
 	 * @param y - screen y, in canvas pixels (e.g. `pointer.gameScreenY`)
 	 * @param container - where to look, usually `app.world`

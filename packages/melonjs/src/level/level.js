@@ -143,6 +143,7 @@ function levelIdAt(offset) {
  * @property {number} [toonBands] - (glTF/GLB only) cel-shade every lit mesh into this many bands ({@link Mesh#toonBands})
  * @property {number} [outlineWidth] - (glTF/GLB only) outline every mesh this many world units wide ({@link Mesh#outlineWidth})
  * @property {Color|string|number[]} [outlineColor] - (glTF/GLB only) the outline colour ({@link Mesh#outlineColor})
+ * @property {boolean} [pickable] - (glTF/GLB only) set `false` to have {@link Camera3d#pick} pass over the scene's meshes ({@link Mesh#pickable})
  * @property {number} [crossfade] - (glTF/GLB only) for an animated or skinned asset, the default crossfade between its clips, in milliseconds ({@link GLTFModel#crossfade})
  */
 

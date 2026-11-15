@@ -165,6 +165,7 @@ export default class Sprite3d extends Mesh {
 	 * @param {boolean} [settings.flipX=false] - mirror the sprite horizontally (see {@link Sprite3d#flipX})
 	 * @param {boolean} [settings.flipY=false] - mirror the sprite vertically (see {@link Sprite3d#flipY})
 	 * @param {boolean} [settings.lit=false] - shade through the lit mesh batcher (see {@link Mesh})
+	 * @param {boolean} [settings.pickable=true] - set `false` to have {@link Camera3d#pick} pass over it (see {@link Mesh#pickable})
 	 * @param {number[]|Float32Array} [settings.emissive] - emissive color (see {@link Mesh})
 	 * @param {number} [settings.shadowGroundY] - world Y of the floor the blob shadow lands on. Omit and it falls back to the sprite's own base — which for a billboard moves with the camera, so a scene that knows where its floor is should say so.
 	 * @param {number} [settings.shadowOpacity=0.45] - opacity of the shadow directly beneath the sprite, before any height fade
@@ -265,6 +266,7 @@ export default class Sprite3d extends Mesh {
 			cullBackFaces: false,
 			lit: settings.lit === true,
 			emissive: settings.emissive,
+			pickable: settings.pickable,
 			// the mesh pass is opaque (no alpha blending), so a sprite's
 			// transparent background would otherwise render as a solid box. Use an
 			// alpha cutout by default — fragments below the threshold are

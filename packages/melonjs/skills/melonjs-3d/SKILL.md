@@ -1,6 +1,6 @@
 ---
 name: melonjs-3d
-description: "Use this skill for anything 3D or 2.5D in melonJS — Camera3d, Mesh, InstancedMesh, Sprite3d billboards, Light3d, ground shadows, glTF/GLB scenes, and depth sorting. Covers the Y-down/+Z-forward convention that is the inverse of OpenGL, the cameraClass opt-in, orthographic (isometric) projection, clip planes, and what does not work on the Canvas fallback. Triggers on: Camera3d, toon, cel shading, toonBands, outlineWidth, orthographic, isometric, orthoHeight, projection, Mesh, InstancedMesh, Sprite3d, Trail3d, ribbon, exhaust trail, Light3d, billboard, glTF, glb, 3D, 2.5D, depth, cameraClass, fov, setClipPlanes, setFog, fog, distance fog, height fog, heightFalloff, transparent, transparency, alpha, blendMode, fade, castGroundShadow, shadowGroundPoint, lit, emissive, specular, shininess, normalMap, alphaCutoff, depthTest, vertexColors, worldToScreen, screenToRay, screenToWorld, pick, Ray3d, intersectRay, hit3d, followOffset, setBasis, getBasis, lookAt, up vector, gimbal, slerp, great circle, turn a direction."
+description: "Use this skill for anything 3D or 2.5D in melonJS — Camera3d, Mesh, InstancedMesh, Sprite3d billboards, Light3d, ground shadows, glTF/GLB scenes, and depth sorting. Covers the Y-down/+Z-forward convention (the inverse of OpenGL), the cameraClass opt-in, orthographic (isometric) projection, clip planes, and the Canvas fallback's limits. Triggers on: Camera3d, toon, cel shading, toonBands, outlineWidth, orthographic, isometric, orthoHeight, projection, Mesh, InstancedMesh, Sprite3d, Trail3d, ribbon, exhaust trail, Light3d, billboard, glTF, glb, 3D, 2.5D, depth, cameraClass, fov, setClipPlanes, setFog, fog, height fog, heightFalloff, transparent, transparency, alpha, blendMode, fade, castGroundShadow, shadowGroundPoint, lit, emissive, specular, shininess, normalMap, alphaCutoff, depthTest, vertexColors, worldToScreen, screenToRay, screenToWorld, pick, pickable, Ray3d, intersectRay, hit3d, followOffset, setBasis, getBasis, lookAt, up vector, gimbal, slerp, great circle, turn a direction."
 license: MIT
 ---
 
@@ -1169,7 +1169,19 @@ through that pixel with a unit direction, so distances are from the camera.
 - **Containers count**: a mesh in a moved, turned or scaled container is hit
   where it draws — as of the last frame, which is when the renderer learned
   where the container put it.
-- `pick` skips `floating`, `isRenderable = false` and `alpha` 0 renderables.
+- `pick` skips `floating`, `isRenderable = false` and `alpha` 0 renderables,
+  and those set **`pickable = false`**: a floor, a skybox or a decoration that
+  should not stand in front of what is on it. It is a `Mesh` (and `Sprite3d`,
+  `InstancedMesh`) setting and property, a `GLTFModel` option and property
+  for the whole model (a part, or something attached to a node, sets its
+  own), and a `level.load` option for a whole scene. Like `fog: false`, it
+  opts out of one camera feature only: pointer events registered on the mesh
+  and a direct `mesh.intersectRay(ray)` still see it.
+
+```js
+floor.pickable = false;
+const hit = camera.pick(x, y, app.world); // the crate on the floor, not the floor
+```
 
 The physics adapter's `raycast3d(from, to)` is a different tool: a segment
 against bodies' bounding volumes, for gameplay (line of sight, ground probes),
@@ -1297,6 +1309,8 @@ if (!app.renderer.supportsDepthBuffer) {
 | `zoom` does nothing on a 3D camera | it is a perspective one, which ignores `zoom`: narrow `fov`, or switch to `projection: "orthographic"` |
 | a click on a mesh misses, or hits something beside it | the pointer's `gameWorldX`/`gameWorldY` were used; pass `gameScreenX`/`gameScreenY` to `screenToRay` / `pick` / `screenToWorld` |
 | `screenToWorld` returns `null` | that pixel looks above the horizon, or the floor's Y sign is wrong (Y-down: the floor is a greater y than the camera) |
+| `pick` returns the floor (or a sky dome) instead of what stands on it | it is the nearest mesh along the ray: set `floor.pickable = false` |
+| a mesh set `pickable = false` still gets its pointer events | as intended: `pickable` is for `pick`; to stop its events, release them |
 | a mesh in a moved container is picked where it used to be | it has not been drawn since the container moved: picking learns the container's placement from the last draw |
 | scene lit from underneath | `direction` Y sign — this is Y-down, so a sun overhead is **+Y** |
 | `model.scale(2)` throws "not a function" on a `GLTFModel` (before 20.14) | the `scale` option hid the method: update |

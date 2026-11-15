@@ -99,7 +99,13 @@ export function pickInContainer(
 	let best: MeshHit | null = null;
 	const visit = (node: Walkable) => {
 		for (const child of node.getChildren()) {
-			if (child.isFloating || !child.isRenderable || child.alpha <= 0) {
+			if (
+				child.isFloating ||
+				!child.isRenderable ||
+				child.alpha <= 0 ||
+				// opted out (`Mesh#pickable`, `GLTFModel#pickable`)
+				(child as { pickable?: boolean }).pickable === false
+			) {
 				continue;
 			}
 			const target = child as unknown as Partial<RayTarget>;
