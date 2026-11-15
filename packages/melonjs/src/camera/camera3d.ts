@@ -1959,7 +1959,9 @@ export default class Camera3d extends Camera2d {
 	 * that are not visible: hidden by `alpha` 0 or `isRenderable` false, and
 	 * those set not to be picked ({@link Mesh#pickable},
 	 * {@link GLTFModel#pickable}), so a floor does not stand in front of what
-	 * is on it.
+	 * is on it. Nothing needs registering, and `isKinematic` plays no part:
+	 * that flag opts a renderable in to collisions and pointer events, while
+	 * `pickable` only opts a mesh out of this query.
 	 * @param x - screen x, in canvas pixels (e.g. `pointer.gameScreenX`)
 	 * @param y - screen y, in canvas pixels (e.g. `pointer.gameScreenY`)
 	 * @param container - where to look, usually `app.world`

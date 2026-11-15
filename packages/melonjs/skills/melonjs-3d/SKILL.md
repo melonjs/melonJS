@@ -1204,6 +1204,19 @@ through that pixel with a unit direction, so distances are from the camera.
   own), and a `level.load` option for a whole scene. Like `fog: false`, it
   opts out of one camera feature only: pointer events registered on the mesh
   and a direct `mesh.intersectRay(ray)` still see it.
+- **`pickable` is not `isKinematic`**, and neither replaces the other:
+
+  | | `isKinematic` | `pickable` |
+  | --- | --- | --- |
+  | default | `true` — left out | `true` — included |
+  | direction | opt **in**: set `false` to take part | opt **out**: set `false` to be skipped |
+  | governs | physics collisions **and** pointer events | `camera.pick()` only |
+
+  `pick()` ignores `isKinematic`: it finds a mesh with no body and no events,
+  which is the point of it. Using `isKinematic` instead would mean opting
+  every mesh in, and filing each in the collision broadphase, just to click
+  it. A floor that collides (`isKinematic = false`) but should not be picked
+  sets `pickable = false`.
 
 ```js
 floor.pickable = false;
@@ -1344,6 +1357,8 @@ if (!app.renderer.supportsDepthBuffer) {
 | `screenToWorld` returns `null` | that pixel looks above the horizon, or the floor's Y sign is wrong (Y-down: the floor is a greater y than the camera) |
 | `pick` returns the floor (or a sky dome) instead of what stands on it | it is the nearest mesh along the ray: set `floor.pickable = false` |
 | a mesh set `pickable = false` still gets its pointer events | as intended: `pickable` is for `pick`; to stop its events, release them |
+| `pick` still returns a mesh whose `isKinematic` is `true` | as intended: `isKinematic` gates collisions and pointer events, not `pick`; set `pickable = false` |
+| a mesh was made `isKinematic = false` only to be picked, and now collides | `pick` needs no `isKinematic`; leave it at `true` |
 | a mesh in a moved container is picked where it used to be | it has not been drawn since the container moved: picking learns the container's placement from the last draw |
 | scene lit from underneath | `direction` Y sign — this is Y-down, so a sun overhead is **+Y** |
 | `model.scale(2)` throws "not a function" on a `GLTFModel` (before 20.14) | the `scale` option hid the method: update |

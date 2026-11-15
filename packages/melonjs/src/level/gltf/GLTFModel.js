@@ -538,7 +538,9 @@ export default class GLTFModel extends Container {
 		 * {@link Mesh#pickable} for a mesh: `false` has the whole model passed
 		 * over. A single part, or something attached with
 		 * {@link GLTFModel#addChildToNode}, is left out by setting its own
-		 * `pickable` to `false`.
+		 * `pickable` to `false`. Not {@link Renderable#isKinematic}, which is
+		 * the opt-in to collisions and pointer events: `pickable` concerns
+		 * `pick()` alone (see {@link Mesh#pickable}).
 		 * @type {boolean}
 		 * @default true
 		 */

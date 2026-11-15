@@ -880,10 +880,23 @@ export default class Mesh extends Renderable {
 		 * Whether {@link Camera3d#pick} can return this mesh. `false` has it
 		 * passed over, as though it were not there, so a floor, a skybox or a
 		 * decoration does not stand in front of what is behind it. A
-		 * {@link GLTFModel} passes over such a part too. Like
-		 * {@link Mesh#fog}, it opts one mesh out of a camera feature: pointer
-		 * events (which reach only the meshes they are registered on) and
-		 * {@link Mesh#intersectRay} called directly are not affected.
+		 * {@link GLTFModel} passes over such a part too.
+		 *
+		 * It is **not** {@link Renderable#isKinematic}, and the two do not
+		 * stand in for each other:
+		 * - `isKinematic` (default `true`, so left out) is an opt-IN to
+		 *   physics collisions and pointer events: set it `false` for a mesh
+		 *   to collide, or to receive the events registered on it.
+		 * - `pickable` (default `true`, so included) is an opt-OUT of
+		 *   `pick()` alone, a query of what is drawn under a pixel, which
+		 *   needs nothing registered and ignores `isKinematic`.
+		 *
+		 * So a floor that collides (`isKinematic = false`) but should not be
+		 * picked sets `pickable = false`, and a mesh with no body and no
+		 * events is picked without touching `isKinematic`. Like
+		 * {@link Mesh#fog}, `pickable` opts out of one feature only: pointer
+		 * events and {@link Mesh#intersectRay} called directly still see the
+		 * mesh.
 		 * @type {boolean}
 		 * @default true
 		 * @example
