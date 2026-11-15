@@ -44,7 +44,7 @@
 		"CHANGELOG.md"
 	],
 	"peerDependencies": {
-		"melonjs": ">=20.12.0"
+		"melonjs": ">=20.13.0"
 	},
 	"devDependencies": {
 		"@types/node": "^25.6.0",

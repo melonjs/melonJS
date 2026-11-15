@@ -136,7 +136,7 @@ export class PathfindingPlugin extends plugin.BasePlugin {
 	 */
 	constructor(options: PathfindingPluginOptions = {}, app?: Application) {
 		super(app);
-		this.version = "20.12.0";
+		this.version = "20.13.0";
 		this.options = options;
 		// an engine too old for the plugin: `plugin.register` refuses it
 		// once it is built, so follow nothing, or the listener would outlive it

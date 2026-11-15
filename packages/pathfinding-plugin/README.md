@@ -28,7 +28,7 @@ Staggered and hexagonal maps are not supported.
 npm install melonjs @melonjs/pathfinding-plugin
 ```
 
-It needs melonJS 20.12 or later.
+It needs melonJS 20.13 or later.
 
 ## Quick start
 
