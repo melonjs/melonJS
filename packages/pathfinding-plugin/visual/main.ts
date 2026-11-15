@@ -506,7 +506,8 @@ toggle(
 toggle(
 	"overlay",
 	() => {
-		return overlay.ancestor !== undefined;
+		// undefined once removed, whatever its type says
+		return (overlay.ancestor as unknown) !== undefined;
 	},
 	(on) => {
 		if (on) {
