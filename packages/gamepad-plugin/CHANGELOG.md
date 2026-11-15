@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.2.2] - _unreleased_
+## [1.2.2] - _2026-11-14_
 
 ### Fixed
 - Installing the plugin no longer asks for Node 24. Its `package.json` declared `engines: { node: ">=24.0.0" }`, so npm warned on an older Node and Yarn 1 refused to install it; the plugin runs in the browser
