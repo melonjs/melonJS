@@ -82,7 +82,8 @@ to that animation when this one ends. An **options object** takes
 `{ loop, next, speed, onComplete, onFrame }`, and only an explicit `loop: false`
 stops the looping. A **bare function** is the legacy form: it fires at *every* cycle end,
 and only holds the last frame if it returns `false`. Omit the argument entirely
-and the animation loops forever.
+and the animation loops forever. The options type also has a `crossfade`, which
+only a 3D `GLTFModel` reads (see `melonjs-3d-assets`); a sprite ignores it.
 
 `onFrame(frame)` is called with frame 0 when the animation starts, then with each
 frame playback reaches, so a footstep or a hit lands on its frame without polling

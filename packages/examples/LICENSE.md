@@ -124,6 +124,18 @@ attribution legally required, credited here as a courtesy.
 The **Night City Flythrough** example uses no external assets — its city is
 generated procedurally from raw mesh data at runtime.
 
+### `skinnedCharacter` example
+
+`public/assets/skinnedCharacter/fox.glb` is the **"Fox"** model from the
+Khronos glTF Sample Assets
+(<https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/Fox>),
+unchanged:
+
+- model © 2014 **PixelMannen** — **CC0 1.0 Universal**
+- rigging and animation © 2014 **tomkranis** — **CC BY 4.0**
+  (<https://creativecommons.org/licenses/by/4.0/>)
+- conversion to glTF © 2017 **@AsoboStudio** and **@scurest** — **CC BY 4.0**
+
 ### `text` example
 
 Pixel bitmap fonts `minogram` and `thick` in `public/assets/text/` are from

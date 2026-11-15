@@ -203,12 +203,16 @@ export default class GLTFScene {
 		// occlusion between meshes under Camera3d)
 		container.autoDepth = false;
 
-		// Animated asset → keep the node hierarchy intact inside one rig-driven
-		// GLTFModel (a parent transform carries its children). Static asset →
-		// the flat-mesh path below. The model is named after the asset so it can
+		// Animated or skinned asset → keep the node hierarchy intact inside one
+		// rig-driven GLTFModel (a parent transform carries its children, and a
+		// skin needs its joints' hierarchy). Static asset → the flat-mesh path
+		// below. The model is named after the asset so it can
 		// be retrieved from the world (`world.getChildByName(name)[0]`) to drive
 		// playback. Lights are still instantiated (shared block at the end).
-		if ((this.data.animations ?? []).length > 0) {
+		if (
+			(this.data.animations ?? []).length > 0 ||
+			(this.data.skins ?? []).length > 0
+		) {
 			const model = new GLTFModel(this.data, {
 				scale,
 				rightHanded,

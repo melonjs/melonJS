@@ -26,6 +26,11 @@ export interface AnimationOptions {
 	/** playback rate multiplier (1 = authored speed). */
 	speed: number;
 	/**
+	 * blend into the animation over this many milliseconds instead of
+	 * switching at once. {@link GLTFModel} only; frame animations ignore it.
+	 */
+	crossfade?: number | undefined;
+	/**
 	 * the argument was a bare function — the legacy `Sprite` callback whose
 	 * `false` return holds the last frame. Carried so callers can preserve that
 	 * exact contract; not part of the public options shape.
@@ -59,6 +64,11 @@ export type AnimationOptionsInput =
 			loop?: boolean;
 			/** playback rate multiplier (1 = authored speed) */
 			speed?: number;
+			/**
+			 * blend into the animation over this many milliseconds instead of
+			 * switching at once ({@link GLTFModel} only; frame animations ignore it)
+			 */
+			crossfade?: number;
 	  };
 
 /**
@@ -67,7 +77,7 @@ export type AnimationOptionsInput =
  * - `undefined` → loop forever
  * - a `string` → the name of the next animation to chain to
  * - a `function` → legacy completion callback (return `false` to hold the last frame)
- * - an options object → `{ onComplete, onFrame, next, loop, speed }`
+ * - an options object → `{ onComplete, onFrame, next, loop, speed, crossfade }`
  * @param arg - the second argument passed to `setCurrentAnimation`
  * @returns the normalized options
  * @category Animation
@@ -93,6 +103,10 @@ export function parseAnimationOptions(
 			// only an explicit `false` disables looping
 			loop: arg.loop !== false,
 			speed: typeof arg.speed === "number" ? arg.speed : 1,
+			crossfade:
+				typeof arg.crossfade === "number" && arg.crossfade > 0
+					? arg.crossfade
+					: undefined,
 		};
 	}
 	return { loop: true, speed: 1 };

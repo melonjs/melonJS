@@ -163,6 +163,11 @@ const ExampleGroundShadows = lazy(() =>
 		default: m.ExampleGroundShadows,
 	})),
 );
+const ExampleSkinnedCharacter = lazy(() =>
+	import("./examples/skinnedCharacter/ExampleSkinnedCharacter").then((m) => ({
+		default: m.ExampleSkinnedCharacter,
+	})),
+);
 const ExampleGltfCharacter = lazy(() =>
 	import("./examples/gltf/ExampleGltfCharacter").then((m) => ({
 		default: m.ExampleGltfCharacter,
@@ -529,6 +534,14 @@ const examples: {
 		sourceDir: "gltf",
 		description:
 			"A rigged blocky character (Kenney, CC0) loaded from GLB, using node-TRS animation over a rigid hierarchy.",
+	},
+	{
+		component: <ExampleSkinnedCharacter />,
+		label: "Skinned Character",
+		path: "skinned-character",
+		sourceDir: "skinnedCharacter",
+		description:
+			"A skinned glTF fox (Khronos sample) deformed by its skeleton, crossfading between Survey, Walk and Run as it trots around a track.",
 	},
 	{
 		component: <ExampleForest />,

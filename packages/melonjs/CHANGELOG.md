@@ -1,5 +1,12 @@
 # Changelog
 
+## [20.16.0] (melonJS 2) - _unreleased_
+
+### Added
+- 3D: skinned glTF meshes (`JOINTS_0` / `WEIGHTS_0` with a `skin`, the format of Mixamo, Quaternius and most rigged character packs) deform with their skeleton. A skinned asset loads as a `GLTFModel`, even with no clips; the skin is deformed on the CPU, so it works the same on WebGPU, WebGL and Canvas. Up to four joints per vertex; morph targets are still not read
+- 3D: `GLTFModel#setCurrentAnimation(name, { crossfade })` blends into a clip over that many milliseconds instead of switching at once, on skinned and rigid rigs alike; switching again mid-fade blends from the pose on screen, and a clip chained with `next` is entered with the same crossfade
+- glTF: the parsed descriptor carries the asset's `skins`, and each skinned primitive its `joints`, `weights` and `skin`; `bounds` are measured on the skinned rest pose
+
 ## [20.15.1] (melonJS 2) - _2026-11-14_
 
 ### Fixed

@@ -1115,7 +1115,7 @@ primitive exported at the origin; see `melonjs-3d-assets`.
 
 `melonjs-3d-assets` covers the rest: every `level.load` option, which material
 features are imported, imported lights and their intensity units, node-TRS
-animation (and the skinning that is out of scope), and OBJ/MTL.
+animation, skinned characters and crossfades between clips, and OBJ/MTL.
 
 ## Requires a GPU backend
 

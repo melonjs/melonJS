@@ -1,3 +1,8 @@
+import {
+	computeJointMatrices,
+	normalizeSkinWeights,
+	skinVertices,
+} from "../../level/gltf/gltf_skin.js";
 import { level } from "../../level/level.js";
 import { transformedBounds } from "../../math/vertex.ts";
 import { hasDOM } from "../../system/dom.ts";
@@ -15,9 +20,12 @@ import { specularFromMetallicRoughness } from "./pbr.ts";
  * Tier 1 scope: static node graph + mesh primitives (POSITION / TEXCOORD_0
  * / indices) + pbrMetallicRoughness.baseColorTexture (and baseColorFactor) +
  * node TRS animation (translation / rotation / scale channels, the rigid
- * hierarchical animation used by e.g. Kenney's blocky characters).
- * Out of scope: skinning (vertex skinning / JOINTS_0 / WEIGHTS_0), morph
- * targets, full PBR maps, KHR extensions, Draco compression.
+ * hierarchical animation used by e.g. Kenney's blocky characters) + skins
+ * (JOINTS_0 / WEIGHTS_0 with inverse bind matrices, deformed on the CPU by
+ * `GLTFModel`).
+ * Out of scope: morph targets, more than four joint influences per vertex
+ * (JOINTS_1 / WEIGHTS_1), full PBR maps, most KHR extensions, Draco
+ * compression.
  * @ignore
  * @internal
  */
@@ -676,6 +684,55 @@ function loadImageFromUrl(url, revoke = false, crossOrigin) {
  * @ignore
  * @internal
  */
+/**
+ * Read a skinned primitive's `JOINTS_0` / `WEIGHTS_0` attributes.
+ *
+ * Joints arrive as unsigned bytes or shorts, weights as floats or normalized
+ * integers; both come out as 4 per vertex, with the weights summing to 1. A
+ * joint index past the end of the skin's joint list (a malformed file) has
+ * its weight dropped rather than reading a matrix that does not exist.
+ * Influences beyond the first four (`JOINTS_1` / `WEIGHTS_1`) are ignored.
+ * @param {object} json - the glTF document
+ * @param {Uint8Array[]} buffers - the resolved binary buffers
+ * @param {object} prim - the mesh primitive
+ * @param {number} vertexCount - the primitive's vertex count
+ * @param {{joints: number[]}} skin - the parsed skin the node is bound to
+ * @returns {{joints: Uint16Array, weights: Float32Array}|undefined} the influences, or undefined when the primitive has none
+ * @ignore
+ * @internal
+ */
+function readSkinInfluences(json, buffers, prim, vertexCount, skin) {
+	const jointsIndex = prim.attributes.JOINTS_0;
+	const weightsIndex = prim.attributes.WEIGHTS_0;
+	if (jointsIndex === undefined || weightsIndex === undefined) {
+		return undefined;
+	}
+	const joints = Uint16Array.from(readAccessor(json, buffers, jointsIndex));
+	const rawWeights = readAccessor(json, buffers, weightsIndex);
+	if (joints.length < vertexCount * 4 || rawWeights.length < vertexCount * 4) {
+		return undefined;
+	}
+	const jointCount = skin.joints.length;
+	let malformed = false;
+	for (let i = 0; i < vertexCount * 4; i++) {
+		if (joints[i] >= jointCount) {
+			joints[i] = 0;
+			rawWeights[i] = 0;
+			malformed = true;
+		}
+	}
+	if (malformed) {
+		console.warn(
+			"glTF: a skinned primitive names joints its skin does not have; their weights were dropped",
+		);
+	}
+	const weights = normalizeSkinWeights(
+		rawWeights,
+		json.accessors[weightsIndex].componentType,
+	);
+	return { joints, weights };
+}
+
 export async function parseGLTF(arrayBuffer, baseURI, settings) {
 	const { json, bin } = parseGLB(arrayBuffer);
 	const buffers = await resolveBuffers(json, bin, baseURI, settings);
@@ -853,6 +910,36 @@ export async function parseGLTF(arrayBuffer, baseURI, settings) {
 		return [r, g, b];
 	};
 
+	// skins: each binds a mesh to a list of joint nodes, with one inverse bind
+	// matrix per joint (identity when the accessor is absent, per the spec)
+	const skins = (json.skins || []).map((skin, si) => {
+		const joints = (skin.joints || []).slice();
+		let inverseBindMatrices;
+		if (skin.inverseBindMatrices !== undefined) {
+			inverseBindMatrices = Float32Array.from(
+				readAccessor(json, buffers, skin.inverseBindMatrices),
+			);
+			if (inverseBindMatrices.length < joints.length * 16) {
+				throw new Error(
+					`glTF: skin ${si} has ${joints.length} joints but only ${inverseBindMatrices.length / 16} inverse bind matrices`,
+				);
+			}
+		} else {
+			inverseBindMatrices = new Float32Array(joints.length * 16);
+			for (let j = 0; j < joints.length; j++) {
+				inverseBindMatrices[j * 16] = 1;
+				inverseBindMatrices[j * 16 + 5] = 1;
+				inverseBindMatrices[j * 16 + 10] = 1;
+				inverseBindMatrices[j * 16 + 15] = 1;
+			}
+		}
+		return {
+			name: skin.name || `skin_${si}`,
+			joints,
+			inverseBindMatrices,
+		};
+	});
+
 	// walk the active scene's node graph, accumulating world matrices.
 	// A malformed asset is not allowed to crash the loader: a missing scene
 	// or scene-node list degrades to an empty (but valid) descriptor rather
@@ -870,7 +957,7 @@ export async function parseGLTF(arrayBuffer, baseURI, settings) {
 	// colors) + resolved material color. Shared by the flat static `meshNodes`
 	// list and the hierarchical `graph` (animated path) so geometry is read
 	// exactly once per primitive and both views share the same typed arrays.
-	const readPrimitiveGeometry = (prim) => {
+	const readPrimitiveGeometry = (prim, skin) => {
 		const vertices = readAccessor(json, buffers, prim.attributes.POSITION);
 		const uvs =
 			prim.attributes.TEXCOORD_0 !== undefined
@@ -903,12 +990,22 @@ export async function parseGLTF(arrayBuffer, baseURI, settings) {
 			prim.attributes.COLOR_0 !== undefined
 				? readVertexColors(json, buffers, prim.attributes.COLOR_0)
 				: undefined;
+		// skin influences (JOINTS_0 / WEIGHTS_0), read only when the node is
+		// bound to a skin: the attributes mean nothing without one
+		const influences =
+			skin !== undefined
+				? readSkinInfluences(json, buffers, prim, vertexCount, skin)
+				: undefined;
 		return {
 			vertices,
 			normals,
 			uvs,
 			indices,
 			vertexCount,
+			// per-vertex joint indices (into the skin's joint list) and weights,
+			// 4 per vertex, or undefined for a rigid primitive
+			joints: influences?.joints,
+			weights: influences?.weights,
 			image: materialImage(prim.material),
 			// texture wrap mode from the glTF sampler (default REPEAT) — see
 			// materialTextureRepeat; carried so the Mesh samples tiling UVs
@@ -953,6 +1050,8 @@ export async function parseGLTF(arrayBuffer, baseURI, settings) {
 	// carrying rest TRS, children, and any mesh primitives. Built alongside the
 	// flat `meshNodes` from the same single geometry read.
 	const graphNodes = {};
+	// glTF node index → its rest-pose world matrix, for bounding skinned meshes
+	const restWorld = {};
 
 	const visit = (nodeIndex, parentWorld) => {
 		if (visited.has(nodeIndex)) {
@@ -961,6 +1060,7 @@ export async function parseGLTF(arrayBuffer, baseURI, settings) {
 		visited.add(nodeIndex);
 		const node = json.nodes[nodeIndex];
 		const world = multiplyMatrix(parentWorld, nodeLocalMatrix(node));
+		restWorld[nodeIndex] = world;
 		const nodeName = node.name || `node_${nodeIndex}`;
 		const primitives = [];
 		if (node.mesh !== undefined) {
@@ -973,8 +1073,20 @@ export async function parseGLTF(arrayBuffer, baseURI, settings) {
 			const instances = instancing
 				? readInstanceAttributes(json, buffers, instancing.attributes)
 				: undefined;
+			// a skinned node: its primitives deform with the skin's joints, and
+			// (per the spec) its own transform does not place them
+			const skinIndex =
+				node.skin !== undefined && skins[node.skin] !== undefined
+					? node.skin
+					: undefined;
 			for (const prim of json.meshes[node.mesh].primitives) {
-				const geo = readPrimitiveGeometry(prim);
+				const geo = readPrimitiveGeometry(
+					prim,
+					skinIndex !== undefined ? skins[skinIndex] : undefined,
+				);
+				// the skin rides along only on a primitive that actually has
+				// influences to deform with
+				geo.skin = geo.joints !== undefined ? skinIndex : undefined;
 				primitives.push(geo);
 				// flat static entry — same shape (+ world + name) as before so the
 				// static path and bounds computation are unchanged
@@ -998,6 +1110,11 @@ export async function parseGLTF(arrayBuffer, baseURI, settings) {
 			matrix: node.matrix ? node.matrix.slice() : null,
 			children: (node.children || []).slice(),
 			primitives,
+			// index into `skins` when the node's mesh is skinned, else null
+			skin:
+				node.skin !== undefined && skins[node.skin] !== undefined
+					? node.skin
+					: null,
 		};
 		if (node.camera !== undefined) {
 			cameras.push({ ...json.cameras[node.camera], world });
@@ -1037,7 +1154,32 @@ export async function parseGLTF(arrayBuffer, baseURI, settings) {
 	const min = [Infinity, Infinity, Infinity];
 	const max = [-Infinity, -Infinity, -Infinity];
 	for (const n of meshNodes) {
-		transformedBounds(n.vertices, n.vertexCount, n.world, min, max);
+		if (n.skin !== undefined) {
+			// a skinned mesh is placed by its joints, not its node: bound it
+			// where the rest pose puts its deformed vertices
+			const skin = skins[n.skin];
+			const jointMatrices = computeJointMatrices(
+				new Float32Array(skin.joints.length * 16),
+				skin,
+				(j) => {
+					return restWorld[j];
+				},
+				IDENTITY,
+			);
+			const posed = new Float32Array(n.vertices.length);
+			skinVertices(
+				n.vertices,
+				undefined,
+				n.joints,
+				n.weights,
+				jointMatrices,
+				n.vertexCount,
+				posed,
+			);
+			transformedBounds(posed, n.vertexCount, IDENTITY, min, max);
+		} else {
+			transformedBounds(n.vertices, n.vertexCount, n.world, min, max);
+		}
 	}
 	// a scene with no drawable geometry leaves the bounds at their sentinel
 	// ±Infinity — collapse to a degenerate box at the origin so consumers
@@ -1093,6 +1235,9 @@ export async function parseGLTF(arrayBuffer, baseURI, settings) {
 		// static path ignores both. `graph.nodes` is keyed by glTF node index.
 		graph: { roots, nodes: graphNodes },
 		animations,
+		// skins (joint node indices + inverse bind matrices), referenced by a
+		// graph node's `skin` and a primitive's `skin`
+		skins,
 	};
 }
 
@@ -1119,6 +1264,17 @@ export async function parseGLTF(arrayBuffer, baseURI, settings) {
  * @property {boolean} [unlit] - the material carried `KHR_materials_unlit`
  * @property {boolean} [doubleSided] - the material is double-sided
  * @property {string} [name] - the source node's name
+ * @property {Uint16Array} [joints] - skinned primitives only: 4 joint indices per vertex, into the skin's `joints` list
+ * @property {Float32Array} [weights] - skinned primitives only: 4 weights per vertex, summing to 1
+ * @property {number} [skin] - skinned primitives only: the index of its skin in {@link GLTFData}'s `skins`
+ */
+
+/**
+ * A glTF skin: the joint nodes a skinned mesh deforms with.
+ * @typedef {object} GLTFSkin
+ * @property {string} name - the skin's name (`skin_<index>` when unnamed)
+ * @property {number[]} joints - glTF node index of each joint
+ * @property {Float32Array} inverseBindMatrices - one column-major 4x4 matrix per joint, back to back
  */
 
 /**
@@ -1130,6 +1286,7 @@ export async function parseGLTF(arrayBuffer, baseURI, settings) {
  * @property {{min: number[], max: number[]}} bounds - world-space scene bounds in glTF units
  * @property {object[]} graph - the full node graph (every node's TRS/matrix + children), for custom traversal
  * @property {object[]} animations - parsed node animations (consumed by `GLTFModel` playback)
+ * @property {GLTFSkin[]} [skins] - the asset's skins (consumed by `GLTFModel`, which deforms skinned meshes with them)
  */
 
 /**

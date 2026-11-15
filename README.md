@@ -140,6 +140,7 @@ Scenes
     - Automatically lit by the scene's authored lights — the sun plus any point/spot lamps set up in the authoring tool, each keeping its authored name so `getChildByName("Sun")` finds it for runtime tuning
     - Textured, solid-colored, and vertex-colored materials
     - Node animation — walk/idle/sprint characters, spinning pickups, doors, lifts — played through the same `setCurrentAnimation` / `play` / `pause` / `stop` API as a 2D `Sprite`
+    - Skinned characters (`JOINTS_0` / `WEIGHTS_0`, the format of Mixamo and most rigged character packs) deformed by their skeleton, with `crossfade` blending between clips
     - `.glb` and `.gltf` files, with embedded *or* external buffers & textures
     - Works with any glTF authoring tool (Blender, Maya, 3ds Max, Cinema 4D, …)
 
@@ -216,6 +217,7 @@ Examples
 * [Jungle Rabbit](https://melonjs.github.io/melonJS/examples/#/jungle-rabbit) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/jungleRabbit)) — a low-poly river endless runner: Blender-modelled props through `InstancedMesh`, a rigged paddling boat, a procedural valley and shadows laid on its banks
 * [glTF Scene](https://melonjs.github.io/melonJS/examples/#/gltf) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/gltf)) — a Blender-authored, lit 3D scene loaded with `level.load`
 * [glTF Animated Model](https://melonjs.github.io/melonJS/examples/#/gltf-character) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/gltf)) — a rigged character (Kenney Blocky Characters) with node animation, driven by the Sprite-aligned `setCurrentAnimation` / `play` / `pause` / `stop` API
+* [Skinned Character](https://melonjs.github.io/melonJS/examples/#/skinned-character) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/skinnedCharacter)) — a skinned glTF fox deformed by its skeleton, crossfading between Survey, Walk and Run
 * [Trail](https://melonjs.github.io/melonJS/examples/#/trail) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/trail))
 * [Shader Effects](https://melonjs.github.io/melonJS/examples/#/shader-effects) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/shaderEffects))
 * [Spine](https://melonjs.github.io/melonJS/examples/#/spine) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/spine))

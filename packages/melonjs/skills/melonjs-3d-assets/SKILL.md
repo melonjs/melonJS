@@ -1,6 +1,6 @@
 ---
 name: melonjs-3d-assets
-description: "Use this skill when loading 3D models into melonJS — glTF and GLB scenes, OBJ/MTL models, materials, imported lights, node animation, ground shadows and GPU instancing. Covers level.load options including the async flag, the rightHanded conversion, and exactly what the loader does and does not support. Triggers on: glTF, gltf, glb, OBJ, MTL, 3D model, getGLTF, getOBJ, getMTL, GLTFModel, GLTFScene, level.load glb, rightHanded, lightIntensityScale, castGroundShadow, shadowGroundY, EXT_mesh_gpu_instancing, KHR_lights_punctual, alphaMode, doubleSided, map_d, map_bump, normalize, animationspeed, skinning, Blender export, 3D asset."
+description: "Use this skill when loading 3D models into melonJS — glTF and GLB scenes, OBJ/MTL models, materials, imported lights, node animation, skinned characters and crossfades, ground shadows and GPU instancing. Covers level.load options including the async flag, the rightHanded conversion, and exactly what the loader does and does not support. Triggers on: glTF, gltf, glb, OBJ, MTL, 3D model, getGLTF, getOBJ, getMTL, GLTFModel, GLTFScene, level.load glb, rightHanded, lightIntensityScale, castGroundShadow, shadowGroundY, EXT_mesh_gpu_instancing, KHR_lights_punctual, alphaMode, doubleSided, map_d, map_bump, normalize, animationspeed, skinning, skinned mesh, skin, JOINTS_0, WEIGHTS_0, rigged character, Mixamo, crossfade, blend animations, Blender export, 3D asset."
 license: MIT
 ---
 
@@ -149,7 +149,7 @@ because one loaded mesh can merge materials and the flag routes the whole mesh.
 Set `transparent: true` on the part yourself (see `melonjs-3d`).
 
 Not imported: **normal maps**, metallic/roughness *textures*, occlusion maps,
-morph targets, `KHR_texture_transform`. Nothing errors — the material simply
+`KHR_texture_transform`. Nothing errors — the material simply
 arrives without them, which reads as "flatter than the preview in my authoring
 tool". Bake what you need into the base colour. (OBJ/MTL does carry a normal
 map, see below.)
@@ -304,11 +304,71 @@ Constructing one directly from `loader.getGLTF(name)` is fine and is the way to
 go when the model is a game object rather than a scene — `level.load` is for
 loading a whole scene into the world.
 
-**Vertex skinning is out of scope** — `JOINTS_0` / `WEIGHTS_0` are not read, and
-neither are morph targets. A smoothly-deforming character will not deform. The
-options are: rig it hierarchically instead (separate meshes parented into a
-node tree), use `Sprite3d` billboards, or use the Spine plugin for 2D skeletal
-work.
+### Skinned characters
+
+A **skinned** mesh — one bound to a skeleton through `JOINTS_0` / `WEIGHTS_0`
+and a glTF `skin`, which is what Mixamo, Quaternius, KayKit and most rigged
+character packs export — deforms with its joints (20.16). Nothing to opt in:
+an asset with a skin loads as a `GLTFModel` (even with no clips), and its clips
+drive the joints like any other node.
+
+```js
+await loader.preload([{ name: "fox", type: "glb", src: "models/fox.glb" }]);
+
+const data = loader.getGLTF("fox");
+// size it from the asset's own bounds rather than guessing the export unit
+const scale = 200 / (data.bounds.max[1] - data.bounds.min[1]);
+const fox = new GLTFModel(data, { scale, lit: true });
+app.world.addChild(fox, 0);
+fox.setCurrentAnimation("Walk");
+```
+
+How it behaves, so nothing about it is a surprise:
+
+- **The skin is deformed on the CPU**, from the bind pose, on every frame the
+  joints move: identical on WebGPU, WebGL and Canvas, at one pass over the
+  vertices per frame. A character of a few thousand vertices costs a fraction
+  of a millisecond; a crowd of hundreds of skinned characters is the wrong use
+  — the GPU has nothing to share between them. Moving or turning the model
+  alone does **not** re-skin it.
+- **Up to four joints per vertex** (`JOINTS_0` / `WEIGHTS_0`). `JOINTS_1` /
+  `WEIGHTS_1` are ignored, so an export with more influences loses the extra
+  ones; limit influences to 4 in the exporter. Weights are renormalised to sum
+  to 1, and a weight naming a joint the skin does not have is dropped with a
+  warning.
+- **The skinned mesh's own node transform is ignored**, as the glTF spec
+  requires: the joints alone say where it is. Its part `Mesh` sits at the
+  model's origin with a cull sphere covering the rig, so it culls where it is
+  drawn.
+- `data.bounds` is measured on the **skinned rest pose**, so framing a camera
+  on it works for a rigged character.
+- Each model deforms its **own copy** of the geometry; the descriptor's arrays
+  stay the bind pose, so many models can share one loaded asset.
+- **Morph targets are not read** (facial blend shapes): the mesh keeps its base
+  shape.
+
+### Crossfading between clips
+
+`setCurrentAnimation(name, { crossfade: ms })` blends into the clip instead of
+snapping to it — the difference between a walk turning into a run and a walk
+*popping* into one. The clip being faded out keeps playing underneath while its
+weight falls to 0; with nothing playing, the blend starts from the rest pose.
+
+```js
+fox.setCurrentAnimation("Run", { crossfade: 250 });
+fox.setCurrentAnimation("Jump", { loop: false, next: "Idle", crossfade: 150 });
+// `next` is entered with the same crossfade
+```
+
+- Switching again **mid-fade** blends from the pose on screen, so mashing
+  buttons never pops.
+- `pause()` freezes the fade with the clip; `stop()` cancels it.
+- Rotations are slerped, translations and scales lerped, per node. It works on
+  rigid (node-TRS) rigs as well as skinned ones.
+- `crossfade` is ignored by `Sprite` and other frame animations.
+
+Ground speed has to follow the clip too, or the feet skate: tween the speed
+over the same duration (`new Tween(pace).to({ value: runSpeed }, { duration: 250 })`).
 
 ## Instancing
 
@@ -560,8 +620,13 @@ need a prefix.
 | a mesh built from `getGLTF(name).nodes` comes out unit-sized | `normalize` defaults to `true`; pass `normalize: false` to keep the authored units |
 | after one normalized mesh of a model, the scene or other meshes of that model load shrunken (before 20.14) | the default normalized the loader's cached array in place; update, or pass `normalize: false` |
 | some copies in an imported scatter render inside-out | negative-scale (mirrored) instances under per-mesh face culling; make the material `doubleSided` |
-| a character does not deform | vertex skinning is out of scope; rig hierarchically or billboard |
-| animation names come back empty | the asset has no node-TRS channels (skin-only rig) |
+| a character does not deform (before 20.16) | vertex skinning was not supported: update |
+| a skinned character is a crumpled ball or a spike at the origin | weights all zero or exported for more than 4 influences — limit influences to 4 per vertex in the exporter |
+| a skinned character's face does not change expression | morph targets (blend shapes) are not read |
+| a skinned character is tiny or enormous | its export unit (often centimetres): size it from `data.bounds` rather than a fixed `scale` |
+| switching clips pops from one pose to the next | no `crossfade`: `setCurrentAnimation(name, { crossfade: 200 })` |
+| the feet skate during a crossfade | the ground speed changes instantly while the legs blend; tween the speed over the same duration |
+| animation names come back empty | the asset has no animation clips (a rig exported without its actions) |
 | `setCurrentAnimation(name, { speed })` changes nothing | that clip is already playing, so the call returns at once; set `animationspeed` |
 | `model.scale(2)` throws "not a function" on a `GLTFModel` (before 20.14) | the `scale` option hid the method: update |
 | a `GLTFModel` ignores `pos` / `rotate` once its clip is paused or finished (before 20.14) | it was only re-posed while a clip played: update |
