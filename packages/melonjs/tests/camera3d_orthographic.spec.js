@@ -7,6 +7,7 @@ import {
 	Container,
 	Frustum,
 	Mesh,
+	Sprite,
 	Vector3d,
 	video,
 } from "../src/index.js";
@@ -134,6 +135,24 @@ describe("Camera3d projection", () => {
 			}).toThrow();
 		}
 		expect(cam.orthoHeight).toBe(H);
+	});
+
+	it("rejects them as options too, rather than falling back", () => {
+		expect(() => {
+			return new Camera3d(0, 0, W, H, { projection: "ortho" });
+		}).toThrow(/unknown projection/);
+		for (const bad of [0, -10, Number.NaN, Number.POSITIVE_INFINITY]) {
+			expect(() => {
+				return new Camera3d(0, 0, W, H, {
+					projection: "orthographic",
+					orthoHeight: bad,
+				});
+			}).toThrow(/orthoHeight/);
+		}
+		// a camera with no size yet is still made, as before
+		expect(() => {
+			return new Camera3d(0, 0, 0, 0);
+		}).not.toThrow();
 	});
 
 	it("keeps orthoHeight across a resize, and follows the new aspect", () => {
@@ -318,5 +337,78 @@ describe("drawing through an orthographic Camera3d", () => {
 		expect(far).toBe(near);
 		// and the flag the draw raised is lowered again
 		expect(renderer._orthographic3d).toBe(false);
+	});
+
+	it("a sprite keeps its depth: it draws where worldToScreen puts it", () => {
+		const renderer = app.renderer;
+		// looking down at the floor: a farther sprite sits higher on screen
+		const cam = ortho({ orthoHeight: 1000 });
+		cam.setPosition(0, -1000, 0);
+		cam.lookAt(0, 0, 1000);
+		cam.update(0);
+		const canvas = document.createElement("canvas");
+		canvas.width = 40;
+		canvas.height = 40;
+		const c2d = canvas.getContext("2d");
+		c2d.fillStyle = "#ffffff";
+		c2d.fillRect(0, 0, 40, 40);
+		// the screen row of the lit pixels in the middle column
+		const rowAt = (z) => {
+			const world = new Container(0, 0, Infinity, Infinity);
+			world.autoDepth = false;
+			world.root = true;
+			const sprite = new Sprite(0, 0, { image: canvas });
+			sprite.inViewport = true;
+			world.addChild(sprite, z);
+			renderer.backgroundColor.setColor(0, 0, 0, 255);
+			renderer.clear();
+			cam.draw(renderer, world);
+			renderer.flush();
+			const gl = renderer.gl;
+			gl.finish();
+			const column = new Uint8Array(H * 4);
+			gl.readPixels(W / 2, 0, 1, H, gl.RGBA, gl.UNSIGNED_BYTE, column);
+			let sum = 0;
+			let lit = 0;
+			for (let y = 0; y < H; y++) {
+				if (column[y * 4] > 128) {
+					// readPixels is bottom-up
+					sum += H - 1 - y;
+					lit++;
+				}
+			}
+			return lit > 0 ? sum / lit : Number.NaN;
+		};
+		const near = rowAt(600);
+		const far = rowAt(1400);
+		const expected = (z) => {
+			return cam.worldToScreen(new Vector3d(0, 0, z)).y;
+		};
+		expect(Math.abs(near - expected(600))).toBeLessThan(3);
+		expect(Math.abs(far - expected(1400))).toBeLessThan(3);
+		expect(near - far).toBeGreaterThan(20);
+	});
+
+	it("setDepth keeps a depth under an orthographic Camera3d, not on screen-space draws", () => {
+		const renderer = app.renderer;
+		const saved = renderer.projectionMatrix.clone();
+		renderer.projectionMatrix.copy(ortho().projectionMatrix);
+		try {
+			renderer._orthographic3d = true;
+			renderer.setDepth(250);
+			expect(renderer.currentDepth).toBe(250);
+			renderer.beginScreenSpace();
+			renderer.setDepth(250);
+			expect(renderer.currentDepth).toBe(0);
+			renderer.endScreenSpace();
+			// a 2D camera's orthographic projection: depth is a sort key only
+			renderer._orthographic3d = false;
+			renderer.setDepth(250);
+			expect(renderer.currentDepth).toBe(0);
+		} finally {
+			renderer._orthographic3d = false;
+			renderer.projectionMatrix.copy(saved);
+			renderer.setDepth(0);
+		}
 	});
 });

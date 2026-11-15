@@ -498,6 +498,15 @@ export default class GLTFModel extends Container {
 		this._fade = null;
 
 		/**
+		 * Whether the current clip plays once (`loop: false`, or chained to
+		 * another with `next`) rather than looping: faded out, it then holds
+		 * its last frame instead of starting over under the blend.
+		 * @ignore
+		 * @internal
+		 */
+		this._animOnce = false;
+
+		/**
 		 * a world-matrix lookup handed to the skinning helpers
 		 * @ignore
 		 * @internal
@@ -582,6 +591,10 @@ export default class GLTFModel extends Container {
 		this.current.length = this.anim[name].duration;
 		this.animationspeed = opts.speed;
 		this._animDone = false;
+		// a legacy callback decides at the end whether to loop: as before,
+		// such a clip loops while it is faded out
+		this._animOnce =
+			!opts.legacyFn && (typeof opts.next === "string" || opts.loop === false);
 		const onComplete = opts.onComplete;
 		if (opts.legacyFn) {
 			// legacy bare-function callback (return false → hold the last pose)
@@ -676,6 +689,7 @@ export default class GLTFModel extends Container {
 		this.current.length = 0;
 		this.resetAnim = undefined;
 		this._animDone = false;
+		this._animOnce = false;
 		this._fade = null;
 		this.animationpause = false;
 		// re-pose with no active clip → every node falls back to its rest matrix
@@ -1133,11 +1147,21 @@ export default class GLTFModel extends Container {
 			this.current.name !== undefined ? this.anim[this.current.name] : null;
 		const running = this._fade;
 		if (running === null) {
+			// a clip that plays once holds its last frame from where it ended
+			// (a chain into the next clip starts this fade at or past its
+			// end); a looping one carries on from where it is in its loop
+			const length = prev !== null ? prev.duration : 0;
+			const once = this._animOnce;
+			let time = this.current.time;
+			if (length > 0) {
+				time = once ? Math.min(time, length) : time % length;
+			}
 			return {
 				clip: prev,
-				time: this.current.time,
+				time,
 				speed: this.animationspeed,
-				done: this._animDone,
+				once,
+				done: this._animDone || (once && time >= length),
 				pose: null,
 				nodes: prev !== null ? prev.animatedNodes : NO_NODES,
 				elapsed: 0,
@@ -1179,6 +1203,7 @@ export default class GLTFModel extends Container {
 			clip: null,
 			time: 0,
 			speed: 0,
+			once: true,
 			done: true,
 			pose,
 			nodes: new Set(pose.keys()),
@@ -1189,8 +1214,8 @@ export default class GLTFModel extends Container {
 
 	/**
 	 * Advance the running crossfade by `dt` ms: its weight, and the clip being
-	 * faded out, which keeps looping (or holds its last pose if it had
-	 * finished). Ends the fade once it is complete.
+	 * faded out, which keeps looping, or, if it plays once, runs on to its
+	 * last frame and holds it. Ends the fade once it is complete.
 	 * @param {number} dt - elapsed time, in milliseconds
 	 * @ignore
 	 * @internal
@@ -1204,7 +1229,15 @@ export default class GLTFModel extends Container {
 		}
 		const clip = fade.clip;
 		if (clip !== null && !fade.done && clip.duration > 0) {
-			fade.time = (fade.time + (dt / 1000) * fade.speed) % clip.duration;
+			const time = fade.time + (dt / 1000) * fade.speed;
+			if (!fade.once) {
+				fade.time = time % clip.duration;
+			} else if (time >= clip.duration) {
+				fade.time = clip.duration;
+				fade.done = true;
+			} else {
+				fade.time = time;
+			}
 		}
 	}
 

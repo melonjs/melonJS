@@ -205,7 +205,13 @@ input.registerPointerEvent("pointerdown", crate, (pointer) => {
   reused: copy what you keep past the callback.
 - `pointerenter` / `pointerleave` follow the ray on and off the mesh.
 - A mesh inside a moved or turned container is hit where it draws, as of the
-  last frame.
+  last frame. One in a container taken out of the world gets nothing.
+- **Each event ray-tests the meshes it can reach**, every triangle of them
+  (each instance of an `InstancedMesh`). A move only tests the meshes that
+  listen for moves, `pointerenter` / `pointerleave` or a release: register
+  only `pointerdown` on a ten-thousand-instance forest and moving the mouse
+  costs nothing; register `pointermove` on it and every move pays for all of
+  them.
 
 Without registering anything, `camera.pick(x, y, app.world)` returns the same
 record for the nearest mesh under a screen point, and
@@ -420,6 +426,7 @@ input.triggerKeyEvent(input.KEY.LEFT, false);   // release
 |---|---|
 | clicks on a 3D mesh land in the wrong place or not at all (before 20.16) | meshes were hit-tested by their 2D bounds, which a perspective camera makes meaningless: update — they are hit-tested by the pointer's ray now |
 | a click on a mesh also reaches the floor or mesh behind it | the handler did not `return false` |
+| moving the mouse got slow under a `Camera3d` | a big mesh or `InstancedMesh` listens for `pointermove` / `pointerenter` / `pointerleave`: each move ray-tests all its triangles. Listen for presses only, or hover with `camera.pick` on a smaller set |
 | `pointer.hit3d` is `null` | not a mesh's event, a `pointerleave`, or read after the callback returned (the record is reused) |
 | pointer handler never fires | `isKinematic` left at its `true` default |
 | touches never arrive where there is no DOM (nx.js, a Web Worker) | melonJS older than 20.14 listened for mouse events there; update. Touch is then read from `TouchEvent`s dispatched on the canvas given as `settings.canvas` |

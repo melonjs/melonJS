@@ -354,7 +354,9 @@ How it behaves, so nothing about it is a surprise:
 `setCurrentAnimation(name, { crossfade: ms })` blends into the clip instead of
 snapping to it — the difference between a walk turning into a run and a walk
 *popping* into one. The clip being faded out keeps playing underneath while its
-weight falls to 0; with nothing playing, the blend starts from the rest pose.
+weight falls to 0 (a looping one round its loop, a play-once one, or one
+chained with `next`, on to its last frame, which it then holds); with nothing
+playing, the blend starts from the rest pose.
 
 ```js
 fox.setCurrentAnimation("Run", { crossfade: 250 });

@@ -2097,9 +2097,25 @@ export default class Mesh extends Renderable {
 	 * @internal
 	 */
 	onDeactivateEvent(...args) {
+		this._releaseGeometry();
+		super.onDeactivateEvent(...args);
+	}
+
+	/**
+	 * Release the GPU geometry the renderer keeps for this mesh, and for its
+	 * outline hull: the hull is drawn as a mesh of its own, so the batchers
+	 * keep its buffers too, and nothing else would ever release them.
+	 * @ignore
+	 * @internal
+	 */
+	_releaseGeometry() {
+		// the fallback is load-bearing: a mesh that was never parented has no
+		// `parentApp`, and skipping the release would leak its GPU geometry
 		const renderer = this.parentApp?.renderer ?? game.renderer;
 		renderer?.deleteMeshGeometry?.(this);
-		super.onDeactivateEvent(...args);
+		if (this._outline !== undefined) {
+			renderer?.deleteMeshGeometry?.(this._outline);
+		}
 	}
 
 	/**
@@ -2920,6 +2936,11 @@ export default class Mesh extends Renderable {
 		let hull = this._outline;
 		const count = this.vertexCount;
 		if (hull === undefined || hull.vertexCount !== count) {
+			// a hull of the old vertex count is replaced: free its buffers
+			if (hull !== undefined) {
+				const renderer = this.parentApp?.renderer ?? game.renderer;
+				renderer?.deleteMeshGeometry?.(hull);
+			}
 			// weld vertices that share a position, so a hard-edged model's
 			// split vertices are pushed out together and the hull stays closed
 			const groups = new Int32Array(count);
@@ -3446,10 +3467,8 @@ export default class Mesh extends Renderable {
 	 * @internal
 	 */
 	destroy() {
-		// the fallback is load-bearing: a mesh that was never parented has no
-		// `parentApp`, and skipping the release would leak its GPU geometry
-		const renderer = this.parentApp?.renderer ?? game.renderer;
-		renderer?.deleteMeshGeometry?.(this);
+		this._releaseGeometry();
+		this._outline = undefined;
 		super.destroy();
 	}
 }

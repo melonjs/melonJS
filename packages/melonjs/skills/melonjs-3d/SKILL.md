@@ -208,7 +208,8 @@ class GameStage extends Stage {
 
 `camera.projection = "orthographic"` (or `projection: "orthographic"` in the
 `Camera3d` options) keeps everything 3D — depth buffer, lighting, fog, ground
-shadows, billboards, culling, picking, glTF scenes — and drops the
+shadows, billboards, sprites and particles at their depth, culling, picking,
+glTF scenes — and drops the
 foreshortening (20.16). Parallel edges stay parallel and a prop is the same
 size at the back as at the front: the look of an isometric tactics, builder or
 diorama game, without isometric tile maths.

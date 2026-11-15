@@ -568,6 +568,39 @@ describe("GLTFModel crossfade", () => {
 		expect(model._fade).not.toBeNull();
 	});
 
+	it("a chained clip fades out from its last frame, not from its start", () => {
+		const model = makeModel();
+		model.setCurrentAnimation("bend", { next: "rest", crossfade: 100 });
+		model.update(200); // fade in done; bend at 0.2 s
+		model.update(800); // bend ends (90°) → rest, faded in over 100 ms
+		expect(model.isCurrentAnimation("rest")).toBe(true);
+		expect(model._fade.time).toBeCloseTo(1);
+		model.update(50);
+		// the outgoing bend holds 90° (not 4.5° from starting over), weight 0.5
+		expect(model._fade.time).toBeCloseTo(1);
+		expectClose(v2(model), [-R45, 1 + R45, 0]);
+	});
+
+	it("a play-once clip faded out near its end runs on to its last frame and holds it", () => {
+		const model = makeModel();
+		model.setCurrentAnimation("bend", { loop: false });
+		model.update(900);
+		model.setCurrentAnimation("rest", { crossfade: 1000 });
+		model.update(500);
+		// 0.9 s + 0.5 s would wrap to 0.4 s on a loop; a play-once clip stops at 1 s
+		expect(model._fade.time).toBeCloseTo(1);
+		expectClose(v2(model), [-R45, 1 + R45, 0]);
+	});
+
+	it("a looping clip faded out carries on round its loop", () => {
+		const model = makeModel();
+		model.setCurrentAnimation("bend");
+		model.update(900);
+		model.setCurrentAnimation("rest", { crossfade: 1000 });
+		model.update(300);
+		expect(model._fade.time).toBeCloseTo(0.2);
+	});
+
 	it("the clip being faded out keeps playing underneath", () => {
 		const model = makeModel();
 		model.setCurrentAnimation("bend");

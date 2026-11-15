@@ -381,6 +381,40 @@ describe("outlines", () => {
 		expect(hull.originalVertices[7]).toBeLessThan(restY - 0.5);
 	});
 
+	// is any batcher still holding GPU geometry for `mesh`?
+	const retained = (mesh) => {
+		let held = false;
+		app.renderer.batchers.forEach((batcher) => {
+			if (batcher.retained?.has(mesh)) {
+				held = true;
+			}
+		});
+		return held;
+	};
+
+	it("free the hull's GPU geometry with the mesh's, on destroy", () => {
+		const m = cube({ outlineWidth: 4 });
+		render([m]);
+		const hull = m._outline;
+		expect(retained(m)).toBe(true);
+		expect(retained(hull)).toBe(true);
+		m.destroy();
+		expect(retained(m)).toBe(false);
+		expect(retained(hull)).toBe(false);
+	});
+
+	it("free the hull's GPU geometry when the mesh leaves the world, and rebuild it on its next draw", () => {
+		const m = cube({ outlineWidth: 4 });
+		render([m]);
+		const hull = m._outline;
+		// what removing it with keepalive, or recycling it through the pool, does
+		m.onDeactivateEvent();
+		expect(retained(hull)).toBe(false);
+		render([m]);
+		expect(retained(m._outline)).toBe(true);
+		m.destroy();
+	});
+
 	it("are not drawn for a Sprite3d", () => {
 		const img = document.createElement("canvas");
 		img.width = 4;

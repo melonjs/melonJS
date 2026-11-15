@@ -630,6 +630,119 @@ describe("pointer events on meshes under a Camera3d", () => {
 		}
 	});
 
+	it("a move does not ray-test a mesh that only listens for presses", () => {
+		try {
+			const mesh = add(cube(0, 0, 500));
+			let tests = 0;
+			const intersectRay = mesh.intersectRay.bind(mesh);
+			mesh.intersectRay = (ray, out) => {
+				tests++;
+				return intersectRay(ray, out);
+			};
+			let pressed = 0;
+			input.registerPointerEvent("pointerdown", mesh, () => {
+				pressed++;
+			});
+			send("pointermove", 5, 5);
+			send("pointermove", SIZE / 2, SIZE / 2);
+			send("pointermove", SIZE / 2 + 1, SIZE / 2);
+			expect(tests).toBe(0);
+			send("pointerdown", SIZE / 2, SIZE / 2);
+			send("pointerup", SIZE / 2, SIZE / 2);
+			expect(pressed).toBe(1);
+			expect(tests).toBeGreaterThan(0);
+			// once it listens for moves, they test it
+			tests = 0;
+			let moved = 0;
+			input.registerPointerEvent("pointermove", mesh, () => {
+				moved++;
+			});
+			send("pointermove", SIZE / 2, SIZE / 2);
+			expect(tests).toBe(1);
+			expect(moved).toBe(1);
+		} finally {
+			cleanup();
+		}
+	});
+
+	it("a mesh in a container taken out of the world gets no events", () => {
+		const group = new Container(0, 0, Infinity, Infinity);
+		const mesh = cube(0, 0, 500);
+		mesh.isKinematic = false;
+		group.addChild(mesh, 500);
+		app.world.addChild(group);
+		let calls = 0;
+		input.registerPointerEvent("pointerdown", mesh, () => {
+			calls++;
+		});
+		try {
+			send("pointerdown", SIZE / 2, SIZE / 2);
+			send("pointerup", SIZE / 2, SIZE / 2);
+			expect(calls).toBe(1);
+			// kept alive, as a scene swapped out and back in is
+			app.world.removeChildNow(group, true);
+			expect(mesh.ancestor).toBe(group);
+			send("pointerdown", SIZE / 2, SIZE / 2);
+			send("pointerup", SIZE / 2, SIZE / 2);
+			expect(calls).toBe(1);
+		} finally {
+			input.releaseAllPointerEvents(mesh);
+			if (group.ancestor !== undefined) {
+				app.world.removeChildNow(group);
+			}
+		}
+	});
+
+	it("a leave because something nearer took the pointer has no hit3d", () => {
+		try {
+			const back = add(cube(0, 0, 800, 100));
+			const front = add(cube(0, 0, 500));
+			const left = [];
+			input.registerPointerEvent("pointerenter", back, () => {});
+			input.registerPointerEvent("pointerleave", back, (pointer) => {
+				left.push(pointer.hit3d);
+			});
+			// on the back cube only, beside the front one
+			const side = app.viewport.worldToScreen(new Vector3d(80, 0, 700));
+			send("pointermove", side.x, side.y);
+			// the front cube now covers the pointer, and keeps the move
+			input.registerPointerEvent("pointermove", front, () => {
+				return false;
+			});
+			send("pointermove", SIZE / 2, SIZE / 2);
+			expect(left).toEqual([null]);
+		} finally {
+			cleanup();
+		}
+	});
+
+	it("an InstancedMesh tells the handler which instance was pressed", () => {
+		try {
+			const set = new InstancedMesh(0, 0, {
+				...cubeGeometry(20),
+				instanceCount: 3,
+			});
+			set.depth = 500;
+			const at = new Matrix3d();
+			for (let i = 0; i < 3; i++) {
+				set.setInstance(i, at.identity().translate(-150 + i * 150, 0, 0));
+			}
+			add(set);
+			const pressed = [];
+			input.registerPointerEvent("pointerdown", set, (pointer) => {
+				pressed.push(pointer.hit3d.instance);
+			});
+			for (const x of [-150, 0, 150]) {
+				const p = app.viewport.worldToScreen(new Vector3d(x, 0, 480));
+				send("pointerdown", p.x, p.y);
+				send("pointerup", p.x, p.y);
+			}
+			expect(pressed).toEqual([0, 1, 2]);
+		} finally {
+			cleanup();
+		}
+	});
+
 	it("a pointer event on a GLTFModel is hit-tested through its parts", async () => {
 		const bar = await parseGLTF(buildBarGLB());
 		const model = new GLTFModel(bar, { scale: 100, rightHanded: false });

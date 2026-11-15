@@ -412,12 +412,33 @@ export default class Camera3d extends Camera2d {
 	) {
 		super(minX, minY, maxX, maxY);
 
+		// the same checks as the `projection` and `orthoHeight` setters: a
+		// misspelt projection would otherwise give perspective without a
+		// word, and a zero height a matrix of NaN
+		const projection = opts?.projection ?? "perspective";
+		if (projection !== "perspective" && projection !== "orthographic") {
+			throw new Error(
+				`Camera3d: unknown projection "${String(projection)}" (expected "perspective" or "orthographic")`,
+			);
+		}
+		// one world unit per pixel by default, as a Camera2d at zoom 1 (only
+		// a height given is checked: a camera made before it has a size has
+		// a height of 0, and is resized before it draws)
+		const orthoHeight = opts?.orthoHeight ?? this.height;
+		if (
+			opts?.orthoHeight !== undefined &&
+			(!(orthoHeight > 0) || !Number.isFinite(orthoHeight))
+		) {
+			throw new Error(
+				`Camera3d: orthoHeight must be a positive finite number, got ${orthoHeight}`,
+			);
+		}
+
 		// build the frustum with the user's opts, defaulting aspect to
 		// the camera viewport rect
 		this.frustum = new Frustum({
-			projection: opts?.projection ?? "perspective",
-			// one world unit per pixel by default, as a Camera2d at zoom 1
-			orthoHeight: opts?.orthoHeight ?? this.height,
+			projection,
+			orthoHeight,
 			fov: opts?.fov ?? Math.PI / 3,
 			aspect: opts?.aspect ?? this.width / this.height,
 			near: opts?.near ?? 0.1,

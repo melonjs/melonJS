@@ -695,8 +695,11 @@ export default class InstancedMesh extends Mesh {
 	 *
 	 * Only the first {@link InstancedMesh#visibleInstanceCount} instances are
 	 * tested, as only they are drawn. Each costs a matrix inverse and a box
-	 * test before any triangle, so picking ten thousand instances is a
-	 * click-time cost rather than a per-frame one.
+	 * test before any triangle. A pointer event registered on the set runs
+	 * this once per event that can reach it: a set listening only for presses
+	 * is tested on a press, not on every move, so picking ten thousand
+	 * instances is a click-time cost; one listening for moves or for entering
+	 * and leaving pays it on every move.
 	 * @param {Ray3d} ray - the ray, in world space (see {@link Camera3d#screenToRay})
 	 * @param {MeshHit} [out] - hit record to write into; a new one is allocated when omitted
 	 * @returns {MeshHit|null} the nearest hit, or `null` when the ray misses every instance
