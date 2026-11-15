@@ -18,7 +18,7 @@
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
 import { loader, Sprite, TextureAtlas } from "melonjs";
-import type { Dir } from "./board";
+import { DIR_NAMES, type Dir } from "./board";
 import type { EnemyKind } from "./levels";
 
 /** the asset name of the sheet, image and JSON alike */
@@ -28,8 +28,6 @@ export const CAST = "starsweep-cast";
 const BAKED_SCALE = 2;
 /** where a character's centre is in its 160 x 160 frame (see the bake script) */
 const CENTRE = { x: 80 / 160, y: 84 / 160 };
-
-export const DIR_NAMES = ["up", "right", "down", "left"] as const;
 
 /** the glow behind each character */
 export const GLOW: Record<EnemyKind | "bolt", string> = {

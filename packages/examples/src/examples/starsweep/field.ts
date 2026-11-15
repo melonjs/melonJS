@@ -46,6 +46,7 @@ import {
 } from "melonjs";
 import {
 	COLS,
+	canStep,
 	type Dir,
 	DX,
 	DY,
@@ -668,7 +669,7 @@ export class Field extends Renderable {
 
 	/** how to move on from a message, for the controls in use */
 	private continueHint() {
-		return this.controls.onScreen ? "tap to go on" : "tap or press Enter";
+		return this.controls.onScreen ? "tap to go on" : "click or press Enter";
 	}
 
 	private addScore(points: number) {
@@ -971,8 +972,7 @@ export class Field extends Renderable {
 	private startStep(p: Player, d: Dir, forced: boolean) {
 		const nx = p.tx + DX[d];
 		const ny = p.ty + DY[d];
-		const g = this.ground(nx, ny);
-		if (g === Tile.WALL || (!forced && !isSolidGround(g))) {
+		if (!canStep(this.ground(nx, ny), forced)) {
 			return false;
 		}
 		// a cracked tile gives way once you step off it

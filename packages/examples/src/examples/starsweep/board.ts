@@ -31,8 +31,13 @@ export type Tile = (typeof Tile)[keyof typeof Tile];
 
 /** 0 = up, 1 = right, 2 = down, 3 = left */
 export type Dir = 0 | 1 | 2 | 3;
+/** the column step of each direction */
 export const DX = [0, 1, 0, -1] as const;
+/** the row step of each direction */
 export const DY = [-1, 0, 1, 0] as const;
+/** each direction's name, which is also its action and animation name */
+export const DIR_NAMES = ["up", "right", "down", "left"] as const;
+/** the direction back the way a step came */
 export const opposite = (d: Dir) => ((d + 2) % 4) as Dir;
 
 export const COLS = 11;
@@ -110,6 +115,18 @@ export const isSolidGround = (t: Tile) =>
 /** Tiles that stop a move: walls, and gates still shut. */
 export const isBlocking = (t: Tile) => t === Tile.WALL || t === Tile.GATE;
 
+/**
+ * Whether a step may go onto a tile. A step the player chose only goes
+ * onto ground; a forced one (an ice slide, an arrow's push) goes anywhere
+ * but a blocking tile, off the edge included. The game and the level
+ * checker both follow this rule.
+ * @param t - the tile ahead
+ * @param forced - whether the step is forced
+ * @returns true if the step may go there
+ */
+export const canStep = (t: Tile, forced: boolean) =>
+	forced ? !isBlocking(t) : isSolidGround(t);
+
 /** The same map with every gate open, as after a switch is lit. */
 export const withGatesOpen = (tiles: readonly Tile[]) =>
 	tiles.map((t) => (t === Tile.GATE ? Tile.GATE_OPEN : t));
@@ -160,7 +177,7 @@ export const traceMove = (
 		inBounds(cx, cy) ? tiles[cy * COLS + cx] : Tile.VOID;
 	let nx = x + DX[dir];
 	let ny = y + DY[dir];
-	if (!isSolidGround(at(nx, ny))) {
+	if (!canStep(at(nx, ny), false)) {
 		return null;
 	}
 	const path = [{ x: nx, y: ny }];
@@ -173,7 +190,7 @@ export const traceMove = (
 		const tx = nx + DX[f];
 		const ty = ny + DY[f];
 		const next = at(tx, ty);
-		if (isBlocking(next)) {
+		if (!canStep(next, true)) {
 			return { path, end: { x: nx, y: ny }, fell: false, loops: false };
 		}
 		if (next === Tile.VOID) {
