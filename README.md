@@ -134,6 +134,7 @@ Scenes
     - Dynamic Entity loading via an extensible object factory registry — register custom handlers for any Tiled class name without modifying engine code
     - Tile objects take the class set on their tile in the tileset, and inherit its properties
     - Shape based Tile collision support
+    - [A* pathfinding](https://github.com/melonjs/melonJS/tree/master/packages/pathfinding-plugin) across a map's tile layer or its collision shapes, on orthogonal and isometric maps
 - glTF / GLB 3D scenes — load an authored 3D scene with `level.load(...)`, the same one call as a Tiled map
     - The whole scene loads at once — meshes, materials, cameras and lights — viewed under a `Camera3d`
     - Automatically lit by the scene's authored lights — the sun plus any point/spot lamps set up in the authoring tool, each keeping its authored name so `getChildByName("Sun")` finds it for runtime tuning
@@ -269,6 +270,7 @@ Here is the list of official plugins maintained by the melonJS team:
 - [tiled-inflate-plugin](https://github.com/melonjs/melonJS/tree/master/packages/tiled-inflate-plugin) - enable loading and parsing of zlib, gzip and zstd compressed [Tiled](https://www.mapeditor.org/) maps
 - [spine-plugin](https://github.com/melonjs/melonJS/tree/master/packages/spine-plugin) - [Spine](http://esotericsoftware.com) runtime integration to render Spine skeletal animations, with a dedicated batcher on each renderer (WebGPU, WebGL and Canvas)
 - [gamepad-plugin](https://github.com/melonjs/melonJS/tree/master/packages/gamepad-plugin) - on-screen touch controls (sticks and buttons) reported as a gamepad, so the same bindings cover a real pad and a touch screen
+- [pathfinding-plugin](https://github.com/melonjs/melonJS/tree/master/packages/pathfinding-plugin) - A* pathfinding on a grid built from a Tiled layer or a level's collision shapes, with costs, diagonals, smoothing and a debug overlay
 - [capacitor-plugin](https://github.com/melonjs/melonJS/tree/master/packages/capacitor-plugin) - bridges [Capacitor](https://capacitorjs.com/)'s native lifecycle (pause/resume, hardware back-button, orientation lock, splash) for melonJS games wrapped as iOS / Android apps
 
 If you wish to develop your own plugin, we also provide a [plugin template](https://github.com/melonjs/plugin-template) to help you get started.

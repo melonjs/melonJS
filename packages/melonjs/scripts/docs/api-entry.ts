@@ -43,6 +43,20 @@ export {
 	type MatterAdapterOptions,
 } from "../../../matter-adapter/src/index.ts";
 export {
+	type BodiesOptions,
+	type CellRegion,
+	type CellShape,
+	type DiagonalMode,
+	Grid,
+	type GridSettings,
+	type Heuristic,
+	PathfindingPlugin,
+	type PathfindingPluginOptions,
+	type PathOptions,
+	type PathResult,
+	type TileLayerOptions,
+} from "../../../pathfinding-plugin/src/index.ts";
+export {
 	PlanckAdapter,
 	type PlanckAdapterOptions,
 	type PlanckJointDefinition,

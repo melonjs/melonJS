@@ -65,4 +65,5 @@ Companion packages cover the rest: `@melonjs/planck-adapter` and
 `@melonjs/matter-adapter` (physics), `@melonjs/spine-plugin` (skeletal
 animation), `@melonjs/tiled-inflate-plugin` (**required** for compressed Tiled
 maps), `@melonjs/debug-plugin`, `@melonjs/gamepad-plugin` (touch controls
-reported as a gamepad), `@melonjs/capacitor-plugin`.
+reported as a gamepad), `@melonjs/pathfinding-plugin` (A* on a grid),
+`@melonjs/capacitor-plugin`.
