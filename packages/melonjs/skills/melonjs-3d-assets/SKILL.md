@@ -49,6 +49,8 @@ or it renders flat. See `melonjs-3d` for the camera.
 | `shadowLight` | — | a `Light3d` to take the direction from, re-read every draw |
 | `toonBands` | `0` | cel-shade every lit mesh into this many bands (see `melonjs-3d`) |
 | `outlineWidth` / `outlineColor` | `0` / black | an ink outline round every mesh, in world units (see `melonjs-3d`) |
+| `rimLight` / `rimColor` | `0` / white | a rim light on every lit mesh (see `melonjs-3d`) |
+| `pickable` | `true` | `false` has `camera.pick` pass over the scene's meshes (see `melonjs-3d`) |
 | `crossfade` | `0` | an animated or skinned asset's default blend between clips, in ms (see Crossfading below) |
 
 Those `game.` defaults are the engine's, not a recommendation. `game` is

@@ -475,6 +475,8 @@ function buildTextureGroups(
  * @property {number} [toonBands=0] - cel (toon) shading for the lit path: the light on the surface is cut into this many flat bands, from unlit to fully lit, and a specular highlight becomes a hard-edged spot. `0` (or anything under 2) is the usual smooth shading. Needs `lit` and a `Camera3d`.
  * @property {number} [outlineWidth=0] - draw an outline this many world units (pixels) wide around the mesh's silhouette, the inked edge of a cartoon look — an "inverted hull" drawn behind it. `0` for none. `Camera3d` only; not drawn by an `InstancedMesh` or a `Sprite3d`.
  * @property {Color|string|number[]} [outlineColor="#000000"] - the outline's colour: a {@link Color}, a CSS colour string, or `[r, g, b]` in 0..1.
+ * @property {number} [rimLight=0] - a rim light for the lit path: a glow along the silhouette, where the surface turns away from the camera, this strong (`0` for none, `1` the full {@link Mesh#rimColor}). Needs `lit` and a `Camera3d`.
+ * @property {Color|string|number[]} [rimColor="#ffffff"] - the rim light's colour: a {@link Color}, a CSS colour string, or `[r, g, b]` in 0..1.
  * @property {string|TextureAtlas|HTMLImageElement} [normalMap] - tangent-space normal map (MTL `map_bump`/`bump`/`norm`), perturbing the lit path's shading normal per fragment. Needs `lit` to have any effect, and a `Camera3d`. See the [Material Textures example](https://melonjs.github.io/melonJS/examples/#/material-textures).
  * @property {string|TextureAtlas|HTMLImageElement} [alphaMap] - per-texel opacity map, sampled in addition to the diffuse texture (MTL `map_d`).
  * @property {boolean} [castGroundShadow] - give this mesh a blob ground shadow, overriding the application's `castGroundShadow` setting in both directions. Omit to inherit. Needs a GPU backend and a `Camera3d`.
@@ -930,6 +932,30 @@ export default class Mesh extends Renderable {
 		 * @type {Color}
 		 */
 		this.outlineColor = toColor(settings.outlineColor, 0, 0, 0);
+
+		/**
+		 * A rim light on the lit path: a glow along the silhouette, where the
+		 * surface turns away from the camera, of this strength — `0` (the
+		 * default) for none, `1` for the full {@link Mesh#rimColor}, more to
+		 * overdrive it. Added on top of the lighting, like
+		 * {@link Mesh#emissive}, so it shows on a model's shadowed side too,
+		 * picking it out from a dark background. With
+		 * {@link Mesh#toonBands} it is a hard-edged band rather than a
+		 * gradient. Needs `lit: true` and a `Camera3d`.
+		 * @type {number}
+		 * @default 0
+		 * @example
+		 * hero.rimLight = 0.6;
+		 * hero.rimColor.parseCSS("#9fd8ff"); // a cold back light
+		 */
+		this.rimLight =
+			typeof settings.rimLight === "number" ? settings.rimLight : 0;
+
+		/**
+		 * The colour of the rim light (see {@link Mesh#rimLight}).
+		 * @type {Color}
+		 */
+		this.rimColor = toColor(settings.rimColor, 255, 255, 255);
 
 		// The material's base colour, applied as the tint. LINEAR per the
 		// glTF spec, so it is encoded rather than scaled: see the setting's
@@ -2937,6 +2963,30 @@ export default class Mesh extends Renderable {
 		} finally {
 			tint.copy(_savedTint);
 		}
+	}
+
+	/**
+	 * The rim light the lit shaders add, {@link Mesh#rimColor} premultiplied
+	 * by {@link Mesh#rimLight}, in 0..1 per channel (more when overdriven):
+	 * all zero for none. A strength that is not a positive number is none.
+	 * @param {Float32Array|number[]} out - where to write `[r, g, b]`
+	 * @returns {Float32Array|number[]} `out`
+	 * @ignore
+	 * @internal
+	 */
+	_rimInto(out) {
+		const k = this.rimLight;
+		const c = this.rimColor;
+		if (!(k > 0) || !Number.isFinite(k) || !(c instanceof Color)) {
+			out[0] = 0;
+			out[1] = 0;
+			out[2] = 0;
+			return out;
+		}
+		out[0] = (c.r / 255) * k;
+		out[1] = (c.g / 255) * k;
+		out[2] = (c.b / 255) * k;
+		return out;
 	}
 
 	/**

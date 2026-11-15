@@ -99,6 +99,8 @@ export default class GLTFScene {
 		"outlineColor",
 		"crossfade",
 		"pickable",
+		"rimLight",
+		"rimColor",
 		// `shadowGroundPoint` is deliberately NOT here. Every option in this
 		// list is handed to each part of the scene, and one floor POINT
 		// shared by every part would stack the whole scene's blobs on a
@@ -153,6 +155,8 @@ export default class GLTFScene {
 	 * @param {number} [options.outlineWidth] - outline every mesh this many world units wide ({@link Mesh#outlineWidth})
 	 * @param {Color|string|number[]} [options.outlineColor] - the outline colour ({@link Mesh#outlineColor})
 	 * @param {number} [options.crossfade] - for an animated or skinned asset, the default crossfade between its clips, in milliseconds ({@link GLTFModel#crossfade})
+	 * @param {number} [options.rimLight] - a rim light on every lit mesh, this strong ({@link Mesh#rimLight})
+	 * @param {Color|string|number[]} [options.rimColor] - the rim light's colour ({@link Mesh#rimColor})
 	 * @param {boolean} [options.pickable] - set `false` to have {@link Camera3d#pick} pass over the scene's meshes ({@link Mesh#pickable})
 	 * @example
 	 * // a loaded scene lit by a sun the game owns, so a day/night cycle
@@ -192,6 +196,8 @@ export default class GLTFScene {
 			toonBands: options.toonBands,
 			outlineWidth: options.outlineWidth,
 			outlineColor: options.outlineColor,
+			rimLight: options.rimLight,
+			rimColor: options.rimColor,
 			pickable: options.pickable,
 		};
 		const scale = options.scale ?? 1;
