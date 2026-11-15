@@ -39,6 +39,7 @@
 		"build/",
 		"package.json",
 		"README.md",
+		"pathfinding.png",
 		"LICENSE",
 		"CHANGELOG.md"
 	],

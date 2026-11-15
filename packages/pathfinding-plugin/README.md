@@ -6,6 +6,8 @@
 
 A* pathfinding on a grid for [melonJS](https://melonjs.org/) games.
 
+![three agents finding their way to a target: through the gap in a wall and around a mud pond, each path drawn with the cells its search looked at](pathfinding.png)
+
 - a grid of open and solid cells, each with a weight to cross (mud, water, roads)
 - built from a Tiled tile layer, from a level's collision shapes, or from your own callbacks
 - changed as the game goes on: open a door, knock down a wall, let a floor fall away
