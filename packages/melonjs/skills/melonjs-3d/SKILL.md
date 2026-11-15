@@ -1,6 +1,6 @@
 ---
 name: melonjs-3d
-description: "Use this skill for anything 3D or 2.5D in melonJS — Camera3d, Mesh, InstancedMesh, Sprite3d billboards, Light3d, ground shadows, glTF/GLB scenes, and depth sorting. Covers the Y-down/+Z-forward convention that is the inverse of OpenGL, the cameraClass opt-in, clip planes, and what does not work on the Canvas fallback. Triggers on: Camera3d, Mesh, InstancedMesh, Sprite3d, Trail3d, ribbon, exhaust trail, Light3d, billboard, glTF, glb, 3D, 2.5D, depth, cameraClass, fov, setClipPlanes, setFog, fog, distance fog, height fog, heightFalloff, transparent, transparency, alpha, blendMode, fade, castGroundShadow, shadowGroundPoint, lit, emissive, specular, shininess, normalMap, alphaCutoff, depthTest, vertexColors, worldToScreen, screenToRay, screenToWorld, pick, picking, Ray3d, intersectRay, hit3d, click a mesh, followOffset, setBasis, getBasis, lookAt, up vector, gimbal, slerp, great circle, turn a direction."
+description: "Use this skill for anything 3D or 2.5D in melonJS — Camera3d, Mesh, InstancedMesh, Sprite3d billboards, Light3d, ground shadows, glTF/GLB scenes, and depth sorting. Covers the Y-down/+Z-forward convention that is the inverse of OpenGL, the cameraClass opt-in, orthographic (isometric) projection, clip planes, and what does not work on the Canvas fallback. Triggers on: Camera3d, orthographic, isometric, orthoHeight, projection, Mesh, InstancedMesh, Sprite3d, Trail3d, ribbon, exhaust trail, Light3d, billboard, glTF, glb, 3D, 2.5D, depth, cameraClass, fov, setClipPlanes, setFog, fog, distance fog, height fog, heightFalloff, transparent, transparency, alpha, blendMode, fade, castGroundShadow, shadowGroundPoint, lit, emissive, specular, shininess, normalMap, alphaCutoff, depthTest, vertexColors, worldToScreen, screenToRay, screenToWorld, pick, picking, Ray3d, intersectRay, hit3d, click a mesh, followOffset, setBasis, getBasis, lookAt, up vector, gimbal, slerp, great circle, turn a direction."
 license: MIT
 ---
 
@@ -203,6 +203,43 @@ class GameStage extends Stage {
   deadzone and damping are not applied. For a damped chase camera, leave the
   target unset and move the camera yourself (`math.damp`, or `slerp` below for
   its facing).
+
+## Orthographic projection: the isometric look
+
+`camera.projection = "orthographic"` (or `projection: "orthographic"` in the
+`Camera3d` options) keeps everything 3D — depth buffer, lighting, fog, ground
+shadows, billboards, culling, picking, glTF scenes — and drops the
+foreshortening (20.16). Parallel edges stay parallel and a prop is the same
+size at the back as at the front: the look of an isometric tactics, builder or
+diorama game, without isometric tile maths.
+
+```js
+const camera = app.viewport;              // cameraClass: Camera3d
+camera.projection = "orthographic";
+camera.orthoHeight = 900;                 // world units tall: the zoom
+// true isometric: a quarter turn of 45°, looking down atan(1/√2) ≈ 35.26°
+const yaw = Math.PI / 4;
+const pitch = Math.atan(1 / Math.SQRT2);
+camera.setPosition(
+    -Math.sin(yaw) * Math.cos(pitch) * 1800,
+    -Math.sin(pitch) * 1800,              // up is -Y
+    -Math.cos(yaw) * Math.cos(pitch) * 1800,
+);
+camera.lookAt(0, 0, 0);
+camera.setClipPlanes(50, 6000);
+```
+
+- **`orthoHeight` is the zoom**, the height of the view in world units (the
+  width follows the aspect). It defaults to the camera's height in pixels, one
+  unit per pixel. `fov` is ignored, and so is the camera's `zoom`.
+- **Still stand the camera back.** It is placed and pointed as a perspective
+  one is: `near` / `far` are measured from it, so something behind it is
+  clipped, and specular highlights are measured from its position.
+- **Switching at run time** keeps the camera where it is; only the projection
+  changes. To make the two frame alike, give perspective
+  `fov = 2 * atan(orthoHeight / 2 / distance)`.
+- Picking works the same: `screenToRay` returns parallel rays, one per pixel,
+  each starting on the camera's plane.
 
 ## Where an up vector earns its keep
 
@@ -1213,6 +1250,8 @@ if (!app.renderer.supportsDepthBuffer) {
 
 | symptom | cause |
 |---|---|
+| an orthographic camera shows nothing, or half a scene | it sits inside the scene: stand it back like a perspective camera, since `near` / `far` are measured from its position |
+| zooming an orthographic camera does nothing | `fov` and `zoom` do not apply to it; change `orthoHeight` |
 | a click on a mesh misses, or hits something beside it | the pointer's `gameWorldX`/`gameWorldY` were used; pass `gameScreenX`/`gameScreenY` to `screenToRay` / `pick` / `screenToWorld` |
 | `screenToWorld` returns `null` | that pixel looks above the horizon, or the floor's Y sign is wrong (Y-down: the floor is a greater y than the camera) |
 | a mesh in a moved container is picked where it used to be | it has not been drawn since the container moved: picking learns the container's placement from the last draw |

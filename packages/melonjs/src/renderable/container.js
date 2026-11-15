@@ -61,7 +61,12 @@ const _depthShift = new Matrix3d();
  */
 function isPerspective(renderer) {
 	const projection = renderer.projectionMatrix;
-	return projection !== undefined && projection.val[11] !== 0;
+	if (projection !== undefined && projection.val[11] !== 0) {
+		return true;
+	}
+	// An orthographic Camera3d has no perspective term, but it still draws a
+	// world with depth; only its screen-space (floating) draws are flat
+	return renderer._orthographic3d === true && !(renderer._screenSpaceDepth > 0);
 }
 
 /**

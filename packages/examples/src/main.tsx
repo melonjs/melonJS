@@ -163,6 +163,11 @@ const ExampleGroundShadows = lazy(() =>
 		default: m.ExampleGroundShadows,
 	})),
 );
+const ExampleIsometric3d = lazy(() =>
+	import("./examples/isometric3d/ExampleIsometric3d").then((m) => ({
+		default: m.ExampleIsometric3d,
+	})),
+);
 const ExamplePicking = lazy(() =>
 	import("./examples/picking/ExamplePicking").then((m) => ({
 		default: m.ExamplePicking,
@@ -539,6 +544,14 @@ const examples: {
 		sourceDir: "gltf",
 		description:
 			"A rigged blocky character (Kenney, CC0) loaded from GLB, using node-TRS animation over a rigid hierarchy.",
+	},
+	{
+		component: <ExampleIsometric3d />,
+		label: "Isometric 3D",
+		path: "isometric-3d",
+		sourceDir: "isometric3d",
+		description:
+			"An orthographic Camera3d over the Kenney platformer diorama (CC0): the isometric look in real 3D, switchable to perspective, wheel to zoom, drag to turn.",
 	},
 	{
 		component: <ExamplePicking />,

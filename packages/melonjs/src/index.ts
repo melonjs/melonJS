@@ -131,6 +131,7 @@ export type {
 	SoundEvents,
 	TrackOptions,
 } from "./audio/types.ts";
+export type { FrustumOptions, ProjectionMode } from "./camera/frustum.ts";
 // export all public constants
 export * from "./const.ts";
 export { Box3d } from "./geometries/box3d.ts";

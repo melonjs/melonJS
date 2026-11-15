@@ -100,7 +100,7 @@ Input
 
 Camera
 - Multi-camera support (split-screen, minimaps, multiple viewports)
-- Optional perspective camera (`Camera3d`) with frustum culling for 2.5D / 3D-projected scenes — drop-in subclass of the default 2D camera — with distance fog (linear or exp2, with height falloff), roll, and `worldToScreen()` to pin HUD elements to 3D points; picking the other way round with `screenToRay()`, `screenToWorld()` and `pick()`, and pointer events on meshes hit-tested against their triangles
+- Optional perspective or orthographic camera (`Camera3d`, `projection: "orthographic"` for isometric views) with frustum culling for 2.5D / 3D-projected scenes — drop-in subclass of the default 2D camera — with distance fog (linear or exp2, with height falloff), roll, and `worldToScreen()` to pin HUD elements to 3D points; picking the other way round with `screenToRay()`, `screenToWorld()` and `pick()`, and pointer events on meshes hit-tested against their triangles
 - Per-camera visibility layers (`visibilityLayer`, `cullMask`): a minimap without particles, a light shown in one camera only
 - Camera follow with configurable deadzone and frame-rate-independent damping
 - Built-in camera shake, fade and flash, and screen transitions: a fade, a mask in any shape, and a pixelate (WebGL and WebGPU); custom effects through `CameraEffect`
@@ -217,6 +217,7 @@ Examples
 * [Jungle Rabbit](https://melonjs.github.io/melonJS/examples/#/jungle-rabbit) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/jungleRabbit)) — a low-poly river endless runner: Blender-modelled props through `InstancedMesh`, a rigged paddling boat, a procedural valley and shadows laid on its banks
 * [glTF Scene](https://melonjs.github.io/melonJS/examples/#/gltf) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/gltf)) — a Blender-authored, lit 3D scene loaded with `level.load`
 * [glTF Animated Model](https://melonjs.github.io/melonJS/examples/#/gltf-character) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/gltf)) — a rigged character (Kenney Blocky Characters) with node animation, driven by the Sprite-aligned `setCurrentAnimation` / `play` / `pause` / `stop` API
+* [Isometric 3D](https://melonjs.github.io/melonJS/examples/#/isometric-3d) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/isometric3d)) — an orthographic `Camera3d` over a glTF diorama, switchable to perspective
 * [3D Picking](https://melonjs.github.io/melonJS/examples/#/picking) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/picking)) — pointer events on meshes under a perspective camera, `pick` and `screenToWorld`
 * [Skinned Character](https://melonjs.github.io/melonJS/examples/#/skinned-character) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/skinnedCharacter)) — a skinned glTF fox deformed by its skeleton, crossfading between Survey, Walk and Run
 * [Trail](https://melonjs.github.io/melonJS/examples/#/trail) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/trail))

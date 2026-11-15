@@ -113,7 +113,7 @@ third-party assets, no attribution required. The ball re-uses the shared
 The 3D scenes in `public/assets/gltf/` are authored/assembled from CC0 kits
 published by Kenney:
 
-- `platformer-diorama.glb` (**glTF Scene**) — **"Platformer Kit"**
+- `platformer-diorama.glb` (**glTF Scene**, **Isometric 3D**) — **"Platformer Kit"**
   (<https://www.kenney.nl/assets/platformer-kit>)
 - `character.glb` (**glTF Animated Model**) — **"Blocky Characters"**
   (<https://www.kenney.nl/assets/blocky-characters>)

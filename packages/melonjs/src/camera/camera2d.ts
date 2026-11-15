@@ -1277,6 +1277,11 @@ export default class Camera2d extends Renderable {
 		// `Stage#draw`) the pass goes OVER what that one drew, see there
 		const usePostEffect = r.beginPostEffect(this);
 
+		// tell the tree whether this view is a 3D world drawn without a
+		// perspective term (an orthographic Camera3d): containers still give
+		// it depth, which they read off the projection otherwise
+		r._orthographic3d = this._isOrthographic3d();
+
 		// apply the world-to-camera-view transform on the container.
 		// Camera2d translates by -camera.pos; Camera3d overrides this
 		// hook to additionally apply the camera's rotation (pitch / yaw)
@@ -1435,6 +1440,18 @@ export default class Camera2d extends Renderable {
 
 		// revert the world-to-camera-view transform applied above
 		this._revertContainerViewTransform(container, translateX, translateY);
+		r._orthographic3d = false;
+	}
+
+	/**
+	 * Whether this camera draws a 3D world through an orthographic
+	 * projection. Never for a 2D camera; see {@link Camera3d}.
+	 * @returns false
+	 * @ignore
+	 * @internal
+	 */
+	_isOrthographic3d(): boolean {
+		return false;
 	}
 
 	/**
