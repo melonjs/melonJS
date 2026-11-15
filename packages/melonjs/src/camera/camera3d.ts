@@ -1961,13 +1961,18 @@ export default class Camera3d extends Camera2d {
 	 * {@link GLTFModel#pickable}), so a floor does not stand in front of what
 	 * is on it. Nothing needs registering, and `isKinematic` plays no part:
 	 * that flag opts a renderable in to collisions and pointer events, while
-	 * `pickable` only opts a mesh out of this query.
+	 * `pickable` only opts a mesh out of this query (see
+	 * {@link Renderable#isKinematic}, {@link Mesh#pickable}).
 	 * @param x - screen x, in canvas pixels (e.g. `pointer.gameScreenX`)
 	 * @param y - screen y, in canvas pixels (e.g. `pointer.gameScreenY`)
 	 * @param container - where to look, usually `app.world`
 	 * @param [out] - hit record to write into; a new one is allocated when omitted
 	 * @returns the nearest hit, or `null` when the ray hits no mesh
+	 * @see Mesh#pickable
+	 * @see Renderable#isKinematic
 	 * @example
+	 * // the floor collides (isKinematic false) but should not be picked
+	 * floor.pickable = false;
 	 * const hit = camera.pick(pointer.gameScreenX, pointer.gameScreenY, app.world);
 	 * if (hit !== null) {
 	 *     select(hit.renderable);   // the Mesh that was hit

@@ -1216,7 +1216,23 @@ through that pixel with a unit direction, so distances are from the camera.
   which is the point of it. Using `isKinematic` instead would mean opting
   every mesh in, and filing each in the collision broadphase, just to click
   it. A floor that collides (`isKinematic = false`) but should not be picked
-  sets `pickable = false`.
+  sets `pickable = false`. The input skill's `isKinematic` section points
+  back here (`melonjs-input`).
+
+```js
+// a floor: collides, but a click picks what stands on it
+floor.isKinematic = false;   // opt in to collisions (and pointer events)
+floor.pickable = false;      // opt out of camera.pick()
+
+// a crate: picked with no flag at all (no body, no events, still kinematic)
+const hit = camera.pick(pointer.gameScreenX, pointer.gameScreenY, app.world);
+if (hit?.renderable === crate) select(crate);
+
+// a lever: answers its own events, so it opts in with isKinematic;
+// pickable has no say over them
+lever.isKinematic = false;
+input.registerPointerEvent("pointerdown", lever, pull);
+```
 
 ```js
 floor.pickable = false;

@@ -899,9 +899,23 @@ export default class Mesh extends Renderable {
 		 * mesh.
 		 * @type {boolean}
 		 * @default true
+		 * @see Renderable#isKinematic
+		 * @see Camera3d#pick
 		 * @example
+		 * // the floor collides, so it is not kinematic, but a click should
+		 * // pick what stands on it
+		 * floor.isKinematic = false;
 		 * floor.pickable = false;
 		 * const hit = camera.pick(x, y, app.world); // the crate on the floor
+		 *
+		 * // the crate needs neither flag to be picked: it has no body and no
+		 * // events, and stays kinematic
+		 * crate.isKinematic; // true, and pick() still finds it
+		 *
+		 * // a lever that answers its own pointer events opts in to those with
+		 * // isKinematic; pickable has no say over its events
+		 * lever.isKinematic = false;
+		 * input.registerPointerEvent("pointerdown", lever, pull);
 		 */
 		this.pickable = settings.pickable !== false;
 

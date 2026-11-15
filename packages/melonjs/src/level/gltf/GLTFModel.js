@@ -543,6 +543,14 @@ export default class GLTFModel extends Container {
 		 * `pick()` alone (see {@link Mesh#pickable}).
 		 * @type {boolean}
 		 * @default true
+		 * @see Mesh#pickable
+		 * @see Renderable#isKinematic
+		 * @example
+		 * // a decorative statue: never picked, though the hero can still
+		 * // bump into it if it has a body
+		 * statue.pickable = false;
+		 * // only the knight's shield arm is left out
+		 * knight.getChildByName("Shield")[0].pickable = false;
 		 */
 		this.pickable = options.pickable !== false;
 
