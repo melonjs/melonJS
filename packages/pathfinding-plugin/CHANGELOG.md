@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.0.0] - _unreleased_
+## [1.0.0] - _2026-11-15_
 
 ### Added
 - `Grid`: A* pathfinding on a grid of open and solid cells, each with a weight; `getIdPath` and `getPointPath` between cells, `findPath` between world positions with whether it reached the goal, its cost and how much it looked at
