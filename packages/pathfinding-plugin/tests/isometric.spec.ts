@@ -8,6 +8,7 @@ import {
 	boot,
 	level,
 	loader,
+	type Renderer,
 	state,
 	type TMXLayer,
 	video,
@@ -381,7 +382,11 @@ describe("grids from an isometric level", () => {
 		);
 		overlay.paths = [{ result }];
 		world().addChild(overlay, 10);
-		const renderer = app?.renderer as Parameters<typeof overlay.draw>[0];
+		if (app === undefined) {
+			throw new Error("no application");
+		}
+		// the renderer as the engine types it, whichever backend runs
+		const renderer: Renderer = app.renderer;
 		const canvas = renderer.getCanvas();
 		const context = canvas.getContext("2d") as CanvasRenderingContext2D;
 		context.clearRect(0, 0, canvas.width, canvas.height);

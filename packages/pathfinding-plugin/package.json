@@ -1,6 +1,6 @@
 {
 	"name": "@melonjs/pathfinding-plugin",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "melonJS A* pathfinding plugin",
 	"homepage": "https://www.npmjs.com/package/@melonjs/pathfinding-plugin",
 	"type": "module",
