@@ -4,12 +4,15 @@ import {
 	composeTRSInto,
 	multiplyMatrixInto,
 } from "../../loader/parsers/gltf.js";
+import { Matrix3d } from "../../math/matrix3d.ts";
 import { vector3dPool } from "../../math/vector3d.ts";
 import { parseAnimationOptions } from "../../renderable/animation.ts";
 import Container from "../../renderable/container.js";
 import { hasVerticalExtent } from "../../renderable/groundshadow.js";
 import InstancedMesh from "../../renderable/instanced_mesh.js";
 import Mesh from "../../renderable/mesh.js";
+import Renderable from "../../renderable/renderable.js";
+import Sprite3d from "../../renderable/sprite3d.js";
 import { fillInstances } from "./GLTFScene.js";
 import { sampleChannel, slerpQuat } from "./gltf_sampler.js";
 import {
@@ -78,6 +81,42 @@ const _qpair = [0, 0, 0, 1, 0, 0, 0, 1];
 const _meshInverse = new Float64Array(16);
 // nodes driven by nothing, the FROM side of a crossfade out of the rest pose
 const NO_NODES = new Set();
+// a node's transform in render space, while placing what is attached to it
+const _nodeScratch = new Matrix3d();
+// the orientation handed to an attached mesh, in that mesh's own space
+const _orientScratch = new Float64Array(16);
+// a node's three axes, while they are made a rotation
+const _rotScratch = new Float64Array(9);
+
+/**
+ * Make the first two axes of `r` (x in 0..2, y in 3..5) unit length and at
+ * right angles, in place: x normalized, then y with its x component taken out
+ * and normalized.
+ * @param {Float64Array} r - the axes
+ * @returns {boolean} false when they span no plane (zero, or parallel)
+ * @ignore
+ */
+function orthonormalize(r) {
+	const lx = Math.hypot(r[0], r[1], r[2]);
+	if (!(lx > 1e-12) || !Number.isFinite(lx)) {
+		return false;
+	}
+	r[0] /= lx;
+	r[1] /= lx;
+	r[2] /= lx;
+	const d = r[3] * r[0] + r[4] * r[1] + r[5] * r[2];
+	r[3] -= d * r[0];
+	r[4] -= d * r[1];
+	r[5] -= d * r[2];
+	const ly = Math.hypot(r[3], r[4], r[5]);
+	if (!(ly > 1e-12) || !Number.isFinite(ly)) {
+		return false;
+	}
+	r[3] /= ly;
+	r[4] /= ly;
+	r[5] /= ly;
+	return true;
+}
 // the per-part hit `intersectRay` tests into
 const _partHit = createMeshHit();
 
@@ -101,7 +140,13 @@ const _partHit = createMeshHit();
  * packs) deforms with its joints: each posed frame the skinned parts are
  * deformed on the CPU from their bind pose, so they bend the same way on
  * WebGPU, WebGL and Canvas. Pass `crossfade` (milliseconds) to
- * `setCurrentAnimation` to blend into a clip rather than snap to it.
+ * `setCurrentAnimation` to blend into a clip rather than snap to it, or set
+ * {@link GLTFModel#crossfade} once for every change.
+ *
+ * Every glTF node (a part, or a skin's joint) is reachable by name:
+ * {@link GLTFModel#getNodeTransform} says where it is this frame, and
+ * {@link GLTFModel#addChildToNode} keeps a renderable on it, a sword in a hand
+ * or a hat on a head.
  *
  * The model is placed like any other renderable: `pos`, `depth` and the
  * transform helpers (`rotate`, `scale`) move the **whole rig**, and compose
@@ -125,6 +170,10 @@ const _partHit = createMeshHit();
  * const fox = new me.GLTFModel(me.loader.getGLTF("fox"), { scale: 2, lit: true });
  * fox.setCurrentAnimation("Walk");
  * fox.setCurrentAnimation("Run", { crossfade: 250 });
+ *
+ * // every change blended by default, and a sword in the right hand
+ * const knight = new me.GLTFModel(me.loader.getGLTF("knight"), { crossfade: 200 });
+ * knight.addChildToNode(sword, "mixamorig:RightHand");
  */
 export default class GLTFModel extends Container {
 	/**
@@ -146,6 +195,7 @@ export default class GLTFModel extends Container {
 	 * @param {number} [options.toonBands=0] - cel-shade the lit parts into this many bands (see {@link Mesh#toonBands})
 	 * @param {number} [options.outlineWidth=0] - outline every part this many world units wide (see {@link Mesh#outlineWidth})
 	 * @param {Color|string|number[]} [options.outlineColor="#000000"] - the outline colour (see {@link Mesh#outlineColor})
+	 * @param {number} [options.crossfade=0] - the default crossfade between clips, in milliseconds (see {@link GLTFModel#crossfade})
 	 */
 	constructor(data, options = {}) {
 		super(0, 0);
@@ -241,6 +291,12 @@ export default class GLTFModel extends Container {
 		 * @internal
 		 */
 		this._world = {};
+		/**
+		 * node name → glTF node index, the first node of each name
+		 * @ignore
+		 * @internal
+		 */
+		this._nodeByName = new Map();
 
 		// a generous per-part cull radius taken from the whole scene's bounds so
 		// the model culls as a unit (a limb never pops out while the body is on
@@ -317,6 +373,9 @@ export default class GLTFModel extends Container {
 				: composeTRS(node.translation, node.rotation, node.scale);
 			// persistent per-node world-matrix buffer (recomputed in place each pose)
 			this._world[idx] = new Array(16);
+			if (typeof node.name === "string" && !this._nodeByName.has(node.name)) {
+				this._nodeByName.set(node.name, idx);
+			}
 
 			for (const prim of node.primitives) {
 				// an instanced node inside an ANIMATED asset still instances:
@@ -454,6 +513,20 @@ export default class GLTFModel extends Container {
 		this.animationspeed = 1;
 
 		/**
+		 * The crossfade, in milliseconds, a change of clip blends over when
+		 * the call does not give its own: {@link GLTFModel#setCurrentAnimation},
+		 * {@link GLTFModel#play} and a clip chained with `next`. `0` switches at
+		 * once. A call's own `crossfade` wins, `0` included.
+		 * @type {number}
+		 * @default 0
+		 * @example
+		 * hero.crossfade = 200;
+		 * hero.setCurrentAnimation("Run");                    // blends over 200 ms
+		 * hero.setCurrentAnimation("Hit", { crossfade: 0 });  // snaps
+		 */
+		this.crossfade = options.crossfade ?? 0;
+
+		/**
 		 * pause/resume the current animation without losing its pose or time.
 		 * @type {boolean}
 		 * @default false
@@ -526,6 +599,15 @@ export default class GLTFModel extends Container {
 		 */
 		this._posedPlacement = new Float64Array(19);
 
+		/**
+		 * what {@link GLTFModel#addChildToNode} attached: child → the node it
+		 * follows, its offset in that node's frame and the orientation it was
+		 * attached with (null for one that only follows the position)
+		 * @ignore
+		 * @internal
+		 */
+		this._attached = new Map();
+
 		// pose to the bind/rest pose so the model is correctly assembled even
 		// before any clip plays
 		this._pose();
@@ -560,7 +642,8 @@ export default class GLTFModel extends Container {
 	 * instead of snapping to it: the previous clip keeps playing underneath
 	 * while its weight falls to 0, so a walk turns into a run without a pop.
 	 * With no clip playing, the blend starts from the rest pose. A clip chained
-	 * with `next` is entered with the same crossfade.
+	 * with `next` is entered with the same crossfade. A call that does not
+	 * give one uses {@link GLTFModel#crossfade}.
 	 * @param {string} name - animation clip id (see {@link GLTFModel#getAnimationNames})
 	 * @param {AnimationOptionsInput} [options] - loop / chain / completion behavior
 	 * @param {boolean} [preserveTime=false] - keep the current playback time instead of restarting at 0
@@ -581,10 +664,20 @@ export default class GLTFModel extends Container {
 			return this;
 		}
 		const opts = parseAnimationOptions(options);
-		// capture what is being faded out BEFORE the current clip changes
-		const crossfade = opts.crossfade;
+		// the call's own crossfade, `0` included (which the parsed options
+		// drop), else the model's default
+		const crossfade =
+			options !== null &&
+			typeof options === "object" &&
+			typeof options.crossfade === "number"
+				? options.crossfade
+				: this.crossfade;
+		// capture what is being faded out BEFORE the current clip changes. An
+		// endless fade would never reach the new clip: it switches at once
 		this._fade =
-			typeof crossfade === "number" && crossfade > 0
+			typeof crossfade === "number" &&
+			crossfade > 0 &&
+			Number.isFinite(crossfade)
 				? this._beginFade(crossfade)
 				: null;
 		this.current.name = name;
@@ -611,10 +704,9 @@ export default class GLTFModel extends Container {
 						return false;
 					}
 				}
-				this.setCurrentAnimation(
-					next,
-					crossfade !== undefined ? { crossfade } : undefined,
-				);
+				this.setCurrentAnimation(next, {
+					crossfade: typeof crossfade === "number" ? crossfade : 0,
+				});
 			};
 		} else if (opts.loop === false) {
 			// play once: fire onComplete, hold the final pose
@@ -637,11 +729,342 @@ export default class GLTFModel extends Container {
 			this.resetAnim = undefined;
 		}
 		if (!preserveTime) {
-			this.current.time = 0;
+			// a clip played backwards starts from its end
+			this.current.time = this._playsBackwards() ? this.current.length : 0;
 		}
 		this._pose();
 		this.isDirty = true;
 		return this;
+	}
+
+	/**
+	 * Whether the current clip runs backwards: reversed with
+	 * {@link GLTFModel#reverseAnimation}, or played at a negative
+	 * {@link GLTFModel#animationspeed} (both together run it forwards).
+	 * @returns {boolean} true when its time runs from its end to its start
+	 * @ignore
+	 * @internal
+	 */
+	_playsBackwards() {
+		const clip =
+			this.current.name !== undefined ? this.anim[this.current.name] : null;
+		const reversed = clip !== null && clip.reversed === true;
+		return reversed !== this.animationspeed < 0;
+	}
+
+	/**
+	 * Play the given clip, or the current one when no name is given,
+	 * backwards: each call turns it around. A looping clip loops from its end
+	 * back to its start, and one played once (`loop: false`, or chained with
+	 * `next`) ends on its first frame, where its `onComplete` and the model's
+	 * `onended` fire. Like {@link Sprite#reverseAnimation}, the clip stays
+	 * reversed until it is reversed again, including the next time it is
+	 * played; the current one carries on from where it is.
+	 * @param {string} [name] - animation clip id; the current clip when omitted
+	 * @returns {GLTFModel} this, for chaining
+	 * @example
+	 * door.setCurrentAnimation("open", { loop: false });
+	 * // ...later, close it by playing the same clip backwards
+	 * door.reverseAnimation("open").setCurrentAnimation("open", { loop: false });
+	 */
+	reverseAnimation(name) {
+		const id = name ?? this.current.name;
+		if (id === undefined) {
+			return this;
+		}
+		const clip = this.anim[id];
+		if (clip === undefined) {
+			throw new Error("animation id '" + id + "' not defined");
+		}
+		clip.reversed = clip.reversed !== true;
+		if (id === this.current.name) {
+			// a play-once clip that finished at one end runs back to the other
+			this._animDone = false;
+		}
+		this.isDirty = true;
+		return this;
+	}
+
+	/**
+	 * Move the current clip to the given time, as {@link Sprite#setAnimationFrame}
+	 * moves a sprite to a frame. A looping clip wraps the time into its
+	 * length; one played once is held between its start and its end, and
+	 * plays on from there, even if it had finished. Does nothing when no clip
+	 * is playing.
+	 * @param {number} [time=0] - the time into the clip, in milliseconds
+	 * @returns {GLTFModel} this, for chaining
+	 * @throws {Error} when `time` is not a finite number
+	 * @example
+	 * // start every guard's patrol at a different point of the walk
+	 * guard.setCurrentAnimation("Walk").setAnimationTime(Math.random() * 1000);
+	 */
+	setAnimationTime(time = 0) {
+		if (typeof time !== "number" || !Number.isFinite(time)) {
+			throw new Error(
+				`GLTFModel: the animation time must be a finite number of milliseconds, got ${String(time)}`,
+			);
+		}
+		if (this.current.name === undefined) {
+			return this;
+		}
+		const length = this.current.length;
+		let t = time / 1000;
+		if (!(length > 0)) {
+			t = 0;
+		} else if (this._animOnce) {
+			t = Math.min(Math.max(t, 0), length);
+		} else {
+			t = ((t % length) + length) % length;
+		}
+		this.current.time = t;
+		this._animDone = false;
+		if (this._isLive()) {
+			this._pose();
+			this.isDirty = true;
+		}
+		return this;
+	}
+
+	/**
+	 * Where the current clip is, as {@link Sprite#getCurrentAnimationFrame}
+	 * says which frame a sprite is on.
+	 * @returns {number} the time into the current clip, in milliseconds; 0 when no clip is playing
+	 */
+	getCurrentAnimationTime() {
+		return this.current.name === undefined ? 0 : this.current.time * 1000;
+	}
+
+	/**
+	 * The names of the asset's glTF nodes: its parts and, for a skinned
+	 * asset, its skeleton's joints. The names {@link GLTFModel#getNodeTransform}
+	 * and {@link GLTFModel#addChildToNode} take. Each name is listed once; a
+	 * name used by several nodes stands for the first of them.
+	 * @returns {string[]}
+	 * @example
+	 * model.getNodeNames(); // ["Armature", "mixamorig:Hips", "mixamorig:Spine", ...]
+	 */
+	getNodeNames() {
+		return [...this._nodeByName.keys()];
+	}
+
+	/**
+	 * The glTF node index for a name.
+	 * @param {string} name - the node's name
+	 * @returns {string} its index in `_nodes`
+	 * @throws {Error} when no node has that name
+	 * @ignore
+	 * @internal
+	 */
+	_nodeIndex(name) {
+		const idx = this._nodeByName.get(name);
+		if (idx === undefined) {
+			throw new Error("node '" + String(name) + "' not defined");
+		}
+		return idx;
+	}
+
+	/**
+	 * Where a node is this frame, and which way it is turned, in the world:
+	 * its origin in `out`'s translation (x, y and depth, in the same units as
+	 * `pos`), and its turn in the rest. The turn is a pure rotation: the
+	 * node's scale is left out, so something placed with it keeps its own
+	 * size. Use it to aim at a hand, place a muzzle flash or sound at a head.
+	 *
+	 * It follows the clip, the crossfade and the model's own `pos`, `depth`
+	 * and transform, as of the last time the model was posed (each update);
+	 * a model moved since is posed again first.
+	 * @param {string} name - the node's name (see {@link GLTFModel#getNodeNames})
+	 * @param {Matrix3d} [out] - the matrix to write into; a new one when omitted
+	 * @returns {Matrix3d} `out`
+	 * @throws {Error} when no node has that name
+	 * @example
+	 * const hand = hero.getNodeTransform("mixamorig:RightHand");
+	 * spark.pos.set(hand.val[12], hand.val[13], hand.val[14]);
+	 */
+	getNodeTransform(name, out = new Matrix3d()) {
+		const idx = this._nodeIndex(name);
+		if (this._isLive() && this._placementChanged()) {
+			this._pose(false);
+		}
+		return this._nodeTransformInto(idx, out);
+	}
+
+	/**
+	 * A node's world transform in render space, without its scale: the
+	 * glTF-space world matrix bridged the way {@link GLTFModel#_applyWorldToMesh}
+	 * bridges a part, its rotation conjugated by `D = diag(1, -1, zSign)`.
+	 * @param {string} idx - the node's index
+	 * @param {Matrix3d} out - the matrix to write into
+	 * @returns {Matrix3d} `out`
+	 * @ignore
+	 * @internal
+	 */
+	_nodeTransformInto(idx, out) {
+		const w = this._world[idx];
+		const v = out.val;
+		const s = this._sceneScale;
+		const zs = this._zSign;
+		// The turn alone, without the scale: a non-uniform scale (the model's
+		// own, or a node's) shears the axes, so normalizing them is not
+		// enough. Gram-Schmidt: x, then y made perpendicular to x, then
+		// z = x × y, which is a rotation whatever the matrix's handedness.
+		const r = _rotScratch;
+		r[0] = w[0];
+		r[1] = w[1];
+		r[2] = w[2];
+		r[3] = w[4];
+		r[4] = w[5];
+		r[5] = w[6];
+		if (!orthonormalize(r)) {
+			// scaled to nothing: no direction to give, keep the axes
+			r[0] = 1;
+			r[1] = 0;
+			r[2] = 0;
+			r[3] = 0;
+			r[4] = 1;
+			r[5] = 0;
+		}
+		r[6] = r[1] * r[5] - r[2] * r[4];
+		r[7] = r[2] * r[3] - r[0] * r[5];
+		r[8] = r[0] * r[4] - r[1] * r[3];
+		// conjugated by D = diag(1, -1, zSign) into render space
+		for (let col = 0; col < 3; col++) {
+			const c = col * 4;
+			const dc = col === 0 ? 1 : col === 1 ? -1 : zs;
+			v[c] = r[col * 3] * dc;
+			v[c + 1] = -r[col * 3 + 1] * dc;
+			v[c + 2] = zs * r[col * 3 + 2] * dc;
+			v[c + 3] = 0;
+		}
+		v[12] = w[12] * s;
+		v[13] = -w[13] * s;
+		v[14] = zs * w[14] * s;
+		v[15] = 1;
+		return out;
+	}
+
+	/**
+	 * Add a renderable to this model, kept on one of its nodes: a sword in a
+	 * hand, a hat on a head, a torch's flame at its tip. Every time the model
+	 * is posed the child is moved to the node, so it follows the clip, the
+	 * crossfade and the model itself.
+	 *
+	 * The child's `pos` when it is added is its offset from the node, along
+	 * the node's own axes: `sword.pos.set(0, -20, 0)` before adding it holds
+	 * it 20 units up the hand. After that, `pos` is where the child is in the
+	 * world, and is overwritten each pose. A {@link Mesh} or a nested
+	 * {@link GLTFModel} also turns with the node, from the way it was turned
+	 * when added; a {@link Sprite3d} billboard and anything else only follows
+	 * the node's position. The node's scale is never applied, so the child
+	 * keeps its own size.
+	 *
+	 * It is an ordinary child otherwise: `getChildByName` finds it, and
+	 * `removeChild` takes it off the node as well as out of the model. Adding
+	 * a child already on a node moves it to the new one, keeping its offset.
+	 * @param {Renderable} child - the renderable to attach
+	 * @param {string} name - the node's name (see {@link GLTFModel#getNodeNames})
+	 * @returns {Renderable} the child, as {@link Container#addChild} returns it
+	 * @throws {Error} when the child is not a renderable, is this model or contains it, or no node has that name
+	 * @example
+	 * sword.pos.set(0, 0, 0);
+	 * knight.addChildToNode(sword, "mixamorig:RightHand");
+	 * // ...and to drop it
+	 * knight.removeChild(sword);
+	 */
+	addChildToNode(child, name) {
+		if (!(child instanceof Renderable)) {
+			throw new Error(`${String(child)} is not an instance of Renderable`);
+		}
+		const idx = this._nodeIndex(name);
+		for (let a = this; a !== undefined && a !== null; a = a.ancestor) {
+			if (a === child) {
+				throw new Error(
+					"GLTFModel: a model cannot be attached to itself or inside itself",
+				);
+			}
+		}
+		const previous = this._attached.get(child);
+		if (previous !== undefined && child.ancestor === this) {
+			// moved to another node: same offset, same starting turn
+			previous.node = idx;
+		} else {
+			const turns =
+				child instanceof GLTFModel ||
+				(child instanceof Mesh &&
+					!(child instanceof Sprite3d && child.billboard !== false));
+			this._attached.set(child, {
+				node: idx,
+				offset: Float64Array.of(child.pos.x, child.pos.y, child.pos.z),
+				base: turns ? Float64Array.from(child.currentTransform.val) : null,
+			});
+			if (child.ancestor !== this) {
+				this.addChild(child);
+			}
+		}
+		if (this._isLive()) {
+			this._placeAttached(child, this._attached.get(child));
+		}
+		return child;
+	}
+
+	/**
+	 * Remove a child at once, taking it off its node if it was attached to
+	 * one (see {@link GLTFModel#addChildToNode}).
+	 * @param {Renderable} child - the child to remove
+	 * @param {boolean} [keepalive=false] - true to keep the child alive for reuse
+	 */
+	removeChildNow(child, keepalive) {
+		// (`_attached` does not exist yet while the base constructor runs)
+		this._attached?.delete(child);
+		super.removeChildNow(child, keepalive);
+	}
+
+	/**
+	 * Move one attached child to its node (see {@link GLTFModel#addChildToNode}).
+	 * @param {Renderable} child - the attached child
+	 * @param {object} record - its node, offset and starting turn
+	 * @ignore
+	 * @internal
+	 */
+	_placeAttached(child, record) {
+		const e = this._nodeTransformInto(record.node, _nodeScratch).val;
+		const o = record.offset;
+		child.pos.set(
+			e[12] + e[0] * o[0] + e[4] * o[1] + e[8] * o[2],
+			e[13] + e[1] * o[0] + e[5] * o[1] + e[9] * o[2],
+			e[14] + e[2] * o[0] + e[6] * o[1] + e[10] * o[2],
+		);
+		const base = record.base;
+		if (base !== null) {
+			// The node's turn E is in render space. A nested model takes its
+			// turn in render space too; a mesh in its own source space, which
+			// its bridge B = diag(1, -1, ±1) maps to render space: B·E·B.
+			const m = _orientScratch;
+			let by = 1;
+			let bz = 1;
+			if (!(child instanceof GLTFModel)) {
+				by = -1;
+				bz = child.rightHanded === true ? -1 : 1;
+			}
+			for (let col = 0; col < 3; col++) {
+				const dc = col === 0 ? 1 : col === 1 ? by : bz;
+				m[col * 4] = e[col * 4] * dc;
+				m[col * 4 + 1] = by * e[col * 4 + 1] * dc;
+				m[col * 4 + 2] = bz * e[col * 4 + 2] * dc;
+			}
+			// the turn it was added with, then the node's: M · base
+			const c = child.currentTransform.val;
+			for (let col = 0; col < 4; col++) {
+				const b0 = base[col * 4];
+				const b1 = base[col * 4 + 1];
+				const b2 = base[col * 4 + 2];
+				c[col * 4] = m[0] * b0 + m[4] * b1 + m[8] * b2;
+				c[col * 4 + 1] = m[1] * b0 + m[5] * b1 + m[9] * b2;
+				c[col * 4 + 2] = m[2] * b0 + m[6] * b1 + m[10] * b2;
+				c[col * 4 + 3] = base[col * 4 + 3];
+			}
+		}
+		child.isDirty = true;
 	}
 
 	/**
@@ -720,9 +1143,30 @@ export default class GLTFModel extends Container {
 			this.current.length > 0
 		) {
 			const duration = this.current.length;
-			// glTF keyframe times are in seconds; dt is in milliseconds
-			this.current.time += (dt / 1000) * this.animationspeed;
-			if (this.current.time >= duration) {
+			// glTF keyframe times are in seconds; dt is in milliseconds. A
+			// reversed clip or a negative speed runs the time backwards, from
+			// the clip's end to its start, where it ends instead
+			const backwards = this._playsBackwards();
+			this.current.time +=
+				(dt / 1000) * Math.abs(this.animationspeed) * (backwards ? -1 : 1);
+			const ended = backwards
+				? this.current.time <= 0
+				: this.current.time >= duration;
+			if (ended) {
+				const name = this.current.name;
+				const wrap = () => {
+					// wrap the overflow into the clip, guarded: a chain may
+					// already have moved on to another clip, or reset the time
+					if (this.current.name !== name) {
+						return;
+					}
+					const t = this.current.time;
+					if (backwards && t <= 0) {
+						this.current.time = (t % duration) + duration;
+					} else if (!backwards && t >= duration) {
+						this.current.time = t % duration;
+					}
+				};
 				if (typeof this.onended === "function") {
 					this.onended();
 					// the handler may have removed this model
@@ -732,15 +1176,13 @@ export default class GLTFModel extends Container {
 				}
 				if (typeof this.resetAnim === "function") {
 					if (this.resetAnim() === false) {
-						// hold the final pose
-						this.current.time = duration;
-					} else if (this.current.time >= duration) {
-						// default loop / loop-with-callback: wrap the overflow
-						// (guarded — a chain may already have reset the time)
-						this.current.time %= duration;
+						// hold the final pose: the last frame it reached
+						this.current.time = backwards ? 0 : duration;
+					} else {
+						wrap();
 					}
 				} else {
-					this.current.time %= duration;
+					wrap();
 				}
 			}
 			// `resetAnim` above is user code too, and `_pose()` writes into the
@@ -938,8 +1380,17 @@ export default class GLTFModel extends Container {
 			this._visit(root, parent, clip, t);
 		}
 		// every joint has its world matrix now, so the skinned parts can
-		// follow them
+		// follow them, and so can what is attached to a node
 		this._skin(parent, reskin);
+		for (const [child, record] of this._attached) {
+			// moved to another container, or destroyed, without being removed
+			// from this one: it no longer follows the node
+			if (child.ancestor !== this || child.pos === undefined) {
+				this._attached.delete(child);
+				continue;
+			}
+			this._placeAttached(child, record);
+		}
 		// remember the placement this pose was built from
 		const p = this._posedPlacement;
 		p[0] = this.pos.x;
@@ -1152,16 +1603,21 @@ export default class GLTFModel extends Container {
 			// end); a looping one carries on from where it is in its loop
 			const length = prev !== null ? prev.duration : 0;
 			const once = this._animOnce;
+			const backwards = this._playsBackwards();
 			let time = this.current.time;
 			if (length > 0) {
-				time = once ? Math.min(time, length) : time % length;
+				time = once
+					? Math.min(Math.max(time, 0), length)
+					: ((time % length) + length) % length;
 			}
 			return {
 				clip: prev,
 				time,
-				speed: this.animationspeed,
+				// signed: the way the clip runs underneath the fade
+				speed: Math.abs(this.animationspeed) * (backwards ? -1 : 1),
 				once,
-				done: this._animDone || (once && time >= length),
+				done:
+					this._animDone || (once && (backwards ? time <= 0 : time >= length)),
 				pose: null,
 				nodes: prev !== null ? prev.animatedNodes : NO_NODES,
 				elapsed: 0,
@@ -1229,11 +1685,15 @@ export default class GLTFModel extends Container {
 		}
 		const clip = fade.clip;
 		if (clip !== null && !fade.done && clip.duration > 0) {
+			const length = clip.duration;
 			const time = fade.time + (dt / 1000) * fade.speed;
 			if (!fade.once) {
-				fade.time = time % clip.duration;
-			} else if (time >= clip.duration) {
-				fade.time = clip.duration;
+				fade.time = ((time % length) + length) % length;
+			} else if (time >= length) {
+				fade.time = length;
+				fade.done = true;
+			} else if (time <= 0 && fade.speed < 0) {
+				fade.time = 0;
 				fade.done = true;
 			} else {
 				fade.time = time;
