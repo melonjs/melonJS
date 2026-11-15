@@ -90,6 +90,17 @@ export interface PathfindingPluginOptions extends TileLayerOptions {
 	 * return null for a level with nothing to find a way across
 	 */
 	build?: (container: Container) => Grid | null;
+	/**
+	 * For the grid built from the collision shapes (no `layer`, no
+	 * `build`): cut each tile into this many cells along each side, a whole
+	 * number of 1 or more. Finer cells follow walls that do not keep to the
+	 * tiles: a doorway narrower than a tile, between walls standing part of
+	 * a tile deep, is closed on a grid of whole tiles and open on one of
+	 * quarter tiles (`subdivide: 4`). A search crosses that many times more
+	 * cells, the square of it in all.
+	 * @default 1
+	 */
+	subdivide?: number;
 }
 
 /**
@@ -178,13 +189,19 @@ export class PathfindingPlugin extends plugin.BasePlugin {
 	 * `build` that returned null. Built from the collision shapes, it covers
 	 * the whole level: on an infinite map, from its first painted column
 	 * and row, which can be left of or above the map's origin.
-	 * @throws {RangeError} on a staggered or hexagonal map (on a level load,
-	 * a warning instead, and no grid)
+	 * @throws {RangeError} on a staggered or hexagonal map, or a `subdivide`
+	 * that is not a whole number of 1 or more (on a level load, a warning
+	 * instead, and no grid)
 	 */
 	rebuild() {
 		// nothing from the last level, whatever happens here
 		this.grid = null;
-		const { build, layer: name } = this.options;
+		const { build, layer: name, subdivide = 1 } = this.options;
+		if (!Number.isInteger(subdivide) || subdivide < 1) {
+			throw new RangeError(
+				`pathfinding: subdivide must be a whole number of 1 or more (got ${subdivide})`,
+			);
+		}
 		const container = this.container;
 		if (build !== undefined) {
 			this.grid = build(container);
@@ -219,11 +236,12 @@ export class PathfindingPlugin extends plugin.BasePlugin {
 			corner.x -= (area.rows * map.tilewidth) / 2;
 		}
 		const at = container.getAbsolutePosition();
+		// the same box, cut into smaller cells: its corner does not move
 		this.grid = Grid.fromBodies(container, {
-			cols: area.cols,
-			rows: area.rows,
-			tileWidth: map.tilewidth,
-			tileHeight: map.tileheight,
+			cols: area.cols * subdivide,
+			rows: area.rows * subdivide,
+			tileWidth: map.tilewidth / subdivide,
+			tileHeight: map.tileheight / subdivide,
 			cellShape: isometric ? "isometric" : "square",
 			x: at.x + corner.x,
 			y: at.y + corner.y,

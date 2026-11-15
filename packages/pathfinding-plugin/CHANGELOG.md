@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.0] - _2026-11-15_
+
+### Added
+- `PathfindingPlugin`: `subdivide` cuts each tile into that many cells along each side on the grid built from the collision shapes, for walls that do not keep to the tiles: a doorway narrower than a tile is closed on a grid of whole tiles and open on one of quarter tiles (`subdivide: 4`)
+
+### Fixed
+- `Grid.fromBodies` (and the plugin's grid from the collision shapes): a `WORLD_SHAPE` body whose collision mask is `NO_OBJECT` collides with nothing and is no longer a wall, so a door opened with `body.setCollisionMask(collision.types.NO_OBJECT)` opens on the grid once it is refreshed. The type and the mask are read from the live body before its `bodyDef`, which keeps them as they were written: a body's `collisionType` changed at run time was not seen. A game that kept bodies of mask `NO_OBJECT` as walls on purpose now passes its own `solid`
+
 ## [1.0.1] - _2026-11-15_
 
 ### Fixed

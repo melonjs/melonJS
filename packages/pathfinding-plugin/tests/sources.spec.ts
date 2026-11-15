@@ -349,6 +349,47 @@ describe("grids from a level", () => {
 			expect(only.getWeight(5, 0)).toBe(3);
 		});
 
+		it("leaves out a wall that collides with nothing", () => {
+			const container = new Container(0, 0, 6 * T, 4 * T);
+			// a wall switched off: it collides with nothing
+			const off = new Renderable(T, T, T, T);
+			off.anchorPoint.set(0, 0);
+			off.bodyDef = {
+				type: "static",
+				shapes: [new Rect(0, 0, T, T)],
+				collisionType: collision.types.WORLD_SHAPE,
+				collisionMask: collision.types.NO_OBJECT,
+			};
+			container.addChild(off);
+			expect(Grid.fromBodies(container, size).isSolid(1, 1)).toBe(false);
+		});
+
+		it("reads the live body, as the game changed it, on refresh", () => {
+			// in the world, so the physics makes the body from its bodyDef
+			const door = wall(3 * T, 3 * T, [new Rect(0, 0, T, T)]);
+			door.anchorPoint.set(0, 0);
+			world().addChild(door);
+			const body = door.body;
+			expect(body).toBeDefined();
+			const grid = Grid.fromBodies(world(), size);
+			expect(grid.isSolid(3, 3)).toBe(true);
+			// opened: it collides with nothing now
+			body.setCollisionMask(collision.types.NO_OBJECT);
+			grid.refresh();
+			expect(grid.isSolid(3, 3)).toBe(false);
+			// shut again, then made something else than a wall: its bodyDef
+			// still says WORLD_SHAPE, as it was written
+			body.setCollisionMask(collision.types.ALL_OBJECT);
+			grid.refresh();
+			expect(grid.isSolid(3, 3)).toBe(true);
+			body.collisionType = collision.types.ENEMY_OBJECT;
+			grid.refresh();
+			const def = door.bodyDef as { collisionType?: number } | undefined;
+			expect(def?.collisionType).toBe(collision.types.WORLD_SHAPE);
+			expect(grid.isSolid(3, 3)).toBe(false);
+			world().removeChildNow(door);
+		});
+
 		it("scans again where the grid now is, on refresh", () => {
 			const container = new Container(0, 0, 8 * T, 4 * T);
 			const w = wall(2 * T, T, [new Rect(0, 0, T, T)]);

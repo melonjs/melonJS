@@ -83,7 +83,7 @@ const grid = Grid.fromBodies(app.world, {
 });
 ```
 
-The walls are the bodies of type `WORLD_SHAPE`: the shapes of a Tiled map's collision layer, and any body declared that way (pass `solid: (renderable) => ...` to choose others). A cell is solid when a wall covers any of nine points spread over it, so a sloped or rotated wall makes solid the cells it really covers. Shapes are read from the built-in physics body or the `bodyDef`, placed from the renderable's anchor point as the engine places them, and from a wall's bounding box otherwise.
+The walls are the bodies of type `WORLD_SHAPE` that collide with something: the shapes of a Tiled map's collision layer, and any body declared that way (pass `solid: (renderable) => ...` to choose others). The type and the mask are read from the live body before its `bodyDef`, so a body changed as the game goes counts as it is now: a door opened with `body.setCollisionMask(collision.types.NO_OBJECT)` collides with nothing and is no wall once the grid is refreshed. A cell is solid when a wall covers any of nine points spread over it, so a sloped or rotated wall makes solid the cells it really covers. Shapes are read from the built-in physics body or the `bodyDef`, placed from the renderable's anchor point as the engine places them, and from a wall's bounding box otherwise.
 
 The shapes are scanned when the grid is built, so it works right after a level loads, before the physics world has stepped. `grid.refresh()` scans them again, where the grid now is if you moved it.
 
@@ -183,7 +183,15 @@ plugin.register(PathfindingPlugin, "pathfinding", { layer: "walls" });
 const { grid } = plugin.cache.pathfinding;
 ```
 
-With `layer`, the grid comes from that tile layer (and takes the same `solid` and `weight` as `Grid.fromTileLayer`); without it, from the level's collision shapes. `build: (container) => grid` builds it yourself. `rebuild()` builds it again, and `destroy()` stops following level loads. Registered once a level is loaded, it builds that level's grid at once. It only follows levels loaded in its container (`container`, or the application's world), so a level another application loads leaves its grid alone. Built from the collision shapes, the grid covers the whole level, on an infinite map from its first column and row, which can be left of or above the map's origin. A level it cannot build a grid for (a staggered or hexagonal map) still loads: the plugin warns and its `grid` is `null` (`rebuild()` called directly throws). A `Grid` works without the plugin: use the plugin only when the grid comes from the level.
+With `layer`, the grid comes from that tile layer (and takes the same `solid` and `weight` as `Grid.fromTileLayer`); without it, from the level's collision shapes. `build: (container) => grid` builds it yourself.
+
+Built from the collision shapes, the grid has one cell per tile; `subdivide: n` cuts each tile into `n` × `n` cells, for walls that do not keep to the tiles. A doorway narrower than a tile, between walls standing part of a tile deep, is closed on a grid of whole tiles and open on one of quarter tiles:
+
+```ts
+plugin.register(PathfindingPlugin, "pathfinding", { subdivide: 4 });
+```
+
+A search then crosses `n` times more cells along a path, `n²` times more in all. `rebuild()` builds it again, and `destroy()` stops following level loads. Registered once a level is loaded, it builds that level's grid at once. It only follows levels loaded in its container (`container`, or the application's world), so a level another application loads leaves its grid alone. Built from the collision shapes, the grid covers the whole level, on an infinite map from its first column and row, which can be left of or above the map's origin. A level it cannot build a grid for (a staggered or hexagonal map) still loads: the plugin warns and its `grid` is `null` (`rebuild()` called directly throws). A `Grid` works without the plugin: use the plugin only when the grid comes from the level.
 
 ## Debug overlay
 
@@ -201,7 +209,7 @@ It draws solid cells in red, heavy ones in orange, the cells each search looked 
 
 ## Physics adapters
 
-The grid does not use the physics engine: `Grid.fromBodies` reads the bodies' shapes from their `bodyDef` (or from the built-in `body`), so a grid builds the same with the built-in physics, Matter, Planck or Rapier. With an adapter whose bodies keep no melonJS shapes, a wall's bounding box is used.
+The grid does not use the physics engine: `Grid.fromBodies` reads the bodies' shapes from the built-in `body` or their `bodyDef`, and their collision type and mask from the body, which every adapter keeps live, so a grid builds the same with the built-in physics, Matter, Planck or Rapier. With an adapter whose bodies keep no melonJS shapes, a wall's bounding box is used.
 
 ## Troubleshooting
 
@@ -212,6 +220,9 @@ The grid does not use the physics engine: `Grid.fromBodies` reads the bodies' sh
 | Every cell is solid on a `fromTileLayer` grid | A floor layer: every cell has a tile, and a tile is solid by default. Pass `solid` |
 | The path is empty | The goal is walled off, solid, or further than `maxNodes` lets the search look. `allowPartialPath: true` returns the way to the nearest point instead |
 | The agent turns back at the start | `path[0]` is where it stands: head for `path[1]` |
+| An opened door still blocks the path | pathfinding-plugin < 1.1 counted every `WORLD_SHAPE` body as a wall, and read the `bodyDef` before the live body: upgrade, then `grid.refresh()` once the door opens |
+| Every doorway is closed on a `fromBodies` grid | The doorways are narrower than a cell: give the plugin `subdivide` (or `fromBodies` smaller cells) |
+| An agent catches on wall corners and stops | The grid sees it as a point, and a smoothed path runs right along the walls: when it stops getting closer to the next point, find a new path from where it stands |
 | `PathfindingPlugin`'s grid is `null`, with a warning | The level is a staggered or hexagonal map, or `layer` names no layer of it |
 | Agents bunch up in a line | Pass the others' positions as `avoid`, with a finite `avoidWeight` |
 | The path is offset from an isometric map | The grid is square: built with `new Grid` or `Grid.fromBodies` without `cellShape: "isometric"` |
