@@ -3,6 +3,7 @@
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
+import type { Grid, PathResult } from "@melonjs/pathfinding-plugin";
 import {
 	collision,
 	input,
@@ -47,6 +48,16 @@ const HEADINGS = Object.values(HEADING);
 
 // a direction, projected between the map and the screen
 const direction = new Vector2d();
+
+// where a click was, before it becomes a path
+const clicked = new Vector2d();
+
+// how close (in pixels) to a point of the path counts as reaching it: a
+// step of the walk, so the hero never overshoots and turns back
+const ARRIVE = HERO_SPEED * 1.5;
+// frames of walking without getting anywhere before the hero gives up on a
+// path (something the grid does not know about is in the way)
+const STUCK_FRAMES = 30;
 
 // frames per animation in the atlas
 const FRAMES = { idle: 1, run: 10, pickup: 10 };
@@ -101,6 +112,17 @@ export class Hero extends Sprite {
 	private heading = "s";
 	// true during the pickup animation
 	private busy = false;
+	// the pathfinding grid of the level, set by the stage
+	grid?: Grid | null;
+	// called with every path found, for the debug overlay
+	onPath?: (result: PathResult) => void;
+	// the points still to walk to, after a click
+	private route: Vector2d[] = [];
+	// what was clicked, to use once it is in reach
+	private goal: Usable | undefined;
+	// frames spent walking without getting closer
+	private stuck = 0;
+	private lastDistance = Number.POSITIVE_INFINITY;
 
 	constructor(x: number, y: number) {
 		// (x, y) is where the feet are; the atlas holds the hero's frames only
@@ -151,6 +173,70 @@ export class Hero extends Sprite {
 		return this.pos.y + FEET_Y;
 	}
 
+	/**
+	 * Walk to a point of the map, clicked or tapped: along the path the grid
+	 * finds round the walls (and the doors still shut). A click on something
+	 * usable walks up to it and uses it.
+	 * @param x - world x of the click
+	 * @param y - world y of the click
+	 */
+	goTo(x: number, y: number) {
+		if (!this.grid || this.busy) {
+			return;
+		}
+		this.goal = this.dungeon?.nearest(clicked.set(x, y), REACH);
+		const to = this.goal ? this.goal.spot : clicked;
+		const result = this.grid.findPath(
+			this.feet.set(this.feetX, this.feetY),
+			to,
+			{
+				// a corner is never cut past a wall
+				diagonalMode: "onlyIfNoObstacles",
+				// straight across open floor, rather than cell by cell
+				smooth: true,
+				// a click on a wall (or a door still shut) walks as near as it can
+				allowPartialPath: true,
+				// for the debug overlay (P): the cells the search looked at
+				trace: true,
+			},
+		);
+		this.onPath?.(result);
+		// path[0] is where the hero stands
+		this.route = result.path.slice(1);
+		this.stuck = 0;
+		this.lastDistance = Number.POSITIVE_INFINITY;
+	}
+
+	/**
+	 * The velocity toward the next point of the route, or null when there is
+	 * no route left to walk.
+	 */
+	private followRoute() {
+		while (this.route.length > 0) {
+			const next = this.route[0];
+			const dx = next.x - this.feetX;
+			const dy = next.y - this.feetY;
+			const distance = Math.hypot(dx, dy);
+			if (distance < ARRIVE) {
+				this.route.shift();
+				this.lastDistance = Number.POSITIVE_INFINITY;
+				continue;
+			}
+			// walled in by something the grid does not know: give up
+			this.stuck = distance < this.lastDistance - 0.5 ? 0 : this.stuck + 1;
+			this.lastDistance = Math.min(this.lastDistance, distance);
+			if (this.stuck > STUCK_FRAMES) {
+				this.route = [];
+				break;
+			}
+			// the screen offset as a map direction, at the keyboard's speed
+			direction.set(dx, dy).to2d().normalize().toIso().scale(HERO_SPEED);
+			this.heading = facing(dx, dy);
+			return direction;
+		}
+		return null;
+	}
+
 	override update(dt: number) {
 		// keys to map direction: up is (-1, -1), right is (1, -1)
 		let mx = 0;
@@ -176,10 +262,18 @@ export class Hero extends Sprite {
 		const sx = Math.sign(mx);
 		const sy = Math.sign(my);
 		if (sx !== 0 || sy !== 0) {
+			// the keys always win over a click
+			this.route = [];
+			this.goal = undefined;
 			// normalize, then project the map direction on the screen
 			direction.set(sx, sy).normalize().toIso().scale(HERO_SPEED);
 			this.body.setVelocity(direction.x, direction.y);
 			this.heading = HEADING[`${sx},${sy}`];
+			this.setCurrentAnimation(`run_${this.heading}`, {
+				onFrame: this.footfall,
+			});
+		} else if (!this.busy && this.route.length > 0 && this.followRoute()) {
+			this.body.setVelocity(direction.x, direction.y);
 			this.setCurrentAnimation(`run_${this.heading}`, {
 				onFrame: this.footfall,
 			});
@@ -194,7 +288,10 @@ export class Hero extends Sprite {
 			? undefined
 			: this.dungeon?.nearest(this.feet.set(this.feetX, this.feetY), REACH);
 		this.onReach?.(target);
-		if (target && input.isKeyPressed("action")) {
+		// the action key, or arriving at what was clicked
+		if (target && (input.isKeyPressed("action") || target === this.goal)) {
+			this.route = [];
+			this.goal = undefined;
 			this.use(target);
 		}
 

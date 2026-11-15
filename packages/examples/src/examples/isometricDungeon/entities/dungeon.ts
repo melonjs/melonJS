@@ -11,6 +11,8 @@ export interface DungeonEvents {
 	locked: () => void;
 	gate: () => void;
 	exit: () => void;
+	// a doorway or the gate opened: there is a new way through
+	opened: () => void;
 }
 
 // how far the other half of a double door can be: it stands in the next
@@ -63,6 +65,7 @@ export class Dungeon {
 					usable.open();
 				}
 			}
+			this.events.opened();
 			this.events.gate();
 		}
 	}
@@ -74,5 +77,6 @@ export class Dungeon {
 			return usable instanceof Door && !(usable instanceof Gate);
 		});
 		other?.open();
+		this.events.opened();
 	}
 }

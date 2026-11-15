@@ -150,6 +150,11 @@ export class Door extends Usable {
 	override open() {
 		super.open();
 		this.body.setCollisionMask(collision.types.NO_OBJECT);
+		// nor a wall to the pathfinding grid, which reads what the body was
+		// declared as
+		if (this.bodyDef) {
+			this.bodyDef.collisionType = collision.types.NO_OBJECT;
+		}
 		// the doors fade out of the frame in a cloud of dust
 		const app = this.parentApp;
 		if (app) {

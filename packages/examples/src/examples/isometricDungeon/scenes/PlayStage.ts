@@ -4,12 +4,18 @@
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
 import {
+	PathfindingDebug,
+	type PathfindingPlugin,
+} from "@melonjs/pathfinding-plugin";
+import {
 	type Application,
 	audio,
 	type Camera2d,
 	input,
 	Light2d,
 	level,
+	type Pointer,
+	plugin,
 	type Renderer,
 	Stage,
 	state,
@@ -21,6 +27,7 @@ import {
 import {
 	DARKNESS,
 	MOTES_Z,
+	PARTICLES,
 	SIGHT_RADIUS,
 	SIGHT_SQUASH,
 	TORCH_COLOR,
@@ -43,11 +50,14 @@ const KEYS: [number, string][] = [
 	[input.KEY.RIGHT, "right"],
 ];
 const ACTION_KEYS = [input.KEY.SPACE, input.KEY.E, input.KEY.ENTER];
+// shows the pathfinding grid and the last path
+const PATHS_KEY = input.KEY.P;
 
 export class PlayStage extends Stage {
 	private started = 0;
 	private pulse: Tween | undefined;
 	private hud: Hud | undefined;
+	private paths: PathfindingDebug | undefined;
 
 	override onResetEvent(app: Application) {
 		this.started = timer.getTime();
@@ -61,6 +71,7 @@ export class PlayStage extends Stage {
 			// locked, so holding the key doesn't repeat the action
 			input.bindKey(key, "action", true);
 		}
+		input.bindKey(PATHS_KEY, "paths", true);
 
 		level.load("dungeon", {
 			container: app.world,
@@ -97,6 +108,10 @@ export class PlayStage extends Stage {
 				const creak = audio.play(SFX.gateCreak, false, null, 0.8);
 				audio.rate(SFX.gateCreak, 0.6, creak);
 			},
+			opened: () => {
+				// a door is no longer a wall: find the ways through again
+				hero.grid?.refresh();
+			},
 			exit: () => {
 				// nothing else to use while fading out
 				hero.dungeon = undefined;
@@ -105,9 +120,46 @@ export class PlayStage extends Stage {
 			},
 		});
 		hud.chests(0, dungeon.chests);
-		hud.say(`Find the ${dungeon.chests} chests`);
+		hud.say(
+			`Find the ${dungeon.chests} chests: arrow keys, or click where to go`,
+		);
 
 		hero.dungeon = dungeon;
+
+		// click to move: the plugin built this level's grid when it loaded
+		const pathfinding = plugin.cache.pathfinding as PathfindingPlugin;
+		hero.grid = pathfinding.grid ?? pathfinding.rebuild();
+		input.registerPointerEvent(
+			"pointerdown",
+			app.viewport,
+			(pointer: Pointer) => {
+				// a click on the minimap is not a place in the dungeon
+				const minimap = this.cameras.get("minimap");
+				if (
+					minimap &&
+					pointer.gameScreenX >= minimap.screenX &&
+					pointer.gameScreenX <= minimap.screenX + minimap.width &&
+					pointer.gameScreenY >= minimap.screenY &&
+					pointer.gameScreenY <= minimap.screenY + minimap.height
+				) {
+					return;
+				}
+				hero.goTo(pointer.gameWorldX, pointer.gameWorldY);
+			},
+		);
+		// P shows the grid (walls in red), the cells the last search looked
+		// at and the path it found, with the lights up
+		if (hero.grid) {
+			const paths = new PathfindingDebug(hero.grid);
+			paths.isRenderable = false;
+			// the minimap leaves it out, as it does the particles
+			paths.visibilityLayer = PARTICLES;
+			app.world.addChild(paths, MOTES_Z);
+			this.paths = paths;
+			hero.onPath = (result) => {
+				paths.paths = [{ result, color: "#ffd75e" }];
+			};
+		}
 		// a second camera, drawing the map in a corner
 		const floor = app.world.getChildByName("floor")[0] as TMXLayer;
 		this.cameras.set("minimap", new Minimap(hero, dungeon, floor));
@@ -168,6 +220,16 @@ export class PlayStage extends Stage {
 		app.viewport.offset.set(0, -70);
 	}
 
+	override update(dt: number) {
+		if (this.paths && input.isKeyPressed("paths")) {
+			const on = !this.paths.isRenderable;
+			this.paths.isRenderable = on;
+			// the darkness would bury the overlay: lift it while it shows
+			this.ambientLight.parseCSS(on ? "rgba(0, 0, 0, 0)" : DARKNESS);
+		}
+		return super.update(dt);
+	}
+
 	// the HUD is not in the world, so the darkness drawn over the world does
 	// not cover it: it is drawn here, over everything the cameras drew
 	override draw(renderer: Renderer, world: World) {
@@ -209,5 +271,8 @@ export class PlayStage extends Stage {
 		for (const key of ACTION_KEYS) {
 			input.unbindKey(key);
 		}
+		input.unbindKey(PATHS_KEY);
+		input.releasePointerEvent("pointerdown", app.viewport);
+		this.paths = undefined;
 	}
 }

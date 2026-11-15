@@ -4,6 +4,7 @@
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
 import { DebugPanelPlugin } from "@melonjs/debug-plugin";
+import { PathfindingPlugin } from "@melonjs/pathfinding-plugin";
 import {
 	Application,
 	audio,
@@ -41,6 +42,9 @@ export const createGame = async () => {
 
 	// debug panel, toggled with S
 	plugin.register(DebugPanelPlugin, "debugPanel");
+	// a pathfinding grid for each level, built from its collision shapes when
+	// it loads: the map is isometric, so the cells are its diamonds
+	plugin.register(PathfindingPlugin, "pathfinding");
 
 	// the classes in the map: the hero's spawn point has its own, the rest
 	// are set on tiles in the tileset, and every object placed from one of

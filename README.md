@@ -199,7 +199,7 @@ Examples
 -------------------------------------------------------------------------------
 
 * [Platformer](https://melonjs.github.io/melonJS/examples/#/platformer) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/platformer))
-* [Isometric Dungeon](https://melonjs.github.io/melonJS/examples/#/isometric-dungeon) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/isometricDungeon))
+* [Isometric Dungeon](https://melonjs.github.io/melonJS/examples/#/isometric-dungeon) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/isometricDungeon)) — click to move along paths found by `@melonjs/pathfinding-plugin` on the isometric map
 * [SVG Shapes](https://melonjs.github.io/melonJS/examples/#/svg-shapes) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/svgShapes))
 * [Particle Editor](https://melonjs.github.io/melonJS/examples/#/particle-editor) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/particleEditor)) — tune a `ParticleEmitter` live in 2D or 3D, from presets or a random roll, and copy the matching code or JSON
 * [Graphics](https://melonjs.github.io/melonJS/examples/#/graphics) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/graphics))
