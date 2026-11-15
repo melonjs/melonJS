@@ -15,6 +15,7 @@
 - Input: `pointer.hit3d`, where the ray through the pointer hit the mesh an event is for, under a `Camera3d`
 
 ### Fixed
+- `Camera3d`: a `zoom` other than 1 sent it down the 2D zoomed camera's path, which shrinks the camera's `width` and `height` to the zoomed world for the length of the draw, so `worldToScreen` and `screenToRay` called while drawing answered for the wrong size. `Camera3d#isDefault` now ignores the zoom, which a 3D camera applies through its own projection
 - `GLTFModel`: a clip played at a negative `speed` (or `animationspeed`) froze on its first frame and never ended, so neither `onComplete` nor `onended` fired; it now plays backwards, from its end to its start
 - glTF: a skinned mesh was placed, drawn and bounded by its own node's transform, which glTF says a skinned mesh ignores (its joints place it), so a rigged character could load offset, frozen in its bind pose, and with `bounds` that did not match it. It is now posed by its skeleton, and the asset's `bounds` are measured on that rest pose
 - Input: under a `Camera3d`, pointer events on a `Mesh`, `Sprite3d`, `InstancedMesh` or `GLTFModel` reached it where its 2D bounds lay, which a perspective projection puts somewhere other than where it draws. They are now hit-tested by the ray through the pointer against its triangles, nearest first, after the 2D regions (screen-space UI is drawn over the scene); one in a container taken out of the world gets none, and a move tests only the meshes listening for moves, entering, leaving or a release. Under a `Camera2d` nothing changes
