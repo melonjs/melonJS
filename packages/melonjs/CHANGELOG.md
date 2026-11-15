@@ -11,10 +11,11 @@
 - 3D: `Camera3d` can project orthographically: `projection: "orthographic"` (an option, or a property switchable at run time) and `orthoHeight`, the view's height in world units (divided by the camera's `zoom`, as on a `Camera2d`), for isometric, top-down and diorama views with the full 3D tier — depth (sprites included), lighting, fog, shadows, culling and picking. Perspective stays the default
 - 3D: toon shading and outlines. `toonBands` cuts a lit mesh's shading into flat bands and turns its specular highlight into a hard spot, on WebGL and WebGPU; `outlineWidth` and `outlineColor` draw an ink line round its silhouette as an inverted hull, which follows a skinned mesh as it bends. Both are `Mesh` settings and properties, and `GLTFModel`, `GLTFScene` and `level.load` options for every part
 - `Ray3d`: a 3D ray with distance tests against a plane, a sphere, an `AABB3d` and a triangle
-- glTF: the parsed descriptor carries the asset's `skins`, and each skinned primitive its `joints`, `weights` and `skin`; `bounds` are measured on the skinned rest pose
+- glTF: the parsed descriptor carries the asset's `skins`, and each skinned primitive its `joints`, `weights` and `skin`
 - Input: `pointer.hit3d`, where the ray through the pointer hit the mesh an event is for, under a `Camera3d`
 
 ### Fixed
+- glTF: a skinned mesh was placed, drawn and bounded by its own node's transform, which glTF says a skinned mesh ignores (its joints place it), so a rigged character could load offset, frozen in its bind pose, and with `bounds` that did not match it. It is now posed by its skeleton, and the asset's `bounds` are measured on that rest pose
 - Input: under a `Camera3d`, pointer events on a `Mesh`, `Sprite3d`, `InstancedMesh` or `GLTFModel` reached it where its 2D bounds lay, which a perspective projection puts somewhere other than where it draws. They are now hit-tested by the ray through the pointer against its triangles, nearest first, after the 2D regions (screen-space UI is drawn over the scene); one in a container taken out of the world gets none, and a move tests only the meshes listening for moves, entering, leaving or a release. Under a `Camera2d` nothing changes
 
 ## [20.15.1] (melonJS 2) - _2026-11-14_
