@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.1.0] - _unreleased_
+## [1.1.0] - _2026-11-15_
 
 ### Added
 - `PathfindingPlugin`: `subdivide` cuts each tile into that many cells along each side on the grid built from the collision shapes, for walls that do not keep to the tiles: a doorway narrower than a tile is closed on a grid of whole tiles and open on one of quarter tiles (`subdivide: 4`)
