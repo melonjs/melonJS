@@ -1,10 +1,12 @@
 import { game } from "../application/application.ts";
 import Camera3d from "../camera/camera3d.ts";
 import { Polygon } from "../geometries/polygon.ts";
+import { createMeshHit, rayBox, rayTriangle } from "../geometries/ray3d.ts";
 import { warnOnce } from "../lang/console.js";
 import { getImage, getMTL, getOBJ } from "./../loader/loader.js";
 import { specularFromMetallicRoughness } from "./../loader/parsers/pbr.ts";
 import { Color } from "../math/color.ts";
+import { invertMatrixInto } from "../math/invert4.ts";
 import { Matrix3d } from "../math/matrix3d.ts";
 import { Vector2d } from "../math/vector2d.ts";
 import { Vector3d } from "../math/vector3d.ts";
@@ -37,6 +39,7 @@ import Renderable from "./renderable.js";
  * @import Camera2d from "../camera/camera2d.ts";
  * @import {Light3d} from "../lighting/light3d.ts";
  * @import GLShader from "../video/webgl/glshader.js";
+ * @import { MeshHit, Ray3d } from "../geometries/ray3d.ts";
  */
 
 // How far above the ground an object rises before its shadow is gone, as a
@@ -68,6 +71,38 @@ const SHADOW_SPREAD = 1.2;
 
 /** scratch for the three vectors `tiltOntoPlane` turns per shadow */
 const _tilted = new Float64Array(3);
+// the renderer's tint, kept aside while an outline draws in its own colour
+const _savedTint = new Color(255, 255, 255, 1);
+
+/**
+ * A colour setting in any of the forms a {@link Light3d} takes: a
+ * {@link Color} (kept as given), a CSS colour string, or `[r, g, b]` in 0..1.
+ * @param {Color|string|number[]|undefined} value - the setting
+ * @param {number} r - default red, 0..255
+ * @param {number} g - default green, 0..255
+ * @param {number} b - default blue, 0..255
+ * @returns {Color} the colour
+ * @ignore
+ * @internal
+ */
+function toColor(value, r, g, b) {
+	if (value instanceof Color) {
+		return value;
+	}
+	if (typeof value === "string") {
+		return new Color().parseCSS(value);
+	}
+	if (Array.isArray(value) || ArrayBuffer.isView(value)) {
+		return new Color(value[0] * 255, value[1] * 255, value[2] * 255, 1);
+	}
+	return new Color(r, g, b, 1);
+}
+
+// picking scratch: the model → world matrix, its inverse, and the parent →
+// world matrix recovered from what the last draw captured
+const _pickWorld = new Float64Array(16);
+const _pickInverse = new Float64Array(16);
+const _parentToWorld = new Float64Array(16);
 /** scratch for one blob axis lengthened along the light */
 const _STRETCH = new Float64Array(2);
 
@@ -436,6 +471,9 @@ function buildTextureGroups(
  * @property {number[]|Float32Array|undefined} [baseColorFactor] - the material's base colour factor `[r, g, b]` in 0..1, LINEAR, applied as the mesh tint. That is the form a glTF material states it in (spec 3.9.2) and the form the loader hands back, so a mesh built from a node passes the node's own field straight through. It is ENCODED rather than scaled: a linear factor pushed through `tint.setColor` by multiplying by 255 renders every untextured material 60 to 70 counts too dark in the midtones, which reads as a lighting fault and gets debugged as one. For an ordinary sRGB colour use {@link Renderable#setTint}. The type admits `undefined` deliberately: the loader declares the field optional, so `baseColorFactor: node.baseColorFactor` is the headline use and it has to compile for a consumer building under `exactOptionalPropertyTypes`.
  * @property {number[]|Float32Array} [specular] - specular color `[r, g, b]` (0..1) for the lit path. Set by the OBJ loader from MTL `Ks`, and derived from glTF metallic/roughness.
  * @property {number} [shininess=0] - specular exponent for the lit path (MTL `Ns`). `0` for a fully diffuse surface.
+ * @property {number} [toonBands=0] - cel (toon) shading for the lit path: the light on the surface is cut into this many flat bands, from unlit to fully lit, and a specular highlight becomes a hard-edged spot. `0` (or anything under 2) is the usual smooth shading. Needs `lit` and a `Camera3d`.
+ * @property {number} [outlineWidth=0] - draw an outline this many world units (pixels) wide around the mesh's silhouette, the inked edge of a cartoon look — an "inverted hull" drawn behind it. `0` for none. `Camera3d` only; not drawn by an `InstancedMesh` or a `Sprite3d`.
+ * @property {Color|string|number[]} [outlineColor="#000000"] - the outline's colour: a {@link Color}, a CSS colour string, or `[r, g, b]` in 0..1.
  * @property {string|TextureAtlas|HTMLImageElement} [normalMap] - tangent-space normal map (MTL `map_bump`/`bump`/`norm`), perturbing the lit path's shading normal per fragment. Needs `lit` to have any effect, and a `Camera3d`. See the [Material Textures example](https://melonjs.github.io/melonJS/examples/#/material-textures).
  * @property {string|TextureAtlas|HTMLImageElement} [alphaMap] - per-texel opacity map, sampled in addition to the diffuse texture (MTL `map_d`).
  * @property {boolean} [castGroundShadow] - give this mesh a blob ground shadow, overriding the application's `castGroundShadow` setting in both directions. Omit to inherit. Needs a GPU backend and a `Camera3d`.
@@ -833,6 +871,48 @@ export default class Mesh extends Renderable {
 		 */
 		this.shininess =
 			typeof settings.shininess === "number" ? settings.shininess : 0;
+
+		/**
+		 * Cel (toon) shading on the lit path: the light on the surface is cut
+		 * into this many flat bands, from unlit (the ambient alone) to fully
+		 * lit, and a specular highlight becomes a hard-edged spot instead of a
+		 * falloff. `0` (the default), or anything under 2, is the usual smooth
+		 * shading. Needs `lit: true`, a {@link Light3d} and a `Camera3d`;
+		 * pairs with {@link Mesh#outlineWidth} for the inked cartoon look.
+		 * @type {number}
+		 * @default 0
+		 * @example
+		 * hero.toonBands = 3;      // shadow, mid-tone, lit
+		 * hero.outlineWidth = 3;   // and an ink line round it
+		 */
+		this.toonBands =
+			typeof settings.toonBands === "number" ? settings.toonBands : 0;
+
+		/**
+		 * The width, in world units (pixels), of an outline drawn around this
+		 * mesh's silhouette — `0` (the default) for none.
+		 *
+		 * Drawn as an "inverted hull": a copy of the mesh pushed out along its
+		 * normals and turned inside out, so only its rim shows round the
+		 * edges. Creases inside the silhouette are not outlined, which is the
+		 * usual cartoon look. The hull follows the mesh's geometry, so it
+		 * bends with a skinned character. Its normals are averaged where
+		 * vertices share a position, so a hard-edged model keeps a closed
+		 * line rather than cracking at its edges.
+		 *
+		 * `Camera3d` only. Not drawn by an {@link InstancedMesh} or a
+		 * {@link Sprite3d}.
+		 * @type {number}
+		 * @default 0
+		 */
+		this.outlineWidth =
+			typeof settings.outlineWidth === "number" ? settings.outlineWidth : 0;
+
+		/**
+		 * The colour of the outline (see {@link Mesh#outlineWidth}).
+		 * @type {Color}
+		 */
+		this.outlineColor = toColor(settings.outlineColor, 0, 0, 0);
 
 		// The material's base colour, applied as the tint. LINEAR per the
 		// glTF spec, so it is encoded rather than scaled: see the setting's
@@ -2017,9 +2097,25 @@ export default class Mesh extends Renderable {
 	 * @internal
 	 */
 	onDeactivateEvent(...args) {
+		this._releaseGeometry();
+		super.onDeactivateEvent(...args);
+	}
+
+	/**
+	 * Release the GPU geometry the renderer keeps for this mesh, and for its
+	 * outline hull: the hull is drawn as a mesh of its own, so the batchers
+	 * keep its buffers too, and nothing else would ever release them.
+	 * @ignore
+	 * @internal
+	 */
+	_releaseGeometry() {
+		// the fallback is load-bearing: a mesh that was never parented has no
+		// `parentApp`, and skipping the release would leak its GPU geometry
 		const renderer = this.parentApp?.renderer ?? game.renderer;
 		renderer?.deleteMeshGeometry?.(this);
-		super.onDeactivateEvent(...args);
+		if (this._outline !== undefined) {
+			renderer?.deleteMeshGeometry?.(this._outline);
+		}
 	}
 
 	/**
@@ -2082,6 +2178,18 @@ export default class Mesh extends Renderable {
 		this._lcx = Number.isFinite(minX) ? (minX + maxX) * 0.5 : 0;
 		this._lcy = Number.isFinite(minY) ? (minY + maxY) * 0.5 : 0;
 		this._lcz = Number.isFinite(minZ) ? (minZ + maxZ) * 0.5 : 0;
+		// the model-space box itself, which picking tests a ray against
+		// before walking any triangle
+		/**
+		 * @ignore
+		 * @internal
+		 */
+		this._lmin = [minX, minY, minZ];
+		/**
+		 * @ignore
+		 * @internal
+		 */
+		this._lmax = [maxX, maxY, maxZ];
 		this._lcVersion = this._geometryVersion;
 	}
 
@@ -2723,7 +2831,11 @@ export default class Mesh extends Renderable {
 				// agreeing with that, including when this instance was
 				// previously drawn through the reversing path below.
 				this.indices = this._indicesOriginal;
+				this._captureParentSpace(renderer);
 				renderer.drawMesh(this, this._composeModelMatrix());
+				if (this.outlineWidth > 0) {
+					this._drawOutline(renderer, viewport);
+				}
 				if (
 					this._castsGroundShadow(renderer) === true &&
 					this.instanceLayout === undefined
@@ -2748,6 +2860,7 @@ export default class Mesh extends Renderable {
 			// offset is suppressed for this path via `applyAnchorTransform`
 			// (set in `preDraw`), so it does not leak into the view matrix.
 			this._projectVerticesWorld(this.pos.x, this.pos.y, this.depth);
+			this._captureParentSpace(renderer);
 			// world-space normals — only when this mesh is lit (the unlit batcher
 			// never reads `normals`, so projecting them otherwise is wasted
 			// per-frame work; glTF meshes carry normals even when the scene has
@@ -2783,6 +2896,399 @@ export default class Mesh extends Renderable {
 			}
 		}
 		renderer.drawMesh(this);
+		if (useWorldSpace && this.outlineWidth > 0) {
+			this._drawOutline(renderer, viewport);
+		}
+	}
+
+	/**
+	 * Draw the outline: the inverted hull built by `_outlineHull`, placed
+	 * exactly where this mesh is and drawn flat in {@link Mesh#outlineColor},
+	 * at this mesh's opacity.
+	 * @param {Renderer} renderer - the renderer drawing this mesh
+	 * @param {Camera2d} [viewport] - the camera rendering this frame
+	 * @ignore
+	 * @internal
+	 */
+	_drawOutline(renderer, viewport) {
+		const hull = this._outlineHull();
+		const tint = renderer.currentTint;
+		_savedTint.copy(tint);
+		renderer.setTint(this.outlineColor, _savedTint.alpha);
+		try {
+			hull.draw(renderer, viewport);
+		} finally {
+			tint.copy(_savedTint);
+		}
+	}
+
+	/**
+	 * The inverted hull drawn as this mesh's outline, built on first use and
+	 * refreshed whenever the geometry, the width or the mesh's scale changes:
+	 * every vertex pushed out along its (position-welded) normal by
+	 * {@link Mesh#outlineWidth}, converted to model units, with every
+	 * triangle's winding reversed so back-face culling keeps only the rim.
+	 * @returns {Mesh} the hull, placed where this mesh is
+	 * @ignore
+	 * @internal
+	 */
+	_outlineHull() {
+		let hull = this._outline;
+		const count = this.vertexCount;
+		if (hull === undefined || hull.vertexCount !== count) {
+			// a hull of the old vertex count is replaced: free its buffers
+			if (hull !== undefined) {
+				const renderer = this.parentApp?.renderer ?? game.renderer;
+				renderer?.deleteMeshGeometry?.(hull);
+			}
+			// weld vertices that share a position, so a hard-edged model's
+			// split vertices are pushed out together and the hull stays closed
+			const groups = new Int32Array(count);
+			const seen = new Map();
+			const v = this.originalVertices;
+			for (let i = 0; i < count; i++) {
+				const key = `${v[i * 3]},${v[i * 3 + 1]},${v[i * 3 + 2]}`;
+				let g = seen.get(key);
+				if (g === undefined) {
+					g = seen.size;
+					seen.set(key, g);
+				}
+				groups[i] = g;
+			}
+			// the same triangles, wound the other way round
+			const src = this._indicesOriginal;
+			const reversed = new src.constructor(src.length);
+			for (let i = 0; i + 2 < src.length; i += 3) {
+				reversed[i] = src[i];
+				reversed[i + 1] = src[i + 2];
+				reversed[i + 2] = src[i + 1];
+			}
+			hull = new Mesh(0, 0, {
+				vertices: new Float32Array(count * 3),
+				uvs: new Float32Array(count * 2),
+				indices: reversed,
+				normalize: false,
+				scale: this.meshScale,
+				width: this.width,
+				height: this.height,
+				rightHanded: this.rightHanded,
+				cullBackFaces: true,
+				castGroundShadow: false,
+				lit: false,
+			});
+			/**
+			 * @ignore
+			 * @internal
+			 */
+			this._outline = hull;
+			/**
+			 * @ignore
+			 * @internal
+			 */
+			this._outlineGroups = groups;
+			/**
+			 * @ignore
+			 * @internal
+			 */
+			this._outlineNormals = new Float32Array(seen.size * 3);
+			this._outlineVersion = -1;
+		}
+
+		// the width is in world units: divide out the mesh's own scale and
+		// the largest scale its transform applies
+		const t = this.currentTransform.val;
+		const transformScale = Math.max(
+			Math.hypot(t[0], t[1], t[2]),
+			Math.hypot(t[4], t[5], t[6]),
+			Math.hypot(t[8], t[9], t[10]),
+		);
+		const offset = this.outlineWidth / (this.meshScale * transformScale || 1);
+		if (
+			this._outlineVersion !== this._geometryVersion ||
+			this._outlineOffset !== offset
+		) {
+			this._rebuildOutlineHull(hull, offset);
+			/**
+			 * @ignore
+			 * @internal
+			 */
+			this._outlineVersion = this._geometryVersion;
+			/**
+			 * @ignore
+			 * @internal
+			 */
+			this._outlineOffset = offset;
+		}
+
+		// placed exactly where this mesh is
+		hull.pos.set(this.pos.x, this.pos.y, this.pos.z);
+		hull.currentTransform.copy(this.currentTransform);
+		hull.meshScale = this.meshScale;
+		hull.rightHanded = this.rightHanded;
+		hull.fog = this.fog;
+		hull._useWorldSpace = this._useWorldSpace;
+		return hull;
+	}
+
+	/**
+	 * Push every vertex of the hull out along its welded normal.
+	 * @param {Mesh} hull - the hull to write
+	 * @param {number} offset - how far, in model units
+	 * @ignore
+	 * @internal
+	 */
+	_rebuildOutlineHull(hull, offset) {
+		const v = this.originalVertices;
+		const count = this.vertexCount;
+		const normals =
+			this.originalNormals ?? generateNormals(v, this._indicesOriginal);
+		const groups = this._outlineGroups;
+		const acc = this._outlineNormals;
+		acc.fill(0);
+		for (let i = 0; i < count; i++) {
+			const g = groups[i] * 3;
+			acc[g] += normals[i * 3];
+			acc[g + 1] += normals[i * 3 + 1];
+			acc[g + 2] += normals[i * 3 + 2];
+		}
+		for (let g = 0; g < acc.length; g += 3) {
+			const len = Math.hypot(acc[g], acc[g + 1], acc[g + 2]) || 1;
+			acc[g] /= len;
+			acc[g + 1] /= len;
+			acc[g + 2] /= len;
+		}
+		const out = hull.originalVertices;
+		for (let i = 0; i < count; i++) {
+			const g = groups[i] * 3;
+			out[i * 3] = v[i * 3] + acc[g] * offset;
+			out[i * 3 + 1] = v[i * 3 + 1] + acc[g + 1] * offset;
+			out[i * 3 + 2] = v[i * 3 + 2] + acc[g + 2] * offset;
+		}
+		hull.needsUpdate = true;
+	}
+
+	/**
+	 * Remember how the space this mesh is placed in relates to the world.
+	 *
+	 * Under a `Camera3d` a mesh's model matrix places it in its PARENT's
+	 * space: every ancestor container's transform is folded into the view
+	 * matrix as the tree is drawn, not into the model matrix. Picking works in
+	 * world space, so it needs that fold, and the renderer knows it only while
+	 * drawing (the same `_lightSpaceInverse` that lights a nested mesh in the
+	 * right frame). A mesh straight in the world has nothing to remember.
+	 * @param {Renderer} renderer - the renderer drawing this mesh
+	 * @ignore
+	 * @internal
+	 */
+	_captureParentSpace(renderer) {
+		const worldToParent = renderer._lightSpaceInverse?.() ?? null;
+		if (worldToParent === null) {
+			this._hasParentSpace = false;
+			return;
+		}
+		if (this._worldToParent === undefined) {
+			/**
+			 * @ignore
+			 * @internal
+			 */
+			this._worldToParent = new Float64Array(16);
+		}
+		this._worldToParent.set(worldToParent.val);
+		/**
+		 * @ignore
+		 * @internal
+		 */
+		this._hasParentSpace = true;
+	}
+
+	/**
+	 * This mesh's model → world matrix, as last drawn: its own placement,
+	 * and the transforms of the containers above it.
+	 * @param {Float64Array} out - 16-element destination
+	 * @returns {Float64Array|null} `out`, or `null` when the containers above collapse it to nothing
+	 * @ignore
+	 * @internal
+	 */
+	_pickMatrix(out) {
+		const model = this._composeModelMatrix().val;
+		if (this._hasParentSpace !== true) {
+			out.set(model);
+			return out;
+		}
+		if (!invertMatrixInto(_parentToWorld, this._worldToParent)) {
+			return null;
+		}
+		const p = _parentToWorld;
+		for (let col = 0; col < 4; col++) {
+			const b0 = model[col * 4];
+			const b1 = model[col * 4 + 1];
+			const b2 = model[col * 4 + 2];
+			const b3 = model[col * 4 + 3];
+			for (let row = 0; row < 4; row++) {
+				out[col * 4 + row] =
+					p[row] * b0 + p[4 + row] * b1 + p[8 + row] * b2 + p[12 + row] * b3;
+			}
+		}
+		return out;
+	}
+
+	/**
+	 * Where a world-space ray first meets this mesh, tested against its
+	 * triangles (from either side). The `Camera3d` counterpart of a 2D
+	 * bounds check: {@link Camera3d#pick} and a mesh's pointer events under a
+	 * `Camera3d` are built on it.
+	 *
+	 * The mesh is tested where it is drawn: its own placement, and that of
+	 * the containers above it as of the last frame. A model-space box is tried
+	 * first, so a miss costs a matrix inverse and six divisions; a hit walks
+	 * the triangles once.
+	 * @param {Ray3d} ray - the ray, in world space (see {@link Camera3d#screenToRay})
+	 * @param {MeshHit} [out] - hit record to write into; a new one is allocated when omitted
+	 * @returns {MeshHit|null} the nearest hit, or `null` when the ray misses
+	 * @example
+	 * const ray = camera.screenToRay(pointer.gameScreenX, pointer.gameScreenY);
+	 * const hit = crate.intersectRay(ray);
+	 * if (hit !== null) {
+	 *     spark.pos.set(hit.point.x, hit.point.y);
+	 *     spark.depth = hit.point.z;
+	 * }
+	 */
+	intersectRay(ray, out) {
+		const world = this._pickMatrix(_pickWorld);
+		if (world === null) {
+			return null;
+		}
+		return this._intersectPlaced(
+			ray,
+			world,
+			-1,
+			Number.POSITIVE_INFINITY,
+			out ?? createMeshHit(),
+		);
+	}
+
+	/**
+	 * Test a ray against this mesh's geometry placed by `world`.
+	 *
+	 * The ray is carried into model space rather than every vertex into the
+	 * world. The direction is NOT renormalized there, so the parameter along
+	 * it is the same in both spaces: a world distance comes out directly, and
+	 * so does comparing it against `maxDistance`.
+	 * @param {Ray3d} ray - the world-space ray
+	 * @param {Float64Array} world - model → world matrix for this placement
+	 * @param {number} instance - the instance index to report (-1 for none)
+	 * @param {number} maxDistance - ignore hits at or beyond this distance
+	 * @param {MeshHit} out - hit record to write into
+	 * @returns {MeshHit|null} `out`, or `null` on a miss
+	 * @ignore
+	 * @internal
+	 */
+	_intersectPlaced(ray, world, instance, maxDistance, out) {
+		const inv = _pickInverse;
+		if (!invertMatrixInto(inv, world)) {
+			return null;
+		}
+		const o = ray.origin;
+		const d = ray.direction;
+		const ox = inv[0] * o.x + inv[4] * o.y + inv[8] * o.z + inv[12];
+		const oy = inv[1] * o.x + inv[5] * o.y + inv[9] * o.z + inv[13];
+		const oz = inv[2] * o.x + inv[6] * o.y + inv[10] * o.z + inv[14];
+		const dx = inv[0] * d.x + inv[4] * d.y + inv[8] * d.z;
+		const dy = inv[1] * d.x + inv[5] * d.y + inv[9] * d.z;
+		const dz = inv[2] * d.x + inv[6] * d.y + inv[10] * d.z;
+
+		this._updateLocalCenter();
+		const lo = this._lmin;
+		const hi = this._lmax;
+		if (!Number.isFinite(lo[0])) {
+			return null;
+		}
+		const enter = rayBox(
+			ox,
+			oy,
+			oz,
+			dx,
+			dy,
+			dz,
+			lo[0],
+			lo[1],
+			lo[2],
+			hi[0],
+			hi[1],
+			hi[2],
+		);
+		if (enter === null || enter >= maxDistance) {
+			return null;
+		}
+
+		const v = this.originalVertices;
+		const idx = this._indicesOriginal;
+		let best = maxDistance;
+		let tri = -1;
+		for (let i = 0; i + 2 < idx.length; i += 3) {
+			const a = idx[i] * 3;
+			const b = idx[i + 1] * 3;
+			const c = idx[i + 2] * 3;
+			const t = rayTriangle(
+				ox,
+				oy,
+				oz,
+				dx,
+				dy,
+				dz,
+				v[a],
+				v[a + 1],
+				v[a + 2],
+				v[b],
+				v[b + 1],
+				v[b + 2],
+				v[c],
+				v[c + 1],
+				v[c + 2],
+			);
+			if (t !== null && t < best) {
+				best = t;
+				tri = i / 3;
+			}
+		}
+		if (tri < 0) {
+			return null;
+		}
+
+		// the face normal in model space, carried to the world by the inverse
+		// transpose (exact under non-uniform scale), and turned to face the ray
+		const a = idx[tri * 3] * 3;
+		const b = idx[tri * 3 + 1] * 3;
+		const c = idx[tri * 3 + 2] * 3;
+		const e1x = v[b] - v[a];
+		const e1y = v[b + 1] - v[a + 1];
+		const e1z = v[b + 2] - v[a + 2];
+		const e2x = v[c] - v[a];
+		const e2y = v[c + 1] - v[a + 1];
+		const e2z = v[c + 2] - v[a + 2];
+		const lnx = e1y * e2z - e1z * e2y;
+		const lny = e1z * e2x - e1x * e2z;
+		const lnz = e1x * e2y - e1y * e2x;
+		let nx = inv[0] * lnx + inv[1] * lny + inv[2] * lnz;
+		let ny = inv[4] * lnx + inv[5] * lny + inv[6] * lnz;
+		let nz = inv[8] * lnx + inv[9] * lny + inv[10] * lnz;
+		const len = Math.hypot(nx, ny, nz) || 1;
+		nx /= len;
+		ny /= len;
+		nz /= len;
+		if (nx * d.x + ny * d.y + nz * d.z > 0) {
+			nx = -nx;
+			ny = -ny;
+			nz = -nz;
+		}
+
+		out.renderable = this;
+		ray.at(best, out.point);
+		out.normal.set(nx, ny, nz);
+		out.distance = best;
+		out.triangle = tri;
+		out.instance = instance;
+		return out;
 	}
 
 	/**
@@ -2961,10 +3467,8 @@ export default class Mesh extends Renderable {
 	 * @internal
 	 */
 	destroy() {
-		// the fallback is load-bearing: a mesh that was never parented has no
-		// `parentApp`, and skipping the release would leak its GPU geometry
-		const renderer = this.parentApp?.renderer ?? game.renderer;
-		renderer?.deleteMeshGeometry?.(this);
+		this._releaseGeometry();
+		this._outline = undefined;
 		super.destroy();
 	}
 }

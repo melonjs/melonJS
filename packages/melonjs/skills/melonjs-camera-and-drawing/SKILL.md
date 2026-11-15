@@ -1,6 +1,6 @@
 ---
 name: melonjs-camera-and-drawing
-description: "Use this skill for camera control and immediate-mode drawing in melonJS — following a target, viewport bounds, shake and fade, secondary cameras and what each one draws, and drawing shapes, lines and gradients inside a custom draw(). Covers world versus screen coordinate conversion, clipping and masking, baking with CanvasRenderTarget, and reading pixels back. Triggers on: Camera2d, viewport, follow, offset, look ahead, setBounds, minimap, second camera, split screen, cullMask, visibilityLayer, hide from a camera, zoom, roll, shake, fadeIn, fadeOut, CameraEffect, addCameraEffect, MaskEffect, PixelateTransitionEffect, worldToLocal, localToWorld, colorMatrix, renderer.fill, renderer.stroke, setGlobalAlpha, fillArc, Rect, Ellipse, Polygon, Line, Path2D, SVG path, Gradient, clipRect, mask, CanvasRenderTarget, NoiseTexture2d, lookAt, setBasis, toImageData, getImageData, toBlob, toDataURL, screenshot, read pixels."
+description: "Use this skill for camera control and immediate-mode drawing in melonJS — following a target, viewport bounds, shake and fade, secondary cameras and what each one draws, and drawing shapes, lines and gradients inside a custom draw(). Covers world versus screen coordinate conversion, clipping and masking, baking with CanvasRenderTarget, and reading pixels back. Triggers on: Camera2d, viewport, follow, offset, look ahead, setBounds, minimap, second camera, split screen, cullMask, visibilityLayer, hide from a camera, zoom, roll, shake, fadeIn, fadeOut, CameraEffect, addCameraEffect, MaskEffect, PixelateTransitionEffect, worldToLocal, localToWorld, worldToScreen, screenToRay, screenToWorld, colorMatrix, renderer.fill, renderer.stroke, setGlobalAlpha, fillArc, Rect, Ellipse, Polygon, Line, Path2D, SVG path, Gradient, clipRect, mask, CanvasRenderTarget, NoiseTexture2d, lookAt, setBasis, toImageData, getImageData, toBlob, toDataURL, screenshot, read pixels."
 license: MIT
 ---
 
@@ -216,7 +216,7 @@ perspective projection. To pin a label, damage number or marker to a point in a
 3D scene, project it:
 
 ```js
-const p = camera.worldToScreen(x, y, z);   // view + projection, divide included
+const p = camera.worldToScreen(target);    // a Vector3d; view + projection, divide included
 if (p !== null) {                          // null = at or BEHIND the camera
     label.pos.set(p.x, p.y);
 }
@@ -232,6 +232,19 @@ coordinate that puts your label on the wrong side of the screen. Skip it.
 
 Do not hand-roll this with `Matrix3d` — the perspective divide and the behind-
 camera case are exactly what gets it wrong.
+
+The other way round, a screen point is not a world point under perspective but
+a whole line of them (20.16):
+
+```js
+const ray = camera.screenToRay(pointer.gameScreenX, pointer.gameScreenY); // a Ray3d
+const onFloor = camera.screenToWorld(pointer.gameScreenX, pointer.gameScreenY, FLOOR_Y);
+const hit = camera.pick(pointer.gameScreenX, pointer.gameScreenY, app.world);
+```
+
+Feed them the **screen** pair (`gameScreenX` / `gameScreenY`), never
+`gameWorldX`, which a `Camera3d` can only approximate. `melonjs-3d` covers all
+three.
 
 ## Pointing a 3D camera
 

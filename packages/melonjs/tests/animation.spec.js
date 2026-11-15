@@ -85,4 +85,16 @@ describe("parseAnimationOptions", () => {
 		const opts = parseAnimationOptions({ onComplete: () => {}, loop: false });
 		expect(opts.legacyFn).toBeUndefined();
 	});
+
+	it("options crossfade passes through as milliseconds", () => {
+		expect(parseAnimationOptions({ crossfade: 250 }).crossfade).toBe(250);
+	});
+
+	it("ADVERSARIAL: a zero, negative or non-numeric crossfade is dropped", () => {
+		expect(parseAnimationOptions({ crossfade: 0 }).crossfade).toBeUndefined();
+		expect(parseAnimationOptions({ crossfade: -10 }).crossfade).toBeUndefined();
+		expect(
+			parseAnimationOptions({ crossfade: "250" }).crossfade,
+		).toBeUndefined();
+	});
 });

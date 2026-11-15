@@ -1,6 +1,6 @@
 ---
 name: melonjs-input
-description: "Use this skill for keyboard, pointer, mouse, touch and gamepad input in melonJS. Covers the bindKey action indirection, registerPointerEvent on regions, the isKinematic requirement that silently blocks pointer events, which of several overlapping objects receives an event and how to consume it, world vs screen pointer coordinates, and gamepad mapping onto the same actions. Triggers on: input, bindKey, isKeyPressed, KEY, bindPointer, mouse button, vibrateGamepad, rumble, activeGamepad, registerPointerEvent, releasePointerEvent, pointerdown, pointerup, pointermove, POINTERMOVE, gamepad, bindGamepad, triggerKeyEvent, virtual gamepad, touch controls, joystick, gamepad-plugin, floating stick, floating button, floating joystick, two thumbs, tap to fire, hideAtRest, mobile controls, KEYDOWN, KEYUP, press any key, splash screen, click, touch, drag, hit test, event propagation, stop propagating, overlapping, which object gets the click."
+description: "Use this skill for keyboard, pointer, mouse, touch and gamepad input in melonJS. Covers the bindKey action indirection, registerPointerEvent on regions, the isKinematic requirement that silently blocks pointer events, which of several overlapping objects receives an event and how to consume it, world vs screen pointer coordinates, pointer events on 3D meshes, and gamepad mapping onto the same actions. Triggers on: input, bindKey, isKeyPressed, KEY, bindPointer, mouse button, vibrateGamepad, rumble, activeGamepad, registerPointerEvent, releasePointerEvent, pointerdown, pointerup, pointermove, POINTERMOVE, gamepad, bindGamepad, triggerKeyEvent, virtual gamepad, touch controls, joystick, gamepad-plugin, floating stick, floating button, floating joystick, two thumbs, tap to fire, hideAtRest, mobile controls, KEYDOWN, KEYUP, press any key, splash screen, click, touch, drag, hit test, event propagation, stop propagating, overlapping, which object gets the click, click a mesh, hit3d, 3D picking."
 license: MIT
 ---
 
@@ -176,6 +176,47 @@ Consuming a **move** also takes the pointer away from the regions below: each
 one still holding it gets its `pointerleave`, because it is covered now and
 being inside its own bounds no longer decides. Consuming a press, a release or a
 wheel does not, since none of those says where the pointer is.
+
+### Meshes under a `Camera3d`: the ray through the pointer
+
+Under a perspective camera a region's 2D bounds say nothing about where it
+draws, so a `Mesh` (and a `Sprite3d`, an `InstancedMesh`, a `GLTFModel`) is
+hit-tested differently (20.16): by the **ray through the pointer**, against its
+triangles. The API does not change — `registerPointerEvent` on the mesh, and
+`isKinematic = false` as for any region:
+
+```js
+crate.isKinematic = false;
+input.registerPointerEvent("pointerdown", crate, (pointer) => {
+    const hit = pointer.hit3d;        // where the ray met the crate
+    spark.pos.set(hit.point.x, hit.point.y);
+    spark.depth = hit.point.z;
+    return false;                     // the floor behind it is not clicked too
+});
+```
+
+- Meshes are asked **nearest hit first**, after the screen-space (`floating`)
+  UI, which draws over the scene. Consuming works as above: `return false` and
+  the mesh behind gets nothing.
+- `pointer.hit3d` carries `point`, `normal` (facing the camera), `distance`,
+  `triangle`, `instance` (for an `InstancedMesh`) and `renderable` (for a
+  `GLTFModel`, the part — `hit3d.renderable.name` is the glTF node). It is
+  `null` on a leave, and on any event that is not a mesh's. The record is
+  reused: copy what you keep past the callback.
+- `pointerenter` / `pointerleave` follow the ray on and off the mesh.
+- A mesh inside a moved or turned container is hit where it draws, as of the
+  last frame. One in a container taken out of the world gets nothing.
+- **Each event ray-tests the meshes it can reach**, every triangle of them
+  (each instance of an `InstancedMesh`). A move only tests the meshes that
+  listen for moves, `pointerenter` / `pointerleave` or a release: register
+  only `pointerdown` on a ten-thousand-instance forest and moving the mouse
+  costs nothing; register `pointermove` on it and every move pays for all of
+  them.
+
+Without registering anything, `camera.pick(x, y, app.world)` returns the same
+record for the nearest mesh under a screen point, and
+`camera.screenToWorld(x, y, floorY)` the point on a level floor — see
+`melonjs-3d`.
 
 ## World coordinates versus screen coordinates
 
@@ -383,6 +424,10 @@ input.triggerKeyEvent(input.KEY.LEFT, false);   // release
 
 | symptom | cause |
 |---|---|
+| clicks on a 3D mesh land in the wrong place or not at all (before 20.16) | meshes were hit-tested by their 2D bounds, which a perspective camera makes meaningless: update — they are hit-tested by the pointer's ray now |
+| a click on a mesh also reaches the floor or mesh behind it | the handler did not `return false` |
+| moving the mouse got slow under a `Camera3d` | a big mesh or `InstancedMesh` listens for `pointermove` / `pointerenter` / `pointerleave`: each move ray-tests all its triangles. Listen for presses only, or hover with `camera.pick` on a smaller set |
+| `pointer.hit3d` is `null` | not a mesh's event, a `pointerleave`, or read after the callback returned (the record is reused) |
 | pointer handler never fires | `isKinematic` left at its `true` default |
 | touches never arrive where there is no DOM (nx.js, a Web Worker) | melonJS older than 20.14 listened for mouse events there; update. Touch is then read from `TouchEvent`s dispatched on the canvas given as `settings.canvas` |
 | handlers fire twice, or on dead objects | registered in the constructor instead of `onActivateEvent` |

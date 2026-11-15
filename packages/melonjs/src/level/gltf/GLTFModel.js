@@ -1,3 +1,4 @@
+import { createMeshHit } from "../../geometries/ray3d.ts";
 import {
 	composeTRS,
 	composeTRSInto,
@@ -10,17 +11,24 @@ import { hasVerticalExtent } from "../../renderable/groundshadow.js";
 import InstancedMesh from "../../renderable/instanced_mesh.js";
 import Mesh from "../../renderable/mesh.js";
 import { fillInstances } from "./GLTFScene.js";
-import { sampleChannel } from "./gltf_sampler.js";
+import { sampleChannel, slerpQuat } from "./gltf_sampler.js";
+import {
+	computeJointMatrices,
+	invertMatrixInto,
+	skinVertices,
+} from "./gltf_skin.js";
 
 /**
  * additional import for TypeScript
  * @import { AnimationOptionsInput } from "../../renderable/animation.ts";
  * @import {Vector3d} from "../../math/vector3d.ts";
+ * @import {Color} from "../../math/color.ts";
  * @import {Bounds} from "../../physics/bounds.ts";
  * @import Camera2d from "../../camera/camera2d.ts";
  * @import CanvasRenderer from "../../video/canvas/canvas_renderer.js";
  * @import WebGLRenderer from "../../video/webgl/webgl_renderer.js";
  * @import Renderer from "../../video/renderer.js";
+ * @import { MeshHit, Ray3d } from "../../geometries/ray3d.ts";
  */
 
 // column-major identity, the root's parent transform when the model sits
@@ -60,6 +68,18 @@ const _r = [0, 0, 0, 1];
 const _s = [1, 1, 1];
 const _val = [0, 0, 0, 0];
 const _localScratch = new Array(16);
+// the crossfade's FROM pose for the node being composed, and the two
+// quaternions packed for `slerpQuat`
+const _ft = [0, 0, 0];
+const _fr = [0, 0, 0, 1];
+const _fs = [1, 1, 1];
+const _qpair = [0, 0, 0, 1, 0, 0, 0, 1];
+// the inverse of the model's placement, which skinned parts are expressed in
+const _meshInverse = new Float64Array(16);
+// nodes driven by nothing, the FROM side of a crossfade out of the rest pose
+const NO_NODES = new Set();
+// the per-part hit `intersectRay` tests into
+const _partHit = createMeshHit();
 
 /**
  * A rig-driven 3D model loaded from an animated glTF/GLB asset. Unlike a static
@@ -75,6 +95,13 @@ const _localScratch = new Array(16);
  * but uses the cleaner options form everywhere: `setCurrentAnimation(name, {
  * loop, speed, onComplete, next })`. Here `animationspeed` is a **playback
  * multiplier** (1 = authored speed), not a per-frame delay.
+ *
+ * A **skinned** asset (a mesh bound to joints through `JOINTS_0` /
+ * `WEIGHTS_0`, the format of Mixamo, Quaternius and most rigged character
+ * packs) deforms with its joints: each posed frame the skinned parts are
+ * deformed on the CPU from their bind pose, so they bend the same way on
+ * WebGPU, WebGL and Canvas. Pass `crossfade` (milliseconds) to
+ * `setCurrentAnimation` to blend into a clip rather than snap to it.
  *
  * The model is placed like any other renderable: `pos`, `depth` and the
  * transform helpers (`rotate`, `scale`) move the **whole rig**, and compose
@@ -93,6 +120,11 @@ const _localScratch = new Array(16);
  * // ...then drive it like anything else
  * boat.setPosition(steerX, waterLevel, travelled);
  * boat.rotate(lean - lastLean, AXIS_Z);
+ *
+ * // a skinned character: blend from walking into running over 250 ms
+ * const fox = new me.GLTFModel(me.loader.getGLTF("fox"), { scale: 2, lit: true });
+ * fox.setCurrentAnimation("Walk");
+ * fox.setCurrentAnimation("Run", { crossfade: 250 });
  */
 export default class GLTFModel extends Container {
 	/**
@@ -111,6 +143,9 @@ export default class GLTFModel extends Container {
 	 * @param {number} [options.shadowDirectionZ=0] - z of the ground direction they are cast along
 	 * @param {number[]|Vector3d} [options.shadowGroundNormal] - the UP normal of the floor those shadows land on; needs `shadowGroundY` (see {@link Mesh#shadowGroundNormal})
 	 * @param {Light3d} [options.shadowLight] - a {@link Light3d} to take that direction from instead
+	 * @param {number} [options.toonBands=0] - cel-shade the lit parts into this many bands (see {@link Mesh#toonBands})
+	 * @param {number} [options.outlineWidth=0] - outline every part this many world units wide (see {@link Mesh#outlineWidth})
+	 * @param {Color|string|number[]} [options.outlineColor="#000000"] - the outline colour (see {@link Mesh#outlineColor})
 	 */
 	constructor(data, options = {}) {
 		super(0, 0);
@@ -217,6 +252,19 @@ export default class GLTFModel extends Container {
 		const dz = b.max[2] - b.min[2];
 		const radius = (Math.hypot(dx, dy, dz) / 2) * this._sceneScale;
 		const boxSize = Math.max(radius, 1) * Math.SQRT2;
+		// A skinned part is placed at the model's own origin (its joints, not
+		// its node, say where it is), so its cull sphere is centred there and
+		// must reach the farthest corner of the rig — with headroom, since an
+		// animated pose can reach past the rest pose it was measured in.
+		const reach =
+			Math.hypot(
+				Math.max(Math.abs(b.min[0]), Math.abs(b.max[0])),
+				Math.max(Math.abs(b.min[1]), Math.abs(b.max[1])),
+				Math.max(Math.abs(b.min[2]), Math.abs(b.max[2])),
+			) *
+			1.5 *
+			this._sceneScale;
+		const skinnedBoxSize = Math.max(reach, 1) * Math.SQRT2;
 
 		/**
 		 * The rig's own 2D extent, as a half-size and a centre offset from
@@ -244,6 +292,15 @@ export default class GLTFModel extends Container {
 		 */
 		this._extentY = -((b.min[1] + b.max[1]) / 2) * this._sceneScale;
 
+		/**
+		 * the skinned parts, each deformed from its bind pose on every pose
+		 * that moves its joints
+		 * @ignore
+		 * @internal
+		 */
+		this._skinned = [];
+		const skins = data.skins ?? [];
+
 		const lit = options.lit === true;
 		const rightHanded = options.rightHanded !== false;
 		// tri-state: `undefined` falls through to the application setting
@@ -266,14 +323,26 @@ export default class GLTFModel extends Container {
 				// the node's own TRS is animated, the records place the copies
 				// within it
 				const MeshClass = prim.instances ? InstancedMesh : Mesh;
+				// a skinned primitive is deformed in place every pose, so the
+				// mesh gets its own copy of the geometry: the descriptor's
+				// arrays stay the bind pose, shared by every model built from it
+				const skin =
+					prim.instances === undefined &&
+					prim.joints !== undefined &&
+					prim.weights !== undefined
+						? skins[prim.skin ?? node.skin]
+						: undefined;
 				const mesh = new MeshClass(0, 0, {
-					vertices: prim.vertices,
+					vertices: skin !== undefined ? prim.vertices.slice() : prim.vertices,
 					uvs: prim.uvs,
 					indices: prim.indices,
-					normals: prim.normals,
+					normals:
+						skin !== undefined && prim.normals !== undefined
+							? prim.normals.slice()
+							: prim.normals,
 					texture: prim.image,
-					width: boxSize,
-					height: boxSize,
+					width: skin !== undefined ? skinnedBoxSize : boxSize,
+					height: skin !== undefined ? skinnedBoxSize : boxSize,
 					scale: this._sceneScale,
 					normalize: false,
 					rightHanded,
@@ -314,6 +383,9 @@ export default class GLTFModel extends Container {
 					shadowGroundNormal: options.shadowGroundNormal,
 					shadowLight: options.shadowLight,
 					baseColorFactor: prim.baseColorFactor,
+					toonBands: options.toonBands,
+					outlineWidth: options.outlineWidth,
+					outlineColor: options.outlineColor,
 				});
 				if (prim.instances) {
 					fillInstances(mesh, prim.instances);
@@ -321,9 +393,31 @@ export default class GLTFModel extends Container {
 				if (prim.colors) {
 					mesh.vertexColors = prim.colors;
 				}
+				if (skin !== undefined) {
+					this._skinned.push({
+						mesh,
+						skin,
+						bindVertices: prim.vertices,
+						// a hand-built descriptor may carry no normals, in
+						// which case a lit mesh generated its own: those are the
+						// bind-pose normals to deform
+						bindNormals:
+							prim.normals ??
+							(mesh.originalNormals !== undefined
+								? mesh.originalNormals.slice()
+								: undefined),
+						joints: prim.joints,
+						weights: prim.weights,
+						jointMatrices: new Float32Array(skin.joints.length * 16),
+					});
+				}
 				mesh.name = node.name;
 				mesh.getAbsolutePosition = partAbsolutePosition;
-				(this._meshByNode[idx] ??= []).push(mesh);
+				// a skinned part is placed by `_skin()` instead, at the model's
+				// origin: the spec has a skinned mesh ignore its node's transform
+				if (skin === undefined) {
+					(this._meshByNode[idx] ??= []).push(mesh);
+				}
 				this.addChild(mesh);
 			}
 		}
@@ -393,6 +487,35 @@ export default class GLTFModel extends Container {
 		this._animDone = false;
 
 		/**
+		 * The crossfade in progress, or null. `clip` / `time` / `speed` / `done`
+		 * describe the clip being faded OUT, which keeps playing underneath;
+		 * `pose` instead holds a frozen per-node TRS when a crossfade was
+		 * interrupted by another, so the blend starts from what was on screen.
+		 * `nodes` are the nodes the FROM side drives.
+		 * @ignore
+		 * @internal
+		 */
+		this._fade = null;
+
+		/**
+		 * Whether the current clip plays once (`loop: false`, or chained to
+		 * another with `next`) rather than looping: faded out, it then holds
+		 * its last frame instead of starting over under the blend.
+		 * @ignore
+		 * @internal
+		 */
+		this._animOnce = false;
+
+		/**
+		 * a world-matrix lookup handed to the skinning helpers
+		 * @ignore
+		 * @internal
+		 */
+		this._worldOf = (j) => {
+			return this._world[j];
+		};
+
+		/**
 		 * The placement the rig was last posed with: `pos.x`, `pos.y`, `pos.z`
 		 * then the 16 entries of `currentTransform`. `update()` compares the
 		 * live placement against it, so a model whose clip is not advancing
@@ -432,6 +555,12 @@ export default class GLTFModel extends Container {
 	 * and accepts the same forms: omit to loop forever, a `string` to chain to
 	 * another clip when this one ends, a `function` legacy completion callback
 	 * (return `false` to hold the final pose), or an options object.
+	 *
+	 * `crossfade` (in milliseconds, options form only) blends into the clip
+	 * instead of snapping to it: the previous clip keeps playing underneath
+	 * while its weight falls to 0, so a walk turns into a run without a pop.
+	 * With no clip playing, the blend starts from the rest pose. A clip chained
+	 * with `next` is entered with the same crossfade.
 	 * @param {string} name - animation clip id (see {@link GLTFModel#getAnimationNames})
 	 * @param {AnimationOptionsInput} [options] - loop / chain / completion behavior
 	 * @param {boolean} [preserveTime=false] - keep the current playback time instead of restarting at 0
@@ -442,6 +571,7 @@ export default class GLTFModel extends Container {
 	 * model.setCurrentAnimation("jump", { next: "idle" });     // jump, then idle
 	 * model.setCurrentAnimation("walk", { speed: 2 });         // twice as fast
 	 * model.setCurrentAnimation("emote-yes", () => spawnFx()); // legacy callback
+	 * model.setCurrentAnimation("run", { crossfade: 250 });     // blend in over 250 ms
 	 */
 	setCurrentAnimation(name, options, preserveTime = false) {
 		if (this.anim[name] === undefined) {
@@ -450,11 +580,21 @@ export default class GLTFModel extends Container {
 		if (this.isCurrentAnimation(name)) {
 			return this;
 		}
+		const opts = parseAnimationOptions(options);
+		// capture what is being faded out BEFORE the current clip changes
+		const crossfade = opts.crossfade;
+		this._fade =
+			typeof crossfade === "number" && crossfade > 0
+				? this._beginFade(crossfade)
+				: null;
 		this.current.name = name;
 		this.current.length = this.anim[name].duration;
-		const opts = parseAnimationOptions(options);
 		this.animationspeed = opts.speed;
 		this._animDone = false;
+		// a legacy callback decides at the end whether to loop: as before,
+		// such a clip loops while it is faded out
+		this._animOnce =
+			!opts.legacyFn && (typeof opts.next === "string" || opts.loop === false);
 		const onComplete = opts.onComplete;
 		if (opts.legacyFn) {
 			// legacy bare-function callback (return false → hold the last pose)
@@ -471,7 +611,10 @@ export default class GLTFModel extends Container {
 						return false;
 					}
 				}
-				this.setCurrentAnimation(next);
+				this.setCurrentAnimation(
+					next,
+					crossfade !== undefined ? { crossfade } : undefined,
+				);
 			};
 		} else if (opts.loop === false) {
 			// play once: fire onComplete, hold the final pose
@@ -546,6 +689,8 @@ export default class GLTFModel extends Container {
 		this.current.length = 0;
 		this.resetAnim = undefined;
 		this._animDone = false;
+		this._animOnce = false;
+		this._fade = null;
 		this.animationpause = false;
 		// re-pose with no active clip → every node falls back to its rest matrix
 		this._pose();
@@ -562,6 +707,12 @@ export default class GLTFModel extends Container {
 	 * @protected
 	 */
 	update(dt) {
+		// a crossfade keeps posing even under a finished or zero-length clip:
+		// its FROM side is still moving and its weight still changing
+		const fading = this._fade !== null && !this.animationpause;
+		if (fading) {
+			this._advanceFade(dt);
+		}
 		if (
 			this.current.name !== undefined &&
 			!this.animationpause &&
@@ -599,12 +750,16 @@ export default class GLTFModel extends Container {
 			}
 			this._pose();
 			this.isDirty = true;
+		} else if (fading && this._isLive()) {
+			this._pose();
+			this.isDirty = true;
 		} else if (this._isLive() && this._placementChanged()) {
 			// no clip is advancing, but the model itself was moved, turned or
 			// resized: the placement only reaches the parts through `_pose()`,
 			// so re-pose at the clip's current time, which leaves a paused or
-			// finished clip exactly where it is
-			this._pose();
+			// finished clip exactly where it is. The joints did not move
+			// relative to the skinned parts, so their deformation stands.
+			this._pose(false);
 			this.isDirty = true;
 		}
 		return super.update(dt);
@@ -657,6 +812,43 @@ export default class GLTFModel extends Container {
 	 */
 	_isLive() {
 		return this.pos !== undefined;
+	}
+
+	/**
+	 * Where a world-space ray first meets this model: the nearest hit among
+	 * its parts, tested against their triangles in the pose they were last
+	 * given (see {@link Mesh#intersectRay}). The hit's `renderable` is the
+	 * part, so `hit.renderable.name` is the glTF node that was hit — a
+	 * character's head rather than its body.
+	 *
+	 * What a pointer event registered on the model hit-tests under a
+	 * {@link Camera3d}, and what {@link Camera3d#pick} asks the model.
+	 * @param {Ray3d} ray - the ray, in world space (see {@link Camera3d#screenToRay})
+	 * @param {MeshHit} [out] - hit record to write into; a new one is allocated when omitted
+	 * @returns {MeshHit|null} the nearest hit, or `null` when the ray misses every part
+	 * @example
+	 * input.registerPointerEvent("pointerdown", hero, (pointer) => {
+	 *     console.log("clicked the", pointer.hit3d.renderable.name);
+	 * });
+	 */
+	intersectRay(ray, out) {
+		let best = null;
+		for (const child of this.getChildren()) {
+			if (typeof child.intersectRay !== "function") {
+				continue;
+			}
+			const hit = child.intersectRay(ray, _partHit);
+			if (hit !== null && (best === null || hit.distance < best.distance)) {
+				best = best ?? out ?? createMeshHit();
+				best.renderable = hit.renderable;
+				best.point.copy(hit.point);
+				best.normal.copy(hit.normal);
+				best.distance = hit.distance;
+				best.triangle = hit.triangle;
+				best.instance = hit.instance;
+			}
+		}
+		return best;
 	}
 
 	/**
@@ -738,13 +930,16 @@ export default class GLTFModel extends Container {
 	 * @ignore
 	 * @internal
 	 */
-	_pose() {
+	_pose(reskin = true) {
 		const clip = this.current.name ? this.anim[this.current.name] : null;
 		const t = this.current.time;
 		const parent = this._rootMatrix();
 		for (const root of this._roots) {
 			this._visit(root, parent, clip, t);
 		}
+		// every joint has its world matrix now, so the skinned parts can
+		// follow them
+		this._skin(parent, reskin);
 		// remember the placement this pose was built from
 		const p = this._posedPlacement;
 		p[0] = this.pos.x;
@@ -824,50 +1019,273 @@ export default class GLTFModel extends Container {
 	}
 
 	/**
-	 * The node's local matrix: sampled TRS when the active clip animates it
-	 * (starting from the rest pose, overriding only the animated components),
-	 * otherwise the cached rest matrix.
+	 * The node's local matrix: sampled TRS when the active clip (or either
+	 * side of a crossfade) animates it, starting from the rest pose and
+	 * overriding only the animated components; otherwise the cached rest
+	 * matrix.
 	 * @returns {number[]} 16-element column-major matrix
 	 * @ignore
 	 * @internal
 	 */
 	_localMatrix(idx, clip, t) {
 		const node = this._nodes[idx];
-		if (clip === null || !clip.animatedNodes.has(node.index)) {
+		const fade = this._fade;
+		if (
+			(clip === null || !clip.animatedNodes.has(node.index)) &&
+			(fade === null || !fade.nodes.has(node.index))
+		) {
 			// cached rest matrix — never mutated, safe to return directly
 			return this._restMatrix[idx];
 		}
-		// start from the rest TRS, then override the channels this clip drives
-		_t[0] = node.translation[0];
-		_t[1] = node.translation[1];
-		_t[2] = node.translation[2];
-		_r[0] = node.rotation[0];
-		_r[1] = node.rotation[1];
-		_r[2] = node.rotation[2];
-		_r[3] = node.rotation[3];
-		_s[0] = node.scale[0];
-		_s[1] = node.scale[1];
-		_s[2] = node.scale[2];
-		for (const ch of clip.channelsByNode.get(node.index)) {
-			sampleChannel(ch, t, _val);
-			if (ch.path === "translation") {
-				_t[0] = _val[0];
-				_t[1] = _val[1];
-				_t[2] = _val[2];
-			} else if (ch.path === "rotation") {
-				_r[0] = _val[0];
-				_r[1] = _val[1];
-				_r[2] = _val[2];
-				_r[3] = _val[3];
-			} else {
-				_s[0] = _val[0];
-				_s[1] = _val[1];
-				_s[2] = _val[2];
-			}
-		}
+		this._blendedTRS(node, clip, t, _t, _r, _s);
 		// in-place into the shared scratch (consumed immediately by the caller's
 		// world multiply, before the next node is visited)
 		return composeTRSInto(_localScratch, _t, _r, _s);
+	}
+
+	/**
+	 * A node's TRS under one clip at time `t`: its rest TRS with the channels
+	 * the clip drives overridden. A null clip yields the rest TRS.
+	 * @ignore
+	 * @internal
+	 */
+	_sampleTRS(node, clip, t, T, R, S) {
+		T[0] = node.translation[0];
+		T[1] = node.translation[1];
+		T[2] = node.translation[2];
+		R[0] = node.rotation[0];
+		R[1] = node.rotation[1];
+		R[2] = node.rotation[2];
+		R[3] = node.rotation[3];
+		S[0] = node.scale[0];
+		S[1] = node.scale[1];
+		S[2] = node.scale[2];
+		const channels =
+			clip !== null ? clip.channelsByNode.get(node.index) : undefined;
+		if (channels === undefined) {
+			return;
+		}
+		for (const ch of channels) {
+			sampleChannel(ch, t, _val);
+			if (ch.path === "translation") {
+				T[0] = _val[0];
+				T[1] = _val[1];
+				T[2] = _val[2];
+			} else if (ch.path === "rotation") {
+				R[0] = _val[0];
+				R[1] = _val[1];
+				R[2] = _val[2];
+				R[3] = _val[3];
+			} else {
+				S[0] = _val[0];
+				S[1] = _val[1];
+				S[2] = _val[2];
+			}
+		}
+	}
+
+	/**
+	 * A node's TRS as it is shown: the current clip's, blended with the
+	 * crossfade's FROM side while one is in progress (translation and scale
+	 * lerped, rotation slerped along the shortest arc).
+	 * @ignore
+	 * @internal
+	 */
+	_blendedTRS(node, clip, t, T, R, S) {
+		this._sampleTRS(node, clip, t, T, R, S);
+		const fade = this._fade;
+		if (fade === null) {
+			return;
+		}
+		if (fade.pose !== null) {
+			const snap = fade.pose.get(node.index);
+			if (snap !== undefined) {
+				_ft[0] = snap[0];
+				_ft[1] = snap[1];
+				_ft[2] = snap[2];
+				_fr[0] = snap[3];
+				_fr[1] = snap[4];
+				_fr[2] = snap[5];
+				_fr[3] = snap[6];
+				_fs[0] = snap[7];
+				_fs[1] = snap[8];
+				_fs[2] = snap[9];
+			} else {
+				this._sampleTRS(node, null, 0, _ft, _fr, _fs);
+			}
+		} else {
+			this._sampleTRS(node, fade.clip, fade.time, _ft, _fr, _fs);
+		}
+		const w = Math.min(fade.elapsed / fade.duration, 1);
+		for (let i = 0; i < 3; i++) {
+			T[i] = _ft[i] + (T[i] - _ft[i]) * w;
+			S[i] = _fs[i] + (S[i] - _fs[i]) * w;
+		}
+		_qpair[0] = _fr[0];
+		_qpair[1] = _fr[1];
+		_qpair[2] = _fr[2];
+		_qpair[3] = _fr[3];
+		_qpair[4] = R[0];
+		_qpair[5] = R[1];
+		_qpair[6] = R[2];
+		_qpair[7] = R[3];
+		slerpQuat(_qpair, 0, 4, w, R);
+	}
+
+	/**
+	 * Start a crossfade of `duration` ms out of whatever is showing now: the
+	 * current clip, which keeps playing underneath, or, when a crossfade is
+	 * already running, the blended pose frozen as it stands (restarting from
+	 * either side alone would pop).
+	 * @param {number} duration - the crossfade length, in milliseconds
+	 * @returns {object} the new fade state
+	 * @ignore
+	 * @internal
+	 */
+	_beginFade(duration) {
+		const prev =
+			this.current.name !== undefined ? this.anim[this.current.name] : null;
+		const running = this._fade;
+		if (running === null) {
+			// a clip that plays once holds its last frame from where it ended
+			// (a chain into the next clip starts this fade at or past its
+			// end); a looping one carries on from where it is in its loop
+			const length = prev !== null ? prev.duration : 0;
+			const once = this._animOnce;
+			let time = this.current.time;
+			if (length > 0) {
+				time = once ? Math.min(time, length) : time % length;
+			}
+			return {
+				clip: prev,
+				time,
+				speed: this.animationspeed,
+				once,
+				done: this._animDone || (once && time >= length),
+				pose: null,
+				nodes: prev !== null ? prev.animatedNodes : NO_NODES,
+				elapsed: 0,
+				duration,
+			};
+		}
+		// freeze every node either side of the running fade drives
+		const pose = new Map();
+		const t = this.current.time;
+		const nodes = new Set(running.nodes);
+		if (prev !== null) {
+			for (const n of prev.animatedNodes) {
+				nodes.add(n);
+			}
+		}
+		for (const n of nodes) {
+			const node = this._nodes[n];
+			if (node === undefined) {
+				continue;
+			}
+			this._blendedTRS(node, prev, t, _t, _r, _s);
+			pose.set(
+				n,
+				Float64Array.of(
+					_t[0],
+					_t[1],
+					_t[2],
+					_r[0],
+					_r[1],
+					_r[2],
+					_r[3],
+					_s[0],
+					_s[1],
+					_s[2],
+				),
+			);
+		}
+		return {
+			clip: null,
+			time: 0,
+			speed: 0,
+			once: true,
+			done: true,
+			pose,
+			nodes: new Set(pose.keys()),
+			elapsed: 0,
+			duration,
+		};
+	}
+
+	/**
+	 * Advance the running crossfade by `dt` ms: its weight, and the clip being
+	 * faded out, which keeps looping, or, if it plays once, runs on to its
+	 * last frame and holds it. Ends the fade once it is complete.
+	 * @param {number} dt - elapsed time, in milliseconds
+	 * @ignore
+	 * @internal
+	 */
+	_advanceFade(dt) {
+		const fade = this._fade;
+		fade.elapsed += dt;
+		if (fade.elapsed >= fade.duration) {
+			this._fade = null;
+			return;
+		}
+		const clip = fade.clip;
+		if (clip !== null && !fade.done && clip.duration > 0) {
+			const time = fade.time + (dt / 1000) * fade.speed;
+			if (!fade.once) {
+				fade.time = time % clip.duration;
+			} else if (time >= clip.duration) {
+				fade.time = clip.duration;
+				fade.done = true;
+			} else {
+				fade.time = time;
+			}
+		}
+	}
+
+	/**
+	 * Place every skinned part at the model's origin and, when the joints may
+	 * have moved, deform it from its bind pose by their current world matrices
+	 * (see `gltf_skin.js`), telling the renderer its geometry changed.
+	 *
+	 * The deformation is expressed relative to the model's own placement, so
+	 * moving, turning or scaling the model needs no re-skin: the placement
+	 * reaches the part through `_applyWorldToMesh`, exactly as for a rigid
+	 * part.
+	 * @param {number[]} root - the model's placement, in glTF space (see `_rootMatrix`)
+	 * @param {boolean} reskin - whether the joints may have moved since the last pose
+	 * @ignore
+	 * @internal
+	 */
+	_skin(root, reskin) {
+		if (this._skinned.length === 0) {
+			return;
+		}
+		// a degenerate (zero-scale) placement has nowhere to express the skin
+		// in; leave the parts as they last were rather than writing NaN
+		const invertible = reskin && invertMatrixInto(_meshInverse, root);
+		for (const part of this._skinned) {
+			const mesh = part.mesh;
+			this._applyWorldToMesh(mesh, root);
+			if (!invertible) {
+				continue;
+			}
+			computeJointMatrices(
+				part.jointMatrices,
+				part.skin,
+				this._worldOf,
+				_meshInverse,
+			);
+			skinVertices(
+				part.bindVertices,
+				part.bindNormals,
+				part.joints,
+				part.weights,
+				part.jointMatrices,
+				mesh.vertexCount,
+				mesh.originalVertices,
+				mesh.originalNormals,
+			);
+			mesh.needsUpdate = true;
+		}
 	}
 
 	/**

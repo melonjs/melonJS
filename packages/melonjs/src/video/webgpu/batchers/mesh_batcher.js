@@ -35,7 +35,7 @@ const _INVERSE_VIEW = new Matrix3d();
  * mat4x4 model (64) + mat4x4 view (64) + vec4 tint (16) + vec4 params
  * (alphaCutoff, hasAlphaMap, reserved ×2) (16) + vec4 emissive (16) +
  * vec4 specular (rgb + shininess) (16) + vec4 eye (camera world position;
- * w reserved) (16) + vec4 fogColor (16) + vec4 fogParams (16)
+ * w = cel-shading bands) (16) + vec4 fogColor (16) + vec4 fogParams (16)
  * + vec4 fogHeight (16) → 256.
  * @ignore
  * @internal
@@ -860,7 +860,8 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 		scratch[48] = v[12];
 		scratch[49] = v[13];
 		scratch[50] = v[14];
-		scratch[51] = 0;
+		// cel-shading bands, read by the lit shader (< 2 = smooth)
+		scratch[51] = mesh?.toonBands || 0;
 
 		// Distance fog, resolved by the camera drawing this frame.
 		// `mesh.fog === false` exempts this object; with no fog installed every

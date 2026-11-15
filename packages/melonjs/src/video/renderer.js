@@ -3102,8 +3102,8 @@ export default class Renderer {
 	 * Set the current per-renderable depth value. GPU batchers (WebGL
 	 * today, WebGPU once it lands) push it into the vertex stream as the
 	 * `z` component of each vertex — a no-op under the default
-	 * orthographic projection, used by perspective (Camera3d) to scale
-	 * and parallax sprites by distance.
+	 * orthographic projection, used by a Camera3d (perspective, to scale and
+	 * parallax sprites by distance, or orthographic, to place them in depth).
 	 *
 	 * Typically called automatically by `Renderable.preDraw` from the
 	 * renderable's `depth` property. User code only needs to call this
@@ -3126,7 +3126,14 @@ export default class Renderer {
 		// per renderable) so the per-quad batcher hot path is untouched. Mesh
 		// geometry z is unaffected — only this sprite/quad sort key is zeroed.
 		// val[11] is the projection's z→w (perspective-divide) term: 0 ⇒ orthographic, non-zero ⇒ perspective.
-		this.currentDepth = this.projectionMatrix.val[11] !== 0 ? depth : 0;
+		// An orthographic Camera3d has no such term but still draws a world in
+		// depth (`_orthographic3d`, raised by the camera for its draw): its
+		// sprites keep their depth too, except on screen-space (floating) draws,
+		// the same test `Container` makes for its own depth
+		const inDepth =
+			this.projectionMatrix.val[11] !== 0 ||
+			(this._orthographic3d === true && !(this._screenSpaceDepth > 0));
+		this.currentDepth = inDepth ? depth : 0;
 	}
 
 	/**

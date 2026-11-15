@@ -1,6 +1,6 @@
 ---
 name: melonjs-3d
-description: "Use this skill for anything 3D or 2.5D in melonJS — Camera3d, Mesh, InstancedMesh, Sprite3d billboards, Light3d, ground shadows, glTF/GLB scenes, and depth sorting. Covers the Y-down/+Z-forward convention that is the inverse of OpenGL, the cameraClass opt-in, clip planes, and what does not work on the Canvas fallback. Triggers on: Camera3d, Mesh, InstancedMesh, Sprite3d, Trail3d, ribbon, exhaust trail, Light3d, billboard, glTF, glb, 3D, 2.5D, depth, cameraClass, fov, setClipPlanes, setFog, fog, distance fog, height fog, heightFalloff, transparent, transparency, alpha, blendMode, fade, castGroundShadow, shadowGroundPoint, lit, emissive, specular, shininess, normalMap, alphaCutoff, depthTest, vertexColors, worldToScreen, followOffset, setBasis, getBasis, lookAt, up vector, gimbal, slerp, great circle, turn a direction."
+description: "Use this skill for anything 3D or 2.5D in melonJS — Camera3d, Mesh, InstancedMesh, Sprite3d billboards, Light3d, ground shadows, glTF/GLB scenes, and depth sorting. Covers the Y-down/+Z-forward convention that is the inverse of OpenGL, the cameraClass opt-in, orthographic (isometric) projection, clip planes, and what does not work on the Canvas fallback. Triggers on: Camera3d, toon, cel shading, toonBands, outlineWidth, orthographic, isometric, orthoHeight, projection, Mesh, InstancedMesh, Sprite3d, Trail3d, ribbon, exhaust trail, Light3d, billboard, glTF, glb, 3D, 2.5D, depth, cameraClass, fov, setClipPlanes, setFog, fog, distance fog, height fog, heightFalloff, transparent, transparency, alpha, blendMode, fade, castGroundShadow, shadowGroundPoint, lit, emissive, specular, shininess, normalMap, alphaCutoff, depthTest, vertexColors, worldToScreen, screenToRay, screenToWorld, pick, Ray3d, intersectRay, hit3d, followOffset, setBasis, getBasis, lookAt, up vector, gimbal, slerp, great circle, turn a direction."
 license: MIT
 ---
 
@@ -203,6 +203,47 @@ class GameStage extends Stage {
   deadzone and damping are not applied. For a damped chase camera, leave the
   target unset and move the camera yourself (`math.damp`, or `slerp` below for
   its facing).
+
+## Orthographic projection: the isometric look
+
+`camera.projection = "orthographic"` (or `projection: "orthographic"` in the
+`Camera3d` options) keeps everything 3D — depth buffer, lighting, fog, ground
+shadows, billboards, sprites and particles at their depth, culling, picking,
+glTF scenes — and drops the
+foreshortening (20.16). Parallel edges stay parallel and a prop is the same
+size at the back as at the front: the look of an isometric tactics, builder or
+diorama game, without isometric tile maths.
+
+```js
+const camera = app.viewport;              // cameraClass: Camera3d
+camera.projection = "orthographic";
+camera.orthoHeight = 900;                 // world units tall, at zoom 1
+// true isometric: a quarter turn of 45°, looking down atan(1/√2) ≈ 35.26°
+const yaw = Math.PI / 4;
+const pitch = Math.atan(1 / Math.SQRT2);
+camera.setPosition(
+    -Math.sin(yaw) * Math.cos(pitch) * 1800,
+    -Math.sin(pitch) * 1800,              // up is -Y
+    -Math.cos(yaw) * Math.cos(pitch) * 1800,
+);
+camera.lookAt(0, 0, 0);
+camera.setClipPlanes(50, 6000);
+```
+
+- **`orthoHeight` frames the view, `zoom` zooms it.** `orthoHeight` is the
+  height of the view in world units at zoom 1 (the width follows the aspect),
+  defaulting to the camera's height in pixels, one unit per pixel. `zoom`
+  divides it, as on a `Camera2d`: `zoom = 2` shows half as much world, and
+  `orthoHeight` still reads what was set. `fov` is ignored; a perspective
+  camera ignores `zoom` (narrow its `fov` instead).
+- **Still stand the camera back.** It is placed and pointed as a perspective
+  one is: `near` / `far` are measured from it, so something behind it is
+  clipped, and specular highlights are measured from its position.
+- **Switching at run time** keeps the camera where it is; only the projection
+  changes. To make the two frame alike, give perspective
+  `fov = 2 * atan(orthoHeight / 2 / distance)`.
+- Picking works the same: `screenToRay` returns parallel rays, one per pixel,
+  each starting on the camera's plane.
 
 ## Where an up vector earns its keep
 
@@ -550,6 +591,8 @@ ignores them.
 | `alphaCutoff` | discard texels below this alpha: foliage, fences | nothing |
 | `alphaMap` | per-texel opacity, multiplied in before the cutoff | a non-zero `alphaCutoff` |
 | `baseColorFactor` | a LINEAR colour, encoded into `tint` (see `melonjs-3d-assets`) | nothing |
+| `toonBands` | cel shading: the light cut into this many flat bands, a hard specular spot | `lit`, a `Light3d` |
+| `outlineWidth` + `outlineColor` | an ink line round the silhouette, in world units | a `Camera3d` |
 
 `emissive`, `specular` and `shininess` can be changed after construction too;
 `setBaseColorFactor()` is the method form of the last row.
@@ -559,6 +602,39 @@ into the mesh shader as a colour hook on both GPU backends, so the mesh keeps it
 placement, cutout, lighting and fog. A few builtins are unavailable there, and an
 `InstancedMesh` cannot host one; both warn once. See
 `melonjs-effects-and-shaders`.
+
+### Toon shading and outlines
+
+The cartoon look is two settings (20.16), both off by default:
+
+```js
+const hero = new GLTFModel(loader.getGLTF("hero"), {
+    scale, lit: true,
+    toonBands: 3,            // shadow, mid-tone, lit
+    outlineWidth: 3,         // world units (pixels)
+    outlineColor: "#1d1a2b", // Color, CSS string, or [r, g, b] in 0..1
+});
+// or per mesh, at any time
+crate.toonBands = 2;
+crate.outlineWidth = 0;      // off
+```
+
+- **`toonBands`** cuts the lit shading into flat bands from unlit (the ambient
+  alone) to fully lit, with the light's terminator on a band edge, and turns a
+  specular highlight into a hard-edged spot. Under 2 is smooth shading. It
+  needs `lit` and a `Light3d` with a direction: an ambient-only scene has
+  nothing to band.
+- **`outlineWidth`** draws an *inverted hull*: a copy of the mesh pushed out
+  along its normals and turned inside out, so only its rim shows. It costs
+  one more draw per outlined mesh. The outline is the **silhouette** only;
+  creases inside it are not inked. Normals are averaged where vertices share
+  a position, so a hard-edged model still gets a closed line, and the hull
+  follows the geometry — a skinned character's outline bends with it.
+- The hull is built from the mesh's normals, so **a model wound inside out
+  (normals pointing in) draws its outline OVER itself**; fix the export.
+- Not drawn by an `InstancedMesh` or a `Sprite3d`; `Camera3d` only.
+- `GLTFModel`, `level.load` and `GLTFScene` take `toonBands`, `outlineWidth`
+  and `outlineColor` for every part at once.
 
 ### InstancedMesh, and when it is the wrong tool
 
@@ -1050,6 +1126,55 @@ shadows" — which looks like culling, an LOD stage or a fog problem, none of
 which it is. Before chasing any of those, dump `shadowGroundY` against the
 caster's own y and check which one is larger.
 
+## Picking: what is under the pointer
+
+Under a perspective camera a pixel is a line of world points, so every
+"what did I click" question is a ray (20.16). Three levels, smallest first:
+
+```js
+// where a pixel meets a level floor (Y-down: the floor is a GREATER y)
+const p = camera.screenToWorld(pointer.gameScreenX, pointer.gameScreenY, FLOOR_Y);
+if (p !== null) hero.walkTo(p.x, p.z);          // null: that pixel sees sky
+
+// the nearest mesh under a pixel, no event registered on anything
+const hit = camera.pick(pointer.gameScreenX, pointer.gameScreenY, app.world);
+if (hit !== null) select(hit.renderable);
+
+// or let the mesh answer its own pointer events, as a 2D sprite does
+crate.isKinematic = false;
+input.registerPointerEvent("pointerdown", crate, (pointer) => {
+    burst(pointer.hit3d.point);
+    return false;
+});
+```
+
+All three are built from `camera.screenToRay(x, y)`, a `Ray3d` from the eye
+through that pixel with a unit direction, so distances are from the camera.
+`Ray3d` tests planes, spheres, boxes and triangles itself, and
+`mesh.intersectRay(ray)` tests one mesh's triangles. A hit (`MeshHit`) carries
+`renderable`, `point`, `normal` (facing the ray), `distance`, `triangle` and
+`instance`.
+
+- **Pass the screen pair**, `gameScreenX` / `gameScreenY`. `gameWorldX` under a
+  `Camera3d` is a flat approximation and lands nowhere near the mesh.
+- **Triangles, not bounds**: a thin mesh is missed through its gaps, a cutout
+  (`alphaCutoff`) is not — picking does not read the texture.
+- **An `InstancedMesh` reports `hit.instance`**, the index for
+  `setInstanceColor` / `getInstance` / `removeInstance`. Only the
+  `visibleInstanceCount` drawn are tested, each costing a matrix inverse: fine
+  on a click, not something to run over 100 000 trees every frame.
+- **A `GLTFModel` answers for its parts**: `hit.renderable` is the part,
+  `hit.renderable.name` its glTF node, and a skinned part is hit in its current
+  pose.
+- **Containers count**: a mesh in a moved, turned or scaled container is hit
+  where it draws — as of the last frame, which is when the renderer learned
+  where the container put it.
+- `pick` skips `floating`, `isRenderable = false` and `alpha` 0 renderables.
+
+The physics adapter's `raycast3d(from, to)` is a different tool: a segment
+against bodies' bounding volumes, for gameplay (line of sight, ground probes),
+not against what is drawn.
+
 ## Collision in 3D
 
 Use a body with a depth shape, not a hand-rolled distance check. Two shapes
@@ -1115,7 +1240,7 @@ primitive exported at the origin; see `melonjs-3d-assets`.
 
 `melonjs-3d-assets` covers the rest: every `level.load` option, which material
 features are imported, imported lights and their intensity units, node-TRS
-animation (and the skinning that is out of scope), and OBJ/MTL.
+animation, skinned characters and crossfades between clips, and OBJ/MTL.
 
 ## Requires a GPU backend
 
@@ -1164,6 +1289,15 @@ if (!app.renderer.supportsDepthBuffer) {
 
 | symptom | cause |
 |---|---|
+| `toonBands` changes nothing | the mesh is not `lit`, or the scene has only ambient light: banding needs a directional, point or spot light |
+| an outline covers the mesh instead of ringing it | the model is wound inside out (its normals point in); the hull is pushed along them |
+| an outline is missing on an instanced scatter or a billboard | `InstancedMesh` and `Sprite3d` do not draw one |
+| an orthographic camera shows nothing, or half a scene | it sits inside the scene: stand it back like a perspective camera, since `near` / `far` are measured from its position |
+| zooming an orthographic camera does nothing | `fov` does not apply to it: set `zoom` (or `orthoHeight`) |
+| `zoom` does nothing on a 3D camera | it is a perspective one, which ignores `zoom`: narrow `fov`, or switch to `projection: "orthographic"` |
+| a click on a mesh misses, or hits something beside it | the pointer's `gameWorldX`/`gameWorldY` were used; pass `gameScreenX`/`gameScreenY` to `screenToRay` / `pick` / `screenToWorld` |
+| `screenToWorld` returns `null` | that pixel looks above the horizon, or the floor's Y sign is wrong (Y-down: the floor is a greater y than the camera) |
+| a mesh in a moved container is picked where it used to be | it has not been drawn since the container moved: picking learns the container's placement from the last draw |
 | scene lit from underneath | `direction` Y sign — this is Y-down, so a sun overhead is **+Y** |
 | `model.scale(2)` throws "not a function" on a `GLTFModel` (before 20.14) | the `scale` option hid the method: update |
 | a `GLTFModel` ignores `pos` / `rotate` once its clip is paused or finished (before 20.14) | it was only re-posed while a clip played: update |

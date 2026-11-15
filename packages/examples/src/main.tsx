@@ -163,6 +163,26 @@ const ExampleGroundShadows = lazy(() =>
 		default: m.ExampleGroundShadows,
 	})),
 );
+const ExampleToon = lazy(() =>
+	import("./examples/toon/ExampleToon").then((m) => ({
+		default: m.ExampleToon,
+	})),
+);
+const ExampleIsometric3d = lazy(() =>
+	import("./examples/isometric3d/ExampleIsometric3d").then((m) => ({
+		default: m.ExampleIsometric3d,
+	})),
+);
+const ExamplePicking = lazy(() =>
+	import("./examples/picking/ExamplePicking").then((m) => ({
+		default: m.ExamplePicking,
+	})),
+);
+const ExampleSkinnedCharacter = lazy(() =>
+	import("./examples/skinnedCharacter/ExampleSkinnedCharacter").then((m) => ({
+		default: m.ExampleSkinnedCharacter,
+	})),
+);
 const ExampleGltfCharacter = lazy(() =>
 	import("./examples/gltf/ExampleGltfCharacter").then((m) => ({
 		default: m.ExampleGltfCharacter,
@@ -440,7 +460,7 @@ const examples: {
 		path: "isometric-dungeon",
 		sourceDir: "isometricDungeon",
 		description:
-			"A big isometric Tiled dungeon: depth-sorted walls, flickering wall torches, chests, doors and a locked gate.",
+			"A big isometric Tiled dungeon: depth-sorted walls, flickering wall torches, chests, doors and a locked gate. Walk with the arrow keys or click to move, along paths found by @melonjs/pathfinding-plugin.",
 	},
 	{
 		component: <ExampleLights />,
@@ -529,6 +549,38 @@ const examples: {
 		sourceDir: "gltf",
 		description:
 			"A rigged blocky character (Kenney, CC0) loaded from GLB, using node-TRS animation over a rigid hierarchy.",
+	},
+	{
+		component: <ExampleToon />,
+		label: "Toon Shading",
+		path: "toon",
+		sourceDir: "toon",
+		description:
+			"Cel shading in flat bands and inked outlines on lit meshes: a Kenney character and Cube Pets (CC0), with the band count and outlines switchable.",
+	},
+	{
+		component: <ExampleIsometric3d />,
+		label: "Isometric 3D",
+		path: "isometric-3d",
+		sourceDir: "isometric3d",
+		description:
+			"An isometric tactics board in real 3D (Kenney, CC0): an orthographic Camera3d, an instanced board whose tiles are picked by the pointer, and a hero that walks the path found by @melonjs/pathfinding-plugin.",
+	},
+	{
+		component: <ExamplePicking />,
+		label: "3D Picking",
+		path: "picking",
+		sourceDir: "picking",
+		description:
+			"Pointer events on meshes under a perspective camera: hover and click Kenney Cube Pets (CC0), click the floor to send the selected one there, and a ring that follows the pointer across the floor.",
+	},
+	{
+		component: <ExampleSkinnedCharacter />,
+		label: "Skinned Character",
+		path: "skinned-character",
+		sourceDir: "skinnedCharacter",
+		description:
+			"A skinned glTF fox (Khronos sample) deformed by its skeleton, crossfading between Survey, Walk and Run as it trots around a track.",
 	},
 	{
 		component: <ExampleForest />,

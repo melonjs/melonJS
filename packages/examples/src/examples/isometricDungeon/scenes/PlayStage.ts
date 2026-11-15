@@ -3,6 +3,7 @@
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
+import type { PathfindingPlugin } from "@melonjs/pathfinding-plugin";
 import {
 	type Application,
 	audio,
@@ -10,6 +11,8 @@ import {
 	input,
 	Light2d,
 	level,
+	type Pointer,
+	plugin,
 	type Renderer,
 	Stage,
 	state,
@@ -97,6 +100,10 @@ export class PlayStage extends Stage {
 				const creak = audio.play(SFX.gateCreak, false, null, 0.8);
 				audio.rate(SFX.gateCreak, 0.6, creak);
 			},
+			opened: () => {
+				// a door is no longer a wall: find the ways through again
+				hero.grid?.refresh();
+			},
 			exit: () => {
 				// nothing else to use while fading out
 				hero.dungeon = undefined;
@@ -105,10 +112,33 @@ export class PlayStage extends Stage {
 			},
 		});
 		hud.chests(0, dungeon.chests);
-		hud.say(`Find the ${dungeon.chests} chests`);
+		hud.say(
+			`Find the ${dungeon.chests} chests: arrow keys, or click where to go`,
+		);
 
 		hero.dungeon = dungeon;
-		// a second camera, drawing the map in a corner
+
+		// click to move: the plugin built this level's grid when it loaded
+		const pathfinding = plugin.cache.pathfinding as PathfindingPlugin;
+		hero.grid = pathfinding.grid ?? pathfinding.rebuild();
+		input.registerPointerEvent(
+			"pointerdown",
+			app.viewport,
+			(pointer: Pointer) => {
+				// a click on the minimap is not a place in the dungeon
+				const minimap = this.cameras.get("minimap");
+				if (
+					minimap &&
+					pointer.gameScreenX >= minimap.screenX &&
+					pointer.gameScreenX <= minimap.screenX + minimap.width &&
+					pointer.gameScreenY >= minimap.screenY &&
+					pointer.gameScreenY <= minimap.screenY + minimap.height
+				) {
+					return;
+				}
+				hero.goTo(pointer.gameWorldX, pointer.gameWorldY);
+			},
+		);
 		const floor = app.world.getChildByName("floor")[0] as TMXLayer;
 		this.cameras.set("minimap", new Minimap(hero, dungeon, floor));
 		hero.onReach = (target: Usable | undefined) => {
@@ -209,5 +239,6 @@ export class PlayStage extends Stage {
 		for (const key of ACTION_KEYS) {
 			input.unbindKey(key);
 		}
+		input.releasePointerEvent("pointerdown", app.viewport);
 	}
 }

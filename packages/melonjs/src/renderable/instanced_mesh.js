@@ -1,4 +1,5 @@
 import Camera3d from "../camera/camera3d.ts";
+import { createMeshHit } from "../geometries/ray3d.ts";
 import { warnOnce } from "../lang/console.js";
 import { Matrix3d } from "../math/matrix3d.ts";
 import { AABB3d } from "../physics/broadphase/aabb3d.ts";
@@ -25,9 +26,13 @@ import Mesh from "./mesh.js";
  * @import WebGLRenderer from "../video/webgl/webgl_renderer.js";
  * @import {Bounds} from "../physics/bounds.ts";
  * @import Renderer from "../video/renderer.js";
+ * @import { MeshHit, Ray3d } from "../geometries/ray3d.ts";
  */
 // scratch reused by getBounds3d(); never handed out
 const _instanceMatrix = new Matrix3d();
+// picking scratch: the group's world matrix, and group × one instance
+const _groupWorld = new Float64Array(16);
+const _instanceWorld = new Float64Array(16);
 
 // scratch for the flattened group matrix a shadow pass draws with —
 // synchronous, single-use per draw, never held
@@ -674,10 +679,72 @@ export default class InstancedMesh extends Mesh {
 			this._setupWorldSpace(false);
 		}
 		this.indices = this._indicesOriginal;
+		this._captureParentSpace(renderer);
 		renderer.drawMesh(this, this._composeModelMatrix());
 		if (this._castsGroundShadow(renderer) === true) {
 			this._drawInstancedGroundShadow(renderer);
 		}
+	}
+
+	/**
+	 * Where a world-space ray first meets one of the drawn instances, tested
+	 * against their triangles (see {@link Mesh#intersectRay}). The hit's
+	 * `instance` says which one, for {@link InstancedMesh#getInstance},
+	 * {@link InstancedMesh#setInstanceColor} or
+	 * {@link InstancedMesh#removeInstance}.
+	 *
+	 * Only the first {@link InstancedMesh#visibleInstanceCount} instances are
+	 * tested, as only they are drawn. Each costs a matrix inverse and a box
+	 * test before any triangle. A pointer event registered on the set runs
+	 * this once per event that can reach it: a set listening only for presses
+	 * is tested on a press, not on every move, so picking ten thousand
+	 * instances is a click-time cost; one listening for moves or for entering
+	 * and leaving pays it on every move.
+	 * @param {Ray3d} ray - the ray, in world space (see {@link Camera3d#screenToRay})
+	 * @param {MeshHit} [out] - hit record to write into; a new one is allocated when omitted
+	 * @returns {MeshHit|null} the nearest hit, or `null` when the ray misses every instance
+	 * @example
+	 * const hit = camera.pick(pointer.gameScreenX, pointer.gameScreenY, app.world);
+	 * if (hit !== null && hit.renderable === forest) {
+	 *     forest.setInstanceColor(hit.instance, autumn);
+	 * }
+	 */
+	intersectRay(ray, out) {
+		const group = this._pickMatrix(_groupWorld);
+		if (group === null) {
+			return null;
+		}
+		const hit = out ?? createMeshHit();
+		const floats = this.instanceLayout.floats;
+		const count = this.visibleInstanceCount;
+		let found = null;
+		let best = Number.POSITIVE_INFINITY;
+		for (let i = 0; i < count; i++) {
+			const inst = readInstanceTransform(
+				this.instanceBuffer,
+				i * floats,
+				_instanceMatrix,
+			).val;
+			// group × instance, the order the instanced shader applies them
+			for (let col = 0; col < 4; col++) {
+				const b0 = inst[col * 4];
+				const b1 = inst[col * 4 + 1];
+				const b2 = inst[col * 4 + 2];
+				const b3 = inst[col * 4 + 3];
+				for (let row = 0; row < 4; row++) {
+					_instanceWorld[col * 4 + row] =
+						group[row] * b0 +
+						group[4 + row] * b1 +
+						group[8 + row] * b2 +
+						group[12 + row] * b3;
+				}
+			}
+			if (this._intersectPlaced(ray, _instanceWorld, i, best, hit) !== null) {
+				found = hit;
+				best = hit.distance;
+			}
+		}
+		return found;
 	}
 
 	/**

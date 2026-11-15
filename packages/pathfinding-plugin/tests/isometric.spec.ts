@@ -319,6 +319,66 @@ describe("grids from an isometric level", () => {
 		byLayer.destroy();
 	});
 
+	it("cuts each tile into smaller cells, with subdivide", () => {
+		const fine = new PathfindingPlugin({ subdivide: 2 }, app);
+		const coarse = new PathfindingPlugin({}, app);
+		try {
+			const f = fine.grid as Grid;
+			const c = coarse.grid as Grid;
+			expect([f.cols, f.rows, f.tileWidth, f.tileHeight]).toEqual([
+				COLS * 2,
+				ROWS * 2,
+				W / 2,
+				H / 2,
+			]);
+			expect(f.cellShape).toBe("isometric");
+			// the same box around the diamonds
+			expect([f.x, f.y]).toEqual([c.x, c.y]);
+			// the collision box covers whole tiles: the four cells of each
+			for (let row = 0; row < f.rows; row++) {
+				for (let col = 0; col < f.cols; col++) {
+					expect(f.isSolid(col, row)).toBe(
+						c.isSolid(Math.floor(col / 2), Math.floor(row / 2)),
+					);
+				}
+			}
+			// a point of the world is in the tile's cells
+			for (const [col, row] of [
+				[0, 0],
+				[3, 2],
+				[4, 3],
+			]) {
+				const p = c.getPointPosition(col, row);
+				const cell = f.cellAt(p.x, p.y);
+				expect([
+					Math.floor((cell?.x ?? -2) / 2),
+					Math.floor((cell?.y ?? -2) / 2),
+				]).toEqual([col, row]);
+			}
+		} finally {
+			fine.destroy();
+			coarse.destroy();
+		}
+	});
+
+	it("refuses a subdivide that is not a whole number of 1 or more", () => {
+		const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+		for (const subdivide of [0, 1.5, -2, Number.NaN]) {
+			// built at once, as a level is loaded: a warning, and no grid
+			const bad = new PathfindingPlugin({ subdivide }, app);
+			try {
+				expect(bad.grid).toBe(null);
+				expect(() => {
+					return bad.rebuild();
+				}).toThrow(RangeError);
+			} finally {
+				bad.destroy();
+			}
+		}
+		expect(warn).toHaveBeenCalledTimes(4);
+		warn.mockRestore();
+	});
+
 	it("keeps no grid for a staggered level, which still loads", async () => {
 		const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
 		const byShapes = new PathfindingPlugin({}, app);

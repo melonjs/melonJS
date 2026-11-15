@@ -113,9 +113,10 @@ third-party assets, no attribution required. The ball re-uses the shared
 The 3D scenes in `public/assets/gltf/` are authored/assembled from CC0 kits
 published by Kenney:
 
-- `platformer-diorama.glb` (**glTF Scene**) — **"Platformer Kit"**
+- `platformer-diorama.glb` (**glTF Scene**; its blocks and props build the
+  **Isometric 3D** board) — **"Platformer Kit"**
   (<https://www.kenney.nl/assets/platformer-kit>)
-- `character.glb` (**glTF Animated Model**) — **"Blocky Characters"**
+- `character.glb` (**glTF Animated Model**, **Isometric 3D**, **Toon Shading**) — **"Blocky Characters"**
   (<https://www.kenney.nl/assets/blocky-characters>)
 
 All released under **CC0 1.0 Universal (Public Domain Dedication)** — no
@@ -123,6 +124,29 @@ attribution legally required, credited here as a courtesy.
 
 The **Night City Flythrough** example uses no external assets — its city is
 generated procedurally from raw mesh data at runtime.
+
+### `skinnedCharacter` example
+
+`public/assets/skinnedCharacter/fox.glb` is the **"Fox"** model from the
+Khronos glTF Sample Assets
+(<https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/Fox>),
+unchanged:
+
+- model © 2014 **PixelMannen** — **CC0 1.0 Universal**
+- rigging and animation © 2014 **tomkranis** — **CC BY 4.0**
+  (<https://creativecommons.org/licenses/by/4.0/>)
+- conversion to glTF © 2017 **@AsoboStudio** and **@scurest** — **CC BY 4.0**
+
+### `mesh3dMaterial`, `picking` and `toon` examples
+
+The animal models and `Textures/colormap.png` in `public/assets/mesh3d/kenney/`
+are **"Cube Pets (2.0)"** published by Kenney
+(<https://www.kenney.nl/assets/cube-pets>), released under **CC0 1.0
+Universal**.
+
+The Kenney logo (`public/assets/mesh3d/kenney/kenney_logo.png`), shown in the
+bottom-right corner of every example built on Kenney's assets to credit them,
+is Kenney's own (<https://www.kenney.nl>) and is not covered by the CC0 terms.
 
 ### `text` example
 

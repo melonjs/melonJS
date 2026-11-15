@@ -1,3 +1,4 @@
+import { type MeshHit, pickInContainer, Ray3d } from "../geometries/ray3d.ts";
 import { Color } from "../math/color.ts";
 import { clamp, EPSILON } from "../math/math.ts";
 import { Matrix3d } from "../math/matrix3d.ts";
@@ -9,9 +10,13 @@ import type Renderable from "./../renderable/renderable.js";
 import type Renderer from "./../video/renderer.js";
 import Camera2d from "./camera2d.ts";
 import type { Fog3dState, FogMode, FogOptions } from "./fog.ts";
-import Frustum, { type FrustumOptions } from "./frustum.ts";
+import Frustum, {
+	type FrustumOptions,
+	type ProjectionMode,
+} from "./frustum.ts";
 
 export type { Fog3dState, FogMode, FogOptions } from "./fog.ts";
+export type { ProjectionMode } from "./frustum.ts";
 
 // reusable unit-axis vectors for rotation calls. Pure constants so
 // allocation only happens once per module load, not per frame.
@@ -26,6 +31,17 @@ const _viewMatrix = new Matrix3d();
 const _viewProjection = new Matrix3d();
 // scratch point for worldToScreen, reused to avoid per-call allocation
 const _wsPoint = new Vector3d();
+// scratch for screenToRay: the inverse view-projection, and the two points it
+// unprojects (on the near and far planes)
+const _invViewProjection = new Matrix3d();
+const _nearPoint = new Vector3d();
+const _farPoint = new Vector3d();
+// the ray `screenToWorld` and `pick` cast, when the caller passes none
+const _pickRay = new Ray3d();
+// the floor normal `screenToWorld` intersects with: render space is Y-down,
+// so up is -Y
+const _groundNormal = new Vector3d(0, -1, 0);
+const _groundPoint = new Vector3d();
 // scratch reused by the orientation-basis accessors (getBasis / getRight / …),
 // to avoid per-call allocation on the billboard draw path.
 const _basis = new Matrix3d();
@@ -147,7 +163,9 @@ function rollFromLocalUp(
 /**
  * A perspective camera that extends {@link Camera2d} with a view
  * {@link Frustum} (fov / aspect / near / far) and orientation
- * (pitch / yaw). Slots into `Stage.cameras` as a drop-in
+ * (pitch / yaw) — or, with `projection: "orthographic"`, an orthographic
+ * one: the same 3D world, depth and lighting, with no foreshortening, for
+ * isometric, top-down and diorama views. Slots into `Stage.cameras` as a drop-in
  * replacement for `Camera2d` — inherits the post-effect FBO bracket,
  * color-matrix, fade / shake / follow plumbing, and screen viewport.
  *
@@ -188,8 +206,9 @@ function rollFromLocalUp(
  * - `Light2d` is 2D-only — visible artifacts under perspective.
  *   Avoid combining with Camera3d for now.
  * - `localToWorld` / `worldToLocal` overrides fall back to the
- *   ortho-equivalent 2D projection at z=0. Full 3D unproject for
- *   arbitrary depth is future work.
+ *   ortho-equivalent 2D projection at z=0. For a 3D answer use
+ *   {@link Camera3d#screenToRay}, {@link Camera3d#screenToWorld} or
+ *   {@link Camera3d#pick}.
  * @category Camera
  * @example
  * // opt in app-wide:
@@ -228,6 +247,14 @@ export default class Camera3d extends Camera2d {
 	frustum: Frustum;
 
 	/**
+	 * The orthographic view height as set (see {@link Camera3d#orthoHeight});
+	 * the frustum's own is this divided by the zoom.
+	 * @ignore
+	 * @internal
+	 */
+	_orthoHeight: number;
+
+	/**
 	 * The camera state the frustum planes were last built from: `pos.x`,
 	 * `pos.y`, `depth`, `pitch`, `yaw`, `roll`, then the frustum's `fov`,
 	 * `aspect`, `near` and `far`. A frame steps the world (and so culls it)
@@ -239,7 +266,7 @@ export default class Camera3d extends Camera2d {
 	 * @ignore
 	 * @internal
 	 */
-	private _planesState = new Float64Array(10).fill(Number.NaN);
+	private _planesState = new Float64Array(12).fill(Number.NaN);
 
 	/**
 	 * the fog options as given to {@link Camera3d#setFog}, or `null` when fog
@@ -393,15 +420,41 @@ export default class Camera3d extends Camera2d {
 	) {
 		super(minX, minY, maxX, maxY);
 
+		// the same checks as the `projection` and `orthoHeight` setters: a
+		// misspelt projection would otherwise give perspective without a
+		// word, and a zero height a matrix of NaN
+		const projection = opts?.projection ?? "perspective";
+		if (projection !== "perspective" && projection !== "orthographic") {
+			throw new Error(
+				`Camera3d: unknown projection "${String(projection)}" (expected "perspective" or "orthographic")`,
+			);
+		}
+		// one world unit per pixel by default, as a Camera2d at zoom 1 (only
+		// a height given is checked: a camera made before it has a size has
+		// a height of 0, and is resized before it draws)
+		const orthoHeight = opts?.orthoHeight ?? this.height;
+		if (
+			opts?.orthoHeight !== undefined &&
+			(!(orthoHeight > 0) || !Number.isFinite(orthoHeight))
+		) {
+			throw new Error(
+				`Camera3d: orthoHeight must be a positive finite number, got ${orthoHeight}`,
+			);
+		}
+
 		// build the frustum with the user's opts, defaulting aspect to
 		// the camera viewport rect
 		this.frustum = new Frustum({
+			projection,
+			// the zoom is 1 here: the Camera2d constructor has just set it
+			orthoHeight,
 			fov: opts?.fov ?? Math.PI / 3,
 			aspect: opts?.aspect ?? this.width / this.height,
 			near: opts?.near ?? 0.1,
 			far: opts?.far ?? 1000,
 		});
 
+		this._orthoHeight = orthoHeight;
 		this.pitch = 0;
 		this.yaw = 0;
 		this.roll = 0;
@@ -433,6 +486,96 @@ export default class Camera3d extends Camera2d {
 	}
 	set fov(value: number) {
 		this.frustum.fov = value;
+		this.frustum.update();
+		this.projectionMatrix.copy(this.frustum.projectionMatrix);
+	}
+
+	/**
+	 * How this camera projects the world: `"perspective"` (the default — far
+	 * things are smaller) or `"orthographic"` (no foreshortening: parallel
+	 * lines stay parallel and a thing is the same size at any distance, the
+	 * look of an isometric, top-down or diorama game). Depth, lighting, fog,
+	 * culling, billboards and picking all work the same in both; under
+	 * `"orthographic"`, {@link Camera3d#orthoHeight} sets how much of the
+	 * world is in view, and {@link Camera3d#fov} is ignored.
+	 *
+	 * The camera is still placed and pointed as a perspective one is
+	 * (`setPosition`, `lookAt`, `pitch` / `yaw`): its position decides where
+	 * the near and far planes are and where specular highlights are measured
+	 * from, so stand it back from the scene it looks at.
+	 * @example
+	 * // a classic isometric view: 45° round, 30° down, 900 pixels of world tall
+	 * const camera = app.viewport;
+	 * camera.projection = "orthographic";
+	 * camera.orthoHeight = 900;
+	 * camera.setPosition(-1200, -1000, -1200);
+	 * camera.lookAt(0, 0, 0);
+	 */
+	get projection(): ProjectionMode {
+		return this.frustum.projection;
+	}
+	set projection(value: ProjectionMode) {
+		if (value !== "perspective" && value !== "orthographic") {
+			throw new Error(
+				`Camera3d: unknown projection "${String(value)}" (expected "perspective" or "orthographic")`,
+			);
+		}
+		this.frustum.projection = value;
+		this.frustum.update();
+		this.projectionMatrix.copy(this.frustum.projectionMatrix);
+	}
+
+	/**
+	 * The height of the view in world units under an orthographic
+	 * projection, at a {@link Camera3d#zoom} of 1; the width follows the
+	 * aspect ratio. Smaller shows less of the world. Defaults to the camera's
+	 * height in pixels, one world unit per pixel. Ignored by a perspective
+	 * camera.
+	 */
+	get orthoHeight(): number {
+		return this._orthoHeight;
+	}
+	set orthoHeight(value: number) {
+		if (!(value > 0) || !Number.isFinite(value)) {
+			throw new Error(
+				`Camera3d: orthoHeight must be a positive finite number, got ${value}`,
+			);
+		}
+		this._orthoHeight = value;
+		this._applyOrthoHeight();
+	}
+
+	/**
+	 * The zoom level, as on a {@link Camera2d}: above 1 zooms in, below 1
+	 * out. Under an orthographic projection it divides
+	 * {@link Camera3d#orthoHeight}, so `orthoHeight` frames the view and
+	 * `zoom` zooms it (the world in view is `orthoHeight / zoom` tall).
+	 * A perspective camera ignores it: narrow {@link Camera3d#fov} instead.
+	 * @example
+	 * camera.projection = "orthographic";
+	 * camera.orthoHeight = 900;
+	 * camera.zoom = 2; // 450 world units in view
+	 */
+	override get zoom(): number {
+		return super.zoom;
+	}
+	override set zoom(value: number) {
+		super.zoom = value;
+		// the Camera2d constructor sets the zoom before the frustum exists
+		// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+		if (this.frustum) {
+			this._applyOrthoHeight();
+		}
+	}
+
+	/**
+	 * Give the frustum the orthographic height in view: the one set,
+	 * divided by the zoom.
+	 * @ignore
+	 * @internal
+	 */
+	_applyOrthoHeight(): void {
+		this.frustum.orthoHeight = this._orthoHeight / this.zoom;
 		this.frustum.update();
 		this.projectionMatrix.copy(this.frustum.projectionMatrix);
 	}
@@ -1486,7 +1629,9 @@ export default class Camera3d extends Camera2d {
 			s[6] !== f.fov ||
 			s[7] !== f.aspect ||
 			s[8] !== f.near ||
-			s[9] !== f.far
+			s[9] !== f.far ||
+			s[10] !== (f.projection === "orthographic" ? 1 : 0) ||
+			s[11] !== f.orthoHeight
 		) {
 			this._rebuildFrustumPlanes();
 		}
@@ -1528,22 +1673,7 @@ export default class Camera3d extends Camera2d {
 		world: Vector3d,
 		out: Vector2d = new Vector2d(),
 	): Vector2d | null {
-		// projection × view — built exactly like `_rebuildFrustumPlanes`:
-		// rotate (pitch then yaw), translate by -pos, then pre-multiply by the
-		// frustum projection.
-		_viewMatrix.identity();
-		if (this.roll !== 0) {
-			_viewMatrix.rotate(-this.roll, AXIS_Z);
-		}
-		if (this.pitch !== 0) {
-			_viewMatrix.rotate(-this.pitch, AXIS_X);
-		}
-		if (this.yaw !== 0) {
-			_viewMatrix.rotate(-this.yaw, AXIS_Y);
-		}
-		_viewMatrix.translate(-this.pos.x, -this.pos.y, -this.depth);
-		_viewProjection.copy(this.frustum.projectionMatrix);
-		_viewProjection.multiply(_viewMatrix);
+		this._buildViewProjection();
 
 		// clip-space w (column-major): reject points at/behind the camera before
 		// the perspective divide would mirror them.
@@ -1551,6 +1681,15 @@ export default class Camera3d extends Camera2d {
 		const w = m[3] * world.x + m[7] * world.y + m[11] * world.z + m[15];
 		if (w <= 0) {
 			return null;
+		}
+		// an orthographic w is always 1, so "behind" is read off the view
+		// depth instead (+Z is forward in view space)
+		if (this.frustum.projection === "orthographic") {
+			const v = _viewMatrix.val;
+			const viewZ = v[2] * world.x + v[6] * world.y + v[10] * world.z + v[14];
+			if (viewZ <= 0) {
+				return null;
+			}
 		}
 
 		// `Matrix3d.apply` divides by the clip-space w → normalized device
@@ -1565,6 +1704,166 @@ export default class Camera3d extends Camera2d {
 			(1 - (_wsPoint.y * 0.5 + 0.5)) * this.height,
 		);
 		return out;
+	}
+
+	/**
+	 * Whether this camera draws its 3D world through an orthographic
+	 * projection, which the containers it draws read to keep their depth.
+	 * @returns true under `projection: "orthographic"`
+	 * @ignore
+	 * @internal
+	 */
+	override _isOrthographic3d(): boolean {
+		return this.frustum.projection === "orthographic";
+	}
+
+	/**
+	 * Write `projection × view` — the world → clip matrix — into the
+	 * module scratch `_viewProjection`, built exactly like
+	 * `_rebuildFrustumPlanes`: rotate (pitch then yaw), translate by -pos,
+	 * then pre-multiply by the frustum projection.
+	 * @ignore
+	 * @internal
+	 */
+	_buildViewProjection(): void {
+		_viewMatrix.identity();
+		if (this.roll !== 0) {
+			_viewMatrix.rotate(-this.roll, AXIS_Z);
+		}
+		if (this.pitch !== 0) {
+			_viewMatrix.rotate(-this.pitch, AXIS_X);
+		}
+		if (this.yaw !== 0) {
+			_viewMatrix.rotate(-this.yaw, AXIS_Y);
+		}
+		_viewMatrix.translate(-this.pos.x, -this.pos.y, -this.depth);
+		_viewProjection.copy(this.frustum.projectionMatrix);
+		_viewProjection.multiply(_viewMatrix);
+	}
+
+	/**
+	 * The ray from this camera through a screen point: every world point
+	 * that draws at that pixel lies on it. The inverse of
+	 * {@link Camera3d#worldToScreen}.
+	 *
+	 * The ray starts at the camera's eye (under an orthographic projection,
+	 * at the point on the camera's plane behind that pixel, every ray
+	 * parallel) and its direction is of unit length, so a distance along it (from {@link Mesh#intersectRay},
+	 * {@link Camera3d#pick} or the `Ray3d` intersection methods) is a
+	 * distance from the camera.
+	 * @param x - screen x, in canvas pixels (e.g. `pointer.gameScreenX`)
+	 * @param y - screen y, in canvas pixels, top-left origin, y down (e.g. `pointer.gameScreenY`)
+	 * @param [out] - ray to write into; a new one is allocated when omitted
+	 * @returns the ray through that pixel
+	 * @example
+	 * input.registerPointerEvent("pointerdown", app.viewport, (pointer) => {
+	 *     const ray = camera.screenToRay(pointer.gameScreenX, pointer.gameScreenY);
+	 * });
+	 */
+	screenToRay(x: number, y: number, out: Ray3d = new Ray3d()): Ray3d {
+		this._buildViewProjection();
+		_invViewProjection.copy(_viewProjection).invert();
+		// screen pixels → normalized device coordinates (NDC +y is up)
+		const nx = (x / this.width) * 2 - 1;
+		const ny = 1 - (y / this.height) * 2;
+		// two points on the line through that pixel, on the near and far
+		// planes; `apply` divides by w
+		_nearPoint.set(nx, ny, -1);
+		_invViewProjection.apply(_nearPoint);
+		_farPoint.set(nx, ny, 1);
+		_invViewProjection.apply(_farPoint);
+		if (this.frustum.projection === "orthographic") {
+			// parallel rays, one per pixel: each starts on the camera's own
+			// plane (the near-plane point stepped back by the near distance),
+			// so distances along it are, as for perspective, from the camera
+			const dx = _farPoint.x - _nearPoint.x;
+			const dy = _farPoint.y - _nearPoint.y;
+			const dz = _farPoint.z - _nearPoint.z;
+			const len = Math.hypot(dx, dy, dz) || 1;
+			const back = this.frustum.near / len;
+			return out.set(
+				_nearPoint.x - dx * back,
+				_nearPoint.y - dy * back,
+				_nearPoint.z - dz * back,
+				dx,
+				dy,
+				dz,
+			);
+		}
+		// every perspective ray starts at the eye
+		return out.set(
+			this.pos.x,
+			this.pos.y,
+			this.depth,
+			_farPoint.x - this.pos.x,
+			_farPoint.y - this.pos.y,
+			_farPoint.z - this.depth,
+		);
+	}
+
+	/**
+	 * Where a screen point meets a level floor: the point on the horizontal
+	 * plane at `groundY` that draws at that pixel — what a click on the
+	 * ground means in a top-down or third-person game.
+	 *
+	 * Render space is Y-down, so the floor of a scene is a GREATER y than
+	 * anything standing on it.
+	 * @param x - screen x, in canvas pixels (e.g. `pointer.gameScreenX`)
+	 * @param y - screen y, in canvas pixels (e.g. `pointer.gameScreenY`)
+	 * @param [groundY=0] - world y of the floor
+	 * @param [out] - vector to write into; a new one is allocated when omitted
+	 * @returns the world point, or `null` when that pixel does not look at the floor (the sky, or the ray runs parallel to it)
+	 * @example
+	 * // move the hero to wherever the floor was clicked
+	 * input.registerPointerEvent("pointerdown", app.viewport, (pointer) => {
+	 *     const target = camera.screenToWorld(pointer.gameScreenX, pointer.gameScreenY, FLOOR_Y);
+	 *     if (target !== null) {
+	 *         hero.walkTo(target.x, target.z);
+	 *     }
+	 * });
+	 */
+	screenToWorld(
+		x: number,
+		y: number,
+		groundY = 0,
+		out: Vector3d = new Vector3d(),
+	): Vector3d | null {
+		const ray = this.screenToRay(x, y, _pickRay);
+		_groundPoint.set(0, groundY, 0);
+		const t = ray.intersectPlane(_groundPoint, _groundNormal);
+		return t === null ? null : ray.at(t, out);
+	}
+
+	/**
+	 * The nearest mesh under a screen point, tested against its triangles:
+	 * picking without registering a pointer event on anything.
+	 *
+	 * Walks `container` and every container below it, and asks each
+	 * {@link Mesh} (including {@link Sprite3d}, {@link InstancedMesh} and the
+	 * parts of a {@link GLTFModel}) where the ray through that pixel hits
+	 * it. `floating` (screen-space) renderables are skipped, as are those
+	 * that are not visible: hidden by `alpha` 0 or `isRenderable` false.
+	 * @param x - screen x, in canvas pixels (e.g. `pointer.gameScreenX`)
+	 * @param y - screen y, in canvas pixels (e.g. `pointer.gameScreenY`)
+	 * @param container - where to look, usually `app.world`
+	 * @param [out] - hit record to write into; a new one is allocated when omitted
+	 * @returns the nearest hit, or `null` when the ray hits no mesh
+	 * @example
+	 * const hit = camera.pick(pointer.gameScreenX, pointer.gameScreenY, app.world);
+	 * if (hit !== null) {
+	 *     select(hit.renderable);   // the Mesh that was hit
+	 *     marker.pos.set(hit.point.x, hit.point.y); // where on it
+	 *     marker.depth = hit.point.z;
+	 * }
+	 */
+	pick(
+		x: number,
+		y: number,
+		container: Container,
+		out?: MeshHit,
+	): MeshHit | null {
+		const ray = this.screenToRay(x, y, _pickRay);
+		return pickInContainer(ray, container, out);
 	}
 
 	/**
@@ -1613,5 +1912,7 @@ export default class Camera3d extends Camera2d {
 		s[7] = this.frustum.aspect;
 		s[8] = this.frustum.near;
 		s[9] = this.frustum.far;
+		s[10] = this.frustum.projection === "orthographic" ? 1 : 0;
+		s[11] = this.frustum.orthoHeight;
 	}
 }

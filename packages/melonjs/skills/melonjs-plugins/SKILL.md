@@ -1,6 +1,6 @@
 ---
 name: melonjs-plugins
-description: "Use this skill when adding a melonJS plugin or adapter — the debug panel, Spine skeletal animation, compressed Tiled map support, on-screen touch controls, A* pathfinding, Capacitor packaging — or when writing your own plugin. Covers plugin.register and its version gate, plugin.cache, plugin.patch, and why physics adapters are not plugins. Triggers on: plugin, plugin.register, plugin.cache, plugin.get, plugin.patch, BasePlugin, debug-plugin, DebugPanelPlugin, SpinePlugin, TiledInflatePlugin, GamepadPlugin, gamepad-plugin, touch controls, virtual joystick, floating joystick, floating button, pathfinding, A*, astar, path finding, Grid, findPath, isometric pathfinding, enemy AI chase, CapacitorPlugin, adapter, custom plugin, plugin version mismatch, already registered."
+description: "Use this skill when adding a melonJS plugin or adapter — the debug panel, Spine skeletal animation, compressed Tiled map support, on-screen touch controls, A* pathfinding, Capacitor packaging — or when writing your own plugin. Covers plugin.register and its version gate, plugin.cache, plugin.patch, and why physics adapters are not plugins. Triggers on: plugin, plugin.register, plugin.cache, plugin.get, plugin.patch, BasePlugin, debug-plugin, DebugPanelPlugin, SpinePlugin, TiledInflatePlugin, GamepadPlugin, gamepad-plugin, touch controls, virtual joystick, floating joystick, floating button, pathfinding, A*, astar, path finding, Grid, findPath, isometric pathfinding, click to move, path following, subdivide, enemy AI chase, CapacitorPlugin, adapter, custom plugin, plugin version mismatch, already registered."
 license: MIT
 ---
 
@@ -154,6 +154,50 @@ const { path, found } = grid.findPath(enemy.pos, player.pos, {
 // path[0] is the start: head for path[1]
 ```
 
+The plugin keeps a grid for each level loaded, so a game that gets its grid
+from the level never builds one by hand:
+
+```js
+import { PathfindingPlugin } from "@melonjs/pathfinding-plugin";
+
+// from the "walls" tile layer, or (no `layer`) from the collision shapes;
+// `subdivide` cuts each tile into 4 x 4 cells (1.1+), for doorways narrower
+// than a tile
+plugin.register(PathfindingPlugin, "pathfinding", { subdivide: 4 });
+
+// once a level is loaded (null for a level it could not build a grid for)
+const grid = plugin.cache.pathfinding.grid;
+
+// a door opens: a body that collides with nothing is no wall (1.1+)
+door.body.setCollisionMask(collision.types.NO_OBJECT);
+grid.refresh();
+```
+
+Following a path is the game's part. Walk to each point in turn, and when the
+agent stops getting closer (its body caught on a corner the point-sized path
+runs past), find a new path from where it stands:
+
+```js
+update(dt) {
+    const next = this.route[0];
+    if (next) {
+        const d = next.distance(this.pos);
+        if (d < SPEED * 1.5) {
+            this.route.shift();                          // reached: on to the next
+            this.closest = Infinity;
+        } else if (d < this.closest - 0.5) {
+            this.closest = d; this.stuck = 0;            // getting there
+        } else if (++this.stuck > 12) {
+            this.route = grid.findPath(this.pos, this.destination,
+                { smooth: true, diagonalMode: "onlyIfNoObstacles" }).path.slice(1);
+            this.closest = Infinity; this.stuck = 0;     // a new way from here
+        }
+        // ... set the velocity toward route[0]
+    }
+    return super.update(dt);
+}
+```
+
 - **The grid is a snapshot.** A tile changed with `setTile` / `clearTile`, or
   a wall body added, is not seen until `grid.refreshCell(col, row)` or
   `grid.refresh()`; `setSolid` / `setWeight` (and `fillSolidRegion` /
@@ -166,16 +210,33 @@ const { path, found } = grid.findPath(enemy.pos, player.pos, {
 - **Build `fromBodies` after the level loads.** It scans the shapes, not a
   physics query, so it works before the world first steps; it reads `bodyDef`
   shapes too, so it is the same on every adapter.
+- **The walls are `WORLD_SHAPE` bodies that collide with something.** The
+  type and the mask are read from the live body before its `bodyDef` (which
+  keeps what it was written with), so a door opened with
+  `body.setCollisionMask(collision.types.NO_OBJECT)` is open after
+  `grid.refresh()`, with no `solid` callback. Before 1.1 it stayed a wall.
+  Pass `solid: (renderable) => ...` for any other rule.
+- **Walls off the tile grid need smaller cells.** A doorway narrower than a
+  tile, between walls part of a tile deep, is closed on a grid of whole
+  tiles: `{ subdivide: 4 }` on the plugin, or smaller `tileWidth` /
+  `tileHeight` for `fromBodies`. A search crosses `n` times more cells along
+  a path, `n²` more in all, so subdivide no further than the walls need.
+- **The grid sees an agent as a point**, and a smoothed path runs right along
+  the walls: a body with width catches on corners. Find a new path from where
+  it stands when it stops getting closer (above), rather than giving up.
 - A weight is 1 or more and finite: block with `setSolid`, not `Infinity`.
-- `PathfindingPlugin` (`plugin.register(PathfindingPlugin, "pathfinding",
-  { layer: "walls" })`) only rebuilds the grid when a level loads (and at
-  once if one is loaded); a `Grid` works on its own. On a level it cannot
-  build for it warns and keeps `grid` null.
+- `PathfindingPlugin` builds the grid from `layer` (a tile layer's name),
+  from the collision shapes without it (with `subdivide`), or with
+  `build: (container) => grid`. It only rebuilds when a level loads (and at
+  once if one is loaded): call `grid.refresh()` after the level changes, or
+  `rebuild()` for a new grid. A `Grid` works on its own. On a level it cannot
+  build for (staggered, hexagonal, or a bad `subdivide`) it warns and keeps
+  `grid` null.
 - `PathfindingDebug` draws solid and heavy cells, the cells a search looked
   at (`trace: true`) and the paths.
-- **Isometric maps work**: `fromTileLayer` (and the plugin) sees an isometric
-  layer and lays the cells out as diamonds; for `new Grid` or `fromBodies`,
-  pass `cellShape: "isometric"`. Staggered and hexagonal maps are not
+- **Isometric maps work**: `fromTileLayer` and the plugin (from a layer or
+  the shapes) see an isometric map and lay the cells out as diamonds; for
+  `new Grid` or `fromBodies`, pass `cellShape: "isometric"`. Staggered and hexagonal maps are not
   supported (`fromTileLayer` throws).
 
 ### `@melonjs/capacitor-plugin`
@@ -286,8 +347,12 @@ or a `Stage` is simpler and easier to test.
 | no path found (empty path, `found` false) | the goal is walled off, solid, or past `maxNodes`; `allowPartialPath: true` returns the way to the nearest point |
 | everything is solid on a `fromTileLayer` grid | a floor layer, where every cell has a tile: pass `solid` |
 | an agent turns back at the start | `path[0]` is where it stands: head for `path[1]` |
+| an opened door still blocks the path | pathfinding-plugin < 1.1 counted it a wall (it read the `bodyDef`, and ignored the mask): upgrade, and `grid.refresh()` once it opens |
+| every doorway is closed on the grid | doorways narrower than a cell: `subdivide` on the plugin |
+| searches got slow after `subdivide` | `n` times finer is `n²` times the cells: subdivide no further than the walls need, or cap with `maxNodes` |
+| an agent stops at a wall corner | it is not a point: on getting no closer, find a new path from where it stands |
 | a path is offset from an isometric map | the grid is square: `new Grid` / `fromBodies` without `cellShape: "isometric"` |
-| `plugin.cache.pathfinding.grid` is null, with a warning | a staggered or hexagonal level, or `layer` names no layer of it |
+| `plugin.cache.pathfinding.grid` is null, with a warning | a staggered or hexagonal level, `layer` names no layer of it, or `subdivide` is not a whole number of 1 or more |
 | a path is offset from the map | the grid's `x` / `y` are not the layer's: built before the layer was in its container, or the container moved since |
 | plugin setup never runs | setup written in an `init()` method — there is no such hook |
 | `Plugin should extend the BasePlugin Class !` when registering an adapter | adapters are a construction setting (or `world.setAdapter()`), not a plugin |

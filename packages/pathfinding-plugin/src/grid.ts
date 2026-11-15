@@ -215,8 +215,12 @@ export interface BodiesOptions {
 	y?: number;
 	/**
 	 * which renderables are walls
-	 * @default those with a `WORLD_SHAPE` body: the collision shapes of a
-	 * Tiled map's collision layer, and any body declared as one
+	 * @default those with a `WORLD_SHAPE` body that collides with something:
+	 * the collision shapes of a Tiled map's collision layer, and any body
+	 * declared as one. The live body is read before its `bodyDef`, so a
+	 * body changed at run time counts as it is now; one whose collision mask
+	 * is `NO_OBJECT` (a door opened with `setCollisionMask`) blocks nothing,
+	 * and is no wall.
 	 */
 	solid?: (renderable: Renderable) => boolean;
 	/**
@@ -228,8 +232,12 @@ export interface BodiesOptions {
 
 /** a renderable's body, as the built-in physics or a `bodyDef` holds it */
 interface WithBody {
-	body?: { collisionType?: number; shapes?: Shape[] };
-	bodyDef?: { collisionType?: number; shapes?: Shape[] };
+	body?: { collisionType?: number; collisionMask?: number; shapes?: Shape[] };
+	bodyDef?: {
+		collisionType?: number;
+		collisionMask?: number;
+		shapes?: Shape[];
+	};
 }
 
 /** the part of a melonJS shape the grid uses */
@@ -353,10 +361,24 @@ const CELL_SHAPES: readonly string[] = ["square", "isometric"];
 /** where a cell is sampled for walls, as fractions of its size */
 const SAMPLES = [0.125, 0.5, 0.875];
 
+/**
+ * the default walls: a `WORLD_SHAPE` body that collides with something
+ * @param renderable - a renderable of the container scanned
+ * @returns true if it is a wall
+ */
 const isWorldShape = (renderable: Renderable) => {
 	const r = renderable as unknown as WithBody;
-	const type = r.bodyDef?.collisionType ?? r.body?.collisionType;
-	return type === collision.types.WORLD_SHAPE;
+	// the live body first: a game changes it as it goes, and the bodyDef it
+	// was made from is kept as it was written (to rebuild it on an adapter
+	// swap). Every physics adapter keeps both fields live on the body.
+	const type = r.body?.collisionType ?? r.bodyDef?.collisionType;
+	if (type !== collision.types.WORLD_SHAPE) {
+		return false;
+	}
+	// a body that collides with nothing (collision checks both ways) blocks
+	// nothing: an opened door, a wall switched off
+	const mask = r.body?.collisionMask ?? r.bodyDef?.collisionMask;
+	return mask !== collision.types.NO_OBJECT;
 };
 
 const SQRT2 = Math.SQRT2;

@@ -57,7 +57,7 @@ Graphics
 - 3D mesh rendering with OBJ/MTL model loading, multi-material support, hardware depth testing, and perspective projection via `Camera3d` — retained-mode geometry, uploaded to the GPU once and re-drawn from there, so moving, rotating, scaling or re-tinting a mesh costs no vertex upload and no per-vertex CPU work at all. 3D is built for the GPU backends; the Canvas fallback still draws a mesh under a 2D camera, as a last resort
 - Mipmapped and anisotropically-filtered mesh textures on both GPU backends, so distant and grazing-angle geometry stops shimmering (opt out per mesh with `textureFilter: "nearest"` for crisp pixel-art models)
 - Crisp or smooth, application-wide: `textureFilter` (`"nearest"`, `"linear"`, or `"linear-mipmap"`, which mipmaps sprites, text and tile layers too), and integer scaling with letterboxing (`scaleRounding: "integer"`) for pixel art
-- 3D mesh materials: tangent-space normal maps, specular, emissive, alpha cutout, per-vertex colors, and a back-to-front transparent pass for glass and additive glows; GPU instancing draws one mesh many times in one call (`InstancedMesh`, and glTF `EXT_mesh_gpu_instancing`)
+- 3D mesh materials: tangent-space normal maps, specular, emissive, alpha cutout, per-vertex colors, toon (cel) shading and inked outlines, and a back-to-front transparent pass for glass and additive glows; GPU instancing draws one mesh many times in one call (`InstancedMesh`, and glTF `EXT_mesh_gpu_instancing`)
 - Lighting, in 2D and 3D:
     - **2D** — `Light2d` as a first-class `Renderable` (multiple dynamic lights, radial-gradient falloff, adjustable edge `softness`, illumination-only mode, procedural rendering via `drawLight`), plus optional per-pixel normal-map shading and specular highlights (`shininess`) on sprites for 3D-looking dynamic lights
     - **3D** — `Light3d` directional, point, spot and ambient lights, added to the world like `Light2d` (half-Lambert diffuse + ambient fill, quadratic falloff and cone angles on the punctual types, runtime-manipulable for day/night), auto-loaded from a glTF scene's authored suns and lamps
@@ -100,7 +100,7 @@ Input
 
 Camera
 - Multi-camera support (split-screen, minimaps, multiple viewports)
-- Optional perspective camera (`Camera3d`) with frustum culling for 2.5D / 3D-projected scenes — drop-in subclass of the default 2D camera — with distance fog (linear or exp2, with height falloff), roll, and `worldToScreen()` to pin HUD elements to 3D points
+- Optional perspective or orthographic camera (`Camera3d`, `projection: "orthographic"` for isometric views) with frustum culling for 2.5D / 3D-projected scenes — drop-in subclass of the default 2D camera — with distance fog (linear or exp2, with height falloff), roll, and `worldToScreen()` to pin HUD elements to 3D points; picking the other way round with `screenToRay()`, `screenToWorld()` and `pick()`, and pointer events on meshes hit-tested against their triangles
 - Per-camera visibility layers (`visibilityLayer`, `cullMask`): a minimap without particles, a light shown in one camera only
 - Camera follow with configurable deadzone and frame-rate-independent damping
 - Built-in camera shake, fade and flash, and screen transitions: a fade, a mask in any shape, and a pixelate (WebGL and WebGPU); custom effects through `CameraEffect`
@@ -140,6 +140,7 @@ Scenes
     - Automatically lit by the scene's authored lights — the sun plus any point/spot lamps set up in the authoring tool, each keeping its authored name so `getChildByName("Sun")` finds it for runtime tuning
     - Textured, solid-colored, and vertex-colored materials
     - Node animation — walk/idle/sprint characters, spinning pickups, doors, lifts — played through the same `setCurrentAnimation` / `play` / `pause` / `stop` API as a 2D `Sprite`
+    - Skinned characters (`JOINTS_0` / `WEIGHTS_0`, the format of Mixamo and most rigged character packs) deformed by their skeleton, with `crossfade` blending between clips
     - `.glb` and `.gltf` files, with embedded *or* external buffers & textures
     - Works with any glTF authoring tool (Blender, Maya, 3ds Max, Cinema 4D, …)
 
@@ -198,7 +199,7 @@ Examples
 -------------------------------------------------------------------------------
 
 * [Platformer](https://melonjs.github.io/melonJS/examples/#/platformer) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/platformer))
-* [Isometric Dungeon](https://melonjs.github.io/melonJS/examples/#/isometric-dungeon) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/isometricDungeon))
+* [Isometric Dungeon](https://melonjs.github.io/melonJS/examples/#/isometric-dungeon) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/isometricDungeon)) — click to move along paths found by `@melonjs/pathfinding-plugin` on the isometric map
 * [SVG Shapes](https://melonjs.github.io/melonJS/examples/#/svg-shapes) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/svgShapes))
 * [Particle Editor](https://melonjs.github.io/melonJS/examples/#/particle-editor) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/particleEditor)) — tune a `ParticleEmitter` live in 2D or 3D, from presets or a random roll, and copy the matching code or JSON
 * [Graphics](https://melonjs.github.io/melonJS/examples/#/graphics) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/graphics))
@@ -216,6 +217,10 @@ Examples
 * [Jungle Rabbit](https://melonjs.github.io/melonJS/examples/#/jungle-rabbit) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/jungleRabbit)) — a low-poly river endless runner: Blender-modelled props through `InstancedMesh`, a rigged paddling boat, a procedural valley and shadows laid on its banks
 * [glTF Scene](https://melonjs.github.io/melonJS/examples/#/gltf) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/gltf)) — a Blender-authored, lit 3D scene loaded with `level.load`
 * [glTF Animated Model](https://melonjs.github.io/melonJS/examples/#/gltf-character) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/gltf)) — a rigged character (Kenney Blocky Characters) with node animation, driven by the Sprite-aligned `setCurrentAnimation` / `play` / `pause` / `stop` API
+* [Toon Shading](https://melonjs.github.io/melonJS/examples/#/toon) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/toon)) — cel shading in flat bands and inked outlines, on Kenney's character and Cube Pets
+* [Isometric 3D](https://melonjs.github.io/melonJS/examples/#/isometric-3d) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/isometric3d)) — an isometric tactics board (Kenney assets): an orthographic `Camera3d`, tiles picked from one `InstancedMesh`, a hero walking the path `@melonjs/pathfinding-plugin` finds
+* [3D Picking](https://melonjs.github.io/melonJS/examples/#/picking) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/picking)) — pointer events on Kenney Cube Pets under a perspective camera, `pick` and `screenToWorld`
+* [Skinned Character](https://melonjs.github.io/melonJS/examples/#/skinned-character) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/skinnedCharacter)) — a skinned glTF fox deformed by its skeleton, crossfading between Survey, Walk and Run
 * [Trail](https://melonjs.github.io/melonJS/examples/#/trail) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/trail))
 * [Shader Effects](https://melonjs.github.io/melonJS/examples/#/shader-effects) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/shaderEffects))
 * [Spine](https://melonjs.github.io/melonJS/examples/#/spine) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/spine))

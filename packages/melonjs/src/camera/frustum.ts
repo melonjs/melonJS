@@ -15,7 +15,22 @@ export interface Plane {
 	d: number;
 }
 
+/**
+ * How a {@link Frustum} (and so a {@link Camera3d}) projects the world:
+ * `"perspective"` (far things are smaller) or `"orthographic"` (no
+ * foreshortening, for isometric, top-down and diorama views).
+ * @category Camera
+ */
+export type ProjectionMode = "perspective" | "orthographic";
+
 export interface FrustumOptions {
+	/** how the world is projected (default: `"perspective"`) */
+	projection?: ProjectionMode;
+	/**
+	 * the height of the view in world units under an orthographic projection
+	 * (default 2; a {@link Camera3d} defaults it to its own height in pixels)
+	 */
+	orthoHeight?: number;
 	/** vertical field of view in radians (default: π / 3 = 60°) */
 	fov?: number;
 	/** aspect ratio (width / height) — default 1.0 (square) */
@@ -28,8 +43,10 @@ export interface FrustumOptions {
 
 /**
  * A view frustum — the truncated pyramid that defines a perspective
- * camera's visible volume. Holds the four projection parameters
- * (`fov`, `aspect`, `near`, `far`) and the matching projection matrix.
+ * camera's visible volume (or, with `projection: "orthographic"`, the box
+ * that defines an orthographic one). Holds the projection parameters
+ * (`fov`, `aspect`, `near`, `far`, and `orthoHeight` for the box) and the
+ * matching projection matrix.
  *
  * Used by {@link Camera3d} as its source of truth for perspective
  * projection. The matrix follows melonJS conventions: Y-down (sprite
@@ -54,7 +71,20 @@ export interface FrustumOptions {
  */
 export default class Frustum {
 	/**
-	 * vertical field of view in radians.
+	 * How the world is projected: `"perspective"` (the default) or
+	 * `"orthographic"`. Mutating it requires calling {@link Frustum#update}.
+	 */
+	projection: ProjectionMode;
+
+	/**
+	 * The height of the view in world units under an orthographic projection;
+	 * its width follows from {@link Frustum#aspect}. Ignored by a perspective
+	 * one. Mutating it requires calling {@link Frustum#update}.
+	 */
+	orthoHeight: number;
+
+	/**
+	 * vertical field of view in radians. Ignored by an orthographic projection.
 	 * Mutating this field requires calling {@link Frustum#update} to
 	 * rebuild the projection matrix — or use {@link Frustum#set} to
 	 * change multiple parameters and update in one call.
@@ -102,6 +132,8 @@ export default class Frustum {
 	 *   class default
 	 */
 	constructor(opts?: FrustumOptions) {
+		this.projection = opts?.projection ?? "perspective";
+		this.orthoHeight = opts?.orthoHeight ?? 2;
 		this.fov = opts?.fov ?? Math.PI / 3;
 		this.aspect = opts?.aspect ?? 1.0;
 		this.near = opts?.near ?? 0.1;
@@ -150,12 +182,26 @@ export default class Frustum {
 	 * - +Z is forward (positive `pos.z` = farther from camera)
 	 */
 	update(): void {
-		this.projectionMatrix.perspective(
-			this.fov,
-			this.aspect,
-			this.near,
-			this.far,
-		);
+		if (this.projection === "orthographic") {
+			// a box rather than a pyramid: the same size at every distance
+			const halfH = this.orthoHeight / 2;
+			const halfW = halfH * this.aspect;
+			this.projectionMatrix.ortho(
+				-halfW,
+				halfW,
+				-halfH,
+				halfH,
+				this.near,
+				this.far,
+			);
+		} else {
+			this.projectionMatrix.perspective(
+				this.fov,
+				this.aspect,
+				this.near,
+				this.far,
+			);
+		}
 		// flip Y (down) + Z (+Z forward) to match engine conventions
 		this.projectionMatrix.scale(1, -1, -1);
 	}

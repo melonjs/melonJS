@@ -13,6 +13,7 @@ import GLTFModel from "./GLTFModel.js";
  * @import Mesh from "../../renderable/mesh.js";
  * @import {Light3d} from "../../lighting/light3d.ts";
  * @import {Vector3d} from "../../math/vector3d.ts";
+ * @import {Color} from "../../math/color.ts";
  */
 /**
  * A loadable 3D scene parsed from a glTF / GLB asset. Instances are created
@@ -93,6 +94,9 @@ export default class GLTFScene {
 		"shadowDirectionZ",
 		"shadowGroundNormal",
 		"shadowLight",
+		"toonBands",
+		"outlineWidth",
+		"outlineColor",
 		// `shadowGroundPoint` is deliberately NOT here. Every option in this
 		// list is handed to each part of the scene, and one floor POINT
 		// shared by every part would stack the whole scene's blobs on a
@@ -143,6 +147,9 @@ export default class GLTFScene {
 	 * @param {number} [options.shadowDirectionZ] - z of that direction ({@link Mesh#shadowDirectionZ})
 	 * @param {number[]|Vector3d} [options.shadowGroundNormal] - up normal of the floor, for a scene that is not level ({@link Mesh#shadowGroundNormal})
 	 * @param {Light3d} [options.shadowLight] - a light to take the direction from, re-read every draw ({@link Mesh#shadowLight})
+	 * @param {number} [options.toonBands] - cel-shade every lit mesh into this many bands ({@link Mesh#toonBands})
+	 * @param {number} [options.outlineWidth] - outline every mesh this many world units wide ({@link Mesh#outlineWidth})
+	 * @param {Color|string|number[]} [options.outlineColor] - the outline colour ({@link Mesh#outlineColor})
 	 * @example
 	 * // a loaded scene lit by a sun the game owns, so a day/night cycle
 	 * // carries the shadows with it
@@ -176,6 +183,12 @@ export default class GLTFScene {
 			shadowGroundNormal: options.shadowGroundNormal,
 			shadowLight: options.shadowLight,
 		};
+		// the cartoon look, forwarded to every mesh the same way
+		const styleOptions = {
+			toonBands: options.toonBands,
+			outlineWidth: options.outlineWidth,
+			outlineColor: options.outlineColor,
+		};
 		const scale = options.scale ?? 1;
 		const rightHanded = options.rightHanded !== false;
 		// tri-state on purpose: `undefined` means "the caller said nothing",
@@ -203,18 +216,23 @@ export default class GLTFScene {
 		// occlusion between meshes under Camera3d)
 		container.autoDepth = false;
 
-		// Animated asset → keep the node hierarchy intact inside one rig-driven
-		// GLTFModel (a parent transform carries its children). Static asset →
-		// the flat-mesh path below. The model is named after the asset so it can
+		// Animated or skinned asset → keep the node hierarchy intact inside one
+		// rig-driven GLTFModel (a parent transform carries its children, and a
+		// skin needs its joints' hierarchy). Static asset → the flat-mesh path
+		// below. The model is named after the asset so it can
 		// be retrieved from the world (`world.getChildByName(name)[0]`) to drive
 		// playback. Lights are still instantiated (shared block at the end).
-		if ((this.data.animations ?? []).length > 0) {
+		if (
+			(this.data.animations ?? []).length > 0 ||
+			(this.data.skins ?? []).length > 0
+		) {
 			const model = new GLTFModel(this.data, {
 				scale,
 				rightHanded,
 				lit,
 				castGroundShadow,
 				...shadowOptions,
+				...styleOptions,
 			});
 			model.name = this.name;
 			container.addChild(model);
@@ -309,6 +327,7 @@ export default class GLTFScene {
 				// factor × vertexColor × texel, which is what glTF specifies.
 				baseColorFactor: node.baseColorFactor,
 				...shadowOptions,
+				...styleOptions,
 			});
 			if (instances) {
 				fillInstances(mesh, instances);

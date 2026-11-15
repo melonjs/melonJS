@@ -1043,6 +1043,15 @@ export default class Sprite3d extends Mesh {
 	}
 
 	/**
+	 * A sprite is a flat card: an inverted hull of it would be a second card
+	 * on top of the first, not an outline. {@link Mesh#outlineWidth} is not
+	 * drawn for a `Sprite3d`.
+	 * @ignore
+	 * @internal
+	 */
+	_drawOutline() {}
+
+	/**
 	 * Orient the quad toward the camera when billboarding; otherwise defer to the
 	 * standard {@link Mesh} world projection (a fixed-orientation quad).
 	 * @ignore
