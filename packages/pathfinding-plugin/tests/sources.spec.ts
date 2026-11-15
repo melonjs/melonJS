@@ -13,6 +13,7 @@ import {
 	plugin,
 	Rect,
 	Renderable,
+	type Renderer,
 	state,
 	type TMXLayer,
 	video,
@@ -380,7 +381,11 @@ describe("grids from a level", () => {
 			});
 			const overlay = new PathfindingDebug(grid);
 			expect([overlay.width, overlay.height]).toEqual([6 * T, 4 * T]);
-			const renderer = app?.renderer as Parameters<typeof overlay.draw>[0];
+			if (app === undefined) {
+				throw new Error("no application");
+			}
+			// the renderer as the engine types it, whichever backend runs
+			const renderer: Renderer = app.renderer;
 			const canvas = renderer.getCanvas();
 			const context = canvas.getContext("2d") as CanvasRenderingContext2D;
 			const pixel = (col: number, row: number) => {

@@ -1,10 +1,4 @@
-import {
-	type CanvasRenderer,
-	Polygon,
-	Renderable,
-	Vector2d,
-	type WebGLRenderer,
-} from "melonjs";
+import { Polygon, Renderable, type Renderer, Vector2d } from "melonjs";
 import type { Grid, PathResult } from "./grid.ts";
 
 /** a path for {@link PathfindingDebug} to draw */
@@ -89,7 +83,7 @@ export class PathfindingDebug extends Renderable {
 		return true;
 	}
 
-	override draw(renderer: CanvasRenderer | WebGLRenderer) {
+	override draw(renderer: Renderer) {
 		const { grid, diamond } = this;
 		const w = grid.tileWidth;
 		const h = grid.tileHeight;
@@ -109,7 +103,8 @@ export class PathfindingDebug extends Renderable {
 			grid.getPointPosition(col, row, corner).sub(grid.offset);
 			if (isometric) {
 				diamond.pos.set(corner.x, corner.y);
-				renderer.fillPolygon(diamond);
+				// every renderer fills a polygon, the WebGPU one included
+				renderer.fill(diamond);
 			} else {
 				renderer.fillRect(corner.x, corner.y, w, h);
 			}

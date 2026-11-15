@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.0.1] - _2026-11-15_
+
+### Fixed
+- `PathfindingDebug.draw()` takes a `Renderer`, as `Renderable.draw()` does, instead of a `CanvasRenderer | WebGLRenderer`: a game can pass it `app.renderer` without a cast, and the WebGPU renderer is accepted
+
 ## [1.0.0] - _2026-11-15_
 
 ### Added
