@@ -47,6 +47,8 @@ or it renders flat. See `melonjs-3d` for the camera.
 | `shadowDirectionX` / `shadowDirectionZ` | `0` | the ground direction they are cast along |
 | `shadowGroundNormal` | world up | up normal of the floor, for a scene that is not level |
 | `shadowLight` | — | a `Light3d` to take the direction from, re-read every draw |
+| `toonBands` | `0` | cel-shade every lit mesh into this many bands (see `melonjs-3d`) |
+| `outlineWidth` / `outlineColor` | `0` / black | an ink outline round every mesh, in world units (see `melonjs-3d`) |
 
 Those `game.` defaults are the engine's, not a recommendation. `game` is
 whichever `Application` finished `init()` last, so **pass `container`

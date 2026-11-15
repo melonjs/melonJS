@@ -13,6 +13,7 @@ import TMXTileMap from "./tiled/TMXTileMap.js";
  * @import Mesh from "../renderable/mesh.js";
  * @import {Light3d} from "../lighting/light3d.ts";
  * @import {Vector3d} from "../math/vector3d.ts";
+ * @import {Color} from "../math/color.ts";
  */
 // our levels
 const levels = {};
@@ -139,6 +140,9 @@ function levelIdAt(offset) {
  * @property {number} [shadowDirectionZ] - (glTF/GLB only) z of that direction
  * @property {number[]|Vector3d} [shadowGroundNormal] - (glTF/GLB only) up normal of the floor, for a scene that is not level
  * @property {Light3d} [shadowLight] - (glTF/GLB only) a {@link Light3d} to take the shadow direction from, re-read every draw
+ * @property {number} [toonBands] - (glTF/GLB only) cel-shade every lit mesh into this many bands ({@link Mesh#toonBands})
+ * @property {number} [outlineWidth] - (glTF/GLB only) outline every mesh this many world units wide ({@link Mesh#outlineWidth})
+ * @property {Color|string|number[]} [outlineColor] - (glTF/GLB only) the outline colour ({@link Mesh#outlineColor})
  */
 
 /**

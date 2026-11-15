@@ -163,6 +163,11 @@ const ExampleGroundShadows = lazy(() =>
 		default: m.ExampleGroundShadows,
 	})),
 );
+const ExampleToon = lazy(() =>
+	import("./examples/toon/ExampleToon").then((m) => ({
+		default: m.ExampleToon,
+	})),
+);
 const ExampleIsometric3d = lazy(() =>
 	import("./examples/isometric3d/ExampleIsometric3d").then((m) => ({
 		default: m.ExampleIsometric3d,
@@ -544,6 +549,14 @@ const examples: {
 		sourceDir: "gltf",
 		description:
 			"A rigged blocky character (Kenney, CC0) loaded from GLB, using node-TRS animation over a rigid hierarchy.",
+	},
+	{
+		component: <ExampleToon />,
+		label: "Toon Shading",
+		path: "toon",
+		sourceDir: "toon",
+		description:
+			"Cel shading in flat bands and inked outlines on lit meshes, including a skinned fox whose outline bends with it.",
 	},
 	{
 		component: <ExampleIsometric3d />,

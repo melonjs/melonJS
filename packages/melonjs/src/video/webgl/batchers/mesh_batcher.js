@@ -152,6 +152,8 @@ export default class MeshBatcher extends MaterialBatcher {
 		// last `uShininess` / `uSpecular` pushed — -1 is impossible (valid
 		// range 0..inf), forcing the first set of a pass
 		this.currentShininess = -1;
+		// last `uToonBands` pushed, same sentinel
+		this.currentToonBands = -1;
 		this.currentSpecularR = -1;
 		this.currentSpecularG = -1;
 		this.currentSpecularB = -1;
@@ -348,6 +350,7 @@ export default class MeshBatcher extends MaterialBatcher {
 			this.currentEyeY = Number.NaN;
 			this.currentEyeZ = Number.NaN;
 			this.currentShininess = -1;
+			this.currentToonBands = -1;
 			this.currentSpecularR = -1;
 			this.currentSpecularG = -1;
 			this.currentSpecularB = -1;
@@ -1877,6 +1880,16 @@ export default class MeshBatcher extends MaterialBatcher {
 					this.currentSpecularG = ks[1];
 					this.currentSpecularB = ks[2];
 				}
+			}
+		}
+
+		// cel shading: the lit shader cuts its diffuse ramp into this many
+		// bands (< 2 = smooth), so a shader without the uniform is unaffected
+		if (this.currentShader.uniforms.uToonBands !== undefined) {
+			const bands = mesh.toonBands || 0;
+			if (bands !== this.currentToonBands) {
+				this.currentShader.setUniform("uToonBands", bands);
+				this.currentToonBands = bands;
 			}
 		}
 

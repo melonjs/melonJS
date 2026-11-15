@@ -1,6 +1,6 @@
 ---
 name: melonjs-3d
-description: "Use this skill for anything 3D or 2.5D in melonJS — Camera3d, Mesh, InstancedMesh, Sprite3d billboards, Light3d, ground shadows, glTF/GLB scenes, and depth sorting. Covers the Y-down/+Z-forward convention that is the inverse of OpenGL, the cameraClass opt-in, orthographic (isometric) projection, clip planes, and what does not work on the Canvas fallback. Triggers on: Camera3d, orthographic, isometric, orthoHeight, projection, Mesh, InstancedMesh, Sprite3d, Trail3d, ribbon, exhaust trail, Light3d, billboard, glTF, glb, 3D, 2.5D, depth, cameraClass, fov, setClipPlanes, setFog, fog, distance fog, height fog, heightFalloff, transparent, transparency, alpha, blendMode, fade, castGroundShadow, shadowGroundPoint, lit, emissive, specular, shininess, normalMap, alphaCutoff, depthTest, vertexColors, worldToScreen, screenToRay, screenToWorld, pick, picking, Ray3d, intersectRay, hit3d, click a mesh, followOffset, setBasis, getBasis, lookAt, up vector, gimbal, slerp, great circle, turn a direction."
+description: "Use this skill for anything 3D or 2.5D in melonJS — Camera3d, Mesh, InstancedMesh, Sprite3d billboards, Light3d, ground shadows, glTF/GLB scenes, and depth sorting. Covers the Y-down/+Z-forward convention that is the inverse of OpenGL, the cameraClass opt-in, orthographic (isometric) projection, clip planes, and what does not work on the Canvas fallback. Triggers on: Camera3d, toon, cel shading, toonBands, outlineWidth, orthographic, isometric, orthoHeight, projection, Mesh, InstancedMesh, Sprite3d, Trail3d, ribbon, exhaust trail, Light3d, billboard, glTF, glb, 3D, 2.5D, depth, cameraClass, fov, setClipPlanes, setFog, fog, distance fog, height fog, heightFalloff, transparent, transparency, alpha, blendMode, fade, castGroundShadow, shadowGroundPoint, lit, emissive, specular, shininess, normalMap, alphaCutoff, depthTest, vertexColors, worldToScreen, screenToRay, screenToWorld, pick, Ray3d, intersectRay, hit3d, followOffset, setBasis, getBasis, lookAt, up vector, gimbal, slerp, great circle, turn a direction."
 license: MIT
 ---
 
@@ -587,6 +587,8 @@ ignores them.
 | `alphaCutoff` | discard texels below this alpha: foliage, fences | nothing |
 | `alphaMap` | per-texel opacity, multiplied in before the cutoff | a non-zero `alphaCutoff` |
 | `baseColorFactor` | a LINEAR colour, encoded into `tint` (see `melonjs-3d-assets`) | nothing |
+| `toonBands` | cel shading: the light cut into this many flat bands, a hard specular spot | `lit`, a `Light3d` |
+| `outlineWidth` + `outlineColor` | an ink line round the silhouette, in world units | a `Camera3d` |
 
 `emissive`, `specular` and `shininess` can be changed after construction too;
 `setBaseColorFactor()` is the method form of the last row.
@@ -596,6 +598,39 @@ into the mesh shader as a colour hook on both GPU backends, so the mesh keeps it
 placement, cutout, lighting and fog. A few builtins are unavailable there, and an
 `InstancedMesh` cannot host one; both warn once. See
 `melonjs-effects-and-shaders`.
+
+### Toon shading and outlines
+
+The cartoon look is two settings (20.16), both off by default:
+
+```js
+const hero = new GLTFModel(loader.getGLTF("hero"), {
+    scale, lit: true,
+    toonBands: 3,            // shadow, mid-tone, lit
+    outlineWidth: 3,         // world units (pixels)
+    outlineColor: "#1d1a2b", // Color, CSS string, or [r, g, b] in 0..1
+});
+// or per mesh, at any time
+crate.toonBands = 2;
+crate.outlineWidth = 0;      // off
+```
+
+- **`toonBands`** cuts the lit shading into flat bands from unlit (the ambient
+  alone) to fully lit, with the light's terminator on a band edge, and turns a
+  specular highlight into a hard-edged spot. Under 2 is smooth shading. It
+  needs `lit` and a `Light3d` with a direction: an ambient-only scene has
+  nothing to band.
+- **`outlineWidth`** draws an *inverted hull*: a copy of the mesh pushed out
+  along its normals and turned inside out, so only its rim shows. It costs
+  one more draw per outlined mesh. The outline is the **silhouette** only;
+  creases inside it are not inked. Normals are averaged where vertices share
+  a position, so a hard-edged model still gets a closed line, and the hull
+  follows the geometry — a skinned character's outline bends with it.
+- The hull is built from the mesh's normals, so **a model wound inside out
+  (normals pointing in) draws its outline OVER itself**; fix the export.
+- Not drawn by an `InstancedMesh` or a `Sprite3d`; `Camera3d` only.
+- `GLTFModel`, `level.load` and `GLTFScene` take `toonBands`, `outlineWidth`
+  and `outlineColor` for every part at once.
 
 ### InstancedMesh, and when it is the wrong tool
 
@@ -1250,6 +1285,9 @@ if (!app.renderer.supportsDepthBuffer) {
 
 | symptom | cause |
 |---|---|
+| `toonBands` changes nothing | the mesh is not `lit`, or the scene has only ambient light: banding needs a directional, point or spot light |
+| an outline covers the mesh instead of ringing it | the model is wound inside out (its normals point in); the hull is pushed along them |
+| an outline is missing on an instanced scatter or a billboard | `InstancedMesh` and `Sprite3d` do not draw one |
 | an orthographic camera shows nothing, or half a scene | it sits inside the scene: stand it back like a perspective camera, since `near` / `far` are measured from its position |
 | zooming an orthographic camera does nothing | `fov` and `zoom` do not apply to it; change `orthoHeight` |
 | a click on a mesh misses, or hits something beside it | the pointer's `gameWorldX`/`gameWorldY` were used; pass `gameScreenX`/`gameScreenY` to `screenToRay` / `pick` / `screenToWorld` |

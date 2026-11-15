@@ -22,6 +22,7 @@ import {
  * additional import for TypeScript
  * @import { AnimationOptionsInput } from "../../renderable/animation.ts";
  * @import {Vector3d} from "../../math/vector3d.ts";
+ * @import {Color} from "../../math/color.ts";
  * @import {Bounds} from "../../physics/bounds.ts";
  * @import Camera2d from "../../camera/camera2d.ts";
  * @import CanvasRenderer from "../../video/canvas/canvas_renderer.js";
@@ -142,6 +143,9 @@ export default class GLTFModel extends Container {
 	 * @param {number} [options.shadowDirectionZ=0] - z of the ground direction they are cast along
 	 * @param {number[]|Vector3d} [options.shadowGroundNormal] - the UP normal of the floor those shadows land on; needs `shadowGroundY` (see {@link Mesh#shadowGroundNormal})
 	 * @param {Light3d} [options.shadowLight] - a {@link Light3d} to take that direction from instead
+	 * @param {number} [options.toonBands=0] - cel-shade the lit parts into this many bands (see {@link Mesh#toonBands})
+	 * @param {number} [options.outlineWidth=0] - outline every part this many world units wide (see {@link Mesh#outlineWidth})
+	 * @param {Color|string|number[]} [options.outlineColor="#000000"] - the outline colour (see {@link Mesh#outlineColor})
 	 */
 	constructor(data, options = {}) {
 		super(0, 0);
@@ -379,6 +383,9 @@ export default class GLTFModel extends Container {
 					shadowGroundNormal: options.shadowGroundNormal,
 					shadowLight: options.shadowLight,
 					baseColorFactor: prim.baseColorFactor,
+					toonBands: options.toonBands,
+					outlineWidth: options.outlineWidth,
+					outlineColor: options.outlineColor,
 				});
 				if (prim.instances) {
 					fillInstances(mesh, prim.instances);

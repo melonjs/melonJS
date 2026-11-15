@@ -71,6 +71,33 @@ const SHADOW_SPREAD = 1.2;
 
 /** scratch for the three vectors `tiltOntoPlane` turns per shadow */
 const _tilted = new Float64Array(3);
+// the renderer's tint, kept aside while an outline draws in its own colour
+const _savedTint = new Color(255, 255, 255, 1);
+
+/**
+ * A colour setting in any of the forms a {@link Light3d} takes: a
+ * {@link Color} (kept as given), a CSS colour string, or `[r, g, b]` in 0..1.
+ * @param {Color|string|number[]|undefined} value - the setting
+ * @param {number} r - default red, 0..255
+ * @param {number} g - default green, 0..255
+ * @param {number} b - default blue, 0..255
+ * @returns {Color} the colour
+ * @ignore
+ * @internal
+ */
+function toColor(value, r, g, b) {
+	if (value instanceof Color) {
+		return value;
+	}
+	if (typeof value === "string") {
+		return new Color().parseCSS(value);
+	}
+	if (Array.isArray(value) || ArrayBuffer.isView(value)) {
+		return new Color(value[0] * 255, value[1] * 255, value[2] * 255, 1);
+	}
+	return new Color(r, g, b, 1);
+}
+
 // picking scratch: the model → world matrix, its inverse, and the parent →
 // world matrix recovered from what the last draw captured
 const _pickWorld = new Float64Array(16);
@@ -444,6 +471,9 @@ function buildTextureGroups(
  * @property {number[]|Float32Array|undefined} [baseColorFactor] - the material's base colour factor `[r, g, b]` in 0..1, LINEAR, applied as the mesh tint. That is the form a glTF material states it in (spec 3.9.2) and the form the loader hands back, so a mesh built from a node passes the node's own field straight through. It is ENCODED rather than scaled: a linear factor pushed through `tint.setColor` by multiplying by 255 renders every untextured material 60 to 70 counts too dark in the midtones, which reads as a lighting fault and gets debugged as one. For an ordinary sRGB colour use {@link Renderable#setTint}. The type admits `undefined` deliberately: the loader declares the field optional, so `baseColorFactor: node.baseColorFactor` is the headline use and it has to compile for a consumer building under `exactOptionalPropertyTypes`.
  * @property {number[]|Float32Array} [specular] - specular color `[r, g, b]` (0..1) for the lit path. Set by the OBJ loader from MTL `Ks`, and derived from glTF metallic/roughness.
  * @property {number} [shininess=0] - specular exponent for the lit path (MTL `Ns`). `0` for a fully diffuse surface.
+ * @property {number} [toonBands=0] - cel (toon) shading for the lit path: the light on the surface is cut into this many flat bands, from unlit to fully lit, and a specular highlight becomes a hard-edged spot. `0` (or anything under 2) is the usual smooth shading. Needs `lit` and a `Camera3d`.
+ * @property {number} [outlineWidth=0] - draw an outline this many world units (pixels) wide around the mesh's silhouette, the inked edge of a cartoon look — an "inverted hull" drawn behind it. `0` for none. `Camera3d` only; not drawn by an `InstancedMesh` or a `Sprite3d`.
+ * @property {Color|string|number[]} [outlineColor="#000000"] - the outline's colour: a {@link Color}, a CSS colour string, or `[r, g, b]` in 0..1.
  * @property {string|TextureAtlas|HTMLImageElement} [normalMap] - tangent-space normal map (MTL `map_bump`/`bump`/`norm`), perturbing the lit path's shading normal per fragment. Needs `lit` to have any effect, and a `Camera3d`. See the [Material Textures example](https://melonjs.github.io/melonJS/examples/#/material-textures).
  * @property {string|TextureAtlas|HTMLImageElement} [alphaMap] - per-texel opacity map, sampled in addition to the diffuse texture (MTL `map_d`).
  * @property {boolean} [castGroundShadow] - give this mesh a blob ground shadow, overriding the application's `castGroundShadow` setting in both directions. Omit to inherit. Needs a GPU backend and a `Camera3d`.
@@ -841,6 +871,48 @@ export default class Mesh extends Renderable {
 		 */
 		this.shininess =
 			typeof settings.shininess === "number" ? settings.shininess : 0;
+
+		/**
+		 * Cel (toon) shading on the lit path: the light on the surface is cut
+		 * into this many flat bands, from unlit (the ambient alone) to fully
+		 * lit, and a specular highlight becomes a hard-edged spot instead of a
+		 * falloff. `0` (the default), or anything under 2, is the usual smooth
+		 * shading. Needs `lit: true`, a {@link Light3d} and a `Camera3d`;
+		 * pairs with {@link Mesh#outlineWidth} for the inked cartoon look.
+		 * @type {number}
+		 * @default 0
+		 * @example
+		 * hero.toonBands = 3;      // shadow, mid-tone, lit
+		 * hero.outlineWidth = 3;   // and an ink line round it
+		 */
+		this.toonBands =
+			typeof settings.toonBands === "number" ? settings.toonBands : 0;
+
+		/**
+		 * The width, in world units (pixels), of an outline drawn around this
+		 * mesh's silhouette — `0` (the default) for none.
+		 *
+		 * Drawn as an "inverted hull": a copy of the mesh pushed out along its
+		 * normals and turned inside out, so only its rim shows round the
+		 * edges. Creases inside the silhouette are not outlined, which is the
+		 * usual cartoon look. The hull follows the mesh's geometry, so it
+		 * bends with a skinned character. Its normals are averaged where
+		 * vertices share a position, so a hard-edged model keeps a closed
+		 * line rather than cracking at its edges.
+		 *
+		 * `Camera3d` only. Not drawn by an {@link InstancedMesh} or a
+		 * {@link Sprite3d}.
+		 * @type {number}
+		 * @default 0
+		 */
+		this.outlineWidth =
+			typeof settings.outlineWidth === "number" ? settings.outlineWidth : 0;
+
+		/**
+		 * The colour of the outline (see {@link Mesh#outlineWidth}).
+		 * @type {Color}
+		 */
+		this.outlineColor = toColor(settings.outlineColor, 0, 0, 0);
 
 		// The material's base colour, applied as the tint. LINEAR per the
 		// glTF spec, so it is encoded rather than scaled: see the setting's
@@ -2745,6 +2817,9 @@ export default class Mesh extends Renderable {
 				this.indices = this._indicesOriginal;
 				this._captureParentSpace(renderer);
 				renderer.drawMesh(this, this._composeModelMatrix());
+				if (this.outlineWidth > 0) {
+					this._drawOutline(renderer, viewport);
+				}
 				if (
 					this._castsGroundShadow(renderer) === true &&
 					this.instanceLayout === undefined
@@ -2805,6 +2880,170 @@ export default class Mesh extends Renderable {
 			}
 		}
 		renderer.drawMesh(this);
+		if (useWorldSpace && this.outlineWidth > 0) {
+			this._drawOutline(renderer, viewport);
+		}
+	}
+
+	/**
+	 * Draw the outline: the inverted hull built by `_outlineHull`, placed
+	 * exactly where this mesh is and drawn flat in {@link Mesh#outlineColor},
+	 * at this mesh's opacity.
+	 * @param {Renderer} renderer - the renderer drawing this mesh
+	 * @param {Camera2d} [viewport] - the camera rendering this frame
+	 * @ignore
+	 * @internal
+	 */
+	_drawOutline(renderer, viewport) {
+		const hull = this._outlineHull();
+		const tint = renderer.currentTint;
+		_savedTint.copy(tint);
+		renderer.setTint(this.outlineColor, _savedTint.alpha);
+		try {
+			hull.draw(renderer, viewport);
+		} finally {
+			tint.copy(_savedTint);
+		}
+	}
+
+	/**
+	 * The inverted hull drawn as this mesh's outline, built on first use and
+	 * refreshed whenever the geometry, the width or the mesh's scale changes:
+	 * every vertex pushed out along its (position-welded) normal by
+	 * {@link Mesh#outlineWidth}, converted to model units, with every
+	 * triangle's winding reversed so back-face culling keeps only the rim.
+	 * @returns {Mesh} the hull, placed where this mesh is
+	 * @ignore
+	 * @internal
+	 */
+	_outlineHull() {
+		let hull = this._outline;
+		const count = this.vertexCount;
+		if (hull === undefined || hull.vertexCount !== count) {
+			// weld vertices that share a position, so a hard-edged model's
+			// split vertices are pushed out together and the hull stays closed
+			const groups = new Int32Array(count);
+			const seen = new Map();
+			const v = this.originalVertices;
+			for (let i = 0; i < count; i++) {
+				const key = `${v[i * 3]},${v[i * 3 + 1]},${v[i * 3 + 2]}`;
+				let g = seen.get(key);
+				if (g === undefined) {
+					g = seen.size;
+					seen.set(key, g);
+				}
+				groups[i] = g;
+			}
+			// the same triangles, wound the other way round
+			const src = this._indicesOriginal;
+			const reversed = new src.constructor(src.length);
+			for (let i = 0; i + 2 < src.length; i += 3) {
+				reversed[i] = src[i];
+				reversed[i + 1] = src[i + 2];
+				reversed[i + 2] = src[i + 1];
+			}
+			hull = new Mesh(0, 0, {
+				vertices: new Float32Array(count * 3),
+				uvs: new Float32Array(count * 2),
+				indices: reversed,
+				normalize: false,
+				scale: this.meshScale,
+				width: this.width,
+				height: this.height,
+				rightHanded: this.rightHanded,
+				cullBackFaces: true,
+				castGroundShadow: false,
+				lit: false,
+			});
+			/**
+			 * @ignore
+			 * @internal
+			 */
+			this._outline = hull;
+			/**
+			 * @ignore
+			 * @internal
+			 */
+			this._outlineGroups = groups;
+			/**
+			 * @ignore
+			 * @internal
+			 */
+			this._outlineNormals = new Float32Array(seen.size * 3);
+			this._outlineVersion = -1;
+		}
+
+		// the width is in world units: divide out the mesh's own scale and
+		// the largest scale its transform applies
+		const t = this.currentTransform.val;
+		const transformScale = Math.max(
+			Math.hypot(t[0], t[1], t[2]),
+			Math.hypot(t[4], t[5], t[6]),
+			Math.hypot(t[8], t[9], t[10]),
+		);
+		const offset = this.outlineWidth / (this.meshScale * transformScale || 1);
+		if (
+			this._outlineVersion !== this._geometryVersion ||
+			this._outlineOffset !== offset
+		) {
+			this._rebuildOutlineHull(hull, offset);
+			/**
+			 * @ignore
+			 * @internal
+			 */
+			this._outlineVersion = this._geometryVersion;
+			/**
+			 * @ignore
+			 * @internal
+			 */
+			this._outlineOffset = offset;
+		}
+
+		// placed exactly where this mesh is
+		hull.pos.set(this.pos.x, this.pos.y, this.pos.z);
+		hull.currentTransform.copy(this.currentTransform);
+		hull.meshScale = this.meshScale;
+		hull.rightHanded = this.rightHanded;
+		hull.fog = this.fog;
+		hull._useWorldSpace = this._useWorldSpace;
+		return hull;
+	}
+
+	/**
+	 * Push every vertex of the hull out along its welded normal.
+	 * @param {Mesh} hull - the hull to write
+	 * @param {number} offset - how far, in model units
+	 * @ignore
+	 * @internal
+	 */
+	_rebuildOutlineHull(hull, offset) {
+		const v = this.originalVertices;
+		const count = this.vertexCount;
+		const normals =
+			this.originalNormals ?? generateNormals(v, this._indicesOriginal);
+		const groups = this._outlineGroups;
+		const acc = this._outlineNormals;
+		acc.fill(0);
+		for (let i = 0; i < count; i++) {
+			const g = groups[i] * 3;
+			acc[g] += normals[i * 3];
+			acc[g + 1] += normals[i * 3 + 1];
+			acc[g + 2] += normals[i * 3 + 2];
+		}
+		for (let g = 0; g < acc.length; g += 3) {
+			const len = Math.hypot(acc[g], acc[g + 1], acc[g + 2]) || 1;
+			acc[g] /= len;
+			acc[g + 1] /= len;
+			acc[g + 2] /= len;
+		}
+		const out = hull.originalVertices;
+		for (let i = 0; i < count; i++) {
+			const g = groups[i] * 3;
+			out[i * 3] = v[i * 3] + acc[g] * offset;
+			out[i * 3 + 1] = v[i * 3 + 1] + acc[g + 1] * offset;
+			out[i * 3 + 2] = v[i * 3 + 2] + acc[g + 2] * offset;
+		}
+		hull.needsUpdate = true;
 	}
 
 	/**

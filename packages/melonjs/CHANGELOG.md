@@ -2,12 +2,15 @@
 
 ## [20.16.0] (melonJS 2) - _unreleased_
 
+**Highlights:** the 3D tier gains what indie 3D games reach for first. Skinned characters from Mixamo-style packs now animate, with crossfades between clips; meshes can be picked with the pointer under a perspective camera; `Camera3d` can project orthographically for isometric views; and lit meshes can be toon-shaded and outlined. All of it is opt-in: a game that sets none of it renders as before.
+
 ### Added
 - 3D: skinned glTF meshes (`JOINTS_0` / `WEIGHTS_0` with a `skin`, the format of Mixamo, Quaternius and most rigged character packs) deform with their skeleton. A skinned asset loads as a `GLTFModel`, even with no clips; the skin is deformed on the CPU, so it works the same on WebGPU, WebGL and Canvas. Up to four joints per vertex; morph targets are still not read
 - 3D: `GLTFModel#setCurrentAnimation(name, { crossfade })` blends into a clip over that many milliseconds instead of switching at once, on skinned and rigid rigs alike; switching again mid-fade blends from the pose on screen, and a clip chained with `next` is entered with the same crossfade
 - 3D: picking. `Camera3d#screenToRay(x, y)` returns the `Ray3d` through a screen point, `Camera3d#screenToWorld(x, y, groundY)` the point on a level floor under it, and `Camera3d#pick(x, y, container)` the nearest mesh under it; `Mesh#intersectRay(ray)` tests a mesh's triangles, and an `InstancedMesh` reports which instance was hit. Hits are `MeshHit` records: point, normal, distance, triangle, instance
 - Input: under a `Camera3d`, pointer events on a `Mesh`, `Sprite3d`, `InstancedMesh` or `GLTFModel` are hit-tested by the ray through the pointer against its triangles, nearest first, and `pointer.hit3d` says where it was hit; they were tested against 2D bounds that a perspective projection makes meaningless
 - 3D: `Camera3d` can project orthographically: `projection: "orthographic"` (an option, or a property switchable at run time) and `orthoHeight`, the view's height in world units, for isometric, top-down and diorama views with the full 3D tier — depth, lighting, fog, shadows, culling and picking. Perspective stays the default
+- 3D: toon shading and outlines. `toonBands` cuts a lit mesh's shading into flat bands and turns its specular highlight into a hard spot, on WebGL and WebGPU; `outlineWidth` and `outlineColor` draw an ink line round its silhouette as an inverted hull, which follows a skinned mesh as it bends. Both are `Mesh` settings and properties, and `GLTFModel`, `GLTFScene` and `level.load` options for every part
 - `Ray3d`: a 3D ray with distance tests against a plane, a sphere, an `AABB3d` and a triangle
 - glTF: the parsed descriptor carries the asset's `skins`, and each skinned primitive its `joints`, `weights` and `skin`; `bounds` are measured on the skinned rest pose
 

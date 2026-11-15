@@ -26,6 +26,7 @@ uniform float uAlphaCutoff;               // alpha cutout threshold (0 = disable
 uniform vec3 uEmissive;                   // self-illumination color (0 = none)
 uniform vec3 uSpecular;                   // specular color (0 = purely diffuse)
 uniform float uShininess;                 // specular exponent (0 = no highlight)
+uniform float uToonBands;                 // cel-shading bands (< 2 = smooth)
 uniform vec3 uEyePosition;                // camera position, world space
 uniform sampler2D uAlphaMap;              // per-texel opacity (MTL map_d)
 uniform float uHasAlphaMap;               // 0 = uAlphaMap is filler, ignore it
@@ -262,7 +263,16 @@ void main(void) {
         // terminator and lifts the shadowed side, for a gentler, more
         // diffuse look than hard Lambert (which reads as harsh noon).
         float ndl = dot(N, L) * 0.5 + 0.5;
-        lit += uLights[i].colorInner.rgb * (ndl * ndl * atten);
+        float diffuse = ndl * ndl;
+        if (uToonBands >= 2.0) {
+            // cel shading: the wrapped ramp cut into flat bands, from unlit
+            // (ambient alone) up to fully lit. Cut BEFORE the squaring, whose
+            // curve would push the terminator (ndl = 0.5) down to a quarter
+            // and leave most of a lit surface in the darkest band
+            diffuse = min(floor(ndl * uToonBands) / (uToonBands - 1.0), 1.0);
+        }
+        diffuse *= atten;
+        lit += uLights[i].colorInner.rgb * diffuse;
         if (hasSpecular) {
             // masked by the UNWRAPPED Lambert term: half-Lambert lifts the
             // shadowed side, and a highlight on a surface facing away from
@@ -270,6 +280,11 @@ void main(void) {
             float facing = max(dot(N, L), 0.0);
             vec3 H = normalize(L + V);
             float spec = pow(max(dot(N, H), 0.0), uShininess);
+            if (uToonBands >= 2.0) {
+                // a toon highlight is a hard-edged spot, not a falloff
+                spec = step(0.5, spec);
+                facing = step(1e-4, facing);
+            }
             specular += uLights[i].colorInner.rgb * (spec * facing * atten);
         }
     }

@@ -32,8 +32,8 @@ struct MeshUniforms {
 	emissive : vec4f,
 	// specular color (rgb) and exponent (w); w = 0 means no highlight
 	specular : vec4f,
-	// the camera's world position (xyz; w reserved), for the specular
-	// half-vector — nothing else in this shader needs it
+	// the camera's world position (xyz), for the specular half-vector —
+	// nothing else in this shader needs it; w = cel-shading bands (< 2 = smooth)
 	eye : vec4f,
 	// straight (unpremultiplied) fog colour (rgb; w reserved)
 	fogColor : vec4f,
@@ -339,14 +339,29 @@ fn fragment_main(in : VSOut) -> @location(0) vec4f {
 		// the terminator and lifts the shadowed side — gentler than hard
 		// Lambert, which reads as harsh noon.
 		let ndl = dot(n, lightDir) * 0.5 + 0.5;
-		lit = lit + uLights.lights[i].colorInner.rgb * (ndl * ndl * atten);
+		var diffuse = ndl * ndl;
+		let toonBands = uMesh.eye.w;
+		if (toonBands >= 2.0) {
+			// cel shading: the wrapped ramp cut into flat bands, from unlit
+			// (ambient alone) up to fully lit. Cut BEFORE the squaring, whose
+			// curve would push the terminator (ndl = 0.5) down to a quarter
+			// and leave most of a lit surface in the darkest band
+			diffuse = min(floor(ndl * toonBands) / (toonBands - 1.0), 1.0);
+		}
+		diffuse = diffuse * atten;
+		lit = lit + uLights.lights[i].colorInner.rgb * diffuse;
 		if (hasSpecular) {
 			// masked by the UNWRAPPED Lambert term: half-Lambert lifts the
 			// shadowed side, and a highlight on a surface facing away from
 			// the light reads as a rendering error
-			let facing = max(dot(n, lightDir), 0.0);
+			var facing = max(dot(n, lightDir), 0.0);
 			let h = normalize(lightDir + viewDir);
-			let spec = pow(max(dot(n, h), 0.0), shininess);
+			var spec = pow(max(dot(n, h), 0.0), shininess);
+			if (toonBands >= 2.0) {
+				// a toon highlight is a hard-edged spot, not a falloff
+				spec = step(0.5, spec);
+				facing = step(1e-4, facing);
+			}
 			specular = specular
 				+ uLights.lights[i].colorInner.rgb * (spec * facing * atten);
 		}
