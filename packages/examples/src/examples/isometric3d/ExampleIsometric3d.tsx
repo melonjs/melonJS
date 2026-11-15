@@ -10,10 +10,11 @@
  *   ground is raised. A pointer event on it says which INSTANCE the ray hit
  *   (`pointer.hit3d.instance`), which is the tile under the pointer: hover to
  *   highlight it, click to send the hero there.
- * - **The hero is a `GLTFModel`** that walks the shortest path round the
- *   trees, rocks and crates, crossfading between its idle and walk clips and
- *   turning to face each step. Toon bands and an outline make it read at any
- *   zoom.
+ * - **The hero is a `GLTFModel`** that walks the path
+ *   `@melonjs/pathfinding-plugin` finds: A* on a `Grid` of the board's tiles,
+ *   round the trees, rocks and crates, with raised ground costing more to
+ *   climb onto. It crossfades between its idle and walk clips and turns to
+ *   face each step; toon bands and an outline make it read at any zoom.
  * - **The camera** is orthographic, a true isometric angle; Q / E (or the
  *   buttons) turn the view a quarter at a time, the wheel zooms by changing
  *   `orthoHeight`, and the checkbox switches to perspective for comparison.
@@ -22,6 +23,7 @@
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
 import { DebugPanelPlugin } from "@melonjs/debug-plugin";
+import { Grid } from "@melonjs/pathfinding-plugin";
 import {
 	Application,
 	Camera3d,
@@ -43,6 +45,7 @@ import {
 	Tween,
 	UICheckbox,
 	UITextButton,
+	Vector2d,
 	Vector3d,
 	video,
 	type WebGLRenderer,
@@ -108,58 +111,41 @@ const tileTop = (x: number, z: number) => {
 	};
 };
 
-/** shortest walkable path between two tiles (breadth-first, 4-way) */
+/**
+ * The board as a pathfinding grid: one cell per tile, the cell's `x` its
+ * column and `y` its row (the board's z). The props that block are solid,
+ * and stepping onto raised ground costs more, so the hero takes the flat way
+ * round when there is one. Diagonals are off (the plugin's default): a
+ * tactics unit moves along the grid.
+ */
+const grid = new Grid({
+	cols: N,
+	rows: N,
+	tileWidth: 1,
+	tileHeight: 1,
+	solid: (col, row) => {
+		return PROPS[`${col},${row}`]?.block === true;
+	},
+	weight: (col, row) => {
+		return 1 + height(col, row);
+	},
+});
+const _from = new Vector2d();
+const _to = new Vector2d();
+
+/** the tiles to step through to reach `to`, or null when it cannot be reached */
 const findPath = (
 	from: { x: number; z: number },
 	to: { x: number; z: number },
 ) => {
-	const key = (x: number, z: number) => {
-		return `${x},${z}`;
-	};
-	const blocked = (x: number, z: number) => {
-		return PROPS[key(x, z)]?.block === true;
-	};
-	if (blocked(to.x, to.z)) {
+	const cells = grid.getIdPath(_from.set(from.x, from.z), _to.set(to.x, to.z));
+	if (cells.length === 0) {
 		return null;
 	}
-	const prev = new Map<string, string | null>([[key(from.x, from.z), null]]);
-	const queue = [from];
-	for (let cur = queue.shift(); cur !== undefined; cur = queue.shift()) {
-		if (cur.x === to.x && cur.z === to.z) {
-			const path = [];
-			let k: string | null = key(cur.x, cur.z);
-			while (k !== null) {
-				const [x, z] = k.split(",").map(Number);
-				path.unshift({ x, z });
-				k = prev.get(k) ?? null;
-			}
-			return path.slice(1);
-		}
-		for (const [dx, dz] of [
-			[1, 0],
-			[-1, 0],
-			[0, 1],
-			[0, -1],
-		]) {
-			const x = cur.x + dx;
-			const z = cur.z + dz;
-			if (
-				x < 0 ||
-				z < 0 ||
-				x >= N ||
-				z >= N ||
-				blocked(x, z) ||
-				prev.has(key(x, z)) ||
-				// one block up or down at a time
-				Math.abs(height(x, z) - height(cur.x, cur.z)) > 1
-			) {
-				continue;
-			}
-			prev.set(key(x, z), key(cur.x, cur.z));
-			queue.push({ x, z });
-		}
-	}
-	return null;
+	// the path starts where the hero stands
+	return cells.slice(1).map((cell) => {
+		return { x: cell.x, z: cell.y };
+	});
 };
 
 /** a soft sky behind the board, in screen space */

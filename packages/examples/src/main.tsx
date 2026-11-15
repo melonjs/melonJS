@@ -564,7 +564,7 @@ const examples: {
 		path: "isometric-3d",
 		sourceDir: "isometric3d",
 		description:
-			"An isometric tactics board in real 3D (Kenney, CC0): an orthographic Camera3d, an instanced board whose tiles are picked by the pointer, and a hero that walks the shortest path.",
+			"An isometric tactics board in real 3D (Kenney, CC0): an orthographic Camera3d, an instanced board whose tiles are picked by the pointer, and a hero that walks the path found by @melonjs/pathfinding-plugin.",
 	},
 	{
 		component: <ExamplePicking />,

@@ -145,6 +145,9 @@ importers:
       '@melonjs/matter-adapter':
         specifier: workspace:*
         version: link:../matter-adapter
+      '@melonjs/pathfinding-plugin':
+        specifier: workspace:*
+        version: link:../pathfinding-plugin
       '@melonjs/planck-adapter':
         specifier: workspace:*
         version: link:../planck-adapter
