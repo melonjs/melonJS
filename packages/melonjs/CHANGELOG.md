@@ -5,7 +5,7 @@
 **Highlights:** the 3D tier gains what indie 3D games reach for first. Skinned characters from Mixamo-style packs now animate, with crossfades between clips; meshes can be picked with the pointer under a perspective camera; `Camera3d` can project orthographically for isometric views; and lit meshes can be toon-shaded and outlined. All of it is opt-in: a game that sets none of it renders as before.
 
 ### Added
-- 3D: skinned glTF meshes (`JOINTS_0` / `WEIGHTS_0` with a `skin`, the format of Mixamo, Quaternius and most rigged character packs) deform with their skeleton. The skin is deformed on the CPU, so it works the same on WebGPU, WebGL and Canvas. Up to four joints per vertex; morph targets are still not read
+- 3D: skinned glTF meshes (`JOINTS_0` / `WEIGHTS_0` with a `skin`, the format of Mixamo, Quaternius and most rigged character packs) deform with their skeleton. A skinned asset loads as one `GLTFModel` in a `GLTFScene` or `level.load`, even with no clips. The skin is deformed on the CPU, so it works the same on WebGPU, WebGL and Canvas. Up to four joints per vertex; morph targets are still not read
 - 3D: `GLTFModel#setCurrentAnimation(name, { crossfade })` blends into a clip over that many milliseconds instead of switching at once, on skinned and rigid rigs alike; switching again mid-fade blends from the pose on screen, and a clip chained with `next` is entered with the same crossfade, the clip it leaves holding its last frame
 - 3D: picking. `Camera3d#screenToRay(x, y)` returns the `Ray3d` through a screen point, `Camera3d#screenToWorld(x, y, groundY)` the point on a level floor under it, and `Camera3d#pick(x, y, container)` the nearest mesh under it; `Mesh#intersectRay(ray)` tests a mesh's triangles, and an `InstancedMesh` reports which instance was hit. Hits are `MeshHit` records: point, normal, distance, triangle, instance
 - 3D: `Camera3d` can project orthographically: `projection: "orthographic"` (an option, or a property switchable at run time) and `orthoHeight`, the view's height in world units (divided by the camera's `zoom`, as on a `Camera2d`), for isometric, top-down and diorama views with the full 3D tier — depth (sprites included), lighting, fog, shadows, culling and picking. Perspective stays the default
@@ -14,9 +14,8 @@
 - glTF: the parsed descriptor carries the asset's `skins`, and each skinned primitive its `joints`, `weights` and `skin`; `bounds` are measured on the skinned rest pose
 - Input: `pointer.hit3d`, where the ray through the pointer hit the mesh an event is for, under a `Camera3d`
 
-### Changed
-- Input: under a `Camera3d`, pointer events on a `Mesh`, `Sprite3d`, `InstancedMesh` or `GLTFModel` are hit-tested by the ray through the pointer against its triangles, nearest first, after the 2D regions (screen-space UI is drawn over the scene); they were tested against 2D bounds that a perspective projection makes meaningless. One in a container taken out of the world gets none, and a move tests only the meshes listening for moves, entering, leaving or a release. Under a `Camera2d` nothing changes
-- glTF: a skinned asset loads as one `GLTFModel` in a `GLTFScene` or `level.load`, even with no clips, where its parts were added as separate `Mesh` children, which cannot be skinned
+### Fixed
+- Input: under a `Camera3d`, pointer events on a `Mesh`, `Sprite3d`, `InstancedMesh` or `GLTFModel` reached it where its 2D bounds lay, which a perspective projection puts somewhere other than where it draws. They are now hit-tested by the ray through the pointer against its triangles, nearest first, after the 2D regions (screen-space UI is drawn over the scene); one in a container taken out of the world gets none, and a move tests only the meshes listening for moves, entering, leaving or a release. Under a `Camera2d` nothing changes
 
 ## [20.15.1] (melonJS 2) - _2026-11-14_
 
