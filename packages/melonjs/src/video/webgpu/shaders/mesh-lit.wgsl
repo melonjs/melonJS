@@ -26,16 +26,18 @@ struct MeshUniforms {
 	view : mat4x4<f32>,
 	tint : vec4f,
 	// x = alpha cutout threshold (0 = disabled), y = 1 when an opacity map
-	// is bound (0 = the second sampler is filler); z, w reserved
+	// is bound (0 = the second sampler is filler), z = 1 when a normal map
+	// is; w = the rim light's red (colour x strength)
 	params : vec4f,
-	// self-illumination added AFTER lighting (r, g, b; w reserved)
+	// self-illumination added AFTER lighting (r, g, b); w = the rim light's
+	// green
 	emissive : vec4f,
 	// specular color (rgb) and exponent (w); w = 0 means no highlight
 	specular : vec4f,
 	// the camera's world position (xyz), for the specular half-vector —
 	// nothing else in this shader needs it; w = cel-shading bands (< 2 = smooth)
 	eye : vec4f,
-	// straight (unpremultiplied) fog colour (rgb; w reserved)
+	// straight (unpremultiplied) fog colour (rgb); w = the rim light's blue
 	fogColor : vec4f,
 	// x = mode (0 off / 1 linear / 2 exp2), y = near, z = 1/(far - near),
 	// w = density
@@ -367,11 +369,27 @@ fn fragment_main(in : VSOut) -> @location(0) vec4f {
 		}
 	}
 
+	// Rim light: a glow along the silhouette, where the surface turns away
+	// from the eye — see mesh-lit.frag. Its colour rides in the block's three
+	// free `w` slots. A uniform branch: no rim, no cost.
+	let rimColor = vec3f(uMesh.params.w, uMesh.emissive.w, uMesh.fogColor.w);
+	var rim = vec3f(0.0);
+	if (dot(rimColor, rimColor) > 0.0) {
+		var rimEdge = 1.0 - clamp(dot(n, normalize(uMesh.eye.xyz - in.vWorldPos)), 0.0, 1.0);
+		if (uMesh.eye.w >= 2.0) {
+			// toon: a hard-edged band, as the highlight is a hard-edged spot
+			rimEdge = step(0.6, rimEdge);
+		} else {
+			rimEdge = rimEdge * rimEdge * rimEdge;
+		}
+		rim = rimColor * rimEdge;
+	}
+
 	// emissive self-illuminates: added AFTER lighting so it glows at full
 	// strength regardless of the scene lights (neon, lava, glowing eyes)
 	return vec4f(
 		apply_fog(
-			base.rgb * lit + specular * uMesh.specular.rgb + uMesh.emissive.rgb,
+			base.rgb * lit + specular * uMesh.specular.rgb + uMesh.emissive.rgb + rim,
 			base.a,
 			in.vFogDepth
 		),

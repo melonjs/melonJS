@@ -255,6 +255,23 @@ export default class Camera3d extends Camera2d {
 	_orthoHeight: number;
 
 	/**
+	 * The orthographic view width as set (see {@link Camera3d#orthoWidth}),
+	 * kept across resizes while `_orthoKeep` is `"width"`.
+	 * @ignore
+	 * @internal
+	 */
+	_orthoWidth = 0;
+
+	/**
+	 * Which side of the orthographic view was set last and is kept across
+	 * resizes: its height ({@link Camera3d#orthoHeight}, the default) or its
+	 * width ({@link Camera3d#orthoWidth}); the other follows the aspect.
+	 * @ignore
+	 * @internal
+	 */
+	_orthoKeep: "height" | "width" = "height";
+
+	/**
 	 * The camera state the frustum planes were last built from: `pos.x`,
 	 * `pos.y`, `depth`, `pitch`, `yaw`, `roll`, then the frustum's `fov`,
 	 * `aspect`, `near` and `far`. A frame steps the world (and so culls it)
@@ -441,6 +458,19 @@ export default class Camera3d extends Camera2d {
 				`Camera3d: orthoHeight must be a positive finite number, got ${orthoHeight}`,
 			);
 		}
+		const orthoWidth = opts?.orthoWidth;
+		if (orthoWidth !== undefined) {
+			if (opts?.orthoHeight !== undefined) {
+				throw new Error(
+					"Camera3d: give orthoHeight or orthoWidth, not both: the other follows the aspect ratio",
+				);
+			}
+			if (!(orthoWidth > 0) || !Number.isFinite(orthoWidth)) {
+				throw new Error(
+					`Camera3d: orthoWidth must be a positive finite number, got ${orthoWidth}`,
+				);
+			}
+		}
 
 		// build the frustum with the user's opts, defaulting aspect to
 		// the camera viewport rect
@@ -455,6 +485,11 @@ export default class Camera3d extends Camera2d {
 		});
 
 		this._orthoHeight = orthoHeight;
+		if (orthoWidth !== undefined) {
+			this._orthoWidth = orthoWidth;
+			this._orthoKeep = "width";
+			this._applyOrthoHeight();
+		}
 		this.pitch = 0;
 		this.yaw = 0;
 		this.roll = 0;
@@ -531,9 +566,15 @@ export default class Camera3d extends Camera2d {
 	 * aspect ratio. Smaller shows less of the world. Defaults to the camera's
 	 * height in pixels, one world unit per pixel. Ignored by a perspective
 	 * camera.
+	 *
+	 * Setting it keeps the height across resizes, the default. After
+	 * {@link Camera3d#orthoWidth} was set instead, it reads the height that
+	 * width works out to at the current aspect ratio.
 	 */
 	get orthoHeight(): number {
-		return this._orthoHeight;
+		return this._orthoKeep === "width"
+			? this._orthoWidth / this.frustum.aspect
+			: this._orthoHeight;
 	}
 	set orthoHeight(value: number) {
 		if (!(value > 0) || !Number.isFinite(value)) {
@@ -542,14 +583,45 @@ export default class Camera3d extends Camera2d {
 			);
 		}
 		this._orthoHeight = value;
+		this._orthoKeep = "height";
+		this._applyOrthoHeight();
+	}
+
+	/**
+	 * The width of the view in world units under an orthographic
+	 * projection, at a {@link Camera3d#zoom} of 1, as
+	 * {@link Camera3d#orthoHeight} is its height. Setting it keeps the
+	 * **width** across resizes instead, and the height follows the aspect
+	 * ratio: what a game held in portrait on a phone wants, so the board's
+	 * width always fits whatever the screen's height. Setting
+	 * `orthoHeight` again goes back to keeping the height. Until then it
+	 * reads the width the height works out to.
+	 * @example
+	 * camera.projection = "orthographic";
+	 * camera.orthoWidth = 1200; // the board's width always fits
+	 */
+	get orthoWidth(): number {
+		return this._orthoKeep === "width"
+			? this._orthoWidth
+			: this._orthoHeight * this.frustum.aspect;
+	}
+	set orthoWidth(value: number) {
+		if (!(value > 0) || !Number.isFinite(value)) {
+			throw new Error(
+				`Camera3d: orthoWidth must be a positive finite number, got ${value}`,
+			);
+		}
+		this._orthoWidth = value;
+		this._orthoKeep = "width";
 		this._applyOrthoHeight();
 	}
 
 	/**
 	 * The zoom level, as on a {@link Camera2d}: above 1 zooms in, below 1
 	 * out. Under an orthographic projection it divides
-	 * {@link Camera3d#orthoHeight}, so `orthoHeight` frames the view and
-	 * `zoom` zooms it (the world in view is `orthoHeight / zoom` tall).
+	 * {@link Camera3d#orthoHeight} and {@link Camera3d#orthoWidth}, so they
+	 * frame the view and `zoom` zooms it (the world in view is
+	 * `orthoHeight / zoom` tall).
 	 * A perspective camera ignores it: narrow {@link Camera3d#fov} instead.
 	 * @example
 	 * camera.projection = "orthographic";
@@ -569,15 +641,49 @@ export default class Camera3d extends Camera2d {
 	}
 
 	/**
-	 * Give the frustum the orthographic height in view: the one set,
-	 * divided by the zoom.
+	 * Whether this camera is drawn with the default settings: no screen
+	 * offset. Unlike a {@link Camera2d}, its zoom does not count: a
+	 * `Camera3d` applies its zoom through its own projection (see
+	 * {@link Camera3d#zoom}), so a zoomed one must not take the 2D zoomed
+	 * camera's path, which shrinks the camera's `width` and `height` to the
+	 * zoomed world for the length of the draw. Anything reading them during
+	 * the draw, {@link Camera3d#worldToScreen} and
+	 * {@link Camera3d#screenToRay} among them, would get the wrong size.
+	 * @returns true if this camera has no screen offset
+	 */
+	override get isDefault(): boolean {
+		return this.screenX === 0 && this.screenY === 0;
+	}
+
+	/**
+	 * Give the frustum the orthographic height in view: the one set, or the
+	 * one the width set works out to at the current aspect ratio, divided by
+	 * the zoom.
 	 * @ignore
 	 * @internal
 	 */
 	_applyOrthoHeight(): void {
-		this.frustum.orthoHeight = this._orthoHeight / this.zoom;
+		this._syncOrthoHeight();
 		this.frustum.update();
 		this.projectionMatrix.copy(this.frustum.projectionMatrix);
+	}
+
+	/**
+	 * Set the frustum's orthographic height, without rebuilding it.
+	 * @ignore
+	 * @internal
+	 */
+	_syncOrthoHeight(): void {
+		let height = this._orthoHeight;
+		if (this._orthoKeep === "width") {
+			const aspect = this.frustum.aspect;
+			// a camera not sized yet has no aspect: keep what it has until it is
+			if (!(aspect > 0) || !Number.isFinite(aspect)) {
+				return;
+			}
+			height = this._orthoWidth / aspect;
+		}
+		this.frustum.orthoHeight = height / this.zoom;
 	}
 
 	/**
@@ -590,6 +696,8 @@ export default class Camera3d extends Camera2d {
 	}
 	set aspect(value: number) {
 		this.frustum.aspect = value;
+		// a kept width needs its height worked out again
+		this._syncOrthoHeight();
 		this.frustum.update();
 		this.projectionMatrix.copy(this.frustum.projectionMatrix);
 	}
@@ -1121,6 +1229,12 @@ export default class Camera3d extends Camera2d {
 		this.frustum.aspect = this.width / this.height;
 		this.frustum.near = this.near;
 		this.frustum.far = this.far;
+		// keep the side that was set: a kept width needs its height again
+		// (called from the base constructor, before the fields exist)
+		// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+		if (this._orthoKeep !== undefined) {
+			this._syncOrthoHeight();
+		}
 		this.frustum.update();
 		this.projectionMatrix.copy(this.frustum.projectionMatrix);
 		// `screenProjection` stays a flat screen-space ortho so floating
@@ -1842,13 +1956,23 @@ export default class Camera3d extends Camera2d {
 	 * {@link Mesh} (including {@link Sprite3d}, {@link InstancedMesh} and the
 	 * parts of a {@link GLTFModel}) where the ray through that pixel hits
 	 * it. `floating` (screen-space) renderables are skipped, as are those
-	 * that are not visible: hidden by `alpha` 0 or `isRenderable` false.
+	 * that are not visible: hidden by `alpha` 0 or `isRenderable` false, and
+	 * those set not to be picked ({@link Mesh#pickable},
+	 * {@link GLTFModel#pickable}), so a floor does not stand in front of what
+	 * is on it. Nothing needs registering, and `isKinematic` plays no part:
+	 * that flag opts a renderable in to collisions and pointer events, while
+	 * `pickable` only opts a mesh out of this query (see
+	 * {@link Renderable#isKinematic}, {@link Mesh#pickable}).
 	 * @param x - screen x, in canvas pixels (e.g. `pointer.gameScreenX`)
 	 * @param y - screen y, in canvas pixels (e.g. `pointer.gameScreenY`)
 	 * @param container - where to look, usually `app.world`
 	 * @param [out] - hit record to write into; a new one is allocated when omitted
 	 * @returns the nearest hit, or `null` when the ray hits no mesh
+	 * @see Mesh#pickable
+	 * @see Renderable#isKinematic
 	 * @example
+	 * // the floor collides (isKinematic false) but should not be picked
+	 * floor.pickable = false;
 	 * const hit = camera.pick(pointer.gameScreenX, pointer.gameScreenY, app.world);
 	 * if (hit !== null) {
 	 *     select(hit.renderable);   // the Mesh that was hit

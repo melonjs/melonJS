@@ -16,6 +16,8 @@ import {
 	Vector3d,
 	video,
 } from "../src/index.js";
+import GLTFScene from "../src/level/gltf/GLTFScene.js";
+import { gltfList } from "../src/loader/cache.js";
 import { parseGLTF } from "../src/loader/parsers/gltf.js";
 import { buildBarGLB } from "./helpers/skinned-bar.js";
 
@@ -457,7 +459,150 @@ describe("Camera3d#pick", () => {
 		const record = cam.pick(SIZE / 2, SIZE / 2, world);
 		expect(cam.pick(SIZE / 2, SIZE / 2, world, record)).toBe(record);
 	});
+
+	it("passes over a mesh that is not pickable, to the one behind it", () => {
+		const cam = camera();
+		const world = root();
+		const front = cube(0, 0, 400);
+		const back = cube(0, 0, 900);
+		world.addChild(front, 400);
+		world.addChild(back, 900);
+		expect(front.pickable).toBe(true);
+		front.pickable = false;
+		expect(cam.pick(SIZE / 2, SIZE / 2, world).renderable).toBe(back);
+		back.pickable = false;
+		expect(cam.pick(SIZE / 2, SIZE / 2, world)).toBeNull();
+		// and back again at run time
+		front.pickable = true;
+		expect(cam.pick(SIZE / 2, SIZE / 2, world).renderable).toBe(front);
+	});
+
+	it("takes pickable as a setting, and only an explicit false opts out", () => {
+		const off = new Mesh(0, 0, { ...cubeGeometry(10), pickable: false });
+		expect(off.pickable).toBe(false);
+		for (const value of [undefined, null, 0, "", true]) {
+			const m = new Mesh(0, 0, { ...cubeGeometry(10), pickable: value });
+			expect(m.pickable).toBe(true);
+		}
+		const img = document.createElement("canvas");
+		img.width = 4;
+		img.height = 4;
+		expect(
+			new Sprite3d(0, 0, { image: img, width: 8, height: 8, pickable: false })
+				.pickable,
+		).toBe(false);
+		expect(
+			new InstancedMesh(0, 0, {
+				...cubeGeometry(10),
+				instanceCount: 1,
+				pickable: false,
+			}).pickable,
+		).toBe(false);
+	});
+
+	it("leaves a direct intersectRay alone", () => {
+		const m = cube(0, 0, 400);
+		m.pickable = false;
+		expect(m.intersectRay(new Ray3d(0, 0, 0, 0, 0, 1))).not.toBeNull();
+	});
+
+	it("passes over a whole model, or one part of it, that is not pickable", async () => {
+		const bar = await parseGLTF(buildBarGLB());
+		const cam = camera();
+		const world = root();
+		const model = new GLTFModel(bar, { scale: 100, rightHanded: false });
+		const part = model.getChildByName("bar")[0];
+		part.cullBackFaces = false;
+		world.addChild(model, 300);
+		model.update(0);
+		const at = cam.worldToScreen(new Vector3d(50, -100, 300));
+		expect(cam.pick(at.x, at.y, world).renderable).toBe(part);
+		model.pickable = false;
+		expect(cam.pick(at.x, at.y, world)).toBeNull();
+		model.pickable = true;
+		part.pickable = false;
+		expect(cam.pick(at.x, at.y, world)).toBeNull();
+		// the model's own intersectRay passes over the part as well
+		expect(model.intersectRay(cam.screenToRay(at.x, at.y))).toBeNull();
+		expect(new GLTFModel(bar, { pickable: false }).pickable).toBe(false);
+	});
+
+	it("reaches the meshes of a static scene and an animated one", async () => {
+		const NAME = "__pickable_scene__";
+		try {
+			gltfList[NAME] = await parseGLTF(buildBarGLB());
+			const animated = new Container(0, 0, 10, 10);
+			new GLTFScene(NAME).addTo(animated, { pickable: false });
+			expect(animated.getChildren()[0].pickable).toBe(false);
+			gltfList[NAME] = await parseGLTF(buildStaticGLB());
+			const flat = new Container(0, 0, 10, 10);
+			new GLTFScene(NAME).addTo(flat, { pickable: false });
+			const meshes = flat.getChildren().filter((c) => {
+				return c instanceof Mesh;
+			});
+			expect(meshes.length).toBeGreaterThan(0);
+			for (const m of meshes) {
+				expect(m.pickable).toBe(false);
+			}
+			expect(GLTFScene.loadOptions).toContain("pickable");
+		} finally {
+			delete gltfList[NAME];
+		}
+	});
 });
+
+/** a one-triangle, unanimated GLB: the flat-mesh path of GLTFScene */
+function buildStaticGLB() {
+	const positions = new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]);
+	const indices = new Uint16Array([0, 1, 2, 0]);
+	const bin = new Uint8Array(positions.byteLength + indices.byteLength);
+	bin.set(new Uint8Array(positions.buffer), 0);
+	bin.set(new Uint8Array(indices.buffer), positions.byteLength);
+	const json = {
+		asset: { version: "2.0" },
+		scene: 0,
+		scenes: [{ nodes: [0] }],
+		nodes: [{ name: "tri", mesh: 0 }],
+		meshes: [{ primitives: [{ attributes: { POSITION: 0 }, indices: 1 }] }],
+		buffers: [{ byteLength: bin.byteLength }],
+		bufferViews: [
+			{ buffer: 0, byteOffset: 0, byteLength: positions.byteLength },
+			{
+				buffer: 0,
+				byteOffset: positions.byteLength,
+				byteLength: indices.byteLength,
+			},
+		],
+		accessors: [
+			{
+				bufferView: 0,
+				componentType: 5126,
+				count: 3,
+				type: "VEC3",
+				min: [0, 0, 0],
+				max: [1, 1, 0],
+			},
+			{ bufferView: 1, componentType: 5123, count: 3, type: "SCALAR" },
+		],
+	};
+	const text = new TextEncoder().encode(JSON.stringify(json));
+	const jsonLen = Math.ceil(text.length / 4) * 4;
+	const binLen = Math.ceil(bin.length / 4) * 4;
+	const total = 12 + 8 + jsonLen + 8 + binLen;
+	const out = new Uint8Array(total);
+	const dv = new DataView(out.buffer);
+	dv.setUint32(0, 0x46546c67, true);
+	dv.setUint32(4, 2, true);
+	dv.setUint32(8, total, true);
+	dv.setUint32(12, jsonLen, true);
+	dv.setUint32(16, 0x4e4f534a, true);
+	out.fill(0x20, 20, 20 + jsonLen);
+	out.set(text, 20);
+	dv.setUint32(20 + jsonLen, binLen, true);
+	dv.setUint32(24 + jsonLen, 0x004e4942, true);
+	out.set(bin, 28 + jsonLen);
+	return out.buffer;
+}
 
 /**
  * A mesh's model matrix places it in its PARENT's space: under a Camera3d the
@@ -625,6 +770,22 @@ describe("pointer events on meshes under a Camera3d", () => {
 				["enter", true],
 				["leave", null],
 			]);
+		} finally {
+			cleanup();
+		}
+	});
+
+	it("a mesh that is not pickable still gets the events registered on it", () => {
+		try {
+			const mesh = add(cube(0, 0, 500));
+			mesh.pickable = false;
+			let pressed = 0;
+			input.registerPointerEvent("pointerdown", mesh, () => {
+				pressed++;
+			});
+			send("pointerdown", SIZE / 2, SIZE / 2);
+			send("pointerup", SIZE / 2, SIZE / 2);
+			expect(pressed).toBe(1);
 		} finally {
 			cleanup();
 		}

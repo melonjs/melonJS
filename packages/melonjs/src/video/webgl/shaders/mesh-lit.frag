@@ -27,6 +27,7 @@ uniform vec3 uEmissive;                   // self-illumination color (0 = none)
 uniform vec3 uSpecular;                   // specular color (0 = purely diffuse)
 uniform float uShininess;                 // specular exponent (0 = no highlight)
 uniform float uToonBands;                 // cel-shading bands (< 2 = smooth)
+uniform vec3 uRim;                        // rim light, colour x strength (0 = none)
 uniform vec3 uEyePosition;                // camera position, world space
 uniform sampler2D uAlphaMap;              // per-texel opacity (MTL map_d)
 uniform float uHasAlphaMap;               // 0 = uAlphaMap is filler, ignore it
@@ -289,9 +290,20 @@ void main(void) {
         }
     }
 
+    // Rim light: a glow along the silhouette, where the surface turns away
+    // from the eye. Added after the lighting, like the emissive term, so it
+    // also picks out the shadowed side. A uniform branch: no rim, no cost.
+    vec3 rim = vec3(0.0);
+    if (dot(uRim, uRim) > 0.0) {
+        float rimEdge = 1.0 - clamp(dot(N, normalize(uEyePosition - vWorldPos)), 0.0, 1.0);
+        // toon: a hard-edged band, as the highlight is a hard-edged spot
+        rimEdge = uToonBands >= 2.0 ? step(0.6, rimEdge) : rimEdge * rimEdge * rimEdge;
+        rim = uRim * rimEdge;
+    }
+
     // emissive self-illuminates: added AFTER lighting so it glows at full
     // strength regardless of the scene lights (neon, lava, glowing eyes).
-    vec3 emissive = uEmissive;
+    vec3 emissive = uEmissive + rim;
 #ifdef INSTANCE_DATA
     emissive += vInstanceData.rgb;
 #endif

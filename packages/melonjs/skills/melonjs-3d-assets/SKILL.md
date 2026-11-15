@@ -1,6 +1,6 @@
 ---
 name: melonjs-3d-assets
-description: "Use this skill when loading 3D models into melonJS — glTF and GLB scenes, OBJ/MTL models, materials, imported lights, node animation, skinned characters and crossfades, ground shadows and GPU instancing. Covers level.load options including the async flag, the rightHanded conversion, and exactly what the loader does and does not support. Triggers on: glTF, gltf, glb, OBJ, MTL, 3D model, getGLTF, getOBJ, getMTL, GLTFModel, GLTFScene, level.load glb, rightHanded, lightIntensityScale, castGroundShadow, shadowGroundY, EXT_mesh_gpu_instancing, KHR_lights_punctual, alphaMode, doubleSided, map_d, map_bump, normalize, animationspeed, skinning, skinned mesh, skin, JOINTS_0, WEIGHTS_0, rigged character, Mixamo, crossfade, blend animations, Blender export, 3D asset."
+description: "Use this skill when loading 3D models into melonJS — glTF and GLB scenes, OBJ/MTL models, materials, imported lights, node animation, skinned characters, crossfades and attachments, ground shadows and GPU instancing. Covers level.load options including the async flag, the rightHanded conversion, and exactly what the loader does and does not support. Triggers on: glTF, gltf, glb, OBJ, MTL, 3D model, getGLTF, getOBJ, getMTL, GLTFModel, GLTFScene, level.load glb, rightHanded, lightIntensityScale, castGroundShadow, shadowGroundY, EXT_mesh_gpu_instancing, KHR_lights_punctual, alphaMode, doubleSided, map_d, map_bump, normalize, animationspeed, skinning, skinned mesh, skin, JOINTS_0, WEIGHTS_0, rigged character, Mixamo, crossfade, blend animations, reverseAnimation, setAnimationTime, play backwards, attach to bone, addChildToNode, getNodeTransform, getNodeNames, Blender export, 3D asset."
 license: MIT
 ---
 
@@ -49,6 +49,10 @@ or it renders flat. See `melonjs-3d` for the camera.
 | `shadowLight` | — | a `Light3d` to take the direction from, re-read every draw |
 | `toonBands` | `0` | cel-shade every lit mesh into this many bands (see `melonjs-3d`) |
 | `outlineWidth` / `outlineColor` | `0` / black | an ink outline round every mesh, in world units (see `melonjs-3d`) |
+| `outlineMode` | `"world"` | `"screen"` measures `outlineWidth` in pixels, the same thickness near or far |
+| `rimLight` / `rimColor` | `0` / white | a rim light on every lit mesh (see `melonjs-3d`) |
+| `pickable` | `true` | `false` has `camera.pick` pass over the scene's meshes (see `melonjs-3d`) |
+| `crossfade` | `0` | an animated or skinned asset's default blend between clips, in ms (see Crossfading below) |
 
 Those `game.` defaults are the engine's, not a recommendation. `game` is
 whichever `Application` finished `init()` last, so **pass `container`
@@ -274,6 +278,9 @@ model.setCurrentAnimation("jump", { next: "idle" }); // chain
 model.isCurrentAnimation("walk");
 model.play();
 model.pause();
+model.setAnimationTime(500);                         // like Sprite#setAnimationFrame, in ms
+model.getCurrentAnimationTime();                     // like getCurrentAnimationFrame
+model.reverseAnimation("open");                      // like Sprite#reverseAnimation
 ```
 
 `speed` is a playback multiplier (1 = authored speed), not a frame delay. Only
@@ -282,6 +289,23 @@ clip name the asset does not define — check `getAnimationNames()` first. Calle
 with the clip that is already playing it returns at once and ignores its
 options, so retime a running clip through `model.animationspeed`, not a second
 `setCurrentAnimation(name, { speed })`.
+
+Moving and turning a clip around (20.16):
+
+- **`setAnimationTime(ms)`** moves the current clip to that time and poses it
+  at once. A looping clip wraps the time (`setAnimationTime(length)` is its
+  first frame); a play-once clip is held between its start and its end and
+  plays on from there, even if it had finished. It throws on a time that is
+  not a finite number, and does nothing with no clip playing. Use it to start
+  a crowd's identical walk cycles out of step.
+- **`reverseAnimation(name?)`** plays the clip backwards, as
+  `Sprite#reverseAnimation` does: each call turns it around, and it stays
+  reversed the next time it is played, starting from its end. A play-once
+  clip played backwards ends on its first frame, where `onComplete` and
+  `onended` fire. A door's "open" clip reversed is its "close".
+- **A negative `speed`** plays the clip backwards as well (both together play
+  it forwards). Before 20.16 it froze the clip on its first frame and never
+  ended it.
 
 ### Placing and moving a model
 
@@ -364,6 +388,19 @@ fox.setCurrentAnimation("Jump", { loop: false, next: "Idle", crossfade: 150 });
 // `next` is entered with the same crossfade
 ```
 
+Set it once rather than on every call with **`model.crossfade`** (or the
+`crossfade` option of `new GLTFModel`, `GLTFScene#addTo` and `level.load`),
+like `animationspeed`: every change that does not give its own blends over it,
+`play(name)` and the string and function forms included. A call's own
+`crossfade` wins, `0` included, which is how one change snaps on a model that
+blends by default.
+
+```js
+hero.crossfade = 200;
+hero.setCurrentAnimation("Run");                    // blends over 200 ms
+hero.setCurrentAnimation("Hit", { crossfade: 0 });  // snaps
+```
+
 - Switching again **mid-fade** blends from the pose on screen, so mashing
   buttons never pops.
 - `pause()` freezes the fade with the clip; `stop()` cancels it.
@@ -373,6 +410,42 @@ fox.setCurrentAnimation("Jump", { loop: false, next: "Idle", crossfade: 150 });
 
 Ground speed has to follow the clip too, or the feet skate: tween the speed
 over the same duration (`new Tween(pace).to({ value: runSpeed }, { duration: 250 })`).
+
+### Holding things: nodes and attachments
+
+Every glTF node of a model, a part or a skeleton's joint, is reachable by its
+name (20.16). `getNodeNames()` lists them, as `getAnimationNames()` lists the
+clips.
+
+```js
+hero.getNodeNames();       // ["Armature", "mixamorig:Hips", ..., "mixamorig:RightHand", ...]
+
+// keep a sword in the right hand: it follows the clip, the crossfade and the hero
+sword.pos.set(0, -12, 0);  // its offset from the hand, along the hand's own axes
+hero.addChildToNode(sword, "mixamorig:RightHand");
+hero.removeChild(sword);   // drops it
+
+// or just ask where the hand is this frame
+const hand = hero.getNodeTransform("mixamorig:RightHand");
+spark.pos.set(hand.val[12], hand.val[13], hand.val[14]);
+```
+
+- **`addChildToNode(child, name)`** adds the child to the model like
+  `addChild`, and moves it to the node every time the model is posed. Its
+  `pos` when added is its **offset** from the node; after that `pos` is where
+  it is in the world, overwritten each pose, so set the offset first. Adding a
+  child already on a node moves it to the new one with the same offset.
+- **What turns with the node**: a `Mesh` (either handedness) or a nested
+  `GLTFModel`, from the way it was turned when added. A billboard `Sprite3d`,
+  a particle emitter or any other renderable only follows the position.
+- **The node's scale is never applied.** Mixamo armatures carry a 0.01 scale;
+  the sword keeps its own size instead of shrinking with the bone.
+- `getChildByName` finds it and `removeChild` takes it off the node; moved to
+  another container or destroyed, it stops following.
+- **`getNodeTransform(name, out?)`** returns a `Matrix3d`: the node's origin in
+  the translation (x, y and depth, the units of `pos`) and its turn, without
+  scale, in the rest. A model moved since its last pose is posed again first.
+- Both throw on a name the asset does not have: check `getNodeNames()`.
 
 ## Instancing
 
@@ -628,7 +701,15 @@ need a prefix.
 | a skinned character is a crumpled ball or a spike at the origin | weights all zero or exported for more than 4 influences — limit influences to 4 per vertex in the exporter |
 | a skinned character's face does not change expression | morph targets (blend shapes) are not read |
 | a skinned character is tiny or enormous | its export unit (often centimetres): size it from `data.bounds` rather than a fixed `scale` |
-| switching clips pops from one pose to the next | no `crossfade`: `setCurrentAnimation(name, { crossfade: 200 })` |
+| switching clips pops from one pose to the next | no `crossfade`: `setCurrentAnimation(name, { crossfade: 200 })`, or `model.crossfade = 200` for every change |
+| one change should snap on a model that blends by default | give that call `{ crossfade: 0 }` |
+| a clip at a negative `speed` freezes on its first frame and never ends (before 20.16) | update; `reverseAnimation()` says the same thing more plainly |
+| `setAnimationTime(length)` shows the first frame | the clip loops, so the time wraps; play it with `loop: false` to hold the end |
+| a reversed clip starts from its end the next time it plays | a clip stays reversed until reversed again, as on a `Sprite` |
+| `addChildToNode` / `getNodeTransform` throws "node … not defined" | a name the asset does not have; check `getNodeNames()` (Mixamo prefixes `mixamorig:`) |
+| an attached child jumps back to the node after setting its `pos` | `pos` is overwritten each pose; set the offset before `addChildToNode` |
+| an attached sword points the wrong way | it keeps the turn it had when added; turn it (`currentTransform.rotate`) before adding |
+| a billboard attached to a hand does not turn with it | billboards keep facing the camera and only follow the position |
 | the feet skate during a crossfade | the ground speed changes instantly while the legs blend; tween the speed over the same duration |
 | animation names come back empty | the asset has no animation clips (a rig exported without its actions) |
 | `setCurrentAnimation(name, { speed })` changes nothing | that clip is already playing, so the call returns at once; set `animationspeed` |

@@ -110,6 +110,23 @@ class Button extends Renderable {
 }
 ```
 
+It gates pointer **events**, not `camera.pick()`: under a `Camera3d`, `pick()`
+finds the nearest mesh under a pixel whatever its `isKinematic`, and a mesh is
+left out of it with **`pickable = false`** instead (an opt-out, default
+`true`), which touches neither its events nor its collisions — `melonjs-3d`
+compares the two side by side. Do not clear `isKinematic` just to make a mesh
+pickable: that also files it in the collision broadphase.
+
+```js
+crate.isKinematic = false;                 // receives its own pointer events
+input.registerPointerEvent("pointerdown", crate, onCrate);
+
+floor.pickable = false;                    // camera.pick() looks past it...
+floor.isKinematic = false;                 // ...though it still collides
+
+const hit = camera.pick(pointer.gameScreenX, pointer.gameScreenY, app.world);
+```
+
 `Container`, `Camera2d`, `Draggable`, `DropTarget` and the `UI*` elements set it
 to `false` for you, and so does giving it a physics body (a `bodyDef` on any
 adapter, or a `Body`) — so plain `Renderable` and `Sprite` subclasses with no

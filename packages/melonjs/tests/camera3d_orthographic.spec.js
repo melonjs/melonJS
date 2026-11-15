@@ -7,6 +7,7 @@ import {
 	Container,
 	Frustum,
 	Mesh,
+	Renderable,
 	Sprite,
 	Vector3d,
 	video,
@@ -194,6 +195,167 @@ describe("Camera3d projection", () => {
 		// and switching to orthographic then applies it
 		cam.projection = "orthographic";
 		expect(cam.frustum.orthoHeight).toBeCloseTo(H / 3);
+	});
+});
+
+describe("Camera3d#orthoWidth: keeping the width instead", () => {
+	// W × H = 200 × 100: an aspect ratio of 2
+	const rightEdge = (cam) => {
+		// the world x at the right edge of the view, straight ahead
+		return cam.screenToRay(cam.width, cam.height / 2).origin.x;
+	};
+
+	it("reads the width the height works out to, until it is set", () => {
+		const cam = ortho({ orthoHeight: 80 });
+		expect(cam.orthoWidth).toBeCloseTo(160);
+		expect(cam._orthoKeep).toBe("height");
+	});
+
+	it("sets the view's width, and the height follows the aspect", () => {
+		const cam = ortho();
+		cam.orthoWidth = 300;
+		expect(cam.orthoWidth).toBe(300);
+		expect(cam.orthoHeight).toBeCloseTo(150);
+		expect(rightEdge(cam)).toBeCloseTo(150, 2);
+		expect(cam.worldToScreen(new Vector3d(150, 0, 100)).x).toBeCloseTo(W, 1);
+	});
+
+	it("keeps the width across a resize, then the height again once that is set", () => {
+		const cam = ortho();
+		cam.orthoWidth = 300;
+		cam.resize(100, 100); // square now
+		expect(cam.orthoWidth).toBe(300);
+		expect(cam.orthoHeight).toBeCloseTo(300);
+		expect(rightEdge(cam)).toBeCloseTo(150, 2);
+		cam.resize(100, 400); // a phone held upright
+		expect(cam.orthoWidth).toBe(300);
+		expect(cam.orthoHeight).toBeCloseTo(1200);
+		cam.orthoHeight = 80;
+		cam.resize(400, 100);
+		expect(cam.orthoHeight).toBe(80);
+		expect(cam.orthoWidth).toBeCloseTo(320);
+	});
+
+	it("follows an aspect ratio set by hand", () => {
+		const cam = ortho();
+		cam.orthoWidth = 300;
+		cam.aspect = 3;
+		expect(cam.orthoHeight).toBeCloseTo(100);
+		expect(cam.frustum.orthoHeight).toBeCloseTo(100);
+	});
+
+	it("is divided by the zoom, like the height", () => {
+		const cam = ortho();
+		cam.orthoWidth = 300;
+		cam.zoom = 2;
+		expect(cam.orthoWidth).toBe(300);
+		expect(rightEdge(cam)).toBeCloseTo(75, 2);
+		cam.resize(100, 100);
+		expect(rightEdge(cam)).toBeCloseTo(75, 2);
+	});
+
+	it("re-culls with the new width at once", () => {
+		const cam = ortho();
+		const beside = quad(10, 140, 0, 500);
+		beside.updateBounds();
+		expect(cam.isVisible(beside)).toBe(false);
+		cam.orthoWidth = 400;
+		expect(cam.isVisible(beside)).toBe(true);
+	});
+
+	it("is a constructor option, given instead of orthoHeight", () => {
+		const cam = new Camera3d(0, 0, W, H, {
+			projection: "orthographic",
+			orthoWidth: 400,
+		});
+		expect(cam.orthoWidth).toBe(400);
+		expect(cam.orthoHeight).toBeCloseTo(200);
+		expect(cam.frustum.orthoHeight).toBeCloseTo(200);
+		expect(() => {
+			return new Camera3d(0, 0, W, H, { orthoWidth: 400, orthoHeight: 100 });
+		}).toThrow(/not both/);
+	});
+
+	it("refuses a width that is not a positive finite number, and keeps its own", () => {
+		const cam = ortho();
+		cam.orthoWidth = 300;
+		for (const bad of [0, -10, Number.NaN, Number.POSITIVE_INFINITY]) {
+			expect(() => {
+				cam.orthoWidth = bad;
+			}).toThrow(/orthoWidth/);
+			expect(() => {
+				return new Camera3d(0, 0, W, H, { orthoWidth: bad });
+			}).toThrow(/orthoWidth/);
+		}
+		expect(cam.orthoWidth).toBe(300);
+		expect(cam._orthoKeep).toBe("width");
+	});
+
+	it("waits for a camera with no size yet, and comes out right once it has one", () => {
+		// a camera with no size has no aspect ratio to work the height out from
+		const cam = new Camera3d(0, 0, 0, 0, {
+			projection: "orthographic",
+			orthoWidth: 300,
+		});
+		cam.resize(W, H);
+		expect(cam.orthoHeight).toBeCloseTo(150);
+		expect(Array.from(cam.projectionMatrix.val).every(Number.isFinite)).toBe(
+			true,
+		);
+	});
+
+	it("changes nothing on a perspective camera", () => {
+		const cam = new Camera3d(0, 0, W, H);
+		const before = Array.from(cam.projectionMatrix.val);
+		cam.orthoWidth = 999;
+		expect(Array.from(cam.projectionMatrix.val)).toEqual(before);
+		cam.projection = "orthographic";
+		expect(cam.frustum.orthoHeight).toBeCloseTo(999 / 2);
+	});
+});
+
+describe("a zoomed Camera3d keeps its size while it draws", () => {
+	it("is still the default camera: zoom is its projection's business", () => {
+		const cam = ortho();
+		cam.zoom = 2;
+		expect(cam.isDefault).toBe(true);
+		cam.screenX = 10;
+		expect(cam.isDefault).toBe(false);
+		// a 2D camera is unchanged: zoomed is not default
+		const flat = new Camera2d(0, 0, W, H);
+		flat.zoom = 2;
+		expect(flat.isDefault).toBe(false);
+	});
+
+	it("worldToScreen and screenToRay give the same answer during the draw as outside it", () => {
+		const renderer = app.renderer;
+		const cam = ortho();
+		cam.zoom = 2;
+		cam.update(0);
+		const point = new Vector3d(20, 10, 300);
+		const outside = cam.worldToScreen(point).clone();
+		const rayOutside = cam.screenToRay(W, H).origin.clone();
+		const seen = {};
+		const probe = new Renderable(0, 0, 1, 1);
+		probe.inViewport = true;
+		probe.alwaysUpdate = true;
+		probe.draw = () => {
+			seen.width = cam.width;
+			seen.height = cam.height;
+			seen.screen = cam.worldToScreen(point).clone();
+			seen.ray = cam.screenToRay(W, H).origin.clone();
+		};
+		const world = new Container(0, 0, Infinity, Infinity);
+		world.root = true;
+		world.addChild(probe, 0);
+		cam.draw(renderer, world);
+		renderer.flush();
+		expect(seen.width).toBe(W);
+		expect(seen.height).toBe(H);
+		expect(seen.screen.x).toBeCloseTo(outside.x, 3);
+		expect(seen.screen.y).toBeCloseTo(outside.y, 3);
+		expect(seen.ray.x).toBeCloseTo(rayOutside.x, 3);
+		expect(seen.ray.y).toBeCloseTo(rayOutside.y, 3);
 	});
 });
 

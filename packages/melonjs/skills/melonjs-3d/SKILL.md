@@ -1,6 +1,6 @@
 ---
 name: melonjs-3d
-description: "Use this skill for anything 3D or 2.5D in melonJS — Camera3d, Mesh, InstancedMesh, Sprite3d billboards, Light3d, ground shadows, glTF/GLB scenes, and depth sorting. Covers the Y-down/+Z-forward convention that is the inverse of OpenGL, the cameraClass opt-in, orthographic (isometric) projection, clip planes, and what does not work on the Canvas fallback. Triggers on: Camera3d, toon, cel shading, toonBands, outlineWidth, orthographic, isometric, orthoHeight, projection, Mesh, InstancedMesh, Sprite3d, Trail3d, ribbon, exhaust trail, Light3d, billboard, glTF, glb, 3D, 2.5D, depth, cameraClass, fov, setClipPlanes, setFog, fog, distance fog, height fog, heightFalloff, transparent, transparency, alpha, blendMode, fade, castGroundShadow, shadowGroundPoint, lit, emissive, specular, shininess, normalMap, alphaCutoff, depthTest, vertexColors, worldToScreen, screenToRay, screenToWorld, pick, Ray3d, intersectRay, hit3d, followOffset, setBasis, getBasis, lookAt, up vector, gimbal, slerp, great circle, turn a direction."
+description: "Use this skill for anything 3D or 2.5D in melonJS — Camera3d, Mesh, InstancedMesh, Sprite3d billboards, Light3d, ground shadows, glTF/GLB scenes, and depth sorting. Covers the Y-down/+Z-forward convention (the inverse of OpenGL), the cameraClass opt-in, orthographic (isometric) projection, clip planes, and the Canvas fallback's limits. Triggers on: Camera3d, toon, cel shading, toonBands, outlineWidth, outlineMode, rimLight, orthographic, isometric, orthoHeight, orthoWidth, projection, Mesh, InstancedMesh, Sprite3d, Trail3d, ribbon, exhaust trail, Light3d, billboard, glTF, glb, 3D, 2.5D, depth, cameraClass, fov, setClipPlanes, setFog, fog, height fog, heightFalloff, transparent, transparency, alpha, blendMode, fade, castGroundShadow, shadowGroundPoint, lit, emissive, specular, shininess, normalMap, alphaCutoff, depthTest, vertexColors, worldToScreen, screenToRay, screenToWorld, pick, pickable, Ray3d, intersectRay, hit3d, followOffset, setBasis, getBasis, lookAt, up vector, gimbal, slerp, turn a direction."
 license: MIT
 ---
 
@@ -236,6 +236,15 @@ camera.setClipPlanes(50, 6000);
   divides it, as on a `Camera2d`: `zoom = 2` shows half as much world, and
   `orthoHeight` still reads what was set. `fov` is ignored; a perspective
   camera ignores `zoom` (narrow its `fov` instead).
+- **`orthoWidth` keeps the width instead.** Set it (or pass it as an option,
+  instead of `orthoHeight`) and the view's width survives every resize while
+  the height follows the aspect: a board that must always fit across a phone
+  held upright. Whichever of the two was set last is the one kept; the other
+  reads what it works out to. `zoom` divides both.
+
+```js
+camera.orthoWidth = 1200;   // the board's width always fits, portrait or landscape
+```
 - **Still stand the camera back.** It is placed and pointed as a perspective
   one is: `near` / `far` are measured from it, so something behind it is
   clipped, and specular highlights are measured from its position.
@@ -605,14 +614,17 @@ placement, cutout, lighting and fog. A few builtins are unavailable there, and a
 
 ### Toon shading and outlines
 
-The cartoon look is two settings (20.16), both off by default:
+The cartoon look is a few settings (20.16), all off by default:
 
 ```js
 const hero = new GLTFModel(loader.getGLTF("hero"), {
     scale, lit: true,
     toonBands: 3,            // shadow, mid-tone, lit
     outlineWidth: 3,         // world units (pixels)
+    outlineMode: "screen",   // or keep 3 pixels on screen, near or far
     outlineColor: "#1d1a2b", // Color, CSS string, or [r, g, b] in 0..1
+    rimLight: 0.5,           // a glow along the silhouette
+    rimColor: "#9fd8ff",     // same forms as outlineColor
 });
 // or per mesh, at any time
 crate.toonBands = 2;
@@ -630,11 +642,26 @@ crate.outlineWidth = 0;      // off
   creases inside it are not inked. Normals are averaged where vertices share
   a position, so a hard-edged model still gets a closed line, and the hull
   follows the geometry — a skinned character's outline bends with it.
+- **`outlineMode: "screen"`** measures `outlineWidth` in screen pixels
+  instead of world units: under a perspective camera a world-unit line thins
+  with distance like the mesh, a screen one stays as thick as set, and a
+  zoomed orthographic camera does not thicken it. It is measured at the
+  middle of the mesh, so a long wall seen end-on is inked thicker at its far
+  end. A mesh moving in depth rebuilds its hull when the width changes by
+  more than about 2%.
+- **`rimLight`** adds a glow along the silhouette, where the surface turns
+  away from the camera, in `rimColor` (white by default) at that strength:
+  `1` is the full colour, more overdrives it. It is added on top of the
+  lighting, like `emissive`, so it also picks a model's shadowed side out of
+  a dark background; with `toonBands` it is a hard-edged band instead of a
+  gradient. Lit meshes only (`lit` and a `Camera3d`); it reads the mesh's
+  normals, so flat normals facing the camera give no rim.
 - The hull is built from the mesh's normals, so **a model wound inside out
   (normals pointing in) draws its outline OVER itself**; fix the export.
 - Not drawn by an `InstancedMesh` or a `Sprite3d`; `Camera3d` only.
-- `GLTFModel`, `level.load` and `GLTFScene` take `toonBands`, `outlineWidth`
-  and `outlineColor` for every part at once.
+- `GLTFModel`, `level.load` and `GLTFScene` take `toonBands`, `outlineWidth`,
+  `outlineColor`, `outlineMode`, `rimLight` and `rimColor` for every part at
+  once.
 
 ### InstancedMesh, and when it is the wrong tool
 
@@ -1169,7 +1196,48 @@ through that pixel with a unit direction, so distances are from the camera.
 - **Containers count**: a mesh in a moved, turned or scaled container is hit
   where it draws — as of the last frame, which is when the renderer learned
   where the container put it.
-- `pick` skips `floating`, `isRenderable = false` and `alpha` 0 renderables.
+- `pick` skips `floating`, `isRenderable = false` and `alpha` 0 renderables,
+  and those set **`pickable = false`**: a floor, a skybox or a decoration that
+  should not stand in front of what is on it. It is a `Mesh` (and `Sprite3d`,
+  `InstancedMesh`) setting and property, a `GLTFModel` option and property
+  for the whole model (a part, or something attached to a node, sets its
+  own), and a `level.load` option for a whole scene. Like `fog: false`, it
+  opts out of one camera feature only: pointer events registered on the mesh
+  and a direct `mesh.intersectRay(ray)` still see it.
+- **`pickable` is not `isKinematic`**, and neither replaces the other:
+
+  | | `isKinematic` | `pickable` |
+  | --- | --- | --- |
+  | default | `true` — left out | `true` — included |
+  | direction | opt **in**: set `false` to take part | opt **out**: set `false` to be skipped |
+  | governs | physics collisions **and** pointer events | `camera.pick()` only |
+
+  `pick()` ignores `isKinematic`: it finds a mesh with no body and no events,
+  which is the point of it. Using `isKinematic` instead would mean opting
+  every mesh in, and filing each in the collision broadphase, just to click
+  it. A floor that collides (`isKinematic = false`) but should not be picked
+  sets `pickable = false`. The input skill's `isKinematic` section points
+  back here (`melonjs-input`).
+
+```js
+// a floor: collides, but a click picks what stands on it
+floor.isKinematic = false;   // opt in to collisions (and pointer events)
+floor.pickable = false;      // opt out of camera.pick()
+
+// a crate: picked with no flag at all (no body, no events, still kinematic)
+const hit = camera.pick(pointer.gameScreenX, pointer.gameScreenY, app.world);
+if (hit?.renderable === crate) select(crate);
+
+// a lever: answers its own events, so it opts in with isKinematic;
+// pickable has no say over them
+lever.isKinematic = false;
+input.registerPointerEvent("pointerdown", lever, pull);
+```
+
+```js
+floor.pickable = false;
+const hit = camera.pick(x, y, app.world); // the crate on the floor, not the floor
+```
 
 The physics adapter's `raycast3d(from, to)` is a different tool: a segment
 against bodies' bounding volumes, for gameplay (line of sight, ground probes),
@@ -1291,12 +1359,22 @@ if (!app.renderer.supportsDepthBuffer) {
 |---|---|
 | `toonBands` changes nothing | the mesh is not `lit`, or the scene has only ambient light: banding needs a directional, point or spot light |
 | an outline covers the mesh instead of ringing it | the model is wound inside out (its normals point in); the hull is pushed along them |
+| no rim light shows | the mesh is not `lit`, or `rimLight` is 0, or its normals face the camera everywhere (a flat card) |
+| a rim light glows on the dark side too | as intended: it is added like `emissive`; lower `rimLight` or pick a dimmer `rimColor` |
+| an outline is a hairline on distant meshes and a thick band up close | `outlineWidth` is in world units; `outlineMode: "screen"` keeps it in pixels |
 | an outline is missing on an instanced scatter or a billboard | `InstancedMesh` and `Sprite3d` do not draw one |
 | an orthographic camera shows nothing, or half a scene | it sits inside the scene: stand it back like a perspective camera, since `near` / `far` are measured from its position |
 | zooming an orthographic camera does nothing | `fov` does not apply to it: set `zoom` (or `orthoHeight`) |
+| on a phone held upright the sides of an orthographic view are cut off | the height is what is kept across resizes; set `orthoWidth` to keep the width instead |
+| `orthoHeight` changes by itself after a resize | `orthoWidth` was set last, so the width is kept and the height follows the aspect |
+| `new Camera3d(..., { orthoHeight, orthoWidth })` throws | give one; the other follows the aspect ratio |
 | `zoom` does nothing on a 3D camera | it is a perspective one, which ignores `zoom`: narrow `fov`, or switch to `projection: "orthographic"` |
 | a click on a mesh misses, or hits something beside it | the pointer's `gameWorldX`/`gameWorldY` were used; pass `gameScreenX`/`gameScreenY` to `screenToRay` / `pick` / `screenToWorld` |
 | `screenToWorld` returns `null` | that pixel looks above the horizon, or the floor's Y sign is wrong (Y-down: the floor is a greater y than the camera) |
+| `pick` returns the floor (or a sky dome) instead of what stands on it | it is the nearest mesh along the ray: set `floor.pickable = false` |
+| a mesh set `pickable = false` still gets its pointer events | as intended: `pickable` is for `pick`; to stop its events, release them |
+| `pick` still returns a mesh whose `isKinematic` is `true` | as intended: `isKinematic` gates collisions and pointer events, not `pick`; set `pickable = false` |
+| a mesh was made `isKinematic = false` only to be picked, and now collides | `pick` needs no `isKinematic`; leave it at `true` |
 | a mesh in a moved container is picked where it used to be | it has not been drawn since the container moved: picking learns the container's placement from the last draw |
 | scene lit from underneath | `direction` Y sign — this is Y-down, so a sun overhead is **+Y** |
 | `model.scale(2)` throws "not a function" on a `GLTFModel` (before 20.14) | the `scale` option hid the method: update |

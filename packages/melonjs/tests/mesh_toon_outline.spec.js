@@ -86,7 +86,7 @@ const camera = () => {
 };
 
 /** draw `meshes` straight ahead of an unturned camera; the RGBA pixels, bottom-up */
-const render = (meshes, lights = []) => {
+const render = (meshes, lights = [], cam = camera()) => {
 	const renderer = app.renderer;
 	const stage = state.current();
 	const savedLights = stage._activeLights3d;
@@ -102,7 +102,7 @@ const render = (meshes, lights = []) => {
 		}
 		renderer.backgroundColor.setColor(0, 0, 0, 255);
 		renderer.clear();
-		camera().draw(renderer, world);
+		cam.draw(renderer, world);
 		renderer.flush();
 		const gl = renderer.gl;
 		gl.finish();
@@ -226,6 +226,326 @@ describe("toon shading (WebGL)", () => {
 	it("fewer than 2 bands is smooth shading", () => {
 		const shades = distinctAcrossMiddleRow(render([gradientQuad(1)], [sun()]));
 		expect(shades.size).toBeGreaterThan(10);
+	});
+});
+
+describe("outlineMode", () => {
+	const cube = (opts = {}) => {
+		const m = new Mesh(0, 0, {
+			...cubeGeometry(20),
+			outlineWidth: 4,
+			outlineColor: "#00ff00",
+			...opts,
+		});
+		return m;
+	};
+	// how many pixels of the middle row are the outline's green
+	const rimPixels = (px) => {
+		let n = 0;
+		for (let x = 0; x < SIZE; x++) {
+			if (green(px, x, SIZE / 2) > 200 && red(px, x, SIZE / 2) < 50) {
+				n++;
+			}
+		}
+		return n;
+	};
+	const at = (m, depth) => {
+		m.depth = depth;
+		return m;
+	};
+
+	it('is world units by default, and only an exact "screen" means pixels', () => {
+		expect(cube().outlineMode).toBe("world");
+		expect(cube({ outlineMode: "screen" }).outlineMode).toBe("screen");
+		for (const other of ["Screen", "pixels", "", null, 1]) {
+			expect(cube({ outlineMode: other }).outlineMode).toBe("world");
+		}
+	});
+
+	it("in world units the line thins with distance, as the mesh does", () => {
+		const near = rimPixels(render([at(cube({ outlineWidth: 6 }), 150)]));
+		const far = rimPixels(render([at(cube({ outlineWidth: 6 }), 450)]));
+		expect(near).toBeGreaterThan(far);
+	});
+
+	it("in screen pixels the line keeps its thickness however far the mesh is", () => {
+		const widths = [150, 300, 450].map((d) => {
+			return rimPixels(render([at(cube({ outlineMode: "screen" }), d)]));
+		});
+		// four pixels each side
+		for (const w of widths) {
+			expect(w).toBeGreaterThanOrEqual(6);
+			expect(w).toBeLessThanOrEqual(10);
+		}
+		expect(Math.max(...widths) - Math.min(...widths)).toBeLessThanOrEqual(2);
+	});
+
+	it("in screen pixels it ignores an orthographic camera's zoom too", () => {
+		const ortho = (zoom) => {
+			const cam = new Camera3d(0, 0, SIZE, SIZE, {
+				projection: "orthographic",
+				near: 1,
+				far: 5000,
+			});
+			cam.setPosition(0, 0, 0);
+			cam.zoom = zoom;
+			cam.update(0);
+			return cam;
+		};
+		const screen = [1, 2].map((z) => {
+			return rimPixels(
+				render([at(cube({ outlineMode: "screen" }), 300)], [], ortho(z)),
+			);
+		});
+		expect(Math.abs(screen[0] - screen[1])).toBeLessThanOrEqual(2);
+		const world = [1, 2].map((z) => {
+			return rimPixels(render([at(cube(), 300)], [], ortho(z)));
+		});
+		// in world units, zoomed in twice as close, the line is twice as thick
+		expect(world[1]).toBeGreaterThan(world[0] * 1.6);
+	});
+
+	it("does not rebuild the hull for a change of depth no one could see", () => {
+		const m = at(cube({ outlineMode: "screen" }), 300);
+		render([m]);
+		const offset = m._outlineOffset;
+		render([at(m, 300.3)]);
+		expect(m._outlineOffset).toBe(offset);
+		render([at(m, 600)]);
+		expect(m._outlineOffset / offset).toBeGreaterThan(1.9);
+		expect(m._outlineOffset / offset).toBeLessThan(2.1);
+	});
+
+	it("keeps the width as given where a pixel has no size", () => {
+		const m = cube({ outlineMode: "screen", outlineWidth: 5 });
+		// no camera, a 2D camera, a camera with no size
+		expect(m._outlineWorldWidth(app.renderer, undefined)).toBe(5);
+		expect(m._outlineWorldWidth(app.renderer, { height: 100 })).toBe(5);
+		expect(m._outlineWorldWidth(app.renderer, new Camera3d(0, 0, 0, 0))).toBe(
+			5,
+		);
+		// a mesh at or behind the eye
+		const behind = { currentTransform: new Matrix3d() };
+		m.depth = -50;
+		expect(m._outlineWorldWidth(behind, camera())).toBe(5);
+		m.depth = 0;
+		expect(m._outlineWorldWidth(behind, camera())).toBe(5);
+		// and world mode never looks
+		const w = cube({ outlineWidth: 5 });
+		expect(w._outlineWorldWidth(behind, camera())).toBe(5);
+	});
+
+	it("reaches every part of a GLTFModel and of a scene", async () => {
+		const data = await parseGLTF(buildBarGLB());
+		const model = new GLTFModel(data, { outlineMode: "screen" });
+		expect(model.getChildByName("bar")[0].outlineMode).toBe("screen");
+		expect(GLTFScene.loadOptions).toContain("outlineMode");
+	});
+});
+
+describe("rim light", () => {
+	it("is off and white by default, and takes a Color, a CSS string or [r, g, b]", () => {
+		const m = new Mesh(0, 0, cubeGeometry(10));
+		expect(m.rimLight).toBe(0);
+		expect(m.rimColor.toHex()).toBe("#FFFFFF");
+		expect(
+			new Mesh(0, 0, {
+				...cubeGeometry(10),
+				rimColor: "#ff8000",
+			}).rimColor.toHex(),
+		).toBe("#FF8000");
+		const c = new Color(1, 2, 3);
+		expect(new Mesh(0, 0, { ...cubeGeometry(10), rimColor: c }).rimColor).toBe(
+			c,
+		);
+		expect(
+			new Mesh(0, 0, { ...cubeGeometry(10), rimColor: [0, 1, 0] }).rimColor.g,
+		).toBe(255);
+		// a strength given as anything but a number is none
+		expect(
+			new Mesh(0, 0, { ...cubeGeometry(10), rimLight: "1" }).rimLight,
+		).toBe(0);
+	});
+
+	it("is pushed as the colour times the strength, and as nothing when unusable", () => {
+		const m = new Mesh(0, 0, {
+			...cubeGeometry(10),
+			rimLight: 0.5,
+			rimColor: [1, 0.5, 0],
+		});
+		const near = (actual, expected) => {
+			expected.forEach((v, i) => {
+				// a Color keeps 8 bits a channel: 0.5 is 127/255
+				expect(actual[i]).toBeCloseTo(v, 2);
+			});
+		};
+		const out = [9, 9, 9];
+		expect(m._rimInto(out)).toBe(out);
+		near(out, [0.5, 0.25, 0]);
+		// overdriven
+		m.rimLight = 2;
+		near(m._rimInto(out), [2, 1, 0]);
+		for (const bad of [
+			0,
+			-1,
+			Number.NaN,
+			Number.POSITIVE_INFINITY,
+			"1",
+			null,
+		]) {
+			m.rimLight = bad;
+			expect(Array.from(m._rimInto([9, 9, 9]))).toEqual([0, 0, 0]);
+		}
+		m.rimLight = 1;
+		m.rimColor = "#ffffff"; // not a Color any more: none, rather than NaN
+		expect(Array.from(m._rimInto([9, 9, 9]))).toEqual([0, 0, 0]);
+	});
+
+	/**
+	 * The quad of the toon tests, its normals turning from the camera at the
+	 * middle to sideways at the edges, tinted black: whatever red shows is
+	 * the rim alone.
+	 */
+	const rimQuad = (settings) => {
+		const h = 50;
+		const mesh = new Mesh(0, 0, {
+			vertices: new Float32Array([-h, -h, 0, h, -h, 0, h, h, 0, -h, h, 0]),
+			normals: new Float32Array([
+				-1, 0, -0.2, 1, 0, -0.2, 1, 0, -0.2, -1, 0, -0.2,
+			]),
+			uvs: new Float32Array(8),
+			indices: new Uint16Array([0, 1, 2, 0, 2, 3]),
+			width: h * 2,
+			height: h * 2,
+			scale: 1,
+			normalize: false,
+			cullBackFaces: false,
+			castGroundShadow: false,
+			lit: true,
+			rimColor: [1, 0, 0],
+			...settings,
+		});
+		mesh.tint.setColor(0, 0, 0);
+		mesh.depth = 150;
+		return mesh;
+	};
+	const redsAcrossMiddleRow = (px) => {
+		const reds = [];
+		for (let x = 0; x < SIZE; x++) {
+			reds.push(red(px, x, SIZE / 2));
+		}
+		return reds;
+	};
+
+	it("draws nothing at strength 0, as before", () => {
+		const reds = redsAcrossMiddleRow(render([rimQuad({ rimLight: 0 })]));
+		expect(Math.max(...reds)).toBe(0);
+	});
+
+	it("glows where the surface turns away from the camera, not where it faces it", () => {
+		const reds = redsAcrossMiddleRow(render([rimQuad({ rimLight: 1 })]));
+		const c = SIZE / 2;
+		expect(reds[c]).toBeLessThan(8);
+		// the edges of the quad, a few pixels in
+		const lit = reds.filter((r) => {
+			return r > 0;
+		});
+		expect(Math.max(...lit)).toBeGreaterThan(80);
+		// a smooth falloff: many shades between the middle and the edge
+		expect(new Set(lit).size).toBeGreaterThan(10);
+	});
+
+	it("is twice as bright at twice the strength", () => {
+		const one = redsAcrossMiddleRow(render([rimQuad({ rimLight: 0.4 })]));
+		const two = redsAcrossMiddleRow(render([rimQuad({ rimLight: 0.8 })]));
+		const i = one.indexOf(Math.max(...one));
+		expect(two[i] / one[i]).toBeGreaterThan(1.8);
+		expect(two[i] / one[i]).toBeLessThan(2.2);
+	});
+
+	it("is a hard-edged band with toonBands", () => {
+		const reds = redsAcrossMiddleRow(
+			render([rimQuad({ rimLight: 1, toonBands: 3 })]),
+		);
+		const lit = reds.filter((r) => {
+			return r > 0;
+		});
+		expect(lit.length).toBeGreaterThan(0);
+		// all or nothing: no gradient into the band
+		expect(new Set(lit).size).toBeLessThanOrEqual(2);
+		expect(Math.min(...lit)).toBeGreaterThan(200);
+	});
+
+	it("is not drawn on an unlit mesh", () => {
+		const reds = redsAcrossMiddleRow(
+			render([rimQuad({ rimLight: 1, lit: false })]),
+		);
+		expect(Math.max(...reds)).toBe(0);
+	});
+
+	it("reaches every part of a GLTFModel and of a scene", async () => {
+		const data = await parseGLTF(buildBarGLB());
+		const model = new GLTFModel(data, { rimLight: 0.7, rimColor: "#00ff00" });
+		const part = model.getChildByName("bar")[0];
+		expect(part.rimLight).toBe(0.7);
+		expect(part.rimColor.toHex()).toBe("#00FF00");
+		expect(GLTFScene.loadOptions).toEqual(
+			expect.arrayContaining(["rimLight", "rimColor"]),
+		);
+	});
+});
+
+describe("rim light (WebGPU, mock device)", () => {
+	it("rides in the block's three free floats, leaving the rest as it was", async () => {
+		await import("./helpers/webgpu-globals.js");
+		const { createMockWebGPURenderer } = await import(
+			"./helpers/webgpu-mock-renderer.js"
+		);
+		const { default: WebGPUMeshBatcher, MESH_UNIFORM_SIZE } = await import(
+			"../src/video/webgpu/batchers/mesh_batcher.js"
+		);
+		// still one 256-byte block: growing it would double it per draw
+		expect(MESH_UNIFORM_SIZE).toBe(256);
+		const renderer = createMockWebGPURenderer();
+		const batcher = new WebGPUMeshBatcher(renderer);
+		const lastBlock = () => {
+			return renderer.calls.writes
+				.filter((x) => {
+					return x.floats.length >= 56;
+				})
+				.at(-1).floats;
+		};
+		const mesh = new Mesh(0, 0, {
+			...cubeGeometry(10),
+			alphaCutoff: 0.25,
+			emissive: [0.1, 0.2, 0.3],
+			rimLight: 0.5,
+			rimColor: [1, 0.5, 0.25],
+		});
+		batcher.setPlacementUniforms(new Matrix3d(), 0xffffffff, mesh);
+		const b = lastBlock();
+		[0.5, 0.25, 0.125].forEach((v, i) => {
+			expect(b[[39, 43, 55][i]]).toBeCloseTo(v, 2);
+		});
+		// the neighbours keep their meaning
+		expect(b[36]).toBeCloseTo(0.25);
+		expect(
+			[b[40], b[41], b[42]].map((v) => {
+				return Math.round(v * 10) / 10;
+			}),
+		).toEqual([0.1, 0.2, 0.3]);
+		// and a mesh without one, or a plain record, writes zeros there
+		mesh.rimLight = 0;
+		batcher.setPlacementUniforms(new Matrix3d(), 0xffffffff, mesh);
+		expect([lastBlock()[39], lastBlock()[43], lastBlock()[55]]).toEqual([
+			0, 0, 0,
+		]);
+		batcher.setPlacementUniforms(new Matrix3d(), 0xffffffff, {
+			alphaCutoff: 0,
+		});
+		expect([lastBlock()[39], lastBlock()[43], lastBlock()[55]]).toEqual([
+			0, 0, 0,
+		]);
 	});
 });
 

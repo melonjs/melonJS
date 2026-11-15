@@ -64,6 +64,8 @@ const _TINT_RGBA = new Float32Array(4);
 // shared zero emissive, passed to the shader when a mesh has no emission so the
 // `uEmissive` add is a no-op. Never mutated.
 const _ZERO_EMISSIVE = new Float32Array(3);
+// the rim light pushed for one mesh, colour x strength (see Mesh#_rimInto)
+const _RIM = new Float32Array(3);
 
 // scratch for the camera's world position, recomputed per draw that needs it
 const _EYE_POSITION = new Float32Array(3);
@@ -154,6 +156,10 @@ export default class MeshBatcher extends MaterialBatcher {
 		this.currentShininess = -1;
 		// last `uToonBands` pushed, same sentinel
 		this.currentToonBands = -1;
+		// last `uRim` pushed (premultiplied colour), same sentinel
+		this.currentRimR = -1;
+		this.currentRimG = -1;
+		this.currentRimB = -1;
 		this.currentSpecularR = -1;
 		this.currentSpecularG = -1;
 		this.currentSpecularB = -1;
@@ -351,6 +357,9 @@ export default class MeshBatcher extends MaterialBatcher {
 			this.currentEyeZ = Number.NaN;
 			this.currentShininess = -1;
 			this.currentToonBands = -1;
+			this.currentRimR = -1;
+			this.currentRimG = -1;
+			this.currentRimB = -1;
 			this.currentSpecularR = -1;
 			this.currentSpecularG = -1;
 			this.currentSpecularB = -1;
@@ -1890,6 +1899,25 @@ export default class MeshBatcher extends MaterialBatcher {
 			if (bands !== this.currentToonBands) {
 				this.currentShader.setUniform("uToonBands", bands);
 				this.currentToonBands = bands;
+			}
+		}
+
+		// rim light, the colour premultiplied by its strength (0 = none);
+		// a shader without the uniform is unaffected
+		if (this.currentShader.uniforms.uRim !== undefined) {
+			const rim =
+				typeof mesh._rimInto === "function"
+					? mesh._rimInto(_RIM)
+					: _RIM.fill(0);
+			if (
+				rim[0] !== this.currentRimR ||
+				rim[1] !== this.currentRimG ||
+				rim[2] !== this.currentRimB
+			) {
+				this.currentShader.setUniform("uRim", rim);
+				this.currentRimR = rim[0];
+				this.currentRimG = rim[1];
+				this.currentRimB = rim[2];
 			}
 		}
 

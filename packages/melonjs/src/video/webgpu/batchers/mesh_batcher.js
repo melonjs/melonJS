@@ -33,10 +33,13 @@ const _INVERSE_VIEW = new Matrix3d();
 /**
  * Byte size of the per-draw mesh uniform block:
  * mat4x4 model (64) + mat4x4 view (64) + vec4 tint (16) + vec4 params
- * (alphaCutoff, hasAlphaMap, reserved ×2) (16) + vec4 emissive (16) +
- * vec4 specular (rgb + shininess) (16) + vec4 eye (camera world position;
- * w = cel-shading bands) (16) + vec4 fogColor (16) + vec4 fogParams (16)
- * + vec4 fogHeight (16) → 256.
+ * (alphaCutoff, hasAlphaMap, hasNormalMap, rim red) (16) + vec4 emissive
+ * (rgb + rim green) (16) + vec4 specular (rgb + shininess) (16) + vec4 eye
+ * (camera world position; w = cel-shading bands) (16) + vec4 fogColor
+ * (rgb + rim blue) (16) + vec4 fogParams (16) + vec4 fogHeight (16) → 256.
+ * The rim light rides in the three `w` slots that were free rather than
+ * growing the block past 256 bytes, which the uniform offset alignment
+ * would round up to 512 per draw.
  * @ignore
  * @internal
  */
@@ -50,6 +53,8 @@ const IDENTITY_MATRIX = new Matrix3d();
 // above, so growing the block grows this with it.
 // Reused — setPlacementUniforms runs synchronously and never re-enters.
 const UNIFORM_SCRATCH = new Float32Array(MESH_UNIFORM_SIZE / 4);
+// the rim light for one draw, colour x strength (see Mesh#_rimInto)
+const RIM_SCRATCH = new Float32Array(3);
 
 /**
  * The WebGPU mesh batcher — textured triangle meshes with the same
@@ -900,6 +905,17 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 			// neutral, not 0: this is a multiplier on the whole height factor
 			scratch[63] = 1;
 		}
+
+		// the rim light, colour x strength, in the three free `w` slots (see
+		// MESH_UNIFORM_SIZE); written last, over the zeros the fog and
+		// emissive writes above leave there
+		const rim =
+			typeof mesh?._rimInto === "function"
+				? mesh._rimInto(RIM_SCRATCH)
+				: RIM_SCRATCH.fill(0);
+		scratch[39] = rim[0];
+		scratch[43] = rim[1];
+		scratch[55] = rim[2];
 
 		const region = renderer.effectUniformArena.alloc(
 			MESH_UNIFORM_SIZE,

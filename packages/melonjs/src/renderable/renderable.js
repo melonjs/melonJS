@@ -474,9 +474,29 @@ export default class Renderable extends Rect {
 		this.isRenderable = true;
 
 		/**
-		 * If true then physic collision and input events will not impact this renderable
+		 * If true then physic collision and input events will not impact this
+		 * renderable: set it `false` for it to collide with physics bodies, or
+		 * to receive the pointer events registered on it with
+		 * {@link input.registerPointerEvent}. An opt-in, left out by default.
+		 *
+		 * It does not decide what {@link Camera3d#pick} returns: picking a
+		 * mesh needs neither a body nor an event, so it ignores this flag. A
+		 * mesh is left out of `pick()` with {@link Mesh#pickable} instead, an
+		 * opt-out that touches neither collisions nor events.
 		 * @type {boolean}
 		 * @default true
+		 * @see Mesh#pickable
+		 * @example
+		 * // a button: it must receive its pointer events
+		 * button.isKinematic = false;
+		 * input.registerPointerEvent("pointerdown", button, onPress);
+		 *
+		 * // a floor under a Camera3d: it collides, but is not what a click picks
+		 * floor.isKinematic = false;   // collisions (and events)
+		 * floor.pickable = false;      // camera.pick() looks past it
+		 *
+		 * // a crate picked with camera.pick(): no body, no events, nothing to set
+		 * const hit = camera.pick(pointer.gameScreenX, pointer.gameScreenY, app.world);
 		 */
 		this.isKinematic = true;
 

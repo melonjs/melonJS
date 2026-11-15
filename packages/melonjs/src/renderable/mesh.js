@@ -471,9 +471,13 @@ function buildTextureGroups(
  * @property {number[]|Float32Array|undefined} [baseColorFactor] - the material's base colour factor `[r, g, b]` in 0..1, LINEAR, applied as the mesh tint. That is the form a glTF material states it in (spec 3.9.2) and the form the loader hands back, so a mesh built from a node passes the node's own field straight through. It is ENCODED rather than scaled: a linear factor pushed through `tint.setColor` by multiplying by 255 renders every untextured material 60 to 70 counts too dark in the midtones, which reads as a lighting fault and gets debugged as one. For an ordinary sRGB colour use {@link Renderable#setTint}. The type admits `undefined` deliberately: the loader declares the field optional, so `baseColorFactor: node.baseColorFactor` is the headline use and it has to compile for a consumer building under `exactOptionalPropertyTypes`.
  * @property {number[]|Float32Array} [specular] - specular color `[r, g, b]` (0..1) for the lit path. Set by the OBJ loader from MTL `Ks`, and derived from glTF metallic/roughness.
  * @property {number} [shininess=0] - specular exponent for the lit path (MTL `Ns`). `0` for a fully diffuse surface.
+ * @property {boolean} [pickable=true] - set `false` to have {@link Camera3d#pick} pass over this mesh (see {@link Mesh#pickable})
  * @property {number} [toonBands=0] - cel (toon) shading for the lit path: the light on the surface is cut into this many flat bands, from unlit to fully lit, and a specular highlight becomes a hard-edged spot. `0` (or anything under 2) is the usual smooth shading. Needs `lit` and a `Camera3d`.
  * @property {number} [outlineWidth=0] - draw an outline this many world units (pixels) wide around the mesh's silhouette, the inked edge of a cartoon look — an "inverted hull" drawn behind it. `0` for none. `Camera3d` only; not drawn by an `InstancedMesh` or a `Sprite3d`.
  * @property {Color|string|number[]} [outlineColor="#000000"] - the outline's colour: a {@link Color}, a CSS colour string, or `[r, g, b]` in 0..1.
+ * @property {string} [outlineMode="world"] - what `outlineWidth` is measured in: `"world"` units, so the line thins with distance like the mesh, or `"screen"` pixels, so it stays the same thickness on screen (see {@link Mesh#outlineMode}).
+ * @property {number} [rimLight=0] - a rim light for the lit path: a glow along the silhouette, where the surface turns away from the camera, this strong (`0` for none, `1` the full {@link Mesh#rimColor}). Needs `lit` and a `Camera3d`.
+ * @property {Color|string|number[]} [rimColor="#ffffff"] - the rim light's colour: a {@link Color}, a CSS colour string, or `[r, g, b]` in 0..1.
  * @property {string|TextureAtlas|HTMLImageElement} [normalMap] - tangent-space normal map (MTL `map_bump`/`bump`/`norm`), perturbing the lit path's shading normal per fragment. Needs `lit` to have any effect, and a `Camera3d`. See the [Material Textures example](https://melonjs.github.io/melonJS/examples/#/material-textures).
  * @property {string|TextureAtlas|HTMLImageElement} [alphaMap] - per-texel opacity map, sampled in addition to the diffuse texture (MTL `map_d`).
  * @property {boolean} [castGroundShadow] - give this mesh a blob ground shadow, overriding the application's `castGroundShadow` setting in both directions. Omit to inherit. Needs a GPU backend and a `Camera3d`.
@@ -873,6 +877,49 @@ export default class Mesh extends Renderable {
 			typeof settings.shininess === "number" ? settings.shininess : 0;
 
 		/**
+		 * Whether {@link Camera3d#pick} can return this mesh. `false` has it
+		 * passed over, as though it were not there, so a floor, a skybox or a
+		 * decoration does not stand in front of what is behind it. A
+		 * {@link GLTFModel} passes over such a part too.
+		 *
+		 * It is **not** {@link Renderable#isKinematic}, and the two do not
+		 * stand in for each other:
+		 * - `isKinematic` (default `true`, so left out) is an opt-IN to
+		 *   physics collisions and pointer events: set it `false` for a mesh
+		 *   to collide, or to receive the events registered on it.
+		 * - `pickable` (default `true`, so included) is an opt-OUT of
+		 *   `pick()` alone, a query of what is drawn under a pixel, which
+		 *   needs nothing registered and ignores `isKinematic`.
+		 *
+		 * So a floor that collides (`isKinematic = false`) but should not be
+		 * picked sets `pickable = false`, and a mesh with no body and no
+		 * events is picked without touching `isKinematic`. Like
+		 * {@link Mesh#fog}, `pickable` opts out of one feature only: pointer
+		 * events and {@link Mesh#intersectRay} called directly still see the
+		 * mesh.
+		 * @type {boolean}
+		 * @default true
+		 * @see Renderable#isKinematic
+		 * @see Camera3d#pick
+		 * @example
+		 * // the floor collides, so it is not kinematic, but a click should
+		 * // pick what stands on it
+		 * floor.isKinematic = false;
+		 * floor.pickable = false;
+		 * const hit = camera.pick(x, y, app.world); // the crate on the floor
+		 *
+		 * // the crate needs neither flag to be picked: it has no body and no
+		 * // events, and stays kinematic
+		 * crate.isKinematic; // true, and pick() still finds it
+		 *
+		 * // a lever that answers its own pointer events opts in to those with
+		 * // isKinematic; pickable has no say over its events
+		 * lever.isKinematic = false;
+		 * input.registerPointerEvent("pointerdown", lever, pull);
+		 */
+		this.pickable = settings.pickable !== false;
+
+		/**
 		 * Cel (toon) shading on the lit path: the light on the surface is cut
 		 * into this many flat bands, from unlit (the ambient alone) to fully
 		 * lit, and a specular highlight becomes a hard-edged spot instead of a
@@ -913,6 +960,47 @@ export default class Mesh extends Renderable {
 		 * @type {Color}
 		 */
 		this.outlineColor = toColor(settings.outlineColor, 0, 0, 0);
+
+		/**
+		 * What {@link Mesh#outlineWidth} is measured in. `"world"` (the
+		 * default): world units, so under a perspective camera the line
+		 * thins with distance, as the mesh does. `"screen"`: pixels, so the
+		 * line keeps the same thickness on screen however far away the mesh
+		 * is, or however the orthographic camera is zoomed — the inked look
+		 * of a cartoon. Measured at the middle of the mesh, so one that spans
+		 * a great depth (a long wall seen end-on) is inked thicker at its far
+		 * end than at its near one. Any other value is `"world"`.
+		 * @type {string}
+		 * @default "world"
+		 * @example
+		 * hero.outlineWidth = 2;
+		 * hero.outlineMode = "screen"; // two pixels, near or far
+		 */
+		this.outlineMode = settings.outlineMode === "screen" ? "screen" : "world";
+
+		/**
+		 * A rim light on the lit path: a glow along the silhouette, where the
+		 * surface turns away from the camera, of this strength — `0` (the
+		 * default) for none, `1` for the full {@link Mesh#rimColor}, more to
+		 * overdrive it. Added on top of the lighting, like
+		 * {@link Mesh#emissive}, so it shows on a model's shadowed side too,
+		 * picking it out from a dark background. With
+		 * {@link Mesh#toonBands} it is a hard-edged band rather than a
+		 * gradient. Needs `lit: true` and a `Camera3d`.
+		 * @type {number}
+		 * @default 0
+		 * @example
+		 * hero.rimLight = 0.6;
+		 * hero.rimColor.parseCSS("#9fd8ff"); // a cold back light
+		 */
+		this.rimLight =
+			typeof settings.rimLight === "number" ? settings.rimLight : 0;
+
+		/**
+		 * The colour of the rim light (see {@link Mesh#rimLight}).
+		 * @type {Color}
+		 */
+		this.rimColor = toColor(settings.rimColor, 255, 255, 255);
 
 		// The material's base colour, applied as the tint. LINEAR per the
 		// glTF spec, so it is encoded rather than scaled: see the setting's
@@ -2911,7 +2999,7 @@ export default class Mesh extends Renderable {
 	 * @internal
 	 */
 	_drawOutline(renderer, viewport) {
-		const hull = this._outlineHull();
+		const hull = this._outlineHull(this._outlineWorldWidth(renderer, viewport));
 		const tint = renderer.currentTint;
 		_savedTint.copy(tint);
 		renderer.setTint(this.outlineColor, _savedTint.alpha);
@@ -2923,16 +3011,93 @@ export default class Mesh extends Renderable {
 	}
 
 	/**
+	 * The outline's width in world units for this draw: {@link Mesh#outlineWidth}
+	 * as it is, or, with {@link Mesh#outlineMode} `"screen"`, that many pixels
+	 * at the depth of the mesh's middle through the camera drawing it. Kept to
+	 * steps of about 2%, so a mesh drifting in depth does not rebuild its hull
+	 * on every frame for a change no one can see.
+	 * @param {Renderer} renderer - the renderer drawing, its transform the view
+	 * @param {Camera2d} [viewport] - the camera drawing this pass
+	 * @returns {number} the width, in world units
+	 * @ignore
+	 * @internal
+	 */
+	_outlineWorldWidth(renderer, viewport) {
+		const width = this.outlineWidth;
+		const frustum = viewport?.frustum;
+		if (
+			this.outlineMode !== "screen" ||
+			frustum === undefined ||
+			!(viewport.height > 0)
+		) {
+			return width;
+		}
+		let perPixel;
+		if (frustum.projection === "orthographic") {
+			// already divided by the zoom
+			perPixel = frustum.orthoHeight / viewport.height;
+		} else {
+			// the view-space depth of the geometry's middle, measured as the
+			// transparent pass measures it (see Renderer#queueTransparent)
+			this._updateLocalCenter();
+			const m = this._composeModelMatrix().val;
+			const v = renderer.currentTransform.val;
+			const cx = this._lcx;
+			const cy = this._lcy;
+			const cz = this._lcz;
+			const mx = m[0] * cx + m[4] * cy + m[8] * cz + m[12];
+			const my = m[1] * cx + m[5] * cy + m[9] * cz + m[13];
+			const mz = m[2] * cx + m[6] * cy + m[10] * cz + m[14];
+			const depth = v[2] * mx + v[6] * my + v[10] * mz + v[14];
+			// at or behind the eye a pixel has no size: keep the width as given
+			if (!(depth > 0)) {
+				return width;
+			}
+			perPixel = (2 * depth * Math.tan(frustum.fov / 2)) / viewport.height;
+		}
+		const world = width * perPixel;
+		if (!(world > 0) || !Number.isFinite(world)) {
+			return width;
+		}
+		return 2 ** (Math.round(Math.log2(world) * 32) / 32);
+	}
+
+	/**
+	 * The rim light the lit shaders add, {@link Mesh#rimColor} premultiplied
+	 * by {@link Mesh#rimLight}, in 0..1 per channel (more when overdriven):
+	 * all zero for none. A strength that is not a positive number is none.
+	 * @param {Float32Array|number[]} out - where to write `[r, g, b]`
+	 * @returns {Float32Array|number[]} `out`
+	 * @ignore
+	 * @internal
+	 */
+	_rimInto(out) {
+		const k = this.rimLight;
+		const c = this.rimColor;
+		if (!(k > 0) || !Number.isFinite(k) || !(c instanceof Color)) {
+			out[0] = 0;
+			out[1] = 0;
+			out[2] = 0;
+			return out;
+		}
+		out[0] = (c.r / 255) * k;
+		out[1] = (c.g / 255) * k;
+		out[2] = (c.b / 255) * k;
+		return out;
+	}
+
+	/**
 	 * The inverted hull drawn as this mesh's outline, built on first use and
 	 * refreshed whenever the geometry, the width or the mesh's scale changes:
 	 * every vertex pushed out along its (position-welded) normal by
 	 * {@link Mesh#outlineWidth}, converted to model units, with every
 	 * triangle's winding reversed so back-face culling keeps only the rim.
+	 * @param {number} [width] - the outline's width in world units; {@link Mesh#outlineWidth} when omitted
 	 * @returns {Mesh} the hull, placed where this mesh is
 	 * @ignore
 	 * @internal
 	 */
-	_outlineHull() {
+	_outlineHull(width = this.outlineWidth) {
 		let hull = this._outline;
 		const count = this.vertexCount;
 		if (hull === undefined || hull.vertexCount !== count) {
@@ -3002,7 +3167,7 @@ export default class Mesh extends Renderable {
 			Math.hypot(t[4], t[5], t[6]),
 			Math.hypot(t[8], t[9], t[10]),
 		);
-		const offset = this.outlineWidth / (this.meshScale * transformScale || 1);
+		const offset = width / (this.meshScale * transformScale || 1);
 		if (
 			this._outlineVersion !== this._geometryVersion ||
 			this._outlineOffset !== offset
