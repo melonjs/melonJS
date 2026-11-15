@@ -12,6 +12,7 @@ import { TriangleMesh3d } from "../../geometries/trianglemesh3d.ts";
 import { warning } from "../../lang/console.js";
 import { clamp } from "../../math/math.ts";
 import { Vector2d, vector2dPool } from "../../math/vector2d.ts";
+import { vector3dPool } from "../../math/vector3d.ts";
 import timer from "../../system/timer.ts";
 import { remove } from "../../utils/array.ts";
 import { Bounds, boundsPool } from "../bounds.ts";
@@ -39,6 +40,7 @@ const BLOCKED_DOWN = 8;
  * @import Sprite from "../../renderable/sprite.js";
  * @import NineSliceSprite from "../../renderable/nineslicesprite.js";
  * @import {Vector2d} from "../../math/vector2d.ts";
+ * @import {Vector3d} from "../../math/vector3d.ts";
  * @import ResponseObject from "../response.js";
  **/
 
@@ -493,9 +495,14 @@ export default class Body {
 	 * delegates to `Matter.Body.setVelocity`.
 	 * @param {number} x - velocity along the X axis
 	 * @param {number} y - velocity along the Y axis
+	 * @param {number} [z] - velocity along the Z (depth) axis, into
+	 *   {@link Body#velZ}; left as it is when omitted
 	 */
-	setVelocity(x, y) {
+	setVelocity(x, y, z) {
 		this.vel.set(x, y);
+		if (typeof z === "number") {
+			this.velZ = z;
+		}
 	}
 
 	/**
@@ -506,6 +513,17 @@ export default class Body {
 	 */
 	getVelocity(out) {
 		return (out ?? vector2dPool.get()).copy(this.vel);
+	}
+
+	/**
+	 * read this body's linear velocity on all three axes, the depth one
+	 * ({@link Body#velZ}) included.
+	 * @param {Vector3d} [out] - vector to write into; a new Vector3d is
+	 * allocated when omitted
+	 * @returns {Vector3d}
+	 */
+	getVelocity3d(out) {
+		return (out ?? vector3dPool.get()).set(this.vel.x, this.vel.y, this.velZ);
 	}
 
 	/**
@@ -729,11 +747,16 @@ export default class Body {
 	 * `applyImpulse`).
 	 * @param {number} x - impulse along the X axis
 	 * @param {number} y - impulse along the Y axis
+	 * @param {number} [z] - impulse along the Z (depth) axis, into
+	 *   {@link Body#velZ}
 	 */
-	applyImpulse(x, y) {
+	applyImpulse(x, y, z) {
 		const invMass = this.mass > 0 ? 1 / this.mass : 0;
 		this.vel.x += x * invMass;
 		this.vel.y += y * invMass;
+		if (typeof z === "number") {
+			this.velZ += z * invMass;
+		}
 	}
 
 	/**
