@@ -7,10 +7,13 @@
  *
  * - **Pointer events on meshes.** `input.registerPointerEvent` works on a
  *   `Mesh` under a `Camera3d` exactly as on a 2D sprite: the pets highlight
- *   on `pointerenter`, dim on `pointerleave`, and hop and get selected on
- *   `pointerdown`. The hit-test is the ray through the pointer against each
+ *   on `pointerenter` and dim on `pointerleave`; a click selects one and
+ *   makes it hop. The hit-test is the ray through the pointer against each
  *   pet's triangles, and `pointer.hit3d` says where it landed (point,
  *   normal, distance, triangle) — shown in the corner.
+ * - **Drag and drop.** Hold a pet and move the pointer: it lifts off the
+ *   floor and follows the point under the pointer (`camera.screenToWorld`
+ *   again), until it is let go and lands there.
  * - **The floor is a mesh too.** Clicking it hands `pointer.hit3d.point` to
  *   the selected pet, which hops over there. A pet's handler returns
  *   `false`, so a click on a pet is not also a click on the floor behind it.
@@ -63,6 +66,10 @@ const PETS = [
 const GROUND_Y = 0;
 const PET = 130;
 const SPACING = 220;
+// how far a held pet is lifted off the floor
+const LIFT = 45;
+// how far (in screen pixels) the pointer moves before a press becomes a drag
+const DRAG_SLOP = 6;
 
 /** a flat quad lying on the floor, authored Y-UP like any mesh geometry */
 const createFloor = (half: number) => {
@@ -199,7 +206,7 @@ const createGame = async () => {
 			font: "monospace",
 			size: 16,
 			fillStyle: "#f2f2f2",
-			text: "hover a pet · click one to select it · click the floor to send it there",
+			text: "hover a pet · drag it around · click it, then the floor, to send it there",
 		});
 		readout.floating = true;
 		world.addChild(readout, 100);
@@ -231,6 +238,31 @@ const createGame = async () => {
 					// one arc, higher for a longer hop
 					pet.pos.y =
 						restY - Math.sin(from.t * Math.PI) * (70 + distance * 0.15);
+				})
+				.start();
+		};
+
+		// ── the pet being held, from press to release ────────────────────
+		let held: Mesh | null = null;
+		let dragged = false;
+		let pressX = 0;
+		let pressY = 0;
+		// let go: a click makes it hop, a drag sets it down where it is
+		const release = () => {
+			const pet = held;
+			if (pet === null) {
+				return;
+			}
+			held = null;
+			if (!dragged) {
+				hop(pet);
+				return;
+			}
+			const fall = { y: pet.pos.y };
+			new Tween(fall)
+				.to({ y: restY }, { duration: 260, easing: Tween.Easing.Bounce.Out })
+				.onUpdate(() => {
+					pet.pos.y = fall.y;
 				})
 				.start();
 		};
@@ -281,12 +313,20 @@ const createGame = async () => {
 				if (previous !== null && previous !== pet) {
 					previous.tint.copy(white);
 				}
-				hop(pet);
+				// held: a drag if the pointer moves, a click if it does not
+				held = pet;
+				dragged = false;
+				pressX = pointer.gameScreenX;
+				pressY = pointer.gameScreenY;
 				describe(`${label} (selected)`, pointer);
 				// handled: the floor behind the pet is not clicked too
 				return false;
 			});
 		});
+
+		// let go anywhere: the pointer is rarely still over the pet it lifted,
+		// so the release is caught by the viewport, which every press reaches
+		input.registerPointerEvent("pointerup", app.viewport, release);
 
 		// ── the selected pet hops to wherever the floor is clicked ───────
 		input.registerPointerEvent("pointerdown", floor, (pointer) => {
@@ -318,6 +358,24 @@ const createGame = async () => {
 				ring.pos.set(p.x, p.y - 2);
 				ring.depth = p.z;
 			}
+			// a held pet becomes a drag once the pointer has really moved, and
+			// is carried over the floor point under it, lifted off the ground
+			if (held !== null && p !== null) {
+				if (
+					!dragged &&
+					Math.hypot(
+						pointer.gameScreenX - pressX,
+						pointer.gameScreenY - pressY,
+					) > DRAG_SLOP
+				) {
+					dragged = true;
+				}
+				if (dragged) {
+					held.pos.x = p.x;
+					held.pos.y = restY - LIFT;
+					held.depth = p.z;
+				}
+			}
 		};
 		event.on(event.POINTERMOVE, followPointer);
 
@@ -331,6 +389,7 @@ const createGame = async () => {
 
 		return () => {
 			event.off(event.POINTERMOVE, followPointer);
+			input.releasePointerEvent("pointerup", app.viewport);
 		};
 	};
 

@@ -460,7 +460,7 @@ const examples: {
 		path: "isometric-dungeon",
 		sourceDir: "isometricDungeon",
 		description:
-			"A big isometric Tiled dungeon: depth-sorted walls, flickering wall torches, chests, doors and a locked gate. Walk with the arrow keys or click to move, along paths found by @melonjs/pathfinding-plugin (P shows its grid).",
+			"A big isometric Tiled dungeon: depth-sorted walls, flickering wall torches, chests, doors and a locked gate. Walk with the arrow keys or click to move, along paths found by @melonjs/pathfinding-plugin.",
 	},
 	{
 		component: <ExampleLights />,

@@ -3,7 +3,7 @@
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
-import type { Grid, PathResult } from "@melonjs/pathfinding-plugin";
+import type { Grid } from "@melonjs/pathfinding-plugin";
 import {
 	collision,
 	input,
@@ -114,8 +114,6 @@ export class Hero extends Sprite {
 	private busy = false;
 	// the pathfinding grid of the level, set by the stage
 	grid?: Grid | null;
-	// called with every path found, for the debug overlay
-	onPath?: (result: PathResult) => void;
 	// the points still to walk to, after a click
 	private route: Vector2d[] = [];
 	// what was clicked, to use once it is in reach
@@ -196,11 +194,8 @@ export class Hero extends Sprite {
 				smooth: true,
 				// a click on a wall (or a door still shut) walks as near as it can
 				allowPartialPath: true,
-				// for the debug overlay (P): the cells the search looked at
-				trace: true,
 			},
 		);
-		this.onPath?.(result);
 		// path[0] is where the hero stands
 		this.route = result.path.slice(1);
 		this.stuck = 0;
@@ -288,8 +283,19 @@ export class Hero extends Sprite {
 			? undefined
 			: this.dungeon?.nearest(this.feet.set(this.feetX, this.feetY), REACH);
 		this.onReach?.(target);
-		// the action key, or arriving at what was clicked
-		if (target && (input.isKeyPressed("action") || target === this.goal)) {
+		// arriving at what was clicked: use it, even when something else (the
+		// other half of a double door) happens to be nearer
+		const goal = this.goal;
+		if (
+			goal &&
+			!this.busy &&
+			!goal.used &&
+			goal.spot.distance(this.feet) < REACH
+		) {
+			this.route = [];
+			this.goal = undefined;
+			this.use(goal);
+		} else if (target && input.isKeyPressed("action")) {
 			this.route = [];
 			this.goal = undefined;
 			this.use(target);
