@@ -6,17 +6,19 @@
  * three ways:
  *
  * - **Pointer events on meshes.** `input.registerPointerEvent` works on a
- *   `Mesh` under a `Camera3d` exactly as on a 2D sprite: the crates highlight
- *   on `pointerenter`, dim on `pointerleave` and hop on `pointerdown`. The
- *   hit-test is the ray through the pointer against each crate's triangles,
- *   and `pointer.hit3d` says where it landed (point, normal, distance,
- *   triangle) — shown in the corner.
+ *   `Mesh` under a `Camera3d` exactly as on a 2D sprite: the pets highlight
+ *   on `pointerenter`, dim on `pointerleave`, and hop and get selected on
+ *   `pointerdown`. The hit-test is the ray through the pointer against each
+ *   pet's triangles, and `pointer.hit3d` says where it landed (point,
+ *   normal, distance, triangle) — shown in the corner.
  * - **The floor is a mesh too.** Clicking it hands `pointer.hit3d.point` to
- *   the ball, which rolls there. A crate's handler returns `false`, so a click
- *   on a crate is not also a click on the floor behind it.
+ *   the selected pet, which hops over there. A pet's handler returns
+ *   `false`, so a click on a pet is not also a click on the floor behind it.
  * - **`camera.screenToWorld`** turns the pointer position into the point on
  *   the floor under it, every move, with no event registered on anything:
  *   that is what the ring is following.
+ *
+ * The pets are Kenney's Cube Pets (CC0, see `packages/examples/LICENSE.md`).
  *
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
@@ -25,6 +27,7 @@ import { DebugPanelPlugin } from "@melonjs/debug-plugin";
 import {
 	Application,
 	Camera3d,
+	Color,
 	event,
 	input,
 	Light3d,
@@ -39,16 +42,27 @@ import {
 	Vector3d,
 	video,
 } from "melonjs";
+import { addKenneyCredit, KENNEY_LOGO } from "../kenneyCredit";
 import { createExampleComponent } from "../utils";
 
-const ASSET_BASE = `${import.meta.env.BASE_URL}assets/materialTextures/`;
-const MESH_BASE = `${import.meta.env.BASE_URL}assets/mesh3d/`;
+const PETS_BASE = `${import.meta.env.BASE_URL}assets/mesh3d/kenney/`;
+// three rows of three, left to right, back to front
+const PETS = [
+	"animal-elephant",
+	"animal-giraffe",
+	"animal-lion",
+	"animal-panda",
+	"animal-fox",
+	"animal-tiger",
+	"animal-penguin",
+	"animal-pig",
+	"animal-bunny",
+];
 
 // render space is Y-DOWN: the floor is at y = 0 and up is negative
 const GROUND_Y = 0;
-const CRATE = 110;
+const PET = 130;
 const SPACING = 220;
-const BALL = 60;
 
 /** a flat quad lying on the floor, authored Y-UP like any mesh geometry */
 const createFloor = (half: number) => {
@@ -185,7 +199,7 @@ const createGame = async () => {
 			font: "monospace",
 			size: 16,
 			fillStyle: "#f2f2f2",
-			text: "hover a crate · click the floor",
+			text: "hover a pet · click one to select it · click the floor to send it there",
 		});
 		readout.floating = true;
 		world.addChild(readout, 100);
@@ -204,89 +218,84 @@ const createGame = async () => {
 			]);
 		};
 
-		// ── the crates: pointer events straight on the meshes ────────────
-		for (let row = 0; row < 3; row++) {
-			for (let col = 0; col < 3; col++) {
-				const crate = new Mesh((col - 1) * SPACING, GROUND_Y - CRATE / 2, {
-					model: "crate",
-					material: "crate",
-					width: CRATE,
-					lit: true,
-					castGroundShadow: true,
-					shadowGroundY: GROUND_Y,
-				});
-				crate.rotate((row * 3 + col) * 0.35, new Vector3d(0, 1, 0));
-				crate.isKinematic = false;
-				world.addChild(crate, (row - 1) * SPACING);
-				const name = `crate ${row * 3 + col + 1}`;
-				const restY = crate.pos.y;
-				let hopping = false;
+		// a hop on the spot, or across the floor to (x, z)
+		const restY = GROUND_Y - PET / 2;
+		const hop = (pet: Mesh, x = pet.pos.x, z = pet.depth) => {
+			const from = { x: pet.pos.x, z: pet.depth, t: 0 };
+			const distance = Math.hypot(x - from.x, z - from.z);
+			new Tween(from)
+				.to({ x, z, t: 1 }, { duration: 260 + distance * 0.8 })
+				.onUpdate(() => {
+					pet.pos.x = from.x;
+					pet.depth = from.z;
+					// one arc, higher for a longer hop
+					pet.pos.y =
+						restY - Math.sin(from.t * Math.PI) * (70 + distance * 0.15);
+				})
+				.start();
+		};
 
-				input.registerPointerEvent("pointerenter", crate, (pointer) => {
-					crate.tint.setColor(255, 214, 120);
-					describe(name, pointer);
-				});
-				input.registerPointerEvent("pointermove", crate, (pointer) => {
-					describe(name, pointer);
-				});
-				input.registerPointerEvent("pointerleave", crate, () => {
-					crate.tint.setColor(255, 255, 255);
-				});
-				input.registerPointerEvent("pointerdown", crate, () => {
-					if (!hopping) {
-						hopping = true;
-						new Tween(crate.pos)
-							.to(
-								{ y: restY - 90 },
-								{
-									duration: 220,
-									easing: Tween.Easing.Quadratic.Out,
-									yoyo: true,
-									repeat: 1,
-								},
-							)
-							.onComplete(() => {
-								hopping = false;
-							})
-							.start();
-					}
-					// handled: the floor behind the crate is not clicked too
-					return false;
-				});
+		// ── the pets: pointer events straight on the meshes ──────────────
+		const highlight = new Color(255, 220, 140);
+		const selectedTint = new Color(205, 240, 255);
+		const white = new Color(255, 255, 255);
+		let selected: Mesh | null = null;
+		PETS.forEach((name, i) => {
+			const row = Math.floor(i / 3);
+			const col = i % 3;
+			const pet = new Mesh((col - 1) * SPACING, restY, {
+				model: name,
+				material: name,
+				texture: "colormap",
+				width: PET,
+				height: PET,
+				lit: true,
+				castGroundShadow: true,
+				shadowGroundY: GROUND_Y,
+			});
+			// turned toward the camera, a little each
+			pet.rotate(Math.PI + (col - 1) * 0.35, new Vector3d(0, 1, 0));
+			pet.isKinematic = false;
+			world.addChild(pet, (1 - row) * SPACING);
+			const label = name.replace("animal-", "");
+			const rest = () => {
+				pet.tint.copy(pet === selected ? selectedTint : white);
+			};
+
+			input.registerPointerEvent("pointerenter", pet, (pointer) => {
+				pet.tint.copy(highlight);
+				describe(label, pointer);
+			});
+			input.registerPointerEvent("pointermove", pet, (pointer) => {
+				describe(label, pointer);
+			});
+			input.registerPointerEvent("pointerleave", pet, rest);
+			// the fox, in the middle, starts selected: a floor click works at once
+			if (name === "animal-fox") {
+				selected = pet;
+				rest();
 			}
-		}
-
-		// ── the ball rolls to wherever the floor is clicked ──────────────
-		const ball = new Mesh(0, GROUND_Y - BALL / 2, {
-			model: "ball",
-			material: "props",
-			width: BALL,
-			lit: true,
-			castGroundShadow: true,
-			shadowGroundY: GROUND_Y,
+			input.registerPointerEvent("pointerdown", pet, (pointer) => {
+				const previous = selected;
+				selected = pet;
+				if (previous !== null && previous !== pet) {
+					previous.tint.copy(white);
+				}
+				hop(pet);
+				describe(`${label} (selected)`, pointer);
+				// handled: the floor behind the pet is not clicked too
+				return false;
+			});
 		});
-		world.addChild(ball, -SPACING * 2);
-		let roll: Tween | null = null;
+
+		// ── the selected pet hops to wherever the floor is clicked ───────
 		input.registerPointerEvent("pointerdown", floor, (pointer) => {
 			const hit = pointer.hit3d;
-			if (hit === null) {
+			if (hit === null || selected === null) {
 				return;
 			}
 			// the hit record is reused by the next event: copy what we keep
-			const from = { x: ball.pos.x, z: ball.depth };
-			const to = { x: hit.point.x, z: hit.point.z };
-			const distance = Math.hypot(to.x - from.x, to.z - from.z);
-			roll?.stop();
-			roll = new Tween(from)
-				.to(to, {
-					duration: 300 + distance * 0.9,
-					easing: Tween.Easing.Quadratic.InOut,
-				})
-				.onUpdate(() => {
-					ball.pos.x = from.x;
-					ball.depth = from.z;
-				})
-				.start();
+			hop(selected, hit.point.x, hit.point.z);
 			describe("floor", pointer);
 		});
 
@@ -317,6 +326,9 @@ const createGame = async () => {
 		camera.setPosition(0, -620, -880);
 		camera.lookAt(0, 0, 0);
 
+		// dark lettering: the floor behind it is light
+		addKenneyCredit(app, "#2e3440");
+
 		return () => {
 			event.off(event.POINTERMOVE, followPointer);
 		};
@@ -336,10 +348,18 @@ const createGame = async () => {
 	}
 
 	await loader.preload([
-		{ name: "crate", type: "obj", src: `${ASSET_BASE}crate.obj` },
-		{ name: "crate", type: "mtl", src: `${ASSET_BASE}crate.mtl` },
-		{ name: "props", type: "mtl", src: `${ASSET_BASE}props.mtl` },
-		{ name: "ball", type: "obj", src: `${MESH_BASE}sphere.obj` },
+		{
+			name: "colormap",
+			type: "image",
+			src: `${PETS_BASE}Textures/colormap.png`,
+		},
+		...PETS.flatMap((name) => {
+			return [
+				{ name, type: "obj", src: `${PETS_BASE}${name}.obj` },
+				{ name, type: "mtl", src: `${PETS_BASE}${name}.mtl` },
+			];
+		}),
+		KENNEY_LOGO,
 	]);
 	state.set(state.PLAY, new PickingStage());
 	state.change(state.PLAY);

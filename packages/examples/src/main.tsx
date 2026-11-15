@@ -556,7 +556,7 @@ const examples: {
 		path: "toon",
 		sourceDir: "toon",
 		description:
-			"Cel shading in flat bands and inked outlines on lit meshes, including a skinned fox whose outline bends with it.",
+			"Cel shading in flat bands and inked outlines on lit meshes: a Kenney character and Cube Pets (CC0), with the band count and outlines switchable.",
 	},
 	{
 		component: <ExampleIsometric3d />,
@@ -564,7 +564,7 @@ const examples: {
 		path: "isometric-3d",
 		sourceDir: "isometric3d",
 		description:
-			"An orthographic Camera3d over the Kenney platformer diorama (CC0): the isometric look in real 3D, switchable to perspective, wheel to zoom, drag to turn.",
+			"An isometric tactics board in real 3D (Kenney, CC0): an orthographic Camera3d, an instanced board whose tiles are picked by the pointer, and a hero that walks the shortest path.",
 	},
 	{
 		component: <ExamplePicking />,
@@ -572,7 +572,7 @@ const examples: {
 		path: "picking",
 		sourceDir: "picking",
 		description:
-			"Pointer events on meshes under a perspective camera: hover and click crates, click the floor to roll a ball there, and a ring that follows the pointer across the floor.",
+			"Pointer events on meshes under a perspective camera: hover and click Kenney Cube Pets (CC0), click the floor to send the selected one there, and a ring that follows the pointer across the floor.",
 	},
 	{
 		component: <ExampleSkinnedCharacter />,

@@ -5,18 +5,18 @@
  *
  * - `toonBands` cuts the lit shading into that many flat bands, from shadow
  *   to fully lit, and turns a specular highlight into a hard-edged spot (see
- *   the chrome ball).
+ *   the penguin, which is given one).
  * - `outlineWidth` / `outlineColor` draw an ink line round the silhouette: an
  *   "inverted hull", a copy of the mesh pushed out along its normals and
- *   turned inside out. It follows a skinned mesh as it bends — the fox's
- *   outline walks with it.
+ *   turned inside out. It follows the model as it moves — the character's
+ *   outline waves with its arms.
  *
  * Both are per mesh, and a `GLTFModel` or a `level.load` takes them as options
  * for every part at once. The radio buttons switch the band count, the
  * checkbox the outlines, on everything in the scene.
  *
- * The fox is the Khronos "Fox" sample (see `packages/examples/LICENSE.md`);
- * the crate and ball are the material example's models.
+ * The character (Blocky Characters) and the pets (Cube Pets) are Kenney's,
+ * CC0 (see `packages/examples/LICENSE.md`).
  *
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
@@ -39,11 +39,11 @@ import {
 	video,
 	type WebGLRenderer,
 } from "melonjs";
+import { addKenneyCredit, KENNEY_LOGO } from "../kenneyCredit";
 import { createExampleComponent } from "../utils";
 
-const FOX_BASE = `${import.meta.env.BASE_URL}assets/skinnedCharacter/`;
-const MATERIAL_BASE = `${import.meta.env.BASE_URL}assets/materialTextures/`;
-const MESH_BASE = `${import.meta.env.BASE_URL}assets/mesh3d/`;
+const GLTF_BASE = `${import.meta.env.BASE_URL}assets/gltf/`;
+const PETS_BASE = `${import.meta.env.BASE_URL}assets/mesh3d/kenney/`;
 
 // render space is Y-DOWN: the floor is at y = 0 and up is negative
 const GROUND_Y = 0;
@@ -150,14 +150,14 @@ const createGame = async () => {
 		// everything that takes the look, so the controls can switch it
 		const styled: Mesh[] = [floor];
 
-		// ── the fox: one GLTFModel, the look given once for every part ──
-		const data = loader.getGLTF("fox");
+		// ── the character: one GLTFModel, the look given once for every part
+		const data = loader.getGLTF("character");
 		if (!data) {
-			throw new Error('Toon: "fox" did not preload.');
+			throw new Error('Toon: "character" did not preload.');
 		}
 		const { min, max } = data.bounds;
-		const scale = 210 / (max[1] - min[1]);
-		const fox = new GLTFModel(data, {
+		const scale = 230 / (max[1] - min[1]);
+		const hero = new GLTFModel(data, {
 			scale,
 			lit: true,
 			toonBands: 3,
@@ -166,45 +166,41 @@ const createGame = async () => {
 			castGroundShadow: true,
 			shadowGroundY: GROUND_Y,
 		});
-		fox.pos.set(0, GROUND_Y - min[1] * scale);
-		fox.depth = 40;
-		world.addChild(fox, 40);
-		fox.setCurrentAnimation("Survey");
-		for (const part of fox.getChildren()) {
+		hero.pos.set(0, GROUND_Y - min[1] * scale);
+		hero.depth = 110;
+		world.addChild(hero, 110);
+		hero.setCurrentAnimation("emote-yes");
+		for (const part of hero.getChildren()) {
 			if (part instanceof Mesh) {
 				styled.push(part);
 			}
 		}
 
-		// ── a chrome ball (its highlight goes hard-edged) and a crate ────
-		const ball = new Mesh(-260, GROUND_Y - 70, {
-			model: "ball",
-			material: "props",
-			width: 140,
-			lit: true,
-			toonBands: 3,
-			outlineWidth: 3,
-			outlineColor: INK,
-			castGroundShadow: true,
-			shadowGroundY: GROUND_Y,
-		});
-		ball.depth = 120;
-		world.addChild(ball, 120);
-		const crate = new Mesh(260, GROUND_Y - 60, {
-			model: "crate",
-			material: "crate",
-			width: 120,
-			lit: true,
-			toonBands: 3,
-			outlineWidth: 3,
-			outlineColor: INK,
-			castGroundShadow: true,
-			shadowGroundY: GROUND_Y,
-		});
-		crate.depth = 140;
-		crate.rotate(0.6, UP);
-		world.addChild(crate, 140);
-		styled.push(ball, crate);
+		// ── two pets either side; the penguin gets a highlight to band ────
+		const pet = (name: string, x: number, z: number, glossy: boolean) => {
+			const mesh = new Mesh(x, GROUND_Y - 70, {
+				model: name,
+				material: name,
+				texture: "colormap",
+				width: 140,
+				height: 140,
+				lit: true,
+				toonBands: 3,
+				outlineWidth: 3,
+				outlineColor: INK,
+				castGroundShadow: true,
+				shadowGroundY: GROUND_Y,
+				...(glossy ? { specular: [1, 1, 1], shininess: 24 } : {}),
+			});
+			mesh.depth = z;
+			// face the front of the turntable
+			mesh.rotate(Math.PI, UP);
+			world.addChild(mesh, z);
+			styled.push(mesh);
+			return mesh;
+		};
+		pet("animal-cat", -250, -60, false);
+		pet("animal-penguin", 250, -60, true);
 
 		// ── controls ─────────────────────────────────────────────────────
 		const label = { font: "sans-serif", fontSize: 18, labelFillStyle: INK };
@@ -251,6 +247,9 @@ const createGame = async () => {
 		// the floor is never outlined, but it does band
 		floor.outlineWidth = 0;
 
+		// dark lettering on the pale backdrop
+		addKenneyCredit(app, INK);
+
 		// ── camera: a low three-quarter view of the turntable ────────────
 		const camera = app.viewport as Camera3d;
 		camera.setClipPlanes(10, 6000);
@@ -287,11 +286,19 @@ const createGame = async () => {
 	}
 
 	await loader.preload([
-		{ name: "fox", type: "glb", src: `${FOX_BASE}fox.glb` },
-		{ name: "crate", type: "obj", src: `${MATERIAL_BASE}crate.obj` },
-		{ name: "crate", type: "mtl", src: `${MATERIAL_BASE}crate.mtl` },
-		{ name: "props", type: "mtl", src: `${MATERIAL_BASE}props.mtl` },
-		{ name: "ball", type: "obj", src: `${MESH_BASE}sphere.obj` },
+		{ name: "character", type: "glb", src: `${GLTF_BASE}character.glb` },
+		{
+			name: "colormap",
+			type: "image",
+			src: `${PETS_BASE}Textures/colormap.png`,
+		},
+		...["animal-cat", "animal-penguin"].flatMap((name) => {
+			return [
+				{ name, type: "obj", src: `${PETS_BASE}${name}.obj` },
+				{ name, type: "mtl", src: `${PETS_BASE}${name}.mtl` },
+			];
+		}),
+		KENNEY_LOGO,
 	]);
 	state.set(state.PLAY, new ToonStage());
 	state.change(state.PLAY);

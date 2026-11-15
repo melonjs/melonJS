@@ -1,18 +1,22 @@
 /**
- * melonJS — an orthographic Camera3d: the isometric look, in real 3D.
+ * melonJS — an isometric tactics board, in real 3D.
  *
- * The Kenney Platformer Kit diorama (CC0), loaded with `level.load` exactly as
- * the glTF Scene example does, viewed through a `Camera3d` whose `projection`
- * is `"orthographic"`: no foreshortening, so parallel edges stay parallel and
- * the back row is as large as the front. That is the look of an isometric
- * tactics or builder game, with none of the 2D isometric tile bookkeeping —
- * depth, lighting, shadows and picking all still come from the 3D scene.
+ * Kenney's Platformer Kit blocks and props and a Blocky Characters hero
+ * (all CC0), on an 8 × 8 board seen through an orthographic `Camera3d`: the
+ * isometric look, with none of the 2D isometric tile bookkeeping. Depth,
+ * lighting, shadows and picking all come from the 3D scene.
  *
- * - The checkbox switches between orthographic and perspective at run time:
- *   the camera keeps its place, only the projection changes.
- * - The wheel zooms: `orthoHeight` is the orthographic camera's zoom (how
- *   many world units tall the view is); under perspective it moves closer.
- * - Drag to turn the view around the diorama.
+ * - **The board is one `InstancedMesh`** of grass blocks, stacked where the
+ *   ground is raised. A pointer event on it says which INSTANCE the ray hit
+ *   (`pointer.hit3d.instance`), which is the tile under the pointer: hover to
+ *   highlight it, click to send the hero there.
+ * - **The hero is a `GLTFModel`** that walks the shortest path round the
+ *   trees, rocks and crates, crossfading between its idle and walk clips and
+ *   turning to face each step. Toon bands and an outline make it read at any
+ *   zoom.
+ * - **The camera** is orthographic, a true isometric angle; Q / E (or the
+ *   buttons) turn the view a quarter at a time, the wheel zooms by changing
+ *   `orthoHeight`, and the checkbox switches to perspective for comparison.
  *
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
@@ -22,33 +26,144 @@ import {
 	Application,
 	Camera3d,
 	type CanvasRenderer,
+	Color,
+	GLTFModel,
+	InstancedMesh,
 	input,
-	level,
+	Light3d,
 	loader,
+	Matrix3d,
+	Mesh,
 	type Pointer,
 	plugin,
 	Renderable,
 	Stage,
 	state,
+	Text,
+	Tween,
 	UICheckbox,
+	UITextButton,
+	Vector3d,
 	video,
 	type WebGLRenderer,
 } from "melonjs";
+import { addKenneyCredit, KENNEY_LOGO } from "../kenneyCredit";
 import { createExampleComponent } from "../utils";
 
 const base = `${import.meta.env.BASE_URL}assets/gltf/`;
 
 // pixels per glTF unit
-const SCALE = 32;
+const SCALE = 40;
+// the board: N × N tiles, each a 2 × 2-unit Kenney grass block
+const N = 8;
+const PITCH = 2;
+// ground height per tile, in blocks: rows run toward the back of the board
+const HEIGHTS = [
+	"00000000",
+	"00000110",
+	"00100110",
+	"00100000",
+	"00000000",
+	"01100000",
+	"01100001",
+	"00000011",
+];
+// props, by tile; `block` ones cannot be walked through
+const PROPS: Record<string, { piece: string; block: boolean }> = {
+	"1,1": { piece: "tree-pine", block: true },
+	"2,2": { piece: "tree-pine-small", block: true },
+	"6,0": { piece: "tree-pine", block: true },
+	"5,1": { piece: "rocks", block: true },
+	"3,5": { piece: "rocks", block: true },
+	"5,3": { piece: "crate", block: true },
+	"4,3": { piece: "barrel", block: true },
+	"0,6": { piece: "tree-pine-small", block: true },
+	"6,6": { piece: "flowers-tall", block: false },
+	"1,4": { piece: "flowers", block: false },
+	"7,7": { piece: "flag", block: false },
+	"4,6": { piece: "mushrooms", block: false },
+};
+const START = { x: 0, z: 0 };
 // the classic isometric angles: a quarter turn of 45°, looking down by
 // atan(1/√2) ≈ 35.26°, so the three axes come out equally foreshortened
-const ISO_YAW = Math.PI / 4;
 const ISO_PITCH = Math.atan(1 / Math.SQRT2);
-// far enough that the near plane never clips the scene as it turns
-const DISTANCE = 1800;
+const DISTANCE = 1600;
+const STEP_MS = 260;
+const INK = "#1d2433";
+const UP = new Vector3d(0, 1, 0);
 
-/** a soft vertical gradient behind the scene, in screen space */
-class SkyBackdrop extends Renderable {
+const height = (x: number, z: number) => {
+	return Number(HEIGHTS[z][x]);
+};
+
+/**
+ * The render-space centre of a tile's TOP face. glTF is Y-up and the scene is
+ * bridged right-handed, so glTF y becomes -y and glTF z becomes -z.
+ */
+const tileTop = (x: number, z: number) => {
+	return {
+		x: (x - (N - 1) / 2) * PITCH * SCALE,
+		y: -(height(x, z) + 1) * SCALE,
+		z: -(z - (N - 1) / 2) * PITCH * SCALE,
+	};
+};
+
+/** shortest walkable path between two tiles (breadth-first, 4-way) */
+const findPath = (
+	from: { x: number; z: number },
+	to: { x: number; z: number },
+) => {
+	const key = (x: number, z: number) => {
+		return `${x},${z}`;
+	};
+	const blocked = (x: number, z: number) => {
+		return PROPS[key(x, z)]?.block === true;
+	};
+	if (blocked(to.x, to.z)) {
+		return null;
+	}
+	const prev = new Map<string, string | null>([[key(from.x, from.z), null]]);
+	const queue = [from];
+	for (let cur = queue.shift(); cur !== undefined; cur = queue.shift()) {
+		if (cur.x === to.x && cur.z === to.z) {
+			const path = [];
+			let k: string | null = key(cur.x, cur.z);
+			while (k !== null) {
+				const [x, z] = k.split(",").map(Number);
+				path.unshift({ x, z });
+				k = prev.get(k) ?? null;
+			}
+			return path.slice(1);
+		}
+		for (const [dx, dz] of [
+			[1, 0],
+			[-1, 0],
+			[0, 1],
+			[0, -1],
+		]) {
+			const x = cur.x + dx;
+			const z = cur.z + dz;
+			if (
+				x < 0 ||
+				z < 0 ||
+				x >= N ||
+				z >= N ||
+				blocked(x, z) ||
+				prev.has(key(x, z)) ||
+				// one block up or down at a time
+				Math.abs(height(x, z) - height(cur.x, cur.z)) > 1
+			) {
+				continue;
+			}
+			prev.set(key(x, z), key(cur.x, cur.z));
+			queue.push({ x, z });
+		}
+	}
+	return null;
+};
+
+/** a soft sky behind the board, in screen space */
+class Sky extends Renderable {
 	private sky: HTMLCanvasElement;
 
 	constructor() {
@@ -109,104 +224,319 @@ const createGame = async () => {
 	plugin.register(DebugPanelPlugin, "debugPanel");
 
 	const buildScene = (app: Application) => {
-		level.load("diorama", {
-			container: app.world,
-			scale: SCALE,
-			castGroundShadow: true,
+		const world = app.world;
+		world.addChild(new Sky(), -10000);
+		world.addChild(
+			new Light3d({
+				type: "directional",
+				direction: [0.35, 0.8, 0.5],
+				color: [1, 0.97, 0.9],
+			}),
+		);
+		world.addChild(
+			new Light3d({
+				type: "ambient",
+				color: [0.7, 0.75, 0.95],
+				intensity: 0.55,
+			}),
+		);
+
+		// ── the Kenney pieces, read out of the platformer diorama ─────────
+		const kit = loader.getGLTF("diorama");
+		const hero = loader.getGLTF("character");
+		if (!kit || !hero) {
+			throw new Error("Isometric: the Kenney assets did not preload.");
+		}
+		const piece = (name: string) => {
+			const node = kit.nodes.find((n) => {
+				return n.name === name || n.name?.startsWith(`${name}.`);
+			});
+			if (node === undefined) {
+				throw new Error(`Isometric: no "${name}" in the kit.`);
+			}
+			return {
+				vertices: node.vertices,
+				uvs: node.uvs,
+				normals: node.normals,
+				indices: node.indices,
+				texture: node.image ?? undefined,
+				textureRepeat: node.textureRepeat,
+				baseColorFactor: node.baseColorFactor,
+				normalize: false,
+				scale: SCALE,
+				rightHanded: true,
+				lit: true,
+			};
+		};
+
+		// ── the board: every block one instance of one mesh ──────────────
+		const instanceTile: number[] = [];
+		const topInstance: number[] = [];
+		for (let z = 0; z < N; z++) {
+			for (let x = 0; x < N; x++) {
+				for (let level = 0; level <= height(x, z); level++) {
+					instanceTile.push(z * N + x);
+				}
+				topInstance[z * N + x] = instanceTile.length - 1;
+			}
+		}
+		const board = new InstancedMesh(0, 0, {
+			...piece("block-grass-large"),
+			width: N * PITCH * SCALE,
+			height: N * PITCH * SCALE,
+			instanceCount: instanceTile.length,
+			instanceColors: true,
+			castGroundShadow: false,
 		});
-		// after the load, which resets the container it loads into
-		app.world.addChild(new SkyBackdrop(), -10000);
-		const scene = loader.getGLTF("diorama");
-		if (!scene) {
-			throw new Error('Isometric: "diorama" did not preload.');
+		const at = new Matrix3d();
+		instanceTile.forEach((tile, i) => {
+			const x = tile % N;
+			const z = Math.floor(tile / N);
+			const below = topInstance[tile] - i;
+			at.identity().translate(
+				(x - (N - 1) / 2) * PITCH,
+				height(x, z) - below,
+				(z - (N - 1) / 2) * PITCH,
+			);
+			board.setInstance(i, at);
+		});
+		board.isKinematic = false; // listen to the pointer
+		world.addChild(board, 0);
+
+		// ── props, toon-shaded and inked to match the hero ────────────────
+		for (const [k, prop] of Object.entries(PROPS)) {
+			const [x, z] = k.split(",").map(Number);
+			const top = tileTop(x, z);
+			const mesh = new Mesh(top.x, top.y, {
+				...piece(prop.piece),
+				toonBands: 3,
+				outlineWidth: 1.5,
+				outlineColor: INK,
+				castGroundShadow: true,
+				shadowGroundY: top.y,
+			});
+			mesh.depth = top.z;
+			mesh.rotate(((x * 7 + z * 3) % 4) * (Math.PI / 2), UP);
+			world.addChild(mesh, top.z);
 		}
 
-		// the scene's centre and size, in render space (Y-down, Z bridged)
-		const { min, max } = scene.bounds;
-		const cx = ((min[0] + max[0]) / 2) * SCALE;
-		const cy = -((min[1] + max[1]) / 2) * SCALE;
-		const cz = -((min[2] + max[2]) / 2) * SCALE;
-		const span = Math.hypot(max[0] - min[0], max[2] - min[2]) * SCALE;
-
-		const camera = app.viewport as Camera3d;
-		camera.setClipPlanes(50, 6000);
-		// the switch: everything else about the camera stays as it is
-		camera.projection = "orthographic";
-		// the whole diorama in view, with a margin: this is the zoom
-		camera.orthoHeight = span * 0.8;
-		// perspective, when switched to, gets the lens that frames the same
-		// height at the camera's distance, so the two views start alike
-		camera.fov = 2 * Math.atan(camera.orthoHeight / 2 / DISTANCE);
-
-		let yaw = ISO_YAW;
-		// under perspective, the wheel changes the distance instead
-		let distance = DISTANCE;
-		const place = () => {
-			camera.setPosition(
-				cx - Math.sin(yaw) * Math.cos(ISO_PITCH) * distance,
-				// up is -Y
-				cy - Math.sin(ISO_PITCH) * distance,
-				cz - Math.cos(yaw) * Math.cos(ISO_PITCH) * distance,
-			);
-			camera.lookAt(cx, cy, cz);
+		// ── the hero ──────────────────────────────────────────────────────
+		const heroScale = (1.5 * SCALE) / (hero.bounds.max[1] - hero.bounds.min[1]);
+		const unit = new GLTFModel(hero, {
+			scale: heroScale,
+			lit: true,
+			toonBands: 3,
+			outlineWidth: 1.5,
+			outlineColor: INK,
+			castGroundShadow: true,
+		});
+		const place = { ...START };
+		const placeAt = (p: { x: number; y: number; z: number }) => {
+			unit.pos.set(p.x, p.y);
+			unit.depth = p.z;
+			for (const part of unit.getChildren()) {
+				if (part instanceof Mesh) {
+					part.shadowGroundY = p.y;
+				}
+			}
 		};
-		place();
+		placeAt(tileTop(START.x, START.z));
+		world.addChild(unit, 0);
+		unit.setCurrentAnimation("idle");
+		// the model faces glTF +Z, which the bridge turns into engine -Z
+		let facing = 0;
+		const face = (dx: number, dz: number) => {
+			const target = Math.atan2(-dx, dz);
+			let turn = target - facing;
+			turn = Math.atan2(Math.sin(turn), Math.cos(turn));
+			unit.rotate(turn, UP);
+			facing = target;
+		};
 
-		// ── controls ─────────────────────────────────────────────────────
-		const toggle = new UICheckbox(24, 24, {
-			label: "orthographic",
-			checked: true,
+		// walk the path a tile at a time; a new click re-plans from the
+		// next tile instead of cutting a corner
+		let path: { x: number; z: number }[] = [];
+		let walking = false;
+		const step = () => {
+			const next = path.shift();
+			if (next === undefined) {
+				walking = false;
+				unit.setCurrentAnimation("idle", { crossfade: 200 });
+				return;
+			}
+			face(next.x - place.x, next.z - place.z);
+			const from = tileTop(place.x, place.z);
+			const to = tileTop(next.x, next.z);
+			const pos = { ...from };
+			new Tween(pos)
+				.to(to, { duration: STEP_MS })
+				.onUpdate(() => {
+					placeAt(pos);
+				})
+				.onComplete(() => {
+					place.x = next.x;
+					place.z = next.z;
+					step();
+				})
+				.start();
+		};
+		const walkTo = (x: number, z: number) => {
+			const found = findPath(place, { x, z });
+			if (found === null || found.length === 0) {
+				return;
+			}
+			path = found;
+			if (!walking) {
+				walking = true;
+				unit.setCurrentAnimation("walk", { crossfade: 150 });
+				step();
+			}
+		};
+
+		// ── the pointer: the ray's instance is the tile ───────────────────
+		const readout = new Text(20, 20, {
 			font: "sans-serif",
-			fontSize: 20,
-			labelFillStyle: "#1d3557",
-			onChange: (on) => {
-				camera.projection = on ? "orthographic" : "perspective";
-			},
+			size: 18,
+			fillStyle: INK,
+			text: "click a tile to walk there · Q / E turn · wheel zoom",
 		});
-		app.world.addChild(toggle, 100);
+		readout.floating = true;
+		world.addChild(readout, 100);
 
-		// drag to turn round the diorama; screen coordinates, since the
-		// camera itself moves (see the input skill)
-		let dragging = false;
-		let lastX = 0;
-		input.registerPointerEvent("pointerdown", camera, (ev: Pointer) => {
-			dragging = true;
-			lastX = ev.gameScreenX;
-		});
-		input.registerPointerEvent("pointerup", camera, () => {
-			dragging = false;
-		});
-		input.registerPointerEvent("pointermove", camera, (ev: Pointer) => {
-			if (dragging) {
-				yaw -= (ev.gameScreenX - lastX) * 0.006;
-				lastX = ev.gameScreenX;
-				place();
+		const white = new Color(255, 255, 255);
+		const reachable = new Color(255, 236, 140);
+		const unreachable = new Color(255, 190, 185);
+		let hovered = -1;
+		const hover = (tile: number) => {
+			if (tile === hovered) {
+				return;
+			}
+			if (hovered >= 0) {
+				board.setInstanceColor(topInstance[hovered], white);
+			}
+			hovered = tile;
+			if (tile >= 0) {
+				const x = tile % N;
+				const z = Math.floor(tile / N);
+				const ok =
+					(x === place.x && z === place.z) ||
+					findPath(place, { x, z }) !== null;
+				board.setInstanceColor(topInstance[tile], ok ? reachable : unreachable);
+				readout.setText(
+					`tile ${x}, ${z} · height ${height(x, z)}${ok ? "" : " · blocked"}`,
+				);
+			}
+		};
+		input.registerPointerEvent("pointermove", board, (pointer: Pointer) => {
+			if (pointer.hit3d !== null) {
+				hover(instanceTile[pointer.hit3d.instance]);
 			}
 		});
-		// the wheel zooms: orthoHeight for the orthographic view, the
-		// distance for the perspective one
+		input.registerPointerEvent("pointerleave", board, () => {
+			hover(-1);
+		});
+		input.registerPointerEvent("pointerdown", board, (pointer: Pointer) => {
+			if (pointer.hit3d !== null) {
+				const tile = instanceTile[pointer.hit3d.instance];
+				walkTo(tile % N, Math.floor(tile / N));
+			}
+			return false;
+		});
+
+		// ── the camera ────────────────────────────────────────────────────
+		const camera = app.viewport as Camera3d;
+		camera.setClipPlanes(50, 5000);
+		camera.projection = "orthographic";
+		camera.orthoHeight = 860;
+		camera.fov = 2 * Math.atan(camera.orthoHeight / 2 / DISTANCE);
+		const view = { yaw: Math.PI / 4 };
+		const aim = () => {
+			camera.setPosition(
+				-Math.sin(view.yaw) * Math.cos(ISO_PITCH) * DISTANCE,
+				-Math.sin(ISO_PITCH) * DISTANCE - SCALE,
+				-Math.cos(view.yaw) * Math.cos(ISO_PITCH) * DISTANCE,
+			);
+			camera.lookAt(0, -SCALE, 0);
+		};
+		aim();
+		let turning: Tween | null = null;
+		const turn = (quarter: number) => {
+			turning?.stop();
+			// round to the nearest quarter so repeated presses stay aligned
+			const target =
+				Math.round((view.yaw - Math.PI / 4) / (Math.PI / 2)) * (Math.PI / 2) +
+				Math.PI / 4 +
+				quarter * (Math.PI / 2);
+			turning = new Tween(view)
+				.to({ yaw: target }, { duration: 350 })
+				.easing(Tween.Easing.Quadratic.Out)
+				.onUpdate(aim)
+				.start();
+		};
 		input.registerPointerEvent("wheel", camera, (ev: Pointer) => {
 			const factor = ev.deltaY > 0 ? 1.1 : 1 / 1.1;
-			if (camera.projection === "orthographic") {
-				camera.orthoHeight = Math.min(
-					Math.max(camera.orthoHeight * factor, span * 0.2),
-					span * 2,
-				);
-			} else {
-				distance = Math.min(Math.max(distance * factor, 600), 4000);
-				place();
-			}
+			camera.orthoHeight = Math.min(
+				Math.max(camera.orthoHeight * factor, 300),
+				1600,
+			);
+			camera.fov = 2 * Math.atan(camera.orthoHeight / 2 / DISTANCE);
 		});
+		const onKey = (e: KeyboardEvent) => {
+			if (e.key === "q" || e.key === "Q") {
+				turn(-1);
+			} else if (e.key === "e" || e.key === "E") {
+				turn(1);
+			}
+		};
+		globalThis.addEventListener("keydown", onKey);
+
+		// ── controls ──────────────────────────────────────────────────────
+		const button = (x: number, text: string, onClick: () => void) => {
+			world.addChild(
+				new UITextButton(x, 56, {
+					font: "sans-serif",
+					size: 16,
+					text,
+					width: 110,
+					height: 32,
+					labelFillStyle: INK,
+					hoverOffColor: "#ffffff",
+					hoverOnColor: "#ffe48a",
+					borderColor: INK,
+					onClick,
+				}),
+				100,
+			);
+		};
+		button(20, "◀ turn (Q)", () => {
+			turn(-1);
+		});
+		button(140, "turn (E) ▶", () => {
+			turn(1);
+		});
+		world.addChild(
+			new UICheckbox(270, 60, {
+				label: "orthographic",
+				checked: true,
+				font: "sans-serif",
+				fontSize: 18,
+				labelFillStyle: INK,
+				onChange: (on) => {
+					camera.projection = on ? "orthographic" : "perspective";
+				},
+			}),
+			100,
+		);
+
+		addKenneyCredit(app, INK);
 
 		return () => {
-			input.releasePointerEvent("pointerdown", camera);
-			input.releasePointerEvent("pointerup", camera);
-			input.releasePointerEvent("pointermove", camera);
 			input.releasePointerEvent("wheel", camera);
+			globalThis.removeEventListener("keydown", onKey);
 		};
 	};
 
-	class IsometricStage extends Stage {
+	class TacticsStage extends Stage {
 		#teardown: (() => void) | null = null;
 
 		override onResetEvent(app: Application) {
@@ -221,8 +551,10 @@ const createGame = async () => {
 
 	await loader.preload([
 		{ name: "diorama", type: "glb", src: `${base}platformer-diorama.glb` },
+		{ name: "character", type: "glb", src: `${base}character.glb` },
+		KENNEY_LOGO,
 	]);
-	state.set(state.PLAY, new IsometricStage());
+	state.set(state.PLAY, new TacticsStage());
 	state.change(state.PLAY);
 };
 
