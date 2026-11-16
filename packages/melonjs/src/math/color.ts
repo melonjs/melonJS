@@ -764,8 +764,11 @@ export class Color {
 	}
 
 	/**
-	 * return a Float Array representation of this object
-	 * @returns A Float Array representation of this color
+	 * The color as `[r, g, b, a]`, each component from 0 to 1. This is the
+	 * color's own array, not a copy: writing into it changes the color, and
+	 * it follows any later change to the color. Copy it to keep the values or
+	 * to change them (`color.toArray().slice()`, or `.slice(0, 3)` for RGB).
+	 * @returns this color's own normalized RGBA components
 	 */
 	toArray() {
 		return this.normalizedRGBA;
