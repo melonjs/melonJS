@@ -640,7 +640,8 @@ export interface RaycastHit3d {
  *   come closer (a pendulum, a grappling hook, a cap on a chain's length).
  * - `"weld"`: the two bodies move and turn as one, as they stand when the
  *   joint is made (parts glued together that can break apart).
- * - `"slider"`: the second body slides along `axis` and keeps its angle (a
+ * - `"slider"`: the second body slides along `axis` and keeps its angle to
+ *   the first, as it was when the joint was made (a
  *   lift, a piston). Optional `limits` bound the travel.
  */
 export type JointType = "hinge" | "rope" | "weld" | "slider";

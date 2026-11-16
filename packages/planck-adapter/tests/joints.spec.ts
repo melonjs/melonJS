@@ -367,6 +367,29 @@ describe.each(JOINT_BACKENDS)("$name: world.addJoint()", (backend) => {
 		expect(turn).toBeLessThan(0.02);
 	});
 
+	it("a slider joins the bodies as they stand: b keeps its own angle, and slides along a's turned axis", () => {
+		const world = new World(0, 0, 800, 600, backend.make());
+		const rail = box(400, 100, 32, 32, "static");
+		const car = box(400, 160, 32, 32, "dynamic");
+		world.addChild(rail);
+		world.addChild(car);
+		// the rail's own x points down the world's y; the car stands tilted
+		world.adapter.setAngle?.(rail, Math.PI / 2);
+		world.adapter.setAngle?.(car, 0.5);
+		world.addJoint({ type: "slider", a: rail, b: car });
+		let turn = 0;
+		let drift = 0;
+		run(world, 30, () => {
+			const p = backend.pose(car);
+			turn = Math.max(turn, Math.abs(p.angle - 0.5));
+			drift = Math.max(drift, Math.abs(p.x - 416));
+		});
+		// gravity takes it down the rail, and only along it
+		expect(backend.pose(car).y).toBeGreaterThan(200);
+		expect(drift).toBeLessThan(1);
+		expect(turn).toBeLessThan(0.02);
+	});
+
 	it("anchors are in the renderable's own space, whatever its anchorPoint", () => {
 		const world = new World(0, 0, 800, 600, backend.make());
 		// both anchored at their centre: the hook spans 390..410 x 90..110,
