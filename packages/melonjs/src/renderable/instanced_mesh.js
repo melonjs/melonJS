@@ -27,6 +27,7 @@ import Mesh from "./mesh.js";
  * @import {Bounds} from "../physics/bounds.ts";
  * @import Renderer from "../video/renderer.js";
  * @import { MeshHit, Ray3d } from "../geometries/ray3d.ts";
+ * @import {Vector3d} from "../math/vector3d.ts";
  */
 // scratch reused by getBounds3d(); never handed out
 const _instanceMatrix = new Matrix3d();
@@ -847,7 +848,10 @@ export default class InstancedMesh extends Mesh {
 		}
 	}
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @returns {undefined} always: a set has no point of its own
+	 */
 	get shadowGroundPoint() {
 		return undefined;
 	}

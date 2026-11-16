@@ -31,6 +31,7 @@ import Body from "./../physics/builtin/body.js";
  * @import ShaderEffect from "../video/effects/shadereffect.js";
  * @import {Vector2d} from "../math/vector2d.ts";
  * @import {Vector3d} from "../math/vector3d.ts";
+ * @import {XYPoint} from "../utils/types.ts";
  * @import Renderer from "../video/renderer.js";
  **/
 
@@ -1108,7 +1109,7 @@ export default class Renderable extends Rect {
 
 	/**
 	 * Translate the renderable by the specified offset.
-	 * @param {number|Vector2d|Vector3d} x - x offset, or a vector to translate by
+	 * @param {number|Vector2d|Vector3d|XYPoint} x - x offset, or a vector (any `{x, y}` or `{x, y, z}` point) to translate by
 	 * @param {number} [y=0] - y offset, ignored when the first argument is a vector
 	 * @param {number} [z=0] - z offset, ignored when the first argument is a vector
 	 * @returns {this} Reference to this object for method chaining
