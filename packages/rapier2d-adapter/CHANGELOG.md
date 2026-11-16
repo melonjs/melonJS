@@ -8,7 +8,7 @@
 - `step()` with a `dt` that is `NaN`, infinite, zero or negative simulates nothing; a `NaN` or `Infinity` step used to freeze every awake body for good, with no gravity afterwards
 - `raycast()` and `queryAABB()` on a destroyed adapter return `null` and `[]`; they threw `Cannot read properties of undefined`
 - A `NaN` `maxVelocity` on an axis no longer turns the body's velocity into `NaN`: it caps nothing. A negative one caps by its size; it used to pin the velocity at that speed, even on a body at rest
-- `setMaxVelocity()` on a renderable with no body does nothing; it stored the limit and kept the renderable alive until `destroy()`
+- `setMaxVelocity()` on a renderable with no body yet no longer keeps the renderable alive until `destroy()`: the cap is held weakly, and still applies once `addChild()` builds the body, unless the `bodyDef` has a `maxVelocity` of its own
 - A second `addBody()` for the same renderable replaces its body; the first Rapier body and its records were leaked, and kept colliding. An `addBody()` refused for an unsupported shape no longer leaves an orphan Rapier body in the world
 - The normal of an `onCollisionEnd` and of a sensor contact is `{ x: 0, y: 0 }`, not `-0` on one side, so `toEqual({ x: 0, y: 0 })` holds; so are the shape-level `normal`, `overlapN` and `overlapV`
 

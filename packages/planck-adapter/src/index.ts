@@ -333,6 +333,11 @@ export class PlanckAdapter implements PhysicsAdapter {
 		Renderable,
 		{ x: number; y: number }
 	>();
+	/**
+	 * Caps set before the renderable had a body, applied when `addBody`
+	 * builds one. Held weakly: a renderable never added is not kept alive.
+	 */
+	private pendingLimits = new WeakMap<Renderable, { x: number; y: number }>();
 	/** touching contacts, from their start hooks until their end */
 	private readonly started = new Set<planck.Contact>();
 	/** the contacts whose start or active hooks are running, innermost last */
@@ -501,6 +506,7 @@ export class PlanckAdapter implements PhysicsAdapter {
 		this.renderableMap.clear();
 		this.fixtureShapeMap.clear();
 		this.velocityLimits.clear();
+		this.pendingLimits = new WeakMap();
 		this.defMap.clear();
 		this.posOffsets.clear();
 		this.reportedShapes.clear();
@@ -748,8 +754,11 @@ export class PlanckAdapter implements PhysicsAdapter {
 		this.bodyMap.set(renderable, body);
 		this.renderableMap.set(body, renderable);
 		this.defMap.set(renderable, def);
-		if (def.maxVelocity) {
-			this.setMaxVelocity(renderable, def.maxVelocity);
+		// the definition's cap, or else one set before the body was built
+		const limit = def.maxVelocity ?? this.pendingLimits.get(renderable);
+		this.pendingLimits.delete(renderable);
+		if (limit) {
+			this.setMaxVelocity(renderable, limit);
 		}
 		// Maps the body origin back onto `renderable.pos` on the way out of
 		// the simulation. The body is anchored in the renderable's DRAWN
@@ -1324,15 +1333,21 @@ export class PlanckAdapter implements PhysicsAdapter {
 		renderable: Renderable,
 		limit: { x: number; y: number },
 	): void {
-		// nothing to cap, and nothing to keep, for a renderable with no body
-		if (!this.bodyMap.has(renderable)) return;
-		this.velocityLimits.set(renderable, { x: limit.x, y: limit.y });
+		const copy = { x: limit.x, y: limit.y };
+		if (this.bodyMap.has(renderable)) {
+			this.velocityLimits.set(renderable, copy);
+		} else {
+			// no body yet: kept for the one `addBody` builds, unless the
+			// body definition has a cap of its own
+			this.pendingLimits.set(renderable, copy);
+		}
 	}
 
 	getMaxVelocity(renderable: Renderable): { x: number; y: number } {
 		// a copy, so changing it does not change the cap; and no cap reads as
 		// Infinity, where `{ 0, 0 }` read as a cap that holds the body still
-		const limit = this.velocityLimits.get(renderable);
+		const limit =
+			this.velocityLimits.get(renderable) ?? this.pendingLimits.get(renderable);
 		return limit ? { x: limit.x, y: limit.y } : { x: Infinity, y: Infinity };
 	}
 

@@ -300,6 +300,11 @@ export class RapierAdapter implements PhysicsAdapter {
 		Renderable,
 		{ x: number; y: number }
 	>();
+	/**
+	 * Caps set before the renderable had a body, applied when `addBody`
+	 * builds one. Held weakly: a renderable never added is not kept alive.
+	 */
+	private pendingLimits = new WeakMap<Renderable, { x: number; y: number }>();
 	private readonly defMap = new Map<Renderable, BodyDefinition>();
 	/**
 	 * Offset between `renderable.pos` and the Rapier body's translation (the
@@ -460,6 +465,7 @@ export class RapierAdapter implements PhysicsAdapter {
 		this.pendingEvents.length = 0;
 		this.forced.clear();
 		this.velocityLimits.clear();
+		this.pendingLimits = new WeakMap();
 		this.defMap.clear();
 		this.posOffsets.clear();
 		this.reportedShapes.clear();
@@ -632,8 +638,11 @@ export class RapierAdapter implements PhysicsAdapter {
 		this.bodyMap.set(renderable, body);
 		this.collidersOf.set(renderable, colliders);
 		this.defMap.set(renderable, def);
-		if (def.maxVelocity) {
-			this.setMaxVelocity(renderable, def.maxVelocity);
+		// the definition's cap, or else one set before the body was built
+		const limit = def.maxVelocity ?? this.pendingLimits.get(renderable);
+		this.pendingLimits.delete(renderable);
+		if (limit) {
+			this.setMaxVelocity(renderable, limit);
 		}
 		// maps the body origin back onto `renderable.pos`, anchor included
 		this.posOffsets.set(renderable, {
@@ -1038,15 +1047,21 @@ export class RapierAdapter implements PhysicsAdapter {
 		renderable: Renderable,
 		limit: { x: number; y: number },
 	): void {
-		// nothing to cap, and nothing to keep, for a renderable with no body
-		if (!this.bodyMap.has(renderable)) return;
-		this.velocityLimits.set(renderable, { x: limit.x, y: limit.y });
+		const copy = { x: limit.x, y: limit.y };
+		if (this.bodyMap.has(renderable)) {
+			this.velocityLimits.set(renderable, copy);
+		} else {
+			// no body yet: kept for the one `addBody` builds, unless the
+			// body definition has a cap of its own
+			this.pendingLimits.set(renderable, copy);
+		}
 	}
 
 	getMaxVelocity(renderable: Renderable): { x: number; y: number } {
 		// a copy, so changing it does not change the cap; no cap reads as
 		// Infinity
-		const limit = this.velocityLimits.get(renderable);
+		const limit =
+			this.velocityLimits.get(renderable) ?? this.pendingLimits.get(renderable);
 		return limit ? { x: limit.x, y: limit.y } : { x: Infinity, y: Infinity };
 	}
 

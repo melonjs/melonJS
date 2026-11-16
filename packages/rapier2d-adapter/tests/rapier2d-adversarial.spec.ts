@@ -465,15 +465,13 @@ describe("RapierAdapter, adversarially", () => {
 	});
 
 	describe("a renderable with no body", () => {
-		it("setMaxVelocity keeps nothing about it", () => {
+		it("setMaxVelocity keeps its cap for the body to come, without holding on to the renderable", () => {
 			const loose = new Renderable(10, 20, 1, 1);
 			expect(() => {
 				adapter.setMaxVelocity(loose, { x: 1, y: 1 });
 			}).not.toThrow();
-			expect(adapter.getMaxVelocity(loose)).toEqual({
-				x: Infinity,
-				y: Infinity,
-			});
+			expect(adapter.getMaxVelocity(loose)).toEqual({ x: 1, y: 1 });
+			// not in the map of live caps, which holds its renderables
 			expect(internals().velocityLimits.size).toBe(0);
 		});
 	});

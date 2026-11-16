@@ -363,14 +363,59 @@ for (const backend of BACKENDS) {
 		});
 
 		describe("a renderable with no body, or with two", () => {
-			it("setMaxVelocity on a renderable with no body keeps nothing", () => {
+			// a renderable with a body definition, not yet in the world
+			const unadded = (extra = {}) => {
+				const r = new Renderable(100, 100, 32, 32) as Hooked;
+				r.anchorPoint.set(0, 0);
+				r.alwaysUpdate = true;
+				r.bodyDef = {
+					type: "dynamic",
+					shapes: [new Rect(0, 0, 32, 32)],
+					gravityScale: 0,
+					...extra,
+				};
+				return r;
+			};
+			const speedAfterOneFrame = (r: Renderable) => {
+				adapter.setVelocity(r, new Vector2d(backend.speed, 0));
+				run(1);
+				return adapter.getVelocity(r).x;
+			};
+
+			it("a cap set before the body is built applies once it is", () => {
 				fresh();
-				const loose = new Renderable(10, 20, 1, 1);
-				adapter.setMaxVelocity(loose, { x: 1, y: 1 });
-				expect(adapter.getMaxVelocity(loose)).toEqual({
+				const r = unadded();
+				const cap = { x: backend.speed / 4, y: backend.speed / 4 };
+				adapter.setMaxVelocity(r, cap);
+				// read back as set, and copied
+				cap.x = 1;
+				expect(adapter.getMaxVelocity(r).x).toBe(backend.speed / 4);
+				world.addChild(r);
+				expect(speedAfterOneFrame(r)).toBeCloseTo(backend.speed / 4, 3);
+			});
+
+			it("the body definition's own cap wins over one set before the body was built", () => {
+				fresh();
+				const r = unadded({
+					maxVelocity: { x: backend.speed / 2, y: backend.speed / 2 },
+				});
+				adapter.setMaxVelocity(r, { x: 1, y: 1 });
+				world.addChild(r);
+				expect(speedAfterOneFrame(r)).toBeCloseTo(backend.speed / 2, 3);
+			});
+
+			it("added again, a renderable has its body definition's cap, not one set on it before", () => {
+				fresh();
+				const r = unadded();
+				adapter.setMaxVelocity(r, { x: backend.speed / 4, y: 1 });
+				world.addChild(r);
+				world.removeChildNow(r, true);
+				world.addChild(r);
+				expect(adapter.getMaxVelocity(r)).toEqual({
 					x: Infinity,
 					y: Infinity,
 				});
+				expect(speedAfterOneFrame(r)).toBeCloseTo(backend.speed, 1);
 			});
 
 			it("a second addBody replaces the first", () => {

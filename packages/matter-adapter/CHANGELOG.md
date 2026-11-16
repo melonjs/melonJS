@@ -7,7 +7,7 @@
 - Removing that body again from its partner's `onCollisionEnd` no longer overflows the stack (`Maximum call stack size exceeded`)
 - `step()` with a `dt` that is `NaN`, infinite, zero or negative simulates nothing; a `NaN` or `Infinity` step turned the position of every body it moved into `NaN` for good
 - A `NaN` `maxVelocity` on an axis no longer turns the body's velocity into `NaN`: it caps nothing. A negative one caps by its size; it used to pin the velocity at that speed, even on a body at rest
-- `setMaxVelocity()` on a renderable with no body does nothing; it stored the limit and kept the renderable alive until `destroy()`
+- `setMaxVelocity()` on a renderable with no body yet no longer keeps the renderable alive until `destroy()`: the cap is held weakly, and still applies once `addChild()` builds the body, unless the `bodyDef` has a `maxVelocity` of its own
 - A second `addBody()` for the same renderable replaces its body; the first matter body was left in the world, still colliding
 - `removeBody()` forgets the body's shapes; they were kept until `destroy()`
 - A contact normal has no negative zero: the side of an axis-aligned contact that is handed the negated normal got `{ x: -0, y: -1 }`, so `toEqual({ x: 0, y: -1 })` failed; so did the shape-level `normal`, `overlapN` and `overlapV`

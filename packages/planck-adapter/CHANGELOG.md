@@ -7,7 +7,7 @@
 - A body removed inside an `onCollisionActive` hook no longer makes its partner hear `onCollisionEnd` before its own active hook that frame, then the active hook after the end
 - `step()` with a `dt` that is `NaN`, infinite, zero or negative simulates nothing; a `NaN` or `Infinity` step turned the position of every body it moved into `NaN` for good
 - A `NaN` `maxVelocity` on an axis no longer turns the body's velocity into `NaN`: it caps nothing. A negative one caps by its size; it used to pin the velocity at that speed, even on a body at rest
-- `setMaxVelocity()` on a renderable with no body does nothing; it stored the limit and kept the renderable alive until `destroy()`
+- `setMaxVelocity()` on a renderable with no body yet no longer keeps the renderable alive until `destroy()`: the cap is held weakly, and still applies once `addChild()` builds the body, unless the `bodyDef` has a `maxVelocity` of its own
 - A second `addBody()` for the same renderable replaces its body; the first planck body was left in the world, still colliding. An `addBody()` refused for an unsupported shape no longer leaves an orphan body in the world
 - A contact normal has no negative zero: the side of an axis-aligned contact that is handed the negated normal got `{ x: -0, y: -1 }`, so `toEqual({ x: 0, y: -1 })` failed; so did a sensor's zero normal, and the shape-level `normal`, `overlapN` and `overlapV`
 

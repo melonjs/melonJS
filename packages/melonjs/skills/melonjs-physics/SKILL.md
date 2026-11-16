@@ -611,6 +611,14 @@ A velocity cap is in the adapter's velocity unit: pixels per step on the
 built-in and matter, pixels per second on planck and Rapier (see *Porting*
 below).
 
+A cap the body starts with belongs in `bodyDef.maxVelocity`: it is applied
+every time the body is built, so a pooled or re-added renderable gets it back.
+`setMaxVelocity()` changes the live body. Called before `addChild()`, when
+there is no body yet, the built-in adapter throws; matter, planck and Rapier
+keep the cap and apply it to the body `addChild()` builds, unless the
+`bodyDef` has a `maxVelocity` of its own. A renderable removed and added again
+loses such a cap: only the `bodyDef` is built again.
+
 Under matter, planck and Rapier, `syncFromPhysics()` copies the engine body's position
 back onto `renderable.pos` after every step, so a direct write is simply erased
 — no error. The built-in world integrates `pos` in place instead, so a write
