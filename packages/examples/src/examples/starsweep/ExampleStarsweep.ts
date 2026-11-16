@@ -19,8 +19,9 @@
  *
  * The characters are sprites from one sheet, `cast.png`, baked from
  * Kenney's Monster Builder Pack (CC0) with every animation in its JSON (see
- * `cast.ts`; `pnpm bake:starsweep` bakes it again). On GPU renderers a custom nebula shader animates the sky,
- * bloom, vignette and chromatic aberration post-effects polish the frame,
+ * `cast.ts`; `pnpm bake:starsweep` bakes it again). On GPU renderers a
+ * custom nebula shader animates the sky, bloom, vignette and chromatic
+ * aberration post-effects polish the frame,
  * and a second, 3D camera draws star dust and novas behind the game (see
  * `fx.ts`). Every sound is synthesised with `audio.tone` / `audio.noise`.
  *
