@@ -12,8 +12,8 @@
  *   type of its own (`loader.setParser`), loaded behind the loading screen
  *   with the models, whose materials bring their own texture; the world then
  *   switches to Rapier with `world.setAdapter()`. The wood, stone and grass
- *   are painted in code, each on a `CanvasRenderTarget` made once and handed
- *   to the meshes as their texture.
+ *   are painted in code on a `CanvasRenderTarget` and preloaded as images
+ *   too, so the meshes ask for them by name.
  * - **`@melonjs/rapier3d-adapter`**, with a `Camera3d`. Every block, pet and
  *   rival is a `Mesh` with a `bodyDef`; the adapter writes each body's
  *   position and turn back onto its mesh.
@@ -134,8 +134,8 @@ const ORBIT_EASE = 8;
 type Paint = "wood" | "stone" | "grass";
 
 /**
- * A texture painted in code: wood planks, stone, or grass. The canvas of a
- * `CanvasRenderTarget` is a texture as it is, for a mesh or a sprite.
+ * A texture painted in code on a `CanvasRenderTarget`: wood planks, stone,
+ * or grass. It is handed to the loader as an image, like any other asset.
  */
 const paint = (kind: Paint): HTMLCanvasElement => {
 	const target = new CanvasRenderTarget(64, 64, { context: "2d" });
@@ -173,12 +173,7 @@ const paint = (kind: Paint): HTMLCanvasElement => {
  * `Box3d(0, 0, 0, w, h, d)` is exactly its outline. Authored Y-UP like any
  * mesh geometry; a box looks the same either way.
  */
-const createBox = (
-	w: number,
-	h: number,
-	d: number,
-	texture: HTMLCanvasElement,
-) => {
+const createBox = (w: number, h: number, d: number, texture: string) => {
 	const x = w / 2;
 	const y = h / 2;
 	const z = d / 2;
@@ -337,11 +332,10 @@ const createGame = async () => {
 
 	plugin.register(DebugPanelPlugin, "debugPanel");
 
-	// the textures painted in code: made once, here, and shared by every
-	// round, since the renderer keeps a texture for each canvas it is handed
-	const wood = paint("wood");
-	const stone = paint("stone");
-	const grass = paint("grass");
+	// the textures painted in code, by the names they are preloaded under
+	const wood = "wood" as const;
+	const stone = "stone" as const;
+	const grass = "grass" as const;
 
 	/**
 	 * Build a round: the field, the towers, the slingshot.
@@ -1166,6 +1160,10 @@ const createGame = async () => {
 
 	await loader.preload([
 		{ name: "rapier3d", type: "rapier3d", src: "" },
+		// the textures painted in code go through the loader as images too
+		...([wood, stone, grass] as const).map((name) => {
+			return { name, type: "image", src: paint(name).toDataURL() };
+		}),
 		{ name: "sphere", type: "obj", src: `${MESH_BASE}sphere.obj` },
 		{ name: "backdrop", type: "image", src: `${PETS_BASE}jungle_bg.png` },
 		...[...PETS, ...RIVALS].flatMap((name) => {
