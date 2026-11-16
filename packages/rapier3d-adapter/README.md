@@ -50,9 +50,29 @@ As on every melonJS adapter:
 - `Rapier3dAdapter.create(options)` waits for `load()`, then constructs the adapter.
 - `Rapier3dAdapter.loaded` is `true` once `load()` has finished.
 
-Rapier is imported with `import()`, so bundlers put it (about 4.3 MB, 1.6 MB compressed) in a chunk of its own, downloaded when `load()` is first called.
+Rapier is imported with `import()`, so bundlers put it (about 4.3 MB, 1.6 MB compressed) in a chunk of its own, downloaded when `load()` is first called. There are two ways to wait for it.
 
-#### Behind the loading screen
+#### 1. Before the game starts: `create()`
+
+The shortest: await the adapter in the `Application` settings, as on every adapter.
+
+```ts
+import { Application, Camera3d, loader } from "melonjs";
+import { Rapier3dAdapter } from "@melonjs/rapier3d-adapter";
+
+const app = new Application(800, 600, {
+    parent: "screen",
+    cameraClass: Camera3d,
+    physic: await Rapier3dAdapter.create({ gravity: { x: 0, y: 980, z: 0 } }),
+});
+await app.init();
+await loader.preload(assets);
+// build the scene from here
+```
+
+The page stays blank while Rapier downloads and compiles: the loading screen only starts with `loader.preload`, after it. Right for a prototype, a test, or a game whose players have Rapier cached.
+
+#### 2. Behind the loading screen: the preloader
 
 Rapier is the largest download a game with it has, so load it with the game's other assets, where the loading screen counts it. Teach the loader an asset type for it with `loader.setParser`, list it in the preload, and switch the world to Rapier once the preload is done:
 
@@ -78,16 +98,11 @@ app.world.setAdapter(new Rapier3dAdapter({ gravity: { x: 0, y: 980, z: 0 } }));
 // build the scene from here
 ```
 
-`world.setAdapter()` rebuilds any body made before it from its `bodyDef`, so the order is safe either way; building the scene after it is simply cheaper. The [Slingshot](https://melonjs.github.io/melonJS/examples/#/slingshot) example loads this way.
+Rapier downloads in parallel with the models and textures, the loading screen shows it from the first frame, and a failed download fails the preload like any other asset. `world.setAdapter()` (melonJS 20.14 and later) rebuilds any body made before it from its `bodyDef`, so the order is safe either way; building the scene after it is simply cheaper. The [Slingshot](https://melonjs.github.io/melonJS/examples/#/slingshot) example loads this way.
 
-Without a loading screen, start `load()` early and await it before constructing:
+#### Will this stay asynchronous?
 
-```ts
-const rapierReady = Rapier3dAdapter.load();
-await loader.preload(assets);
-await rapierReady;
-app.world.setAdapter(new Rapier3dAdapter());
-```
+The WebAssembly ESM integration proposal lets JavaScript import a compiled module without awaiting it (source phase imports, `import source mod from "./engine.wasm"`), supported in some engines already. It takes the `await` out of the code, not the download: a static import is fetched and compiled before the game's own code runs, where no loading screen can show it. Rapier's `-compat` build, which this adapter uses, embeds its WebAssembly and starts it asynchronously. Should a later build be ready at import, `load()` resolves at once, as it already does on the built-in, matter and planck adapters, and both ways above work unchanged.
 
 ### Options
 
