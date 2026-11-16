@@ -76,19 +76,10 @@ export interface Rapier3dJointDefinition {
 	/**
 	 * `"hinge"`: the axis the bodies turn about, default Z, so a hinge turns
 	 * as it does in 2D. `"slider"`: the direction `b` slides in, default X.
-	 * In the bodies' own space.
+	 * In `a`'s own space; `z` defaults to `0`.
 	 */
 	axis?: Vector3Like;
 }
-
-/**
- * The world's internal hook that builds a renderable's joints again after
- * `updateShape()` rebuilt its body. Internal, so not in melonJS's published
- * types.
- */
-type WorldJointHook = {
-	_rebuildJointsOf?: (renderable: Renderable) => void;
-};
 
 /**
  * Options accepted by the {@link Rapier3dAdapter} constructor and by
@@ -106,12 +97,16 @@ export interface Rapier3dAdapterOptions {
 	 * Rapier is tuned for objects about a meter across, so the adapter works
 	 * in meters and converts at every boundary (positions, velocities,
 	 * gravity, forces, queries). Default `32`: a 32-pixel cube is one meter.
+	 * Raising it makes every body smaller in meters, so lighter, and the same
+	 * force moves it further; motion under gravity alone looks the same in
+	 * pixels. Must be a positive number.
 	 */
 	pixelsPerMeter?: number;
 	/**
 	 * Rapier steps per engine frame, each of `dt / N` seconds. More sub-steps
 	 * make fast contacts and tall stacks more accurate, at about `N` times
-	 * the physics cost. Default `1`; values below 1 are clamped to 1.
+	 * the physics cost. Default `1`; values below 1 are clamped to 1. A
+	 * force applied once in a frame acts across all of them.
 	 */
 	subSteps?: number;
 }
@@ -154,7 +149,64 @@ interface ColliderEntry {
 	/** the collider's box in body space, in pixels, before the body turns */
 	min: XYZ;
 	max: XYZ;
+	/**
+	 * a sphere or a capsule as the segment its radius sweeps, in body space
+	 * and pixels: its bounds once turned are those of the turned segment, a
+	 * radius wider, where its turned box would be too large
+	 */
+	round?: { a: XYZ; b: XYZ; r: number };
 }
+
+/** A collider ready to be made: its description, and what is kept about it. */
+interface ColliderPart {
+	shape: BodyShape;
+	index: number;
+	desc: RAPIER.ColliderDesc;
+	min: XYZ;
+	max: XYZ;
+	round?: { a: XYZ; b: XYZ; r: number };
+}
+
+/**
+ * What was changed on every collider of a body at run time, so that
+ * `updateShape()` gives it to the new ones.
+ */
+interface ColliderOverrides {
+	category?: number;
+	mask?: number;
+	sensor?: boolean;
+	restitution?: number;
+}
+
+/** A box in XY: min x, min y, max x, max y. */
+type Footprint = [number, number, number, number];
+
+/**
+ * A pair whose start or active hooks are running. When one of them takes a
+ * body of the pair out, the contact's end is told in the order a hook can
+ * rely on: to the side going out at once, while it is whole, and to the other
+ * once the hooks are done; and only to a side that heard the start.
+ */
+interface Dispatch {
+	key: string;
+	h1: number;
+	h2: number;
+	e1: ColliderEntry;
+	e2: ColliderEntry;
+	/** the sides that may hear the end: those the start reached */
+	reached: number;
+	/** the sides already told the end */
+	told: number;
+	/** true once a body of the pair was taken out */
+	ended: boolean;
+}
+
+/** Which hooks of a pair a dispatch reaches: one bit per side and level. */
+const SIDE_A = 1;
+const SIDE_B = 2;
+const SHAPE_A = 4;
+const SHAPE_B = 8;
+const EVERY_SIDE = SIDE_A | SIDE_B | SHAPE_A | SHAPE_B;
 
 /**
  * How a renderable draws its `currentTransform`, so the body's turn can be
@@ -207,6 +259,21 @@ function rotate(q: RAPIER.Rotation, v: XYZ): XYZ {
  */
 function conjugate(q: RAPIER.Rotation): RAPIER.Rotation {
 	return { x: -q.x, y: -q.y, z: -q.z, w: q.w };
+}
+
+/**
+ * Two turns composed: `a` applied after `b`.
+ * @param a - the second turn
+ * @param b - the first turn
+ * @returns the combined turn
+ */
+function multiply(a: RAPIER.Rotation, b: RAPIER.Rotation): RAPIER.Rotation {
+	return {
+		x: a.w * b.x + a.x * b.w + a.y * b.z - a.z * b.y,
+		y: a.w * b.y - a.x * b.z + a.y * b.w + a.z * b.x,
+		z: a.w * b.z + a.x * b.y - a.y * b.x + a.z * b.w,
+		w: a.w * b.w - a.x * b.x - a.y * b.y - a.z * b.z,
+	};
 }
 
 /**
@@ -305,6 +372,8 @@ export class Rapier3dAdapter implements PhysicsAdapter {
 	private readonly activePairs = new Map<string, [number, number]>();
 	/** a step's events, collected before any is dispatched */
 	private readonly pendingEvents: number[] = [];
+	/** the pairs whose start or active hooks are running, innermost last */
+	private readonly dispatching: Dispatch[] = [];
 	/** bodies with a force or torque to clear once the frame is stepped */
 	private readonly forced = new Set<RAPIER.RigidBody>();
 	private readonly velocityLimits = new Map<Renderable, Vector3Like>();
@@ -313,6 +382,8 @@ export class Rapier3dAdapter implements PhysicsAdapter {
 	private readonly poses = new Map<Renderable, Pose>();
 	/** the shapes {@link Rapier3dAdapter.getBodyShapes} reports */
 	private readonly reportedShapes = new Map<Renderable, BodyShape[]>();
+	/** what was set on every collider of a body at run time */
+	private readonly overrides = new Map<Renderable, ColliderOverrides>();
 
 	private readonly subSteps: number;
 
@@ -462,6 +533,8 @@ export class Rapier3dAdapter implements PhysicsAdapter {
 		this.defMap.clear();
 		this.poses.clear();
 		this.reportedShapes.clear();
+		this.overrides.clear();
+		this.dispatching.length = 0;
 	}
 
 	step(dt: number): void {
@@ -472,6 +545,11 @@ export class Rapier3dAdapter implements PhysicsAdapter {
 		}
 		// as the other adapters: no simulation while the game is paused
 		if (state.isPaused()) {
+			return;
+		}
+		// a step of no length simulates nothing, and one that is not a
+		// number would leave every body it touched stuck for good
+		if (!(dt > 0) || !Number.isFinite(dt)) {
 			return;
 		}
 		// read every step, so `adapter.gravity` can change while the game runs
@@ -570,6 +648,11 @@ export class Rapier3dAdapter implements PhysicsAdapter {
 
 	addBody(renderable: Renderable, def: BodyDefinition): Rapier3dAdapter.Body {
 		const R = this.rapier;
+		// build every collider first, so a refused shape leaves no body
+		// behind, nor takes away the one the renderable had
+		const parts = this._buildParts(def.shapes);
+		// a renderable has one body: a second one replaces the first
+		this.removeBody(renderable);
 		const desc =
 			def.type === "static"
 				? R.RigidBodyDesc.fixed()
@@ -583,74 +666,26 @@ export class Rapier3dAdapter implements PhysicsAdapter {
 			this.px2m(renderable.pos.y),
 			this.px2m(renderable.depth),
 		);
+		// `frictionAir` damps rotation as well as movement, as on the 2D
+		// adapter: Rapier damping, a rate per second
 		const damping = this._scalarOf(def.frictionAir) ?? 0;
 		desc.setLinearDamping(damping);
 		desc.setAngularDamping(damping);
 		desc.setGravityScale(def.gravityScale ?? 1);
+		// unset means a rigid body turns
 		if (def.fixedRotation === true) {
 			desc.lockRotations();
 		}
-		// build every collider first, so a refused shape leaves no body behind
-		const parts: {
-			shape: BodyShape;
-			index: number;
-			built: { desc: RAPIER.ColliderDesc; min: XYZ; max: XYZ };
-		}[] = [];
-		for (const [index, shape] of def.shapes.entries()) {
-			// `isActive === false` keeps a shape out of the simulation
-			if ((shape as { isActive?: boolean }).isActive === false) {
-				continue;
-			}
-			parts.push({ shape, index, built: this._shapeToCollider(shape) });
-		}
 		const body = this.world.createRigidBody(desc);
-
 		const colliders: RAPIER.Collider[] = [];
-		const bodyType =
-			typeof def.collisionType === "number" ? def.collisionType : 0x0001;
-		const bodyMask =
-			typeof def.collisionMask === "number"
-				? def.collisionMask
-				: collision.types.ALL_OBJECT;
-		for (const { shape, index, built } of parts) {
-			const shapeType = (shape as { collisionType?: number }).collisionType;
-			const shapeMask = (shape as { collisionMask?: number }).collisionMask;
-			const trigger = (shape as { isTrigger?: boolean }).isTrigger === true;
-			built.desc
-				.setDensity(def.density ?? 1)
-				.setFriction(def.friction ?? 0.2)
-				.setRestitution(def.restitution ?? 0)
-				// a trigger shape is a sensor: it reports contacts and
-				// contributes nothing to the solver
-				.setSensor(def.isSensor === true || trigger)
-				.setActiveEvents(R.ActiveEvents.COLLISION_EVENTS);
-			const collider = this.world.createCollider(built.desc, body);
-			this._applyFilter(
-				collider,
-				typeof shapeType === "number" ? shapeType : bodyType,
-				typeof shapeMask === "number" ? shapeMask : bodyMask,
-			);
-			this.colliderMap.set(collider.handle, {
-				renderable,
-				shape,
-				index,
-				min: built.min,
-				max: built.max,
-			});
-			colliders.push(collider);
-		}
-
-		if (def.maxVelocity) {
-			const limit = def.maxVelocity as Vector3Like;
-			this.velocityLimits.set(renderable, {
-				x: limit.x,
-				y: limit.y,
-				z: limit.z,
-			});
-		}
 		this.bodyMap.set(renderable, body);
 		this.collidersOf.set(renderable, colliders);
 		this.defMap.set(renderable, def);
+		this._createColliders(renderable, body, def, parts, colliders);
+
+		if (def.maxVelocity) {
+			this.setMaxVelocity(renderable, def.maxVelocity);
+		}
 		this.poses.set(renderable, {
 			base: Float64Array.from(renderable.currentTransform.val),
 			bridge:
@@ -664,7 +699,8 @@ export class Rapier3dAdapter implements PhysicsAdapter {
 
 		const adapterBody = body as Rapier3dAdapter.Body;
 		renderable.body = adapterBody;
-		// as the builtin `Body` constructor does
+		// as the builtin `Body` constructor does: a renderable with a body
+		// takes part in physics and receives pointer events
 		renderable.isKinematic = false;
 		return adapterBody;
 	}
@@ -674,26 +710,16 @@ export class Rapier3dAdapter implements PhysicsAdapter {
 		if (body === undefined) {
 			return;
 		}
-		const colliders = this.collidersOf.get(renderable) ?? [];
 		// a partner still touching this body learns the contact ended
-		const handles = new Set(
-			colliders.map((c) => {
-				return c.handle;
-			}),
-		);
-		for (const [key, [h1, h2]] of this.activePairs) {
-			if (handles.has(h1) || handles.has(h2)) {
-				this.activePairs.delete(key);
-				this._dispatchPair(h1, h2, "end");
-			}
-		}
-		for (const handle of handles) {
-			this.colliderMap.delete(handle);
-			this.filters.delete(handle);
+		this._endContacts(this.collidersOf.get(renderable) ?? []);
+		// one of their hooks may have taken this body out already
+		if (this.bodyMap.get(renderable) !== body) {
+			return;
 		}
 		// Rapier removes the body's joints with it
 		for (const joint of this.joints) {
 			if (
+				!joint.isValid() ||
 				joint.body1().handle === body.handle ||
 				joint.body2().handle === body.handle
 			) {
@@ -709,43 +735,169 @@ export class Rapier3dAdapter implements PhysicsAdapter {
 		this.defMap.delete(renderable);
 		this.poses.delete(renderable);
 		this.reportedShapes.delete(renderable);
-	}
-
-	updateShape(renderable: Renderable, shapes: BodyShape[]): void {
-		// rebuild the body with the new shapes, where it stands and as it
-		// moves
-		const oldDef = this.defMap.get(renderable);
-		const oldBody = this.bodyMap.get(renderable);
-		if (!oldDef || !oldBody) {
-			return;
-		}
-		const position = oldBody.translation();
-		const rotation = oldBody.rotation();
-		const linvel = oldBody.linvel();
-		const angvel = oldBody.angvel();
-		// the transform the turn is written from, not the turned one now on
-		// the renderable
-		const pose = this.poses.get(renderable);
-		this.removeBody(renderable);
-		const body = this.addBody(renderable, { ...oldDef, shapes });
-		if (pose) {
-			this.poses.set(renderable, pose);
-		}
-		body.setTranslation(position, true);
-		body.setRotation(rotation, true);
-		body.setLinvel(linvel, true);
-		body.setAngvel(angvel, true);
-		// the old body took its joints with it: the world builds them again
-		(this.melonWorld as WorldJointHook)._rebuildJointsOf?.(renderable);
+		this.overrides.delete(renderable);
 	}
 
 	/**
-	 * Make a joint between two bodies: what `world.addJoint()` calls. A
-	 * `"hinge"` is a Rapier revolute joint about `axis` (default Z), a
-	 * `"rope"` a rope joint, a `"weld"` a fixed joint and a `"slider"` a
-	 * prismatic joint along `axis` (default X). Anchors and axes are in each
-	 * renderable's own space, relative to its `pos`, in pixels; a `z` left
-	 * out is `0`.
+	 * Give a body new shapes. The body itself stays: its position, turn and
+	 * velocities, its joints, what was changed on it at run time (static or
+	 * not, gravity scale, damping, sensor, collision type and mask, bounce,
+	 * speed cap, Rapier's own settings such as CCD) and the handle on
+	 * `renderable.body`. Its colliders are replaced, so the pairs touching
+	 * it end and start again, and its mass is that of the new shapes.
+	 *
+	 * A shape this adapter cannot build throws before anything is changed.
+	 * @param renderable - the body's renderable
+	 * @param shapes - the new shapes, relative to `pos`
+	 */
+	updateShape(renderable: Renderable, shapes: BodyShape[]): void {
+		const def = this.defMap.get(renderable);
+		const body = this.bodyMap.get(renderable);
+		const colliders = this.collidersOf.get(renderable);
+		if (!def || !body || !colliders) {
+			return;
+		}
+		// every new collider is built before an old one goes
+		const parts = this._buildParts(shapes);
+		this._endContacts(colliders);
+		// one of the hooks told so may have taken this body out
+		if (this.bodyMap.get(renderable) !== body) {
+			return;
+		}
+		for (const collider of colliders) {
+			this.world.removeCollider(collider, false);
+		}
+		// emptied in place: the body's helpers hold this array
+		colliders.length = 0;
+		const next = { ...def, shapes };
+		this.defMap.set(renderable, next);
+		this.reportedShapes.delete(renderable);
+		this._createColliders(renderable, body, next, parts, colliders);
+		// the mass and the inertia of the new shapes, from now
+		body.recomputeMassPropertiesFromColliders();
+		body.wakeUp();
+	}
+
+	/**
+	 * The colliders a list of shapes becomes, not yet in the world. A shape
+	 * with `isActive: false` makes none.
+	 * @param shapes - the shapes of a body definition
+	 * @returns one part per active shape
+	 * @throws {Error} for a shape this adapter cannot build
+	 */
+	private _buildParts(shapes: BodyShape[]): ColliderPart[] {
+		const parts: ColliderPart[] = [];
+		for (const [index, shape] of shapes.entries()) {
+			// `isActive === false` keeps a shape out of the simulation
+			if ((shape as { isActive?: boolean }).isActive === false) {
+				continue;
+			}
+			parts.push({ shape, index, ...this._shapeToCollider(shape) });
+		}
+		return parts;
+	}
+
+	/**
+	 * Make a body's colliders, with the body definition's material and
+	 * filter, a shape's own settings over them, and what was set on the
+	 * whole body at run time over both.
+	 * @param renderable - the body's renderable
+	 * @param body - the body
+	 * @param def - its definition
+	 * @param parts - the colliders to make
+	 * @param colliders - the body's list of colliders, added to
+	 */
+	private _createColliders(
+		renderable: Renderable,
+		body: RAPIER.RigidBody,
+		def: BodyDefinition,
+		parts: ColliderPart[],
+		colliders: RAPIER.Collider[],
+	): void {
+		const over = this.overrides.get(renderable);
+		const bodyType =
+			typeof def.collisionType === "number" ? def.collisionType : 0x0001;
+		const bodyMask =
+			typeof def.collisionMask === "number"
+				? def.collisionMask
+				: collision.types.ALL_OBJECT;
+		for (const { shape, index, desc, min, max, round } of parts) {
+			const shapeType = (shape as { collisionType?: number }).collisionType;
+			const shapeMask = (shape as { collisionMask?: number }).collisionMask;
+			const trigger = (shape as { isTrigger?: boolean }).isTrigger === true;
+			desc
+				.setDensity(def.density ?? 1)
+				.setFriction(def.friction ?? 0.2)
+				.setRestitution(over?.restitution ?? def.restitution ?? 0)
+				// a trigger shape is a sensor: it reports contacts and
+				// contributes nothing to the solver
+				.setSensor(over?.sensor ?? (def.isSensor === true || trigger))
+				.setActiveEvents(this.rapier.ActiveEvents.COLLISION_EVENTS);
+			const collider = this.world.createCollider(desc, body);
+			// a shape's own collision settings override the body's
+			this._applyFilter(
+				collider,
+				over?.category ??
+					(typeof shapeType === "number" ? shapeType : bodyType),
+				over?.mask ?? (typeof shapeMask === "number" ? shapeMask : bodyMask),
+			);
+			const entry: ColliderEntry = { renderable, shape, index, min, max };
+			if (round !== undefined) {
+				entry.round = round;
+			}
+			this.colliderMap.set(collider.handle, entry);
+			colliders.push(collider);
+		}
+	}
+
+	/**
+	 * Forget colliders that are about to go, and tell the pairs touching
+	 * them that their contact ended.
+	 * @param colliders - the colliders leaving the world
+	 */
+	private _endContacts(colliders: RAPIER.Collider[]): void {
+		const handles = new Set(
+			colliders.map((c) => {
+				return c.handle;
+			}),
+		);
+		// a pair whose start or active hooks are running: the side going out
+		// hears the end now, the other once those hooks are done, so that no
+		// one hears of an end before its start
+		for (const d of this.dispatching) {
+			const going =
+				(handles.has(d.h1) ? SIDE_A | SHAPE_A : 0) |
+				(handles.has(d.h2) ? SIDE_B | SHAPE_B : 0);
+			if (going !== 0 && (this.activePairs.delete(d.key) || d.ended)) {
+				d.ended = true;
+				const sides = going & d.reached & ~d.told;
+				d.told |= sides;
+				this._dispatch(d.e1, d.e2, d.h1, d.h2, "end", sides);
+			}
+		}
+		for (const [key, [h1, h2]] of this.activePairs) {
+			if (handles.has(h1) || handles.has(h2)) {
+				this.activePairs.delete(key);
+				this._dispatchPair(h1, h2, "end");
+			}
+		}
+		for (const handle of handles) {
+			this.colliderMap.delete(handle);
+			this.filters.delete(handle);
+		}
+	}
+
+	/**
+	 * Make a joint between two bodies: what `world.addJoint()` calls, which
+	 * game code uses instead. A `"hinge"` is a Rapier revolute joint about
+	 * `axis` (default Z), a `"rope"` a rope joint, a `"weld"` a fixed joint
+	 * and a `"slider"` a prismatic joint along `axis` (default X). Anchors
+	 * are in each renderable's own space, relative to its `pos`, in pixels,
+	 * and the axis in `a`'s; a `z` left out is `0`.
+	 *
+	 * The bodies are joined as they stand, however each is turned: a weld
+	 * and a slider keep the turn between them, and a hinge leaves them only
+	 * the turn about its axis.
 	 * @param def - what to join, and how, in pixels and radians
 	 * @returns the Rapier joint
 	 */
@@ -773,15 +925,23 @@ export class Rapier3dAdapter implements PhysicsAdapter {
 			z: this.m2px(anchorA.z),
 		};
 		def.anchorB ??= { x: 0, y: 0, z: 0 };
+		// the turn that brings b's space onto a's, as the two stand
+		const aInB = multiply(conjugate(bodyB.rotation()), bodyA.rotation());
 		let data: RAPIER.JointData;
 		switch (def.type) {
-			case "hinge":
-				data = JointData.revolute(
+			case "hinge": {
+				// the same axis in the world, in each body's own space: the
+				// same vector in both when they are turned alike, or apart
+				// about the axis only, as a 2D hinge is
+				const axis = this._unitAxis(def.axis, { x: 0, y: 0, z: 1 });
+				data = JointData.revoluteWithAxes(
 					anchorA,
 					anchorB,
-					this._unitAxis(def.axis, { x: 0, y: 0, z: 1 }),
+					axis,
+					rotate(aInB, axis),
 				);
 				break;
+			}
 			case "rope": {
 				if (def.maxLength === undefined) {
 					const pa = this._worldPoint(bodyA, anchorA);
@@ -800,7 +960,7 @@ export class Rapier3dAdapter implements PhysicsAdapter {
 					anchorA,
 					{ x: 0, y: 0, z: 0, w: 1 },
 					anchorB,
-					this._multiply(conjugate(bodyB.rotation()), bodyA.rotation()),
+					aInB,
 				);
 				break;
 			case "slider":
@@ -816,6 +976,11 @@ export class Rapier3dAdapter implements PhysicsAdapter {
 				);
 		}
 		const joint = this.world.createImpulseJoint(data, bodyA, bodyB, true);
+		if (def.type === "slider") {
+			// Rapier gives both bodies the same frame, which would turn b
+			// onto a: b's frame is a's as b sees it, so b keeps its turn
+			joint.setFrameX2(multiply(aInB, joint.frameX1()));
+		}
 		joint.setContactsEnabled(def.collideConnected === true);
 		if (
 			def.limits !== undefined &&
@@ -862,21 +1027,6 @@ export class Rapier3dAdapter implements PhysicsAdapter {
 			);
 		}
 		return { x: axis.x / length, y: axis.y / length, z: z / length };
-	}
-
-	/**
-	 * Two turns composed: `a` applied after `b`.
-	 * @param a - the second turn
-	 * @param b - the first turn
-	 * @returns the combined turn
-	 */
-	private _multiply(a: RAPIER.Rotation, b: RAPIER.Rotation): RAPIER.Rotation {
-		return {
-			x: a.w * b.x + a.x * b.w + a.y * b.z - a.z * b.y,
-			y: a.w * b.y - a.x * b.z + a.y * b.w + a.z * b.x,
-			z: a.w * b.z + a.x * b.y - a.y * b.x + a.z * b.w,
-			w: a.w * b.w - a.x * b.x - a.y * b.y - a.z * b.z,
-		};
 	}
 
 	/**
@@ -964,9 +1114,10 @@ export class Rapier3dAdapter implements PhysicsAdapter {
 	}
 
 	/**
-	 * Push the body for this frame, in pixels: a force at `point` (in world
-	 * space) also turns it. A force or point given as a {@link Vector2d}
-	 * acts in the plane of the body.
+	 * Push the body for this frame, across every sub-step: it accelerates by
+	 * `force / mass` pixels per second². A force at `point` (in world pixels)
+	 * also turns it. A force or point given as a {@link Vector2d} acts in
+	 * the plane of the body.
 	 * @param renderable - the body's renderable
 	 * @param force - the force
 	 * @param [point] - where it pushes, in world space
@@ -977,19 +1128,15 @@ export class Rapier3dAdapter implements PhysicsAdapter {
 		point?: Vector2d | Vector3d,
 	): void {
 		const body = this.bodyMap.get(renderable);
-		if (!body) return;
-		const f = this.inMeters(force.x, force.y, zOf(force) ?? 0);
-		if (point) {
-			body.addForceAtPoint(f, this._pointInMeters(body, point), true);
-		} else {
-			body.addForce(f, true);
+		if (body) {
+			this._addForce(body, force, point);
 		}
-		this.forced.add(body);
 	}
 
 	/**
-	 * Strike the body once, in pixels: an impulse at `point` (in world space)
-	 * also turns it. A {@link Vector2d} strikes in the plane of the body.
+	 * Strike the body once: its velocity changes by `impulse / mass` pixels
+	 * per second, at once. An impulse at `point` (in world pixels) also turns
+	 * it. A {@link Vector2d} strikes in the plane of the body.
 	 * @param renderable - the body's renderable
 	 * @param impulse - the impulse
 	 * @param [point] - where it strikes, in world space
@@ -1011,8 +1158,9 @@ export class Rapier3dAdapter implements PhysicsAdapter {
 	}
 
 	/**
-	 * Move the body and its renderable. A {@link Vector3d} sets the depth
-	 * too; a {@link Vector2d} keeps it.
+	 * Move the body and its renderable, at once. A {@link Vector3d} sets the
+	 * depth too; a {@link Vector2d} keeps it. A renderable with no body here
+	 * is moved all the same, as on every adapter.
 	 * @param renderable - the body's renderable
 	 * @param p - the new position, in `renderable.pos` space
 	 */
@@ -1120,7 +1268,8 @@ export class Rapier3dAdapter implements PhysicsAdapter {
 
 	/**
 	 * Twist the body for this frame: a number about Z, a {@link Vector3d}
-	 * about each axis.
+	 * about each axis. In Rapier's own unit (N·m, not scaled by
+	 * `pixelsPerMeter`), as on the 2D Rapier adapter.
 	 * @param renderable - the body's renderable
 	 * @param torque - the torque
 	 */
@@ -1154,7 +1303,10 @@ export class Rapier3dAdapter implements PhysicsAdapter {
 	}
 
 	setSensor(renderable: Renderable, isSensor: boolean): void {
-		for (const collider of this.collidersOf.get(renderable) ?? []) {
+		const colliders = this.collidersOf.get(renderable);
+		if (colliders === undefined) return;
+		this._override(renderable).sensor = isSensor;
+		for (const collider of colliders) {
 			collider.setSensor(isSensor);
 		}
 	}
@@ -1177,6 +1329,8 @@ export class Rapier3dAdapter implements PhysicsAdapter {
 	 * @param limit - the cap
 	 */
 	setMaxVelocity(renderable: Renderable, limit: Vector3Like): void {
+		// nothing to cap, and nothing to keep, for a renderable with no body
+		if (!this.bodyMap.has(renderable)) return;
 		this.velocityLimits.set(renderable, {
 			x: limit.x,
 			y: limit.y,
@@ -1213,7 +1367,9 @@ export class Rapier3dAdapter implements PhysicsAdapter {
 
 	/**
 	 * The body's XY bounds in renderable-local pixels, relative to `pos`: the
-	 * footprint of its colliders as the body is turned now.
+	 * footprint of its colliders as the body is turned now. Exact for a
+	 * box, a sphere and a capsule; for a hull or a triangle mesh, that of its
+	 * bounding box, turned.
 	 * @param renderable - the renderable whose body bounds to read
 	 * @param out - destination `Bounds` (filled in place, also returned)
 	 */
@@ -1227,29 +1383,52 @@ export class Rapier3dAdapter implements PhysicsAdapter {
 			return undefined;
 		}
 		const q = body.rotation();
-		let minX = Number.POSITIVE_INFINITY;
-		let minY = Number.POSITIVE_INFINITY;
-		let maxX = Number.NEGATIVE_INFINITY;
-		let maxY = Number.NEGATIVE_INFINITY;
+		const box: Footprint = [Infinity, Infinity, -Infinity, -Infinity];
 		for (const collider of colliders) {
 			const entry = this.colliderMap.get(collider.handle);
-			if (entry === undefined) continue;
-			const { min, max } = entry;
-			// the eight corners of the collider's box, turned with the body
-			for (let i = 0; i < 8; i++) {
-				const p = rotate(q, {
-					x: i & 1 ? max.x : min.x,
-					y: i & 2 ? max.y : min.y,
-					z: i & 4 ? max.z : min.z,
-				});
-				if (p.x < minX) minX = p.x;
-				if (p.y < minY) minY = p.y;
-				if (p.x > maxX) maxX = p.x;
-				if (p.y > maxY) maxY = p.y;
+			if (entry !== undefined) {
+				this._growFootprint(entry, q, box);
 			}
 		}
-		out.setMinMax(minX, minY, maxX, maxY);
+		out.setMinMax(box[0], box[1], box[2], box[3]);
 		return out;
+	}
+
+	/**
+	 * Grow a box in XY by a collider's footprint as its body is turned, in
+	 * pixels, relative to the body's origin.
+	 * @param entry - the collider's entry
+	 * @param q - its body's turn
+	 * @param box - the box to grow
+	 */
+	private _growFootprint(
+		entry: ColliderEntry,
+		q: RAPIER.Rotation,
+		box: Footprint,
+	): void {
+		const { min, max, round } = entry;
+		// a sphere or a capsule: the two ends of its segment, turned with
+		// the body, a radius wider. Any other: the eight corners of its box,
+		// turned with the body
+		const r = round?.r ?? 0;
+		for (let i = 0; i < (round ? 2 : 8); i++) {
+			const p = rotate(
+				q,
+				round
+					? i === 0
+						? round.a
+						: round.b
+					: {
+							x: i & 1 ? max.x : min.x,
+							y: i & 2 ? max.y : min.y,
+							z: i & 4 ? max.z : min.z,
+						},
+			);
+			if (p.x - r < box[0]) box[0] = p.x - r;
+			if (p.y - r < box[1]) box[1] = p.y - r;
+			if (p.x + r > box[2]) box[2] = p.x + r;
+			if (p.y + r > box[3]) box[3] = p.y + r;
+		}
 	}
 
 	/**
@@ -1318,12 +1497,14 @@ export class Rapier3dAdapter implements PhysicsAdapter {
 	 * The first collider a segment meets, from `from` to `to`, in world
 	 * pixels: the exact shape, not a bounding volume. A shape the ray starts
 	 * inside is skipped, so a body casting from its own centre does not hit
-	 * itself.
+	 * itself. Sensors are hit like any other body.
 	 * @param from - where the ray starts
 	 * @param to - where it ends
 	 * @returns the hit, or `null`
 	 */
 	raycast3d(from: Vector3d, to: Vector3d): RaycastHit3d | null {
+		// nothing to hit once the Rapier world is freed
+		if (!this.alive) return null;
 		const origin = this.inMeters(from.x, from.y, from.z);
 		const dir = this.inMeters(to.x - from.x, to.y - from.y, to.z - from.z);
 		if (dir.x === 0 && dir.y === 0 && dir.z === 0) return null;
@@ -1358,16 +1539,17 @@ export class Rapier3dAdapter implements PhysicsAdapter {
 
 	/**
 	 * The renderables whose colliders' boxes overlap a rectangle in XY, at
-	 * any depth.
+	 * any depth: the boxes {@link Rapier3dAdapter.getBodyAABB} reports.
 	 * @param rect - the rectangle, in world pixels
 	 * @returns the renderables, each once
 	 */
 	queryAABB(rect: Rect): Renderable[] {
+		const { x, y } = rect.pos;
 		return this._collect((visit) => {
 			this.world.collidersWithAabbIntersectingAabb(
 				{
-					x: this.px2m(rect.pos.x + rect.width / 2),
-					y: this.px2m(rect.pos.y + rect.height / 2),
+					x: this.px2m(x + rect.width / 2),
+					y: this.px2m(y + rect.height / 2),
 					z: 0,
 				},
 				{
@@ -1375,7 +1557,24 @@ export class Rapier3dAdapter implements PhysicsAdapter {
 					y: this.px2m(rect.height / 2),
 					z: QUERY_HALF_DEPTH,
 				},
-				visit,
+				(collider) => {
+					// Rapier keeps its own boxes loose, more so around a body
+					// that moves: those are the candidates, tested here
+					const entry = this.colliderMap.get(collider.handle);
+					const body = collider.parent();
+					if (entry === undefined || body === null) return true;
+					const box: Footprint = [Infinity, Infinity, -Infinity, -Infinity];
+					this._growFootprint(entry, body.rotation(), box);
+					const t = body.translation();
+					const bx = this.m2px(t.x);
+					const by = this.m2px(t.y);
+					return bx + box[0] <= x + rect.width &&
+						bx + box[2] >= x &&
+						by + box[1] <= y + rect.height &&
+						by + box[3] >= y
+						? visit(collider)
+						: true;
+				},
 			);
 		});
 	}
@@ -1383,7 +1582,8 @@ export class Rapier3dAdapter implements PhysicsAdapter {
 	/**
 	 * The renderables whose colliders overlap a sphere: their exact shapes.
 	 * @param center - the centre in world pixels, or a {@link Sphere}
-	 * @param [radius] - the radius in pixels, with a centre
+	 * @param [radius] - the radius in pixels, with a centre; none, or less
+	 * than none, is a point
 	 * @returns the renderables, each once
 	 */
 	querySphere(center: Vector3d | Sphere, radius?: number): Renderable[] {
@@ -1410,6 +1610,8 @@ export class Rapier3dAdapter implements PhysicsAdapter {
 		query: (visit: (collider: RAPIER.Collider) => boolean) => void,
 	): Renderable[] {
 		const result: Renderable[] = [];
+		// nothing to find once the Rapier world is freed
+		if (!this.alive) return result;
 		const seen = new Set<Renderable>();
 		query((collider) => {
 			const entry = this.colliderMap.get(collider.handle);
@@ -1445,45 +1647,28 @@ export class Rapier3dAdapter implements PhysicsAdapter {
 				this._setLinvel(body, x, y, z);
 			},
 			getVelocity: (out?: Vector2d): Vector2d => {
-				const v = body.linvel();
-				return (out ?? new Vector2d()).set(this.m2px(v.x), this.m2px(v.y));
+				return this.getVelocity(renderable, out);
 			},
 			getVelocity3d: (out?: Vector3d): Vector3d => {
-				const v = body.linvel();
-				return (out ?? new Vector3d()).set(
-					this.m2px(v.x),
-					this.m2px(v.y),
-					this.m2px(v.z),
-				);
+				return this.getVelocity3d(renderable, out);
 			},
 			applyForce: (x: number, y: number, pointX?: number, pointY?: number) => {
-				const f = this.inMeters(x, y, 0);
-				if (typeof pointX === "number" && typeof pointY === "number") {
-					body.addForceAtPoint(
-						f,
-						this._pointInMeters(body, { x: pointX, y: pointY }),
-						true,
-					);
-				} else {
-					body.addForce(f, true);
-				}
-				this.forced.add(body);
+				this._addForce(
+					body,
+					{ x, y },
+					typeof pointX === "number" && typeof pointY === "number"
+						? { x: pointX, y: pointY }
+						: undefined,
+				);
 			},
 			applyImpulse: (x: number, y: number, z?: number) => {
 				proto.applyImpulse.call(body, this.inMeters(x, y, z ?? 0), true);
 			},
 			setSensor: (isSensor = true) => {
-				for (const collider of colliders) {
-					collider.setSensor(isSensor);
-				}
+				this.setSensor(renderable, isSensor);
 			},
 			setStatic: (isStatic = true) => {
-				body.setBodyType(
-					isStatic
-						? this.rapier.RigidBodyType.Fixed
-						: this.rapier.RigidBodyType.Dynamic,
-					true,
-				);
+				this.setStatic(renderable, isStatic);
 			},
 			setCollisionMask: (mask: number) => {
 				this._setFilter(renderable, undefined, mask);
@@ -1507,12 +1692,13 @@ export class Rapier3dAdapter implements PhysicsAdapter {
 				}
 			},
 			setBounce: (r: number) => {
+				this._override(renderable).restitution = r;
 				for (const collider of colliders) {
 					collider.setRestitution(r);
 				}
 			},
 			setGravityScale: (scale: number) => {
-				proto.setGravityScale.call(body, scale, true);
+				this.setGravityScale(renderable, scale);
 			},
 			setAngle: (rad: number) => {
 				this.setAngle(renderable, rad);
@@ -1524,10 +1710,10 @@ export class Rapier3dAdapter implements PhysicsAdapter {
 				this.setAngularVelocity(renderable, omega);
 			},
 			getAngularVelocity: () => {
-				return body.angvel().z;
+				return this.getAngularVelocity(renderable);
 			},
 			applyTorque: (torque: number) => {
-				this._addTorque(body, torque);
+				this.applyTorque(renderable, torque);
 			},
 		};
 		Object.assign(body, helpers);
@@ -1582,6 +1768,27 @@ export class Rapier3dAdapter implements PhysicsAdapter {
 			},
 			true,
 		);
+	}
+
+	/**
+	 * Add a force for this frame, in pixels: at a world point, it also turns
+	 * the body. A force or a point with no `z` acts in the plane of the body.
+	 * @param body - the body
+	 * @param force - the force
+	 * @param [point] - where it pushes, in world pixels
+	 */
+	private _addForce(
+		body: RAPIER.RigidBody,
+		force: Vector3Like,
+		point?: Vector3Like,
+	): void {
+		const f = this.inMeters(force.x, force.y, zOf(force) ?? 0);
+		if (point) {
+			body.addForceAtPoint(f, this._pointInMeters(body, point), true);
+		} else {
+			body.addForce(f, true);
+		}
+		this.forced.add(body);
 	}
 
 	/**
@@ -1659,12 +1866,23 @@ export class Rapier3dAdapter implements PhysicsAdapter {
 		}
 	}
 
+	/**
+	 * Change the collision type and/or mask of every collider of a body.
+	 * @param renderable - the body's renderable
+	 * @param category - the new type, or undefined to keep each collider's
+	 * @param mask - the new mask, or undefined to keep each collider's
+	 */
 	private _setFilter(
 		renderable: Renderable,
 		category: number | undefined,
 		mask: number | undefined,
 	): void {
-		for (const collider of this.collidersOf.get(renderable) ?? []) {
+		const colliders = this.collidersOf.get(renderable);
+		if (colliders === undefined) return;
+		const over = this._override(renderable);
+		if (category !== undefined) over.category = category;
+		if (mask !== undefined) over.mask = mask;
+		for (const collider of colliders) {
 			const current = this.filters.get(collider.handle);
 			this._applyFilter(
 				collider,
@@ -1674,6 +1892,26 @@ export class Rapier3dAdapter implements PhysicsAdapter {
 		}
 	}
 
+	/**
+	 * What was set on every collider of a body at run time, to write to.
+	 * @param renderable - the body's renderable
+	 * @returns its record, made when there is none
+	 */
+	private _override(renderable: Renderable): ColliderOverrides {
+		let over = this.overrides.get(renderable);
+		if (over === undefined) {
+			over = {};
+			this.overrides.set(renderable, over);
+		}
+		return over;
+	}
+
+	/**
+	 * Whether two colliders collide, by their full 32-bit types and masks.
+	 * @param c1 - a collider handle
+	 * @param c2 - the other
+	 * @returns true when each one's mask includes the other's type
+	 */
 	private _passesFilter(c1: number, c2: number): boolean {
 		const f1 = this.filters.get(c1);
 		const f2 = this.filters.get(c2);
@@ -1698,8 +1936,10 @@ export class Rapier3dAdapter implements PhysicsAdapter {
 			if (!body) continue;
 			const v = body.linvel();
 			const clamp = (value: number, px: number | undefined) => {
-				if (typeof px !== "number") return value;
-				const m = this.px2m(px);
+				// no cap on this axis; one that is not a number caps nothing
+				// (it would turn the velocity itself into NaN)
+				if (typeof px !== "number" || Number.isNaN(px)) return value;
+				const m = this.px2m(Math.abs(px));
 				return Math.max(-m, Math.min(m, value));
 			};
 			const vx = clamp(v.x, limit.x);
@@ -1727,8 +1967,11 @@ export class Rapier3dAdapter implements PhysicsAdapter {
 			const h2 = events[i + 1];
 			const key = pairKey(h1, h2);
 			if (events[i + 2] === 1) {
-				this.activePairs.set(key, [h1, h2]);
-				this._dispatchPair(h1, h2, "start");
+				// a hook earlier in this step may have taken one of them out
+				if (this.colliderMap.has(h1) && this.colliderMap.has(h2)) {
+					this.activePairs.set(key, [h1, h2]);
+					this._dispatchPair(h1, h2, "start");
+				}
 			} else if (this.activePairs.delete(key)) {
 				// a pair already ended (one of its bodies was removed) is not
 				// ended twice
@@ -1785,6 +2028,13 @@ export class Rapier3dAdapter implements PhysicsAdapter {
 		return { nx, ny, nz, depth: this.m2px(depth) };
 	}
 
+	/**
+	 * Fire the hooks of one pair of colliders, on both renderables. A start
+	 * or active hook may take a body of the pair out: see {@link Dispatch}.
+	 * @param h1 - the first collider handle
+	 * @param h2 - the second
+	 * @param phase - which lifecycle hook to fire
+	 */
 	private _dispatchPair(
 		h1: number,
 		h2: number,
@@ -1793,6 +2043,60 @@ export class Rapier3dAdapter implements PhysicsAdapter {
 		const e1 = this.colliderMap.get(h1);
 		const e2 = this.colliderMap.get(h2);
 		if (e1 === undefined || e2 === undefined) return;
+		if (phase === "end") {
+			this._dispatch(e1, e2, h1, h2, phase, EVERY_SIDE);
+			return;
+		}
+		const current: Dispatch = {
+			key: pairKey(h1, h2),
+			h1,
+			h2,
+			e1,
+			e2,
+			// a pair already active had its start on every side
+			reached: phase === "start" ? 0 : EVERY_SIDE,
+			told: 0,
+			ended: false,
+		};
+		this.dispatching.push(current);
+		try {
+			this._dispatch(
+				e1,
+				e2,
+				h1,
+				h2,
+				phase,
+				EVERY_SIDE,
+				phase === "start" ? current : undefined,
+			);
+		} finally {
+			this.dispatching.splice(this.dispatching.indexOf(current), 1);
+		}
+		if (current.ended) {
+			this._dispatch(e1, e2, h1, h2, "end", current.reached & ~current.told);
+		}
+	}
+
+	/**
+	 * Fire one phase of a pair's hooks: the shape-level ones, then the
+	 * renderables' own. A renderable whose body is gone hears nothing.
+	 * @param e1 - the first collider's entry
+	 * @param e2 - the second collider's entry
+	 * @param h1 - the first collider handle
+	 * @param h2 - the second
+	 * @param phase - which lifecycle hook to fire
+	 * @param sides - the sides and levels to fire it on, as bits
+	 * @param [record] - where to note each side reached, before its hook runs
+	 */
+	private _dispatch(
+		e1: ColliderEntry,
+		e2: ColliderEntry,
+		h1: number,
+		h2: number,
+		phase: "start" | "active" | "end",
+		sides: number,
+		record?: Dispatch,
+	): void {
 		const rA = e1.renderable;
 		const rB = e2.renderable;
 		// skip start/active when either side has left the world; an end still
@@ -1808,7 +2112,19 @@ export class Rapier3dAdapter implements PhysicsAdapter {
 		} else if (aDetached || bDetached) {
 			return;
 		}
+		// a hook earlier in this dispatch may have removed a body: its
+		// renderable hears nothing from then on
+		const reaches = (side: number, receiver: Renderable, detached: boolean) => {
+			if ((sides & side) === 0 || detached || !this.bodyMap.has(receiver)) {
+				return false;
+			}
+			if (record !== undefined) {
+				record.reached |= side;
+			}
+			return true;
+		};
 
+		// a separated pair has no contact: identity only
 		const { nx, ny, nz, depth } =
 			phase === "end"
 				? { nx: 0, ny: 0, nz: 0, depth: 0 }
@@ -1823,87 +2139,9 @@ export class Rapier3dAdapter implements PhysicsAdapter {
 				: "onCollision";
 		};
 
-		this._dispatchShapePair(
-			e1,
-			e2,
-			nx,
-			ny,
-			nz,
-			depth,
-			phase,
-			aDetached,
-			bDetached,
-		);
-
-		const pair = { collider1: h1, collider2: h2 };
-		// the normal points from A to B: A escapes along its opposite, B
-		// along it
-		const responseAB = {
-			a: rA,
-			b: rB,
-			normal: { x: -nx, y: -ny, z: -nz },
-			depth,
-			pair,
-		};
-		const responseBA = {
-			a: rB,
-			b: rA,
-			normal: { x: nx, y: ny, z: nz },
-			depth,
-			pair,
-		};
-		// a handler earlier in this dispatch may have removed this body
-		if (!aDetached && this.bodyMap.has(rA)) {
-			const fnA = (rA as Renderable & Record<string, unknown>)[
-				methodForSide(rA)
-			];
-			if (typeof fnA === "function") {
-				(fnA as (response: unknown, other: Renderable) => unknown).call(
-					rA,
-					responseAB,
-					rB,
-				);
-			}
-		}
-		if (!bDetached && this.bodyMap.has(rB)) {
-			const fnB = (rB as Renderable & Record<string, unknown>)[
-				methodForSide(rB)
-			];
-			if (typeof fnB === "function") {
-				(fnB as (response: unknown, other: Renderable) => unknown).call(
-					rB,
-					responseBA,
-					rA,
-				);
-			}
-		}
-	}
-
-	/**
-	 * Fire the shape-level collision hooks for one pair of colliders: each
-	 * melonJS shape is one collider, so Rapier's events name the shapes.
-	 * @param e1 - the first collider's entry
-	 * @param e2 - the second collider's entry
-	 * @param nx - contact normal x, from the first to the second
-	 * @param ny - contact normal y
-	 * @param nz - contact normal z
-	 * @param depth - penetration depth, in pixels
-	 * @param phase - which lifecycle hook to fire
-	 * @param aDetached - true when the first renderable has left the world
-	 * @param bDetached - true when the second renderable has left the world
-	 */
-	private _dispatchShapePair(
-		e1: ColliderEntry,
-		e2: ColliderEntry,
-		nx: number,
-		ny: number,
-		nz: number,
-		depth: number,
-		phase: "start" | "active" | "end",
-		aDetached: boolean,
-		bDetached: boolean,
-	): void {
-		const method =
+		// each melonJS shape is one collider, so Rapier's events name the
+		// shapes: the shape-level hooks first
+		const shapeMethod =
 			phase === "start"
 				? "onShapeCollisionStart"
 				: phase === "end"
@@ -1912,18 +2150,20 @@ export class Rapier3dAdapter implements PhysicsAdapter {
 		const isTrigger =
 			(e1.shape as { isTrigger?: boolean }).isTrigger === true ||
 			(e2.shape as { isTrigger?: boolean }).isTrigger === true;
-		const emit = (
+		const emitShape = (
 			own: ColliderEntry,
 			other: ColliderEntry,
-			ownNx: number,
-			ownNy: number,
-			ownNz: number,
+			sign: number,
 		): void => {
 			const receiver = own.renderable;
-			const fn = (receiver as Renderable & Record<string, unknown>)[method];
-			if (typeof fn !== "function" || !this.bodyMap.has(receiver)) {
-				return;
-			}
+			const fn = (receiver as Renderable & Record<string, unknown>)[
+				shapeMethod
+			];
+			if (typeof fn !== "function") return;
+			// (`+ 0` keeps a zero normal from reading as -0)
+			const ownNx = sign * nx + 0;
+			const ownNy = sign * ny + 0;
+			const ownNz = sign * nz + 0;
 			(fn as (contact: unknown, other: Renderable) => unknown).call(
 				receiver,
 				{
@@ -1939,19 +2179,46 @@ export class Rapier3dAdapter implements PhysicsAdapter {
 					normal: { x: ownNx, y: ownNy },
 					normalZ: ownNz,
 					// the SAT fields, in the builtin's convention
-					overlapN: { x: -ownNx, y: -ownNy },
-					overlapNZ: -ownNz,
-					overlapV: { x: -ownNx * depth, y: -ownNy * depth },
-					overlapZ: -ownNz * depth,
+					overlapN: { x: -ownNx + 0, y: -ownNy + 0 },
+					overlapNZ: -ownNz + 0,
+					overlapV: { x: -ownNx * depth + 0, y: -ownNy * depth + 0 },
+					overlapZ: -ownNz * depth + 0,
 				},
 				other.renderable,
 			);
 		};
-		if (!aDetached) {
-			emit(e1, e2, -nx, -ny, -nz);
+		// the normal points from A to B: A escapes along its opposite, B
+		// along it
+		if (reaches(SHAPE_A, rA, aDetached)) {
+			emitShape(e1, e2, -1);
 		}
-		if (!bDetached) {
-			emit(e2, e1, nx, ny, nz);
+		if (reaches(SHAPE_B, rB, bDetached)) {
+			emitShape(e2, e1, 1);
+		}
+
+		const pair = { collider1: h1, collider2: h2 };
+		const emit = (receiver: Renderable, other: Renderable, sign: number) => {
+			const fn = (receiver as Renderable & Record<string, unknown>)[
+				methodForSide(receiver)
+			];
+			if (typeof fn !== "function") return;
+			(fn as (response: unknown, other: Renderable) => unknown).call(
+				receiver,
+				{
+					a: receiver,
+					b: other,
+					normal: { x: sign * nx + 0, y: sign * ny + 0, z: sign * nz + 0 },
+					depth,
+					pair,
+				},
+				other,
+			);
+		};
+		if (reaches(SIDE_A, rA, aDetached)) {
+			emit(rA, rB, -1);
+		}
+		if (reaches(SIDE_B, rB, bDetached)) {
+			emit(rB, rA, 1);
 		}
 	}
 
@@ -1962,11 +2229,9 @@ export class Rapier3dAdapter implements PhysicsAdapter {
 	 * @returns its collider description and box
 	 * @throws {Error} for a 2D shape, or anything else this adapter cannot build
 	 */
-	private _shapeToCollider(shape: BodyShape): {
-		desc: RAPIER.ColliderDesc;
-		min: XYZ;
-		max: XYZ;
-	} {
+	private _shapeToCollider(
+		shape: BodyShape,
+	): Omit<ColliderPart, "shape" | "index"> {
 		const R = this.rapier;
 		const box = (c: XYZ, hx: number, hy: number, hz: number) => {
 			return {
@@ -1993,20 +2258,25 @@ export class Rapier3dAdapter implements PhysicsAdapter {
 		}
 		if (shape instanceof Sphere) {
 			const r = shape.radius;
+			const { x, y, z } = shape.pos;
 			return {
 				desc: at(R.ColliderDesc.ball(this.px2m(r)), shape.pos),
 				...box(shape.pos, r, r, r),
+				round: { a: { x, y, z }, b: { x, y, z }, r },
 			};
 		}
 		if (shape instanceof Capsule3d) {
 			const r = shape.radius;
+			const half = shape.halfSegment;
+			const { x, y, z } = shape.pos;
 			// along Y, as Rapier's own capsule
 			return {
 				desc: at(
-					R.ColliderDesc.capsule(this.px2m(shape.halfSegment), this.px2m(r)),
+					R.ColliderDesc.capsule(this.px2m(half), this.px2m(r)),
 					shape.pos,
 				),
-				...box(shape.pos, r, shape.height / 2, r),
+				...box(shape.pos, r, half + r, r),
+				round: { a: { x, y: y - half, z }, b: { x, y: y + half, z }, r },
 			};
 		}
 		if (shape instanceof TriangleMesh3d || shape instanceof ConvexHull3d) {

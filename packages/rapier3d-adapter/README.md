@@ -116,7 +116,17 @@ physic: await Rapier3dAdapter.create({
 }),
 ```
 
-`gravity` is read at every step: `app.world.adapter.gravity.set(0, 0, 320)` pulls along Z from the next one. Rapier works in meters, and the adapter converts everything at the boundary (positions, velocities, gravity, forces, queries), so every value you pass is in pixels. `pixelsPerMeter` must be a positive number.
+#### `gravity`
+
+In pixels per second², with an optional `z`. It is read at every step: `app.world.adapter.gravity.set(0, 0, 320)` pulls along Z from the next one (a body already asleep stays asleep until something wakes it).
+
+#### `pixelsPerMeter`
+
+Rapier is tuned for objects about a meter across, so the adapter works in meters and converts everything at the boundary (positions, velocities, gravity, forces, queries): every value you pass is in pixels. Raising it makes every body smaller in meters, so lighter, and the same force moves it further; motion under gravity alone looks the same in pixels. It must be a positive number.
+
+#### `subSteps`
+
+Rapier steps per engine frame, each of `dt / subSteps` seconds: more accurate fast contacts and tall stacks, at about that many times the physics cost. Values below 1 are clamped to 1.
 
 ## Shapes
 
@@ -136,7 +146,11 @@ level.bodyDef = { type: "static", shapes: [TriangleMesh3d.fromMesh(level)] };
 rock.bodyDef  = { type: "dynamic", shapes: [ConvexHull3d.fromMesh(rock)] };
 ```
 
-A shape can carry `collisionType`, `collisionMask`, `isTrigger` (a sensor) and `isActive` (`false` builds no collider), which override the body's. `adapter.getBodyShapes(renderable)` returns the shapes as given, before the body turns; `getBodyAABB` the XY footprint of the colliders as the body is turned now.
+A shape can carry `collisionType`, `collisionMask`, `isTrigger` (a sensor) and `isActive` (`false` builds no collider), which override the body's. A `ConvexHull3d` whose points all lie in one plane has no hull: it becomes their bounding box. A triangle mesh has no volume, so it gives a dynamic body no mass.
+
+`adapter.getBodyShapes(renderable)` returns the shapes as given, before the body turns; `getBodyAABB` the XY footprint of the colliders as the body is turned now (exact for a box, a sphere and a capsule; a hull's or a mesh's bounding box, turned).
+
+`adapter.updateShape(renderable, shapes)` replaces the colliders and keeps the body: its position, turn and velocities, its joints, everything set on it at run time, and the handle on `renderable.body`. The pairs touching it end and start again, and its mass becomes that of the new shapes. A shape the adapter cannot build throws before anything is changed.
 
 ## The 3D API
 
@@ -160,7 +174,27 @@ adapter.setAngularVelocity(crate, new Vector3d(0, 2, 0)); // a number sets the s
 adapter.setAngle(crate, rad);        // a turn about Z; getAngle() reads the turn about Z
 ```
 
-On the body handle, `setVelocity(x, y, z?)` and `applyImpulse(x, y, z?)` take an optional `z`, and `getVelocity3d(out?)` reads all three axes; the rest of the helpers are those of the 2D adapters. `renderable.body` is the Rapier `RigidBody`: type it as `Rapier3dAdapter.Body` to reach Rapier's own methods.
+`renderable.body` is the Rapier `RigidBody`, with the portable melonJS helpers added to it, as on the 2D Rapier adapter:
+
+```ts
+body.setVelocity(x, y, z?)              // pixels per second; without z, the depth velocity is kept
+body.getVelocity(out?) / body.getVelocity3d(out?)
+body.applyForce(x, y, pointX?, pointY?) // for this frame, in the plane of the body
+body.applyImpulse(x, y, z?)             // an instant change of velocity: Δv = J / mass
+body.setAngle(rad) / body.getAngle()    // the turn about Z
+body.setAngularVelocity(w) / body.getAngularVelocity() // radians per second, about Z
+body.applyTorque(t)                     // for this frame, about Z
+body.setStatic(isStatic?)
+body.setSensor(isSensor?)
+body.setGravityScale(scale)
+body.setMass(kg)                        // scales every shape's density
+body.setBounce(restitution)
+body.collisionType / body.collisionMask // read the first shape's values, write every shape's
+```
+
+The adapter has the same operations as `adapter.X(renderable, ...)`, except `setMass` and `setBounce`, and also `setFrictionAir`, `setMaxVelocity({ x, y, z? })` / `getMaxVelocity`, `setCollisionType` and `setCollisionMask`. Type the body as `Rapier3dAdapter.Body` to reach Rapier's own methods (`enableCcd`, `linvel`, `sleep`, …), which work in meters.
+
+**Units.** Velocities are in pixels per second and angular velocities in radians per second. `applyForce` accelerates a body by `force / mass` px/s², and `applyImpulse` changes its velocity by `impulse / mass` px/s; a 32-pixel cube at the default density weighs 1 kg at the default scale. A torque is in Rapier's own unit (N·m, not scaled by `pixelsPerMeter`), as on the 2D Rapier adapter. A force or torque lasts for the frame it is applied in, across every sub-step, so apply it every frame for a sustained push.
 
 **How the turn is drawn.** The body's turn is applied on top of the `currentTransform` the renderable had when its body was made, so a model turned or scaled to its rest pose keeps it. A `Mesh` (and a `Sprite3d`) turns in its model's Y-up space, which the adapter accounts for; a `GLTFModel` and any other renderable turn in the engine's space. Moving the renderable with `pos` directly is undone at the next step; use `setPosition` and `setRotation`.
 
@@ -182,7 +216,9 @@ class Pet extends Mesh {
 }
 ```
 
-`response.normal` is `{ x, y, z }`, the unit direction this renderable must move to separate, and `response.depth` the overlap in pixels; both are zero for a sensor contact and in `onCollisionEnd`. The shape-level hooks (`onShapeCollisionStart`, …) name each pair of shapes, with the z of the normal in `normalZ`.
+`response.normal` is `{ x, y, z }`, the unit direction this renderable must move to separate, and `response.depth` the overlap in pixels; both are zero for a sensor contact and in `onCollisionEnd`. `response.pair` is `{ collider1, collider2 }`, the two Rapier collider handles. The shape-level hooks (`onShapeCollisionStart`, …) name each pair of shapes, with the z of the normal in `normalZ`. A renderable with no `onCollisionActive` gets `onCollision` instead, once a frame.
+
+A hook can remove a body, its own or the other one, or change its shapes with `updateShape()`. Every renderable that heard a contact start hears it end, after the start: the one whose body is taken out at once, the other when the hooks of that contact are done. A renderable whose body is gone hears nothing more.
 
 `adapter.isGrounded(renderable)` is true while a contact pushes the body up (against Y), on a surface up to about 84° from level.
 
@@ -194,11 +230,11 @@ adapter.querySphere(center: Vector3d, radius) / querySphere(sphere: Sphere) → 
 adapter.queryAABB(rect: Rect) → Renderable[]
 ```
 
-- `raycast3d` returns the first collider along the segment, as `{ renderable, point, normal, fraction }`, against the exact shapes. A body the ray starts inside is skipped.
-- `querySphere` returns every renderable whose colliders overlap the sphere, exactly.
-- `queryAABB` returns what lies over a rectangle in XY, at any depth.
+- `raycast3d` returns the first collider along the segment, as `{ renderable, point, normal, fraction }`, against the exact shapes: the hit point in pixels, the unit surface normal there, and how far along the segment it is (0 to 1). A body the ray starts inside is skipped, so a body casting from its own centre does not hit itself. Sensors are hit like any other body.
+- `querySphere` returns every renderable whose colliders overlap the sphere, exactly, once each.
+- `queryAABB` returns what lies over a rectangle in XY, at any depth, once each: by each collider's box as the body is turned, the one `getBodyAABB` reports.
 
-Rapier indexes a body for these queries when its world steps, so a body is found from the frame after it is added.
+There is no 2D `raycast` (`capabilities.raycasts` is `false`): a 3D world is queried with `raycast3d`. Rapier indexes a body for these queries when its world steps, so a body is found from the frame after it is added, or moved with `setPosition`.
 
 ## Body definitions
 
@@ -212,7 +248,7 @@ this.bodyDef = {
     density?: number,           // kg/m³, default 1
     friction?: number,          // default 0.2
     restitution?: number,       // bounce, default 0
-    frictionAir?: number,       // damping per second, of movement and rotation
+    frictionAir?: number,       // damping per second, of movement and rotation; { x, y } is averaged
     gravityScale?: number,      // default 1
     fixedRotation?: boolean,    // default false: the body turns
     maxVelocity?: { x, y, z? }, // px/s per axis; z left out leaves depth uncapped
@@ -232,7 +268,7 @@ A `kinematic` body moves by its velocity and ignores gravity. Collision types an
 | `"weld"` | fixed | welded as they stand |
 | `"slider"` | prismatic | `axis`, default X; `limits` in pixels along it |
 
-Anchors and axes take an optional `z`, in each renderable's own space, relative to its `pos`. A default `anchorB` is `b`'s position, and a default `anchorA` the point of `a` under it, so nothing moves when the joint is made.
+Anchors take an optional `z`, in each renderable's own space, relative to its `pos`; the axis too, in `a`'s own space.
 
 ```ts
 app.world.addJoint({
@@ -244,6 +280,13 @@ app.world.addJoint({
     limits: { min: 0, max: Math.PI / 2 },
 });
 ```
+
+- **Pixels in, meters inside.** Anchors, lengths and slider limits are in pixels; the adapter converts them with `pixelsPerMeter`.
+- **Default anchors hold the bodies where they are.** `anchorB` defaults to `b`'s position, and `anchorA` to the point of `a` under it; a rope joins the two positions.
+- **Bodies are joined as they stand**, however each is turned: a weld and a slider keep the turn between them, and a hinge leaves them only the turn about its axis. A hinge's `limits` are `b`'s angle about the axis minus `a`'s, so make the joint with the two turned alike (or apart about the axis only) when it has limits.
+- **Limits are soft.** A body moving fast can pass a hinge or slider limit by a few pixels for a frame before Rapier pushes it back.
+- **The world keeps the joint.** It is removed when either body leaves the world, and built again by `world.setAdapter()`. `updateShape()` keeps the body, so it keeps its joints too, `joint.native` included.
+- **Motors and the rest of Rapier's joint settings** are on the Rapier joint itself, `joint.native` (a `RevoluteImpulseJoint`, …). That code is Rapier-only, and the setting is lost when `setAdapter()` builds the joint again.
 
 ## Rapier features
 
@@ -265,11 +308,30 @@ world.createImpulseJoint(
 
 // Rapier's kinematic character controller, with a 1 cm skin
 const controller = world.createCharacterController(0.01);
-controller.computeColliderMovement(hero.body.collider(0), { x: 0.1, y: 0.2, z: 0 });
+controller.computeColliderMovement(
+    (hero.body as Rapier3dAdapter.Body).collider(0),
+    { x: 0.1, y: 0.2, z: 0 },
+);
 const move = controller.computedMovement(); // meters: apply it to a kinematic body
 ```
 
-Bodies sleep when they come to rest and wake on contact. Rapier's objects live in WebAssembly memory: the adapter frees them in `destroy()`, which `world.setAdapter()` calls on the adapter it replaces; free what you create through `adapter.world` yourself.
+Bodies sleep when they come to rest and wake on contact, or when the adapter moves, turns or pushes them; `body.sleep()` and `body.wakeUp()` force it. A sleeping body's renderable is not written to, nor a static one's.
+
+Rapier's objects live in WebAssembly memory, which the garbage collector does not reclaim. The adapter frees them in `destroy()`, which `world.setAdapter()` calls on the adapter it replaces; from then on its queries find nothing, and a body handle kept from it must not be used. Free a joint or a character controller you created yourself through `adapter.world` with `world.removeImpulseJoint()` / `world.removeCharacterController()`; the joints `app.world.addJoint()` made are freed for you.
+
+## Coming from the 2D Rapier adapter
+
+The options, the loading (`load()` / `create()` / `loaded`), the `bodyDef` fields, the hooks, the body helpers and the units are the same. What differs:
+
+- **Shapes have depth.** `Box3d`, `Sphere`, `Capsule3d`, `ConvexHull3d` and `TriangleMesh3d`; a `Rect` or an `Ellipse` is refused with the shape to use instead.
+- **The body sits at the renderable's `pos` and `depth`**, and shapes are relative to it, whatever the anchor point. The 2D adapter puts the body at the centre of its first shape.
+- **Three axes.** `gravity` is a `Vector3d`; a call given a `Vector3d` acts on all three axes, and one given a `Vector2d`, a scalar angle or a scalar spin acts in the plane of the body, about Z. `getRotation` / `setRotation`, `getVelocity3d` and `getAngularVelocity3d` read and write the rest.
+- **`raycast3d` and `querySphere`** in place of `raycast`.
+- **`getBodyShapes` returns the shapes as given**, where the 2D adapter returns them posed; the pose is `pos`, `depth` and `getRotation`.
+- **`updateShape()` keeps the body** (see [Shapes](#shapes)), where the 2D adapter builds a new one.
+- **`physicLabel` is `"rapier3d"`**, and `capabilities.bodies3d` is `true`.
+- **Hinges and sliders take an `axis`** with a `z`, and anchors a `z`.
+
 
 ## Examples
 

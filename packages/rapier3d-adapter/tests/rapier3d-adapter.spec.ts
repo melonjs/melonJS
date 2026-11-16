@@ -763,7 +763,7 @@ describe("Rapier3dAdapter", () => {
 				b: door,
 				anchorB: { x: -50, y: 0 },
 				axis: { x: 0, y: 1, z: 0 },
-			} as never);
+			});
 			adapter.applyTorque(door, new Vector3d(3, 3, 3));
 			run(30);
 			const w = adapter.getAngularVelocity3d(door);
@@ -808,7 +808,7 @@ describe("Rapier3dAdapter", () => {
 				b,
 				new Quaternion().setFromAxisAngle(new Vector3d(0, 1, 0), 0.6),
 			);
-			world.addJoint({ type: "weld", a, b } as never);
+			world.addJoint({ type: "weld", a, b });
 			adapter.applyImpulse(a, new Vector3d(0, -20, 0));
 			adapter.applyTorque(a, new Vector3d(0, 0, 2));
 			run(60);
