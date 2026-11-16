@@ -469,6 +469,7 @@ layer into the offscreen-bake path instead.
 | `unknown or invalid resource type` | asset `type` set to `"tmj"` / `"tsj"` — use `"tmx"` / `"tsx"` with the `.tmj` / `.tsj` file |
 | camera will not scroll | `setViewportBounds: false`, or the map was added with `addTo()` (which defaults to `false`) |
 | `No inflate function set` at parse time | compressed layers without the tiled-inflate plugin |
+| `@melonjs/tiled-inflate-plugin: cannot read ... compressed layer data` | that layer's data is damaged (a checksum or its length does not match), cut short, or edited by hand: save the map again from Tiled |
 | `Tiled layer "…" has N tiles of data for its W x H cells` | the layer's data does not fill it, as Tiled would refuse too: written by another tool or edited by hand. Save the map again from Tiled |
 | collision shapes are not solid | the object layer's name does not contain `"collision"`, or the objects are named |
 | isometric objects overlap wrongly | `world.sortOn` not set to `"y"` |
