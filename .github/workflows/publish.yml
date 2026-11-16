@@ -15,6 +15,7 @@ on:
           - matter-adapter
           - planck-adapter
           - rapier2d-adapter
+          - rapier3d-adapter
           - capacitor-plugin
           - gamepad-plugin
           - pathfinding-plugin
@@ -76,6 +77,9 @@ jobs:
             echo "build_cmd=pnpm clean && pnpm build" >> "$GITHUB_OUTPUT"
           elif [ "${{ inputs.package }}" = "rapier2d-adapter" ]; then
             echo "dir=packages/rapier2d-adapter" >> "$GITHUB_OUTPUT"
+            echo "build_cmd=pnpm clean && pnpm build" >> "$GITHUB_OUTPUT"
+          elif [ "${{ inputs.package }}" = "rapier3d-adapter" ]; then
+            echo "dir=packages/rapier3d-adapter" >> "$GITHUB_OUTPUT"
             echo "build_cmd=pnpm clean && pnpm build" >> "$GITHUB_OUTPUT"
           elif [ "${{ inputs.package }}" = "capacitor-plugin" ]; then
             echo "dir=packages/capacitor-plugin" >> "$GITHUB_OUTPUT"

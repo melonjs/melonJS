@@ -66,5 +66,11 @@ export {
 	type RapierAdapterOptions,
 	type RapierJointDefinition,
 } from "../../../rapier2d-adapter/src/index.ts";
+export {
+	Rapier3dAdapter,
+	type Rapier3dAdapterOptions,
+	type Rapier3dJointDefinition,
+	type Vector3Like,
+} from "../../../rapier3d-adapter/src/index.ts";
 export { SpinePlugin } from "../../../spine-plugin/src/index.js";
 export { TiledInflatePlugin } from "../../../tiled-inflate-plugin/src/index.js";

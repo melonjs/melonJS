@@ -39,6 +39,7 @@ A pnpm workspace (`packages/*`), built with Turborepo. Node 24 or later.
 | `packages/tiled-inflate-plugin` | compressed Tiled maps |
 | `packages/capacitor-plugin` | Capacitor lifecycle and hardware back button |
 | `packages/matter-adapter`, `packages/planck-adapter`, `packages/rapier2d-adapter` | physics engines that replace the built-in world |
+| `packages/rapier3d-adapter` | Rapier 3D physics, for a `Camera3d` game |
 | `packages/create-melonjs` | the project scaffolder |
 | `packages/tsconfig` | shared TypeScript configuration |
 

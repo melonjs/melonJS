@@ -6,16 +6,27 @@ import { Box3d } from "./box3d.ts";
 
 /**
  * What {@link TriangleMesh3d.fromMesh} and {@link ConvexHull3d.fromMesh} read
- * from a {@link Mesh}: its geometry as loaded, and how it is placed.
- * @ignore
+ * from a {@link Mesh}: its geometry as loaded, and how it is placed. Pass the
+ * mesh itself, a glTF part or a `Sprite3d` included.
+ * @category Geometry
  */
 export interface MeshGeometrySource {
+	/** the vertices as loaded, `[x, y, z, ...]` */
 	originalVertices: ArrayLike<number>;
+	/** how many vertices there are */
 	vertexCount: number;
+	/** the triangles, three vertex indices each */
 	indices?: ArrayLike<number>;
+	/**
+	 * the triangles as loaded, before any reordering for drawing
+	 * @ignore
+	 */
 	_indicesOriginal?: ArrayLike<number>;
+	/** the mesh's turn and stretch */
 	currentTransform: Matrix3d;
+	/** the uniform scale the mesh is drawn at */
 	meshScale: number;
+	/** whether the source is right-handed (glTF) */
 	rightHanded?: boolean;
 }
 

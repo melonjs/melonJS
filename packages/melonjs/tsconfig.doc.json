@@ -15,6 +15,7 @@
 		"../matter-adapter/src",
 		"../planck-adapter/src",
 		"../rapier2d-adapter/src",
+		"../rapier3d-adapter/src",
 		"../spine-plugin/src",
 		"../tiled-inflate-plugin/src"
 	]

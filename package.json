@@ -24,7 +24,9 @@
 		"publish-planck-adapter": "gh workflow run publish.yml -f package=planck-adapter",
 		"publish-planck-adapter:dry": "gh workflow run publish.yml -f package=planck-adapter -f dry-run=true",
 		"publish-rapier2d-adapter": "gh workflow run publish.yml -f package=rapier2d-adapter",
-		"publish-rapier2d-adapter:dry": "gh workflow run publish.yml -f package=rapier2d-adapter -f dry-run=true"
+		"publish-rapier2d-adapter:dry": "gh workflow run publish.yml -f package=rapier2d-adapter -f dry-run=true",
+		"publish-rapier3d-adapter": "gh workflow run publish.yml -f package=rapier3d-adapter",
+		"publish-rapier3d-adapter:dry": "gh workflow run publish.yml -f package=rapier3d-adapter -f dry-run=true"
 	},
 	"packageManager": "pnpm@10.32.1",
 	"dependencies": {
