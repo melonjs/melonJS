@@ -31,10 +31,13 @@
  *   is the page's own `pointerup`, since a pull often ends off the canvas.
  * - **Collision hooks**: a rival's `onCollisionStart` tells when it lands on
  *   the ground or is struck hard, from the speed of the two bodies
- *   (`getVelocity3d`).
+ *   (`getVelocity3d`). A shot is over once the pet has come to rest, which
+ *   the adapter says with `isSleeping()`.
  * - **The UI widgets and `Tween`**: the end-of-round card is a `UIPanel` with
  *   a `UITextButton`; a tween fades a rival out, lifts the score it earned,
  *   and carries the next pet into the pouch along a path.
+ * - **`state.reload()`** for PLAY AGAIN: the stage is built again from its
+ *   `onResetEvent`, on a world emptied of the last round's bodies.
  * - **A camera that orbits the field**: the turn buttons, the arrow keys and
  *   the VIEW button (side on, or behind the slingshot) turn a `Camera3d`,
  *   eased with `math.damp`, and the aim follows it, so a shot from behind can
@@ -340,10 +343,9 @@ const createGame = async () => {
 	/**
 	 * Build a round: the field, the towers, the slingshot.
 	 * @param app - the running application
-	 * @param restart - builds a new round, once this frame is done
 	 * @returns what to undo when the round goes
 	 */
-	const buildScene = (app: Application, restart: () => void) => {
+	const buildScene = (app: Application) => {
 		const world = app.world;
 		const adapter = world.adapter as Rapier3dAdapter;
 		// the application's `cameraClass` gave the stage a Camera3d of its own
@@ -758,9 +760,10 @@ const createGame = async () => {
 					borderColor: "#7a3f0c",
 					hoverScale: 1.05,
 					pressScale: 0.95,
-					// a new round, once this frame is done with the world
+					// a new round: the stage is built again, once this frame
+					// is done with the world
 					onClick: () => {
-						event.once(event.GAME_AFTER_UPDATE, restart);
+						state.reload();
 					},
 				}),
 			);
@@ -1080,12 +1083,12 @@ const createGame = async () => {
 					return false;
 				}
 				flightTime += dt / 1000;
-				const body = pet.body as Rapier3dAdapter.Body;
 				const gone =
 					pet.pos.y > 400 ||
 					Math.abs(pet.pos.x) > SIDE_X ||
 					Math.abs(pet.depth) > BACK_Z;
-				if (body.isSleeping() || gone || flightTime > SHOT_SECONDS) {
+				// at rest: Rapier put it to sleep
+				if (adapter.isSleeping(pet) || gone || flightTime > SHOT_SECONDS) {
 					flying = null;
 					if (over) {
 						return false;
@@ -1128,16 +1131,10 @@ const createGame = async () => {
 	class SlingshotStage extends Stage {
 		#teardown: (() => void) | null = null;
 
+		// on entering PLAY, and again on each `state.reload()`, onto a world
+		// the state manager has emptied, bodies and all
 		override onResetEvent(app: Application) {
-			const build = () => {
-				this.#teardown = buildScene(app, () => {
-					// a new round: everything out of the world, bodies too
-					this.#teardown?.();
-					app.world.reset();
-					build();
-				});
-			};
-			build();
+			this.#teardown = buildScene(app);
 		}
 
 		override onDestroyEvent() {
