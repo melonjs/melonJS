@@ -105,8 +105,11 @@ export interface BoltWorld {
 	shielded(): boolean;
 	/** Bolt landed on a cell (lighting its panel is up to the game) */
 	landed(cell: Cell): void;
-	/** Bolt was caught, or fell: a life is lost */
-	lost(): void;
+	/**
+	 * Bolt was caught, or fell: a life is lost
+	 * @param caught - true if a monster caught it, false if it fell
+	 */
+	lost(caught: boolean): void;
 	/** Bolt picked a power-up up */
 	collected(kind: PowerKind): void;
 }
@@ -313,7 +316,7 @@ export class Bolt extends Actor {
 		if (!world?.playing()) {
 			return;
 		}
-		world.lost();
+		world.lost(false);
 		fallAway(this);
 		sfx.sfxFall();
 		aberrationBurst(FALL_ABERRATION);
@@ -325,7 +328,7 @@ export class Bolt extends Actor {
 	 */
 	private knockOut() {
 		const world = this.world as BoltWorld;
-		world.lost();
+		world.lost(true);
 		sfx.sfxDie();
 		world.effects.burst(this.x, this.y, KO_COLOR, 30, 220, 300);
 		game.viewport.shake(KO_SHAKE.strength, KO_SHAKE.duration);

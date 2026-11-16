@@ -53,7 +53,7 @@ const DYING_TIME = 1.6;
 const CLEAR_TIME = 2.8;
 /** the end screens take input after this, in seconds */
 const END_WAIT = 1;
-/** how long everything holds when a monster is hit, in milliseconds */
+/** how long everything holds when a monster is hit, or Bolt is caught, in ms */
 const HIT_STOP = 80;
 
 type Phase =
@@ -205,8 +205,9 @@ export class Field extends Renderable {
 	};
 
 	/**
-	 * A monster was hit: everything holds for a moment, so the hit lands.
-	 * The engine's `state.freeze` pauses the game and resumes it by itself.
+	 * A monster was hit, or Bolt was caught: everything holds for a moment,
+	 * so the hit lands. The engine's `state.freeze` pauses the game and
+	 * resumes it by itself.
 	 */
 	private hitStop() {
 		this.hitStopping = true;
@@ -285,7 +286,7 @@ export class Field extends Renderable {
 			playing: () => this.phase === "play",
 			shielded: () => this.powers.active("shield"),
 			landed: (cell) => this.painted(cell),
-			lost: () => this.lifeLost(),
+			lost: (caught) => this.lifeLost(caught),
 			collected: (kind) => this.collected(kind),
 		});
 	}
@@ -380,10 +381,16 @@ export class Field extends Renderable {
 		}
 	}
 
-	/** Bolt was caught, or fell */
-	private lifeLost() {
+	/**
+	 * Bolt was caught, or fell: a life is lost. Being caught holds the game
+	 * a moment, as hitting a monster does; a fall has nothing to hit.
+	 */
+	private lifeLost(caught: boolean) {
 		this.score.loseLife();
 		this.setPhase("dying");
+		if (caught) {
+			this.hitStop();
+		}
 	}
 
 	/** a cracked panel gave way: whoever stands on it falls */
