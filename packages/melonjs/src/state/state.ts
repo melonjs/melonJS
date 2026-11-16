@@ -987,6 +987,40 @@ const state = {
 	},
 
 	/**
+	 * Build the current stage again, for a "play again" button, a level
+	 * restart or a retry: what {@link state.change} does when it switches
+	 * to another state (the stage's `onDestroyEvent`, the world reset, then
+	 * its `onResetEvent`), for the state already running, which
+	 * `change()` leaves alone. It runs without the transition set with
+	 * {@link state.transition}.
+	 * @param [forceChange=false] - if true the stage is built again at once;
+	 * otherwise on the next frame, as with `change()`
+	 * @param extraArgs - the arguments passed to `onResetEvent`; left out,
+	 * the ones the current state was last entered with
+	 * @throws {Error} when no state has been entered yet
+	 * @example
+	 * // a button on the game-over card
+	 * new UITextButton(x, y, { text: "Play again", onClick: () => state.reload() });
+	 * @example
+	 * // the same level again, or the next one
+	 * state.reload(false, "level1");
+	 */
+	reload(forceChange: boolean = false, ...extraArgs: unknown[]): void {
+		// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- no stage before the first change()
+		if (_stages[_state] === undefined) {
+			throw new Error("state.reload(): no state has been entered yet");
+		}
+		if (extraArgs.length > 0) {
+			_extraArgs = extraArgs;
+		}
+		if (forceChange) {
+			_switchState(_state);
+		} else {
+			defer(_switchState, this, _state);
+		}
+	},
+
+	/**
 	 * return true if the specified state is the current one
 	 * @param stateId - State ID (see constants)
 	 * @returns true if the specified state is the current one

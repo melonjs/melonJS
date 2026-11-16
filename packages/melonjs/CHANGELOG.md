@@ -15,8 +15,12 @@
 - Physics: the adapter API takes a `Vector3d` wherever it takes a `Vector2d` (`setVelocity`, `applyForce`, `applyImpulse`, `setPosition`, `gravity`), with optional `getVelocity3d`, `getRotation` / `setRotation` and `getAngularVelocity3d` for a 3D adapter; the built-in applies them along its depth axis. A `Vector2d` works as before. A joint's anchors and axis and a body's `maxVelocity` may carry a `z`, which a 2D adapter ignores
 - Physics: the built-in says once in the console when it is asked for 3D it can only approximate (those three shapes, or a turn or spin about X or Y), naming `@melonjs/rapier3d-adapter`
 - Math: `Quaternion`, an orientation in 3D
+- State: `state.reload()` builds the current stage again, for a "play again" or a level restart, with the arguments it was entered with or new ones; `state.change()` to the current state still does nothing
+- Physics: optional `isSleeping()` on the adapter API, whether the engine has put a body to rest; always `false` on the built-in, which has no sleeping
 
 ### Fixed
+- `Mesh#shadowGroundNormal`: a normal with a part along Z was not normalized on Z, so the ground shadow was laid on a wrongly tilted plane
+- `World#setAdapter`: a body a 3D adapter tilted (turned about X or Y) is built again with its whole rotation on an adapter with `setRotation`; it lost all but its turn about Z
 - Input: under a `Camera3d`, pointer events on a mesh are hit-tested by the ray through the pointer against its triangles; they were tested against 2D bounds that a perspective view misplaces
 - glTF: a skinned mesh was placed and bounded by its own node's transform, which glTF says it ignores, so a rigged character could load offset and with wrong `bounds`
 - `GLTFModel`: a clip at a negative `speed` froze on its first frame and never ended; it now plays backwards

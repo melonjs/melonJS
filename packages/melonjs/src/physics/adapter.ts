@@ -1011,6 +1011,19 @@ export interface PhysicsAdapter {
 	isGrounded?(renderable: Renderable): boolean;
 
 	/**
+	 * Whether the engine has put this body to sleep: a dynamic body at rest,
+	 * which it leaves out of the simulation until a contact, a force or a
+	 * velocity wakes it. A static or kinematic body, an unregistered
+	 * renderable, and every body of an adapter without
+	 * {@link AdapterCapabilities.sleepingBodies} (the builtin one) are never
+	 * asleep. Read it to tell when a throw, a stack or a level has settled.
+	 * @example
+	 * // the level is over once every crate has come to rest
+	 * const settled = crates.every((c) => world.adapter.isSleeping?.(c) ?? false);
+	 */
+	isSleeping?(renderable: Renderable): boolean;
+
+	/**
 	 * Spatial queries.
 	 *
 	 * `raycast` is capability-gated by {@link AdapterCapabilities.raycasts}.
