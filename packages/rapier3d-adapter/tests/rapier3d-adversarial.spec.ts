@@ -49,7 +49,11 @@ type Internals = {
 	overrides: Map<Renderable, unknown>;
 };
 
-/** exactly these renderables, in this order: by identity, not by likeness */
+/**
+ * Exactly these renderables, in this order: by identity, not by likeness.
+ * @param found - what the query returned
+ * @param expected - the renderables it should have
+ */
 const expectFound = (found: readonly unknown[], ...expected: unknown[]) => {
 	expect(found).toHaveLength(expected.length);
 	for (const [i, r] of expected.entries()) {
@@ -63,7 +67,12 @@ const Z = new Vector3d(0, 0, 1);
 const turn = (axis: Vector3d, angle: number) => {
 	return new Quaternion().setFromAxisAngle(axis.clone().normalize(), angle);
 };
-/** how alike two turns are: 1 for the same turn, whatever the sign of q */
+/**
+ * How alike two turns are: 1 for the same turn, whatever the sign of q.
+ * @param a - one turn
+ * @param b - the other
+ * @returns |a · b|
+ */
 const alike = (a: Quaternion, b: Quaternion) => {
 	return Math.abs(a.dot(b));
 };
@@ -1502,7 +1511,7 @@ describe("Rapier3dAdapter, adversarially", () => {
 			const at = new Vector3d(100, 100, 0);
 			expectFound(adapter.querySphere(at, 0), b);
 			expectFound(adapter.querySphere(at, -5), b);
-			expectFound(adapter.querySphere(at, undefined as unknown as number), b);
+			expectFound(adapter.querySphere(at, undefined), b);
 			expectFound(adapter.querySphere(new Vector3d(100, 100, 17), 0));
 			// and the world still runs
 			run(1);

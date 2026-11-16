@@ -898,8 +898,9 @@ const createGame = async () => {
 		aimArea.anchorPoint.set(0, 0);
 		aimArea.floating = true;
 		aimArea.isKinematic = false;
-		// behind every UI element, in the order regions are asked in
-		world.addChild(aimArea, -5);
+		// with no depth given, it gets a large one (autoDepth): drawn behind,
+		// and so asked after, the buttons and the card, at depths 0 to 3
+		world.addChild(aimArea);
 		const beside = new Vector3d();
 		const pouchOnScreen = new Vector2d();
 		const besideOnScreen = new Vector2d();
