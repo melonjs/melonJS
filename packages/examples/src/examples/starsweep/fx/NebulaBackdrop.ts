@@ -9,7 +9,14 @@
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
-import { Color, loader, math, type ShaderEffect, Sprite } from "melonjs";
+import {
+	Color,
+	loader,
+	math,
+	NoiseTexture2d,
+	type ShaderEffect,
+	Sprite,
+} from "melonjs";
 import type { Theme } from "../rules/levels";
 import { NEBULA_SHADER } from "./nebulaShader";
 
@@ -20,6 +27,23 @@ const rgb = (css: string) => new Color().parseCSS(css).toArray().slice(0, 3);
 const QUAD = 16;
 /** the blank quad, made once: a new canvas would be a new GPU texture */
 let quad: HTMLCanvasElement | null = null;
+
+/**
+ * The clouds' noise, baked once by the engine: fractal Perlin noise, five
+ * octaves, seamless so the shader can scroll it forever. Four cells of the
+ * base noise across, so the clouds have a few big shapes and detail in them.
+ */
+let noise: NoiseTexture2d | null = null;
+const makeNoise = () =>
+	new NoiseTexture2d({
+		width: 256,
+		height: 256,
+		seamless: true,
+		type: "perlin",
+		seed: 7,
+		frequency: 4 / 256,
+		octaves: 5,
+	});
 
 const blankQuad = () => {
 	const canvas = document.createElement("canvas");
@@ -49,6 +73,8 @@ export class NebulaBackdrop extends Sprite {
 		this.alwaysUpdate = true;
 		this.scale(width / QUAD, height / QUAD);
 		this.fx = loader.getShader(NEBULA_SHADER) as ShaderEffect;
+		noise ??= makeNoise();
+		this.fx.setTexture("uNoise", noise, "repeat");
 		this.fx.setUniform("uAspect", width / height);
 		this.addPostEffect(this.fx);
 	}
