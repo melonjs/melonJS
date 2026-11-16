@@ -740,7 +740,7 @@ const examples: {
 		path: "starsweep",
 		sourceDir: "starsweep",
 		description:
-			"Portrait mobile maze game: guide Bolt the robot to power up every panel while Kenney monsters roam. Virtual gamepad plugin, custom nebula shader, bloom and chromatic aberration, and 3D ships flying under the station.",
+			"Portrait mobile maze game: guide Bolt the robot to power up every panel while monsters hunt it. Ten levels made in Tiled, monsters routed by the A* pathfinding plugin, the virtual gamepad plugin, a nebula shader, bloom and chromatic aberration, and 3D star dust and novas.",
 	},
 	{
 		component: <ExampleWhacAMole />,

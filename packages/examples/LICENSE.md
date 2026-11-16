@@ -108,7 +108,9 @@ from parts of the **Monster Builder Pack** by **Kenney**
 **CC0 1.0** (public domain). The parts used are repacked at half size into
 `public/assets/starsweep/monsters.png`, and `scripts/bake-starsweep-cast.mjs`
 poses them into the characters' sprite sheet, `cast.png` / `cast.json`; the
-pack's own license ships beside them as `License.txt`.
+pack's own license ships beside them as `License.txt`. The rest of the
+sprite sheet (Bolt's details, the drone's hull and rotor, the shield ring)
+is drawn by that script and covered by the MIT license above.
 
 It also reuses the CC0 **Kenney Future** font already in this repository,
 from `public/assets/ui/font/`. The nebula shader, the particles and

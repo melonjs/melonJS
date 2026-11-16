@@ -1,9 +1,12 @@
 /**
- * Bakes the Starsweep cast, Bolt and the three monsters, into one sprite
- * sheet: `public/assets/starsweep/cast.png` and `cast.json`.
+ * Bakes the Starsweep cast into one sprite sheet: Bolt, the four monsters
+ * (wobbler, muncher, chaser, drone) and Bolt's shield ring, into
+ * `public/assets/starsweep/cast.png` and `cast.json`.
  *
  * The characters are put together from parts of Kenney's Monster Builder
  * Pack (`public/assets/starsweep/monsters.png`): bodies, eyes, legs, horns.
+ * Bolt's details, the drone's hull and rotor, and the shield ring are drawn
+ * here, with canvas shapes.
  * This script poses those parts for every frame of every animation, draws
  * the frames in Chromium, trims and packs them, and writes the atlas in
  * Aseprite's JSON layout. That layout carries the animations themselves, as
@@ -17,9 +20,10 @@
  * game draws the sprites at half scale. A character's centre (the point the
  * game places) is at ANCHOR in each CELL x CELL frame.
  *
- * Run (from packages/examples): node scripts/bake-starsweep-cast.mjs
+ * Run (from packages/examples): pnpm bake:starsweep
  *
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
+ * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
 
 import { readFileSync, writeFileSync } from "node:fs";
