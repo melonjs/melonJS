@@ -797,27 +797,30 @@ const createGame = async () => {
 		// the pets after the first wait in line on the deck, nearest first;
 		// they are only drawn until their turn comes
 		const waiting = PETS.slice(1).map((name, i) => {
-			const pet = petMesh(
+			const mesh = petMesh(
 				name,
 				POUCH.x - 70 - QUEUE_GAP * i,
 				DECK_TOP - PET / 2,
 			);
 			// on the deck, whose top is not the ground their shadows fall on
-			pet.castGroundShadow = false;
-			world.addChild(pet, POUCH.z);
-			return pet;
+			mesh.castGroundShadow = false;
+			world.addChild(mesh, POUCH.z);
+			return { name, mesh };
 		});
 
 		// the next pet into the pouch: the first straight there, the others
-		// with a hop from the front of the line
+		// with a hop from the front of the line. The line decides which pet
+		// comes next, so the one that leaves the deck is the one that hops.
+		let first = true;
 		const load = () => {
-			const name = PETS[PETS.length - shotsLeft];
-			const queued = waiting.shift();
+			const queued = first ? undefined : waiting.shift();
+			first = false;
+			const name = queued?.name ?? PETS[0];
 			const from = queued
-				? { x: queued.pos.x, y: queued.pos.y }
+				? { x: queued.mesh.pos.x, y: queued.mesh.pos.y }
 				: { x: POUCH.x, y: POUCH.y };
 			if (queued) {
-				world.removeChildNow(queued);
+				world.removeChildNow(queued.mesh);
 			}
 			const pet = petMesh(name, from.x, from.y);
 			pet.bodyDef = {
