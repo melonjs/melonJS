@@ -9,7 +9,7 @@
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
 import { type Mesh, Quaternion, Vector3d, type World } from "melonjs";
-import { AXIS_X, AXIS_Y, DECK_TOP, PET_SIZE, POUCH, WOOD } from "../constants";
+import { AXIS_X, DECK_TOP, PET_SIZE, POUCH, WOOD } from "../constants";
 import { createBox } from "../meshes/box";
 
 const NO_PULL = new Vector3d(0, 0, 0);
@@ -20,7 +20,6 @@ export class Slingshot {
 	private readonly tipY = POUCH.y - 20;
 	// scratch vectors, so that nothing is allocated while the pet is pulled
 	private readonly turn = new Quaternion();
-	private readonly turnAxis = new Vector3d();
 	private readonly along = new Vector3d();
 	private readonly heldAt = new Vector3d();
 
@@ -105,24 +104,17 @@ export class Slingshot {
 			to.y - this.tipY,
 			to.z - band.depth,
 		);
-		band.pos.set(POUCH.x + along.x / 2, this.tipY + along.y / 2);
+		// `setPosition`, not `pos.set(x, y)`, which would put the band at
+		// depth 0: each band stays at its own prong's depth
+		band.setPosition(POUCH.x + along.x / 2, this.tipY + along.y / 2);
 		const length = Math.max(along.length(), 1);
 		// the mesh turns in its model's Y-up space: Y the other way
 		along.y = -along.y;
-		// the turn that takes +X onto the band: about X × band, by the angle
-		// between the two
-		this.turnAxis.copy(AXIS_X).cross(along);
-		if (this.turnAxis.length2() < 1e-12) {
-			// the band lies along X already, one way or the other
-			this.turn.setFromAxisAngle(AXIS_Y, along.x < 0 ? Math.PI : 0);
-		} else {
-			this.turn.setFromAxisAngle(
-				this.turnAxis.normalize(),
-				AXIS_X.angle(along),
-			);
-		}
-		band.currentTransform.identity();
-		this.turn.toMatrix3d(band.currentTransform);
-		band.currentTransform.scale(length, 1, 1);
+		// the shortest turn that takes the box's +X onto the band, then
+		// stretched to its length
+		band.currentTransform
+			.identity()
+			.rotate(this.turn.setFromUnitVectors(AXIS_X, along))
+			.scale(length, 1, 1);
 	}
 }

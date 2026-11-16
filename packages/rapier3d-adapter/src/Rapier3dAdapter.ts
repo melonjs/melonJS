@@ -543,9 +543,9 @@ export class Rapier3dAdapter implements PhysicsAdapter {
 	 */
 	setPosition(renderable: Renderable, p: Vector2d | Vector3d): void {
 		const depth = zOf(p) ?? renderable.depth;
-		renderable.pos.x = p.x;
-		renderable.pos.y = p.y;
-		renderable.depth = depth;
+		// one batched write, as the pose is written each frame
+		renderable.setPosition(p.x, p.y, depth);
+		renderable.isDirty = true;
 		this.sim.bodies
 			.get(renderable)
 			?.setTranslation(this.sim.units.inMeters(p.x, p.y, depth), true);

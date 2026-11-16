@@ -4,7 +4,7 @@
  * renderable had when the body was made.
  */
 import type * as RAPIER from "@dimforge/rapier3d-compat";
-import { Mesh, type Renderable } from "melonjs";
+import { type Matrix3d, Mesh, Quaternion, type Renderable } from "melonjs";
 import type { Units } from "../math/units";
 
 /**
@@ -14,9 +14,12 @@ import type { Units } from "../math/units";
  * Y-up space), and `base` the transform it had when the body was made.
  */
 export interface Pose {
-	base: Float64Array;
+	base: Matrix3d;
 	bridge: [number, number, number];
 }
+
+// the body's turn, carried into the space the renderable turns in
+const _turn = new Quaternion();
 
 /**
  * A renderable's pose as it stands, to turn from.
@@ -25,7 +28,7 @@ export interface Pose {
  */
 export function poseOf(renderable: Renderable): Pose {
 	return {
-		base: Float64Array.from(renderable.currentTransform.val),
+		base: renderable.currentTransform.clone(),
 		bridge:
 			renderable instanceof Mesh
 				? // a mesh turns in its source's Y-up space (see Mesh)
@@ -53,49 +56,26 @@ export function writePose(
 		return;
 	}
 	const p = body.translation();
-	renderable.pos.x = units.toPixels(p.x);
-	renderable.pos.y = units.toPixels(p.y);
-	renderable.depth = units.toPixels(p.z);
+	// one batched write: the position's change callback (a bounds update)
+	// runs once, where assigning `pos.x`, `pos.y` and `depth` ran it three
+	// times
+	renderable.setPosition(
+		units.toPixels(p.x),
+		units.toPixels(p.y),
+		units.toPixels(p.z),
+	);
+	renderable.isDirty = true;
 	if (pose === undefined) {
 		return;
 	}
 	const { x, y, z, w } = body.rotation();
-	// the turn as a matrix, R[row][col]
-	const r00 = 1 - 2 * (y * y + z * z);
-	const r01 = 2 * (x * y - z * w);
-	const r02 = 2 * (x * z + y * w);
-	const r10 = 2 * (x * y + z * w);
-	const r11 = 1 - 2 * (x * x + z * z);
-	const r12 = 2 * (y * z - x * w);
-	const r20 = 2 * (x * z - y * w);
-	const r21 = 2 * (y * z + x * w);
-	const r22 = 1 - 2 * (x * x + y * y);
 	// carried into the space the transform turns in: D · R · D, with the
-	// bridge D its own inverse
+	// bridge D its own inverse. On a quaternion, each axis part takes its
+	// axis's sign, and the sign of det(D) when D mirrors the space
 	const [d0, d1, d2] = pose.bridge;
-	const m = [
-		r00,
-		r01 * d0 * d1,
-		r02 * d0 * d2,
-		r10 * d1 * d0,
-		r11,
-		r12 * d1 * d2,
-		r20 * d2 * d0,
-		r21 * d2 * d1,
-		r22,
-	];
-	// currentTransform = R' · base, column by column (column-major)
-	const out = renderable.currentTransform.val;
-	const base = pose.base;
-	for (let col = 0; col < 4; col++) {
-		const o = col * 4;
-		const b0 = base[o];
-		const b1 = base[o + 1];
-		const b2 = base[o + 2];
-		out[o] = m[0] * b0 + m[1] * b1 + m[2] * b2;
-		out[o + 1] = m[3] * b0 + m[4] * b1 + m[5] * b2;
-		out[o + 2] = m[6] * b0 + m[7] * b1 + m[8] * b2;
-		out[o + 3] = base[o + 3];
-	}
+	const det = d0 * d1 * d2;
+	_turn.set(det * d0 * x, det * d1 * y, det * d2 * z, w);
+	// currentTransform = R' · base
+	renderable.currentTransform.identity().rotate(_turn).multiply(pose.base);
 	renderable.isDirty = true;
 }

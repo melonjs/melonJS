@@ -19,7 +19,6 @@
 - State: `state.reload()` builds the current stage again, for a "play again" or a level restart, with the arguments it was entered with or new ones; `state.change()` to the current state still does nothing
 - Physics: optional `isSleeping()` on the adapter API, whether the engine has put a body to rest; always `false` on the built-in, which has no sleeping
 
-
 ### Performance
 - `Camera3d`: the camera builds its orientation once, from a `Quaternion`, when `yaw`, `pitch` or `roll` changes, and the view, the frustum, the fog and `getBasis()` all reuse it, where each rebuilt it from three rotations; the view is taken off the world container by restoring its transform instead of turning it back. The camera's view work per frame is about **48%** faster with the camera moving (1.49 to **0.78 µs**) and **72%** faster with it still (1.15 to **0.32 µs**)
 
