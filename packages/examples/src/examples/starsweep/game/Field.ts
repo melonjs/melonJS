@@ -53,6 +53,8 @@ const DYING_TIME = 1.6;
 const CLEAR_TIME = 2.8;
 /** the end screens take input after this, in seconds */
 const END_WAIT = 1;
+/** how long everything holds when a monster is hit, in milliseconds */
+const HIT_STOP = 80;
 
 type Phase =
 	| "loading"
@@ -109,6 +111,8 @@ export class Field extends Renderable {
 	/** the dimming and panel behind a message, 0 to 1 */
 	private overlay = 0;
 	private introFade: Tween | null = null;
+	/** a hit-stop is on: the game is paused, but not by the player */
+	private hitStopping = false;
 	/** what was on screen when the game paused, put back on resume */
 	private beforePause: { big: string; sub: string; alpha: number } | null =
 		null;
@@ -151,7 +155,10 @@ export class Field extends Renderable {
 				space: host.space,
 				bolt: () => this.bolt as Bolt,
 				fell: (m) => this.score.fell(m.score),
-				popped: (m) => this.score.popped(m.score),
+				popped: (m) => {
+					this.score.popped(m.score);
+					this.hitStop();
+				},
 				munched: (cell) => this.station.unpaint(cell.x, cell.y),
 			},
 			host.actors,
@@ -173,7 +180,8 @@ export class Field extends Renderable {
 	}
 
 	private readonly onPause = () => {
-		if (this.beforePause) {
+		// a hit-stop pauses too, but says nothing
+		if (this.hitStopping || this.beforePause) {
 			return;
 		}
 		this.beforePause = {
@@ -195,6 +203,17 @@ export class Field extends Renderable {
 		this.hud.show(was.big, was.sub);
 		this.hud.messageAlpha = was.alpha;
 	};
+
+	/**
+	 * A monster was hit: everything holds for a moment, so the hit lands.
+	 * The engine's `state.freeze` pauses the game and resumes it by itself.
+	 */
+	private hitStop() {
+		this.hitStopping = true;
+		void state.freeze(HIT_STOP).then(() => {
+			this.hitStopping = false;
+		});
+	}
 
 	/** whether the player may pause now */
 	get canPause() {
@@ -510,7 +529,7 @@ export class Field extends Renderable {
 		}
 		this.hud.drawPanel(
 			r,
-			state.isPaused() ? 1 : this.overlay,
+			this.beforePause ? 1 : this.overlay,
 			this.level.theme.lit,
 		);
 	}
