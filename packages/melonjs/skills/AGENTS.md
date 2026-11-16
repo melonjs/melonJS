@@ -61,8 +61,9 @@ Before hand-rolling: `ParticleEmitter`, `Trail`, `Tween`, the built-in
 `CanvasRenderTarget` for bake-once drawing, `viewport.shake` / `fadeIn` /
 `fadeOut`, and `save` for persistence.
 
-Companion packages cover the rest: `@melonjs/planck-adapter` and
-`@melonjs/matter-adapter` (physics), `@melonjs/spine-plugin` (skeletal
+Companion packages cover the rest: `@melonjs/planck-adapter`,
+`@melonjs/matter-adapter` and `@melonjs/rapier2d-adapter` (physics),
+`@melonjs/rapier3d-adapter` (physics for a `Camera3d` game), `@melonjs/spine-plugin` (skeletal
 animation), `@melonjs/tiled-inflate-plugin` (**required** for compressed Tiled
 maps), `@melonjs/debug-plugin`, `@melonjs/gamepad-plugin` (touch controls
 reported as a gamepad), `@melonjs/pathfinding-plugin` (A* on a grid),
