@@ -53,6 +53,7 @@ import { BACKGROUND, HEIGHT, WIDTH } from "./config/layout";
 import { CAST } from "./entities/Actor";
 import { Bolt } from "./entities/Bolt";
 import { Portal } from "./entities/Portal";
+import { NEBULA_SHADER, nebula } from "./fx/nebulaShader";
 import { controls } from "./input/Controls";
 import {
 	LEVEL_FILES,
@@ -101,6 +102,9 @@ const createGame = async () => {
 			type: "tmx",
 			src: `${levelDir}${name}.tmj`,
 		})),
+		// the nebula sky's shader: compiled here, while loading, and shared
+		// by both screens (an inert effect on Canvas, which has no shaders)
+		{ name: NEBULA_SHADER, type: "shader", data: nebula },
 	]);
 
 	// turn each Tiled map into a level the game can play

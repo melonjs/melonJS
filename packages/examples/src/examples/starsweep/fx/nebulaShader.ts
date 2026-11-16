@@ -3,14 +3,18 @@
  *
  * The `apply` function a `ShaderEffect` runs for each pixel, written
  * twice, once for WebGL and once for WebGPU: drifting space clouds in two
- * colours over the sky colour, and a grid of twinkling stars. Used by
- * `NebulaBackdrop`.
+ * colours over the sky colour, and a grid of twinkling stars.
+ *
+ * It is a `"shader"` asset, preloaded with the rest (see
+ * `ExampleStarsweep.ts`): the loader compiles it while loading, and
+ * `loader.getShader` hands every screen's `NebulaBackdrop` the same
+ * instance, so it is never compiled again.
  *
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
 
-export const nebulaGlsl = `
+const glsl = `
 uniform float uTime;
 uniform float uAspect;
 uniform vec3 uSky;
@@ -66,7 +70,7 @@ vec4 apply(vec4 color, vec2 uv) {
 }
 `;
 
-export const nebulaWgsl = `
+const wgsl = `
 struct NebulaUniforms {
 	uSky : vec3f,
 	uTime : f32,
@@ -123,3 +127,9 @@ fn apply(color : vec4f, uv : vec2f) -> vec4f {
 	return vec4f(col, 1.0);
 }
 `;
+
+/** the shader's asset name */
+export const NEBULA_SHADER = "starsweep-nebula";
+
+/** the shader's source, for the preload: one body per shading language */
+export const nebula = { glsl, wgsl };

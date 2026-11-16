@@ -9,43 +9,46 @@
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
-import { Color, game, math, ShaderEffect, Sprite } from "melonjs";
+import { Color, loader, math, type ShaderEffect, Sprite } from "melonjs";
 import type { Theme } from "../rules/levels";
-import { nebulaGlsl, nebulaWgsl } from "./nebulaShader";
+import { NEBULA_SHADER } from "./nebulaShader";
 
 /** a CSS colour as the shader's vec3: red, green and blue from 0 to 1 */
 const rgb = (css: string) => new Color().parseCSS(css).toArray().slice(0, 3);
 
-const blankQuad = (size: number) => {
+/** the quad's size, in pixels: it is scaled to the screen */
+const QUAD = 16;
+/** the blank quad, made once: a new canvas would be a new GPU texture */
+let quad: HTMLCanvasElement | null = null;
+
+const blankQuad = () => {
 	const canvas = document.createElement("canvas");
-	canvas.width = canvas.height = size;
+	canvas.width = canvas.height = QUAD;
 	const ctx = canvas.getContext("2d");
 	if (ctx) {
 		ctx.fillStyle = "#ffffff";
-		ctx.fillRect(0, 0, size, size);
+		ctx.fillRect(0, 0, QUAD, QUAD);
 	}
 	return canvas;
 };
 
 /**
  * The animated space backdrop: a screen-sized quad whose pixels come
- * entirely from the nebula shader.
+ * entirely from the nebula shader. The shader is the preloaded one, shared
+ * by every screen's backdrop.
  */
 export class NebulaBackdrop extends Sprite {
 	readonly fx: ShaderEffect;
 	private time = math.randomFloat(0, 100);
 
 	constructor(width: number, height: number) {
-		const QUAD = 16;
-		super(0, 0, { image: blankQuad(QUAD) });
+		quad ??= blankQuad();
+		super(0, 0, { image: quad });
 		this.anchorPoint.set(0, 0);
 		this.floating = true;
 		this.alwaysUpdate = true;
 		this.scale(width / QUAD, height / QUAD);
-		this.fx = new ShaderEffect(game.renderer, {
-			glsl: nebulaGlsl,
-			wgsl: nebulaWgsl,
-		});
+		this.fx = loader.getShader(NEBULA_SHADER) as ShaderEffect;
 		this.fx.setUniform("uAspect", width / height);
 		this.addPostEffect(this.fx);
 	}
