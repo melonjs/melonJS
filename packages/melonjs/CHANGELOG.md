@@ -12,7 +12,7 @@
 - 3D: toon shading and outlines on lit meshes: `toonBands`, `outlineWidth`, `outlineColor` and `outlineMode` (world units or screen pixels), and a `rimLight` / `rimColor` glow along the silhouette; `GLTFModel`, `GLTFScene` and `level.load` options too
 - glTF: the parsed descriptor carries the asset's `skins`, and each skinned primitive its `joints`, `weights` and `skin`
 - Physics: `Capsule3d`, `ConvexHull3d` and `TriangleMesh3d` collision shapes, the last two built from a model with `fromMesh()`; the built-in physics collides them as their bounding box ([#1846](https://github.com/melonjs/melonJS/issues/1846))
-- Physics: the adapter API takes a `Vector3d` wherever it takes a `Vector2d` (`setVelocity`, `applyForce`, `applyImpulse`, `setPosition`, `gravity`), with optional `getVelocity3d`, `getRotation` / `setRotation` and `getAngularVelocity3d` for a 3D adapter; the built-in applies them along its depth axis. A `Vector2d` works as before
+- Physics: the adapter API takes a `Vector3d` wherever it takes a `Vector2d` (`setVelocity`, `applyForce`, `applyImpulse`, `setPosition`, `gravity`), with optional `getVelocity3d`, `getRotation` / `setRotation` and `getAngularVelocity3d` for a 3D adapter; the built-in applies them along its depth axis. A `Vector2d` works as before. A joint's anchors and axis and a body's `maxVelocity` may carry a `z`, which a 2D adapter ignores
 - Physics: the built-in says once in the console when it is asked for 3D it can only approximate (those three shapes, or a turn or spin about X or Y), naming `@melonjs/rapier3d-adapter`
 - Math: `Quaternion`, an orientation in 3D
 

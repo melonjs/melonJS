@@ -389,9 +389,11 @@ export interface BodyDefinition {
 	 * Hard cap on velocity magnitude per axis. melonJS extension —
 	 * Matter has no direct equivalent and uses `frictionAir`-induced
 	 * terminal velocity instead; MatterAdapter implements this by
-	 * clamping velocity in an `afterUpdate` hook.
+	 * clamping velocity in an `afterUpdate` hook. `z` caps the depth axis
+	 * on `@melonjs/rapier3d-adapter` (left out, that axis has no cap); the
+	 * other adapters ignore it.
 	 */
-	maxVelocity?: { x: number; y: number };
+	maxVelocity?: { x: number; y: number; z?: number };
 
 	/**
 	 * Disable rotation simulation, so the body keeps whatever angle it has.
@@ -674,11 +676,16 @@ export interface JointDefinition {
 	/**
 	 * where the joint holds `a`, in `a`'s own space. Default: the point of
 	 * `a` under `b`'s anchor when the joint is made, so nothing moves; for a
-	 * `"rope"`, the centre of `a`'s body.
+	 * `"rope"`, the centre of `a`'s body. `z` is its depth, for an adapter
+	 * whose bodies have depth ({@link AdapterCapabilities.bodies3d}); a 2D
+	 * adapter ignores it.
 	 */
-	anchorA?: { x: number; y: number };
-	/** where the joint holds `b`, in `b`'s own space; default: the centre of its body */
-	anchorB?: { x: number; y: number };
+	anchorA?: { x: number; y: number; z?: number };
+	/**
+	 * where the joint holds `b`, in `b`'s own space; default: the centre of
+	 * its body. `z` as for `anchorA`.
+	 */
+	anchorB?: { x: number; y: number; z?: number };
 	/** whether `a` and `b` still collide with each other; default `false` */
 	collideConnected?: boolean;
 	/**
@@ -690,8 +697,14 @@ export interface JointDefinition {
 	limits?: { min: number; max: number };
 	/** `"rope"`: the most the anchors can be apart, in pixels; default: their distance when the joint is made */
 	maxLength?: number;
-	/** `"slider"`: the direction `b` slides in, in `a`'s own space; default: along x */
-	axis?: { x: number; y: number };
+	/**
+	 * `"slider"`: the direction `b` slides in, in `a`'s own space; default:
+	 * along x. On an adapter whose bodies have depth
+	 * ({@link AdapterCapabilities.bodies3d}) it may carry a `z`, and a
+	 * `"hinge"` takes it as the axis the bodies turn about (default: z, as a
+	 * 2D hinge turns); a 2D adapter ignores both.
+	 */
+	axis?: { x: number; y: number; z?: number };
 }
 
 /**
@@ -959,7 +972,10 @@ export interface PhysicsAdapter {
 		renderable: Renderable,
 		friction: number | { x: number; y: number },
 	): void;
-	setMaxVelocity(renderable: Renderable, limit: { x: number; y: number }): void;
+	setMaxVelocity(
+		renderable: Renderable,
+		limit: { x: number; y: number; z?: number },
+	): void;
 	/**
 	 * Read the body's current velocity cap (mirror of
 	 * {@link setMaxVelocity}). Returns plain `{x, y}` so callers don't
