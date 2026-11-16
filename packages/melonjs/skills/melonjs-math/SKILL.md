@@ -1,6 +1,6 @@
 ---
 name: melonjs-math
-description: "Use this skill for vector and matrix maths in melonJS — Vector2d, Vector3d, their observable variants, Matrix2d, Matrix3d, and the math utility functions. Covers which methods mutate and which allocate, the vector pool and when clone() is the wrong tool, interpolation with lerp, slerp, damp and moveTowards, and the argument defaults that silently drop a component. Triggers on: Vector2d, Vector3d, ObservableVector2d, ObservableVector3d, Matrix2d, Matrix3d, vector, vector maths, dot, cross, normalize, length, distance, angle, lerp, slerp, damp, moveTowards, project, clamp, degToRad, radToDeg, clone, vector pool, vector3dPool, setMuted, setCallback, my vector is wrong, z is zero, scale ignores z, moveTowards ignores z, setPosition, projectN, currentTransform, setTransform, matrix, transform matrix, column-major, val, Float32Array, basis matrix, orientation matrix, Noise, getNoise1d, flicker, wobble, Color, toArray, color components."
+description: "Use this skill for vector and matrix maths in melonJS — Vector2d, Vector3d, their observable variants, Matrix2d, Matrix3d, and the math utility functions. Covers which methods mutate and which allocate, the vector pool and when clone() is the wrong tool, interpolation with lerp, slerp, damp and moveTowards, and the argument defaults that silently drop a component. Triggers on: Vector2d, Vector3d, ObservableVector2d, ObservableVector3d, Matrix2d, Matrix3d, Quaternion, vector, vector maths, dot, cross, normalize, length, distance, angle, lerp, slerp, damp, moveTowards, project, clamp, degToRad, radToDeg, clone, vector pool, vector3dPool, setMuted, setCallback, my vector is wrong, z is zero, scale ignores z, moveTowards ignores z, setPosition, projectN, currentTransform, setTransform, matrix, transform matrix, column-major, val, Float32Array, basis matrix, orientation matrix, Noise, getNoise1d, flicker, wobble, Color, toArray, color components."
 license: MIT
 ---
 
@@ -286,6 +286,34 @@ rounded to single precision. That is where they were always heading, since
 this is what reaches the GPU, but it means a value read back out is not
 bit-identical to the double you wrote.
 
+### Orientations: `Quaternion`
+
+A `Quaternion` is an orientation in 3D: what a 3D physics adapter's
+`getRotation` returns and `setRotation` takes. It turns without the gimbal
+lock of three angles, and blends between two orientations along the shortest
+arc with `slerp`.
+
+```js
+const q = new Quaternion().setFromAxisAngle(new Vector3d(0, 1, 0), Math.PI / 2);
+q.apply(v);                       // turns v IN PLACE (+X goes to -Z here)
+a.multiply(b);                    // a = a × b: b is applied first, then a
+a.slerp(b, 0.25);                 // a quarter of the way from a to b, in place
+mesh.currentTransform.val.set(q.toMatrix3d().val); // its turn as a matrix
+```
+
+Like the vectors, its methods mutate `this` and return it, so `clone()` first
+to keep the original. The two that write somewhere else return what they
+wrote, as their `Matrix3d` namesakes do: `apply(v)` returns `v`, and
+`toMatrix3d(out)` returns the matrix. `length2()` is the squared length, as on
+a vector.
+
+`setFromAxisAngle(axis, angle)` takes the **axis first**, the other way round
+from `Matrix3d#rotate(angle, axis)`. `setFromMatrix3d(m)` reads a turn back
+out of a matrix and takes a scale out on the way, so a renderable's
+`currentTransform` can be read as it is. A zero or `NaN` axis, an angle that
+is not finite, or a zero quaternion normalized, gives the identity rather than
+`NaN`.
+
 ## Utilities
 
 ```js
@@ -351,6 +379,8 @@ const rgb = color.toArray().slice(0, 3);   // three numbers in 0..1, yours
 | a colour changes by itself, or values read from one change later | `Color#toArray()` is the colour's own array: `slice()` it before changing or keeping it |
 | `.z` is a type error | `Renderable.pos` is declared `Vector2d` (#1510) |
 | rotation eases oddly between directions | `lerp` on directions; use `slerp` |
+| an orientation came back applied in the wrong order | `a.multiply(b)` applies `b` first; `premultiply` for the other order |
+| `setFromAxisAngle` gives no rotation at all | the arguments are `(axis, angle)`; `(angle, axis)`, the order of `Matrix3d#rotate`, reads as no axis |
 | you built your own 16-number array | `Renderable.currentTransform` is already a `Matrix3d`; write its `val` |
 | a value read back from a matrix differs | `val` is `Float32Array`; it holds float32 |
 | easing differs at 120fps | per-frame `lerp`; use `damp` |

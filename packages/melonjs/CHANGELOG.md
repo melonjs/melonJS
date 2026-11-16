@@ -2,7 +2,7 @@
 
 ## [20.16.0] (melonJS 2) - _unreleased_
 
-**Highlights:** skinned glTF characters with crossfades, mesh picking, an orthographic `Camera3d` for isometric views, and toon shading with outlines. All opt-in: a game that sets none of it renders as before.
+**Highlights:** skinned glTF characters with crossfades, mesh picking, an orthographic `Camera3d` for isometric views, toon shading with outlines, and the groundwork for 3D physics: 3D collision shapes and an adapter API that takes a `Vector3d`, which the new `@melonjs/rapier3d-adapter` builds on. All opt-in: a game that sets none of it renders as before.
 
 ### Added
 - 3D: skinned glTF meshes (`JOINTS_0` / `WEIGHTS_0`, as exported by Mixamo and Quaternius) deform with their skeleton, on the CPU, so alike on WebGPU, WebGL and Canvas; up to four joints per vertex, no morph targets. A skinned asset loads as one `GLTFModel`, whose nodes and joints are reached by name with `getNodeNames()`, `getNodeTransform()` and `addChildToNode()` (a sword in a hand)
@@ -11,6 +11,10 @@
 - 3D: `Camera3d` `projection: "orthographic"`, sized by `orthoHeight` or `orthoWidth` and zoomed by `zoom`, for isometric, top-down and diorama views
 - 3D: toon shading and outlines on lit meshes: `toonBands`, `outlineWidth`, `outlineColor` and `outlineMode` (world units or screen pixels), and a `rimLight` / `rimColor` glow along the silhouette; `GLTFModel`, `GLTFScene` and `level.load` options too
 - glTF: the parsed descriptor carries the asset's `skins`, and each skinned primitive its `joints`, `weights` and `skin`
+- Physics: `Capsule3d`, `ConvexHull3d` and `TriangleMesh3d` collision shapes, the last two built from a model with `fromMesh()`; the built-in physics collides them as their bounding box ([#1846](https://github.com/melonjs/melonJS/issues/1846))
+- Physics: the adapter API takes a `Vector3d` wherever it takes a `Vector2d` (`setVelocity`, `applyForce`, `applyImpulse`, `setPosition`, `gravity`), with optional `getVelocity3d`, `getRotation` / `setRotation` and `getAngularVelocity3d` for a 3D adapter; the built-in applies them along its depth axis. A `Vector2d` works as before
+- Physics: the built-in says once in the console when it is asked for 3D it can only approximate (those three shapes, or a turn or spin about X or Y), naming `@melonjs/rapier3d-adapter`
+- Math: `Quaternion`, an orientation in 3D
 
 ### Fixed
 - Input: under a `Camera3d`, pointer events on a mesh are hit-tested by the ray through the pointer against its triangles; they were tested against 2D bounds that a perspective view misplaces
