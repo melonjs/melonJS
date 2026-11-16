@@ -1300,6 +1300,8 @@ yourself through `adapter.world` with `world.removeImpulseJoint()` /
 | `response.depth` is always `0` (planck) | planck-adapter < 1.7.0 read the depth from the wrong place; upgrade |
 | an invisible body keeps colliding after `removeChildNow()` from `onCollisionStart` (planck) | planck-adapter < 1.7.0 could not destroy a body while the world was locked; upgrade, or use `removeChild()` |
 | a spin never settles after `adapter.setFrictionAir()` (planck) | planck-adapter < 1.7.0 damped movement only there; upgrade |
+| `onCollisionEnd` arrives before `onCollisionStart`, or no end comes, when a hook removes one of the pair (Rapier) | rapier2d-adapter < 1.1.2 told the partner of the end in the middle of the start; upgrade, or use `removeChild()` |
+| every body stops falling after one frame with a bad `dt`, or a capped body's velocity turns `NaN` (Rapier) | rapier2d-adapter < 1.1.2 stepped a `NaN` or infinite `dt`, and clamped by a `NaN` `maxVelocity`; upgrade |
 | a body falls through a `TriangleMesh3d` floor (built-in) | the built-in resolves it as its bounding box, of no thickness for a flat floor; use a thick `Box3d` slab, or the Rapier 3D adapter |
 | a `Capsule3d` or `ConvexHull3d` body collides as a box and never tips over (built-in) | the built-in approximates both by an upright bounding box; the Rapier 3D adapter builds them exactly |
 | "unsupported shape type Rect" from the Rapier 3D adapter | a 2D shape has no depth; give the body a `Box3d` (or a `Sphere` for an `Ellipse`) |

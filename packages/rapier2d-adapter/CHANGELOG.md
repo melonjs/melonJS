@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.1.2 - _unreleased_
+
+### Fixed
+- A body removed inside an `onCollisionStart`, `onCollisionActive` or shape-level hook no longer makes the other renderable hear `onCollisionEnd` before its `onCollisionStart`, with no end after it: the side going out hears the end at once, the other once the pair's hooks are done, and only a side that heard the start hears the end. Removing that body again from the partner's end hook no longer crashes Rapier (`RuntimeError: unreachable`)
+- A start event Rapier queued for a collider that a hook removed earlier in the same step no longer leaves a stale touching pair behind: it stayed until Rapier's stop event
+- `step()` with a `dt` that is `NaN`, infinite, zero or negative simulates nothing; a `NaN` or `Infinity` step used to freeze every awake body for good, with no gravity afterwards
+- `raycast()` and `queryAABB()` on a destroyed adapter return `null` and `[]`; they threw `Cannot read properties of undefined`
+- A `NaN` `maxVelocity` on an axis no longer turns the body's velocity into `NaN`: it caps nothing. A negative one caps by its size; it used to pin the velocity at that speed, even on a body at rest
+- `setMaxVelocity()` on a renderable with no body does nothing; it stored the limit and kept the renderable alive until `destroy()`
+- A second `addBody()` for the same renderable replaces its body; the first Rapier body and its records were leaked, and kept colliding. An `addBody()` refused for an unsupported shape no longer leaves an orphan Rapier body in the world
+- The normal of an `onCollisionEnd` and of a sensor contact is `{ x: 0, y: 0 }`, not `-0` on one side, so `toEqual({ x: 0, y: 0 })` holds; so are the shape-level `normal`, `overlapN` and `overlapV`
+
 ## 1.1.1 - _2026-11-14_
 
 ### Fixed
