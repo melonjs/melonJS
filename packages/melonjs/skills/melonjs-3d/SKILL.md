@@ -1,6 +1,6 @@
 ---
 name: melonjs-3d
-description: "Use this skill for anything 3D or 2.5D in melonJS — Camera3d, Mesh, InstancedMesh, Sprite3d billboards, Light3d, ground shadows, glTF/GLB scenes, and depth sorting. Covers the Y-down/+Z-forward convention (the inverse of OpenGL), the cameraClass opt-in, orthographic (isometric) projection, clip planes, and the Canvas fallback's limits. Triggers on: Camera3d, toon, cel shading, toonBands, outlineWidth, outlineMode, rimLight, orthographic, isometric, orthoHeight, orthoWidth, projection, Mesh, InstancedMesh, Sprite3d, Trail3d, ribbon, exhaust trail, Light3d, billboard, glTF, glb, 3D, 2.5D, depth, cameraClass, fov, setClipPlanes, setFog, fog, height fog, heightFalloff, transparent, transparency, alpha, blendMode, fade, castGroundShadow, shadowGroundPoint, lit, emissive, specular, shininess, normalMap, alphaCutoff, depthTest, vertexColors, worldToScreen, screenToRay, screenToWorld, pick, pickable, Ray3d, intersectRay, hit3d, followOffset, setBasis, getBasis, lookAt, up vector, gimbal, slerp, turn a direction."
+description: "Use this skill for anything 3D or 2.5D in melonJS — Camera3d, Mesh, InstancedMesh, Sprite3d billboards, Light3d, ground shadows, glTF/GLB scenes, and depth sorting. Covers the Y-down/+Z-forward convention (the inverse of OpenGL), the cameraClass opt-in, orthographic (isometric) projection, clip planes, and the Canvas fallback's limits. Triggers on: Camera3d, toon, cel shading, toonBands, outlineWidth, outlineMode, rimLight, orthographic, isometric, orthoHeight, orthoWidth, projection, Mesh, InstancedMesh, Sprite3d, Trail3d, Light3d, billboard, glTF, glb, 3D, 2.5D, depth, cameraClass, fov, setClipPlanes, setFog, fog, heightFalloff, transparent, transparency, blendMode, castGroundShadow, shadowGroundPoint, lit, emissive, specular, shininess, normalMap, alphaCutoff, depthTest, vertexColors, worldToScreen, screenToRay, screenToWorld, pick, pickable, Ray3d, intersectRay, hit3d, followOffset, setBasis, getBasis, lookAt, up vector, gimbal, slerp, turn a direction, physics, rapier3d, Capsule3d, TriangleMesh3d."
 license: MIT
 ---
 
@@ -1245,11 +1245,41 @@ not against what is drawn.
 
 ## Collision in 3D
 
-Use a body with a depth shape, not a hand-rolled distance check. Two shapes
-carry depth — `Box3d` and `Sphere` — and any pair of them is resolved in three
-dimensions; the response carries `overlapNZ` / `overlapZ` for the depth axis.
+Use a body with a depth shape, not a hand-rolled distance check. The 3D
+shapes are `Box3d`, `Sphere`, `Capsule3d` (upright, for a character),
+`ConvexHull3d` (a moving prop) and `TriangleMesh3d` (static terrain); the last
+two are built from a model as drawn with `fromMesh(mesh)`. Any pair is
+resolved in three dimensions; the response carries `overlapNZ` / `overlapZ`
+for the depth axis.
 
-Pick by whether the thing turns. `Box3d` is world-axis-aligned and cannot be
+**Which physics.** The built-in resolves `Box3d` and `Sphere` exactly, and a
+capsule, hull or triangle mesh as its bounding box, and its bodies never turn
+in 3D: right for 2.5D games and for collision that only has to detect. When
+props must tumble, stack and topple, or roll over uneven terrain, use
+`@melonjs/rapier3d-adapter`: Rapier's 3D solver, every 3D shape exact, and the
+body's turn written onto the mesh each frame, on top of the transform it had
+when its body was made.
+
+```js
+import { Rapier3dAdapter } from "@melonjs/rapier3d-adapter";
+
+const app = new Application(800, 600, {
+    cameraClass: Camera3d,
+    physic: await Rapier3dAdapter.create(),
+});
+await app.init();
+
+crate.bodyDef = { type: "dynamic", shapes: [new Box3d(0, 0, 0, 64, 64, 64)] };
+app.world.addChild(crate, crate.depth);   // pass the depth: autoDepth renumbers it
+app.world.adapter.applyImpulse(crate, new Vector3d(0, -200, 400));
+app.world.adapter.getRotation(crate);     // a Quaternion
+```
+
+Move such a body with `setPosition` / `setRotation`, not by writing `pos` or
+`currentTransform`, which the next step writes back. The physics skill has the
+`Vector3d` API in full.
+
+On the built-in, pick by whether the thing turns. `Box3d` is world-axis-aligned and cannot be
 oriented, so it fits walls, floors and crates and misfits anything that
 tumbles. `Sphere` has no orientation at all, which makes it the shape for
 spinning debris, projectiles, and anything spread over a curved surface: on a
@@ -1365,6 +1395,10 @@ if (!app.renderer.supportsDepthBuffer) {
 | an outline is missing on an instanced scatter or a billboard | `InstancedMesh` and `Sprite3d` do not draw one |
 | an orthographic camera shows nothing, or half a scene | it sits inside the scene: stand it back like a perspective camera, since `near` / `far` are measured from its position |
 | zooming an orthographic camera does nothing | `fov` does not apply to it: set `zoom` (or `orthoHeight`) |
+| a crate under physics slides and stacks but never tips over | the built-in bodies never turn in 3D; use `@melonjs/rapier3d-adapter` |
+| a body falls through a flat `TriangleMesh3d` floor | the built-in makes it a box of no thickness; use a thick `Box3d`, or the Rapier 3D adapter |
+| a physics mesh snaps back after its `currentTransform` is changed | the adapter writes the body's turn every step; use `setRotation` |
+| a mesh tumbles about the wrong point, or drawn off its collider | the shapes are relative to `pos`: build them with `fromMesh(mesh)`, or centre them on the model |
 | on a phone held upright the sides of an orthographic view are cut off | the height is what is kept across resizes; set `orthoWidth` to keep the width instead |
 | `orthoHeight` changes by itself after a resize | `orthoWidth` was set last, so the width is kept and the height follows the aspect |
 | `new Camera3d(..., { orthoHeight, orthoWidth })` throws | give one; the other follows the aspect ratio |

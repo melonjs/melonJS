@@ -260,8 +260,9 @@ game the player had paused stays paused.
 ## Physics adapters
 
 `@melonjs/planck-adapter`, `@melonjs/matter-adapter` and
-`@melonjs/rapier2d-adapter` swap the physics world wholesale. Pick **one** per
-game (`app.world.setAdapter()` can switch it later). The portable surface — the
+`@melonjs/rapier2d-adapter` swap the physics world wholesale, and
+`@melonjs/rapier3d-adapter` does it for a `Camera3d` game whose bodies turn in
+3D (3D shapes only). Pick **one** per game (`app.world.setAdapter()` can switch it later). The portable surface — the
 declarative `renderable.bodyDef`, `world.adapter.queryAABB(rect)` and
 `world.adapter.raycast(from, to)` — works unchanged across the built-in world and
 every adapter, so entity code does not have to branch. The exceptions are in
@@ -274,8 +275,8 @@ rapier2d-adapter 1.0 (an older planck or matter adapter is made with
 `new X(options)`), and `world.setAdapter()` from melonJS 20.14.
 
 Two queries are **not** portable: `querySphere` and `raycast3d` exist only on the
-built-in adapter (planck, matter and Rapier are 2D-only and deliberately omit
-them).
+built-in and Rapier 3D adapters (planck, matter and Rapier 2D are 2D-only and
+deliberately omit them).
 `queryAABB` is the one region query every adapter must implement, so call the
 others optionally — `app.world.adapter.querySphere?.(center, radius)`. For rays
 there is a real flag: `app.world.adapter.capabilities.raycasts3d`.
@@ -340,7 +341,7 @@ or a `Stage` is simpler and easier to test.
 | `Plugin version mismatch` | the plugin's `version` floor is above the running engine |
 | `Plugin should extend the BasePlugin Class !` | the class does not extend `plugin.BasePlugin` |
 | the panel reports another app's numbers | `app` defaulted to `game`, the last Application to finish `init()` |
-| `world.adapter.querySphere is not a function` | built-in adapter only; planck, matter and Rapier are 2D-only |
+| `world.adapter.querySphere is not a function` | built-in and Rapier 3D adapters only; planck, matter and Rapier 2D are 2D-only |
 | a Tiled map opens in Tiled but not melonJS | compressed layers, tiled-inflate plugin missing |
 | a path goes through walls | the grid does not know them: a floor layer needs `solid`, a changed tile needs `refreshCell`, `fromBodies` walls must be `WORLD_SHAPE` bodies (or pass `solid`) |
 | a path cuts across a wall corner | `diagonalMode` is `"always"` or `"atLeastOneWalkable"`: use `"onlyIfNoObstacles"` |

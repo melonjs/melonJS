@@ -59,6 +59,8 @@ interface AdapterFactory {
 		raycasts3d: boolean;
 		velocityLimit: boolean;
 		isGrounded: boolean;
+		/** only the adapters that move bodies in 3D set it */
+		bodies3d?: boolean;
 	};
 }
 
@@ -74,6 +76,7 @@ const factories: AdapterFactory[] = [
 			raycasts3d: true,
 			velocityLimit: true,
 			isGrounded: true,
+			bodies3d: true,
 		},
 		make() {
 			const adapter = new BuiltinAdapter({

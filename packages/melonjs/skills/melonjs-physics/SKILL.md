@@ -1,6 +1,6 @@
 ---
 name: melonjs-physics
-description: "Use this skill for collision, physics bodies, movement, and spatial queries in melonJS — the built-in SAT world and the planck, matter and Rapier adapters. Covers bodyDef vs Body, collision types and masks, the collision callback family and their firing rules, raycast/queryAABB/querySphere, the behaviour differences between adapters, and which one to pick for a given game. Triggers on: which physics engine, choosing an adapter, switching adapters, setAdapter, PhysicsAdapterClass, create, rotation collision, rotating body, torque, joints, addJoint, removeJoint, hinge, rope, weld, slider, stacking, Body, bodyDef, collision, collisionType, collisionMask, onCollision, onCollisionStart, onCollisionActive, raycast, queryAABB, querySphere, raycast3d, PlanckAdapter, MatterAdapter, RapierAdapter, rapier2d, enableCcd, gravity, velocity, applyForce, isGrounded, isSensor, isTrigger, onShapeCollisionStart, kinematic, subSteps, pixelsPerMeter, Box3d, Sphere, getBodyShapes, hitbox offset, slope, SAT."
+description: "Use this skill for collision, physics bodies, movement, and spatial queries in melonJS — the built-in SAT world and the planck, matter, Rapier and Rapier 3D adapters. Covers bodyDef vs Body, collision types and masks, the collision callback family and their firing rules, raycast/queryAABB/querySphere, how the adapters differ, and which one to pick for a given game. Triggers on: which physics engine, choosing an adapter, switching adapters, setAdapter, PhysicsAdapterClass, create, rotation collision, rotating body, torque, joints, addJoint, removeJoint, hinge, rope, weld, slider, stacking, Body, bodyDef, collision, collisionType, collisionMask, onCollision, onCollisionStart, onCollisionActive, raycast, queryAABB, querySphere, raycast3d, PlanckAdapter, MatterAdapter, RapierAdapter, Rapier3dAdapter, enableCcd, gravity, velocity, applyForce, isGrounded, isSensor, isTrigger, onShapeCollisionStart, kinematic, subSteps, pixelsPerMeter, Box3d, Sphere, getBodyShapes, Capsule3d, TriangleMesh3d, slope, SAT."
 license: MIT
 ---
 
@@ -19,6 +19,7 @@ license: MIT
 | **`@melonjs/planck-adapter`** | Full rigid-body dynamics: stacking, realistic restitution. | ✅ hinge, rope, weld, slider |
 | **`@melonjs/matter-adapter`** | Same class of thing, backed by matter-js. | ❌ throws (matter's own constraints, through `adapter.matter`) |
 | **`@melonjs/rapier2d-adapter`** | Same again, backed by Rapier compiled to WebAssembly: many bodies, per-body continuous collision, a character controller. Loaded asynchronously. | ✅ hinge, rope, weld, slider |
+| **`@melonjs/rapier3d-adapter`** | A `Camera3d` game whose bodies move, tumble and stack in 3D, written back onto a `Mesh` or `GLTFModel`. 3D shapes only. Loaded asynchronously. | ✅ the same four, with 3D anchors and axes |
 
 ### Picking one
 
@@ -89,7 +90,8 @@ an import change and a gravity re-tune.
 | platformer with moving platforms that carry the player | planck or Rapier | true kinematic bodies, moved by their velocity; the built-in and matter build a dynamic body for `kinematic` |
 | top-down RPG or adventure, grid or tile puzzle | built-in | collision is "did these touch" plus a push-out; no dependency, smallest bundle |
 | shoot-'em-up, bullet hell | built-in | bullets need detection, not a physical response |
-| 2.5D with height: isometric, beat-'em-up lanes | built-in only | the only backend that takes `Box3d` and `Sphere`; the 2D engines refuse them |
+| 2.5D with height: isometric, beat-'em-up lanes | built-in | `Box3d` and `Sphere` that never turn; the 2D engines refuse them |
+| 3D under `Camera3d`: props that tumble, towers that topple, a ball rolling over terrain | Rapier 3D | bodies turn in 3D and collide as turned; exact capsules, convex hulls and triangle-mesh terrain, continuous collision. The built-in keeps every 3D shape an upright box |
 | fighting game or brawler, hitboxes and hurtboxes on one body | built-in, planck or Rapier | matter ignores a shape's own `collisionType`, `collisionMask` and `isTrigger` |
 | stacking, towers, catapult and destruction puzzles | planck, or Rapier for many pieces | an iterative solver keeps a pile crisp; Rapier is built for many bodies at once |
 | pool, billiards, mini-golf: few bodies, a capped top speed | any rigid-body adapter, matter included | give matter enough `subSteps` that a ball moves less than its radius per sub-step: the `pool-matter` example's break, about 30 px a frame on 16 px balls, runs on 2 |
@@ -139,6 +141,33 @@ await loader.preload(assets);
 await rapierReady;
 app.world.setAdapter(new RapierAdapter());
 ```
+
+**Better: load it behind the loading screen.** Rapier (about 3 MB for 2D,
+4.3 MB for 3D) is usually the largest thing a game downloads, and the loading
+screen only counts what goes through the loader. Teach the loader an asset
+type for it, list it with the other assets, and switch once they are in. The
+same works for the 2D and 3D adapters:
+
+```js
+// once per page: registering the same type twice logs a warning
+loader.setParser("rapier", (_asset, onload, onerror) => {
+    RapierAdapter.load().then(() => onload(), onerror); // or Rapier3dAdapter
+    return 1; // one asset, for the progress bar
+});
+
+// no `physic` option: the built-in physics runs until the switch
+const app = new Application(800, 600, { parent: "screen" });
+await app.init();
+await loader.preload([{ name: "rapier", type: "rapier", src: "" }, ...assets]);
+app.world.setAdapter(new RapierAdapter({ gravity: { x: 0, y: 900 } }));
+// build the scene here
+```
+
+`setAdapter()` rebuilds any body made before it from its `bodyDef`, so the
+order is safe either way; building the scene after the switch skips that
+rebuild. Do not `await X.create()` inside the `Application` settings for a
+WebAssembly adapter: the page stays blank, with no loading screen, while
+it downloads.
 
 `PlanckAdapter` also takes `velocityIterations` (default `8`) and
 `positionIterations` (default `3`). `MatterAdapter` takes a different set —
@@ -191,7 +220,7 @@ shapes permanently fused at rest, which reads as a broken collision shape
 rather than as a bad gravity constant. Spawn clear of anything already there.
 
 `world.physic` carries the active adapter's label (`"builtin"`, `"planck"`,
-`"matter"`, `"rapier"`, `"none"`), so game code can branch without importing
+`"matter"`, `"rapier"`, `"rapier3d"`, `"none"`), so game code can branch without importing
 the class.
 
 ### Switching adapters while the game runs
@@ -394,7 +423,12 @@ built-in-only spelling of this and are deprecated since 20.7.0.
 | `Ellipse` | exact | circle of the average radius | circle of the average radius | circle of the average radius |
 | `Line` | exact | thin quad along the segment | thin quad along the segment | exact segment on a static or kinematic body, thin quad on a dynamic one |
 | `Box3d`, `Sphere` | exact, and in 3D | **throws** | **throws** | **throws** |
+| `Capsule3d`, `ConvexHull3d`, `TriangleMesh3d` | **its bounding `Box3d`** | **throws** | **throws** | **throws** |
 | `Point` | supported | **throws** | **throws** | **throws** |
+
+`@melonjs/rapier3d-adapter` is the other way round: it builds every 3D shape
+exactly (a capsule, a convex polyhedron, a triangle mesh) and refuses every 2D
+one, which has no depth. See [3D bodies](#3d-bodies-the-vector3d-api).
 
 Two of those are worth knowing before you author geometry. Box2D caps a
 polygon's vertex count and says nothing when you go over: measured, a
@@ -582,6 +616,65 @@ back onto `renderable.pos` after every step, so a direct write is simply erased
 — no error. The built-in world integrates `pos` in place instead, so a write
 survives but fights collision resolution and jitters. To teleport, go through
 `adapter.setPosition(renderable, p)` so the engine body moves with it.
+
+## 3D bodies: the `Vector3d` API
+
+The portable calls take a `Vector3d` wherever they take a `Vector2d`:
+`setVelocity`, `applyForce`, `applyImpulse` (and their `point`),
+`setPosition`, `setAngularVelocity`, and the `gravity` option. A 2D call is
+unchanged everywhere, and on a 3D-capable adapter it acts in the plane of the
+body: a `Vector2d` velocity keeps the depth velocity, a `Vector2d` position
+keeps the depth. A 2D adapter reads `x` and `y` of a `Vector3d` and ignores
+`z`. On the body handle, `setVelocity(x, y, z?)` and `applyImpulse(x, y, z?)`
+take an optional `z`.
+
+The readers are optional members, present when `capabilities.bodies3d` is
+`true` (the built-in and Rapier 3D adapters):
+
+```js
+const adapter = app.world.adapter;
+adapter.getVelocity3d?.(ball);          // Vector3d
+adapter.getRotation?.(crate);           // Quaternion, from the pose it was made in
+adapter.setRotation?.(crate, q);
+adapter.getAngularVelocity3d?.(crate);  // rad/s about each axis
+```
+
+The built-in implements them on what it has: `velZ` / `forceZ` along the depth,
+and a turn about Z only (`setRotation` keeps the part of a turn about Z). Its
+`setPosition` takes a depth only for a body that lives in 3D (one with a
+`Box3d`, `Sphere` or other 3D shape): a flat body keeps its depth, its draw
+order, so `setPosition(bullet, gun.pos)` does not copy the gun's draw order
+across, though a renderable's `pos` is a 3D vector at run time. The
+Rapier 3D adapter is a full 3D solver: bodies turn about every axis, and each
+frame the body's turn is written onto the renderable's `currentTransform`, on
+top of the one it had when its body was made, so a model keeps its rest pose.
+
+```js
+import { Rapier3dAdapter } from "@melonjs/rapier3d-adapter";
+
+const app = new Application(800, 600, {
+    cameraClass: Camera3d,
+    physic: await Rapier3dAdapter.create(),   // gravity {x: 0, y: 320, z: 0} px/s²
+});
+await app.init();
+
+crate.bodyDef = { type: "dynamic", shapes: [ConvexHull3d.fromMesh(crate)] };
+level.bodyDef = { type: "static", shapes: [TriangleMesh3d.fromMesh(level)] };
+app.world.addChild(crate, crate.depth);   // the depth, or autoDepth renumbers it
+```
+
+- **Shapes are relative to `pos` and `depth`**, where the body sits; the
+  engine's 3D convention holds (Y down, +Z into the screen). `Capsule3d`
+  stands along Y; build a model's own outline with `fromMesh`, through its
+  transform and scale.
+- **`TriangleMesh3d` is for static and kinematic bodies**: terrain and level
+  geometry. A moving prop is a `ConvexHull3d`, or several shapes.
+- **Move a 3D body with `setPosition` and `setRotation`**, never by writing
+  `pos` or `currentTransform`: the next step writes them back from the body.
+- **On the built-in, a capsule, hull or triangle mesh is its bounding box**,
+  which never turns, and a flat triangle mesh is a box of no thickness that a
+  fast body steps straight through. Give it a thick slab, or use the Rapier 3D
+  adapter, which has continuous collision (`enableCcd`).
 
 ## Joints: hinges, ropes, welds and sliders
 
@@ -797,7 +890,8 @@ What actually happens per adapter:
 
 ## Spatial queries
 
-`raycast` and `queryAABB` are implemented by every adapter:
+`raycast` and `queryAABB` are implemented by every 2D adapter (the Rapier 3D
+adapter has `queryAABB`, at any depth, and `raycast3d` in place of `raycast`):
 
 ```js
 import { Rect, Vector2d } from "melonjs";
@@ -810,12 +904,15 @@ const hit = app.world.adapter.raycast(new Vector2d(x0, y0), new Vector2d(x1, y1)
 const inArea = app.world.adapter.queryAABB(new Rect(x, y, w, h));
 ```
 
-`querySphere(centre, radius)` (or `querySphere(sphere)`) is **built-in only**,
-and only active under a 3D broadphase — i.e. `world.sortOn === "depth"`, which
+`querySphere(centre, radius)` (or `querySphere(sphere)`) and `raycast3d` are
+on the built-in and the Rapier 3D adapter, which tests the exact shapes where
+the built-in tests bounding volumes. On the built-in they are only active under a 3D broadphase — i.e. `world.sortOn === "depth"`, which
 `Camera3d` sets. So is `raycast3d`. `world.adapter.capabilities.raycasts3d`
 says whether the adapter has them at all, and it stays `true` on the built-in
 under a 2D camera, where `raycast3d` returns `null` and `querySphere` returns
-`[]`: check `world.sortOn === "depth"` as well. `raycast` itself is
+`[]`: check `world.sortOn === "depth"` as well. Rapier indexes a body for its
+queries when its world steps, so it finds a body from the frame after it is
+added. `raycast` itself is
 capability-gated by `capabilities.raycasts`.
 
 `queryAABB` does not return the same set everywhere. On the built-in it
@@ -1152,7 +1249,7 @@ yourself through `adapter.world` with `world.removeImpulseJoint()` /
 | `return false` from a handler does nothing | return values are only honoured by legacy `onCollision` — use `isSensor` / `isTrigger` |
 | crash or a null body when spawning from `onCollisionStart` | world mutated during contact dispatch (locked world under planck) |
 | `raycast` / `queryAABB` finds nothing | `isKinematic` still `true`, or no `world.update` yet (built-in) |
-| `new RapierAdapter()` throws "Rapier is not loaded yet" | its WebAssembly loads asynchronously; use `await RapierAdapter.create(options)`, or `await RapierAdapter.load()` first |
+| `new RapierAdapter()` (or `Rapier3dAdapter`) throws "Rapier is not loaded yet" | its WebAssembly loads asynchronously; preload it as an asset with `loader.setParser` (see *Picking one*), or `await X.load()` / `X.create(options)` first |
 | a fast body passes through a thin one (Rapier) | continuous collision is per body and off by default: `(body as RapierAdapter.Body).enableCcd(true)` |
 | `normal` is `(0, 0)` and `depth` is `0` (Rapier) | a sensor contact or an `onCollisionEnd`: Rapier computes no contact there |
 | `querySphere` / `raycast3d` is not a function | matter, planck or Rapier: all are 2D-only and omit them |
@@ -1203,6 +1300,15 @@ yourself through `adapter.world` with `world.removeImpulseJoint()` /
 | `response.depth` is always `0` (planck) | planck-adapter < 1.7.0 read the depth from the wrong place; upgrade |
 | an invisible body keeps colliding after `removeChildNow()` from `onCollisionStart` (planck) | planck-adapter < 1.7.0 could not destroy a body while the world was locked; upgrade, or use `removeChild()` |
 | a spin never settles after `adapter.setFrictionAir()` (planck) | planck-adapter < 1.7.0 damped movement only there; upgrade |
+| a body falls through a `TriangleMesh3d` floor (built-in) | the built-in resolves it as its bounding box, of no thickness for a flat floor; use a thick `Box3d` slab, or the Rapier 3D adapter |
+| a `Capsule3d` or `ConvexHull3d` body collides as a box and never tips over (built-in) | the built-in approximates both by an upright bounding box; the Rapier 3D adapter builds them exactly |
+| "unsupported shape type Rect" from the Rapier 3D adapter | a 2D shape has no depth; give the body a `Box3d` (or a `Sphere` for an `Ellipse`) |
+| a mesh under the Rapier 3D adapter snaps back after its `currentTransform` is changed | the adapter writes the turn every step, from the transform the mesh had when its body was made; turn it with `setRotation` |
+| 3D bodies start one behind the other along Z | added without a depth, so `autoDepth` numbered them; `addChild(child, child.depth)` |
+| the console says the built-in "resolves a Capsule3d as its bounding Box3d", or keeps only the turn or spin about Z, and names `@melonjs/rapier3d-adapter` | the game asks the built-in for real 3D it can only approximate: a capsule, hull or triangle-mesh shape, or a turn or spin about X or Y. Once per page. Use the Rapier 3D adapter, or a `Box3d` / `Sphere` and turns about Z, which the built-in resolves exactly and never warns about |
+| `setPosition` with a `Vector3d` leaves the depth as it was (built-in) | the body has no 3D shape: a flat body keeps its depth, which is its draw order; set `renderable.depth` yourself, or give it a `Box3d` |
+| `raycast3d` or `querySphere` finds nothing right after the body is added (Rapier 3D) | Rapier indexes bodies when its world steps; query from the next frame |
+| a blank page for seconds before the loading screen appears (Rapier) | the adapter was made with `await X.create()` in the `Application` settings; load it through the preloader with `loader.setParser`, then `world.setAdapter()` |
 
 ## Related skills
 

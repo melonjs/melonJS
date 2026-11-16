@@ -1,8 +1,12 @@
 import type { Box3d } from "../geometries/box3d.ts";
+import type { Capsule3d } from "../geometries/capsule3d.ts";
+import type { ConvexHull3d } from "../geometries/convexhull3d.ts";
 import type { Ellipse } from "../geometries/ellipse.ts";
 import type { Polygon } from "../geometries/polygon.ts";
 import type { Rect } from "../geometries/rectangle.ts";
 import type { Sphere } from "../geometries/sphere.ts";
+import type { TriangleMesh3d } from "../geometries/trianglemesh3d.ts";
+import type { Quaternion } from "../math/quaternion.ts";
 import type { Vector2d } from "../math/vector2d.ts";
 import type { Vector3d } from "../math/vector3d.ts";
 import type Renderable from "../renderable/renderable.js";
@@ -36,14 +40,25 @@ export type BodyType = "static" | "dynamic" | "kinematic";
  * to the parts it is built from, so per-shape values are ignored there, except
  * `isActive: false`, which leaves the shape out of the body.
  *
- * **The two 3D shapes are builtin-only.** `Box3d` and `Sphere` exist because
- * the builtin solver resolves along Z; the matter, planck and Rapier adapters
- * are 2D engines with no depth to resolve and THROW when handed either one. They are
- * in this union because a body definition is otherwise portable and these are
- * body shapes, not because every adapter accepts them: a game that wants to
- * stay adapter-portable builds its bodies from the planar three.
+ * **The 3D shapes need a 3D adapter.** `Box3d`, `Sphere`, {@link Capsule3d},
+ * {@link TriangleMesh3d} and {@link ConvexHull3d} have depth. A 3D adapter
+ * (`@melonjs/rapier3d-adapter`) builds every one of them exactly. The builtin
+ * solver resolves `Box3d` and `Sphere` along Z, and stands the bounding
+ * `Box3d` in for the other three. The matter, planck and Rapier 2D adapters
+ * are 2D engines with no depth to resolve, and THROW when handed any of them.
+ * They are in this union because a body definition is otherwise portable, not
+ * because every adapter accepts them: a 2D game that wants to stay
+ * adapter-portable builds its bodies from the planar shapes.
  */
-export type BodyShape = Rect | Ellipse | Polygon | Box3d | Sphere;
+export type BodyShape =
+	| Rect
+	| Ellipse
+	| Polygon
+	| Box3d
+	| Sphere
+	| Capsule3d
+	| TriangleMesh3d
+	| ConvexHull3d;
 
 /**
  * One overlapping SHAPE pair, passed to the shape-level collision lifecycle
@@ -205,11 +220,19 @@ export interface PhysicsBody {
 	/**
 	 * Set linear velocity, in pixels per step on the builtin and matter
 	 * adapters (a step is 1/60 s) and in pixels per second on planck and
-	 * Rapier.
+	 * Rapier. `z` is the velocity along the depth axis, for an adapter whose
+	 * bodies have depth ({@link AdapterCapabilities.bodies3d}); a 2D adapter
+	 * ignores it.
 	 */
-	setVelocity(x: number, y: number): void;
+	setVelocity(x: number, y: number, z?: number): void;
 	/** Read linear velocity; writes into `out` if provided to avoid an alloc. */
 	getVelocity(out?: Vector2d): Vector2d;
+	/**
+	 * Read linear velocity with its depth component, on an adapter whose
+	 * bodies have depth ({@link AdapterCapabilities.bodies3d}); writes into
+	 * `out` if provided. {@link PhysicsBody.getVelocity} stays 2D.
+	 */
+	getVelocity3d?(out?: Vector3d): Vector3d;
 	/**
 	 * Apply a continuous force (integrated over the next step). When the
 	 * optional application point is provided and differs from the body's
@@ -233,8 +256,11 @@ export interface PhysicsBody {
 	 * @param pointY - world Y of the application point (defaults to centroid)
 	 */
 	applyForce(x: number, y: number, pointX?: number, pointY?: number): void;
-	/** Apply an instantaneous impulse (`Δv = J / mass`). */
-	applyImpulse(x: number, y: number): void;
+	/**
+	 * Apply an instantaneous impulse (`Δv = J / mass`). `z` is its depth
+	 * component, ignored by a 2D adapter.
+	 */
+	applyImpulse(x: number, y: number, z?: number): void;
 	/**
 	 * Toggle static (fixed-position, infinite-mass) state. Static bodies
 	 * still participate in collisions; they just don't integrate.
@@ -536,6 +562,19 @@ export interface AdapterCapabilities {
 	 */
 	raycasts3d: boolean;
 	/**
+	 * Bodies have depth: the velocities, forces, impulses and positions
+	 * handed to the adapter may be a {@link Vector3d}, whose `z` it applies
+	 * along the depth axis, and it reads them back with
+	 * {@link PhysicsAdapter.getVelocity3d}. A 2D adapter leaves this out or
+	 * reports `false`, and ignores any `z`.
+	 *
+	 * `true` on `@melonjs/rapier3d-adapter`, which also turns bodies in 3D
+	 * ({@link PhysicsAdapter.getRotation}), and on the built-in adapter,
+	 * whose bodies move along Z (a {@link Box3d} or {@link Sphere} resolves
+	 * there) but turn only about it, as in 2D.
+	 */
+	bodies3d?: boolean;
+	/**
 	 * supports {@link BodyDefinition.maxVelocity} /
 	 * {@link PhysicsAdapter.setMaxVelocity}. BuiltinAdapter does this
 	 * via its kinematic integrator; MatterAdapter via an `afterUpdate`
@@ -554,8 +593,11 @@ export interface AdapterCapabilities {
  * with their own engine-specific options.
  */
 export interface AdapterOptions {
-	/** world gravity vector, default `(0, 0.98)` */
-	gravity?: Vector2d;
+	/**
+	 * world gravity vector, default `(0, 0.98)`. A {@link Vector3d} gives it a
+	 * depth component, for an adapter whose bodies have depth.
+	 */
+	gravity?: Vector2d | Vector3d;
 }
 
 /** Result of a successful {@link PhysicsAdapter.raycast}. */
@@ -746,8 +788,13 @@ export interface PhysicsAdapter {
 	 */
 	readonly url?: string;
 
-	/** world gravity. Mutate to change at runtime. */
-	gravity: Vector2d;
+	/**
+	 * World gravity. Mutate to change at runtime. On an adapter whose bodies
+	 * have depth ({@link AdapterCapabilities.bodies3d}) it may be a
+	 * {@link Vector3d}, whose `z` pulls along the depth axis; a 2D adapter
+	 * keeps a {@link Vector2d}.
+	 */
+	gravity: Vector2d | Vector3d;
 
 	/**
 	 * Called once after the adapter is attached to a {@link World}.
@@ -834,21 +881,68 @@ export interface PhysicsAdapter {
 	 * code.
 	 */
 	getVelocity(renderable: Renderable, out?: Vector2d): Vector2d;
-	setVelocity(renderable: Renderable, v: Vector2d): void;
-	applyForce(renderable: Renderable, force: Vector2d, point?: Vector2d): void;
+	/**
+	 * Set the body's velocity. A {@link Vector3d} also sets it along the
+	 * depth axis on an adapter whose bodies have depth
+	 * ({@link AdapterCapabilities.bodies3d}); a 2D adapter reads `x` and `y`
+	 * only. The same holds for {@link applyForce}, {@link applyImpulse} and
+	 * {@link setPosition}.
+	 * @example
+	 * // a 2D game, as ever
+	 * world.adapter.setVelocity(player, new Vector2d(4, 0));
+	 * // a 3D one: the same call, with depth
+	 * world.adapter.setVelocity(ball, new Vector3d(0, -6, 12));
+	 */
+	setVelocity(renderable: Renderable, v: Vector2d | Vector3d): void;
+	applyForce(
+		renderable: Renderable,
+		force: Vector2d | Vector3d,
+		point?: Vector2d | Vector3d,
+	): void;
 	applyImpulse(
 		renderable: Renderable,
-		impulse: Vector2d,
-		point?: Vector2d,
+		impulse: Vector2d | Vector3d,
+		point?: Vector2d | Vector3d,
 	): void;
-	setPosition(renderable: Renderable, p: Vector2d): void;
+	setPosition(renderable: Renderable, p: Vector2d | Vector3d): void;
+	/**
+	 * Read the body's velocity with its depth component, on an adapter whose
+	 * bodies have depth ({@link AdapterCapabilities.bodies3d}).
+	 * {@link getVelocity} stays 2D, so the code reading it is unchanged.
+	 * @example
+	 * const v = world.adapter.getVelocity3d?.(ball) ?? new Vector3d();
+	 */
+	getVelocity3d?(renderable: Renderable, out?: Vector3d): Vector3d;
+	/**
+	 * Read the body's orientation in 3D, on an adapter that turns bodies in
+	 * 3D (`@melonjs/rapier3d-adapter`). The built-in adapter, whose bodies
+	 * turn about Z only, reports that turn.
+	 */
+	getRotation?(renderable: Renderable, out?: Quaternion): Quaternion;
+	/**
+	 * Turn the body to an orientation in 3D. The built-in adapter, whose
+	 * bodies turn about Z only, applies the part of it about Z.
+	 * @example
+	 * // stand a crate on its side
+	 * world.adapter.setRotation?.(crate, new Quaternion().setFromAxisAngle(new Vector3d(0, 0, 1), Math.PI / 2));
+	 */
+	setRotation?(renderable: Renderable, q: Quaternion): void;
 	setAngle?(renderable: Renderable, angle: number): void;
 	/** Read absolute rotation angle (radians). Returns 0 if not tracked. */
 	getAngle?(renderable: Renderable): number;
-	/** Set angular velocity: radians per step, per second on planck and Rapier. */
-	setAngularVelocity?(renderable: Renderable, omega: number): void;
+	/**
+	 * Set angular velocity: radians per step, per second on planck and
+	 * Rapier. A {@link Vector3d} is a turn about each axis, for an adapter
+	 * that turns bodies in 3D; a number turns about Z, as in 2D.
+	 */
+	setAngularVelocity?(renderable: Renderable, omega: number | Vector3d): void;
 	/** Read angular velocity, in the same unit. Returns 0 if not tracked. */
 	getAngularVelocity?(renderable: Renderable): number;
+	/**
+	 * Read angular velocity about each axis, for an adapter that turns
+	 * bodies in 3D. {@link getAngularVelocity} stays the turn about Z.
+	 */
+	getAngularVelocity3d?(renderable: Renderable, out?: Vector3d): Vector3d;
 	/** Apply an angular impulse (`Δω = τ / inertia`). */
 	applyTorque?(renderable: Renderable, torque: number): void;
 

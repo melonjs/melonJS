@@ -1,5 +1,7 @@
 import type { Rect } from "../../geometries/rectangle.ts";
 import { Sphere } from "../../geometries/sphere.ts";
+import { warnOnce } from "../../lang/console.js";
+import { Quaternion } from "../../math/quaternion.ts";
 import { Vector2d } from "../../math/vector2d.ts";
 import { Vector3d } from "../../math/vector3d.ts";
 import type Renderable from "../../renderable/renderable.js";
@@ -20,6 +22,13 @@ import type World from "../world.js";
 import Body from "./body.js";
 import Detector from "./detector.js";
 import { raycastQuery } from "./raycast.ts";
+
+// the axis the built-in bodies turn about, and a scratch for setRotation
+const _AXIS_Z = new Vector3d(0, 0, 1);
+
+/** where the warnings about the built-in's 3D limits point to */
+const FULL_3D = "For bodies that turn in 3D, use @melonjs/rapier3d-adapter.";
+const _rotScratch = new Vector3d();
 
 /** world-space AABB scratch for `raycast3d`; never escapes the call */
 const _rayBox = {
@@ -355,12 +364,16 @@ export default class BuiltinAdapter implements PhysicsAdapter {
 		sleepingBodies: false,
 		raycasts: true,
 		raycasts3d: true,
+		// bodies move along Z (velZ, forceZ); they turn about Z only
+		bodies3d: true,
 		velocityLimit: true,
 		isGrounded: true,
 	};
 
 	/**
-	 * World gravity. Mutate to change at runtime.
+	 * World gravity. Mutate to change at runtime. A {@link Vector3d} given
+	 * here (or as the `gravity` option) also pulls along the depth axis, its
+	 * `z` added to each body's `forceZ` as `x` and `y` are to its `force`.
 	 * @default <0, 0.98>
 	 */
 	gravity: Vector2d;
@@ -412,7 +425,8 @@ export default class BuiltinAdapter implements PhysicsAdapter {
 	}
 
 	constructor(options: AdapterOptions = {}) {
-		this.gravity = options.gravity ?? new Vector2d(0, 0.98);
+		// kept as given: a Vector3d's z pulls along the depth axis (see step)
+		this.gravity = (options.gravity ?? new Vector2d(0, 0.98)) as Vector2d;
 	}
 
 	init(world: World): void {
@@ -626,11 +640,26 @@ export default class BuiltinAdapter implements PhysicsAdapter {
 		return target.set(body.vel.x, body.vel.y);
 	}
 
-	setVelocity(renderable: Renderable, v: Vector2d): void {
-		(renderable.body as Body).vel.setV(v);
+	setVelocity(renderable: Renderable, v: Vector2d | Vector3d): void {
+		// a Vector3d also sets the velocity along the depth axis; a Vector2d
+		// has no `z`, which leaves it as it was
+		(renderable.body as Body).setVelocity(v.x, v.y, (v as Vector3d).z);
+	}
+	getVelocity3d(renderable: Renderable, out?: Vector3d): Vector3d {
+		const body = renderable.body as Body | undefined;
+		const target = out ?? new Vector3d();
+		// see getVelocity: a removed body reads as still
+		if (!body || !this.bodies.has(body)) {
+			return target.set(0, 0, 0);
+		}
+		return target.set(body.vel.x, body.vel.y, body.velZ);
 	}
 
-	applyForce(renderable: Renderable, force: Vector2d, point?: Vector2d): void {
+	applyForce(
+		renderable: Renderable,
+		force: Vector2d | Vector3d,
+		point?: Vector2d | Vector3d,
+	): void {
 		// When `point` is provided and differs from the body's centroid,
 		// `Body.applyForce`'s 4-arg form generates a torque from the lever
 		// arm (`τ = r × F`). The 2-arg call (no point) preserves the
@@ -642,21 +671,42 @@ export default class BuiltinAdapter implements PhysicsAdapter {
 		} else {
 			body.applyForce(force.x, force.y);
 		}
+		// a Vector3d also pushes along the depth axis; the built-in bodies
+		// turn about Z only, so a point adds no turn from it
+		const fz = (force as Vector3d).z;
+		if (typeof fz === "number") {
+			body.forceZ += fz;
+		}
 	}
 
-	applyImpulse(renderable: Renderable, impulse: Vector2d): void {
-		// impulse = mass * dv  →  dv = impulse / mass
-		const body = renderable.body as Body;
-		const invMass = body.mass > 0 ? 1 / body.mass : 0;
-		body.vel.x += impulse.x * invMass;
-		body.vel.y += impulse.y * invMass;
+	applyImpulse(renderable: Renderable, impulse: Vector2d | Vector3d): void {
+		// impulse = mass * dv  →  dv = impulse / mass. A Vector3d also kicks
+		// along the depth axis; a Vector2d has no `z`, which leaves it alone
+		(renderable.body as Body).applyImpulse(
+			impulse.x,
+			impulse.y,
+			(impulse as Vector3d).z,
+		);
 	}
 
-	setPosition(renderable: Renderable, p: Vector2d): void {
-		// `pos` is an ObservableVector3d on Renderable; preserve the
-		// existing Z (`pos.z` is the depth field, set independently).
+	/**
+	 * Move a renderable and its body. A {@link Vector3d} also sets the depth
+	 * of a body that lives in 3D, one with a {@link Box3d}, {@link Sphere} or
+	 * other 3D shape; a flat body keeps its depth, which in a 2D game is its
+	 * draw order, whatever it is given. So `setPosition(bullet, gun.pos)`
+	 * (a renderable's `pos` is a 3D vector at run time) moves a flat bullet
+	 * without moving it in front of or behind anything.
+	 * @param renderable - the body's renderable
+	 * @param p - the new position, in `renderable.pos` space
+	 */
+	setPosition(renderable: Renderable, p: Vector2d | Vector3d): void {
 		renderable.pos.x = p.x;
 		renderable.pos.y = p.y;
+		const z = (p as Vector3d).z;
+		const body = renderable.body as Body | undefined;
+		if (typeof z === "number" && body?.hasDepth === true) {
+			renderable.depth = z;
+		}
 	}
 
 	setAngle(renderable: Renderable, angle: number): void {
@@ -670,9 +720,69 @@ export default class BuiltinAdapter implements PhysicsAdapter {
 	getAngle(renderable: Renderable): number {
 		return (renderable.body as Body).angle;
 	}
+	/**
+	 * The body's orientation: its turn about Z, the only one the built-in
+	 * bodies have.
+	 * @param renderable - the body's renderable
+	 * @param [out] - the quaternion to write into
+	 * @returns the turn about Z, as a quaternion
+	 */
+	getRotation(renderable: Renderable, out?: Quaternion): Quaternion {
+		const angle = (renderable.body as Body | undefined)?.angle ?? 0;
+		return (out ?? new Quaternion()).setFromAxisAngle(_AXIS_Z, angle);
+	}
+	/**
+	 * Turn the body to an orientation. The built-in bodies turn about Z
+	 * only, so the part of `q` about Z is applied (the turn that takes +X
+	 * to where `q` takes it, seen down Z) and the rest is left out.
+	 * @param renderable - the body's renderable
+	 * @param q - the orientation
+	 */
+	setRotation(renderable: Renderable, q: Quaternion): void {
+		// a turn with a part about X or Y: say once what is left out
+		if (Math.abs(q.x) > 1e-6 || Math.abs(q.y) > 1e-6) {
+			warnOnce(
+				`melonJS: the built-in physics turns bodies about Z only, so setRotation() keeps the part of a turn about Z. ${FULL_3D}`,
+			);
+		}
+		q.apply(_rotScratch.set(1, 0, 0));
+		const planar =
+			_rotScratch.x * _rotScratch.x + _rotScratch.y * _rotScratch.y;
+		// a turn that takes +X (all but float noise) along Z has no part
+		// about Z, and neither has one that is not a number: the angle stays
+		if (!(planar >= 1e-12) || !Number.isFinite(planar)) {
+			return;
+		}
+		(renderable.body as Body).setAngle(
+			Math.atan2(_rotScratch.y, _rotScratch.x),
+		);
+	}
+	/**
+	 * The body's angular velocity about each axis: about Z only, as the
+	 * built-in bodies turn.
+	 * @param renderable - the body's renderable
+	 * @param [out] - the vector to write into
+	 * @returns `(0, 0, ω)`
+	 */
+	getAngularVelocity3d(renderable: Renderable, out?: Vector3d): Vector3d {
+		const omega = (renderable.body as Body | undefined)?.angularVelocity ?? 0;
+		return (out ?? new Vector3d()).set(0, 0, omega);
+	}
 
-	setAngularVelocity(renderable: Renderable, omega: number): void {
-		(renderable.body as Body).setAngularVelocity(omega);
+	setAngularVelocity(renderable: Renderable, omega: number | Vector3d): void {
+		if (
+			typeof omega !== "number" &&
+			((omega.x !== 0 && Number.isFinite(omega.x)) ||
+				(omega.y !== 0 && Number.isFinite(omega.y)))
+		) {
+			warnOnce(
+				`melonJS: the built-in physics turns bodies about Z only, so setAngularVelocity() keeps the spin about Z. ${FULL_3D}`,
+			);
+		}
+		// a Vector3d's turn about Z, the only one the built-in bodies have
+		(renderable.body as Body).setAngularVelocity(
+			typeof omega === "number" ? omega : omega.z,
+		);
 	}
 
 	getAngularVelocity(renderable: Renderable): number {
@@ -1057,6 +1167,11 @@ export default class BuiltinAdapter implements PhysicsAdapter {
 		if (body.gravityScale !== 0 && !body.ignoreGravity) {
 			body.force.x += body.mass * this.gravity.x * body.gravityScale;
 			body.force.y += body.mass * this.gravity.y * body.gravityScale;
+			// a Vector3d gravity pulls along the depth axis too
+			const gz = (this.gravity as { z?: number }).z;
+			if (typeof gz === "number" && gz !== 0) {
+				body.forceZ += body.mass * gz * body.gravityScale;
+			}
 		}
 	}
 }
