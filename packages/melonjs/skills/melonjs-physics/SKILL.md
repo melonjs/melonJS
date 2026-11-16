@@ -611,31 +611,60 @@ A velocity cap is in the adapter's velocity unit: pixels per step on the
 built-in and matter, pixels per second on planck and Rapier (see *Porting*
 below).
 
-A cap the body starts with belongs in `bodyDef.maxVelocity`: it is applied
-every time the body is built, so a pooled or re-added renderable gets it back.
-`setMaxVelocity()` changes the live body. Called before `addChild()`, when
-there is no body yet, the built-in adapter throws; matter, planck and Rapier
-keep the cap and apply it to the body `addChild()` builds, unless the
-`bodyDef` has a `maxVelocity` of its own. A renderable removed and added again
-loses such a cap: only the `bodyDef` is built again.
+### Where body settings go
 
-The cap is the only setting that waits for the body. Every other adapter
-setter acts on the live body, which `addChild()` builds: called before it, in a
-constructor say, it throws on the built-in adapter and does nothing on matter,
-planck and Rapier. Give the body what it starts with through the `bodyDef`:
+The adapter setters act on the live body, and a renderable has no body until
+it is in the world: `addChild()` builds it from the `bodyDef`. So a body's
+settings go in one of three places, never the constructor:
 
-| before `addChild()` | in the `bodyDef` |
+- **What the body starts with: the `bodyDef`.** It is applied every time the
+  body is built, so a pooled or re-added renderable gets it back.
+- **What is set through the adapter from the start: `onActivateEvent()`.** The
+  engine calls it once the renderable is in the world, after its body is
+  built, and again each time it comes back (pooled, re-added, its container
+  added), so the setting comes back with it. Velocities, angles, spins,
+  forces and impulses have no `bodyDef` field: this is where they go.
+- **What changes in play: wherever it changes**, in `update()`, a collision
+  hook, an input handler.
+
+```js
+class Rocket extends Sprite {
+    constructor(x, y) {
+        super(x, y, { image: "rocket" });
+        // what the body starts with
+        this.bodyDef = {
+            type: "dynamic",
+            shapes: [new Rect(0, 0, 16, 32)],
+            gravityScale: 0,
+            maxVelocity: { x: 600, y: 600 },
+        };
+        // no body here yet: an adapter setter would throw on the built-in
+        // adapter, and do nothing on matter, planck and Rapier
+    }
+
+    onActivateEvent() {
+        // the body exists, every time the rocket enters the world
+        app.world.adapter.setVelocity(this, new Vector2d(0, -300));
+        app.world.adapter.setAngle?.(this, -Math.PI / 2);
+    }
+}
+```
+
+| a setting the body starts with | in the `bodyDef` |
 |---|---|
 | `setStatic(r, true)` | `type: "static"` |
 | `setGravityScale(r, s)` | `gravityScale` |
 | `setSensor(r, true)` | `isSensor` |
 | `setFrictionAir(r, f)` | `frictionAir` |
 | `setCollisionType(r, t)` / `setCollisionMask(r, m)` | `collisionType` / `collisionMask` |
-| `setMaxVelocity(r, v)` | `maxVelocity` (the setter also works) |
+| `setMaxVelocity(r, v)` | `maxVelocity` |
+| `setVelocity`, `setAngle`, `setAngularVelocity`, `applyForce`, `applyImpulse`, `applyTorque` | none: in `onActivateEvent()` |
 
-A velocity, an angle, a spin, a force or an impulse has no `bodyDef` field: set
-it once the renderable is in the world, in `onActivateEvent()` or the first
-`update()`. `setPosition()` works either way; the body is built at `pos`.
+`setPosition()` works anywhere: with no body it moves `pos`, where the body
+will be built. `setMaxVelocity()` called before the body exists is kept by
+matter, planck and Rapier for the body `addChild()` builds (the built-in
+throws, and a `bodyDef.maxVelocity` wins), but only that once: a re-added
+renderable gets its `bodyDef` back, not the earlier call. Use the `bodyDef`.
 
 Under matter, planck and Rapier, `syncFromPhysics()` copies the engine body's position
 back onto `renderable.pos` after every step, so a direct write is simply erased
@@ -1288,7 +1317,8 @@ yourself through `adapter.world` with `world.removeImpulseJoint()` /
 | a pickup or a landing sound fires twice (matter, planck, Rapier) | contacts are reported per shape pair, and `onCollisionActive` once per sub-step on matter; guard with a flag |
 | a `type: "kinematic"` platform falls (built-in, matter) | only planck and Rapier have kinematic bodies; use `type: "static"` and `adapter.setPosition()` |
 | `this.body.setMaxVelocity is not a function` (matter, planck, Rapier) | it is a built-in `Body` method; use `app.world.adapter.setMaxVelocity(this, { x, y })` |
-| a body setter called in the constructor has no effect (matter, planck, Rapier), or throws a `TypeError` (built-in) | there is no body before `addChild()`: put the setting in the `bodyDef`, or call the setter once the renderable is in the world |
+| a body setter called in the constructor has no effect (matter, planck, Rapier), or throws a `TypeError` (built-in) | there is no body before `addChild()`: put the setting in the `bodyDef`, or call the setter from `onActivateEvent()`, which runs once the body is built |
+| a pooled or re-added object comes back without the velocity, angle or cap it was given | it was set once, in the constructor or by its spawner: set it in `onActivateEvent()`, which runs each time it enters the world, or in the `bodyDef` |
 | every force got weaker after raising `subSteps` (matter, planck) | forces are cleared after each sub-step, so they act on the first one only; re-tune (Rapier keeps a force for the whole frame) |
 | `isActive = false` on a shape changes nothing (matter, planck, Rapier) | read only when the body is built; call `adapter.updateShape(renderable, shapes)` |
 | `onCollisionEnd` handler throws on `response` | built-in dispatches it with `undefined` |
