@@ -15,7 +15,7 @@
  *   empty cell is open space.
  * - The `power` tile layer starts empty: the game lights a panel by
  *   setting the tile whose `lit` property names its kind there, and
- *   tints the layer with the level's colour (see `game/Station.ts`).
+ *   tints the layer with the level's colour (see `world/Station.ts`).
  * - The `actors` object layer places what stands on the board: one `Bolt`
  *   object (a point, where Bolt begins) and the portals monsters come out
  *   of (the animated portal tile, whose class is `Portal`, dropped as a

@@ -17,10 +17,10 @@ import {
 } from "melonjs";
 import * as sfx from "../audio/sfx";
 import { WIDTH } from "../config/layout";
+import { formatScore, loadHiscore } from "../data/score";
 import type { DeepSpace } from "../fx/DeepSpace";
 import { controls } from "../input/Controls";
-import { FONT, makeLabel } from "../utils/draw";
-import { formatScore, loadHiscore } from "../utils/score";
+import { FONT, makeLabel } from "../ui/label";
 import { setUpLayers, withSpaceCamera } from "./layers";
 import { START, StartBeacon } from "./StartBeacon";
 import { TITLE, TitleBackdrop } from "./TitleBackdrop";

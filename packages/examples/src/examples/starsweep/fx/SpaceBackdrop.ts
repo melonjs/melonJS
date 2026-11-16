@@ -10,13 +10,8 @@
 import { Renderable } from "melonjs";
 import { BACKGROUND } from "../config/layout";
 import { THEMES, type Theme } from "../rules/levels";
-import {
-	drawPlanet,
-	drawSky,
-	makeStars,
-	type Renderer,
-	type Star,
-} from "../utils/draw";
+import type { Renderer } from "../utils/draw";
+import { drawPlanet, drawSky, makeStars, type Star } from "./sky";
 
 /**
  * The ringed planet, and the whole sky on a renderer that cannot run the

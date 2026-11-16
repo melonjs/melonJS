@@ -25,8 +25,9 @@ import {
 } from "@melonjs/pathfinding-plugin";
 import type { Container } from "melonjs";
 import { centreX, centreY, OX, OY, STAND_LIFT, TILE } from "../config/layout";
+import { POWER_COLORS } from "../entities/PowerUp";
 import { type Cell, COLS, cellOf, idx, isBlocking, ROWS } from "../rules/board";
-import { drawGlow, POWER_COLORS, type Renderer } from "../utils/draw";
+import { drawGlow, type Renderer } from "../utils/draw";
 import { kindOf, type Station } from "./Station";
 
 /** what crossing goo costs a monster's search: it goes round when it can */

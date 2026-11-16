@@ -8,7 +8,8 @@
  * of the game is a class of its own, in this folder, which the field puts
  * together:
  * - `Station`, the board as it is played (the level's Tiled map);
- * - `Player`, Bolt as the player moves it, and `Sparks`, what it zaps;
+ * - `Bolt` (in `entities/`), the robot the player moves, and `Sparks`,
+ *   what it zaps;
  * - `Navigation`, where monsters can go, with the pathfinding plugin;
  * - `Monsters`, the monsters and how each kind moves;
  * - `Powers`, the power-ups; and `Hud` (in `ui/`), what is shown around the
@@ -23,8 +24,13 @@
 import { type Container, event, game, Renderable, state, Tween } from "melonjs";
 import * as sfx from "../audio/sfx";
 import { centreX, centreY, HEIGHT, TILE, WIDTH } from "../config/layout";
+import { loadHiscore, saveHiscore } from "../data/score";
 import { GLOW } from "../entities/Actor";
-import type { Bolt } from "../entities/Bolt";
+import type { Bolt, BoltPose } from "../entities/Bolt";
+import type { Monster } from "../entities/Monster";
+import { fallAway } from "../entities/movers";
+import { POWER_COLORS, type PowerKind } from "../entities/PowerUp";
+import { SPARK_COLOR } from "../entities/Spark";
 import type { DeepSpace } from "../fx/DeepSpace";
 import type { Effects } from "../fx/Effects";
 import type { NebulaBackdrop } from "../fx/NebulaBackdrop";
@@ -34,23 +40,13 @@ import type { Controls } from "../input/Controls";
 import { type Cell, idx, isSolidGround } from "../rules/board";
 import { LEVEL_FILES, type LevelDef } from "../rules/levels";
 import { Hud, MAX_LIVES } from "../ui/Hud";
-import { POWER_COLORS, type PowerKind, type Renderer } from "../utils/draw";
-import { loadHiscore, saveHiscore } from "../utils/score";
+import type { Renderer } from "../utils/draw";
+import { Navigation } from "../world/Navigation";
+import { type Board, Station } from "../world/Station";
 import { FieldFront } from "./FieldFront";
-import {
-	ENEMY_SCORE,
-	type Enemy,
-	enemyX,
-	enemyY,
-	isActive,
-	Monsters,
-} from "./Monsters";
-import { fallAway, nearestCell } from "./movers";
-import { Navigation } from "./Navigation";
-import { type BoltPose, Player } from "./Player";
+import { Monsters } from "./Monsters";
 import { POWER_TIME, Powers } from "./Powers";
-import { SPARK_COLOR, Sparks } from "./Sparks";
-import { type Board, Station } from "./Station";
+import { Sparks } from "./Sparks";
 
 const START_LIVES = 3;
 /** seconds Bolt cannot be hurt after coming back */
@@ -117,7 +113,7 @@ export interface FieldHost {
 export class Field extends Renderable {
 	/** called when the run ends and the player confirms */
 	onExit: () => void = () => {};
-	/** sparks and the message panel, drawn over the characters */
+	/** the panel behind a message, drawn over the characters */
 	readonly front: Renderable;
 	/** the labels and the progress bar, for the screen to add */
 	readonly hudItems: Renderable[];
@@ -127,10 +123,11 @@ export class Field extends Renderable {
 	private readonly effects: Effects;
 	private readonly station: Station;
 	private readonly nav: Navigation;
-	private readonly player: Player;
+	/** Bolt, built by each level from its map; set by the first one */
+	private bolt!: Bolt;
 	private readonly sparks: Sparks;
 	private readonly monsters: Monsters;
-	private readonly powers = new Powers();
+	private readonly powers: Powers;
 	private readonly hud: Hud;
 
 	private time = 0;
@@ -177,35 +174,27 @@ export class Field extends Renderable {
 			gatesOpened: (cells) => this.gatesOpened(cells),
 		});
 		this.nav = new Navigation(host.actors);
-		this.player = new Player(
-			{
-				station: this.station,
-				nav: this.nav,
-				controls: this.controls,
-				landed: (cell) => this.paint(cell),
-				fellOff: () => this.killPlayer(true),
-			},
-			host.actors,
-		);
 		this.monsters = new Monsters(
 			{
 				station: this.station,
 				nav: this.nav,
-				bolt: () => this.player,
-				fell: (e) => {
-					fallAway(e);
-					this.addScore(ENEMY_SCORE[e.kind] * FALL_BONUS);
+				bolt: () => this.bolt,
+				fell: (m) => {
+					fallAway(m);
+					this.addScore(m.score * FALL_BONUS);
 					sfx.sfxFall();
 				},
 				munched: (cell) => this.unpaint(cell),
 			},
 			host.actors,
 		);
+		this.powers = new Powers(host.actors);
 		this.sparks = new Sparks({
 			station: this.station,
-			monsters: this.monsters,
 			effects: this.effects,
-			hit: (e) => this.popEnemy(e),
+			actors: host.actors,
+			monsters: () => this.monsters.list,
+			hit: (m) => this.popEnemy(m),
 		});
 		this.hud = new Hud(host.actors);
 		this.hudItems = this.hud.items;
@@ -276,7 +265,7 @@ export class Field extends Renderable {
 		const { layers, bolt } = await this.host.loadBoard(LEVEL_FILES[i]);
 		layers.power.tint.parseCSS(theme.lit);
 		this.station.load(layers, this.level);
-		this.player.take(bolt);
+		this.takeBolt(bolt);
 		this.nav.build(this.station);
 		this.nav.showRoutes(null);
 		this.monsters.startLevel(this.level, i);
@@ -301,6 +290,23 @@ export class Field extends Renderable {
 			.start();
 	}
 
+	/**
+	 * The level built Bolt where its map's `Bolt` object is: it takes the
+	 * place of the last level's.
+	 */
+	private takeBolt(bolt: Bolt) {
+		this.bolt?.leave();
+		this.bolt = bolt;
+		bolt.join({
+			station: this.station,
+			nav: this.nav,
+			controls: this.controls,
+			actors: this.host.actors,
+			landed: (cell) => this.paint(cell),
+			fellOff: () => this.killPlayer(true),
+		});
+	}
+
 	/** the intro is over, or skipped: play */
 	private startPlay() {
 		if (this.phase !== "intro") {
@@ -318,7 +324,7 @@ export class Field extends Renderable {
 	 * @param invuln - seconds Bolt cannot be hurt for
 	 */
 	private resetActors(invuln = 0) {
-		this.player.reset(this.station.start, invuln);
+		this.bolt.reset(this.station.start, invuln);
 		this.monsters.reset();
 		this.sparks.clear();
 		this.streak = 0;
@@ -383,13 +389,7 @@ export class Field extends Renderable {
 		sfx.sfxPaint(this.streak);
 		this.streak++;
 		this.streakTimer = STREAK_WINDOW;
-		this.effects.burst(
-			this.player.x,
-			this.player.y,
-			this.level.theme.lit,
-			6,
-			90,
-		);
+		this.effects.burst(this.bolt.x, this.bolt.y, this.level.theme.lit, 6, 90);
 		if (this.station.cleared && this.phase === "play") {
 			this.levelCleared();
 		}
@@ -409,12 +409,12 @@ export class Field extends Renderable {
 		sfx.sfxCrumble();
 		this.burstAt(cell, CRACK_COLOR, 10, 70, 160);
 		const on = (at: Cell) => at.x === cell.x && at.y === cell.y;
-		if (this.phase === "play" && on(this.player.cell)) {
+		if (this.phase === "play" && on(this.bolt.cell)) {
 			this.killPlayer(true);
 		}
-		for (const e of this.monsters.list) {
-			if (!e.air && isActive(e) && on(nearestCell(e))) {
-				this.monsters.drop(e);
+		for (const m of this.monsters.list) {
+			if (!m.flies && m.isLoose && on(m.cell)) {
+				m.drop();
 			}
 		}
 	}
@@ -490,9 +490,9 @@ export class Field extends Renderable {
 		if (this.streakTimer <= 0) {
 			this.streak = 0;
 		}
-		this.player.update(dt, () => this.phase === "play");
+		this.bolt.step(dt, () => this.phase === "play");
 		if (this.controls.fire()) {
-			const p = this.player;
+			const p = this.bolt;
 			this.sparks.fire(p.x, p.y, p.facing, this.powers.active("burst"));
 		}
 		this.monsters.update(dt, this.powers.active("freeze"));
@@ -500,7 +500,7 @@ export class Field extends Renderable {
 		this.powers.update(
 			dt,
 			this.station,
-			this.player.cell,
+			this.bolt.cell,
 			this.lives < MAX_LIVES,
 		);
 		this.nav.update(dt);
@@ -538,8 +538,8 @@ export class Field extends Renderable {
 		this.host.space?.burst(this.level.theme.lit, 1.2);
 		this.host.space?.burst(this.level.theme.litHi, 0.8);
 		// every monster pops in celebration
-		for (const e of this.monsters.list) {
-			this.effects.burst(enemyX(e), enemyY(e), "#ffffff", 14, 160);
+		for (const m of this.monsters.list) {
+			this.effects.burst(m.x, m.y, "#ffffff", 14, 160);
 		}
 		this.monsters.reset();
 		this.nav.showRoutes(null);
@@ -561,37 +561,30 @@ export class Field extends Renderable {
 		this.setPhase("dying");
 		this.streak = 0;
 		if (fell) {
-			this.player.fall();
+			this.bolt.fall();
 			sfx.sfxFall();
 		} else {
 			sfx.sfxDie();
-			this.effects.burst(
-				this.player.x,
-				this.player.y,
-				SPARK_COLOR,
-				30,
-				220,
-				300,
-			);
+			this.effects.burst(this.bolt.x, this.bolt.y, SPARK_COLOR, 30, 220, 300);
 			game.viewport.shake(8, 350);
-			this.player.knockOut();
+			this.bolt.knockOut();
 		}
 		aberrationBurst(fell ? 4 : 9);
 	}
 
 	/** a monster zapped, or run into under a shield: it pops */
-	private popEnemy(e: Enemy) {
-		this.monsters.remove(e);
-		this.addScore(ENEMY_SCORE[e.kind]);
+	private popEnemy(m: Monster) {
+		this.monsters.remove(m);
+		this.addScore(m.score);
 		sfx.sfxPop();
-		const color = GLOW[e.kind];
-		this.effects.burst(enemyX(e), enemyY(e), color, 22, 200, 260);
+		const color = GLOW[m.kind];
+		this.effects.burst(m.x, m.y, color, 22, 200, 260);
 		this.host.space?.burst(color, 0.35);
 	}
 
 	/** Bolt picked up a power-up on a cell */
 	private collect(kind: PowerKind, at: Cell) {
-		this.player.cheerUp();
+		this.bolt.cheerUp();
 		sfx.sfxPickup();
 		this.host.space?.burst(POWER_COLORS[kind], 0.6);
 		this.effects.burst(
@@ -622,7 +615,7 @@ export class Field extends Renderable {
 	 * monsters cannot go through it, so their plans go round. Bolt can.
 	 */
 	private raiseFields() {
-		const at = this.player.cell;
+		const at = this.bolt.cell;
 		const taken = new Set(this.monsters.cells().map((c) => idx(c.x, c.y)));
 		const cells: Cell[] = [];
 		for (let dy = -1; dy <= 1; dy++) {
@@ -646,21 +639,18 @@ export class Field extends Renderable {
 		if (this.phase !== "play") {
 			return;
 		}
-		const { x, y } = this.player;
+		const { x, y } = this.bolt;
 		const pw = this.powers.pickUp(x, y);
 		if (pw) {
-			this.collect(pw.kind, pw);
+			this.collect(pw.kind, pw.cell);
 		}
-		for (const e of [...this.monsters.list]) {
-			if (
-				!isActive(e) ||
-				Math.hypot(enemyX(e) - x, enemyY(e) - y) >= TILE * CATCH_REACH
-			) {
+		for (const m of [...this.monsters.list]) {
+			if (!m.isLoose || Math.hypot(m.x - x, m.y - y) >= TILE * CATCH_REACH) {
 				continue;
 			}
 			if (this.powers.active("shield")) {
-				this.popEnemy(e);
-			} else if (this.player.canBeHurt) {
+				this.popEnemy(m);
+			} else if (this.bolt.canBeHurt) {
 				this.killPlayer(false);
 				return;
 			}
@@ -687,18 +677,16 @@ export class Field extends Renderable {
 		if (this.nav.showingRoutes) {
 			this.monsters.drawGoals(r, this.time);
 		}
-		this.powers.draw(r, this.time);
 		// a soft glow under each character
 		this.monsters.drawGlows(r);
-		this.player.drawGlow(r);
+		this.bolt?.drawGlow(r);
 	}
 
-	/** over the characters: the sparks, and the panel behind a message */
+	/** over the characters: the panel behind a message */
 	drawFront(r: Renderer) {
 		if (!this.station.layers) {
 			return;
 		}
-		this.sparks.draw(r);
 		this.hud.drawPanel(
 			r,
 			state.isPaused() ? 1 : this.overlay,
@@ -708,12 +696,13 @@ export class Field extends Renderable {
 
 	/** put each character's sprite where it is, playing what it is doing */
 	private placeActors() {
-		this.player.place(
+		// no Bolt yet while the first level loads
+		this.bolt?.pose(
 			this.boltPose(),
 			this.phaseTime,
 			this.powers.active("shield"),
 		);
-		this.monsters.place(this.powers.active("freeze"));
+		this.monsters.pose(this.powers.active("freeze"));
 	}
 
 	/** how Bolt is drawn, from the phase */

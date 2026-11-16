@@ -18,18 +18,46 @@ import {
 } from "../config/layout";
 import { Actor, GLOW } from "../entities/Actor";
 import type { DeepSpace } from "../fx/DeepSpace";
+import { drawSky, makeStars, type Star } from "../fx/sky";
 import { controls } from "../input/Controls";
 import { COLS } from "../rules/board";
 import { THEMES } from "../rules/levels";
-import {
-	drawGlow,
-	drawPanelDetail,
-	drawSky,
-	drawSlab,
-	makeStars,
-	type Renderer,
-	type Star,
-} from "../utils/draw";
+import { drawGlow, type Renderer } from "../utils/draw";
+
+/**
+ * A floor slab, one cell wide, its top left at (x, y): a darker front edge
+ * with the face on top.
+ */
+const drawSlab = (
+	r: Renderer,
+	x: number,
+	y: number,
+	face: string,
+	side: string,
+) => {
+	r.setColor(side);
+	r.fillRoundRect(x + 2, y + TILE - 14, TILE - 4, 12, 5);
+	r.setColor(face);
+	r.fillRoundRect(x + 2, y + 2, TILE - 4, TILE - 10, 6);
+};
+
+/** Rivets and a seam, so a slab reads as a metal deck panel. */
+const drawPanelDetail = (r: Renderer, x: number, y: number, lit: boolean) => {
+	r.setGlobalAlpha(lit ? 0.35 : 0.5);
+	r.setColor(lit ? "#ffffff" : "#0d1024");
+	for (const [rx, ry] of [
+		[8, 8],
+		[TILE - 8, 8],
+		[8, TILE - 16],
+		[TILE - 8, TILE - 16],
+	]) {
+		r.fillEllipse(x + rx, y + ry, 1.8, 1.8);
+	}
+	if (!lit) {
+		r.fillRect(x + 14, y + 19, TILE - 28, 2);
+	}
+	r.setGlobalAlpha(1);
+};
 
 /** the title's colours: the cyan and pink themes */
 export const TITLE = {

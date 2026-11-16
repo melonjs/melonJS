@@ -18,11 +18,13 @@ import {
 	type Text,
 } from "melonjs";
 import { BOARD_BOTTOM, OX, OY, TILE, WIDTH } from "../config/layout";
+import { formatScore } from "../data/score";
 import { Actor } from "../entities/Actor";
+import { POWER_COLORS } from "../entities/PowerUp";
 import { POWER_TIME, type TimedPower } from "../game/Powers";
 import { ROWS } from "../rules/board";
-import { makeLabel, POWER_COLORS, type Renderer } from "../utils/draw";
-import { formatScore } from "../utils/score";
+import type { Renderer } from "../utils/draw";
+import { makeLabel } from "./label";
 
 /** the most lives Bolt can have, and so the life icons in the top bar */
 export const MAX_LIVES = 6;

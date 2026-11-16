@@ -64,5 +64,14 @@ export const cellUnder = (x: number, y: number) => ({
 	y: Math.floor((y + STAND_LIFT - OY) / TILE),
 });
 
-/** the characters' order in the actors layer, back to front */
-export const ACTOR_Z = { bolt: 1, shield: 2, monster: 3 } as const;
+/**
+ * the order in the actors layer, back to front: power-ups on the panels,
+ * then Bolt, its shield, the monsters, and the sparks flying over them
+ */
+export const ACTOR_Z = {
+	powerUp: 0,
+	bolt: 1,
+	shield: 2,
+	monster: 3,
+	spark: 4,
+} as const;

@@ -16,14 +16,20 @@
  * - `scenes/`: the screens, as `Stage`s. `TitleScreen` (with its
  *   `TitleBackdrop` and `StartBeacon`), `PlayScreen`, and `layers.ts`, the
  *   two layers both are drawn in.
- * - `game/`: the game as it is played. `Field` runs a run of levels and
- *   puts the rest together: `Station` (the board), `Player` (Bolt) and
- *   `Sparks` (its zaps), `Monsters`, `Navigation` (where monsters can go,
- *   with `@melonjs/pathfinding-plugin`), `Powers` (the power-ups),
- *   `FieldFront` (drawn over the characters) and `movers.ts` (cell-to-cell
- *   walking, shared by Bolt and the monsters).
- * - `entities/`: the characters' sprites. `Actor` (a sprite over the cast
- *   sheet), and `Bolt` and `Portal`, which the maps place (see below).
+ * - `entities/`: what is on the board, one class each, owning its state,
+ *   its moves and how it is drawn. `Bolt` (the robot the player moves),
+ *   the monsters (`Monster`, and its kinds `Wobbler`, `Muncher`, `Chaser`
+ *   and `Drone`), `PowerUp`, `Spark` and `Portal`; `Actor`, the sprite
+ *   over the cast sheet they are drawn from; and `movers.ts`, the
+ *   cell-to-cell walking Bolt and the monsters share. Bolt and the portals
+ *   are placed by the maps (see below).
+ * - `game/`: the run. `Field` goes from level to level, keeps the score and
+ *   lives, and decides what happens when things meet; `Monsters`, `Powers`
+ *   and `Sparks` bring their entities on and off the board; `FieldFront`
+ *   is drawn over the characters.
+ * - `world/`: the board as it is played. `Station` (its panels, lit, cracked
+ *   or gated) and `Navigation` (where monsters can go, with
+ *   `@melonjs/pathfinding-plugin`).
  * - `rules/`: no engine, so they run in Node too. `board.ts` (the tiles and
  *   how moves go), `levels.ts` (reading a level from its Tiled map) and
  *   `check-levels.ts` (`pnpm check:starsweep`, which checks every level
@@ -31,11 +37,13 @@
  * - `fx/`: what makes it shine. `NebulaBackdrop` (a custom shader sky, its
  *   source in `nebulaShader.ts`), `DeepSpace` (3D star dust and novas, seen
  *   by `spaceCamera.ts`), `Effects` (particle bursts and spark trails),
- *   `SpaceBackdrop` (the planet, and the sky on Canvas) and `screenFx.ts`
- *   (bloom, vignette and chromatic aberration).
- * - `ui/Hud`, `input/Controls`, `audio/sfx.ts` (every sound synthesised
- *   with `audio.tone` / `audio.noise`), `config/layout.ts` (sizes and
- *   places) and `utils/` (drawing helpers, and the saved best score).
+ *   `SpaceBackdrop` and `sky.ts` (the planet, and the sky on Canvas) and
+ *   `screenFx.ts` (bloom, vignette and chromatic aberration).
+ * - `ui/`: `Hud` and `label.ts` (the font, and text labels). `input/Controls`,
+ *   `audio/sfx.ts` (every sound synthesised with `audio.tone` /
+ *   `audio.noise`), `config/layout.ts` (sizes and places), `data/score.ts`
+ *   (the saved best score) and `utils/draw.ts` (the glow every drawing
+ *   shares).
  *
  * The levels are Tiled maps (`public/assets/starsweep/levels/*.tmj`);
  * `rules/levels.ts` says how to edit them. Bolt and the portals are objects
@@ -64,7 +72,7 @@ import {
 } from "./rules/levels";
 import { PlayScreen } from "./scenes/PlayScreen";
 import { TitleScreen } from "./scenes/TitleScreen";
-import { FONT } from "./utils/draw";
+import { FONT } from "./ui/label";
 
 const createGame = async () => {
 	const app = new Application(WIDTH, HEIGHT, {

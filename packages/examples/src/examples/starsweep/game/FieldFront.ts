@@ -1,9 +1,9 @@
 /**
  * melonJS — Starsweep: the field's front layer.
  *
- * What the field draws over the characters: the sparks, and the panel
- * behind a message. A `Renderable` of its own, so the screen can put it
- * above the characters' container.
+ * What the field draws over the characters: the panel behind a message.
+ * A `Renderable` of its own, so the screen can put it above the
+ * characters' container.
  *
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
