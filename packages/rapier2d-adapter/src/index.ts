@@ -56,6 +56,20 @@ type WorldJointHook = {
 };
 
 /**
+ * The raw joint set behind an `ImpulseJoint`: protected in Rapier's types,
+ * and the only way to set a joint's frame in 2D, which `ImpulseJoint` has no
+ * method for.
+ */
+type RawJointAccess = {
+	rawSet: {
+		jointSetFrameX2: (
+			handle: number,
+			rotation: ReturnType<typeof RAPIER.RotationOps.intoRaw>,
+		) => void;
+	};
+};
+
+/**
  * Options accepted by the {@link RapierAdapter} constructor and by
  * {@link RapierAdapter.create}.
  */
@@ -145,6 +159,33 @@ interface ColliderEntry {
 	index: number;
 	geometry: LocalGeometry;
 }
+
+/**
+ * A pair whose start or active hooks are running. When one of them takes a
+ * body of the pair out, the contact's end is told in the order a hook can
+ * rely on: to the side going out at once, while it is whole, and to the other
+ * once the hooks are done; and only to a side that heard the start.
+ */
+interface Dispatch {
+	key: string;
+	h1: number;
+	h2: number;
+	e1: ColliderEntry;
+	e2: ColliderEntry;
+	/** the sides that may hear the end: those the start reached */
+	reached: number;
+	/** the sides already told the end */
+	told: number;
+	/** true once a body of the pair was taken out */
+	ended: boolean;
+}
+
+/** Which hooks of a pair a dispatch reaches: one bit per side and level. */
+const SIDE_A = 1;
+const SIDE_B = 2;
+const SHAPE_A = 4;
+const SHAPE_B = 8;
+const EVERY_SIDE = SIDE_A | SIDE_B | SHAPE_A | SHAPE_B;
 
 /** The Rapier module, once {@link RapierAdapter.load} has compiled it. */
 let rapier: typeof RAPIER | undefined;
@@ -265,12 +306,19 @@ export class RapierAdapter implements PhysicsAdapter {
 	private readonly activePairs = new Map<string, [number, number]>();
 	/** a step's events, collected before any is dispatched */
 	private readonly pendingEvents: number[] = [];
+	/** the pairs whose start or active hooks are running, innermost last */
+	private readonly dispatching: Dispatch[] = [];
 	/** bodies with a force or torque to clear once the frame is stepped */
 	private readonly forced = new Set<RAPIER.RigidBody>();
 	private readonly velocityLimits = new Map<
 		Renderable,
 		{ x: number; y: number }
 	>();
+	/**
+	 * Caps set before the renderable had a body, applied when `addBody`
+	 * builds one. Held weakly: a renderable never added is not kept alive.
+	 */
+	private pendingLimits = new WeakMap<Renderable, { x: number; y: number }>();
 	private readonly defMap = new Map<Renderable, BodyDefinition>();
 	/**
 	 * Offset between `renderable.pos` and the Rapier body's translation (the
@@ -431,9 +479,11 @@ export class RapierAdapter implements PhysicsAdapter {
 		this.pendingEvents.length = 0;
 		this.forced.clear();
 		this.velocityLimits.clear();
+		this.pendingLimits = new WeakMap();
 		this.defMap.clear();
 		this.posOffsets.clear();
 		this.reportedShapes.clear();
+		this.dispatching.length = 0;
 	}
 
 	step(dt: number): void {
@@ -444,6 +494,11 @@ export class RapierAdapter implements PhysicsAdapter {
 		}
 		// as the other adapters: no simulation while the game is paused
 		if (state.isPaused()) {
+			return;
+		}
+		// a step of no length simulates nothing, and one that is not a
+		// number would leave every body it touched stuck for good
+		if (!(dt > 0) || !Number.isFinite(dt)) {
 			return;
 		}
 		// read every step, so `adapter.gravity` can change while the game runs
@@ -516,6 +571,25 @@ export class RapierAdapter implements PhysicsAdapter {
 		// the body origin is the first shape's centre, so a body that rotates
 		// turns about the middle of what it looks like
 		const centroid = this._computeCentroid(def.shapes);
+		// build every collider first, so a refused shape leaves no body
+		// behind, nor takes away the one the renderable had
+		const parts: {
+			shape: BodyShape;
+			index: number;
+			desc: RAPIER.ColliderDesc;
+			geometry: LocalGeometry;
+		}[] = [];
+		for (const [index, shape] of def.shapes.entries()) {
+			// `isActive === false` keeps a shape out of the simulation
+			if ((shape as { isActive?: boolean }).isActive === false) {
+				continue;
+			}
+			for (const part of this._shapeToColliders(shape, centroid, def.type)) {
+				parts.push({ shape, index, ...part });
+			}
+		}
+		// a renderable has one body: a second one replaces the first
+		this.removeBody(renderable);
 		const desc =
 			def.type === "static"
 				? R.RigidBodyDesc.fixed()
@@ -546,50 +620,44 @@ export class RapierAdapter implements PhysicsAdapter {
 			typeof def.collisionMask === "number"
 				? def.collisionMask
 				: collision.types.ALL_OBJECT;
-		for (const [index, shape] of def.shapes.entries()) {
-			// `isActive === false` keeps a shape out of the simulation
-			if ((shape as { isActive?: boolean }).isActive === false) {
-				continue;
-			}
+		for (const { shape, index, desc: colliderDesc, geometry } of parts) {
 			const shapeType = (shape as { collisionType?: number }).collisionType;
 			const shapeMask = (shape as { collisionMask?: number }).collisionMask;
 			const trigger = (shape as { isTrigger?: boolean }).isTrigger === true;
-			for (const part of this._shapeToColliders(shape, centroid, def.type)) {
-				part.desc
-					.setDensity(def.density ?? 1)
-					.setFriction(def.friction ?? 0.2)
-					.setRestitution(def.restitution ?? 0)
-					// a trigger shape is a sensor: it reports contacts and
-					// contributes nothing to the solver
-					.setSensor(def.isSensor === true || trigger)
-					.setActiveEvents(R.ActiveEvents.COLLISION_EVENTS);
-				const collider = this.world.createCollider(part.desc, body);
-				// a shape's own collision settings override the body's, as on
-				// the planck adapter
-				this._applyFilter(
-					collider,
-					typeof shapeType === "number" ? shapeType : bodyType,
-					typeof shapeMask === "number" ? shapeMask : bodyMask,
-				);
-				this.colliderMap.set(collider.handle, {
-					renderable,
-					shape,
-					index,
-					geometry: part.geometry,
-				});
-				colliders.push(collider);
-			}
+			colliderDesc
+				.setDensity(def.density ?? 1)
+				.setFriction(def.friction ?? 0.2)
+				.setRestitution(def.restitution ?? 0)
+				// a trigger shape is a sensor: it reports contacts and
+				// contributes nothing to the solver
+				.setSensor(def.isSensor === true || trigger)
+				.setActiveEvents(R.ActiveEvents.COLLISION_EVENTS);
+			const collider = this.world.createCollider(colliderDesc, body);
+			// a shape's own collision settings override the body's, as on
+			// the planck adapter
+			this._applyFilter(
+				collider,
+				typeof shapeType === "number" ? shapeType : bodyType,
+				typeof shapeMask === "number" ? shapeMask : bodyMask,
+			);
+			this.colliderMap.set(collider.handle, {
+				renderable,
+				shape,
+				index,
+				geometry,
+			});
+			colliders.push(collider);
 		}
 
-		if (def.maxVelocity) {
-			this.velocityLimits.set(renderable, {
-				x: def.maxVelocity.x,
-				y: def.maxVelocity.y,
-			});
-		}
 		this.bodyMap.set(renderable, body);
 		this.collidersOf.set(renderable, colliders);
 		this.defMap.set(renderable, def);
+		// the definition's cap, or else one set before the body was built
+		const limit = def.maxVelocity ?? this.pendingLimits.get(renderable);
+		this.pendingLimits.delete(renderable);
+		if (limit) {
+			this.setMaxVelocity(renderable, limit);
+		}
 		// maps the body origin back onto `renderable.pos`, anchor included
 		this.posOffsets.set(renderable, {
 			x: anchorX - centroid.x,
@@ -612,27 +680,17 @@ export class RapierAdapter implements PhysicsAdapter {
 		if (body === undefined) {
 			return;
 		}
-		const colliders = this.collidersOf.get(renderable) ?? [];
 		// a partner still touching this body learns the contact ended, as it
 		// does on the other adapters
-		const handles = new Set(
-			colliders.map((c) => {
-				return c.handle;
-			}),
-		);
-		for (const [key, [h1, h2]] of this.activePairs) {
-			if (handles.has(h1) || handles.has(h2)) {
-				this.activePairs.delete(key);
-				this._dispatchPair(h1, h2, "end");
-			}
-		}
-		for (const handle of handles) {
-			this.colliderMap.delete(handle);
-			this.filters.delete(handle);
+		this._endContacts(this.collidersOf.get(renderable) ?? []);
+		// one of their hooks may have taken this body out already
+		if (this.bodyMap.get(renderable) !== body) {
+			return;
 		}
 		// Rapier removes the body's joints with it
 		for (const joint of this.joints) {
 			if (
+				!joint.isValid() ||
 				joint.body1().handle === body.handle ||
 				joint.body2().handle === body.handle
 			) {
@@ -649,6 +707,43 @@ export class RapierAdapter implements PhysicsAdapter {
 		this.defMap.delete(renderable);
 		this.posOffsets.delete(renderable);
 		this.reportedShapes.delete(renderable);
+	}
+
+	/**
+	 * Forget colliders that are about to go, and tell the pairs touching
+	 * them that their contact ended.
+	 * @param colliders - the colliders leaving the world
+	 */
+	private _endContacts(colliders: RAPIER.Collider[]): void {
+		const handles = new Set(
+			colliders.map((c) => {
+				return c.handle;
+			}),
+		);
+		// a pair whose start or active hooks are running: the side going out
+		// hears the end now, the other once those hooks are done, so that no
+		// one hears of an end before its start
+		for (const d of this.dispatching) {
+			const going =
+				(handles.has(d.h1) ? SIDE_A | SHAPE_A : 0) |
+				(handles.has(d.h2) ? SIDE_B | SHAPE_B : 0);
+			if (going !== 0 && (this.activePairs.delete(d.key) || d.ended)) {
+				d.ended = true;
+				const sides = going & d.reached & ~d.told;
+				d.told |= sides;
+				this._dispatch(d.e1, d.e2, d.h1, d.h2, "end", sides);
+			}
+		}
+		for (const [key, [h1, h2]] of this.activePairs) {
+			if (handles.has(h1) || handles.has(h2)) {
+				this.activePairs.delete(key);
+				this._dispatchPair(h1, h2, "end");
+			}
+		}
+		for (const handle of handles) {
+			this.colliderMap.delete(handle);
+			this.filters.delete(handle);
+		}
 	}
 
 	updateShape(renderable: Renderable, shapes: BodyShape[]): void {
@@ -767,6 +862,21 @@ export class RapierAdapter implements PhysicsAdapter {
 				);
 		}
 		const joint = this.world.createImpulseJoint(data, bodyA, bodyB, true);
+		if (def.type === "slider") {
+			// Rapier gives both bodies the axis's frame, which would turn b
+			// onto a's angle: b's frame is a's turned by the angle between
+			// them, so b keeps its own. The 2D joint has no setter for it,
+			// so the raw joint set's is used.
+			const axis = data.axis;
+			const frame2 = this.rapier.RotationOps.intoRaw(
+				Math.atan2(axis.y, axis.x) + bodyA.rotation() - bodyB.rotation(),
+			);
+			(joint as unknown as RawJointAccess).rawSet.jointSetFrameX2(
+				joint.handle,
+				frame2,
+			);
+			frame2.free();
+		}
 		joint.setContactsEnabled(def.collideConnected === true);
 		if (
 			def.limits !== undefined &&
@@ -966,13 +1076,21 @@ export class RapierAdapter implements PhysicsAdapter {
 		renderable: Renderable,
 		limit: { x: number; y: number },
 	): void {
-		this.velocityLimits.set(renderable, { x: limit.x, y: limit.y });
+		const copy = { x: limit.x, y: limit.y };
+		if (this.bodyMap.has(renderable)) {
+			this.velocityLimits.set(renderable, copy);
+		} else {
+			// no body yet: kept for the one `addBody` builds, unless the
+			// body definition has a cap of its own
+			this.pendingLimits.set(renderable, copy);
+		}
 	}
 
 	getMaxVelocity(renderable: Renderable): { x: number; y: number } {
 		// a copy, so changing it does not change the cap; no cap reads as
 		// Infinity
-		const limit = this.velocityLimits.get(renderable);
+		const limit =
+			this.velocityLimits.get(renderable) ?? this.pendingLimits.get(renderable);
 		return limit ? { x: limit.x, y: limit.y } : { x: Infinity, y: Infinity };
 	}
 
@@ -1087,17 +1205,6 @@ export class RapierAdapter implements PhysicsAdapter {
 		return cached;
 	}
 
-	/**
-	 * Whether Rapier has put the body to sleep. `false` for a static or
-	 * kinematic body and for a renderable this adapter does not know.
-	 * @param renderable - the renderable whose body to read
-	 * @returns `true` while the body sleeps
-	 */
-	isSleeping(renderable: Renderable): boolean {
-		const body = this.bodyMap.get(renderable);
-		return body !== undefined && body.isDynamic() && body.isSleeping();
-	}
-
 	isGrounded(renderable: Renderable): boolean {
 		const body = this.bodyMap.get(renderable);
 		if (!body) return false;
@@ -1139,6 +1246,8 @@ export class RapierAdapter implements PhysicsAdapter {
 	}
 
 	raycast(from: Vector2d, to: Vector2d): RaycastHit | null {
+		// nothing to hit once the Rapier world is freed
+		if (!this.alive) return null;
 		const origin = this.vecInMeters(from.x, from.y);
 		const dir = this.vecInMeters(to.x - from.x, to.y - from.y);
 		if (dir.x === 0 && dir.y === 0) return null;
@@ -1174,6 +1283,8 @@ export class RapierAdapter implements PhysicsAdapter {
 
 	queryAABB(rect: Rect): Renderable[] {
 		const result: Renderable[] = [];
+		// nothing to find once the Rapier world is freed
+		if (!this.alive) return result;
 		const seen = new Set<Renderable>();
 		this.world.collidersWithAabbIntersectingAabb(
 			this.vecInMeters(
@@ -1428,12 +1539,17 @@ export class RapierAdapter implements PhysicsAdapter {
 		for (const [renderable, limit] of this.velocityLimits) {
 			const body = this.bodyMap.get(renderable);
 			if (!body) continue;
-			// limits are in pixels per second, the adapter's velocity unit
-			const limitX = this.px2m(limit.x);
-			const limitY = this.px2m(limit.y);
 			const v = body.linvel();
-			const vx = Math.max(-limitX, Math.min(limitX, v.x));
-			const vy = Math.max(-limitY, Math.min(limitY, v.y));
+			// limits are in pixels per second, the adapter's velocity unit
+			const clamp = (value: number, px: number) => {
+				// one that is not a number caps nothing (it would turn the
+				// velocity itself into NaN); a negative one caps by its size
+				if (Number.isNaN(px)) return value;
+				const m = this.px2m(Math.abs(px));
+				return Math.max(-m, Math.min(m, value));
+			};
+			const vx = clamp(v.x, limit.x);
+			const vy = clamp(v.y, limit.y);
 			if (vx !== v.x || vy !== v.y) {
 				body.setLinvel({ x: vx, y: vy }, false);
 			}
@@ -1456,8 +1572,11 @@ export class RapierAdapter implements PhysicsAdapter {
 			const h2 = events[i + 1];
 			const key = pairKey(h1, h2);
 			if (events[i + 2] === 1) {
-				this.activePairs.set(key, [h1, h2]);
-				this._dispatchPair(h1, h2, "start");
+				// a hook earlier in this step may have taken one of them out
+				if (this.colliderMap.has(h1) && this.colliderMap.has(h2)) {
+					this.activePairs.set(key, [h1, h2]);
+					this._dispatchPair(h1, h2, "start");
+				}
 			} else if (this.activePairs.delete(key)) {
 				// a pair already ended (one of its bodies was removed) is not
 				// ended twice
@@ -1512,6 +1631,13 @@ export class RapierAdapter implements PhysicsAdapter {
 		return { nx, ny, depth: this.m2px(depth) };
 	}
 
+	/**
+	 * Fire the hooks of one pair of colliders, on both renderables. A start
+	 * or active hook may take a body of the pair out: see {@link Dispatch}.
+	 * @param h1 - the first collider handle
+	 * @param h2 - the second
+	 * @param phase - which lifecycle hook to fire
+	 */
 	private _dispatchPair(
 		h1: number,
 		h2: number,
@@ -1520,11 +1646,67 @@ export class RapierAdapter implements PhysicsAdapter {
 		const e1 = this.colliderMap.get(h1);
 		const e2 = this.colliderMap.get(h2);
 		if (e1 === undefined || e2 === undefined) return;
+		if (phase === "end") {
+			this._dispatch(e1, e2, h1, h2, phase, EVERY_SIDE);
+			return;
+		}
+		const current: Dispatch = {
+			key: pairKey(h1, h2),
+			h1,
+			h2,
+			e1,
+			e2,
+			// a pair already active had its start on every side
+			reached: phase === "start" ? 0 : EVERY_SIDE,
+			told: 0,
+			ended: false,
+		};
+		this.dispatching.push(current);
+		try {
+			this._dispatch(
+				e1,
+				e2,
+				h1,
+				h2,
+				phase,
+				EVERY_SIDE,
+				phase === "start" ? current : undefined,
+			);
+		} finally {
+			this.dispatching.splice(this.dispatching.indexOf(current), 1);
+		}
+		if (current.ended) {
+			this._dispatch(e1, e2, h1, h2, "end", current.reached & ~current.told);
+		}
+	}
+
+	/**
+	 * Fire one phase of a pair's hooks: the shape-level ones, then the
+	 * renderables' own. Each melonJS shape is one collider (a concave
+	 * polygon, one per triangle), so Rapier's per-collider events name the
+	 * shapes. A renderable whose body is gone hears nothing.
+	 * @param e1 - the first collider's entry
+	 * @param e2 - the second collider's entry
+	 * @param h1 - the first collider handle
+	 * @param h2 - the second
+	 * @param phase - which lifecycle hook to fire
+	 * @param sides - the sides and levels to fire it on, as bits
+	 * @param [record] - where to note each side reached, before its hook runs
+	 */
+	private _dispatch(
+		e1: ColliderEntry,
+		e2: ColliderEntry,
+		h1: number,
+		h2: number,
+		phase: "start" | "active" | "end",
+		sides: number,
+		record?: Dispatch,
+	): void {
 		const rA = e1.renderable;
 		const rB = e2.renderable;
-		// Detachment handling, as on the other adapters: skip a stale pair,
-		// and skip start/active when either side has left the world; an end
-		// still reaches the side that remains.
+		// Detachment handling, as on the other adapters: skip start/active
+		// when either side has left the world; an end still reaches the side
+		// that remains.
 		const ancA = (rA as Renderable & { ancestor?: object | null }).ancestor;
 		const ancB = (rB as Renderable & { ancestor?: object | null }).ancestor;
 		// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- runtime guard: ancestor is set to null by Container on removeChild
@@ -1536,6 +1718,17 @@ export class RapierAdapter implements PhysicsAdapter {
 		} else if (aDetached || bDetached) {
 			return;
 		}
+		// a hook earlier in this dispatch may have removed a body: its
+		// renderable hears nothing from then on
+		const reaches = (side: number, receiver: Renderable, detached: boolean) => {
+			if ((sides & side) === 0 || detached || !this.bodyMap.has(receiver)) {
+				return false;
+			}
+			if (record !== undefined) {
+				record.reached |= side;
+			}
+			return true;
+		};
 
 		// a separated pair has no contact: identity only, as on the others
 		const { nx, ny, depth } =
@@ -1550,76 +1743,8 @@ export class RapierAdapter implements PhysicsAdapter {
 				: "onCollision";
 		};
 
-		this._dispatchShapePair(e1, e2, nx, ny, depth, phase, aDetached, bDetached);
-
-		const pair = { collider1: h1, collider2: h2 };
-		// the normal points from A to B: A escapes along its opposite, B
-		// along it
-		const responseAB = {
-			a: rA,
-			b: rB,
-			normal: { x: -nx, y: -ny },
-			depth,
-			pair,
-		};
-		const responseBA = {
-			a: rB,
-			b: rA,
-			normal: { x: nx, y: ny },
-			depth,
-			pair,
-		};
-		// a handler earlier in this dispatch may have removed this body
-		if (!aDetached && this.bodyMap.has(rA)) {
-			const fnA = (rA as Renderable & Record<string, unknown>)[
-				methodForSide(rA)
-			];
-			if (typeof fnA === "function") {
-				(fnA as (response: unknown, other: Renderable) => unknown).call(
-					rA,
-					responseAB,
-					rB,
-				);
-			}
-		}
-		if (!bDetached && this.bodyMap.has(rB)) {
-			const fnB = (rB as Renderable & Record<string, unknown>)[
-				methodForSide(rB)
-			];
-			if (typeof fnB === "function") {
-				(fnB as (response: unknown, other: Renderable) => unknown).call(
-					rB,
-					responseBA,
-					rA,
-				);
-			}
-		}
-	}
-
-	/**
-	 * Fire the shape-level collision hooks for one pair of colliders. Each
-	 * melonJS shape is one collider (a concave polygon, one per triangle), so
-	 * Rapier's per-collider events name the shapes.
-	 * @param e1 - the first collider's entry
-	 * @param e2 - the second collider's entry
-	 * @param nx - contact normal x, from the first to the second
-	 * @param ny - contact normal y, from the first to the second
-	 * @param depth - penetration depth, in pixels
-	 * @param phase - which lifecycle hook to fire
-	 * @param aDetached - true when the first renderable has left the world
-	 * @param bDetached - true when the second renderable has left the world
-	 */
-	private _dispatchShapePair(
-		e1: ColliderEntry,
-		e2: ColliderEntry,
-		nx: number,
-		ny: number,
-		depth: number,
-		phase: "start" | "active" | "end",
-		aDetached: boolean,
-		bDetached: boolean,
-	): void {
-		const method =
+		// the shape-level hooks first
+		const shapeMethod =
 			phase === "start"
 				? "onShapeCollisionStart"
 				: phase === "end"
@@ -1628,18 +1753,19 @@ export class RapierAdapter implements PhysicsAdapter {
 		const isTrigger =
 			(e1.shape as { isTrigger?: boolean }).isTrigger === true ||
 			(e2.shape as { isTrigger?: boolean }).isTrigger === true;
-		const emit = (
+		const emitShape = (
 			own: ColliderEntry,
 			other: ColliderEntry,
-			ownNx: number,
-			ownNy: number,
+			sign: number,
 		): void => {
 			const receiver = own.renderable;
-			const fn = (receiver as Renderable & Record<string, unknown>)[method];
-			// skipped too when an earlier handler removed this body
-			if (typeof fn !== "function" || !this.bodyMap.has(receiver)) {
-				return;
-			}
+			const fn = (receiver as Renderable & Record<string, unknown>)[
+				shapeMethod
+			];
+			if (typeof fn !== "function") return;
+			// (`+ 0` keeps a zero normal from reading as -0)
+			const ownNx = sign * nx + 0;
+			const ownNy = sign * ny + 0;
 			(fn as (contact: unknown, other: Renderable) => unknown).call(
 				receiver,
 				{
@@ -1655,8 +1781,8 @@ export class RapierAdapter implements PhysicsAdapter {
 					normal: { x: ownNx, y: ownNy },
 					// the SAT fields `ShapeCollisionContact` declares, in the
 					// builtin's convention
-					overlapN: { x: -ownNx, y: -ownNy },
-					overlapV: { x: -ownNx * depth, y: -ownNy * depth },
+					overlapN: { x: -ownNx + 0, y: -ownNy + 0 },
+					overlapV: { x: -ownNx * depth + 0, y: -ownNy * depth + 0 },
 					overlapZ: 0,
 					overlapNZ: 0,
 					normalZ: 0,
@@ -1664,11 +1790,38 @@ export class RapierAdapter implements PhysicsAdapter {
 				other.renderable,
 			);
 		};
-		if (!aDetached) {
-			emit(e1, e2, -nx, -ny);
+		// the normal points from A to B: A escapes along its opposite, B
+		// along it
+		if (reaches(SHAPE_A, rA, aDetached)) {
+			emitShape(e1, e2, -1);
 		}
-		if (!bDetached) {
-			emit(e2, e1, nx, ny);
+		if (reaches(SHAPE_B, rB, bDetached)) {
+			emitShape(e2, e1, 1);
+		}
+
+		const pair = { collider1: h1, collider2: h2 };
+		const emit = (receiver: Renderable, other: Renderable, sign: number) => {
+			const fn = (receiver as Renderable & Record<string, unknown>)[
+				methodForSide(receiver)
+			];
+			if (typeof fn !== "function") return;
+			(fn as (response: unknown, other: Renderable) => unknown).call(
+				receiver,
+				{
+					a: receiver,
+					b: other,
+					normal: { x: sign * nx + 0, y: sign * ny + 0 },
+					depth,
+					pair,
+				},
+				other,
+			);
+		};
+		if (reaches(SIDE_A, rA, aDetached)) {
+			emit(rA, rB, -1);
+		}
+		if (reaches(SIDE_B, rB, bDetached)) {
+			emit(rB, rA, 1);
 		}
 	}
 

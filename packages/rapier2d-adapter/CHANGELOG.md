@@ -1,9 +1,21 @@
 # Changelog
 
-## 1.2.0 - _unreleased_
+## 1.1.3 - _2026-11-16_
 
-### Added
-- `isSleeping()`: whether Rapier has put a body to sleep
+### Fixed
+- A `"slider"` joint keeps the angle between the two bodies as it was when the joint was made, as `JointDefinition` says and as a Box2D prismatic joint set up from the bodies does: the second body slides along the first body's axis and turns with it. It used to turn the second body onto the first body's angle. Bodies joined at the same angle behave as before. A game that relied on the turn sets the second body's angle with `setAngle()` before `addJoint()`
+
+## 1.1.2 - _2026-11-16_
+
+### Fixed
+- A body removed inside an `onCollisionStart`, `onCollisionActive` or shape-level hook no longer makes the other renderable hear `onCollisionEnd` before its `onCollisionStart`, with no end after it: the side going out hears the end at once, the other once the pair's hooks are done, and only a side that heard the start hears the end. Removing that body again from the partner's end hook no longer crashes Rapier (`RuntimeError: unreachable`)
+- A start event Rapier queued for a collider that a hook removed earlier in the same step no longer leaves a stale touching pair behind: it stayed until Rapier's stop event
+- `step()` with a `dt` that is `NaN`, infinite, zero or negative simulates nothing; a `NaN` or `Infinity` step used to freeze every awake body for good, with no gravity afterwards
+- `raycast()` and `queryAABB()` on a destroyed adapter return `null` and `[]`; they threw `Cannot read properties of undefined`
+- A `NaN` `maxVelocity` on an axis no longer turns the body's velocity into `NaN`: it caps nothing. A negative one caps by its size; it used to pin the velocity at that speed, even on a body at rest
+- `setMaxVelocity()` on a renderable with no body yet no longer keeps the renderable alive until `destroy()`: the cap is held weakly, and still applies once `addChild()` builds the body, unless the `bodyDef` has a `maxVelocity` of its own
+- A second `addBody()` for the same renderable replaces its body; the first Rapier body and its records were leaked, and kept colliding. An `addBody()` refused for an unsupported shape no longer leaves an orphan Rapier body in the world
+- A contact normal has no negative zero: the side of an axis-aligned contact that is handed the negated normal got `{ x: -0, y: -1 }`, so `toEqual({ x: 0, y: -1 })` failed; so did the zero normal of an `onCollisionEnd` and of a sensor contact, and the shape-level `normal`, `overlapN` and `overlapV`
 
 ## 1.1.1 - _2026-11-14_
 
