@@ -17,6 +17,7 @@
 - glTF: a skinned mesh was placed and bounded by its own node's transform, which glTF says it ignores, so a rigged character could load offset and with wrong `bounds`
 - `GLTFModel`: a clip at a negative `speed` froze on its first frame and never ended; it now plays backwards
 - `Camera3d`: with a `zoom` other than 1, `worldToScreen` and `screenToRay` called while drawing answered for the wrong size
+- TypeScript: the declarations of `InstancedMesh` and `Renderable#translate()` no longer fail to type-check in a project without `skipLibCheck`; `translate()` is now typed to take any `{x, y}` point, as it already did at runtime
 
 ## [20.15.1] (melonJS 2) - _2026-11-14_
 
