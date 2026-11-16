@@ -176,15 +176,55 @@ function hitTestRayRegions(pointer: Pointer, isMove: boolean): boolean {
  */
 export let _app: Application;
 on(GAME_INIT, (app: Application) => {
+	// A new Application (the last one destroyed, or a second one on the
+	// page): the listeners are on the previous app's canvas, which no longer
+	// draws anything, so the new canvas got no pointer events at all. Move
+	// them over, if they were on.
+	const rebind = pointerInitialized && app !== _app;
+	if (rebind) {
+		disablePointerEvent();
+	}
 	/**
 	 * @ignore
 	 * @internal
 	 */
 	_app = app;
+	if (rebind) {
+		enablePointerEvent();
+	}
 });
 
 // some useful flags
 let pointerInitialized = false;
+let pointerPoolFilled = false;
+
+/**
+ * Every DOM listener {@link enablePointerEvent} added, so that
+ * {@link disablePointerEvent} can take them off again.
+ * @ignore
+ * @internal
+ */
+const boundListeners: Array<{
+	target: EventTarget;
+	type: string;
+	listener: EventListener;
+	options: AddEventListenerOptions;
+}> = [];
+
+/**
+ * `addEventListener`, recorded in {@link boundListeners}
+ * @ignore
+ * @internal
+ */
+function listen(
+	target: EventTarget,
+	type: string,
+	listener: EventListener,
+	options: AddEventListenerOptions,
+): void {
+	target.addEventListener(type, listener, options);
+	boundListeners.push({ target, type, listener, options });
+}
 
 // Track last event timestamp to prevent firing events out of order
 let lastTimeStamp = 0;
@@ -266,7 +306,7 @@ function registerEventListener(
 ): void {
 	for (let x = 0; x < eventList.length; x++) {
 		if (POINTER_MOVE.indexOf(eventList[x]) === -1) {
-			pointerEventTarget!.addEventListener(eventList[x], callback, {
+			listen(pointerEventTarget!, eventList[x], callback as EventListener, {
 				passive: !preventDefault,
 			});
 		}
@@ -286,9 +326,13 @@ function enablePointerEvent(): void {
 		// the current pointer area
 		currentPointer = new Rect(0, 0, 1, 1);
 
-		// instantiate a pool of pointer catched
-		for (let v = 0; v < device.maxTouchPoints; v++) {
-			T_POINTERS.push(new Pointer());
+		// instantiate a pool of pointer catched (once: they all come back to
+		// it, so enabling again after a disable has nothing to add)
+		if (!pointerPoolFilled) {
+			for (let v = 0; v < device.maxTouchPoints; v++) {
+				T_POINTERS.push(new Pointer());
+			}
+			pointerPoolFilled = true;
 		}
 
 		if (pointerEventTarget === null || pointerEventTarget === undefined) {
@@ -317,7 +361,8 @@ function enablePointerEvent(): void {
 
 		if (device.autoFocus) {
 			device.focus();
-			pointerEventTarget.addEventListener(
+			listen(
+				pointerEventTarget,
 				activeEventList[2], // MOUSE/POINTER DOWN
 				() => {
 					device.focus();
@@ -331,7 +376,8 @@ function enablePointerEvent(): void {
 		if (throttlingInterval < 17) {
 			for (let i = 0; i < events.length; i++) {
 				if (activeEventList.indexOf(events[i]) !== -1) {
-					pointerEventTarget.addEventListener(
+					listen(
+						pointerEventTarget,
 						events[i],
 						onMoveEvent,
 						{ passive: true }, // do not preventDefault on Move events
@@ -341,7 +387,8 @@ function enablePointerEvent(): void {
 		} else {
 			for (let i = 0; i < events.length; i++) {
 				if (activeEventList.indexOf(events[i]) !== -1) {
-					pointerEventTarget.addEventListener(
+					listen(
+						pointerEventTarget,
 						events[i],
 						throttle(onMoveEvent, throttlingInterval),
 						{ passive: true }, // do not preventDefault on Move events
@@ -354,7 +401,8 @@ function enablePointerEvent(): void {
 
 		// set a on change listener on pointerlock if supported
 		if (device.hasPointerLockSupport) {
-			globalThis.document.addEventListener(
+			listen(
+				globalThis.document,
 				POINTERLOCKCHANGE,
 				() => {
 					// change the locked status accordingly
@@ -363,13 +411,34 @@ function enablePointerEvent(): void {
 					// emit the corresponding internal event
 					emit(POINTERLOCKCHANGE, locked);
 				},
-				true,
+				{ capture: true },
 			);
 		}
 
 		// all done !
 		pointerInitialized = true;
 	}
+}
+
+/**
+ * Take every listener {@link enablePointerEvent} added off its target and
+ * forget the target, so that the next {@link enablePointerEvent} binds to
+ * the canvas of the current Application. Registered regions and
+ * `bindPointer` bindings are kept.
+ * @ignore
+ * @internal
+ */
+function disablePointerEvent(): void {
+	for (const { target, type, listener, options } of boundListeners) {
+		target.removeEventListener(type, listener, options);
+	}
+	boundListeners.length = 0;
+	// events normalized but not dispatched belong to the old canvas
+	T_POINTERS.push(...normalizedEvents);
+	normalizedEvents.length = 0;
+	pointerEventTarget = null;
+	locked = false;
+	pointerInitialized = false;
 }
 
 /**
@@ -880,6 +949,11 @@ function normalizeEvent(originalEvent: any): Pointer[] {
  * @internal
  */
 function onMoveEvent(e: Event): void {
+	// the canvas of an app destroyed with `destroy(false)`, still in the
+	// page: its world is gone, so there is nothing to dispatch to
+	if (!_app.isInitialized) {
+		return;
+	}
 	// dispatch mouse event to registered object
 	dispatchEvent(normalizeEvent(e));
 	// do not prevent default on moveEvent :
@@ -891,6 +965,10 @@ function onMoveEvent(e: Event): void {
  * @internal
  */
 function onPointerEvent(e: Event): void {
+	// see onMoveEvent
+	if (!_app.isInitialized) {
+		return;
+	}
 	// normalize eventTypes
 	normalizeEvent(e);
 
