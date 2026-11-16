@@ -1,6 +1,6 @@
 ---
 name: melonjs-physics
-description: "Use this skill for collision, physics bodies, movement, and spatial queries in melonJS — the built-in SAT world and the planck, matter, Rapier and Rapier 3D adapters. Covers bodyDef vs Body, collision types and masks, the collision callback family and their firing rules, raycast/queryAABB/querySphere, how the adapters differ, and which one to pick for a given game. Triggers on: which physics engine, choosing an adapter, switching adapters, setAdapter, PhysicsAdapterClass, create, rotation collision, rotating body, torque, joints, addJoint, removeJoint, hinge, rope, weld, slider, stacking, Body, bodyDef, collision, collisionType, collisionMask, onCollision, onCollisionStart, onCollisionActive, raycast, queryAABB, querySphere, raycast3d, PlanckAdapter, MatterAdapter, RapierAdapter, Rapier3dAdapter, enableCcd, gravity, velocity, applyForce, isGrounded, isSensor, isTrigger, onShapeCollisionStart, kinematic, subSteps, pixelsPerMeter, Box3d, Sphere, getBodyShapes, Capsule3d, TriangleMesh3d, slope, SAT."
+description: "Use this skill for collision, physics bodies, movement, and spatial queries in melonJS: the built-in SAT world and the planck, matter, Rapier and Rapier 3D adapters. Covers bodyDef vs Body, collision types and masks, the collision callback family and their firing rules, raycast/queryAABB/querySphere, how the adapters differ, and which one to pick for a given game. Triggers on: which physics engine, choosing an adapter, switching adapters, setAdapter, PhysicsAdapterClass, create, rotation collision, rotating body, torque, joints, addJoint, removeJoint, hinge, rope, weld, slider, stacking, Body, bodyDef, collision, collisionType, collisionMask, onCollision, onCollisionStart, onCollisionActive, raycast, queryAABB, querySphere, raycast3d, PlanckAdapter, MatterAdapter, RapierAdapter, Rapier3dAdapter, enableCcd, gravity, velocity, applyForce, isGrounded, isSleeping, isSensor, isTrigger, onShapeCollisionStart, kinematic, subSteps, pixelsPerMeter, Box3d, Sphere, getBodyShapes, Capsule3d, TriangleMesh3d, slope, SAT."
 license: MIT
 ---
 
@@ -1252,6 +1252,16 @@ Same call, different magnitude — these are the ones that waste an afternoon:
   active contacts on matter, planck and Rapier, counting a solid contact that
   pushes the body up (a sensor contact counts when the other body is below).
   On every adapter the side of a wall is not ground.
+- **`isSleeping(renderable)`** (optional, melonJS 20.16) reads whether the
+  engine put a dynamic body to rest: the way to tell a throw, a stack or a
+  level has settled. Call it as `world.adapter.isSleeping?.(r) ?? false`.
+  matter-adapter 1.8, planck-adapter 1.9 and rapier2d-adapter 1.2 implement
+  it; matter sleeps only with `matterEngineOptions: { enableSleeping: true }`.
+  Always `false` on the built-in (no sleeping), for a static or kinematic body
+  (a `"kinematic"` body on matter is a dynamic one, and sleeps like one), and
+  for a renderable with no body. A velocity, force, impulse or position
+  written to a sleeping body wakes it on every adapter (on matter since 1.8.0;
+  before, it was dropped).
 
 Adapter-specific escapes exist (`(this.body as MatterAdapter.Body).frictionAir`,
 `adapter.matter.Constraint.create(...)`) but are not portable — flag them if you
