@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.3.0 - _unreleased_
+## 1.3.0 - _2026-11-16_
 
 ### Changed
 - gzip and zlib are decompressed with [fflate](https://github.com/101arrowz/fflate) instead of pako: the plugin is about 16 KB minified instead of 59 KB
