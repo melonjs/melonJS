@@ -470,7 +470,7 @@ describe("Rapier3dAdapter", () => {
 				const now = adapter.getRotation(mesh);
 				const at = drawn(mesh);
 				for (let i = 0; i < at.length; i++) {
-					const p = now.rotate(
+					const p = now.apply(
 						new Vector3d(rest[i * 3], rest[i * 3 + 1], rest[i * 3 + 2]),
 					);
 					expectNear(at[i], {

@@ -195,11 +195,25 @@ describe("Physics : BuiltinAdapter 3D interface", () => {
 			expect(r.depth).toBe(42);
 		});
 
-		it("a Vector3d sets the depth", () => {
-			const { r } = make();
+		it("a Vector3d sets the depth of a body that lives in 3D", () => {
+			const { r } = make(new Box3d(0, 0, 0, 32, 32, 32));
 			adapter.setPosition(r, new Vector3d(5, 6, -7));
 			expect(r.depth).toBe(-7);
 			expect(r.pos.z).toBe(-7);
+		});
+
+		it("a flat body keeps its depth (its draw order) whatever it is given", () => {
+			const { r } = make();
+			r.depth = 3;
+			// a renderable's `pos` is declared a Vector2d, but is a 3D vector
+			// at run time: moving one body onto another must not copy its
+			// draw order across
+			const other = new Renderable(40, 50, 8, 8);
+			other.depth = 12;
+			adapter.setPosition(r, other.pos);
+			expect([r.pos.x, r.pos.y, r.depth]).toEqual([40, 50, 3]);
+			adapter.setPosition(r, new Vector3d(1, 2, 99));
+			expect([r.pos.x, r.pos.y, r.depth]).toEqual([1, 2, 3]);
 		});
 	});
 
@@ -299,7 +313,7 @@ describe("Physics : BuiltinAdapter 3D interface", () => {
 				);
 			adapter.setRotation(r, q);
 			const seen = new Vector3d(1, 0, 0);
-			q.rotate(seen);
+			q.apply(seen);
 			expect(body.angle).toBeCloseTo(Math.atan2(seen.y, seen.x), 6);
 		});
 

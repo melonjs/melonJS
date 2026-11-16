@@ -25,7 +25,7 @@ const SLERP_EPSILON = 1e-6;
  * // a quarter turn about the vertical axis
  * const turn = new Quaternion().setFromAxisAngle(new Vector3d(0, 1, 0), Math.PI / 2);
  * // where it takes +X
- * const v = turn.rotate(new Vector3d(1, 0, 0));
+ * const v = turn.apply(new Vector3d(1, 0, 0));
  * // and the same turn as a matrix, for a renderable's transform
  * mesh.currentTransform.identity().multiply(turn.toMatrix3d());
  */
@@ -117,14 +117,18 @@ export class Quaternion {
 
 	/**
 	 * The rotation of `angle` radians about `axis`. The axis need not be of
-	 * unit length; one of length 0 gives no rotation.
+	 * unit length; one of length 0, or an angle that is not a finite number,
+	 * gives no rotation.
+	 *
+	 * Mind the order: the axis comes first here, where
+	 * {@link Matrix3d#rotate} takes the angle first.
 	 * @param axis - the axis to turn about
 	 * @param angle - the angle, in radians
 	 * @returns this, for chaining
 	 */
 	setFromAxisAngle(axis: Vector3d, angle: number) {
 		const len = Math.hypot(axis.x, axis.y, axis.z);
-		if (!(len > 0) || !Number.isFinite(len)) {
+		if (!(len > 0) || !Number.isFinite(len) || !Number.isFinite(angle)) {
 			return this.identity();
 		}
 		const s = Math.sin(angle / 2) / len;
@@ -132,53 +136,47 @@ export class Quaternion {
 	}
 
 	/**
-	 * The rotation held in a matrix: its upper 3×3, which must be a pure
-	 * rotation (a scale is not taken out). The inverse of
-	 * {@link Quaternion#toMatrix3d}.
+	 * The rotation held in a matrix: its upper 3×3. A scale along each axis
+	 * is taken out, so a renderable's `currentTransform` can be read as it
+	 * is; a mirror or a shear is not, and a matrix with an axis scaled to
+	 * nothing gives no rotation. The inverse of {@link Quaternion#toMatrix3d}.
 	 * @param m - the matrix to read
 	 * @returns this, for chaining
 	 */
 	setFromMatrix3d(m: Matrix3d) {
 		const v = m.val;
+		// the length of each column is the scale along that axis
+		const sx = Math.hypot(v[0], v[1], v[2]);
+		const sy = Math.hypot(v[4], v[5], v[6]);
+		const sz = Math.hypot(v[8], v[9], v[10]);
+		if (!(sx > 0) || !(sy > 0) || !(sz > 0)) {
+			return this.identity();
+		}
 		// column-major: element (row r, column c) is v[c * 4 + r]
-		const m00 = v[0];
-		const m11 = v[5];
-		const m22 = v[10];
+		const m00 = v[0] / sx;
+		const m10 = v[1] / sx;
+		const m20 = v[2] / sx;
+		const m01 = v[4] / sy;
+		const m11 = v[5] / sy;
+		const m21 = v[6] / sy;
+		const m02 = v[8] / sz;
+		const m12 = v[9] / sz;
+		const m22 = v[10] / sz;
 		const trace = m00 + m11 + m22;
 		// the largest of w, x, y, z is recovered first: dividing by a small
 		// one would lose the others' precision
 		if (trace > 0) {
 			const s = 0.5 / Math.sqrt(trace + 1);
-			this.set(
-				(v[6] - v[9]) * s,
-				(v[8] - v[2]) * s,
-				(v[1] - v[4]) * s,
-				0.25 / s,
-			);
+			this.set((m21 - m12) * s, (m02 - m20) * s, (m10 - m01) * s, 0.25 / s);
 		} else if (m00 > m11 && m00 > m22) {
 			const s = 2 * Math.sqrt(1 + m00 - m11 - m22);
-			this.set(
-				0.25 * s,
-				(v[4] + v[1]) / s,
-				(v[8] + v[2]) / s,
-				(v[6] - v[9]) / s,
-			);
+			this.set(0.25 * s, (m01 + m10) / s, (m02 + m20) / s, (m21 - m12) / s);
 		} else if (m11 > m22) {
 			const s = 2 * Math.sqrt(1 + m11 - m00 - m22);
-			this.set(
-				(v[4] + v[1]) / s,
-				0.25 * s,
-				(v[9] + v[6]) / s,
-				(v[8] - v[2]) / s,
-			);
+			this.set((m01 + m10) / s, 0.25 * s, (m12 + m21) / s, (m02 - m20) / s);
 		} else {
 			const s = 2 * Math.sqrt(1 + m22 - m00 - m11);
-			this.set(
-				(v[8] + v[2]) / s,
-				(v[9] + v[6]) / s,
-				0.25 * s,
-				(v[1] - v[4]) / s,
-			);
+			this.set((m02 + m20) / s, (m12 + m21) / s, 0.25 * s, (m10 - m01) / s);
 		}
 		return this.normalize();
 	}
@@ -251,12 +249,13 @@ export class Quaternion {
 
 	/**
 	 * Turn this into the opposite rotation. For a unit quaternion this is
-	 * its conjugate, `(-x, -y, -z, w)`.
+	 * its conjugate, `(-x, -y, -z, w)`. A zero quaternion, or one that is
+	 * not a finite number, becomes no rotation.
 	 * @returns this, for chaining
 	 */
 	invert() {
-		const d = this.lengthSquared();
-		if (!(d > 0)) {
+		const d = this.length2();
+		if (!(d > 0) || !Number.isFinite(d)) {
 			return this.identity();
 		}
 		return this.set(-this.x / d, -this.y / d, -this.z / d, this.w / d);
@@ -273,10 +272,10 @@ export class Quaternion {
 	}
 
 	/**
-	 * The squared length.
+	 * The squared length, named as {@link Vector3d#length2} is.
 	 * @returns the squared length
 	 */
-	lengthSquared() {
+	length2() {
 		return this.dot(this);
 	}
 
@@ -285,7 +284,7 @@ export class Quaternion {
 	 * @returns the length
 	 */
 	length() {
-		return Math.sqrt(this.lengthSquared());
+		return Math.sqrt(this.length2());
 	}
 
 	/**
@@ -340,23 +339,27 @@ export class Quaternion {
 	}
 
 	/**
-	 * Turn a vector by this rotation, in place.
+	 * Turn a vector by this rotation, in place: what {@link Matrix3d#apply}
+	 * does with a matrix. The vector is changed and returned, not this
+	 * quaternion.
 	 * @param v - the vector to turn
 	 * @returns `v`, turned
+	 * @example
+	 * // where a quarter turn about Y takes +X, keeping the original
+	 * const where = turn.apply(new Vector3d(1, 0, 0));
 	 */
-	rotate(v: Vector3d) {
+	apply(v: Vector3d) {
 		const { x, y, z, w } = this;
 		// v' = v + 2w(q × v) + 2 q × (q × v)
 		const tx = 2 * (y * v.z - z * v.y);
 		const ty = 2 * (z * v.x - x * v.z);
 		const tz = 2 * (x * v.y - y * v.x);
-		const vx = v.x + w * tx + (y * tz - z * ty);
-		const vy = v.y + w * ty + (z * tx - x * tz);
-		const vz = v.z + w * tz + (x * ty - y * tx);
-		v.x = vx;
-		v.y = vy;
-		v.z = vz;
-		return v;
+		// through `set`, so an observable vector reports the change once
+		return v.set(
+			v.x + w * tx + (y * tz - z * ty),
+			v.y + w * ty + (z * tx - x * tz),
+			v.z + w * tz + (x * ty - y * tx),
+		);
 	}
 
 	/**

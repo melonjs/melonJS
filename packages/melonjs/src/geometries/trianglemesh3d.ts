@@ -60,13 +60,19 @@ export function bakeMeshVertices(mesh: MeshGeometrySource): Float32Array {
 }
 
 /**
- * The 3D and 2D bounds of a vertex list.
+ * The 3D bounds of a vertex list, moved by an offset. A vertex with a
+ * component that is not a finite number is left out.
  * @param vertices - `[x, y, z, ...]`
+ * @param offset - added to every vertex (a shape's `pos`)
  * @param out - the AABB3d to write into
- * @returns `out`, empty for no vertices
+ * @returns `out`, a point at `offset` for no vertices
  * @ignore
  */
-export function boundsOfVertices(vertices: ArrayLike<number>, out: AABB3d) {
+export function boundsOfVertices(
+	vertices: ArrayLike<number>,
+	offset: Vector3d,
+	out: AABB3d,
+) {
 	let minX = Infinity;
 	let minY = Infinity;
 	let minZ = Infinity;
@@ -88,10 +94,16 @@ export function boundsOfVertices(vertices: ArrayLike<number>, out: AABB3d) {
 		if (z > maxZ) maxZ = z;
 	}
 	if (minX === Infinity) {
-		out.setMinMax(0, 0, 0, 0, 0, 0);
-	} else {
-		out.setMinMax(minX, minY, minZ, maxX, maxY, maxZ);
+		minX = minY = minZ = maxX = maxY = maxZ = 0;
 	}
+	out.setMinMax(
+		minX + offset.x,
+		minY + offset.y,
+		minZ + offset.z,
+		maxX + offset.x,
+		maxY + offset.y,
+		maxZ + offset.z,
+	);
 	return out;
 }
 
@@ -232,17 +244,7 @@ export class TriangleMesh3d {
 	 * @returns the 3D bounds
 	 */
 	getBounds3d(out?: AABB3d): AABB3d {
-		const target = boundsOfVertices(this.vertices, out ?? new AABB3d());
-		const { min, max } = target;
-		target.setMinMax(
-			min.x + this.pos.x,
-			min.y + this.pos.y,
-			min.z + this.pos.z,
-			max.x + this.pos.x,
-			max.y + this.pos.y,
-			max.z + this.pos.z,
-		);
-		return target;
+		return boundsOfVertices(this.vertices, this.pos, out ?? new AABB3d());
 	}
 
 	/**

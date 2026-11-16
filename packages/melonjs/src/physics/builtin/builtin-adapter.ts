@@ -637,12 +637,9 @@ export default class BuiltinAdapter implements PhysicsAdapter {
 	}
 
 	setVelocity(renderable: Renderable, v: Vector2d | Vector3d): void {
-		const body = renderable.body as Body;
-		body.vel.set(v.x, v.y);
-		// a Vector3d also sets the velocity along the depth axis
-		if (typeof (v as Vector3d).z === "number") {
-			body.velZ = (v as Vector3d).z;
-		}
+		// a Vector3d also sets the velocity along the depth axis; a Vector2d
+		// has no `z`, which leaves it as it was
+		(renderable.body as Body).setVelocity(v.x, v.y, (v as Vector3d).z);
 	}
 	getVelocity3d(renderable: Renderable, out?: Vector3d): Vector3d {
 		const body = renderable.body as Body | undefined;
@@ -679,25 +676,32 @@ export default class BuiltinAdapter implements PhysicsAdapter {
 	}
 
 	applyImpulse(renderable: Renderable, impulse: Vector2d | Vector3d): void {
-		// impulse = mass * dv  →  dv = impulse / mass
-		const body = renderable.body as Body;
-		const invMass = body.mass > 0 ? 1 / body.mass : 0;
-		body.vel.x += impulse.x * invMass;
-		body.vel.y += impulse.y * invMass;
-		const jz = (impulse as Vector3d).z;
-		if (typeof jz === "number") {
-			body.velZ += jz * invMass;
-		}
+		// impulse = mass * dv  →  dv = impulse / mass. A Vector3d also kicks
+		// along the depth axis; a Vector2d has no `z`, which leaves it alone
+		(renderable.body as Body).applyImpulse(
+			impulse.x,
+			impulse.y,
+			(impulse as Vector3d).z,
+		);
 	}
 
+	/**
+	 * Move a renderable and its body. A {@link Vector3d} also sets the depth
+	 * of a body that lives in 3D, one with a {@link Box3d}, {@link Sphere} or
+	 * other 3D shape; a flat body keeps its depth, which in a 2D game is its
+	 * draw order, whatever it is given. So `setPosition(bullet, gun.pos)`
+	 * (a renderable's `pos` is a 3D vector at run time) moves a flat bullet
+	 * without moving it in front of or behind anything.
+	 * @param renderable - the body's renderable
+	 * @param p - the new position, in `renderable.pos` space
+	 */
 	setPosition(renderable: Renderable, p: Vector2d | Vector3d): void {
-		// `pos` is an ObservableVector3d on Renderable. A Vector2d keeps the
-		// existing Z (`pos.z` is the depth field, set independently); a
-		// Vector3d places the body in depth too.
 		renderable.pos.x = p.x;
 		renderable.pos.y = p.y;
-		if (typeof (p as Vector3d).z === "number") {
-			renderable.depth = (p as Vector3d).z;
+		const z = (p as Vector3d).z;
+		const body = renderable.body as Body | undefined;
+		if (typeof z === "number" && body?.hasDepth === true) {
+			renderable.depth = z;
 		}
 	}
 
@@ -731,11 +735,12 @@ export default class BuiltinAdapter implements PhysicsAdapter {
 	 * @param q - the orientation
 	 */
 	setRotation(renderable: Renderable, q: Quaternion): void {
-		_rotScratch.set(1, 0, 0);
-		q.rotate(_rotScratch);
+		q.apply(_rotScratch.set(1, 0, 0));
+		const planar =
+			_rotScratch.x * _rotScratch.x + _rotScratch.y * _rotScratch.y;
 		// a turn that takes +X (all but float noise) along Z has no part
-		// about Z
-		if (_rotScratch.x * _rotScratch.x + _rotScratch.y * _rotScratch.y < 1e-12) {
+		// about Z, and neither has one that is not a number: the angle stays
+		if (!(planar >= 1e-12) || !Number.isFinite(planar)) {
 			return;
 		}
 		(renderable.body as Body).setAngle(

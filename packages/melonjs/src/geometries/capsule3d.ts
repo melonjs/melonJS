@@ -89,11 +89,12 @@ export class Capsule3d {
 
 	/**
 	 * half the length of the straight part between the two rounded ends: `0`
-	 * for a capsule that is a sphere. What Rapier calls the capsule's half
-	 * height.
+	 * for a capsule that is a sphere, and never less, whatever `radius` and
+	 * `height` were set to since {@link Capsule3d#setShape}. What Rapier
+	 * calls the capsule's half height.
 	 */
 	get halfSegment(): number {
-		return this.height / 2 - this.radius;
+		return Math.max(this.height / 2 - Math.abs(this.radius), 0) || 0;
 	}
 
 	/**
@@ -117,8 +118,10 @@ export class Capsule3d {
 	 * @returns the XY footprint
 	 */
 	getBounds(): Bounds {
-		const r = this.radius;
-		const h = this.height / 2;
+		const r = Math.abs(this.radius);
+		// not `height / 2`: the two can be written apart, and a capsule is
+		// never shorter than its two ends
+		const h = this.halfSegment + r;
 		this._bounds.setMinMax(
 			this.pos.x - r,
 			this.pos.y - h,
@@ -135,8 +138,10 @@ export class Capsule3d {
 	 */
 	getBounds3d(out?: AABB3d): AABB3d {
 		const target = out ?? new AABB3d();
-		const r = this.radius;
-		const h = this.height / 2;
+		const r = Math.abs(this.radius);
+		// not `height / 2`: the two can be written apart, and a capsule is
+		// never shorter than its two ends
+		const h = this.halfSegment + r;
 		target.setMinMax(
 			this.pos.x - r,
 			this.pos.y - h,
@@ -172,13 +177,14 @@ export class Capsule3d {
 	 * @returns a new Box3d
 	 */
 	toBox3d(): Box3d {
+		const r = Math.abs(this.radius);
 		return new Box3d(
 			this.pos.x,
 			this.pos.y,
 			this.pos.z,
-			this.radius * 2,
-			this.height,
-			this.radius * 2,
+			r * 2,
+			(this.halfSegment + r) * 2,
+			r * 2,
 		);
 	}
 

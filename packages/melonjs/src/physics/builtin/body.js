@@ -902,7 +902,7 @@ export default class Body {
 	 * per body only and ignores these. Note that under planck, the body-wide
 	 * setters (`setCollisionType`, `setCollisionMask`, `setSensor`) write every
 	 * fixture and so overwrite per-shape values.
-	 * @param {Rect|Polygon|Line|Ellipse|Point|Point[]|Bounds|object} shape - a shape or JSON object
+	 * @param {Rect|Polygon|Line|Ellipse|Point|Point[]|Bounds|Box3d|Sphere|Capsule3d|ConvexHull3d|TriangleMesh3d|object} shape - a shape or JSON object. A `Capsule3d`, `ConvexHull3d` or `TriangleMesh3d` is stored as its bounding `Box3d` ({@link Capsule3d#toBox3d}), as a `Rect` is stored as a `Polygon`
 	 * @returns {number} the shape array length
 	 * @example
 	 * // add a rectangle shape

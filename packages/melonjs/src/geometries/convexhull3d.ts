@@ -117,17 +117,7 @@ export class ConvexHull3d {
 	 * @returns the 3D bounds
 	 */
 	getBounds3d(out?: AABB3d): AABB3d {
-		const target = boundsOfVertices(this.points, out ?? new AABB3d());
-		const { min, max } = target;
-		target.setMinMax(
-			min.x + this.pos.x,
-			min.y + this.pos.y,
-			min.z + this.pos.z,
-			max.x + this.pos.x,
-			max.y + this.pos.y,
-			max.z + this.pos.z,
-		);
-		return target;
+		return boundsOfVertices(this.points, this.pos, out ?? new AABB3d());
 	}
 
 	/**

@@ -48,7 +48,7 @@ describe("Quaternion", () => {
 		expect(q.isIdentity()).toBe(true);
 		expect(new Quaternion(0, 0, 0, -1).isIdentity()).toBe(true);
 		expect(new Quaternion(0, 0.1, 0, 1).isIdentity()).toBe(false);
-		close(q.rotate(new Vector3d(3, -4, 5)), new Vector3d(3, -4, 5));
+		close(q.apply(new Vector3d(3, -4, 5)), new Vector3d(3, -4, 5));
 	});
 
 	it("turns a vector as Matrix3d#rotate does, about any axis", () => {
@@ -56,7 +56,7 @@ describe("Quaternion", () => {
 			const q = new Quaternion().setFromAxisAngle(axis, angle);
 			const m = new Matrix3d().rotate(angle, axis.clone().normalize());
 			for (const v of [X, Y, Z, new Vector3d(2, -3, 7)]) {
-				close(q.rotate(v.clone()), rotated(m, v), 4);
+				close(q.apply(v.clone()), rotated(m, v), 4);
 			}
 		}
 	});
@@ -64,7 +64,7 @@ describe("Quaternion", () => {
 	it("follows the right-hand rule in the engine's space", () => {
 		// a quarter turn about +Z takes +X to +Y
 		const q = new Quaternion().setFromAxisAngle(Z, Math.PI / 2);
-		close(q.rotate(X.clone()), Y);
+		close(q.apply(X.clone()), Y);
 	});
 
 	it("does not mind the axis's length", () => {
@@ -122,7 +122,7 @@ describe("Quaternion", () => {
 			.rotate(Math.PI / 2, Z)
 			.multiply(new Matrix3d().rotate(Math.PI / 2, X));
 		for (const v of [X, Y, Z]) {
-			close(ab.rotate(v.clone()), rotated(m, v));
+			close(ab.apply(v.clone()), rotated(m, v));
 		}
 		// and premultiply the other way round
 		const ba = a.clone().premultiply(b);
@@ -130,7 +130,7 @@ describe("Quaternion", () => {
 			.rotate(Math.PI / 2, X)
 			.multiply(new Matrix3d().rotate(Math.PI / 2, Z));
 		for (const v of [X, Y, Z]) {
-			close(ba.rotate(v.clone()), rotated(n, v));
+			close(ba.apply(v.clone()), rotated(n, v));
 		}
 	});
 

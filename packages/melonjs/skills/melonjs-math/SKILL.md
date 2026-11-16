@@ -295,15 +295,24 @@ arc with `slerp`.
 
 ```js
 const q = new Quaternion().setFromAxisAngle(new Vector3d(0, 1, 0), Math.PI / 2);
-q.rotate(v);                      // turns v IN PLACE (+X goes to -Z here)
+q.apply(v);                       // turns v IN PLACE (+X goes to -Z here)
 a.multiply(b);                    // a = a × b: b is applied first, then a
 a.slerp(b, 0.25);                 // a quarter of the way from a to b, in place
 mesh.currentTransform.val.set(q.toMatrix3d().val); // its turn as a matrix
 ```
 
-Like the vectors, every method mutates `this` and returns it, so `clone()`
-first to keep the original. A zero or `NaN` axis, or a zero quaternion
-normalized, gives the identity rather than `NaN`.
+Like the vectors, its methods mutate `this` and return it, so `clone()` first
+to keep the original. The two that write somewhere else return what they
+wrote, as their `Matrix3d` namesakes do: `apply(v)` returns `v`, and
+`toMatrix3d(out)` returns the matrix. `length2()` is the squared length, as on
+a vector.
+
+`setFromAxisAngle(axis, angle)` takes the **axis first**, the other way round
+from `Matrix3d#rotate(angle, axis)`. `setFromMatrix3d(m)` reads a turn back
+out of a matrix and takes a scale out on the way, so a renderable's
+`currentTransform` can be read as it is. A zero or `NaN` axis, an angle that
+is not finite, or a zero quaternion normalized, gives the identity rather than
+`NaN`.
 
 ## Utilities
 
@@ -359,6 +368,7 @@ and `Math.random()` every frame jitters instead of drifting.
 | `.z` is a type error | `Renderable.pos` is declared `Vector2d` (#1510) |
 | rotation eases oddly between directions | `lerp` on directions; use `slerp` |
 | an orientation came back applied in the wrong order | `a.multiply(b)` applies `b` first; `premultiply` for the other order |
+| `setFromAxisAngle` gives no rotation at all | the arguments are `(axis, angle)`; `(angle, axis)`, the order of `Matrix3d#rotate`, reads as no axis |
 | you built your own 16-number array | `Renderable.currentTransform` is already a `Matrix3d`; write its `val` |
 | a value read back from a matrix differs | `val` is `Float32Array`; it holds float32 |
 | easing differs at 120fps | per-frame `lerp`; use `damp` |

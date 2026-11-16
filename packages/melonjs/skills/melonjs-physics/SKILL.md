@@ -640,7 +640,11 @@ adapter.getAngularVelocity3d?.(crate);  // rad/s about each axis
 ```
 
 The built-in implements them on what it has: `velZ` / `forceZ` along the depth,
-and a turn about Z only (`setRotation` keeps the part of a turn about Z). The
+and a turn about Z only (`setRotation` keeps the part of a turn about Z). Its
+`setPosition` takes a depth only for a body that lives in 3D (one with a
+`Box3d`, `Sphere` or other 3D shape): a flat body keeps its depth, its draw
+order, so `setPosition(bullet, gun.pos)` does not copy the gun's draw order
+across, though a renderable's `pos` is a 3D vector at run time. The
 Rapier 3D adapter is a full 3D solver: bodies turn about every axis, and each
 frame the body's turn is written onto the renderable's `currentTransform`, on
 top of the one it had when its body was made, so a model keeps its rest pose.
@@ -1301,6 +1305,7 @@ yourself through `adapter.world` with `world.removeImpulseJoint()` /
 | "unsupported shape type Rect" from the Rapier 3D adapter | a 2D shape has no depth; give the body a `Box3d` (or a `Sphere` for an `Ellipse`) |
 | a mesh under the Rapier 3D adapter snaps back after its `currentTransform` is changed | the adapter writes the turn every step, from the transform the mesh had when its body was made; turn it with `setRotation` |
 | 3D bodies start one behind the other along Z | added without a depth, so `autoDepth` numbered them; `addChild(child, child.depth)` |
+| `setPosition` with a `Vector3d` leaves the depth as it was (built-in) | the body has no 3D shape: a flat body keeps its depth, which is its draw order; set `renderable.depth` yourself, or give it a `Box3d` |
 | `raycast3d` or `querySphere` finds nothing right after the body is added (Rapier 3D) | Rapier indexes bodies when its world steps; query from the next frame |
 | a blank page for seconds before the loading screen appears (Rapier) | the adapter was made with `await X.create()` in the `Application` settings; load it through the preloader with `loader.setParser`, then `world.setAdapter()` |
 
