@@ -10,29 +10,36 @@
  *
  * - **Everything through the preloader.** Rapier's WebAssembly is an asset
  *   type of its own (`loader.setParser`), loaded behind the loading screen
- *   with the models and the textures, which are painted in code and handed
- *   to the loader as images; the world then switches to Rapier with
- *   `world.setAdapter()`.
- * - **`@melonjs/rapier3d-adapter`**, with a `Camera3d`. Every block, pet and rival is a `Mesh` with a `bodyDef`; the
- *   adapter writes each body's position and turn back onto its mesh.
+ *   with the models, whose materials bring their own texture; the world then
+ *   switches to Rapier with `world.setAdapter()`. The wood, stone and grass
+ *   are painted in code, each on a `CanvasRenderTarget` made once and handed
+ *   to the meshes as their texture.
+ * - **`@melonjs/rapier3d-adapter`**, with a `Camera3d`. Every block, pet and
+ *   rival is a `Mesh` with a `bodyDef`; the adapter writes each body's
+ *   position and turn back onto its mesh.
  * - **The 3D shapes.** Blocks are `Box3d`, and each pet and rival the
  *   `ConvexHull3d` of its own model, built with `ConvexHull3d.fromMesh()`, so
  *   it tumbles as the shape it is drawn.
  * - **The `Vector3d` adapter API.** The pet waits in the pouch as a static
- *   body, moved with `setPosition` while it is pulled (from a press anywhere,
- *   which a phone needs: a pet is a small target under a finger); letting go makes it
+ *   body, moved with `setPosition` while it is pulled; letting go makes it
  *   dynamic (`setStatic(false)`) and launches it with `setVelocity` and
  *   `setAngularVelocity`, with Rapier's continuous collision on so a fast pet
  *   cannot pass through a thin plank.
+ * - **A press anywhere**, which a phone needs: a pet is a small target under
+ *   a finger. The whole screen is one pointer region behind the UI, so a
+ *   press on a button or on the end-of-round card stops there; the release
+ *   is the page's own `pointerup`, since a pull often ends off the canvas.
  * - **Collision hooks**: a rival's `onCollisionStart` tells when it lands on
  *   the ground or is struck hard, from the speed of the two bodies
  *   (`getVelocity3d`).
- * - **The UI widgets**: the end-of-round card is a `UIPanel` with a
- *   `UITextButton`, and the score pops come up with a `Tween`.
+ * - **The UI widgets and `Tween`**: the end-of-round card is a `UIPanel` with
+ *   a `UITextButton`; a tween fades a rival out, lifts the score it earned,
+ *   and carries the next pet into the pouch along a path.
  * - **A camera that orbits the field**: the turn buttons, the arrow keys and
- *   the VIEW button (side on, or behind the slingshot) turn a `Camera3d`, and
- *   the aim follows it, so a shot from behind can go anywhere in 3D. The
- *   slingshot's bands are turned in 3D with a `Quaternion`.
+ *   the VIEW button (side on, or behind the slingshot) turn a `Camera3d`,
+ *   eased with `math.damp`, and the aim follows it, so a shot from behind can
+ *   go anywhere in 3D. The slingshot's bands are turned in 3D with a
+ *   `Quaternion`.
  *
  * The pets are Kenney's Cube Pets (CC0, see `packages/examples/LICENSE.md`).
  *
@@ -45,12 +52,15 @@ import {
 	Application,
 	Box3d,
 	Camera3d,
+	CanvasRenderTarget,
+	type CollisionResponse,
 	ConvexHull3d,
 	event,
 	input,
 	Light3d,
 	loader,
 	Mesh,
+	math,
 	type Pointer,
 	plugin,
 	Quaternion,
@@ -109,6 +119,7 @@ const MAX_PULL = 120;
 const POWER = 11;
 // a pet is done once it rests, leaves the field, or after this long
 const SHOT_SECONDS = 7;
+const AXIS_X = new Vector3d(1, 0, 0);
 const AXIS_Y = new Vector3d(0, 1, 0);
 // the camera orbits this point, the middle of the field, at this distance
 const PIVOT = new Vector3d(100, -210, 0);
@@ -117,44 +128,44 @@ const ORBIT_DISTANCE = 1150;
 // fast (radians per second)
 const ORBIT_STEP = Math.PI / 6;
 const ORBIT_SPEED = 1.6;
+// how quickly the camera eases to where it is asked to be (`math.damp`)
+const ORBIT_EASE = 8;
 
-/** a canvas texture: wood planks, stone, grass, or plain white */
-const paint = (kind: "wood" | "stone" | "grass" | "white") => {
-	const c = document.createElement("canvas");
-	c.width = 64;
-	c.height = 64;
-	const ctx = c.getContext("2d");
-	if (ctx) {
-		if (kind === "wood") {
-			ctx.fillStyle = "#c98b4f";
-			ctx.fillRect(0, 0, 64, 64);
-			ctx.fillStyle = "#b07440";
-			for (let y = 0; y < 64; y += 16) {
-				ctx.fillRect(0, y, 64, 3);
-			}
-			ctx.fillStyle = "#dca267";
-			ctx.fillRect(0, 6, 64, 2);
-			ctx.fillRect(0, 38, 64, 2);
-		} else if (kind === "grass") {
-			ctx.fillStyle = "#7cb85a";
-			ctx.fillRect(0, 0, 64, 64);
-			ctx.fillStyle = "#6fab4e";
-			ctx.fillRect(0, 0, 32, 32);
-			ctx.fillRect(32, 32, 32, 32);
-		} else if (kind === "white") {
-			ctx.fillStyle = "#ffffff";
-			ctx.fillRect(0, 0, 64, 64);
-		} else {
-			ctx.fillStyle = "#9aa0a8";
-			ctx.fillRect(0, 0, 64, 64);
-			ctx.fillStyle = "#868c94";
-			ctx.fillRect(0, 31, 64, 3);
-			ctx.fillRect(31, 0, 3, 31);
-			ctx.fillRect(12, 34, 3, 30);
-			ctx.fillRect(48, 34, 3, 30);
+type Paint = "wood" | "stone" | "grass";
+
+/**
+ * A texture painted in code: wood planks, stone, or grass. The canvas of a
+ * `CanvasRenderTarget` is a texture as it is, for a mesh or a sprite.
+ */
+const paint = (kind: Paint): HTMLCanvasElement => {
+	const target = new CanvasRenderTarget(64, 64, { context: "2d" });
+	const ctx = target.context as CanvasRenderingContext2D;
+	if (kind === "wood") {
+		ctx.fillStyle = "#c98b4f";
+		ctx.fillRect(0, 0, 64, 64);
+		ctx.fillStyle = "#b07440";
+		for (let y = 0; y < 64; y += 16) {
+			ctx.fillRect(0, y, 64, 3);
 		}
+		ctx.fillStyle = "#dca267";
+		ctx.fillRect(0, 6, 64, 2);
+		ctx.fillRect(0, 38, 64, 2);
+	} else if (kind === "grass") {
+		ctx.fillStyle = "#7cb85a";
+		ctx.fillRect(0, 0, 64, 64);
+		ctx.fillStyle = "#6fab4e";
+		ctx.fillRect(0, 0, 32, 32);
+		ctx.fillRect(32, 32, 32, 32);
+	} else {
+		ctx.fillStyle = "#9aa0a8";
+		ctx.fillRect(0, 0, 64, 64);
+		ctx.fillStyle = "#868c94";
+		ctx.fillRect(0, 31, 64, 3);
+		ctx.fillRect(31, 0, 3, 31);
+		ctx.fillRect(12, 34, 3, 30);
+		ctx.fillRect(48, 34, 3, 30);
 	}
-	return c;
+	return target.canvas;
 };
 
 /**
@@ -162,7 +173,12 @@ const paint = (kind: "wood" | "stone" | "grass" | "white") => {
  * `Box3d(0, 0, 0, w, h, d)` is exactly its outline. Authored Y-UP like any
  * mesh geometry; a box looks the same either way.
  */
-const createBox = (w: number, h: number, d: number, texture: string) => {
+const createBox = (
+	w: number,
+	h: number,
+	d: number,
+	texture: HTMLCanvasElement,
+) => {
 	const x = w / 2;
 	const y = h / 2;
 	const z = d / 2;
@@ -288,6 +304,11 @@ const createBackdrop = (w: number, h: number) => {
 	});
 };
 
+/** the collision hook a rival opts into, on a `Mesh` that is not subclassed */
+interface Contacts {
+	onCollisionStart?: (response: CollisionResponse, other: Renderable) => void;
+}
+
 // whether the loader has been taught the "rapier3d" asset type yet
 let rapierParserSet = false;
 
@@ -316,11 +337,11 @@ const createGame = async () => {
 
 	plugin.register(DebugPanelPlugin, "debugPanel");
 
-	// the painted textures, by the names they are preloaded under
-	const wood = "wood" as const;
-	const stone = "stone" as const;
-	const grass = "grass" as const;
-	const white = "white" as const;
+	// the textures painted in code: made once, here, and shared by every
+	// round, since the renderer keeps a texture for each canvas it is handed
+	const wood = paint("wood");
+	const stone = paint("stone");
+	const grass = paint("grass");
 
 	/**
 	 * Build a round: the field, the towers, the slingshot.
@@ -331,7 +352,11 @@ const createGame = async () => {
 	const buildScene = (app: Application, restart: () => void) => {
 		const world = app.world;
 		const adapter = world.adapter as Rapier3dAdapter;
-		const camera = app.viewport as Camera3d;
+		// the application's `cameraClass` gave the stage a Camera3d of its own
+		const camera = app.viewport;
+		if (!(camera instanceof Camera3d)) {
+			throw new Error("the slingshot needs a Camera3d");
+		}
 		// the sky above the backdrop, in the colour of its top edge
 		world.backgroundColor.setColor(135, 206, 235);
 
@@ -418,41 +443,38 @@ const createGame = async () => {
 		const tipY = prongTop;
 		const turn = new Quaternion();
 		const turnAxis = new Vector3d();
+		const along = new Vector3d();
 		// a band from its prong's tip to `to`, in 3D: a unit box along X,
 		// turned onto the band and stretched to its length
-		const stretch = (band: Mesh, to: { x: number; y: number; z: number }) => {
-			const dx = to.x - POUCH.x;
-			const dy = to.y - tipY;
-			const dz = to.z - band.depth;
-			const length = Math.max(Math.hypot(dx, dy, dz), 1);
-			band.pos.set(POUCH.x + dx / 2, tipY + dy / 2);
+		const stretch = (band: Mesh, to: Vector3d) => {
+			along.set(to.x - POUCH.x, to.y - tipY, to.z - band.depth);
+			band.pos.set(POUCH.x + along.x / 2, tipY + along.y / 2);
+			const length = Math.max(along.length(), 1);
 			// the mesh turns in its model's Y-up space: Y the other way
-			const ux = dx / length;
-			const uy = -dy / length;
-			const uz = dz / length;
-			// the turn that takes +X onto the band: about X × u
-			turnAxis.set(0, -uz, uy);
-			if (turnAxis.length() < 1e-6) {
-				turn.setFromAxisAngle(AXIS_Y, ux < 0 ? Math.PI : 0);
+			along.y = -along.y;
+			// the turn that takes +X onto the band: about X × band, by the
+			// angle between the two
+			turnAxis.copy(AXIS_X).cross(along);
+			if (turnAxis.length2() < 1e-12) {
+				// the band lies along X already, one way or the other
+				turn.setFromAxisAngle(AXIS_Y, along.x < 0 ? Math.PI : 0);
 			} else {
-				turn.setFromAxisAngle(turnAxis.normalize(), Math.acos(ux));
+				turn.setFromAxisAngle(turnAxis.normalize(), AXIS_X.angle(along));
 			}
 			band.currentTransform.identity();
 			turn.toMatrix3d(band.currentTransform);
 			band.currentTransform.scale(length, 1, 1);
 		};
-		// where the bands hold the pet: just behind it, away from the shot
+		// where the bands hold the pet: half a pet behind it, away from the shot
+		const held = new Vector3d();
 		const pouchBack = (at: Vector3d, pulled: Vector3d) => {
-			const length = pulled.length();
-			const back =
-				length > 1e-6
-					? { x: pulled.x / length, y: pulled.y / length, z: pulled.z / length }
-					: { x: -1, y: 0, z: 0 };
-			return {
-				x: at.x + (back.x * PET) / 2,
-				y: at.y + (back.y * PET) / 2,
-				z: at.z + (back.z * PET) / 2,
-			};
+			if (pulled.length2() < 1e-12) {
+				// at rest: no pull, so held from straight behind
+				held.set(-1, 0, 0);
+			} else {
+				held.copy(pulled).normalize();
+			}
+			return held.scale(PET / 2, PET / 2, PET / 2).add(at);
 		};
 
 		// ── the towers ───────────────────────────────────────────────────
@@ -524,13 +546,13 @@ const createGame = async () => {
 			});
 			label.floating = true;
 			world.addChild(label, 2);
-			const rise = { y: screen.y, a: 1 };
-			new Tween(rise)
-				.to({ y: screen.y - 70, a: 0 }, { duration: 900 })
-				.onUpdate(() => {
-					label.pos.y = rise.y;
-					label.alpha = rise.a;
-				})
+			// it rises and fades: a tween on its position, another on the label
+			new Tween(label.pos)
+				.to({ y: screen.y - 70 }, { duration: 900 })
+				.easing(Tween.Easing.Quadratic.Out)
+				.start();
+			new Tween(label)
+				.to({ alpha: 0 }, { duration: 900 })
 				.onComplete(() => {
 					world.removeChild(label);
 				})
@@ -545,30 +567,29 @@ const createGame = async () => {
 			camera.shake(6, 250);
 			// a flash, then it fades away and leaves the field
 			rival.tint.setColor(255, 120, 120);
-			const fade = { a: 1 };
-			new Tween(fade)
-				.to({ a: 0 }, { duration: 450, delay: 150 })
-				.onUpdate(() => {
-					rival.alpha = fade.a;
-				})
+			new Tween(rival)
+				.to({ alpha: 0 }, { duration: 450, delay: 150 })
 				.onComplete(() => {
 					world.removeChild(rival);
 				})
 				.start();
 			refresh();
 		};
+		// how fast two bodies meet: the distance between their velocities
+		const velocityA = new Vector3d();
+		const velocityB = new Vector3d();
 		const speedBetween = (a: Renderable, b: Renderable) => {
-			const va = adapter.getVelocity3d(a);
-			const vb = adapter.getVelocity3d(b);
-			return Math.hypot(va.x - vb.x, va.y - vb.y, va.z - vb.z);
+			return adapter
+				.getVelocity3d(a, velocityA)
+				.distance(adapter.getVelocity3d(b, velocityB));
 		};
 		const spots = [...tower(180, 10), ...gate(470, -15), ...tower(720, 20)];
 		spots.forEach((spot, i) => {
 			const name = RIVALS[i % RIVALS.length];
 			const rival = new Mesh(spot.x, spot.y, {
 				model: name,
+				// its texture is the one its material names
 				material: name,
-				texture: "colormap",
 				width: RIVAL,
 				height: RIVAL,
 				lit: true,
@@ -584,16 +605,11 @@ const createGame = async () => {
 				friction: 0.6,
 			};
 			// out once it lands on the ground, or is struck hard
-			Object.assign(rival, {
-				onCollisionStart: (_response: unknown, other: Renderable) => {
-					if (
-						other === ground ||
-						speedBetween(rival, other) >= KNOCKOUT_SPEED
-					) {
-						knockOut(rival);
-					}
-				},
-			});
+			(rival as Contacts).onCollisionStart = (_response, other) => {
+				if (other === ground || speedBetween(rival, other) >= KNOCKOUT_SPEED) {
+					knockOut(rival);
+				}
+			};
 			world.addChild(rival, spot.z);
 			rivals.add(rival);
 		});
@@ -601,13 +617,12 @@ const createGame = async () => {
 
 		// ── the dotted arc the pet will fly along ────────────────────────
 		const dots = Array.from({ length: 18 }, () => {
+			// no texture: a mesh without one is plain white
 			const dot = new Mesh(0, 0, {
 				model: "sphere",
-				texture: white,
 				width: 9,
 				height: 9,
 				castGroundShadow: false,
-				transparent: true,
 			});
 			dot.alpha = 0;
 			world.addChild(dot, 0);
@@ -770,8 +785,8 @@ const createGame = async () => {
 		const petMesh = (name: string, x: number, y: number) => {
 			const pet = new Mesh(x, y, {
 				model: name,
+				// its texture is the one its material names
 				material: name,
-				texture: "colormap",
 				width: PET,
 				height: PET,
 				lit: true,
@@ -822,27 +837,22 @@ const createGame = async () => {
 				loaded = pet;
 				for (const band of bands) {
 					band.alpha = 1;
-					// at rest: no pull, so held from just behind
-					stretch(band, pouchBack(POUCH, new Vector3d()));
+					stretch(band, pouchBack(POUCH, pull.set(0, 0, 0)));
 				}
 			};
 			if (!queued) {
 				ready();
 				return;
 			}
-			const hop = { t: 0 };
-			const spot = new Vector3d();
-			new Tween(hop)
-				.to({ t: 1 }, { duration: 450 })
+			// one arc up out of the line and down into the pouch: a tween along
+			// a path, whose middle point the curve bends toward
+			const spot = new Vector3d(from.x, from.y, POUCH.z);
+			new Tween(spot)
+				.to(
+					{ x: POUCH.x, y: [POUCH.y - 70, POUCH.y] },
+					{ duration: 450, interpolation: Tween.Interpolation.Bezier },
+				)
 				.onUpdate(() => {
-					// one arc up out of the line and down into the pouch
-					spot.set(
-						from.x + (POUCH.x - from.x) * hop.t,
-						from.y +
-							(POUCH.y - from.y) * hop.t -
-							Math.sin(hop.t * Math.PI) * 70,
-						POUCH.z,
-					);
 					adapter.setPosition(pet, spot);
 				})
 				.onComplete(ready)
@@ -877,27 +887,40 @@ const createGame = async () => {
 		// follows the pointer from there, relative to the camera: sideways on
 		// screen is sideways to the view, and down on screen is down from the
 		// side, back toward the camera from behind.
-		const pressed = { x: 0, y: 0 };
+		const pressed = new Vector2d();
+		// where the pull has the pet
+		const petAt = new Vector3d();
 		// world pixels per screen pixel, at the pouch, for this press
 		let perPixel = 1;
-		const onButtons = (pointer: Pointer) => {
-			return buttons.some((b) => {
-				return b.getBounds().contains(pointer.gameScreenX, pointer.gameScreenY);
-			});
-		};
-		input.registerPointerEvent("pointerdown", app.viewport, (pointer) => {
-			if (loaded === null || over || onButtons(pointer)) {
+		// The whole screen is the region that takes the press, from behind the
+		// buttons and the end-of-round card: a press on one of those stops
+		// there, as on any UI element, and never reaches this one.
+		const aimArea = new Renderable(
+			0,
+			0,
+			app.viewport.width,
+			app.viewport.height,
+		);
+		aimArea.anchorPoint.set(0, 0);
+		aimArea.floating = true;
+		aimArea.isKinematic = false;
+		// behind every UI element, in the order regions are asked in
+		world.addChild(aimArea, -5);
+		const beside = new Vector3d();
+		const pouchOnScreen = new Vector2d();
+		const besideOnScreen = new Vector2d();
+		input.registerPointerEvent("pointerdown", aimArea, (pointer) => {
+			if (loaded === null || over) {
 				return;
 			}
-			const a = camera.worldToScreen(POUCH, new Vector2d());
+			// how far apart on screen two points 100 pixels apart are, there
+			const a = camera.worldToScreen(POUCH, pouchOnScreen);
 			const b = camera.worldToScreen(
-				new Vector3d(POUCH.x + right.x * 100, POUCH.y, POUCH.z + right.z * 100),
-				new Vector2d(),
+				beside.copy(right).scale(100, 100, 100).add(POUCH),
+				besideOnScreen,
 			);
-			perPixel =
-				a && b ? 100 / Math.max(Math.hypot(b.x - a.x, b.y - a.y), 1) : 1;
-			pressed.x = pointer.gameScreenX;
-			pressed.y = pointer.gameScreenY;
+			perPixel = a && b ? 100 / Math.max(a.distance(b), 1) : 1;
+			pressed.set(pointer.gameScreenX, pointer.gameScreenY);
 			aiming = true;
 			pull.set(0, 0, 0);
 		});
@@ -916,17 +939,15 @@ const createGame = async () => {
 			);
 			const length = pull.length();
 			if (length > MAX_PULL) {
-				pull.scale(MAX_PULL / length);
+				// all three: `scale(n)` alone leaves z as it is
+				const k = MAX_PULL / length;
+				pull.scale(k, k, k);
 			}
-			const p = new Vector3d(
-				POUCH.x + pull.x,
-				POUCH.y + pull.y,
-				POUCH.z + pull.z,
-			);
-			adapter.setPosition(loaded, p);
-			const held = pouchBack(p, pull);
+			petAt.copy(POUCH).add(pull);
+			adapter.setPosition(loaded, petAt);
+			const back = pouchBack(petAt, pull);
 			for (const band of bands) {
-				stretch(band, held);
+				stretch(band, back);
 			}
 			// released now, it would leave opposite the pull; from behind, a
 			// pull straight back is lofted upward too
@@ -935,7 +956,7 @@ const createGame = async () => {
 				-pull.y * POWER - behind * pull.length() * POWER * 0.45,
 				-pull.z * POWER,
 			);
-			showArc(p, launchVelocity);
+			showArc(petAt, launchVelocity);
 		};
 		event.on(event.POINTERMOVE, onMove);
 
@@ -1014,7 +1035,7 @@ const createGame = async () => {
 				pet,
 				new Vector3d(
 					(-launchVelocity.z / across) * 6,
-					(Math.random() - 0.5) * 3,
+					math.randomFloat(-1.5, 1.5),
 					(launchVelocity.x / across) * 6,
 				),
 			);
@@ -1025,15 +1046,10 @@ const createGame = async () => {
 			hint.alpha = 0;
 			refresh();
 		};
-		input.registerPointerEvent("pointerup", app.viewport, release);
-		// a pull often ends past the edge of the canvas, where the game sees
-		// no pointer event: the page still does, and lets the pet go
-		const releaseOutside = () => {
-			if (aiming) {
-				release();
-			}
-		};
-		globalThis.addEventListener("pointerup", releaseOutside);
+		// a pull often ends past the edge of the canvas, where no region of
+		// the game is told: the release is the page's own event, wherever the
+		// pointer comes up
+		globalThis.addEventListener("pointerup", release);
 
 		// ── follows the pet in flight, and loads the next one ────────────
 		class Referee extends Renderable {
@@ -1052,7 +1068,7 @@ const createGame = async () => {
 					targetYaw -= (ORBIT_SPEED * dt) / 1000;
 				}
 				if (Math.abs(targetYaw - yaw) > 1e-4) {
-					yaw += (targetYaw - yaw) * (1 - Math.exp(-dt / 120));
+					yaw = math.damp(yaw, targetYaw, ORBIT_EASE, dt / 1000);
 					placeCamera();
 				}
 				for (const rival of rivals) {
@@ -1101,9 +1117,8 @@ const createGame = async () => {
 
 		return () => {
 			event.off(event.POINTERMOVE, onMove);
-			globalThis.removeEventListener("pointerup", releaseOutside);
-			input.releasePointerEvent("pointerdown", app.viewport);
-			input.releasePointerEvent("pointerup", app.viewport);
+			globalThis.removeEventListener("pointerup", release);
+			input.releasePointerEvent("pointerdown", aimArea);
 			for (const key of [
 				input.KEY.LEFT,
 				input.KEY.A,
@@ -1151,18 +1166,8 @@ const createGame = async () => {
 
 	await loader.preload([
 		{ name: "rapier3d", type: "rapier3d", src: "" },
-		// the textures painted in code go through the loader as images too,
-		// and the meshes ask for them by name
-		...([wood, stone, grass, white] as const).map((name) => {
-			return { name, type: "image", src: paint(name).toDataURL() };
-		}),
 		{ name: "sphere", type: "obj", src: `${MESH_BASE}sphere.obj` },
 		{ name: "backdrop", type: "image", src: `${PETS_BASE}jungle_bg.png` },
-		{
-			name: "colormap",
-			type: "image",
-			src: `${PETS_BASE}Textures/colormap.png`,
-		},
 		...[...PETS, ...RIVALS].flatMap((name) => {
 			return [
 				{ name, type: "obj", src: `${PETS_BASE}${name}.obj` },
