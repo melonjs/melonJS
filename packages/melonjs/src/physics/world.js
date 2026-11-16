@@ -1,5 +1,6 @@
 import { consolePhysics } from "../application/header.ts";
 import { hasRegisteredEvents } from "../input/pointerevent.ts";
+import { Quaternion } from "../math/quaternion.ts";
 import Container, {
 	hasRegisteredBody,
 	registerTreeBodies,
@@ -21,7 +22,6 @@ import BuiltinAdapter from "./builtin/builtin-adapter.ts";
  * @import Application from "./../application/application.ts";
  * @import Detector from "./builtin/detector.js";
  * @import { Vector2d } from "../math/vector2d.ts";
- * @import { Quaternion } from "../math/quaternion.ts";
  * @import { JointDefinition, PhysicsAdapter, PhysicsJoint } from "./adapter.ts";
  */
 
@@ -84,18 +84,27 @@ function releaseDefinedBodies(node) {
 	}
 }
 
+// the orientation of a body that is not turned
+const UNTURNED = new Quaternion();
+
 /**
  * The orientation of every body {@link World#setAdapter} is about to build
  * again, at any depth, read from the outgoing adapter: a body is built
  * unturned, and is turned back to this once it is. The angle about Z, and
  * for a body a 3D adapter tilted (a part about X or Y), its whole rotation.
+ *
+ * With `unturn`, each turned body is then turned back to unturned on the
+ * outgoing adapter, renderable included: an adapter that turns a renderable
+ * from how it stood when its body was made (Rapier 3D) would otherwise take
+ * the turned renderable as unturned, and turn it a second time.
  * @ignore
  * @internal
  * @param {object} node - a renderable leaving the outgoing adapter
  * @param {PhysicsAdapter} adapter - the outgoing adapter
  * @param {Map<object, {angle: number, rotation: Quaternion | null}>} out - receives each turned body's orientation
+ * @param {boolean} unturn - turn each turned body back, once read
  */
-function collectBodyAngles(node, adapter, out) {
+function collectBodyAngles(node, adapter, out, unturn) {
 	const shapes = node.bodyDef?.shapes;
 	if (node.body !== undefined && shapes !== undefined && shapes.length > 0) {
 		const angle = adapter.getAngle?.(node) ?? 0;
@@ -109,11 +118,18 @@ function collectBodyAngles(node, adapter, out) {
 		}
 		if (angle !== 0 || rotation !== null) {
 			out.set(node, { angle, rotation });
+			if (unturn) {
+				if (adapter.setRotation !== undefined) {
+					adapter.setRotation(node, UNTURNED);
+				} else {
+					adapter.setAngle?.(node, 0);
+				}
+			}
 		}
 	}
 	if (node instanceof Container) {
 		node.forEach((child) => {
-			collectBodyAngles(child, adapter, out);
+			collectBodyAngles(child, adapter, out, unturn);
 		});
 	}
 }
@@ -407,10 +423,14 @@ export default class World extends Container {
 		// and the bodies' orientations: each is built again as it stands, turned
 		const angles = new Map();
 		if (previous !== undefined) {
+			// a turned body is turned back on the way out only when the new
+			// adapter can turn it again; one that cannot leaves it as it looks
+			const unturn =
+				adapter.setRotation !== undefined || adapter.setAngle !== undefined;
 			// take every body out of the outgoing simulation, at any depth,
 			// and drop the handles it built: each is built again, at rest
 			this.forEach((child) => {
-				collectBodyAngles(child, previous, angles);
+				collectBodyAngles(child, previous, angles, unturn);
 				unregisterTreeBodies(child, this);
 				releaseDefinedBodies(child);
 			});

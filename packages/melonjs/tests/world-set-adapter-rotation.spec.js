@@ -189,4 +189,64 @@ describe("World#setAdapter keeps each body's orientation", () => {
 		expect(warn).toHaveBeenCalledTimes(1);
 		expect(String(warn.mock.calls[0][0])).toMatch(/about Z only/);
 	});
+	// An adapter that turns a renderable from how it stood when its body was
+	// made (Rapier 3D) would turn it twice if handed a renderable still
+	// turned: the outgoing adapter turns each turned body back first.
+	describe("the outgoing adapter turns a turned body back first", () => {
+		it("a tilted body is turned back to unturned, before the new adapter turns it", () => {
+			const first = new Tilting();
+			app.world.setAdapter(first);
+			const r = crate();
+			const tilt = new Quaternion().setFromAxisAngle(AXIS_X, 0.4);
+			first.rotations.set(r, tilt.clone());
+			const unturned = [];
+			const setRotation = first.setRotation.bind(first);
+			first.setRotation = (renderable, q) => {
+				unturned.push([renderable, q.clone()]);
+				setRotation(renderable, q);
+			};
+			const next = new Tilting();
+			app.world.setAdapter(next);
+			expect(unturned).toHaveLength(1);
+			expect(unturned[0][0]).toBe(r);
+			expect(unturned[0][1].equals(new Quaternion())).toBe(true);
+			// and the new adapter turns it to the tilt, once
+			const q = next.getRotation(r);
+			expect(Math.abs(q.dot(tilt))).toBeCloseTo(1, 10);
+		});
+
+		it("a turned body on a 2D adapter is set back to angle 0", () => {
+			const first = new Flat();
+			app.world.setAdapter(first);
+			const r = crate();
+			first.setAngle(r, 0.5);
+			const angles = vi.spyOn(first, "setAngle");
+			app.world.setAdapter(new Flat());
+			expect(angles).toHaveBeenCalledWith(r, 0);
+		});
+
+		it("an unturned body is left as it is", () => {
+			const first = new Flat();
+			app.world.setAdapter(first);
+			crate();
+			const angles = vi.spyOn(first, "setAngle");
+			app.world.setAdapter(new Flat());
+			expect(angles).not.toHaveBeenCalled();
+		});
+
+		it("nothing is turned back for an adapter that cannot turn it again", () => {
+			const first = new Flat();
+			app.world.setAdapter(first);
+			const r = crate();
+			first.setAngle(r, 0.5);
+			const angles = vi.spyOn(first, "setAngle");
+			// a builtin with no way to turn a body: the renderable stays as
+			// it looks
+			const stiff = new BuiltinAdapter();
+			stiff.setAngle = undefined;
+			stiff.setRotation = undefined;
+			app.world.setAdapter(stiff);
+			expect(angles).not.toHaveBeenCalled();
+		});
+	});
 });
