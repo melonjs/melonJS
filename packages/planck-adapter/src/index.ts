@@ -56,6 +56,43 @@ type WorldJointHook = {
 };
 
 /**
+ * A contact whose start or active hooks are running. When one of them takes a
+ * body of the pair out, the contact's end is told in the order a hook can
+ * rely on: to the side going out at once, while it is whole, and to the other
+ * once the hooks are done; and only to a side that heard the start.
+ */
+interface Dispatch {
+	contact: planck.Contact;
+	bodyA: planck.Body;
+	bodyB: planck.Body;
+	rA: Renderable;
+	rB: Renderable;
+	/** the contact as it was when the hooks began, for a later end */
+	nx: number;
+	ny: number;
+	depth: number;
+	/** the shapes the two fixtures were built from, kept for a later end */
+	entryA: ShapeEntry | undefined;
+	entryB: ShapeEntry | undefined;
+	/** the sides that may hear the end: those the start reached */
+	reached: number;
+	/** the sides already told the end */
+	told: number;
+	/** true once a body of the pair was taken out */
+	ended: boolean;
+}
+
+/** The melonJS shape a fixture was built from, and its index in the body. */
+type ShapeEntry = { shape: BodyShape; index: number };
+
+/** Which hooks of a contact a dispatch reaches: one bit per side and level. */
+const SIDE_A = 1;
+const SIDE_B = 2;
+const SHAPE_A = 4;
+const SHAPE_B = 8;
+const EVERY_SIDE = SIDE_A | SIDE_B | SHAPE_A | SHAPE_B;
+
+/**
  * Options accepted by the {@link PlanckAdapter} constructor.
  */
 export interface PlanckAdapterOptions {
@@ -296,6 +333,15 @@ export class PlanckAdapter implements PhysicsAdapter {
 		Renderable,
 		{ x: number; y: number }
 	>();
+	/**
+	 * Caps set before the renderable had a body, applied when `addBody`
+	 * builds one. Held weakly: a renderable never added is not kept alive.
+	 */
+	private pendingLimits = new WeakMap<Renderable, { x: number; y: number }>();
+	/** touching contacts, from their start hooks until their end */
+	private readonly started = new Set<planck.Contact>();
+	/** the contacts whose start or active hooks are running, innermost last */
+	private readonly dispatching: Dispatch[] = [];
 	private readonly defMap = new Map<Renderable, BodyDefinition>();
 	/**
 	 * Shapes handed back by {@link PlanckAdapter#getBodyShapes}: one reusable
@@ -460,9 +506,12 @@ export class PlanckAdapter implements PhysicsAdapter {
 		this.renderableMap.clear();
 		this.fixtureShapeMap.clear();
 		this.velocityLimits.clear();
+		this.pendingLimits = new WeakMap();
 		this.defMap.clear();
 		this.posOffsets.clear();
 		this.reportedShapes.clear();
+		this.started.clear();
+		this.dispatching.length = 0;
 	}
 
 	step(dt: number): void {
@@ -470,6 +519,11 @@ export class PlanckAdapter implements PhysicsAdapter {
 		// engine is paused (browser loses focus, state.pause(), etc.)
 		// skip the physics step entirely.
 		if (state.isPaused()) {
+			return;
+		}
+		// a step of no length simulates nothing, and one that is not a
+		// number would turn every body it touched into NaN for good
+		if (!(dt > 0) || !Number.isFinite(dt)) {
 			return;
 		}
 		// Mirror gravity (user may have mutated this.gravity since init).
@@ -602,6 +656,27 @@ export class PlanckAdapter implements PhysicsAdapter {
 		const centroid = this._computeCentroid(def.shapes);
 		const bodyWorldPx = { x: baseX + centroid.x, y: baseY + centroid.y };
 
+		// build every shape first, so a refused one leaves no body behind,
+		// nor takes away the one the renderable had
+		const built: {
+			shape: BodyShape;
+			shapeIndex: number;
+			planckShape: planck.Shape;
+		}[] = [];
+		for (const [shapeIndex, shape] of def.shapes.entries()) {
+			// `isActive === false` keeps a shape out of the simulation without
+			// removing it from the body — no fixture, so Box2D never sees it
+			if ((shape as { isActive?: boolean }).isActive === false) {
+				continue;
+			}
+			const planckShape = this._shapeToPlanck(shape, centroid);
+			if (planckShape) {
+				built.push({ shape, shapeIndex, planckShape });
+			}
+		}
+		// a renderable has one body: a second one replaces the first
+		this.removeBody(renderable);
+
 		const bodyDef: planck.BodyDef = {
 			type: def.type,
 			position: this.vec2InMeters(bodyWorldPx.x, bodyWorldPx.y),
@@ -625,14 +700,7 @@ export class PlanckAdapter implements PhysicsAdapter {
 		// Attach each shape as a fixture, with vertices in body-local
 		// meters (renderable-space shape position minus centroid, divided
 		// by pixelsPerMeter).
-		for (const [shapeIndex, shape] of def.shapes.entries()) {
-			// `isActive === false` keeps a shape out of the simulation without
-			// removing it from the body — no fixture, so Box2D never sees it
-			if ((shape as { isActive?: boolean }).isActive === false) {
-				continue;
-			}
-			const planckShape = this._shapeToPlanck(shape, centroid);
-			if (!planckShape) continue;
+		for (const { shape, shapeIndex, planckShape } of built) {
 			// Per-shape collision settings (melonJS #1590) override the
 			// body-level ones. This backend needs no special handling for them:
 			// it already builds one fixture per shape, and Box2D filters and
@@ -683,16 +751,15 @@ export class PlanckAdapter implements PhysicsAdapter {
 			body.resetMassData();
 		}
 
-		if (def.maxVelocity) {
-			this.velocityLimits.set(renderable, {
-				x: def.maxVelocity.x,
-				y: def.maxVelocity.y,
-			});
-		}
-
 		this.bodyMap.set(renderable, body);
 		this.renderableMap.set(body, renderable);
 		this.defMap.set(renderable, def);
+		// the definition's cap, or else one set before the body was built
+		const limit = def.maxVelocity ?? this.pendingLimits.get(renderable);
+		this.pendingLimits.delete(renderable);
+		if (limit) {
+			this.setMaxVelocity(renderable, limit);
+		}
 		// Maps the body origin back onto `renderable.pos` on the way out of
 		// the simulation. The body is anchored in the renderable's DRAWN
 		// frame (`pos - anchor`), so the anchor has to come back on here or
@@ -885,6 +952,14 @@ export class PlanckAdapter implements PhysicsAdapter {
 	removeBody(renderable: Renderable): void {
 		const body = this.bodyMap.get(renderable);
 		if (body) {
+			// a partner still touching this body learns the contact ended now:
+			// planck would report it only once the body is destroyed, which
+			// waits for the step to end when the world is locked
+			this._endContacts(body);
+			// one of their hooks may have taken this body out already
+			if (this.bodyMap.get(renderable) !== body) {
+				return;
+			}
 			// destroying the body destroys its joints: forget them, and drop
 			// any still waiting for the step to end
 			for (let edge = body.getJointList(); edge; edge = edge.next) {
@@ -1258,13 +1333,21 @@ export class PlanckAdapter implements PhysicsAdapter {
 		renderable: Renderable,
 		limit: { x: number; y: number },
 	): void {
-		this.velocityLimits.set(renderable, { x: limit.x, y: limit.y });
+		const copy = { x: limit.x, y: limit.y };
+		if (this.bodyMap.has(renderable)) {
+			this.velocityLimits.set(renderable, copy);
+		} else {
+			// no body yet: kept for the one `addBody` builds, unless the
+			// body definition has a cap of its own
+			this.pendingLimits.set(renderable, copy);
+		}
 	}
 
 	getMaxVelocity(renderable: Renderable): { x: number; y: number } {
 		// a copy, so changing it does not change the cap; and no cap reads as
 		// Infinity, where `{ 0, 0 }` read as a cap that holds the body still
-		const limit = this.velocityLimits.get(renderable);
+		const limit =
+			this.velocityLimits.get(renderable) ?? this.pendingLimits.get(renderable);
 		return limit ? { x: limit.x, y: limit.y } : { x: Infinity, y: Infinity };
 	}
 
@@ -1604,13 +1687,18 @@ export class PlanckAdapter implements PhysicsAdapter {
 		for (const [renderable, limit] of this.velocityLimits) {
 			const body = this.bodyMap.get(renderable);
 			if (!body) continue;
+			const v = body.getLinearVelocity();
 			// Limits are in pixel-space; convert to m/s for comparison
 			// with planck's linear velocity.
-			const limitX = this.px2m(limit.x);
-			const limitY = this.px2m(limit.y);
-			const v = body.getLinearVelocity();
-			const vx = Math.max(-limitX, Math.min(limitX, v.x));
-			const vy = Math.max(-limitY, Math.min(limitY, v.y));
+			const clamp = (value: number, px: number) => {
+				// one that is not a number caps nothing (it would turn the
+				// velocity itself into NaN); a negative one caps by its size
+				if (Number.isNaN(px)) return value;
+				const m = this.px2m(Math.abs(px));
+				return Math.max(-m, Math.min(m, value));
+			};
+			const vx = clamp(v.x, limit.x);
+			const vy = clamp(v.y, limit.y);
 			if (vx !== v.x || vy !== v.y) {
 				body.setLinearVelocity(new planck.Vec2(vx, vy));
 			}
@@ -1621,17 +1709,32 @@ export class PlanckAdapter implements PhysicsAdapter {
 		// After each step, walk the world contact list for currently-
 		// touching pairs and dispatch `onCollisionActive` / `onCollision`.
 		// Begin/End are dispatched from the event handlers (instant), and
-		// active is per-frame while contact persists.
+		// active is per-frame while contact persists. The contacts are
+		// gathered first: a hook that removes a body destroys its contacts.
+		const touching: planck.Contact[] = [];
 		for (
 			let contact = this.world.getContactList();
 			contact;
 			contact = contact.getNext()
 		) {
-			if (!contact.isTouching()) continue;
-			this._dispatchContact(contact, "active");
+			if (contact.isTouching() && this.started.has(contact)) {
+				touching.push(contact);
+			}
+		}
+		for (const contact of touching) {
+			// an earlier hook may have ended it
+			if (this.started.has(contact)) {
+				this._dispatchContact(contact, "active");
+			}
 		}
 	}
 
+	/**
+	 * Fire the hooks of one contact, on both renderables. A start or active
+	 * hook may take a body of the pair out: see {@link Dispatch}.
+	 * @param contact the Box2D contact being reported
+	 * @param phase which lifecycle hook to fire
+	 */
 	private _dispatchContact(
 		contact: planck.Contact,
 		phase: "start" | "active" | "end",
@@ -1641,6 +1744,134 @@ export class PlanckAdapter implements PhysicsAdapter {
 		const rA = this.renderableMap.get(bodyA);
 		const rB = this.renderableMap.get(bodyB);
 		if (!rA || !rB) return;
+		if (phase === "end") {
+			// a contact already ended (one of its bodies was removed), or
+			// never started, is not ended again
+			if (this.started.delete(contact)) {
+				this._dispatch(contact, rA, rB, phase, EVERY_SIDE);
+			}
+			return;
+		}
+		if (phase === "start") {
+			this.started.add(contact);
+		}
+		const { nx, ny, depth } = this._contactOf(contact);
+		const current: Dispatch = {
+			contact,
+			bodyA,
+			bodyB,
+			rA,
+			rB,
+			nx,
+			ny,
+			depth,
+			entryA: this.fixtureShapeMap.get(contact.getFixtureA()),
+			entryB: this.fixtureShapeMap.get(contact.getFixtureB()),
+			// a contact already active had its start on every side
+			reached: phase === "start" ? 0 : EVERY_SIDE,
+			told: 0,
+			ended: false,
+		};
+		this.dispatching.push(current);
+		try {
+			this._dispatch(
+				contact,
+				rA,
+				rB,
+				phase,
+				EVERY_SIDE,
+				phase === "start" ? current : undefined,
+				current,
+			);
+		} finally {
+			this.dispatching.splice(this.dispatching.indexOf(current), 1);
+		}
+		if (current.ended) {
+			this._dispatch(
+				contact,
+				rA,
+				rB,
+				"end",
+				current.reached & ~current.told,
+				undefined,
+				current,
+			);
+		}
+	}
+
+	/**
+	 * Tell the contacts touching a body about to go that they ended.
+	 * @param body the body leaving the world
+	 */
+	private _endContacts(body: planck.Body): void {
+		// a contact whose start or active hooks are running: the side going
+		// out hears the end now, the other once those hooks are done, so
+		// that no one hears of an end before its start
+		for (const d of this.dispatching) {
+			const going =
+				(d.bodyA === body ? SIDE_A | SHAPE_A : 0) |
+				(d.bodyB === body ? SIDE_B | SHAPE_B : 0);
+			if (going !== 0 && (this.started.delete(d.contact) || d.ended)) {
+				d.ended = true;
+				const sides = going & d.reached & ~d.told;
+				d.told |= sides;
+				this._dispatch(d.contact, d.rA, d.rB, "end", sides, undefined, d);
+			}
+		}
+		// gathered first: a hook may change the contact list
+		const ending: planck.Contact[] = [];
+		for (let edge = body.getContactList(); edge; edge = edge.next) {
+			if (this.started.has(edge.contact)) {
+				ending.push(edge.contact);
+			}
+		}
+		for (const contact of ending) {
+			this._dispatchContact(contact, "end");
+		}
+	}
+
+	/**
+	 * A contact's normal, from fixture A to fixture B, and its depth.
+	 * @param contact the Box2D contact
+	 * @returns the normal and the depth, in pixels
+	 */
+	private _contactOf(contact: planck.Contact): {
+		nx: number;
+		ny: number;
+		depth: number;
+	} {
+		// World-space manifold gives us the collision normal in world
+		// coords; we report it as the MTV for the receiver side.
+		const worldManifold = new planck.WorldManifold();
+		contact.getWorldManifold(worldManifold);
+		return {
+			nx: worldManifold.normal.x,
+			ny: worldManifold.normal.y,
+			depth: this._contactDepth(contact, worldManifold),
+		};
+	}
+
+	/**
+	 * Fire one phase of a contact's hooks: the shape-level ones, then the
+	 * renderables' own. A renderable whose body is gone hears nothing.
+	 * @param contact the Box2D contact being reported
+	 * @param rA renderable owning fixture A
+	 * @param rB renderable owning fixture B
+	 * @param phase which lifecycle hook to fire
+	 * @param sides the sides and levels to fire it on, as bits
+	 * @param [record] where to note each side reached, before its hook runs
+	 * @param [known] the contact as its hooks began, when a body of it may
+	 * since have gone
+	 */
+	private _dispatch(
+		contact: planck.Contact,
+		rA: Renderable,
+		rB: Renderable,
+		phase: "start" | "active" | "end",
+		sides: number,
+		record?: Dispatch,
+		known?: Dispatch,
+	): void {
 		// Detachment handling. Same rules as matter-adapter: skip stale
 		// pairs (both detached) and skip start/active when either side is
 		// detached; for `end`, dispatch to whichever partner remains.
@@ -1655,18 +1886,23 @@ export class PlanckAdapter implements PhysicsAdapter {
 		} else if (aDetached || bDetached) {
 			return;
 		}
+		// a hook earlier in this dispatch may have removed a body: its
+		// renderable hears nothing from then on
+		const reaches = (side: number, receiver: Renderable, detached: boolean) => {
+			if ((sides & side) === 0 || detached || !this.bodyMap.has(receiver)) {
+				return false;
+			}
+			if (record !== undefined) {
+				record.reached |= side;
+			}
+			return true;
+		};
 
-		// World-space manifold gives us the collision normal in world
-		// coords; we report it as the MTV for the receiver side.
-		const worldManifold = new planck.WorldManifold();
-		contact.getWorldManifold(worldManifold);
-		const nx = worldManifold.normal.x;
-		const ny = worldManifold.normal.y;
 		// Box2D's normal points from fixtureA to fixtureB; the MTV for A
 		// to escape B is `-normal`, MTV for B is `+normal`. Per
 		// CollisionResponse contract, each side sees the normal pointing
 		// in the direction it must move to separate.
-		const depth = this._contactDepth(contact, worldManifold);
+		const { nx, ny, depth } = known ?? this._contactOf(contact);
 
 		const methodForSide = (receiver: Renderable): string => {
 			if (phase === "start") return "onCollisionStart";
@@ -1679,53 +1915,45 @@ export class PlanckAdapter implements PhysicsAdapter {
 
 		this._dispatchShapeContact(
 			contact,
+			known ? known.entryA : this.fixtureShapeMap.get(contact.getFixtureA()),
+			known ? known.entryB : this.fixtureShapeMap.get(contact.getFixtureB()),
 			rA,
 			rB,
 			nx,
 			ny,
 			depth,
 			phase,
-			aDetached,
-			bDetached,
+			() => {
+				return reaches(SHAPE_A, rA, aDetached);
+			},
+			() => {
+				return reaches(SHAPE_B, rB, bDetached);
+			},
 		);
 
-		const responseAB = {
-			a: rA,
-			b: rB,
-			normal: { x: -nx, y: -ny },
-			depth,
-			pair: contact,
+		const emit = (receiver: Renderable, other: Renderable, sign: number) => {
+			const fn = (receiver as Renderable & Record<string, unknown>)[
+				methodForSide(receiver)
+			];
+			if (typeof fn !== "function") return;
+			(fn as (response: unknown, other: Renderable) => unknown).call(
+				receiver,
+				{
+					a: receiver,
+					b: other,
+					// (`+ 0` keeps a zero component from reading as -0)
+					normal: { x: sign * nx + 0, y: sign * ny + 0 },
+					depth,
+					pair: contact,
+				},
+				other,
+			);
 		};
-		const responseBA = {
-			a: rB,
-			b: rA,
-			normal: { x: nx, y: ny },
-			depth,
-			pair: contact,
-		};
-
-		// a handler earlier in this dispatch may have removed this body
-		if (!aDetached && this.bodyMap.has(rA)) {
-			const mA = methodForSide(rA);
-			const fnA = (rA as Renderable & Record<string, unknown>)[mA];
-			if (typeof fnA === "function") {
-				(fnA as (response: unknown, other: Renderable) => unknown).call(
-					rA,
-					responseAB,
-					rB,
-				);
-			}
+		if (reaches(SIDE_A, rA, aDetached)) {
+			emit(rA, rB, -1);
 		}
-		if (!bDetached && this.bodyMap.has(rB)) {
-			const mB = methodForSide(rB);
-			const fnB = (rB as Renderable & Record<string, unknown>)[mB];
-			if (typeof fnB === "function") {
-				(fnB as (response: unknown, other: Renderable) => unknown).call(
-					rB,
-					responseBA,
-					rA,
-				);
-			}
+		if (reaches(SIDE_B, rB, bDetached)) {
+			emit(rB, rA, 1);
 		}
 	}
 
@@ -1738,28 +1966,30 @@ export class PlanckAdapter implements PhysicsAdapter {
 	 * shapes produces several contacts, and each names its own pair. Fixtures
 	 * not built from a melonJS shape are skipped.
 	 * @param contact the Box2D contact being reported
+	 * @param entryA the shape fixture A was built from
+	 * @param entryB the shape fixture B was built from
 	 * @param rA renderable owning fixture A
 	 * @param rB renderable owning fixture B
 	 * @param nx contact normal x, in A -> B orientation
 	 * @param ny contact normal y, in A -> B orientation
 	 * @param depth penetration depth
 	 * @param phase which lifecycle hook to fire
-	 * @param aDetached true when A has left the world
-	 * @param bDetached true when B has left the world
+	 * @param toA whether A's hook fires, asked just before it would
+	 * @param toB whether B's hook fires, asked just before it would
 	 */
 	private _dispatchShapeContact(
 		contact: planck.Contact,
+		entryA: ShapeEntry | undefined,
+		entryB: ShapeEntry | undefined,
 		rA: Renderable,
 		rB: Renderable,
 		nx: number,
 		ny: number,
 		depth: number,
 		phase: "start" | "active" | "end",
-		aDetached: boolean,
-		bDetached: boolean,
+		toA: () => boolean,
+		toB: () => boolean,
 	): void {
-		const entryA = this.fixtureShapeMap.get(contact.getFixtureA());
-		const entryB = this.fixtureShapeMap.get(contact.getFixtureB());
 		if (entryA === undefined || entryB === undefined) {
 			return;
 		}
@@ -1777,14 +2007,15 @@ export class PlanckAdapter implements PhysicsAdapter {
 			partner: Renderable,
 			own: { shape: BodyShape; index: number },
 			other: { shape: BodyShape; index: number },
-			ownNx: number,
-			ownNy: number,
+			sign: number,
 		): void => {
 			const fn = (receiver as Renderable & Record<string, unknown>)[method];
-			// skipped too when an earlier handler removed this body
-			if (typeof fn !== "function" || !this.bodyMap.has(receiver)) {
+			if (typeof fn !== "function") {
 				return;
 			}
+			// (`+ 0` keeps a zero component from reading as -0)
+			const ownNx = sign * nx + 0;
+			const ownNy = sign * ny + 0;
 			// a separated contact carries identity only, matching the builtin
 			// adapter and `onCollisionEnd`
 			const d = phase === "end" ? 0 : depth;
@@ -1805,8 +2036,8 @@ export class PlanckAdapter implements PhysicsAdapter {
 					// the builtin's convention: `overlapN` is the opposite of
 					// `normal`, `overlapV` is `overlapN` scaled by the depth, and
 					// a 2D engine has no Z
-					overlapN: { x: -ownNx, y: -ownNy },
-					overlapV: { x: -ownNx * d, y: -ownNy * d },
+					overlapN: { x: -ownNx + 0, y: -ownNy + 0 },
+					overlapV: { x: -ownNx * d + 0, y: -ownNy * d + 0 },
 					overlapZ: 0,
 					overlapNZ: 0,
 					normalZ: 0,
@@ -1815,11 +2046,11 @@ export class PlanckAdapter implements PhysicsAdapter {
 				partner,
 			);
 		};
-		if (!aDetached) {
-			emit(rA, rB, entryA, entryB, -nx, -ny);
+		if (toA()) {
+			emit(rA, rB, entryA, entryB, -1);
 		}
-		if (!bDetached) {
-			emit(rB, rA, entryB, entryA, nx, ny);
+		if (toB()) {
+			emit(rB, rA, entryB, entryA, 1);
 		}
 	}
 
