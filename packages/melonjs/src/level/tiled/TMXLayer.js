@@ -79,11 +79,20 @@ function gidWithFlips(gid, flipMask) {
  * Decode a tiled layer's data blob directly into the typed-array layerData.
  * `data` holds `width` x `height` cells whose top left one is the map's tile
  * (`x`, `y`): a whole finite layer, or one chunk of an infinite map's layer.
- * A cell outside the layer's grid is left out, never wrapped into another row
+ * A cell outside the layer's grid is left out, never wrapped into another row.
+ * Data that does not hold exactly `width` x `height` tiles throws
  * @ignore
  * @internal
  */
-function setLayerData(layer, data, x, y, width, height) {
+function setLayerData(layer, data, x, y, width, height, chunk = false) {
+	// as Tiled does, refuse data that does not fill the cells exactly: a
+	// missing tile would otherwise be left empty, without a word
+	if (data.length !== width * height) {
+		const where = chunk ? ` (the chunk at ${x}, ${y})` : "";
+		throw new Error(
+			`Tiled layer "${layer.name}" has ${data.length} tiles of data for its ${width} x ${height} cells${where}`,
+		);
+	}
 	let idx = 0;
 	const cols = layer.cols;
 	const rows = layer.rows;
@@ -386,6 +395,7 @@ export default class TMXLayer extends Renderable {
 					+chunk.y,
 					+chunk.width,
 					+chunk.height,
+					true,
 				);
 			}
 		}
