@@ -1457,6 +1457,23 @@ export class Rapier3dAdapter implements PhysicsAdapter {
 		return cached;
 	}
 
+	/**
+	 * Whether Rapier has put the body to sleep: a dynamic body at rest, left
+	 * out of the step until a contact or a write to it (a velocity, a force,
+	 * an impulse, a position or a rotation, which all wake it) moves it
+	 * again. `false` for a fixed or kinematic body, and for a renderable this
+	 * adapter does not know, including every one once it is destroyed.
+	 * @param renderable - the renderable whose body to read
+	 * @returns `true` while the body sleeps
+	 * @example
+	 * // the shot is over once every block has come to rest
+	 * const settled = blocks.every((b) => adapter.isSleeping(b));
+	 */
+	isSleeping(renderable: Renderable): boolean {
+		const body = this.bodyMap.get(renderable);
+		return body !== undefined && body.isDynamic() && body.isSleeping();
+	}
+
 	isGrounded(renderable: Renderable): boolean {
 		const body = this.bodyMap.get(renderable);
 		if (!body) return false;

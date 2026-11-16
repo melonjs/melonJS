@@ -839,6 +839,112 @@ describe("Rapier3dAdapter", () => {
 		});
 	});
 
+	describe("sleeping", () => {
+		/**
+		 * Steps until `r` sleeps, or gives up.
+		 * @param r - the body's renderable
+		 * @param max - the frames to give up after
+		 * @returns whether it fell asleep
+		 */
+		const settle = (r: Renderable, max = 1200): boolean => {
+			for (let i = 0; i < max; i++) {
+				run(1);
+				if (adapter.isSleeping(r)) {
+					return true;
+				}
+			}
+			return false;
+		};
+		// a cube dropped a little way onto the floor, and left to settle
+		const rested = () => {
+			floor(500);
+			const b = cube(400, 440, 0);
+			expect(settle(b)).toBe(true);
+			return b;
+		};
+
+		it("reports the capability", () => {
+			expect(adapter.capabilities.sleepingBodies).toBe(true);
+		});
+
+		it("is false for a renderable the adapter does not know", () => {
+			expect(adapter.isSleeping(new Renderable(0, 0, 8, 8))).toBe(false);
+		});
+
+		it("is false for a fixed or a kinematic body, however long they rest", () => {
+			const ground = floor(500);
+			const k = make(100, 100, 0, {
+				type: "kinematic",
+				shapes: [new Box3d(0, 0, 0, 32, 32, 32)],
+			});
+			run(600);
+			expect(adapter.isSleeping(ground)).toBe(false);
+			expect(adapter.isSleeping(k)).toBe(false);
+		});
+
+		it("is false while a body falls", () => {
+			floor(500);
+			const b = cube(400, 100, 0);
+			run(10);
+			expect(adapter.isSleeping(b)).toBe(false);
+		});
+
+		it("is true once the body has come to rest on the floor", () => {
+			const b = rested();
+			const y = b.pos.y;
+			run(30);
+			// asleep, it stays where it came to rest
+			expect(b.pos.y).toBe(y);
+			expect(adapter.isSleeping(b)).toBe(true);
+		});
+
+		it("a velocity along Z wakes the body, which then moves along Z", () => {
+			const b = rested();
+			const z = b.depth;
+			adapter.setVelocity(b, new Vector3d(0, 0, 200));
+			expect(adapter.isSleeping(b)).toBe(false);
+			run(10);
+			expect(b.depth).toBeGreaterThan(z);
+		});
+
+		it("an impulse, a force, a position or a rotation wakes it too", () => {
+			const wakes: Array<(b: Renderable) => void> = [
+				(b) => {
+					adapter.applyImpulse(b, new Vector3d(0, 0, 5));
+				},
+				(b) => {
+					adapter.applyForce(b, new Vector3d(50, 0, 0));
+				},
+				(b) => {
+					adapter.setPosition(b, new Vector3d(b.pos.x + 40, b.pos.y, 0));
+				},
+				(b) => {
+					adapter.setRotation(
+						b,
+						new Quaternion().setFromAxisAngle(new Vector3d(0, 1, 0), 0.5),
+					);
+				},
+			];
+			for (const wake of wakes) {
+				const b = rested();
+				wake(b);
+				expect(adapter.isSleeping(b)).toBe(false);
+				adapter.removeBody(b);
+				world.removeChildNow(b);
+			}
+		});
+
+		it("is false once the body is removed, or the adapter destroyed", () => {
+			const b = rested();
+			adapter.removeBody(b);
+			expect(adapter.isSleeping(b)).toBe(false);
+			const c = cube(200, 440, 0);
+			expect(settle(c)).toBe(true);
+			adapter.destroy();
+			expect(adapter.isSleeping(c)).toBe(false);
+		});
+	});
+
 	describe("body changes", () => {
 		it("a kinematic body ignores gravity and moves by its velocity", () => {
 			const k = make(100, 100, 0, {

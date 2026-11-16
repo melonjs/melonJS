@@ -315,7 +315,7 @@ controller.computeColliderMovement(
 const move = controller.computedMovement(); // meters: apply it to a kinematic body
 ```
 
-Bodies sleep when they come to rest and wake on contact, or when the adapter moves, turns or pushes them; `body.sleep()` and `body.wakeUp()` force it. A sleeping body's renderable is not written to, nor a static one's.
+Bodies sleep when they come to rest and wake on contact, or when the adapter moves, turns or pushes them; `body.sleep()` and `body.wakeUp()` force it. `adapter.isSleeping(renderable)` says whether a body is asleep, the way to tell a shot or a stack has settled; it is `false` for a fixed or kinematic body. A sleeping body's renderable is not written to, nor a static one's.
 
 Rapier's objects live in WebAssembly memory, which the garbage collector does not reclaim. The adapter frees them in `destroy()`, which `world.setAdapter()` calls on the adapter it replaces; from then on its queries find nothing, and a body handle kept from it must not be used. Free a joint or a character controller you created yourself through `adapter.world` with `world.removeImpulseJoint()` / `world.removeCharacterController()`; the joints `app.world.addJoint()` made are freed for you.
 

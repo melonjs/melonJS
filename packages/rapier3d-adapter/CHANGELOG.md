@@ -7,4 +7,5 @@
 - `Box3d`, `Sphere`, `Capsule3d`, `ConvexHull3d` and `TriangleMesh3d` colliders; a 2D shape is refused with the reason
 - The 3D form of the adapter API: `Vector3d` velocities, forces, impulses and positions, `getRotation` / `setRotation`, `getVelocity3d`, `getAngularVelocity3d`, exact `raycast3d` and `querySphere`
 - Joints through `world.addJoint()`, with 3D anchors and axes, joining the bodies as they stand however each is turned; Rapier's own features through `adapter.rapier` and `adapter.world`
+- `isSleeping()`: whether Rapier has put a body to rest, to tell when a shot or a stack has settled
 - `updateShape()` replaces a body's colliders and keeps the body: its pose, velocities, joints, what was set on it at run time and the handle on `renderable.body`

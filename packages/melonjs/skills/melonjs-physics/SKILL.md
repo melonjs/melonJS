@@ -1263,8 +1263,8 @@ Same call, different magnitude — these are the ones that waste an afternoon:
   engine put a dynamic body to rest: the way to tell a throw or a stack has
   settled. It is optional, so call it as
   `world.adapter.isSleeping?.(r) ?? false`; an adapter that leaves it out
-  answers `undefined`. Always `false` on the built-in (no sleeping) and for
-  static or kinematic bodies.
+  answers `undefined`. Rapier 3D has it; the 2D adapters do not yet. Always
+  `false` on the built-in (no sleeping) and for static or kinematic bodies.
 
 Adapter-specific escapes exist (`(this.body as MatterAdapter.Body).frictionAir`,
 `adapter.matter.Constraint.create(...)`) but are not portable — flag them if you
