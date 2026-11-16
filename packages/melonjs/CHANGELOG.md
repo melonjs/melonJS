@@ -17,6 +17,9 @@
 - glTF: a skinned mesh was placed and bounded by its own node's transform, which glTF says it ignores, so a rigged character could load offset and with wrong `bounds`
 - `GLTFModel`: a clip at a negative `speed` froze on its first frame and never ended; it now plays backwards
 - `Camera3d`: with a `zoom` other than 1, `worldToScreen` and `screenToRay` called while drawing answered for the wrong size
+- TypeScript: the declarations of `InstancedMesh` and `Renderable#translate()` no longer fail to type-check in a project without `skipLibCheck`; `translate()` is now typed to take any `{x, y}` point, as it already did at runtime
+- Tiled: a tile layer or infinite-map chunk whose data holds more or fewer tiles than its cells throws, naming the layer; missing cells were left empty
+- Tiled: loading a compressed map without the inflate plugin throws an error that names `@melonjs/tiled-inflate-plugin`, the plugin to register
 - `Color#toArray()`: its documentation now says it returns the color's own array, not a copy, so writing into it changes the color. The maths skill says so too, with a symptom row
 - Skills: the scenes skill now says that `save` keeps its keys in memory where there is no `localStorage` (a sandboxed iframe, cookies blocked), so it needs no `try` / `catch`, and how to tell with `device.localStorage`
 
