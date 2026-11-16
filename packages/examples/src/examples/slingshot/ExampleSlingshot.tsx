@@ -14,7 +14,8 @@
  *   `ConvexHull3d` of its own model, built with `ConvexHull3d.fromMesh()`, so
  *   it tumbles as the shape it is drawn.
  * - **The `Vector3d` adapter API.** The pet waits in the pouch as a static
- *   body, moved with `setPosition` while it is pulled; letting go makes it
+ *   body, moved with `setPosition` while it is pulled (from a press anywhere,
+ *   which a phone needs: a pet is a small target under a finger); letting go makes it
  *   dynamic (`setStatic(false)`) and launches it with `setVelocity` and
  *   `setAngularVelocity`, with Rapier's continuous collision on so a fast pet
  *   cannot pass through a thin plank.
@@ -69,7 +70,8 @@ const GRAVITY = 980;
 const PET = 64;
 const ORB = 36;
 // where the pet waits in the pouch, how far it can be pulled, and how hard
-const POUCH = new Vector3d(-560, -190, 0);
+// in from the left edge, so a full pull still has room on screen
+const POUCH = new Vector3d(-400, -190, 0);
 const MAX_PULL = 120;
 const POWER = 11;
 // a pet is done once it rests, leaves the field, or after this long
@@ -467,7 +469,7 @@ const createGame = async () => {
 			} else if (over) {
 				lines.push("out of pets: click to try again");
 			} else {
-				lines.push("drag the pet back and let go");
+				lines.push("press anywhere, drag back and let go");
 			}
 			hud.setText(lines);
 		};
@@ -478,8 +480,9 @@ const createGame = async () => {
 		let flightTime = 0;
 		let aiming = false;
 		const pull = new Vector3d();
+		// where the pull started, on the plane of the slingshot
+		const grab = new Vector3d();
 		const launchVelocity = new Vector3d();
-		const pets: Mesh[] = [];
 
 		const load = () => {
 			const name = PETS[PETS.length - shotsLeft];
@@ -505,13 +508,6 @@ const createGame = async () => {
 				restitution: 0.15,
 			};
 			world.addChild(pet, POUCH.z);
-			input.registerPointerEvent("pointerdown", pet, () => {
-				if (pet === loaded && !over) {
-					aiming = true;
-				}
-				return false;
-			});
-			pets.push(pet);
 			loaded = pet;
 			for (const band of bands) {
 				band.alpha = 1;
@@ -532,12 +528,21 @@ const createGame = async () => {
 				POUCH.z,
 			);
 		};
+		// a press anywhere takes hold of the loaded pet: a pet is a small
+		// target under a finger, and a finger on it would hide it. The pull is
+		// how far the pointer has moved since the press.
+		input.registerPointerEvent("pointerdown", app.viewport, (pointer) => {
+			if (loaded !== null && !over && onPlane(pointer, grab) !== null) {
+				aiming = true;
+				pull.set(0, 0, 0);
+			}
+		});
 		const at = new Vector3d();
 		const onMove = (pointer: Pointer) => {
 			if (!aiming || loaded === null || onPlane(pointer, at) === null) {
 				return;
 			}
-			pull.set(at.x - POUCH.x, at.y - POUCH.y, 0);
+			pull.set(at.x - grab.x, at.y - grab.y, 0);
 			const length = pull.length();
 			if (length > MAX_PULL) {
 				pull.scale(MAX_PULL / length);
@@ -650,10 +655,8 @@ const createGame = async () => {
 		return () => {
 			event.off(event.POINTERMOVE, onMove);
 			globalThis.removeEventListener("pointerup", releaseOutside);
+			input.releasePointerEvent("pointerdown", app.viewport);
 			input.releasePointerEvent("pointerup", app.viewport);
-			for (const pet of pets) {
-				input.releasePointerEvent("pointerdown", pet);
-			}
 		};
 	};
 
