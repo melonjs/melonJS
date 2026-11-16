@@ -175,13 +175,10 @@ input.registerPointerEvent("pointerdown", this, () => {
 
 Three things decide the order, and only the first is obvious:
 
-- **`pos.z`, among siblings of one container.** Higher is on top. Under a
-  `Camera3d` the world sorts on `"depth"` instead, and its children are asked
-  in the order it draws them: a `floating` one by `|pos.z|`, **smaller** on
-  top (a HUD at 1 over a full-screen region at 50), a world one nearest the
-  camera first (melonJS 20.16; before, the larger `pos.z` was asked first
-  there too, against what was drawn). A plain `Container` (a UI panel) keeps
-  the `"z"` rule for its own children.
+- **`pos.z`, among siblings of one container.** Higher is on top, except
+  under a `Camera3d`, where the world sorts on `"depth"` and the regions follow
+  that sort: a `floating` region is ordered by `|z|` alone, the **smaller** on
+  top, so a dialog at depth 1 is asked before a full-screen region at depth 4.
 - **Across containers, the common ancestor decides.** `pos.z` is
   container-local, since `autoDepth` numbers each container's children from 1,
   so a button at `z = 8` inside one panel does not outrank a second panel at
@@ -452,6 +449,7 @@ input.triggerKeyEvent(input.KEY.LEFT, false);   // release
 | moving the mouse got slow under a `Camera3d` | a big mesh or `InstancedMesh` listens for `pointermove` / `pointerenter` / `pointerleave`: each move ray-tests all its triangles. Listen for presses only, or hover with `camera.pick` on a smaller set |
 | `pointer.hit3d` is `null` | not a mesh's event, a `pointerleave`, or read after the callback returned (the record is reused) |
 | pointer handler never fires | `isKinematic` left at its `true` default |
+| under a `Camera3d`, a full-screen `floating` region takes the presses meant for a button drawn over it (before 20.16) | regions were asked by raw z, highest first, though a `Camera3d` draws the smaller depth on top: update |
 | touches never arrive where there is no DOM (nx.js, a Web Worker) | melonJS older than 20.14 listened for mouse events there; update. Touch is then read from `TouchEvent`s dispatched on the canvas given as `settings.canvas` |
 | handlers fire twice, or on dead objects | registered in the constructor instead of `onActivateEvent` |
 | camera drag jumps around | using world coordinates instead of `gameScreenX`/`gameScreenY` |
@@ -476,7 +474,6 @@ input.triggerKeyEvent(input.KEY.LEFT, false);   // release
 | a key stays pressed after its pad is unplugged, or a stick bound on one side holds its key after coming back to the centre (before 20.12) | update: an unplugged pad lets go of what it held, and a stick lets go when it returns to rest, even just past the centre |
 | a widget under an overlapping panel still lights up | the panel consumes no hover: return `false` from its `onOver` (presses already stop at UI elements; `UIPanel` with `blocking` does both) |
 | a widget stays highlighted after the pointer moves onto a panel over it | the panel consumes no `pointermove`, so nothing takes the pointer off the widget |
-| under a `Camera3d`, a full-screen floating region takes the press of a button drawn over it (before 20.16) | the hit-test asked the larger `pos.z` first while the depth sort draws the smaller `|z|` on top: update; no negative-depth workaround is needed |
 | a child's big `z` does not put it in front of another container | `pos.z` is container-local — use `ancestor.moveToTop()` on the container |
 | every click in the game stops working | a handler on `app.viewport` returning `false`, which is asked first |
 | touch controls do nothing | nothing bound to their slot — `bindGamepad` on the plugin's `index` (0 by default), or give the buttons a `key` |

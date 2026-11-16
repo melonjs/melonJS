@@ -1509,6 +1509,10 @@ export default class Container extends Renderable {
 	 * other the descendant wins, since a child paints after its parent.
 	 * Equal sibling z falls back to child order, because the sort in
 	 * `draw` is stable and its reverse walk paints the lower index last.
+	 *
+	 * Siblings in a `"depth"` container (the world under a `Camera3d`)
+	 * are compared by the same key `_sortDepth` draws them by, not by z:
+	 * there the smaller depth draws on top, floating children included.
 	 * @ignore
 	 * @internal
 	 */
@@ -1547,22 +1551,31 @@ export default class Container extends Renderable {
 		}
 
 		const parent = nodeA.ancestor;
-		// under the camera-distance sort, `draw` paints by distance from the
-		// camera (by |z| for a floating child), nearest last, not by raw z:
-		// compare as it does, or a floating region deeper on screen is asked
-		// before the overlay painted over it
-		if (parent?.sortOn === "depth") {
-			captureDepthCamera();
-			captureDepthOffset(parent);
-			return (
-				depthKey(nodeB) - depthKey(nodeA) ||
-				parent.getChildIndex(nodeB) - parent.getChildIndex(nodeA)
-			);
+
+		// A `"depth"` container (the world under a `Camera3d`) does not draw
+		// by z: it paints the SMALLER depth key last, so a floating dialog at
+		// depth 1 covers a full-screen floating region at depth 4. Ranking
+		// them by raw z here asked the region first and it took the press.
+		// Use the key the draw sort uses instead, smaller on top.
+		if (parent?._sortOn === "depth") {
+			// a floating child's key is its depth alone; anything else is a
+			// distance from the camera, in the world frame of this container
+			if (nodeA.floating !== true || nodeB.floating !== true) {
+				captureDepthCamera();
+				captureDepthOffset(parent);
+			}
+			const byKey = depthKey(nodeB) - depthKey(nodeA);
+			if (byKey !== 0) {
+				return byKey;
+			}
+		} else if (nodeA.pos.z !== nodeB.pos.z) {
+			return nodeA.pos.z - nodeB.pos.z;
 		}
-		return (
-			nodeA.pos.z - nodeB.pos.z ||
-			(parent ? parent.getChildIndex(nodeB) - parent.getChildIndex(nodeA) : 0)
-		);
+
+		// a tie: the sort in `draw` is stable, so the lower index paints last
+		return parent
+			? parent.getChildIndex(nodeB) - parent.getChildIndex(nodeA)
+			: 0;
 	}
 
 	/**
