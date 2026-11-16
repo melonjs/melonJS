@@ -46,6 +46,7 @@ import {
 	Stage,
 	state,
 	Text,
+	Tween,
 	Vector3d,
 	video,
 } from "melonjs";
@@ -69,9 +70,13 @@ const GROUND_Y = 0;
 const GRAVITY = 980;
 const PET = 64;
 const ORB = 36;
-// where the pet waits in the pouch, how far it can be pulled, and how hard
+// the raised deck the slingshot stands on, and the next pets wait on
+const DECK_TOP = -70;
+// where the pet waits in the pouch, how far it can be pulled, and how hard;
 // in from the left edge, so a full pull still has room on screen
-const POUCH = new Vector3d(-400, -190, 0);
+const POUCH = new Vector3d(-400, -250, 0);
+// how far apart the waiting pets stand, in line behind the slingshot
+const QUEUE_GAP = 58;
 const MAX_PULL = 120;
 const POWER = 11;
 // a pet is done once it rests, leaves the field, or after this long
@@ -228,6 +233,32 @@ const createBox = (
 	});
 };
 
+/**
+ * The painted backdrop: one upright quad far behind the field, its horizon
+ * level with the far edge of the ground, the picture repeated across it so
+ * its trees stay small. Unlit, so it keeps its own colours.
+ */
+const createBackdrop = (w: number, h: number) => {
+	const x = w / 2;
+	const y = h / 2;
+	// the picture is 4:3: how many times it fits across
+	const across = w / ((h * 4) / 3);
+	return new Mesh(0, 0, {
+		// Y-UP like any mesh geometry: the top edge takes the image's top row
+		vertices: new Float32Array([-x, -y, 0, x, -y, 0, x, y, 0, -x, y, 0]),
+		uvs: new Float32Array([0, 1, across, 1, across, 0, 0, 0]),
+		indices: new Uint16Array([0, 1, 2, 0, 2, 3]),
+		texture: "backdrop",
+		textureRepeat: "repeat",
+		normalize: false,
+		scale: 1,
+		width: w,
+		height: h,
+		cullBackFaces: false,
+		castGroundShadow: false,
+	});
+};
+
 const createGame = async () => {
 	let app: Application;
 	try {
@@ -273,7 +304,8 @@ const createGame = async () => {
 		const world = app.world;
 		const adapter = world.adapter as Rapier3dAdapter;
 		const camera = app.viewport as Camera3d;
-		world.backgroundColor.setColor(150, 200, 235);
+		// the sky above the backdrop, in the colour of its top edge
+		world.backgroundColor.setColor(135, 206, 235);
 
 		world.addChild(
 			new Light3d({
@@ -287,21 +319,45 @@ const createGame = async () => {
 			new Light3d({ type: "ambient", color: "#8fa3c2", intensity: 0.75 }),
 		);
 
-		// ── the ground: a thick static slab, its top at y = 0 ────────────
-		const ground = createBox(3200, 40, 1600, grass);
+		// ── the backdrop, and the ground running back to meet it ─────────
+		// the backdrop's horizon is 55% of the way down the picture
+		const BACK_Z = 1700;
+		// tall enough that its top edge stays above the view
+		const backdrop = createBackdrop(9600, 3600);
+		backdrop.pos.set(0, 3600 * (0.5 - 0.55));
+		world.addChild(backdrop, BACK_Z);
+
+		// a thick static slab, its top at y = 0
+		const ground = createBox(6000, 40, BACK_Z * 2, grass);
 		ground.pos.set(0, GROUND_Y + 20);
 		ground.castGroundShadow = false;
 		ground.bodyDef = {
 			type: "static",
-			shapes: [new Box3d(0, 0, 0, 3200, 40, 1600)],
+			shapes: [new Box3d(0, 0, 0, 6000, 40, BACK_Z * 2)],
 			friction: 0.8,
 		};
 		world.addChild(ground, 0);
 
+		// ── the deck: a raised stone platform for the slingshot and the
+		// pets waiting their turn
+		const DECK_LEFT = POUCH.x - 70 - QUEUE_GAP * (PETS.length - 1) - 40;
+		const DECK_RIGHT = POUCH.x + 60;
+		const deckW = DECK_RIGHT - DECK_LEFT;
+		const deck = createBox(deckW, -DECK_TOP, 120, stone);
+		deck.pos.set((DECK_LEFT + DECK_RIGHT) / 2, DECK_TOP / 2);
+		deck.bodyDef = {
+			type: "static",
+			shapes: [new Box3d(0, 0, 0, deckW, -DECK_TOP, 120)],
+			friction: 0.8,
+		};
+		world.addChild(deck, 0);
+
 		// ── the slingshot: a post and two prongs, one in front, one behind
 		const prongTop = POUCH.y - 20;
-		const post = createBox(18, -prongTop - 60, 18, wood);
-		post.pos.set(POUCH.x, (prongTop + 60) / 2);
+		// from the deck up to just inside the prongs
+		const postTop = prongTop + 60;
+		const post = createBox(18, DECK_TOP - postTop, 18, wood);
+		post.pos.set(POUCH.x, (DECK_TOP + postTop) / 2);
 		world.addChild(post, 0);
 		const prongs = [-40, 40].map((z) => {
 			const prong = createBox(14, 70, 14, wood);
@@ -484,9 +540,9 @@ const createGame = async () => {
 		const grab = new Vector3d();
 		const launchVelocity = new Vector3d();
 
-		const load = () => {
-			const name = PETS[PETS.length - shotsLeft];
-			const pet = new Mesh(POUCH.x, POUCH.y, {
+		/** a pet's mesh, facing the towers, turned a little toward the camera */
+		const petMesh = (name: string, x: number, y: number) => {
+			const pet = new Mesh(x, y, {
 				model: name,
 				material: name,
 				texture: "colormap",
@@ -496,8 +552,36 @@ const createGame = async () => {
 				castGroundShadow: true,
 				shadowGroundY: GROUND_Y,
 			});
-			// facing the towers, turned a little toward the camera
 			pet.rotate((Math.PI * 2) / 3, AXIS_Y);
+			return pet;
+		};
+
+		// the pets after the first wait in line on the deck, nearest first;
+		// they are only drawn until their turn comes
+		const waiting = PETS.slice(1).map((name, i) => {
+			const pet = petMesh(
+				name,
+				POUCH.x - 70 - QUEUE_GAP * i,
+				DECK_TOP - PET / 2,
+			);
+			// on the deck, whose top is not the ground their shadows fall on
+			pet.castGroundShadow = false;
+			world.addChild(pet, POUCH.z);
+			return pet;
+		});
+
+		// the next pet into the pouch: the first straight there, the others
+		// with a hop from the front of the line
+		const load = () => {
+			const name = PETS[PETS.length - shotsLeft];
+			const queued = waiting.shift();
+			const from = queued
+				? { x: queued.pos.x, y: queued.pos.y }
+				: { x: POUCH.x, y: POUCH.y };
+			if (queued) {
+				world.removeChildNow(queued);
+			}
+			const pet = petMesh(name, from.x, from.y);
 			pet.bodyDef = {
 				// still in the pouch: moved by hand until it is let go
 				type: "static",
@@ -508,11 +592,34 @@ const createGame = async () => {
 				restitution: 0.15,
 			};
 			world.addChild(pet, POUCH.z);
-			loaded = pet;
-			for (const band of bands) {
-				band.alpha = 1;
-				stretch(band, { x: POUCH.x - PET / 2, y: POUCH.y });
+			const ready = () => {
+				loaded = pet;
+				for (const band of bands) {
+					band.alpha = 1;
+					stretch(band, { x: POUCH.x - PET / 2, y: POUCH.y });
+				}
+			};
+			if (!queued) {
+				ready();
+				return;
 			}
+			const hop = { t: 0 };
+			const spot = new Vector3d();
+			new Tween(hop)
+				.to({ t: 1 }, { duration: 450 })
+				.onUpdate(() => {
+					// one arc up out of the line and down into the pouch
+					spot.set(
+						from.x + (POUCH.x - from.x) * hop.t,
+						from.y +
+							(POUCH.y - from.y) * hop.t -
+							Math.sin(hop.t * Math.PI) * 70,
+						POUCH.z,
+					);
+					adapter.setPosition(pet, spot);
+				})
+				.onComplete(ready)
+				.start();
 		};
 
 		// the point under the pointer on the plane of the slingshot (z = 0)
@@ -645,10 +752,10 @@ const createGame = async () => {
 		load();
 		refresh();
 
-		// ── a side view of the field, a little from above ────────────────
+		// ── a side view of the field, from just above the deck ───────────
 		camera.setClipPlanes(10, 10000);
-		camera.setPosition(80, -300, -1000);
-		camera.lookAt(80, -170, 0);
+		camera.setPosition(0, -240, -1120);
+		camera.lookAt(0, -210, 0);
 
 		addKenneyCredit(app, "#1d2a3a");
 
@@ -683,6 +790,7 @@ const createGame = async () => {
 
 	await loader.preload([
 		{ name: "sphere", type: "obj", src: `${MESH_BASE}sphere.obj` },
+		{ name: "backdrop", type: "image", src: `${PETS_BASE}jungle_bg.png` },
 		{
 			name: "colormap",
 			type: "image",
