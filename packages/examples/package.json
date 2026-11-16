@@ -17,6 +17,7 @@
 		"@melonjs/pathfinding-plugin": "workspace:*",
 		"@melonjs/planck-adapter": "workspace:*",
 		"@melonjs/rapier2d-adapter": "workspace:*",
+		"@melonjs/rapier3d-adapter": "workspace:*",
 		"@melonjs/spine-plugin": "workspace:*",
 		"@melonjs/tiled-inflate-plugin": "workspace:*",
 		"@types/react": "^19.2.17",

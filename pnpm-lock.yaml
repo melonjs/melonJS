@@ -154,6 +154,9 @@ importers:
       '@melonjs/rapier2d-adapter':
         specifier: workspace:*
         version: link:../rapier2d-adapter
+      '@melonjs/rapier3d-adapter':
+        specifier: workspace:*
+        version: link:../rapier3d-adapter
       '@melonjs/spine-plugin':
         specifier: workspace:*
         version: link:../spine-plugin

@@ -137,7 +137,7 @@ unchanged:
   (<https://creativecommons.org/licenses/by/4.0/>)
 - conversion to glTF © 2017 **@AsoboStudio** and **@scurest** — **CC BY 4.0**
 
-### `mesh3dMaterial`, `picking` and `toon` examples
+### `mesh3dMaterial`, `picking`, `slingshot` and `toon` examples
 
 The animal models and `Textures/colormap.png` in `public/assets/mesh3d/kenney/`
 are **"Cube Pets (2.0)"** published by Kenney

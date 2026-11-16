@@ -178,6 +178,11 @@ const ExamplePicking = lazy(() =>
 		default: m.ExamplePicking,
 	})),
 );
+const ExampleSlingshot = lazy(() =>
+	import("./examples/slingshot/ExampleSlingshot").then((m) => ({
+		default: m.ExampleSlingshot,
+	})),
+);
 const ExampleSkinnedCharacter = lazy(() =>
 	import("./examples/skinnedCharacter/ExampleSkinnedCharacter").then((m) => ({
 		default: m.ExampleSkinnedCharacter,
@@ -573,6 +578,14 @@ const examples: {
 		sourceDir: "picking",
 		description:
 			"Pointer events on meshes under a perspective camera: hover and click Kenney Cube Pets (CC0), click the floor to send the selected one there, and a ring that follows the pointer across the floor.",
+	},
+	{
+		component: <ExampleSlingshot />,
+		label: "Slingshot",
+		path: "slingshot",
+		sourceDir: "slingshot",
+		description:
+			"3D physics with @melonjs/rapier3d-adapter: launch Kenney Cube Pets (CC0) from a slingshot into towers of wood and stone that topple and tumble, and knock every golden orb to the ground.",
 	},
 	{
 		component: <ExampleSkinnedCharacter />,
