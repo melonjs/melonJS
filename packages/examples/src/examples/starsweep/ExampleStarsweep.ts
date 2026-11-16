@@ -7,25 +7,42 @@
  * gaps. Frozen panels keep you sliding, conveyor pads push you, damaged
  * panels drop away behind you, goo slows the monsters and switches open
  * gates. Zap the monsters, grab power-ups, and don't fall off into space.
+ * Portrait, for phones held upright; on touch screens a virtual gamepad
+ * (`@melonjs/gamepad-plugin`) presses the same keys as the keyboard.
  *
- * The levels are Tiled maps (`public/assets/starsweep/levels/*.tmj`),
- * loaded with the engine's Tiled loader: see `levels.ts` for how to edit
- * them, and run `pnpm check:starsweep` to check them. Bolt and the portals
- * are objects in each map's `actors` layer, built by the classes
- * registered in `objects.ts`. The monsters find
- * their way with `@melonjs/pathfinding-plugin`, and every route they plan
- * is drawn on the board (see `monsters.ts` and `navigation.ts`). Portrait,
- * for phones held upright. On touch screens the `@melonjs/gamepad-plugin`
- * virtual gamepad (a stick and a ZAP button) sits under the board and
- * presses the same keys as the keyboard.
+ * This file loads everything and starts the title screen. The rest, one
+ * class per file:
  *
- * The characters are sprites from one sheet, `cast.png`, baked from
- * Kenney's Monster Builder Pack (CC0) with every animation in its JSON (see
- * `cast.ts`; `pnpm bake:starsweep` bakes it again). On GPU renderers a
- * custom nebula shader animates the sky, bloom, vignette and chromatic
- * aberration post-effects polish the frame,
- * and a second, 3D camera draws star dust and novas behind the game (see
- * `fx.ts`). Every sound is synthesised with `audio.tone` / `audio.noise`.
+ * - `scenes/`: the screens, as `Stage`s. `TitleScreen` (with its
+ *   `TitleBackdrop` and `StartBeacon`), `PlayScreen`, and `layers.ts`, the
+ *   two layers both are drawn in.
+ * - `game/`: the game as it is played. `Field` runs a run of levels and
+ *   puts the rest together: `Station` (the board), `Player` (Bolt) and
+ *   `Sparks` (its zaps), `Monsters`, `Navigation` (where monsters can go,
+ *   with `@melonjs/pathfinding-plugin`), `Powers` (the power-ups),
+ *   `FieldFront` (drawn over the characters) and `movers.ts` (cell-to-cell
+ *   walking, shared by Bolt and the monsters).
+ * - `entities/`: the characters' sprites. `Actor` (a sprite over the cast
+ *   sheet), and `Bolt` and `Portal`, which the maps place (see below).
+ * - `rules/`: no engine, so they run in Node too. `board.ts` (the tiles and
+ *   how moves go), `levels.ts` (reading a level from its Tiled map) and
+ *   `check-levels.ts` (`pnpm check:starsweep`, which checks every level
+ *   can be cleared).
+ * - `fx/`: what makes it shine. `NebulaBackdrop` (a custom shader sky, its
+ *   source in `nebulaShader.ts`), `DeepSpace` (3D star dust and novas, seen
+ *   by `spaceCamera.ts`), `Effects` (particle bursts and spark trails),
+ *   `SpaceBackdrop` (the planet, and the sky on Canvas) and `screenFx.ts`
+ *   (bloom, vignette and chromatic aberration).
+ * - `ui/Hud`, `input/Controls`, `audio/sfx.ts` (every sound synthesised
+ *   with `audio.tone` / `audio.noise`), `config/layout.ts` (sizes and
+ *   places) and `utils/` (drawing helpers, and the saved best score).
+ *
+ * The levels are Tiled maps (`public/assets/starsweep/levels/*.tmj`);
+ * `rules/levels.ts` says how to edit them. Bolt and the portals are objects
+ * in each map's `actors` layer: the classes registered below build them
+ * when a level loads. The characters are sprites from one sheet,
+ * `cast.png`, baked from Kenney's Monster Builder Pack (CC0) with every
+ * animation in its JSON (`pnpm bake:starsweep` bakes it again).
  *
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.

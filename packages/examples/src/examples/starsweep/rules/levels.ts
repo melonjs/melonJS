@@ -15,21 +15,23 @@
  *   empty cell is open space.
  * - The `power` tile layer starts empty: the game lights a panel by
  *   setting the tile whose `lit` property names its kind there, and
- *   tints the layer with the level's colour (see `station.ts`).
+ *   tints the layer with the level's colour (see `game/Station.ts`).
  * - The `actors` object layer places what stands on the board: one `Bolt`
  *   object (a point, where Bolt begins) and the portals monsters come out
  *   of (the animated portal tile, whose class is `Portal`, dropped as a
  *   tile object onto a floor). The engine builds them when the level
- *   loads, with the classes registered in `objects.ts`.
+ *   loads, with the classes in `entities/`, registered in
+ *   `ExampleStarsweep.ts`.
  * - The map's custom properties set the rest: `title`, `hint`, `theme`
  *   (one of {@link THEMES}), `enemies` (the order monsters come out in,
  *   comma separated: `wobbler`, `muncher`, `chaser`, `drone`), `maxEnemies`,
  *   `spawnEvery` (seconds) and `par` (seconds, for the time bonus).
  *
  * The engine draws the maps. The game reads each cell's `kind`, and where
- * the objects are, from the map here, once, and the level checker (`check-levels.ts`) reads the same
- * files the same way: every panel reachable, no move that never ends, no
- * resting spot you cannot leave safely.
+ * the objects are, from the map here, once, and the level checker
+ * (`check-levels.ts`) reads the same files the same way: every panel
+ * reachable, no move that never ends, no resting spot you cannot leave
+ * safely.
  *
  * `title`, not `name`: map properties are set over the map's own fields,
  * so a `name` property would replace the level's name in the engine.

@@ -91,7 +91,7 @@ export class PlayScreen extends Stage {
 						board.getChildByName(name)[0] as unknown as TMXLayer;
 					return {
 						layers: { station: layer("station"), power: layer("power") },
-						// built from the map's `Bolt` object (see objects.ts)
+						// built from the map's `Bolt` object (see entities/Bolt.ts)
 						bolt: board.getChildByType(Bolt)[0] as Bolt,
 					};
 				},

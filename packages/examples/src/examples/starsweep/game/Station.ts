@@ -70,7 +70,7 @@ export interface StationEvents {
 export class Station {
 	/** the level's map, or null while one loads */
 	layers: Board | null = null;
-	/** each cell's tile, as the rules see it now (see `board.ts`) */
+	/** each cell's tile, as the rules see it now (see `rules/board.ts`) */
 	tiles: Tile[] = [];
 	/** where Bolt begins */
 	start: Cell = { x: 0, y: 0 };

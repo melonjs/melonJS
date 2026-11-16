@@ -4,7 +4,7 @@
  * The power-ups, glows, the drawn sky and the title's strip of deck are
  * drawn from shapes (rects, ellipses, arcs, lines, polygons) through the
  * renderer, so they run the same on Canvas, WebGL and WebGPU. The station
- * is a Tiled map and the characters are sprites (see `cast.ts`), both
+ * is a Tiled map and the characters are sprites (see `entities/Actor.ts`), both
  * drawn by the engine; the words on screen are the engine's `Text`.
  *
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.

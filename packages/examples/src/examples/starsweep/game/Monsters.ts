@@ -2,7 +2,7 @@
  * melonJS — Starsweep: the monsters, how each kind moves, and their sprites.
  *
  * They come out of the level's portals, in the order the map lists, and
- * find their way with `@melonjs/pathfinding-plugin` (see `navigation.ts`):
+ * find their way with `@melonjs/pathfinding-plugin` (see `Navigation.ts`):
  * - **wobblers** pick a panel some way off and walk there, round walls and
  *   holes, now and then taking a random step;
  * - **munchers** wander, mostly onto lit panels, and eat the light;
