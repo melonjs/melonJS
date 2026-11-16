@@ -298,7 +298,9 @@ const q = new Quaternion().setFromAxisAngle(new Vector3d(0, 1, 0), Math.PI / 2);
 q.apply(v);                       // turns v IN PLACE (+X goes to -Z here)
 a.multiply(b);                    // a = a × b: b is applied first, then a
 a.slerp(b, 0.25);                 // a quarter of the way from a to b, in place
-mesh.currentTransform.val.set(q.toMatrix3d().val); // its turn as a matrix
+q.setFromUnitVectors(from, to);   // the shortest turn taking direction `from` onto `to`
+mesh.rotate(q);                   // a renderable, or a Matrix3d, turned by q
+m.compose(position, q, scale);    // a whole matrix: scale, then turn, then move
 ```
 
 Like the vectors, its methods mutate `this` and return it, so `clone()` first
@@ -313,6 +315,24 @@ out of a matrix and takes a scale out on the way, so a renderable's
 `currentTransform` can be read as it is. A zero or `NaN` axis, an angle that
 is not finite, or a zero quaternion normalized, gives the identity rather than
 `NaN`.
+
+To point something modeled along an axis at a direction, use
+`setFromUnitVectors(axis, direction)`, which needs neither the angle nor the
+axis of the turn, and works for any two directions, opposite ones included
+(a half turn). Neither has to be of unit length. To set a renderable's turn
+outright rather than add to it, start from `currentTransform.identity()`:
+
+```js
+// a beam modeled along +X, laid from a to b
+const along = b.clone().sub(a);
+beam.currentTransform.identity();
+beam.rotate(new Quaternion().setFromUnitVectors(new Vector3d(1, 0, 0), along));
+beam.currentTransform.scale(along.length(), 1, 1);
+```
+
+`Matrix3d#rotate(q)` and `Renderable#rotate(q)` normalize `q`, and a zero or
+`NaN` one turns nothing. `Matrix3d#compose(t, q, s)` overwrites the whole
+matrix; a missing `z` is 0 for the position and 1 for the scale.
 
 ## Utilities
 
@@ -385,6 +405,8 @@ const rgb = color.toArray().slice(0, 3);   // three numbers in 0..1, yours
 | a value read back from a matrix differs | `val` is `Float32Array`; it holds float32 |
 | easing differs at 120fps | per-frame `lerp`; use `damp` |
 | a flicker or sway looks mechanical, or visibly repeats | a sum of sines or a per-frame `Math.random()`: sample `Noise#getNoise1d(time)` |
+| a mesh pointed along a direction flips, spins or goes NaN when the direction is opposite its axis | an angle from `acos` and an axis from a cross product, which is zero there: `Quaternion#setFromUnitVectors(axis, direction)` |
+| a mesh turned by `rotate(q)` keeps turning further every frame | `rotate` adds to the turn: `currentTransform.identity()` first to set it outright |
 
 ## Related skills
 

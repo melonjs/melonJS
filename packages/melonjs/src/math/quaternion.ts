@@ -1,4 +1,5 @@
 import { Matrix3d } from "./matrix3d.ts";
+import { slerpInto, writeRotationScale } from "./rotation.ts";
 import type { Vector3d } from "./vector3d.ts";
 
 /**
@@ -6,7 +7,8 @@ import type { Vector3d } from "./vector3d.ts";
  * dividing by the sine of the angle between them, which vanishes as they meet,
  * and blends them linearly instead. A cosine, so the test costs no `acos`.
  */
-const SLERP_EPSILON = 1e-6;
+// the two quaternions a slerp blends, side by side
+const _pair = new Float64Array(8);
 
 /**
  * An orientation in 3D: a rotation about an axis, stored as a unit quaternion
@@ -136,6 +138,53 @@ export class Quaternion {
 	}
 
 	/**
+	 * The shortest turn that takes the direction `from` onto the direction
+	 * `to`. Neither needs to be of unit length. Two opposite directions are
+	 * joined by a half turn about an axis square to them; a direction of
+	 * length 0, or one that is not a number, gives no rotation.
+	 * @param from - the direction to turn from
+	 * @param to - the direction to turn onto
+	 * @returns this, for chaining
+	 * @example
+	 * // a band modeled along +X, laid along the line from a to b
+	 * const along = b.clone().sub(a);
+	 * band.rotate(new Quaternion().setFromUnitVectors(new Vector3d(1, 0, 0), along));
+	 */
+	setFromUnitVectors(from: Vector3d, to: Vector3d) {
+		const fl = Math.hypot(from.x, from.y, from.z);
+		const tl = Math.hypot(to.x, to.y, to.z);
+		if (
+			!(fl > 0) ||
+			!(tl > 0) ||
+			!Number.isFinite(fl) ||
+			!Number.isFinite(tl)
+		) {
+			return this.identity();
+		}
+		const fx = from.x / fl;
+		const fy = from.y / fl;
+		const fz = from.z / fl;
+		const tx = to.x / tl;
+		const ty = to.y / tl;
+		const tz = to.z / tl;
+		const r = fx * tx + fy * ty + fz * tz + 1;
+		if (r < 1e-9) {
+			// opposite: a half turn about any axis square to `from`, the one
+			// in the plane of the larger components keeping it well defined
+			return Math.abs(fx) > Math.abs(fz)
+				? this.set(-fy, fx, 0, 0).normalize()
+				: this.set(0, -fz, fy, 0).normalize();
+		}
+		// (from × to, 1 + from · to), normalized: half the angle, no trig
+		return this.set(
+			fy * tz - fz * ty,
+			fz * tx - fx * tz,
+			fx * ty - fy * tx,
+			r,
+		).normalize();
+	}
+
+	/**
 	 * The rotation held in a matrix: its upper 3×3. A scale along each axis
 	 * is taken out, so a renderable's `currentTransform` can be read as it
 	 * is; a mirror or a shear is not, and a matrix with an axis scaled to
@@ -189,29 +238,7 @@ export class Quaternion {
 	 */
 	toMatrix3d(out: Matrix3d = new Matrix3d()) {
 		const target = out;
-		const v = target.val;
-		const { x, y, z, w } = this;
-		const xx = x * x;
-		const yy = y * y;
-		const zz = z * z;
-		const xy = x * y;
-		const xz = x * z;
-		const yz = y * z;
-		const wx = w * x;
-		const wy = w * y;
-		const wz = w * z;
-		v[0] = 1 - 2 * (yy + zz);
-		v[1] = 2 * (xy + wz);
-		v[2] = 2 * (xz - wy);
-		v[3] = 0;
-		v[4] = 2 * (xy - wz);
-		v[5] = 1 - 2 * (xx + zz);
-		v[6] = 2 * (yz + wx);
-		v[7] = 0;
-		v[8] = 2 * (xz + wy);
-		v[9] = 2 * (yz - wx);
-		v[10] = 1 - 2 * (xx + yy);
-		v[11] = 0;
+		writeRotationScale(target.val, this.x, this.y, this.z, this.w, 1, 1, 1);
 		return target;
 	}
 
@@ -308,34 +335,17 @@ export class Quaternion {
 	 * @returns this, for chaining
 	 */
 	slerp(q: Quaternion, t: number) {
-		let { x: bx, y: by, z: bz, w: bw } = q;
-		let cos = this.dot(q);
-		// q and -q are one orientation: go the short way
-		if (cos < 0) {
-			cos = -cos;
-			bx = -bx;
-			by = -by;
-			bz = -bz;
-			bw = -bw;
-		}
-		let a;
-		let b;
-		if (1 - cos < SLERP_EPSILON) {
-			a = 1 - t;
-			b = t;
-		} else {
-			const angle = Math.acos(Math.min(cos, 1));
-			const sin = Math.sin(angle);
-			a = Math.sin((1 - t) * angle) / sin;
-			b = Math.sin(t * angle) / sin;
-		}
-		this.set(
-			this.x * a + bx * b,
-			this.y * a + by * b,
-			this.z * a + bz * b,
-			this.w * a + bw * b,
-		);
-		return this.normalize();
+		const p = _pair;
+		p[0] = this.x;
+		p[1] = this.y;
+		p[2] = this.z;
+		p[3] = this.w;
+		p[4] = q.x;
+		p[5] = q.y;
+		p[6] = q.z;
+		p[7] = q.w;
+		slerpInto(p, 0, p, 4, t, p, 0);
+		return this.set(p[0], p[1], p[2], p[3]);
 	}
 
 	/**

@@ -14,9 +14,14 @@
 - Physics: `Capsule3d`, `ConvexHull3d` and `TriangleMesh3d` collision shapes, the last two built from a model with `fromMesh()`; the built-in physics collides them as their bounding box ([#1846](https://github.com/melonjs/melonJS/issues/1846))
 - Physics: the adapter API takes a `Vector3d` wherever it takes a `Vector2d` (`setVelocity`, `applyForce`, `applyImpulse`, `setPosition`, `gravity`), with optional `getVelocity3d`, `getRotation` / `setRotation` and `getAngularVelocity3d` for a 3D adapter; the built-in applies them along its depth axis. A `Vector2d` works as before
 - Physics: the built-in says once in the console when it is asked for 3D it can only approximate (those three shapes, or a turn or spin about X or Y), naming `@melonjs/rapier3d-adapter`
-- Math: `Quaternion`, an orientation in 3D
+- Math: `Quaternion`, an orientation in 3D, and `Quaternion#setFromUnitVectors(from, to)`, the shortest turn that takes one direction onto another
+- Math: `Matrix3d#compose(translation, rotation, scale)` sets a matrix from a position, a `Quaternion` and a scale; `Matrix3d#rotate()` and `Renderable#rotate()` also take a `Quaternion`
+
+### Performance
+- `Camera3d`: the camera builds its orientation once, from a `Quaternion`, when `yaw`, `pitch` or `roll` changes, and the view, the frustum, the fog and `getBasis()` all reuse it, where each rebuilt it from three rotations; the view is taken off the world container by restoring its transform instead of turning it back. The camera's view work per frame is about **48%** faster with the camera moving (1.49 to **0.78 µs**) and **72%** faster with it still (1.15 to **0.32 µs**)
 
 ### Fixed
+- `Camera3d`: turning the view back off the world container every frame left a rounding error in its transform, which built up as the game ran; it is now restored exactly. A `yaw`, `pitch` or `roll` that is not a number no longer fills the view with NaN: that turn is left out
 - Input: under a `Camera3d`, pointer events on a mesh are hit-tested by the ray through the pointer against its triangles; they were tested against 2D bounds that a perspective view misplaces
 - Input: under a `Camera3d`, overlapping `floating` regions are asked for a pointer event in the order they are drawn, the smaller depth first; they were asked by raw z, so a full-screen floating region at depth 4 took the press meant for a `UITextButton` at depth 1 drawn over it
 - glTF: a skinned mesh was placed and bounded by its own node's transform, which glTF says it ignores, so a rigged character could load offset and with wrong `bounds`

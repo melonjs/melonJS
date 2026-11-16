@@ -10,6 +10,10 @@
  * @ignore
  * @internal
  */
+import { slerpInto } from "../../math/rotation.ts";
+
+// the cosine above which two keys are blended straight rather than slerped
+const KEY_STRAIGHT_ABOVE = 0.9995;
 
 // reused result for findKeyframe — the value is consumed immediately by the
 // caller (sampleChannel destructures it on return), so a single shared object
@@ -76,48 +80,10 @@ export function findKeyframe(times, t) {
  * @internal
  */
 export function slerpQuat(values, o0, o1, t, out) {
-	const ax = values[o0];
-	const ay = values[o0 + 1];
-	const az = values[o0 + 2];
-	const aw = values[o0 + 3];
-	let bx = values[o1];
-	let by = values[o1 + 1];
-	let bz = values[o1 + 2];
-	let bw = values[o1 + 3];
-	let cosom = ax * bx + ay * by + az * bz + aw * bw;
-	// shortest path: negate the second quaternion if the dot is negative
-	if (cosom < 0) {
-		cosom = -cosom;
-		bx = -bx;
-		by = -by;
-		bz = -bz;
-		bw = -bw;
-	}
-	let s0;
-	let s1;
-	if (cosom > 0.9995) {
-		// quaternions almost parallel — normalized lerp avoids a divide-by-~0
-		s0 = 1 - t;
-		s1 = t;
-	} else {
-		const omega = Math.acos(cosom);
-		const sinom = Math.sin(omega);
-		s0 = Math.sin((1 - t) * omega) / sinom;
-		s1 = Math.sin(t * omega) / sinom;
-	}
-	let ox = s0 * ax + s1 * bx;
-	let oy = s0 * ay + s1 * by;
-	let oz = s0 * az + s1 * bz;
-	let ow = s0 * aw + s1 * bw;
-	const len = Math.hypot(ox, oy, oz, ow) || 1;
-	ox /= len;
-	oy /= len;
-	oz /= len;
-	ow /= len;
-	out[0] = ox;
-	out[1] = oy;
-	out[2] = oz;
-	out[3] = ow;
+	// the one slerp `Quaternion#slerp` uses too, on the key buffer itself.
+	// Keys closer than about 1.8 degrees, as dense animation keys are, are
+	// blended straight: twice as fast, and the same to the eye
+	slerpInto(values, o0, values, o1, t, out, 0, KEY_STRAIGHT_ABOVE);
 	return out;
 }
 
