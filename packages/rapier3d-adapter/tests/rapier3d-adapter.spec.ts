@@ -532,6 +532,35 @@ describe("Rapier3dAdapter", () => {
 	});
 
 	describe("orientation", () => {
+		// a turned body moved to another Rapier 3D adapter by setAdapter: the
+		// outgoing one turns it back first, or the new one, which turns a
+		// renderable from how it stood, would turn it twice
+		const swapKeepsTurn = (turn: Quaternion) => {
+			const r = cube(100, 100, 0, { gravityScale: 0 });
+			adapter.setRotation(r, turn);
+			const drawn = Array.from(r.currentTransform.val);
+			world.setAdapter(new Rapier3dAdapter());
+			const next = world.adapter as Rapier3dAdapter;
+			const after = Array.from(r.currentTransform.val);
+			for (let i = 0; i < 16; i++) {
+				expect(after[i]).toBeCloseTo(drawn[i], 5);
+			}
+			const q = next.getRotation(r);
+			expect(Math.abs(q.dot(turn))).toBeCloseTo(1, 5);
+		};
+
+		it("a tilted body moved to another adapter is drawn as it was, turned once", () => {
+			swapKeepsTurn(
+				new Quaternion().setFromAxisAngle(new Vector3d(1, 0, 0), 0.6),
+			);
+		});
+
+		it("a body turned about Z moved to another adapter is drawn as it was", () => {
+			swapKeepsTurn(
+				new Quaternion().setFromAxisAngle(new Vector3d(0, 0, 1), 0.7),
+			);
+		});
+
 		it("getRotation / setRotation round-trip, a non-unit quaternion normalized", () => {
 			const r = cube(100, 100, 0, { gravityScale: 0 });
 			adapter.setRotation(r, new Quaternion(0, 0, 2, 2));
