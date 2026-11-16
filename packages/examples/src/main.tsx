@@ -585,7 +585,7 @@ const examples: {
 		path: "slingshot",
 		sourceDir: "slingshot",
 		description:
-			"3D physics with @melonjs/rapier3d-adapter: launch Kenney Cube Pets (CC0) from a slingshot into towers of wood and stone that topple and tumble, and knock every golden orb to the ground.",
+			"3D physics with @melonjs/rapier3d-adapter: launch Kenney Cube Pets (CC0) from a slingshot into towers of wood and stone that topple and tumble, and knock out every rival animal perched on top.",
 	},
 	{
 		component: <ExampleSkinnedCharacter />,
