@@ -10,8 +10,8 @@ import {
 
 /**
  * Shared by `pointer-floating-draw-order-2d.spec.js` and `-3d.spec.js`, one
- * Application per file, so each is the first on its page and is put into a
- * stage, and given its camera, without the test doing it.
+ * Application per file: the pointer listeners stay on the first
+ * Application's canvas, so a second one in the same file gets no events.
  *
  * Overlapping floating (screen-space) regions are asked for a pointer event
  * the way they are drawn, topmost first.

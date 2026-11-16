@@ -19,7 +19,6 @@
 ### Fixed
 - Input: under a `Camera3d`, pointer events on a mesh are hit-tested by the ray through the pointer against its triangles; they were tested against 2D bounds that a perspective view misplaces
 - Input: under a `Camera3d`, overlapping `floating` regions are asked for a pointer event in the order they are drawn, the smaller depth first; they were asked by raw z, so a full-screen floating region at depth 4 took the press meant for a `UITextButton` at depth 1 drawn over it
-- Input: pointer events follow a new `Application`: after one was destroyed and another created, the pointer listeners stayed on the old canvas and the new one got no pointer events. A press on the canvas of a destroyed `Application` left in the page (`destroy(false)`) is ignored
 - glTF: a skinned mesh was placed and bounded by its own node's transform, which glTF says it ignores, so a rigged character could load offset and with wrong `bounds`
 - `GLTFModel`: a clip at a negative `speed` froze on its first frame and never ended; it now plays backwards
 - `Camera3d`: with a `zoom` other than 1, `worldToScreen` and `screenToRay` called while drawing answered for the wrong size
