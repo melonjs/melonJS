@@ -469,6 +469,12 @@ if (score > store.hiscore) { /* ... */ }
 Chained calls accumulate, so `save.add({ a: 0 }).add({ b: "" })` is typed with
 both.
 
+**No `localStorage`, no error.** Where there is none, or reading it throws (a
+sandboxed iframe such as an embedded playable page, cookies blocked), `save`
+keeps the keys in memory for the session: `add`, reads and writes all work,
+and nothing outlives the page. No `try` / `catch` is needed around it;
+`device.localStorage` is `false` when the keys will not be kept.
+
 **Somewhere other than `localStorage`.** Two calls, one for each kind of
 storage:
 
@@ -547,6 +553,7 @@ When `setStorage()` switches storage:
 | the platform refuses saves (Facebook's `PENDING_REQUEST`), or the game floods it with them | a hand-written storage saving on every `setItem()`; `save.createCloudStorage()` saves the changes together, one write at a time |
 | progress made just before the player left is lost | the last save was still waiting; call the cloud storage's `flush()` on the platform's pause |
 | a saved key is gone after `save.setStorage()` | only keys registered with `save.add()` are carried over to the new storage; register it (before or after) |
+| the high score is back at its default on every visit, with no error | there is no `localStorage` there (a sandboxed iframe, cookies blocked), so `save` kept it in memory; `device.localStorage` is `false`, and `save.setStorage()` can keep it elsewhere |
 | the game pauses or goes quiet when the tab is hidden, on a portal that must decide that itself | the window still drives the focus: `device.setFocusEvents(false)`, then emit `event.BLUR` / `event.FOCUS` from the portal's callbacks |
 | a host's pause stops the game's updates but it keeps drawing | `pauseOnBlur` keeps drawing; set `stopOnBlur = true` and `pauseOnBlur = false` |
 | a host's pause does nothing, after turning `pauseOnBlur` off so the tab would not pause the game | the flags apply to every `event.BLUR`, the host's included; keep them, and stop the window reporting with `device.setFocusEvents(false)` |

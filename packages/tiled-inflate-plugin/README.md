@@ -5,21 +5,24 @@
 [![NPM Package](https://img.shields.io/npm/v/@melonjs/tiled-inflate-plugin)](https://www.npmjs.com/package/@melonjs/tiled-inflate-plugin)
 [![jsDeliver](https://data.jsdelivr.com/v1/package/npm/@melonjs/tiled-inflate-plugin/badge?style=rounded)](https://www.jsdelivr.com/package/npm/@melonjs/tiled-inflate-plugin)
 
-A [melonJS](https://github.com/melonjs/melonJS) plugin to enable loading and parsing of compressed [Tiled](https://www.mapeditor.org/) maps.
+Compressed [Tiled](https://www.mapeditor.org/) maps for [melonJS](https://melonjs.org/) games.
 
-Supports **gzip**, **zlib**, and **zstd** compressed tile layer data.
+Tiled can save a tile layer's data compressed (the map's *Tile Layer Format* property). melonJS reads CSV and uncompressed base64 layers on its own; this plugin adds the compressed ones.
 
-## Installation
+- gzip, zlib and zstd layer data, in `.tmx` and `.tmj` maps, finite or infinite
+- gzip and zlib checksums checked: a damaged map throws an error saying what is wrong, instead of loading with the wrong tiles
+- base64 decoded with `atob`, or by the plugin itself on a runtime that has none
+- small: [fflate](https://github.com/101arrowz/fflate) for gzip and zlib, [fzstd](https://github.com/101arrowz/fzstd) for zstd
 
-```bash
-npm install @melonjs/tiled-inflate-plugin
-# or
-pnpm add @melonjs/tiled-inflate-plugin
+## Install
+
+```sh
+npm install melonjs @melonjs/tiled-inflate-plugin
 ```
 
-## Usage
+## Quick start
 
-```javascript
+```js
 import { plugin } from "melonjs";
 import { TiledInflatePlugin } from "@melonjs/tiled-inflate-plugin";
 
@@ -27,15 +30,22 @@ import { TiledInflatePlugin } from "@melonjs/tiled-inflate-plugin";
 plugin.register(TiledInflatePlugin);
 ```
 
-Once registered, melonJS will automatically decompress compressed tile layer data when loading Tiled maps.
+Maps then load as usual, compressed or not.
 
-## Supported Compression Formats
+## Troubleshooting
 
-| Format | Supported | Library |
-|--------|-----------|---------|
-| gzip   | Yes       | [pako](https://github.com/nodeca/pako) |
-| zlib   | Yes       | [pako](https://github.com/nodeca/pako) |
-| zstd   | Yes       | [fzstd](https://github.com/101arrowz/fzstd) |
+| Symptom | Cause |
+| --- | --- |
+| `No inflate function set` when a map loads | The map has compressed layers and the plugin is not registered: register it before the map loads |
+| `@melonjs/tiled-inflate-plugin: cannot read zlib compressed layer data: …` | That layer's data is damaged (a checksum or its length does not match), cut short, or not base64: save the map again from Tiled |
+| `Tiled layer compression "…" is not supported` | The map was written by another tool, with a compression Tiled does not offer: save it from Tiled with gzip, zlib or zstd |
+| A zstd map loads with the wrong tiles | zstd data as Tiled writes it has no checksum, so damage can go unnoticed: save the map again, or use gzip or zlib, which are checked |
+
+A `.tmx` map is read while it preloads: its error is then the `cause` of the loader's `Failed loading resource …`. A `.tmj` map is read by `level.load`, which throws it.
+
+## Developing
+
+`pnpm -F @melonjs/tiled-inflate-plugin test` runs the tests: maps saved by Tiled in every layer format, damaged copies of them, and the decoders on their own. The maps in `tests/fixtures` are written by Tiled itself, from `tests/fixtures/generate.tiled.js`: run `Tiled --evaluate generate.tiled.js "$PWD"` in that folder.
 
 ## License
 

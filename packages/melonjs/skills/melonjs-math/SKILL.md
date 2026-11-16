@@ -1,6 +1,6 @@
 ---
 name: melonjs-math
-description: "Use this skill for vector and matrix maths in melonJS — Vector2d, Vector3d, their observable variants, Matrix2d, Matrix3d, and the math utility functions. Covers which methods mutate and which allocate, the vector pool and when clone() is the wrong tool, interpolation with lerp, slerp, damp and moveTowards, and the argument defaults that silently drop a component. Triggers on: Vector2d, Vector3d, ObservableVector2d, ObservableVector3d, Matrix2d, Matrix3d, Quaternion, vector, vector maths, dot, cross, normalize, length, distance, angle, lerp, slerp, damp, moveTowards, project, clamp, degToRad, radToDeg, clone, vector pool, vector3dPool, setMuted, setCallback, my vector is wrong, z is zero, scale ignores z, moveTowards ignores z, setPosition, projectN, currentTransform, setTransform, matrix, transform matrix, column-major, val, Float32Array, basis matrix, orientation matrix, Noise, getNoise1d, flicker, wobble."
+description: "Use this skill for vector and matrix maths in melonJS — Vector2d, Vector3d, their observable variants, Matrix2d, Matrix3d, and the math utility functions. Covers which methods mutate and which allocate, the vector pool and when clone() is the wrong tool, interpolation with lerp, slerp, damp and moveTowards, and the argument defaults that silently drop a component. Triggers on: Vector2d, Vector3d, ObservableVector2d, ObservableVector3d, Matrix2d, Matrix3d, Quaternion, vector, vector maths, dot, cross, normalize, length, distance, angle, lerp, slerp, damp, moveTowards, project, clamp, degToRad, radToDeg, clone, vector pool, vector3dPool, setMuted, setCallback, my vector is wrong, z is zero, scale ignores z, moveTowards ignores z, setPosition, projectN, currentTransform, setTransform, matrix, transform matrix, column-major, val, Float32Array, basis matrix, orientation matrix, Noise, getNoise1d, flicker, wobble, Color, toArray, color components."
 license: MIT
 ---
 
@@ -352,6 +352,17 @@ about ±0.6), `frequency` is in changes per unit of the input, and the same seed
 gives the same field every run. A sum of sines repeats where people notice it,
 and `Math.random()` every frame jitters instead of drifting.
 
+## `Color#toArray()` is the colour itself
+
+The same rule holds for colours: `color.toArray()` hands back the colour's own
+`Float32Array` of normalized `[r, g, b, a]`, not a copy. Write into it and the
+colour changes; keep it and it changes when the colour does. Copy what you
+mean to keep or change:
+
+```js
+const rgb = color.toArray().slice(0, 3);   // three numbers in 0..1, yours
+```
+
 ## Symptoms
 
 | symptom | cause |
@@ -365,6 +376,7 @@ and `Math.random()` every frame jitters instead of drifting.
 | memory climbs in a loop | `clone()` or `negate()`/`floor()`/`ceil()` per frame |
 | memory taken by dropped `clone()`s never comes back | before 20.9 the pool kept every instance it handed out; upgrade, and release what you clone |
 | two helper results are the same object | a shared scratch vector was returned |
+| a colour changes by itself, or values read from one change later | `Color#toArray()` is the colour's own array: `slice()` it before changing or keeping it |
 | `.z` is a type error | `Renderable.pos` is declared `Vector2d` (#1510) |
 | rotation eases oddly between directions | `lerp` on directions; use `slerp` |
 | an orientation came back applied in the wrong order | `a.multiply(b)` applies `b` first; `premultiply` for the other order |

@@ -28,7 +28,7 @@ export function decompress(data: string, format: string): Uint32Array {
 		return inflateFunction(data, format);
 	} else {
 		throw new Error(
-			"No inflate function set — GZIP/ZLIB decompression not supported!",
+			"No inflate function set: register @melonjs/tiled-inflate-plugin to load a Tiled map with gzip, zlib or zstd compressed layers",
 		);
 	}
 }

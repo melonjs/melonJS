@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.3.0 - _2026-11-16_
+
+### Changed
+- gzip and zlib are decompressed with [fflate](https://github.com/101arrowz/fflate) instead of pako: the plugin is about 16 KB minified instead of 59 KB
+- base64 is decoded with `atob`, or by the plugin itself where the runtime has none, instead of js-base64
+
+### Performance
+- gzip layer data decompresses about a quarter faster
+
+### Fixed
+- A damaged compressed layer throws an `Error` naming the plugin and the problem, instead of pako's bare string or `TypeError`
+
 ## 1.2.2 - _2026-11-14_
 
 ### Fixed
