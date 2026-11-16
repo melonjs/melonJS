@@ -699,8 +699,14 @@ export class MatterAdapter implements PhysicsAdapter {
 		// just below). If a method is added to or removed from PhysicsBody
 		// in melonJS, this object fails to type-check until updated —
 		// keeps the matter helpers in lockstep with the portable contract.
+		// a write through the handle wakes a sleeping body, as the adapter's
+		// own methods do
+		const wake = () => {
+			this.wake(body);
+		};
 		const helpers: Omit<PhysicsBody, "collisionType" | "collisionMask"> = {
 			setVelocity(x: number, y: number) {
+				wake();
 				Matter.Body.setVelocity(body, { x, y });
 			},
 			getVelocity(out?: Vector2d): Vector2d {
@@ -716,11 +722,13 @@ export class MatterAdapter implements PhysicsAdapter {
 					typeof pointX === "number" && typeof pointY === "number"
 						? { x: pointX, y: pointY }
 						: body.position;
+				wake();
 				Matter.Body.applyForce(body, point, { x, y });
 			},
 			applyImpulse(x: number, y: number) {
 				// matter has no applyImpulse — convert via dv = J / m
 				const invMass = body.mass > 0 ? 1 / body.mass : 0;
+				wake();
 				Matter.Body.setVelocity(body, {
 					x: body.velocity.x + x * invMass,
 					y: body.velocity.y + y * invMass,
@@ -761,12 +769,14 @@ export class MatterAdapter implements PhysicsAdapter {
 				}
 			},
 			setAngularVelocity(omega: number) {
+				wake();
 				Matter.Body.setAngularVelocity(body, omega);
 			},
 			getAngularVelocity(): number {
 				return body.angularVelocity;
 			},
 			setAngle(rad: number) {
+				wake();
 				Matter.Body.setAngle(body, rad);
 			},
 			getAngle(): number {
@@ -776,6 +786,7 @@ export class MatterAdapter implements PhysicsAdapter {
 				// matter-js accumulates `body.torque` for the next step;
 				// adding to it is the documented way to apply an angular
 				// impulse without going through the force/lever-arm path.
+				wake();
 				body.torque += t;
 			},
 		};
@@ -878,6 +889,7 @@ export class MatterAdapter implements PhysicsAdapter {
 	setVelocity(renderable: Renderable, v: Vector2d): void {
 		const body = this.bodyMap.get(renderable);
 		if (body) {
+			this.wake(body);
 			Matter.Body.setVelocity(body, { x: v.x, y: v.y });
 		}
 	}
@@ -890,6 +902,7 @@ export class MatterAdapter implements PhysicsAdapter {
 		// "set velocity to this value each frame" pattern (what
 		// BuiltinAdapter's force-accumulator gave you under the hood)
 		// should use `setVelocity` instead.
+		this.wake(body);
 		Matter.Body.applyForce(body, point ?? body.position, {
 			x: force.x,
 			y: force.y,
@@ -903,6 +916,7 @@ export class MatterAdapter implements PhysicsAdapter {
 		const body = this.bodyMap.get(renderable);
 		if (!body) return;
 		const invMass = body.mass > 0 ? 1 / body.mass : 0;
+		this.wake(body);
 		Matter.Body.setVelocity(body, {
 			x: body.velocity.x + impulse.x * invMass,
 			y: body.velocity.y + impulse.y * invMass,
@@ -917,6 +931,7 @@ export class MatterAdapter implements PhysicsAdapter {
 			// at addBody time so syncFromPhysics keeps renderable.pos at the
 			// requested value.
 			const off = this.posOffsets.get(renderable);
+			this.wake(body);
 			Matter.Body.setPosition(body, {
 				x: p.x - (off?.x ?? 0),
 				y: p.y - (off?.y ?? 0),
@@ -934,6 +949,20 @@ export class MatterAdapter implements PhysicsAdapter {
 		}
 		renderable.pos.x = p.x;
 		renderable.pos.y = p.y;
+	}
+
+	/**
+	 * Wake a sleeping body before a velocity, force, angle or position is
+	 * written to it. matter skips a sleeping body in its step, so a write to
+	 * one was dropped (a `setVelocity` on a crate at rest did nothing);
+	 * planck and Rapier wake the body themselves. Only reachable with
+	 * `matterEngineOptions.enableSleeping`.
+	 * @param body - the body about to be written to
+	 */
+	private wake(body: Matter.Body): void {
+		if (body.isSleeping) {
+			Matter.Sleeping.set(body, false);
+		}
 	}
 
 	private invalidateContactsFor(body: Matter.Body): void {
@@ -968,6 +997,7 @@ export class MatterAdapter implements PhysicsAdapter {
 	setAngle(renderable: Renderable, angle: number): void {
 		const body = this.bodyMap.get(renderable);
 		if (body) {
+			this.wake(body);
 			Matter.Body.setAngle(body, angle);
 		}
 	}
@@ -980,6 +1010,7 @@ export class MatterAdapter implements PhysicsAdapter {
 	setAngularVelocity(renderable: Renderable, omega: number): void {
 		const body = this.bodyMap.get(renderable);
 		if (body) {
+			this.wake(body);
 			Matter.Body.setAngularVelocity(body, omega);
 		}
 	}
@@ -992,6 +1023,7 @@ export class MatterAdapter implements PhysicsAdapter {
 	applyTorque(renderable: Renderable, torque: number): void {
 		const body = this.bodyMap.get(renderable);
 		if (body) {
+			this.wake(body);
 			body.torque += torque;
 		}
 	}
@@ -1205,6 +1237,21 @@ export class MatterAdapter implements PhysicsAdapter {
 			}
 		}
 		return cached;
+	}
+
+	/**
+	 * Whether matter has put the body to sleep: a dynamic body at rest,
+	 * which it leaves out of the simulation until a contact, a force or a
+	 * velocity wakes it. Only with `matterEngineOptions.enableSleeping`.
+	 * `false` for a static body and for a renderable this adapter does not
+	 * know. matter has no kinematic bodies: a `"kinematic"` one is built
+	 * dynamic, and sleeps as one.
+	 * @param renderable - the renderable whose body to read
+	 * @returns `true` while the body sleeps
+	 */
+	isSleeping(renderable: Renderable): boolean {
+		const body = this.bodyMap.get(renderable);
+		return body !== undefined && !body.isStatic && body.isSleeping;
 	}
 
 	isGrounded(renderable: Renderable): boolean {
