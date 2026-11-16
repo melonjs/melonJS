@@ -106,7 +106,9 @@ describe("TMXUtils", () => {
 			setInflateFunction(undefined);
 			expect(() => {
 				return decode("AAAA", "base64", "zlib");
-			}).toThrow("decompression not supported");
+			}).toThrow(
+				"No inflate function set: register @melonjs/tiled-inflate-plugin to load a Tiled map with gzip, zlib or zstd compressed layers",
+			);
 		});
 	});
 
