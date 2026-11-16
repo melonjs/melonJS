@@ -75,3 +75,16 @@ export const ACTOR_Z = {
 	monster: 3,
 	spark: 4,
 } as const;
+
+/**
+ * How far from its centre each thing touches others, in pixels: the engine
+ * finds two touching when their circles meet, so a monster catches Bolt
+ * 0.62 of a cell away, a spark pops a monster 0.55 away, and Bolt picks a
+ * power-up up 0.5 away.
+ */
+export const REACH = {
+	bolt: TILE * 0.31,
+	monster: TILE * 0.31,
+	spark: TILE * 0.24,
+	powerUp: TILE * 0.19,
+} as const;

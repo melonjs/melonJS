@@ -11,14 +11,29 @@
  * it falls off into open space. A shield ring shows round it while a shield
  * is up.
  *
+ * It has a body for the engine's collision detection, and reacts to what
+ * it touches in `onCollisionActive`: a monster catches it (or pops, under a
+ * shield), a power-up is picked up. Its knock-out and its fall make their
+ * own sound and particles; the field only counts the lives.
+ *
  * The field steps Bolt itself (`step`), in a fixed order with the rest of
  * the game; the engine's own `update` only plays its animation.
  *
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
-import { type Container, Tween } from "melonjs";
-import { ACTOR_Z } from "../config/layout";
+import {
+	type CollisionResponse,
+	type Container,
+	collision,
+	game,
+	type Renderable,
+	Tween,
+} from "melonjs";
+import * as sfx from "../audio/sfx";
+import { ACTOR_Z, REACH } from "../config/layout";
+import type { Effects } from "../fx/Effects";
+import { aberrationBurst } from "../fx/screenFx";
 import type { Controls } from "../input/Controls";
 import {
 	type Cell,
@@ -32,7 +47,14 @@ import {
 import { drawGlow, type Renderer } from "../utils/draw";
 import type { Navigation } from "../world/Navigation";
 import type { Station } from "../world/Station";
-import { Actor, boltAnimation, GLOW, placeFalling } from "./Actor";
+import {
+	Actor,
+	boltAnimation,
+	characterBody,
+	GLOW,
+	placeFalling,
+} from "./Actor";
+import { Monster } from "./Monster";
 import {
 	beginStep,
 	fallAway,
@@ -44,6 +66,7 @@ import {
 	standingOn,
 	walk,
 } from "./movers";
+import { type PowerKind, PowerUp } from "./PowerUp";
 
 /** Bolt's walking speed, in cells per second */
 const WALK_SPEED = 5.2;
@@ -55,6 +78,13 @@ const KO_TIME = 1.3;
 const KO_RISE = 16;
 /** seconds Bolt cheers after picking something up */
 const CHEER_TIME = 0.8;
+/** the flash of sparks when Bolt is caught */
+const KO_COLOR = "#fff2a8";
+/** how hard the screen shakes when Bolt is caught: pixels, milliseconds */
+const KO_SHAKE = { strength: 8, duration: 350 };
+/** how much the colours split when Bolt is caught, and when it falls */
+const KO_ABERRATION = 9;
+const FALL_ABERRATION = 4;
 /** how high Bolt hops when a level is cleared, in pixels, and how fast */
 const HOP = { height: 10, speed: 8 };
 
@@ -66,12 +96,19 @@ export interface BoltWorld {
 	readonly station: Station;
 	readonly nav: Navigation;
 	readonly controls: Controls;
+	readonly effects: Effects;
 	/** where the characters' sprites go */
 	readonly actors: Container;
+	/** whether play is on: Bolt only moves, catches and is caught then */
+	playing(): boolean;
+	/** whether a shield is up: monsters that touch Bolt pop */
+	shielded(): boolean;
 	/** Bolt landed on a cell (lighting its panel is up to the game) */
 	landed(cell: Cell): void;
-	/** Bolt stepped off into open space */
-	fellOff(): void;
+	/** Bolt was caught, or fell: a life is lost */
+	lost(): void;
+	/** Bolt picked a power-up up */
+	collected(kind: PowerKind): void;
 }
 
 /** Bolt, as a map places it and the player moves it. */
@@ -101,6 +138,11 @@ export class Bolt extends Actor {
 		super("bolt-idle-down");
 		this.place(x, y);
 		this.walker = standingOn({ x: 0, y: 0 });
+		this.bodyDef = characterBody(
+			REACH.bolt,
+			collision.types.PLAYER_OBJECT,
+			collision.types.ENEMY_OBJECT | collision.types.COLLECTABLE_OBJECT,
+		);
 	}
 
 	/**
@@ -223,7 +265,7 @@ export class Bolt extends Actor {
 		land(w);
 		const g = world.station.ground(w.toX, w.toY);
 		if (g === Tile.VOID) {
-			world.fellOff();
+			this.fall();
 			return;
 		}
 		world.landed({ x: w.toX, y: w.toY });
@@ -237,18 +279,57 @@ export class Bolt extends Actor {
 		}
 	}
 
-	/** Bolt picked something up: a little cheer */
-	cheerUp() {
-		this.cheer = CHEER_TIME;
+	/**
+	 * Bolt touches something: a monster that is out catches it, or pops if a
+	 * shield is up; a power-up is picked up. Called by the engine every step
+	 * the two bodies touch.
+	 */
+	onCollisionActive(_response: CollisionResponse, other: Renderable) {
+		const world = this.world;
+		if (!world?.playing()) {
+			return;
+		}
+		if (other instanceof Monster) {
+			if (!other.isLoose) {
+				return;
+			}
+			if (world.shielded()) {
+				other.pop();
+			} else if (this.canBeHurt) {
+				this.knockOut();
+			}
+		} else if (other instanceof PowerUp) {
+			const kind = other.collect();
+			if (kind !== null) {
+				this.cheer = CHEER_TIME;
+				world.collected(kind);
+			}
+		}
 	}
 
-	/** Bolt falls off into space */
+	/** Bolt falls off into space: a life is lost */
 	fall() {
+		const world = this.world;
+		if (!world?.playing()) {
+			return;
+		}
+		world.lost();
 		fallAway(this);
+		sfx.sfxFall();
+		aberrationBurst(FALL_ABERRATION);
 	}
 
-	/** Bolt was caught: X eyes, floating up as it fades away */
-	knockOut() {
+	/**
+	 * Bolt was caught: a flash of sparks and a shake, then X eyes, floating
+	 * up as it fades away. A life is lost.
+	 */
+	private knockOut() {
+		const world = this.world as BoltWorld;
+		world.lost();
+		sfx.sfxDie();
+		world.effects.burst(this.x, this.y, KO_COLOR, 30, 220, 300);
+		game.viewport.shake(KO_SHAKE.strength, KO_SHAKE.duration);
+		aberrationBurst(KO_ABERRATION);
 		new Tween(this.ko)
 			.to({ alpha: 0, rise: KO_RISE }, { duration: KO_TIME * 1000 })
 			.start();

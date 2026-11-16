@@ -9,15 +9,20 @@
  * the tileset can be rearranged in Tiled: `kind` on the station tiles, `lit`
  * on their lit versions.
  *
- * The station keeps the rules' view of the board in step with the map, and
- * tells the field what happened (a crack gave way, gates opened) through
- * {@link StationEvents}, so the field decides what that does to whoever
- * stands there, and how it looks and sounds.
+ * The station keeps the rules' view of the board in step with the map, with
+ * the sound and the particles of each change (a panel lit or eaten, a crack
+ * giving way or growing back, gates sliding open), and tells the field what
+ * happened through {@link StationEvents}, so the field decides what that
+ * does to whoever stands there.
  *
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
 import type { Tile as MapTile, TMXLayer } from "melonjs";
+import * as sfx from "../audio/sfx";
+import { centreX, centreY, standOn } from "../config/layout";
+import type { DeepSpace } from "../fx/DeepSpace";
+import type { Effects } from "../fx/Effects";
 import {
 	type Cell,
 	cellOf,
@@ -33,6 +38,13 @@ import type { LevelDef } from "../rules/levels";
 const CRUMBLE_DELAY = 0.3;
 /** how long a fallen crack takes to grow back, in seconds */
 const REGROW_TIME = 6;
+/** the dust of a cracked panel */
+const CRACK_COLOR = "#8a7a6a";
+/** a panel's light being eaten */
+const EATEN_COLOR = "#3a3a66";
+/** a gate's colour as it slides open, and the far-off burst it sets off */
+const GATE_COLOR = "#ff3b5c";
+const GATE_NOVA = "#ff5d7a";
 
 /** the two tile layers of a level, once loaded */
 export interface Board {
@@ -88,8 +100,19 @@ export class Station {
 	private litGid = new Map<string, number>();
 	private paintTotal = 0;
 	private paintCount = 0;
+	/** the level's colour, for a panel's sparkle as it lights */
+	private litColor = "#ffffff";
 
-	constructor(private readonly events: StationEvents) {}
+	/**
+	 * @param events - what the field is told
+	 * @param effects - for the particles of each change
+	 * @param space - for a far-off burst when gates open, when there is one
+	 */
+	constructor(
+		private readonly events: StationEvents,
+		private readonly effects: Effects,
+		private readonly space: DeepSpace | null,
+	) {}
 
 	/**
 	 * Play a level on its freshly loaded map.
@@ -110,6 +133,7 @@ export class Station {
 		this.gone = new Array(n).fill(0);
 		this.paintTotal = this.tiles.filter(isPaintable).length;
 		this.paintCount = 0;
+		this.litColor = level.theme.lit;
 	}
 
 	/** forget the map, while the next one loads */
@@ -165,6 +189,21 @@ export class Station {
 	}
 
 	/**
+	 * Light the panel Bolt landed on, with a chime and a sparkle.
+	 * @param streak - panels lit in a row: each a note higher
+	 * @returns true if it was not lit yet
+	 */
+	light(cell: Cell, streak: number) {
+		if (!this.paint(cell.x, cell.y)) {
+			return false;
+		}
+		sfx.sfxPaint(streak);
+		const at = standOn(cell.x, cell.y);
+		this.effects.burst(at.x, at.y, this.litColor, 6, 90);
+		return true;
+	}
+
+	/**
 	 * Put a panel's light out (a muncher ate it).
 	 * @returns true if it was lit
 	 */
@@ -176,6 +215,8 @@ export class Station {
 		this.lit[i] = false;
 		this.paintCount--;
 		this.setLit(x, y, false);
+		sfx.sfxUnpaint();
+		this.burstAt({ x, y }, EATEN_COLOR, 4, 50);
 		return true;
 	}
 
@@ -216,6 +257,8 @@ export class Station {
 		const cell = cellOf(i);
 		this.layers?.station.clearTile(cell.x, cell.y);
 		this.layers?.power.clearTile(cell.x, cell.y);
+		sfx.sfxCrumble();
+		this.burstAt(cell, CRACK_COLOR, 10, 70, 160);
 		this.events.crumbled(cell);
 	}
 
@@ -225,6 +268,7 @@ export class Station {
 		const cell = cellOf(i);
 		this.setTile(this.layers?.station, this.kindGid.get("crack"), cell);
 		this.setLit(cell.x, cell.y, this.lit[i]);
+		this.burstAt(cell, CRACK_COLOR, 6, 40);
 		this.events.regrown(cell);
 	}
 
@@ -241,8 +285,31 @@ export class Station {
 			}
 		}
 		if (opened.length > 0) {
+			for (const cell of opened) {
+				this.burstAt(cell, GATE_COLOR, 10, 120);
+			}
+			sfx.sfxPickup();
+			this.space?.burst(GATE_NOVA, 0.6);
 			this.events.gatesOpened(opened);
 		}
+	}
+
+	/** a burst of particles from a cell's centre */
+	private burstAt(
+		cell: Cell,
+		color: string,
+		count: number,
+		speed: number,
+		life?: number,
+	) {
+		this.effects.burst(
+			centreX(cell.x),
+			centreY(cell.y),
+			color,
+			count,
+			speed,
+			life,
+		);
 	}
 
 	/** light or darken a panel on the power layer */

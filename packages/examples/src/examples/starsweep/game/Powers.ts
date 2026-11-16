@@ -3,9 +3,10 @@
  *
  * Every so often a `PowerUp` appears on an open panel away from Bolt, of a
  * kind drawn by the odds below, and goes again if it is not picked up in
- * time. This keeps the ones on the board, and how long the timed ones
- * picked up (freeze, shield, burst) have left; the field decides what
- * picking one up does.
+ * time. Bolt picks one up by touching it (see `entities/Bolt.ts`). This
+ * keeps the ones on the board, and how long the timed ones picked up
+ * (freeze, shield, burst) have left; the field decides what picking one up
+ * does.
  *
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
@@ -13,6 +14,8 @@
 import { type Container, math, utils } from "melonjs";
 import { ACTOR_Z } from "../config/layout";
 import { type PowerKind, PowerUp } from "../entities/PowerUp";
+import type { DeepSpace } from "../fx/DeepSpace";
+import type { Effects } from "../fx/Effects";
 import { type Cell, COLS, idx, ROWS, Tile } from "../rules/board";
 import type { Station } from "../world/Station";
 
@@ -54,8 +57,16 @@ export class Powers {
 	/** seconds left on each power-up that lasts (not the force-fields') */
 	private readonly left = { freeze: 0, shield: 0, burst: 0 };
 
-	/** @param actors - where the power-ups go, under the characters */
-	constructor(private readonly actors: Container) {}
+	/**
+	 * @param actors - where the power-ups go, under the characters
+	 * @param effects - for their sparkle when picked up
+	 * @param space - for a far-off burst when one is picked up
+	 */
+	constructor(
+		private readonly actors: Container,
+		private readonly effects: Effects,
+		private readonly space: DeepSpace | null,
+	) {}
 
 	/** none on the board and none running, for a new level */
 	reset() {
@@ -106,18 +117,6 @@ export class Powers {
 		return this.left[kind];
 	}
 
-	/**
-	 * Bolt, at a point on the screen, picks up any power-up it is on.
-	 * @returns the one picked up, or null
-	 */
-	pickUp(x: number, y: number): PowerUp | null {
-		const found = this.list.find((pw) => pw.isReachedFrom(x, y));
-		if (found) {
-			this.take(found);
-		}
-		return found ?? null;
-	}
-
 	/** take one off the board */
 	private take(pw: PowerUp) {
 		this.list = this.list.filter((o) => o !== pw);
@@ -145,7 +144,12 @@ export class Powers {
 			return;
 		}
 		const kind = utils.array.random(wantsLife ? DRAW : DRAW_NO_LIFE);
-		const pw = new PowerUp(kind, utils.array.random(spots));
+		const pw = new PowerUp(
+			kind,
+			utils.array.random(spots),
+			this.effects,
+			this.space,
+		);
 		this.list.push(pw);
 		this.actors.addChild(pw, ACTOR_Z.powerUp);
 	}

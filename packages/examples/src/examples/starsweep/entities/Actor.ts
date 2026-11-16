@@ -17,7 +17,13 @@
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
-import { loader, Sprite, TextureAtlas } from "melonjs";
+import {
+	type BodyDefinition,
+	Ellipse,
+	loader,
+	Sprite,
+	TextureAtlas,
+} from "melonjs";
 import { DIR_NAMES, type Dir } from "../rules/board";
 import type { EnemyKind } from "../rules/levels";
 
@@ -26,8 +32,10 @@ export const CAST = "starsweep-cast";
 
 /** the frames are drawn at twice the game's size, for sharp phones */
 const BAKED_SCALE = 2;
-/** where a character's centre is in its 160 x 160 frame (see the bake script) */
-const CENTRE = { x: 80 / 160, y: 84 / 160 };
+/** a frame's size, in pixels (see the bake script) */
+const FRAME = 160;
+/** where a character's centre is in its frame, in pixels */
+const CENTRE = { x: 80, y: 84 };
 
 /** the glow behind each character */
 export const GLOW: Record<EnemyKind | "bolt", string> = {
@@ -53,7 +61,7 @@ export class Actor extends Sprite {
 			loader.getImage(CAST) as HTMLImageElement,
 		);
 		super(0, 0, atlas.getAnimationSettings());
-		this.anchorPoint.set(CENTRE.x, CENTRE.y);
+		this.anchorPoint.set(CENTRE.x / FRAME, CENTRE.y / FRAME);
 		this.place(0, 0);
 		this.play(animation);
 	}
@@ -106,3 +114,27 @@ export const boltAnimation = (walking: boolean, facing: Dir) =>
  */
 export const monsterAnimation = (kind: EnemyKind, dir: Dir | -1) =>
 	dir === -1 ? `${kind}-idle` : `${kind}-walk-${DIR_NAMES[dir]}`;
+
+/**
+ * A character's body for the engine's collision detection: a circle on its
+ * centre, a sensor (it reports touching, and nothing is pushed apart) that
+ * gravity leaves alone, as characters are moved cell to cell by the game.
+ * The frames are drawn at half size, but a body is not scaled with them:
+ * the radius is in screen pixels.
+ * @param radius - how far from its centre it touches things, in pixels
+ * @param type - what it is (a `collision.types` value)
+ * @param mask - what it touches (`collision.types` values, or-ed)
+ * @returns the body definition, for `bodyDef`
+ */
+export const characterBody = (
+	radius: number,
+	type: number,
+	mask: number,
+): BodyDefinition => ({
+	type: "dynamic",
+	shapes: [new Ellipse(CENTRE.x, CENTRE.y, radius * 2, radius * 2)],
+	isSensor: true,
+	gravityScale: 0,
+	collisionType: type,
+	collisionMask: mask,
+});

@@ -63,7 +63,14 @@ export class Monsters {
 		world: Omit<MonsterWorld, "monsters">,
 		private readonly actors: Container,
 	) {
-		this.world = { ...world, monsters: () => this.list };
+		this.world = {
+			...world,
+			monsters: () => this.list,
+			popped: (m) => {
+				this.remove(m);
+				world.popped(m);
+			},
+		};
 	}
 
 	/** a new level: its monsters, in its order, a little faster each level */
@@ -125,6 +132,24 @@ export class Monsters {
 		this.list.push(m);
 		this.actors.addChild(m, ACTOR_Z.monster);
 		sfx.sfxSpawn();
+	}
+
+	/** a panel gave way: the walking monsters on it fall */
+	dropOn(cell: Cell) {
+		for (const m of this.list) {
+			const at = m.cell;
+			if (!m.flies && m.isLoose && at.x === cell.x && at.y === cell.y) {
+				m.drop();
+			}
+		}
+	}
+
+	/** a level was cleared: every monster goes in a puff */
+	celebrate() {
+		for (const m of this.list) {
+			m.vanish();
+		}
+		this.reset();
 	}
 
 	/** the cell each monster is on, drones by where they hover */

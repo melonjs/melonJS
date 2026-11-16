@@ -2,15 +2,27 @@
  * melonJS — Starsweep: a spark Bolt zapped.
  *
  * It flies straight, a glowing `Trail` behind it, until it hits a wall,
- * leaves the board or pops a monster (`game/Sparks.ts` decides which).
+ * leaves the board, or touches a monster, which pops. It finds monsters
+ * with the engine's collision detection: it has a body, and its
+ * `onCollisionStart` is called when that body touches a monster's.
  *
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
-import { Renderable, type Trail, Vector2d } from "melonjs";
-import { cellUnder, TILE } from "../config/layout";
-import { type Dir, DX, DY } from "../rules/board";
+import {
+	type CollisionResponse,
+	collision,
+	Ellipse,
+	Renderable,
+	type Trail,
+	Vector2d,
+} from "melonjs";
+import { cellUnder, REACH, TILE } from "../config/layout";
+import type { Effects } from "../fx/Effects";
+import { type Dir, DX, DY, idx, inBounds, Tile } from "../rules/board";
 import { drawGlow, type Renderer } from "../utils/draw";
+import type { Station } from "../world/Station";
+import { Monster } from "./Monster";
 
 /** a spark's speed, in cells per second */
 const SPEED = 15;
@@ -25,34 +37,43 @@ export class Spark extends Renderable {
 	readonly at: Vector2d;
 	/** the ribbon behind it */
 	readonly trail: Trail;
+	/** it hit something, and is done */
+	spent = false;
 
 	/**
 	 * @param x - where it leaves from
 	 * @param y - where it leaves from
 	 * @param dir - the way it flies
-	 * @param makeTrail - the trail to follow it (see `fx/Effects.ts`)
+	 * @param station - the board, for the walls
+	 * @param effects - for its trail, and its burst on a wall
 	 */
 	constructor(
 		x: number,
 		y: number,
 		readonly dir: Dir,
-		makeTrail: (target: Vector2d) => Trail,
+		private readonly station: Station,
+		private readonly effects: Effects,
 	) {
 		super(x - GLOW_SIZE, y - GLOW_SIZE, GLOW_SIZE * 2, GLOW_SIZE * 2);
 		this.anchorPoint.set(0, 0);
 		// level.load clears the world of everything that is not persistent
 		this.isPersistent = true;
 		this.at = new Vector2d(x, y);
-		this.trail = makeTrail(this.at);
-	}
-
-	/** the cell it is over */
-	get cell() {
-		return cellUnder(this.at.x, this.at.y);
+		this.trail = effects.trail(this.at);
+		this.bodyDef = {
+			type: "dynamic",
+			shapes: [
+				new Ellipse(GLOW_SIZE, GLOW_SIZE, REACH.spark * 2, REACH.spark * 2),
+			],
+			isSensor: true,
+			gravityScale: 0,
+			collisionType: collision.types.PROJECTILE_OBJECT,
+			collisionMask: collision.types.ENEMY_OBJECT,
+		};
 	}
 
 	/**
-	 * Fly on.
+	 * Fly on; a wall or the board's edge stops it, in a little burst.
 	 * @param dt - seconds
 	 */
 	step(dt: number) {
@@ -60,6 +81,19 @@ export class Spark extends Renderable {
 		this.at.x += DX[this.dir] * step;
 		this.at.y += DY[this.dir] * step;
 		this.pos.set(this.at.x - GLOW_SIZE, this.at.y - GLOW_SIZE);
+		const { x, y } = cellUnder(this.at.x, this.at.y);
+		if (!inBounds(x, y) || this.station.tiles[idx(x, y)] === Tile.WALL) {
+			this.effects.burst(this.at.x, this.at.y, SPARK_COLOR, 5, 80);
+			this.spent = true;
+		}
+	}
+
+	/** it touched a monster: one that is out pops, and the spark is done */
+	onCollisionStart(_response: CollisionResponse, other: Renderable) {
+		if (!this.spent && other instanceof Monster && other.isLoose) {
+			this.spent = true;
+			other.pop();
+		}
 	}
 
 	/** a glow, and a white-hot core */

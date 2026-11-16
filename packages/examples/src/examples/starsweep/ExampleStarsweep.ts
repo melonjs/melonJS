@@ -17,16 +17,20 @@
  *   `TitleBackdrop` and `StartBeacon`), `PlayScreen`, and `layers.ts`, the
  *   two layers both are drawn in.
  * - `entities/`: what is on the board, one class each, owning its state,
- *   its moves and how it is drawn. `Bolt` (the robot the player moves),
- *   the monsters (`Monster`, and its kinds `Wobbler`, `Muncher`, `Chaser`
- *   and `Drone`), `PowerUp`, `Spark` and `Portal`; `Actor`, the sprite
+ *   its moves, how it is drawn, and its own sound and particles. They find
+ *   each other with the engine's collision detection: each has a sensor
+ *   body, and Bolt and the sparks react to what they touch in
+ *   `onCollisionActive` / `onCollisionStart`. `Bolt` (the robot the
+ *   player moves), the monsters (`Monster`, and its kinds `Wobbler`,
+ *   `Muncher`, `Chaser` and `Drone`), `PowerUp`, `Spark` and `Portal`;
+ *   `Actor`, the sprite
  *   over the cast sheet they are drawn from; and `movers.ts`, the
  *   cell-to-cell walking Bolt and the monsters share. Bolt and the portals
  *   are placed by the maps (see below).
- * - `game/`: the run. `Field` goes from level to level, keeps the score and
- *   lives, and decides what happens when things meet; `Monsters`, `Powers`
- *   and `Sparks` bring their entities on and off the board; `FieldFront`
- *   is drawn over the characters.
+ * - `game/`: the run. `Field` goes from level to level, keeps the score,
+ *   the lives and the streak, and decides what each event is worth;
+ *   `Monsters`, `Powers` and `Sparks` bring their entities on and off the
+ *   board; `FieldFront` is drawn over the characters.
  * - `world/`: the board as it is played. `Station` (its panels, lit, cracked
  *   or gated) and `Navigation` (where monsters can go, with
  *   `@melonjs/pathfinding-plugin`).

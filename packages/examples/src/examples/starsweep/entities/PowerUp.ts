@@ -11,8 +11,11 @@
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
-import { math, Polygon, Renderable } from "melonjs";
-import { centreX, centreY, STAND_LIFT, TILE } from "../config/layout";
+import { collision, Ellipse, math, Polygon, Renderable } from "melonjs";
+import * as sfx from "../audio/sfx";
+import { centreX, centreY, REACH, STAND_LIFT, TILE } from "../config/layout";
+import type { DeepSpace } from "../fx/DeepSpace";
+import type { Effects } from "../fx/Effects";
 import { type Cell, DX, DY } from "../rules/board";
 import { drawGlow, type Renderer } from "../utils/draw";
 
@@ -20,8 +23,6 @@ import { drawGlow, type Renderer } from "../utils/draw";
 const LIFE = 9;
 /** it blinks for this many seconds before it goes */
 const BLINK = 2;
-/** how close Bolt must come to pick one up, as a share of a cell */
-const PICKUP_REACH = 0.5;
 
 /** the power-ups Bolt can pick up */
 export type PowerKind =
@@ -169,24 +170,69 @@ export class PowerUp extends Renderable {
 	private life = LIFE;
 	/** its own clock, for the bobbing */
 	private time = 0;
+	/** Bolt picked it up */
+	private taken = false;
 
 	/**
 	 * @param kind - what it does
 	 * @param cell - the panel it is on
+	 * @param effects - for its sparkle when picked up
+	 * @param space - for a far-off burst when picked up, when there is one
 	 */
 	constructor(
 		readonly kind: PowerKind,
 		readonly cell: Cell,
+		private readonly effects: Effects,
+		private readonly space: DeepSpace | null,
 	) {
 		super(centreX(cell.x) - TILE / 2, centreY(cell.y) - TILE / 2, TILE, TILE);
 		this.anchorPoint.set(0, 0);
 		// level.load clears the world of everything that is not persistent
 		this.isPersistent = true;
+		// Bolt finds it with the engine's collision detection (see Bolt.ts):
+		// a circle where Bolt would stand, which nothing is pushed off
+		this.bodyDef = {
+			type: "static",
+			shapes: [
+				new Ellipse(
+					TILE / 2,
+					TILE / 2 - STAND_LIFT,
+					REACH.powerUp * 2,
+					REACH.powerUp * 2,
+				),
+			],
+			isSensor: true,
+			collisionType: collision.types.COLLECTABLE_OBJECT,
+			collisionMask: collision.types.PLAYER_OBJECT,
+		};
 	}
 
-	/** whether its time on the board ran out */
+	/** whether it is done: picked up, or its time on the board ran out */
 	get gone() {
-		return this.life <= 0;
+		return this.taken || this.life <= 0;
+	}
+
+	/**
+	 * Bolt picks it up: a sparkle, a chime and a far-off burst in its colour.
+	 * @returns what it does, or null if it was already taken
+	 */
+	collect(): PowerKind | null {
+		if (this.gone) {
+			return null;
+		}
+		this.taken = true;
+		this.alpha = 0;
+		const color = POWER_COLORS[this.kind];
+		sfx.sfxPickup();
+		this.space?.burst(color, 0.6);
+		this.effects.burst(
+			centreX(this.cell.x),
+			centreY(this.cell.y) - 6,
+			color,
+			16,
+			160,
+		);
+		return this.kind;
 	}
 
 	/**
@@ -195,17 +241,6 @@ export class PowerUp extends Renderable {
 	 */
 	step(dt: number) {
 		this.life -= dt;
-	}
-
-	/** whether Bolt, at a point on the screen, is close enough to pick it up */
-	isReachedFrom(x: number, y: number) {
-		return (
-			Math.hypot(
-				centreX(this.cell.x) - x,
-				centreY(this.cell.y) - STAND_LIFT - y,
-			) <
-			TILE * PICKUP_REACH
-		);
 	}
 
 	override update(dt: number) {

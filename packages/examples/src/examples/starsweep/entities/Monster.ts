@@ -7,6 +7,10 @@
  * goes. Where it steps next is up to its kind, each a class of its own:
  * `Wobbler`, `Muncher`, `Chaser` and `Drone` (which flies instead).
  *
+ * It has a body for the engine's collision detection: Bolt and the sparks
+ * find it with theirs (see `Bolt.ts` and `Spark.ts`). Popped, it bursts; it
+ * also makes its own sound and particles when it falls or vanishes.
+ *
  * The field steps every monster itself (`step`), in a fixed order with the
  * rest of the game; the engine's own `update` only plays its animation.
  *
@@ -14,7 +18,11 @@
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
 import type { DebugPath, PathResult } from "@melonjs/pathfinding-plugin";
-import { math, utils } from "melonjs";
+import { collision, math, utils } from "melonjs";
+import * as sfx from "../audio/sfx";
+import { REACH } from "../config/layout";
+import type { DeepSpace } from "../fx/DeepSpace";
+import type { Effects } from "../fx/Effects";
 import {
 	type Cell,
 	type Dir,
@@ -30,9 +38,16 @@ import type { EnemyKind } from "../rules/levels";
 import { drawGlow, type Renderer } from "../utils/draw";
 import type { Navigation } from "../world/Navigation";
 import type { Station } from "../world/Station";
-import { Actor, GLOW, monsterAnimation, placeFalling } from "./Actor";
+import {
+	Actor,
+	characterBody,
+	GLOW,
+	monsterAnimation,
+	placeFalling,
+} from "./Actor";
 import {
 	beginStep,
+	fallAway,
 	land,
 	type Mover,
 	moverX,
@@ -55,12 +70,17 @@ export const SEARCH_CAP = 400;
 export interface MonsterWorld {
 	readonly station: Station;
 	readonly nav: Navigation;
+	readonly effects: Effects;
+	/** the 3D space behind the game, when there is one */
+	readonly space: DeepSpace | null;
 	/** where Bolt is: the cell it is mostly on, and its point on screen */
 	bolt(): { cell: Cell; x: number; y: number };
 	/** every monster on the board, this one included */
 	monsters(): readonly Monster[];
 	/** a monster walked off the edge, or its panel gave way */
 	fell(m: Monster): void;
+	/** a monster was popped (zapped, or run into under a shield) */
+	popped(m: Monster): void;
 	/** a muncher landed on a cell */
 	munched(cell: Cell): void;
 }
@@ -111,6 +131,11 @@ export abstract class Monster extends Actor {
 		this.walker = standingOn(portal);
 		// level.load clears the world of everything that is not persistent
 		this.isPersistent = true;
+		this.bodyDef = characterBody(
+			REACH.monster,
+			collision.types.ENEMY_OBJECT,
+			collision.types.PLAYER_OBJECT | collision.types.PROJECTILE_OBJECT,
+		);
 		// not all stepping in time
 		this.setAnimationFrame(math.random(0, 8));
 	}
@@ -249,7 +274,26 @@ export abstract class Monster extends Actor {
 		w.fromY = w.toY = cell.y;
 		w.t = 0;
 		w.moving = false;
+		fallAway(this);
+		sfx.sfxFall();
 		this.world.fell(this);
+	}
+
+	/** Zapped, or run into under a shield: it pops, in its own colour. */
+	pop() {
+		if (this.falling === -1) {
+			return; // already gone
+		}
+		const color = GLOW[this.kind];
+		sfx.sfxPop();
+		this.world.effects.burst(this.x, this.y, color, 22, 200, 260);
+		this.world.space?.burst(color, 0.35);
+		this.world.popped(this);
+	}
+
+	/** A level was cleared: it goes in a white puff. */
+	vanish() {
+		this.world.effects.burst(this.x, this.y, "#ffffff", 14, 160);
 	}
 
 	/** the route to draw on the board, while it is out */

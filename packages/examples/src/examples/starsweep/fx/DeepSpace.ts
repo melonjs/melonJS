@@ -157,6 +157,16 @@ export class DeepSpace extends Renderable {
 		e.burstParticles(Math.round(70 + 150 * size));
 	}
 
+	/**
+	 * A level cleared: fireworks far out in space, in its colours.
+	 * @param lit - the level's colour
+	 * @param litHi - its lighter colour
+	 */
+	celebrate(lit: string, litHi: string) {
+		this.burst(lit, 1.2);
+		this.burst(litHi, 0.8);
+	}
+
 	override update(dt: number) {
 		this.time += dt / 1000;
 		// each new particle takes the tint of the moment: cycle through the

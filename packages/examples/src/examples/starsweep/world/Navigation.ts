@@ -26,7 +26,15 @@ import {
 import type { Container } from "melonjs";
 import { centreX, centreY, OX, OY, STAND_LIFT, TILE } from "../config/layout";
 import { POWER_COLORS } from "../entities/PowerUp";
-import { type Cell, COLS, cellOf, idx, isBlocking, ROWS } from "../rules/board";
+import {
+	type Cell,
+	COLS,
+	cellOf,
+	idx,
+	isBlocking,
+	isSolidGround,
+	ROWS,
+} from "../rules/board";
 import { drawGlow, type Renderer } from "../utils/draw";
 import { kindOf, type Station } from "./Station";
 
@@ -117,15 +125,35 @@ export class Navigation {
 	}
 
 	/**
-	 * Raise force-fields: nothing can plan through them.
-	 * @param cells - where
+	 * Raise a force-field on every open cell around one that no monster is
+	 * on: monsters cannot plan through them, so their plans go round. Bolt
+	 * can cross them.
+	 * @param at - the cell in the middle (where Bolt is)
+	 * @param station - the board, for which cells are open
+	 * @param taken - the cells monsters are on
 	 * @param seconds - how long they stand
 	 */
-	raiseFields(cells: readonly Cell[], seconds: number) {
-		for (const cell of cells) {
-			this.fields.set(idx(cell.x, cell.y), seconds);
-			this.walk?.setSolid(cell.x, cell.y);
-			this.fly?.setSolid(cell.x, cell.y);
+	raiseFieldsAround(
+		at: Cell,
+		station: Station,
+		taken: readonly Cell[],
+		seconds: number,
+	) {
+		const occupied = new Set(taken.map((c) => idx(c.x, c.y)));
+		for (let dy = -1; dy <= 1; dy++) {
+			for (let dx = -1; dx <= 1; dx++) {
+				const x = at.x + dx;
+				const y = at.y + dy;
+				if (
+					(dx !== 0 || dy !== 0) &&
+					isSolidGround(station.ground(x, y)) &&
+					!occupied.has(idx(x, y))
+				) {
+					this.fields.set(idx(x, y), seconds);
+					this.walk?.setSolid(x, y);
+					this.fly?.setSolid(x, y);
+				}
+			}
 		}
 	}
 
