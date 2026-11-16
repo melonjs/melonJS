@@ -100,8 +100,24 @@ describe("Rapier3dAdapter, adversarially", () => {
 		fresh();
 	});
 
-	const internals = () => {
-		return adapter as unknown as Internals;
+	const internals = (): Internals => {
+		// the records live with the parts of the adapter that keep them
+		const parts = adapter as unknown as {
+			sim: {
+				colliders: Internals["colliderMap"];
+				bodies: Internals["bodyMap"];
+			};
+			contacts: { activePairs: Internals["activePairs"] };
+			motion: { limits: Internals["velocityLimits"] };
+			overrides: Internals["overrides"];
+		};
+		return {
+			activePairs: parts.contacts.activePairs,
+			colliderMap: parts.sim.colliders,
+			velocityLimits: parts.motion.limits,
+			bodyMap: parts.sim.bodies,
+			overrides: parts.overrides,
+		};
 	};
 	const make = (
 		x: number,
