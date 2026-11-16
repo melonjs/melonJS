@@ -17,6 +17,8 @@
 - glTF: a skinned mesh was placed and bounded by its own node's transform, which glTF says it ignores, so a rigged character could load offset and with wrong `bounds`
 - `GLTFModel`: a clip at a negative `speed` froze on its first frame and never ended; it now plays backwards
 - `Camera3d`: with a `zoom` other than 1, `worldToScreen` and `screenToRay` called while drawing answered for the wrong size
+- `Color#toArray()`: its documentation now says it returns the color's own array, not a copy, so writing into it changes the color. The maths skill says so too, with a symptom row
+- Skills: the scenes skill now says that `save` keeps its keys in memory where there is no `localStorage` (a sandboxed iframe, cookies blocked), so it needs no `try` / `catch`, and how to tell with `device.localStorage`
 
 ## [20.15.1] (melonJS 2) - _2026-11-14_
 
