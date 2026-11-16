@@ -8,8 +8,12 @@
  *
  * What it shows:
  *
- * - **`@melonjs/rapier3d-adapter`**, passed as the `physic` option with a
- *   `Camera3d`. Every block, pet and rival is a `Mesh` with a `bodyDef`; the
+ * - **Everything through the preloader.** Rapier's WebAssembly is an asset
+ *   type of its own (`loader.setParser`), loaded behind the loading screen
+ *   with the models and the textures, which are painted in code and handed
+ *   to the loader as images; the world then switches to Rapier with
+ *   `world.setAdapter()`.
+ * - **`@melonjs/rapier3d-adapter`**, with a `Camera3d`. Every block, pet and rival is a `Mesh` with a `bodyDef`; the
  *   adapter writes each body's position and turn back onto its mesh.
  * - **The 3D shapes.** Blocks are `Box3d`, and each pet and rival the
  *   `ConvexHull3d` of its own model, built with `ConvexHull3d.fromMesh()`, so
@@ -158,12 +162,7 @@ const paint = (kind: "wood" | "stone" | "grass" | "white") => {
  * `Box3d(0, 0, 0, w, h, d)` is exactly its outline. Authored Y-UP like any
  * mesh geometry; a box looks the same either way.
  */
-const createBox = (
-	w: number,
-	h: number,
-	d: number,
-	texture: HTMLCanvasElement | string,
-) => {
+const createBox = (w: number, h: number, d: number, texture: string) => {
 	const x = w / 2;
 	const y = h / 2;
 	const z = d / 2;
@@ -289,6 +288,9 @@ const createBackdrop = (w: number, h: number) => {
 	});
 };
 
+// whether the loader has been taught the "rapier3d" asset type yet
+let rapierParserSet = false;
+
 const createGame = async () => {
 	let app: Application;
 	try {
@@ -298,11 +300,6 @@ const createGame = async () => {
 			scale: "auto",
 			cameraClass: Camera3d,
 			antiAlias: true,
-			// Rapier's WebAssembly downloads and compiles before the game starts
-			physic: await Rapier3dAdapter.create({
-				gravity: { x: 0, y: GRAVITY, z: 0 },
-				pixelsPerMeter: 50,
-			}),
 		});
 		await app.init();
 		if (!app.renderer.supportsDepthBuffer) {
@@ -319,10 +316,11 @@ const createGame = async () => {
 
 	plugin.register(DebugPanelPlugin, "debugPanel");
 
-	const wood = paint("wood");
-	const stone = paint("stone");
-	const grass = paint("grass");
-	const white = paint("white");
+	// the painted textures, by the names they are preloaded under
+	const wood = "wood" as const;
+	const stone = "stone" as const;
+	const grass = "grass" as const;
+	const white = "white" as const;
 
 	/**
 	 * Build a round: the field, the towers, the slingshot.
@@ -1138,7 +1136,26 @@ const createGame = async () => {
 		}
 	}
 
+	// Rapier's WebAssembly as an asset type of its own, so that it downloads
+	// and compiles behind the loading screen with everything else. Taught to
+	// the loader once: the example can be started again in the same page.
+	if (!rapierParserSet) {
+		rapierParserSet = true;
+		loader.setParser("rapier3d", (_asset, onload, onerror) => {
+			Rapier3dAdapter.load().then(() => {
+				onload();
+			}, onerror);
+			return 1;
+		});
+	}
+
 	await loader.preload([
+		{ name: "rapier3d", type: "rapier3d", src: "" },
+		// the textures painted in code go through the loader as images too,
+		// and the meshes ask for them by name
+		...([wood, stone, grass, white] as const).map((name) => {
+			return { name, type: "image", src: paint(name).toDataURL() };
+		}),
 		{ name: "sphere", type: "obj", src: `${MESH_BASE}sphere.obj` },
 		{ name: "backdrop", type: "image", src: `${PETS_BASE}jungle_bg.png` },
 		{
@@ -1154,6 +1171,13 @@ const createGame = async () => {
 		}),
 		KENNEY_LOGO,
 	]);
+	// Rapier is compiled now: the world moves onto it before the first round
+	app.world.setAdapter(
+		new Rapier3dAdapter({
+			gravity: { x: 0, y: GRAVITY, z: 0 },
+			pixelsPerMeter: 50,
+		}),
+	);
 	state.set(state.PLAY, new SlingshotStage());
 	state.change(state.PLAY);
 };
