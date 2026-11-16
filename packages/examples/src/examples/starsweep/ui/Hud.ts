@@ -22,12 +22,10 @@ import { formatScore } from "../data/score";
 import { Actor } from "../entities/Actor";
 import { POWER_COLORS } from "../entities/PowerUp";
 import { POWER_TIME, type TimedPower } from "../game/Powers";
+import { MAX_LIVES } from "../game/Score";
 import { ROWS } from "../rules/board";
 import type { Renderer } from "../utils/draw";
 import { makeLabel } from "./label";
-
-/** the most lives Bolt can have, and so the life icons in the top bar */
-export const MAX_LIVES = 6;
 
 /** the life icons: small Bolts, from the left of the top bar */
 const LIVES = { x: OX + 14, y: 96, spacing: 30, scale: 0.5 };

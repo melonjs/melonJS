@@ -3,7 +3,7 @@
  *
  * The field holds the rules of a run: it loads each level, goes from one
  * phase to the next (a level's intro, play, a lost life, a cleared level,
- * the end), and keeps the score, the lives and the streak. Everything on
+ * the end), and tells the `Score` what each thing is worth. Everything on
  * the board is an entity of its own (in `entities/`) that moves, touches
  * others and shows itself; the field is told what happened through the
  * `world` each one is given (Bolt landed on a panel, a monster popped, a
@@ -19,7 +19,6 @@
 import { type Container, event, Renderable, state, Tween } from "melonjs";
 import * as sfx from "../audio/sfx";
 import { HEIGHT, WIDTH } from "../config/layout";
-import { loadHiscore, saveHiscore } from "../data/score";
 import type { Bolt, BoltPose } from "../entities/Bolt";
 import type { PowerKind } from "../entities/PowerUp";
 import type { DeepSpace } from "../fx/DeepSpace";
@@ -29,16 +28,16 @@ import type { SpaceBackdrop } from "../fx/SpaceBackdrop";
 import type { Controls } from "../input/Controls";
 import type { Cell } from "../rules/board";
 import { LEVEL_FILES, type LevelDef } from "../rules/levels";
-import { Hud, MAX_LIVES } from "../ui/Hud";
+import { Hud } from "../ui/Hud";
 import type { Renderer } from "../utils/draw";
 import { Navigation } from "../world/Navigation";
 import { type Board, Station } from "../world/Station";
 import { FieldFront } from "./FieldFront";
 import { Monsters } from "./Monsters";
 import { POWER_TIME, Powers } from "./Powers";
+import { Score } from "./Score";
 import { Sparks } from "./Sparks";
 
-const START_LIVES = 3;
 /** seconds Bolt cannot be hurt after coming back */
 const INVULN_TIME = 2.5;
 /** the longest frame the field steps at once, in seconds */
@@ -54,15 +53,6 @@ const DYING_TIME = 1.6;
 const CLEAR_TIME = 2.8;
 /** the end screens take input after this, in seconds */
 const END_WAIT = 1;
-
-/** points for a panel lit, a gem, and each second under par */
-const PAINT_POINTS = 10;
-const GEM_POINTS = 500;
-const TIME_BONUS = 25;
-/** a monster that falls off is worth this many times its score */
-const FALL_BONUS = 2;
-/** a streak of panels keeps going if the next comes within this, in seconds */
-const STREAK_WINDOW = 0.5;
 
 type Phase =
 	| "loading"
@@ -122,13 +112,7 @@ export class Field extends Renderable {
 	/** what was on screen when the game paused, put back on resume */
 	private beforePause: { big: string; sub: string; alpha: number } | null =
 		null;
-	private score = 0;
-	private hiscore = 0;
-	private lives = START_LIVES;
-	private levelTime = 0;
-	/** panels lit in a row, each within the streak window of the last */
-	private streak = 0;
-	private streakTimer = 0;
+	private readonly score = new Score();
 
 	/**
 	 * @param host - the screen's parts the field plays in
@@ -166,8 +150,8 @@ export class Field extends Renderable {
 				effects: host.effects,
 				space: host.space,
 				bolt: () => this.bolt as Bolt,
-				fell: (m) => this.addScore(m.score * FALL_BONUS),
-				popped: (m) => this.addScore(m.score),
+				fell: (m) => this.score.fell(m.score),
+				popped: (m) => this.score.popped(m.score),
 				munched: (cell) => this.station.unpaint(cell.x, cell.y),
 			},
 			host.actors,
@@ -177,7 +161,6 @@ export class Field extends Renderable {
 		this.hud = new Hud(host.actors);
 		this.hudItems = this.hud.items;
 		this.front = new FieldFront(this);
-		this.hiscore = loadHiscore();
 		// paused by the player or by the page losing focus: say so
 		event.on(event.STATE_PAUSE, this.onPause);
 		event.on(event.STATE_RESUME, this.onResume);
@@ -220,8 +203,7 @@ export class Field extends Renderable {
 
 	/** start a brand new run */
 	newGame() {
-		this.score = 0;
-		this.lives = START_LIVES;
+		this.score.newRun();
 		void this.loadLevel(0);
 	}
 
@@ -248,7 +230,7 @@ export class Field extends Renderable {
 		this.nav.showRoutes(null);
 		this.monsters.startLevel(this.level, i);
 		this.powers.reset();
-		this.levelTime = 0;
+		this.score.newLevel();
 		this.hud.setLevel(i + 1, this.levels.length, this.level.name, theme.lit);
 		this.resetActors();
 		this.station.paint(this.station.start.x, this.station.start.y);
@@ -309,7 +291,6 @@ export class Field extends Renderable {
 		this.bolt?.reset(this.station.start, invuln);
 		this.monsters.reset();
 		this.sparks.clear();
-		this.streak = 0;
 		this.controls.reset();
 	}
 
@@ -322,9 +303,9 @@ export class Field extends Renderable {
 
 	/** a life lost: game over, or Bolt back at the start */
 	private afterDying() {
-		if (this.lives <= 0) {
+		if (this.score.out) {
 			sfx.sfxGameOver();
-			this.endRun("gameover", "Game Over", `Score ${this.score}`);
+			this.endRun("gameover", "Game Over", `Score ${this.score.points}`);
 			return;
 		}
 		this.resetActors(INVULN_TIME);
@@ -335,9 +316,7 @@ export class Field extends Renderable {
 	private levelCleared() {
 		this.setPhase("clear");
 		sfx.sfxClear();
-		const bonus =
-			Math.max(0, Math.round(this.level.par - this.levelTime)) * TIME_BONUS;
-		this.addScore(bonus);
+		const bonus = this.score.levelBonus(this.level.par);
 		this.host.space?.celebrate(this.level.theme.lit, this.level.theme.litHi);
 		this.monsters.celebrate();
 		this.nav.showRoutes(null);
@@ -352,7 +331,11 @@ export class Field extends Renderable {
 			void this.loadLevel(this.levelIndex + 1);
 			return;
 		}
-		this.endRun("victory", "Station saved!", `Final score ${this.score}`);
+		this.endRun(
+			"victory",
+			"Station saved!",
+			`Final score ${this.score.points}`,
+		);
 	}
 
 	/** the end of the run: a message, and any key or tap goes back */
@@ -367,22 +350,12 @@ export class Field extends Renderable {
 	// what things are worth
 	// ---------------------------------------------------------------------
 
-	private addScore(points: number) {
-		this.score += points;
-		if (this.score > this.hiscore) {
-			this.hiscore = this.score;
-			saveHiscore(this.hiscore);
-		}
-	}
-
 	/** Bolt landed on a panel: lit, it scores and keeps the streak going */
 	private painted(cell: Cell) {
-		if (!this.station.light(cell, this.streak)) {
+		if (!this.station.light(cell, this.score.streak)) {
 			return;
 		}
-		this.addScore(PAINT_POINTS);
-		this.streak++;
-		this.streakTimer = STREAK_WINDOW;
+		this.score.panelLit();
 		if (this.station.cleared && this.phase === "play") {
 			this.levelCleared();
 		}
@@ -390,8 +363,7 @@ export class Field extends Renderable {
 
 	/** Bolt was caught, or fell */
 	private lifeLost() {
-		this.lives--;
-		this.streak = 0;
+		this.score.loseLife();
 		this.setPhase("dying");
 	}
 
@@ -409,10 +381,10 @@ export class Field extends Renderable {
 	private collected(kind: PowerKind) {
 		switch (kind) {
 			case "gem":
-				this.addScore(GEM_POINTS);
+				this.score.gem();
 				break;
 			case "life":
-				this.lives = Math.min(MAX_LIVES, this.lives + 1);
+				this.score.gainLife();
 				break;
 			case "field":
 				this.nav.raiseFieldsAround(
@@ -473,10 +445,10 @@ export class Field extends Renderable {
 		}
 
 		this.hud.update(
-			this.score,
-			this.hiscore,
+			this.score.points,
+			this.score.best,
 			this.station.progress,
-			this.station.layers ? this.lives : 0,
+			this.station.layers ? this.score.lives : 0,
 			this.controls.onScreen,
 		);
 		this.placeActors();
@@ -489,11 +461,7 @@ export class Field extends Renderable {
 	 */
 	private updatePlay(dt: number) {
 		const bolt = this.bolt as Bolt;
-		this.levelTime += dt;
-		this.streakTimer -= dt;
-		if (this.streakTimer <= 0) {
-			this.streak = 0;
-		}
+		this.score.update(dt);
 		bolt.step(dt, () => this.phase === "play");
 		if (this.controls.fire()) {
 			this.sparks.fire(
@@ -505,7 +473,7 @@ export class Field extends Renderable {
 		}
 		this.monsters.update(dt, this.powers.active("freeze"));
 		this.sparks.update(dt);
-		this.powers.update(dt, this.station, bolt.cell, this.lives < MAX_LIVES);
+		this.powers.update(dt, this.station, bolt.cell, this.score.wantsLife);
 		this.nav.update(dt);
 		this.nav.showRoutes(this.monsters.routes());
 	}
