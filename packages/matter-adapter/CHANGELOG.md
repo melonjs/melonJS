@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.8.0 - _unreleased_
+## 1.8.0 - _2026-11-16_
 
 ### Added
 - `isSleeping()`: whether matter has put a body to sleep, with `matterEngineOptions.enableSleeping`

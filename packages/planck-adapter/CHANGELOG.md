@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.9.0 - _unreleased_
+## 1.9.0 - _2026-11-16_
 
 ### Added
 - `isSleeping()`: whether planck has put a body to sleep
