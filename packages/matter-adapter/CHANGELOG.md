@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.8.0 - _2026-11-16_
+
+### Added
+- `isSleeping()`: whether matter has put a body to sleep, with `matterEngineOptions.enableSleeping`
+
+### Fixed
+- With sleeping enabled, a velocity, force, impulse, angle, spin, torque or position written to a sleeping body wakes it, through the adapter (`setVelocity`, `applyForce`, `applyImpulse`, `setPosition`, `setAngle`, `setAngularVelocity`, `applyTorque`) or through the body handle (`body.setVelocity()` and the rest). matter skips a sleeping body in its step, so the write was lost: a `setVelocity` on a crate at rest did nothing
+
 ## 1.7.2 - _2026-11-16_
 
 ### Fixed

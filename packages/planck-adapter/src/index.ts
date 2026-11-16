@@ -1553,6 +1553,20 @@ export class PlanckAdapter implements PhysicsAdapter {
 		return cached;
 	}
 
+	/**
+	 * Whether planck has put the body to sleep: a dynamic body at rest,
+	 * which it leaves out of the simulation until a contact, a force or a
+	 * velocity wakes it. `false` for a static or kinematic body (planck keeps
+	 * a static body "not awake" from the start) and for a renderable this
+	 * adapter does not know.
+	 * @param renderable - the renderable whose body to read
+	 * @returns `true` while the body sleeps
+	 */
+	isSleeping(renderable: Renderable): boolean {
+		const body = this.bodyMap.get(renderable);
+		return body !== undefined && body.isDynamic() && !body.isAwake();
+	}
+
 	isGrounded(renderable: Renderable): boolean {
 		const body = this.bodyMap.get(renderable);
 		if (!body) return false;
