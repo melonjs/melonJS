@@ -9,7 +9,7 @@
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
-import { math } from "melonjs";
+import { math, Tween } from "melonjs";
 import { centreX, centreY, STAND_LIFT } from "../config/layout";
 import { type Cell, type Dir, DX, DY } from "../rules/board";
 
@@ -107,4 +107,23 @@ export const walk = (m: Mover, time: number, how: Walk) => {
 		left -= need;
 		how.arrive();
 	}
+};
+
+/** seconds something takes to fall away into space */
+const FALL_TIME = 0.83;
+
+/**
+ * Drop something into open space: its `falling` goes from 1 down to 0 (a
+ * tween, eased in like a drop), then to -1 once it is gone.
+ * @param m - Bolt or a monster
+ */
+export const fallAway = (m: { falling: number }) => {
+	m.falling = 1;
+	new Tween(m)
+		.to({ falling: 0 }, { duration: FALL_TIME * 1000 })
+		.easing(Tween.Easing.Quadratic.In)
+		.onComplete(() => {
+			m.falling = -1;
+		})
+		.start();
 };
