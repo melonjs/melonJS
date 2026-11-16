@@ -99,7 +99,7 @@ export class Station {
 	load(layers: Board, level: LevelDef) {
 		this.layers = layers;
 		this.readTileset(layers.station);
-		const board = readBoard(level.kinds);
+		const board = readBoard(level.kinds, level.start, level.portals);
 		this.tiles = board.tiles;
 		this.start = board.start;
 		this.portals = board.portals;

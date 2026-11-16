@@ -51,7 +51,15 @@ import {
 	type SpaceBackdrop,
 } from "./fx";
 import { Hud, MAX_LIVES } from "./hud";
-import { cellUnder, centreX, centreY, HEIGHT, TILE, WIDTH } from "./layout";
+import {
+	ACTOR_Z,
+	cellUnder,
+	centreX,
+	centreY,
+	HEIGHT,
+	TILE,
+	WIDTH,
+} from "./layout";
 import { LEVEL_FILES, type LevelDef } from "./levels";
 import {
 	ENEMY_SCORE,
@@ -72,6 +80,7 @@ import {
 	walk,
 } from "./movers";
 import { Navigation } from "./navigation";
+import type { Bolt } from "./objects";
 import { POWER_TIME, Powers } from "./powers";
 import { loadHiscore, saveHiscore } from "./score";
 import * as sfx from "./sfx";
@@ -176,8 +185,11 @@ export interface FieldHost {
 	sky: NebulaBackdrop | null;
 	/** the 3D space behind the game, when the renderer can draw it */
 	space: DeepSpace | null;
-	/** load a level's Tiled map into the board container */
-	loadBoard: (file: string) => Promise<Board>;
+	/**
+	 * load a level's Tiled map into the board container
+	 * @returns its tile layers, and the Bolt its `Bolt` object was built into
+	 */
+	loadBoard: (file: string) => Promise<{ layers: Board; bolt: Bolt }>;
 }
 
 /** The playing field: a run of levels, from the first to the last. */
@@ -224,8 +236,8 @@ export class Field extends Renderable {
 	/** > 0 while Bolt is pleased with itself */
 	private cheer = 0;
 
-	// Bolt on screen
-	private readonly bolt = new Actor("bolt-idle-down");
+	// Bolt on screen: built by each level, from its map
+	private bolt: Bolt | null = null;
 	private readonly shieldRing = new Actor("shield");
 
 	/**
@@ -273,11 +285,8 @@ export class Field extends Renderable {
 		);
 		this.hud = new Hud(host.actors);
 		this.hudItems = this.hud.items;
-		for (const sprite of [this.bolt, this.shieldRing]) {
-			sprite.isPersistent = true;
-		}
-		host.actors.addChild(this.bolt, 1);
-		host.actors.addChild(this.shieldRing, 2);
+		this.shieldRing.isPersistent = true;
+		host.actors.addChild(this.shieldRing, ACTOR_Z.shield);
 		this.front = new FieldFront(this);
 		this.hiscore = loadHiscore();
 		// paused by the player or by the page losing focus: say so
@@ -342,9 +351,10 @@ export class Field extends Renderable {
 		this.host.sky?.setLevelTheme(theme);
 		this.host.backdrop.setTheme(theme);
 		this.host.space?.setColors([theme.lit, theme.litHi, "#ffffff"]);
-		const board = await this.host.loadBoard(LEVEL_FILES[i]);
-		board.power.tint.parseCSS(theme.lit);
-		this.station.load(board, this.level);
+		const { layers, bolt } = await this.host.loadBoard(LEVEL_FILES[i]);
+		layers.power.tint.parseCSS(theme.lit);
+		this.station.load(layers, this.level);
+		this.takeBolt(bolt);
 		this.nav.build(this.station);
 		this.nav.showRoutes(null);
 		this.monsters.startLevel(this.level, i);
@@ -367,6 +377,21 @@ export class Field extends Renderable {
 			})
 			.onComplete(() => this.startPlay())
 			.start();
+	}
+
+	/**
+	 * The level built Bolt where its map's `Bolt` object is: draw it with the
+	 * other characters, over the glows the field draws under them, in place
+	 * of the last level's.
+	 */
+	private takeBolt(bolt: Bolt) {
+		if (this.bolt) {
+			this.host.actors.removeChildNow(this.bolt);
+		}
+		this.bolt = bolt;
+		bolt.isPersistent = true;
+		// adding a child to another container moves it there
+		this.host.actors.addChild(bolt, ACTOR_Z.bolt);
 	}
 
 	/** the intro is over, or skipped: play */
@@ -887,7 +912,7 @@ export class Field extends Renderable {
 		this.powers.draw(r, this.time);
 		// a soft glow under each character
 		this.monsters.drawGlows(r);
-		if (this.bolt.alpha > 0) {
+		if (this.bolt && this.bolt.alpha > 0) {
 			drawGlow(
 				r,
 				this.bolt.pos.x,
@@ -925,6 +950,10 @@ export class Field extends Renderable {
 	private placeBolt() {
 		const p = this.player;
 		const sprite = this.bolt;
+		if (!sprite) {
+			this.shieldRing.alpha = 0;
+			return;
+		}
 		let shield = false;
 		if (!this.station.layers) {
 			sprite.alpha = 0;

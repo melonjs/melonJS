@@ -9,21 +9,25 @@
  *
  * - The `station` tile layer is the board. Each board tile in the tileset
  *   has a `kind` property (see `KIND_TILES` in `board.ts`): `wall`,
- *   `floor`, `ice`, `arrow-up` / `-right` / `-down` / `-left`, `crack`,
- *   `portal` (monsters come out, an animated tile), `start` (where Bolt
- *   begins, exactly one), `goo` (monsters avoid it and wade through it
- *   slowly), `gate` (shut until a `switch` is lit) and `gate-open`. An
+ *   `floor`, `pad` (a floor with a ring), `ice`, `arrow-up` / `-right` /
+ *   `-down` / `-left`, `crack`, `goo` (monsters avoid it and wade through
+ *   it slowly), `gate` (shut until a `switch` is lit) and `gate-open`. An
  *   empty cell is open space.
  * - The `power` tile layer starts empty: the game lights a panel by
  *   setting the tile whose `lit` property names its kind there, and
  *   tints the layer with the level's colour (see `station.ts`).
+ * - The `actors` object layer places what stands on the board: one `Bolt`
+ *   object (a point, where Bolt begins) and the portals monsters come out
+ *   of (the animated portal tile, whose class is `Portal`, dropped as a
+ *   tile object onto a floor). The engine builds them when the level
+ *   loads, with the classes registered in `objects.ts`.
  * - The map's custom properties set the rest: `title`, `hint`, `theme`
  *   (one of {@link THEMES}), `enemies` (the order monsters come out in,
  *   comma separated: `wobbler`, `muncher`, `chaser`, `drone`), `maxEnemies`,
  *   `spawnEvery` (seconds) and `par` (seconds, for the time bonus).
  *
- * The engine draws the maps. The game reads each cell's `kind` from the
- * map here, once, and the level checker (`check-levels.ts`) reads the same
+ * The engine draws the maps. The game reads each cell's `kind`, and where
+ * the objects are, from the map here, once, and the level checker (`check-levels.ts`) reads the same
  * files the same way: every panel reachable, no move that never ends, no
  * resting spot you cannot leave safely.
  *
@@ -33,7 +37,7 @@
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
-import { KIND_TILES } from "./board";
+import { type Cell, KIND_TILES } from "./board";
 
 /** the monsters, by how they move */
 export type EnemyKind = "wobbler" | "muncher" | "chaser" | "drone";
@@ -59,6 +63,10 @@ export interface LevelDef {
 	hint: string;
 	/** each cell's tile `kind`, row by row, null for open space */
 	kinds: readonly (string | null)[];
+	/** where Bolt begins: the map's `Bolt` object */
+	start: Cell;
+	/** where monsters come out: the map's `Portal` objects */
+	portals: readonly Cell[];
 	theme: Theme;
 	/** enemies leave the portals in this order, then the list repeats */
 	enemies: readonly EnemyKind[];
@@ -140,18 +148,37 @@ interface TiledProperty {
 	value: unknown;
 }
 
+/** an object, in Tiled's JSON format; `type` is its class */
+interface TiledObject {
+	name: string;
+	type?: string;
+	x: number;
+	y: number;
+	width: number;
+	height: number;
+	/** a tile object's tile */
+	gid?: number;
+}
+
 /** the part of Tiled's JSON map format read here */
 export interface TiledMap {
 	width: number;
 	height: number;
-	layers: { type: string; name: string; data?: number[] }[];
+	tilewidth: number;
+	tileheight: number;
+	layers: {
+		type: string;
+		name: string;
+		data?: number[];
+		objects?: TiledObject[];
+	}[];
 	tilesets: { firstgid: number; source?: string }[];
 	properties?: TiledProperty[];
 }
 
-/** the part of Tiled's JSON tileset format read here */
+/** the part of Tiled's JSON tileset format read here; `type` is a class */
 export interface TiledTileset {
-	tiles?: { id: number; properties?: TiledProperty[] }[];
+	tiles?: { id: number; type?: string; properties?: TiledProperty[] }[];
 }
 
 const ENEMY_KINDS: readonly EnemyKind[] = [
@@ -186,9 +213,14 @@ export const levelFromTiled = (
 	const prop = (props: TiledProperty[] | undefined, name: string) =>
 		props?.find((p) => p.name === name)?.value;
 
-	// each tileset tile's kind; lit overlays and animation frames have none
+	// each tileset tile's kind and class; lit overlays and animation frames
+	// have neither, the portal has a class
 	const tileKinds = new Map<number, string>();
+	const tileClasses = new Map<number, string>();
 	for (const tile of tileset.tiles ?? []) {
+		if (tile.type) {
+			tileClasses.set(tile.id, tile.type);
+		}
 		const kind = prop(tile.properties, "kind");
 		if (kind === undefined) {
 			continue;
@@ -219,6 +251,37 @@ export const levelFromTiled = (
 		}
 		return kind;
 	});
+
+	// Bolt and the portals, from the objects: an object's class is its own
+	// or, for a tile object, its tile's; its cell is the one under its centre
+	// (a tile object's x, y is its bottom left corner)
+	const objects =
+		map.layers.find((l) => l.type === "objectgroup" && l.name === "actors")
+			?.objects ?? [];
+	const starts: Cell[] = [];
+	const portals: Cell[] = [];
+	for (const o of objects) {
+		const tileClass =
+			o.gid === undefined
+				? undefined
+				: tileClasses.get((o.gid & GID_MASK) - firstgid);
+		const cls = o.type || tileClass || o.name;
+		const top = o.gid === undefined ? o.y : o.y - o.height;
+		const at = {
+			x: Math.floor((o.x + o.width / 2) / map.tilewidth),
+			y: Math.floor((top + o.height / 2) / map.tileheight),
+		};
+		if (cls === "Bolt") {
+			starts.push(at);
+		} else if (cls === "Portal") {
+			portals.push(at);
+		} else {
+			fail(`object "${cls}" at ${at.x},${at.y} is not a Bolt or a Portal`);
+		}
+	}
+	if (starts.length !== 1) {
+		fail(`the "actors" layer needs one Bolt object, it has ${starts.length}`);
+	}
 
 	const props = map.properties;
 	const text = (name: string, fallback?: string) => {
@@ -251,6 +314,8 @@ export const levelFromTiled = (
 		name: text("title", file),
 		hint: text("hint", ""),
 		kinds,
+		start: starts[0],
+		portals,
 		theme,
 		enemies: enemies.length > 0 ? enemies : ["wobbler"],
 		maxEnemies: num("maxEnemies", 3),

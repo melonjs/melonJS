@@ -9,6 +9,7 @@
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
+import { math } from "melonjs";
 import { type Cell, type Dir, DX, DY } from "./board";
 import { centreX, centreY, STAND_LIFT } from "./layout";
 
@@ -44,10 +45,10 @@ export const standingOn = (cell: Cell): Mover => ({
 });
 
 /** where a mover stands across the screen, part way along its step */
-export const moverX = (m: Mover) => centreX(m.fromX + (m.toX - m.fromX) * m.t);
+export const moverX = (m: Mover) => centreX(math.lerp(m.fromX, m.toX, m.t));
 /** where a mover stands down the screen, part way along its step */
 export const moverY = (m: Mover) =>
-	centreY(m.fromY + (m.toY - m.fromY) * m.t) - STAND_LIFT;
+	centreY(math.lerp(m.fromY, m.toY, m.t)) - STAND_LIFT;
 
 /** the cell a mover is mostly on: where it steps from, until half way */
 export const nearestCell = (m: Mover): Cell =>

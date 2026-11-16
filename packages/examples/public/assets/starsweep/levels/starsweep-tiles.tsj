@@ -1,12 +1,12 @@
 {
 	"columns": 5,
 	"image": "starsweep-tiles.png",
-	"imageheight": 336,
+	"imageheight": 288,
 	"imagewidth": 240,
 	"margin": 0,
 	"name": "starsweep",
 	"spacing": 0,
-	"tilecount": 32,
+	"tilecount": 28,
 	"tiledversion": "1.11.2",
 	"tileheight": 48,
 	"tiles": [
@@ -96,25 +96,7 @@
 				{
 					"name": "kind",
 					"type": "string",
-					"value": "portal"
-				}
-			],
-			"animation": [
-				{
-					"tileid": 8,
-					"duration": 140
-				},
-				{
-					"tileid": 10,
-					"duration": 140
-				},
-				{
-					"tileid": 11,
-					"duration": 140
-				},
-				{
-					"tileid": 12,
-					"duration": 140
+					"value": "pad"
 				}
 			]
 		},
@@ -124,7 +106,37 @@
 				{
 					"name": "kind",
 					"type": "string",
-					"value": "start"
+					"value": "goo"
+				}
+			]
+		},
+		{
+			"id": 10,
+			"properties": [
+				{
+					"name": "kind",
+					"type": "string",
+					"value": "gate"
+				}
+			]
+		},
+		{
+			"id": 11,
+			"properties": [
+				{
+					"name": "kind",
+					"type": "string",
+					"value": "gate-open"
+				}
+			]
+		},
+		{
+			"id": 12,
+			"properties": [
+				{
+					"name": "kind",
+					"type": "string",
+					"value": "switch"
 				}
 			]
 		},
@@ -204,25 +216,7 @@
 				{
 					"name": "lit",
 					"type": "string",
-					"value": "portal"
-				}
-			],
-			"animation": [
-				{
-					"tileid": 20,
-					"duration": 140
-				},
-				{
-					"tileid": 22,
-					"duration": 140
-				},
-				{
-					"tileid": 23,
-					"duration": 140
-				},
-				{
-					"tileid": 24,
-					"duration": 140
+					"value": "pad"
 				}
 			]
 		},
@@ -232,62 +226,12 @@
 				{
 					"name": "lit",
 					"type": "string",
-					"value": "start"
-				}
-			]
-		},
-		{
-			"id": 25,
-			"properties": [
-				{
-					"name": "kind",
-					"type": "string",
 					"value": "goo"
 				}
 			]
 		},
 		{
-			"id": 26,
-			"properties": [
-				{
-					"name": "kind",
-					"type": "string",
-					"value": "gate"
-				}
-			]
-		},
-		{
-			"id": 27,
-			"properties": [
-				{
-					"name": "kind",
-					"type": "string",
-					"value": "gate-open"
-				}
-			]
-		},
-		{
-			"id": 28,
-			"properties": [
-				{
-					"name": "kind",
-					"type": "string",
-					"value": "switch"
-				}
-			]
-		},
-		{
-			"id": 29,
-			"properties": [
-				{
-					"name": "lit",
-					"type": "string",
-					"value": "goo"
-				}
-			]
-		},
-		{
-			"id": 30,
+			"id": 22,
 			"properties": [
 				{
 					"name": "lit",
@@ -297,12 +241,34 @@
 			]
 		},
 		{
-			"id": 31,
+			"id": 23,
 			"properties": [
 				{
 					"name": "lit",
 					"type": "string",
 					"value": "switch"
+				}
+			]
+		},
+		{
+			"id": 24,
+			"type": "Portal",
+			"animation": [
+				{
+					"tileid": 24,
+					"duration": 140
+				},
+				{
+					"tileid": 25,
+					"duration": 140
+				},
+				{
+					"tileid": 26,
+					"duration": 140
+				},
+				{
+					"tileid": 27,
+					"duration": 140
 				}
 			]
 		}

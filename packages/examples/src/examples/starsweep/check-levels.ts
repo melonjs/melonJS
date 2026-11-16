@@ -99,7 +99,7 @@ const checkLevel = (level: LevelDef) => {
 	const errors: string[] = [];
 	let board: ReturnType<typeof readBoard>;
 	try {
-		board = readBoard(level.kinds);
+		board = readBoard(level.kinds, level.start, level.portals);
 	} catch (e) {
 		return [(e as Error).message];
 	}

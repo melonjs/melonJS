@@ -10,7 +10,9 @@
  *
  * The levels are Tiled maps (`public/assets/starsweep/levels/*.tmj`),
  * loaded with the engine's Tiled loader: see `levels.ts` for how to edit
- * them, and run `pnpm check:starsweep` to check them. The monsters find
+ * them, and run `pnpm check:starsweep` to check them. Bolt and the portals
+ * are objects in each map's `actors` layer, built by the classes
+ * registered in `objects.ts`. The monsters find
  * their way with `@melonjs/pathfinding-plugin`, and every route they plan
  * is drawn on the board (see `monsters.ts` and `navigation.ts`). Portrait,
  * for phones held upright. On touch screens the `@melonjs/gamepad-plugin`
@@ -41,6 +43,7 @@ import {
 	type TiledMap,
 	type TiledTileset,
 } from "./levels";
+import { registerObjects } from "./objects";
 import { PlayScreen, TitleScreen } from "./scenes";
 
 const createGame = async () => {
@@ -87,6 +90,8 @@ const createGame = async () => {
 		levelFromTiled(loader.getTMX(name) as TiledMap, tileset, name),
 	);
 
+	// the classes the maps' objects (Bolt, the portals) are built with
+	registerObjects();
 	state.set(state.MENU, new TitleScreen());
 	state.set(state.PLAY, new PlayScreen(levels));
 	state.transition("fade", BACKGROUND, 250);

@@ -37,15 +37,22 @@ const POWER_BLINK = 2;
 const POWER_DISTANCE = 3;
 /** how close Bolt must come to pick one up, as a share of a cell */
 const PICKUP_REACH = 0.5;
-/** each kind's share of the power-ups (a life only when one is missing) */
-const ODDS: [PowerKind, number][] = [
-	["life", 0.08],
-	["gem", 0.22],
-	["freeze", 0.16],
-	["shield", 0.16],
-	["burst", 0.14],
-	["field", 0.12],
+/**
+ * How often each kind turns up: out of every 88 power-ups, about 8 are a
+ * life, 22 a gem, and so on. A life only turns up when one is missing.
+ */
+const ODDS: readonly [PowerKind, number][] = [
+	["life", 8],
+	["gem", 22],
+	["freeze", 16],
+	["shield", 16],
+	["burst", 14],
+	["field", 12],
 ];
+/** one entry per chance, so a kind drawn with `utils.array.random` follows the odds */
+const DRAW = ODDS.flatMap(([kind, n]) => new Array<PowerKind>(n).fill(kind));
+/** the same, without the life */
+const DRAW_NO_LIFE = DRAW.filter((kind) => kind !== "life");
 
 /** a power-up on the board */
 interface Power extends Cell {
@@ -128,10 +135,12 @@ export class Powers {
 		for (let y = 0; y < ROWS; y++) {
 			for (let x = 0; x < COLS; x++) {
 				const t = station.tiles[idx(x, y)];
+				const at = (c: Cell) => c.x === x && c.y === y;
 				if (
 					(t === Tile.FLOOR || t === Tile.ICE || t === Tile.GOO) &&
 					Math.abs(x - bolt.x) + Math.abs(y - bolt.y) >= POWER_DISTANCE &&
-					!this.list.some((pw) => pw.x === x && pw.y === y)
+					!station.portals.some(at) &&
+					!this.list.some(at)
 				) {
 					spots.push({ x, y });
 				}
@@ -140,19 +149,7 @@ export class Powers {
 		if (spots.length === 0) {
 			return;
 		}
-		const odds = ODDS.map(([kind, w]): [PowerKind, number] => [
-			kind,
-			kind === "life" && !wantsLife ? 0 : w,
-		]);
-		let roll = Math.random() * odds.reduce((sum, [, w]) => sum + w, 0);
-		let kind: PowerKind = "gem";
-		for (const [k, w] of odds) {
-			roll -= w;
-			if (roll < 0) {
-				kind = k;
-				break;
-			}
-		}
+		const kind = utils.array.random(wantsLife ? DRAW : DRAW_NO_LIFE);
 		this.list.push({ ...utils.array.random(spots), kind, life: POWER_LIFE });
 	}
 

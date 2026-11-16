@@ -35,7 +35,7 @@ import {
 } from "./board";
 import { Actor, GLOW, monsterAnimation, placeFalling } from "./cast";
 import { drawGlow, type Renderer } from "./draw";
-import { cellUnder, STAND_LIFT, standOn, TILE } from "./layout";
+import { ACTOR_Z, cellUnder, STAND_LIFT, standOn, TILE } from "./layout";
 import type { EnemyKind, LevelDef } from "./levels";
 import {
 	beginStep,
@@ -297,17 +297,17 @@ export class Monsters {
 		let planned: Dir | -1 = -1;
 		switch (e.kind) {
 			case "chaser":
-				if (Math.random() > CHASE_LAPSE) {
+				if (math.randomFloat(0, 1) > CHASE_LAPSE) {
 					planned = this.chaseStep(e);
 				}
 				break;
 			case "wobbler":
-				if (Math.random() > WOBBLE) {
+				if (math.randomFloat(0, 1) > WOBBLE) {
 					planned = this.wanderStep(e);
 				}
 				break;
 			case "muncher":
-				if (Math.random() < MUNCH_ODDS) {
+				if (math.randomFloat(0, 1) < MUNCH_ODDS) {
 					const onLit = choices.filter((d) =>
 						this.world.station.isLit(e.toX + DX[d], e.toY + DY[d]),
 					);
@@ -512,7 +512,7 @@ export class Monsters {
 				// not all stepping in time
 				sprite.setAnimationFrame(math.random(0, 8));
 				this.sprites.set(e, sprite);
-				this.actors.addChild(sprite, 3);
+				this.actors.addChild(sprite, ACTOR_Z.monster);
 			}
 			const x = enemyX(e);
 			const y = enemyY(e);

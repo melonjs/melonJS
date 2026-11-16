@@ -24,6 +24,7 @@ import {
 	Color,
 	type Container,
 	game,
+	math,
 	ParticleEmitter,
 	Renderable,
 	ShaderEffect,
@@ -182,7 +183,7 @@ const blankQuad = (size: number) => {
  */
 export class NebulaBackdrop extends Sprite {
 	readonly fx: ShaderEffect;
-	private time = Math.random() * 100;
+	private time = math.randomFloat(0, 100);
 
 	constructor(width: number, height: number) {
 		const QUAD = 16;
@@ -353,7 +354,7 @@ export class DeepSpace extends Renderable {
 	/** a few, so one can be aimed elsewhere while the last one fades */
 	private readonly novas: ParticleEmitter[] = [];
 	private colors: string[] = ["#ffffff", "#2ee6d6", "#b8fff6"];
-	private time = Math.random() * 100;
+	private time = math.randomFloat(0, 100);
 	private next = 0;
 	private nextNova = 0;
 
@@ -379,7 +380,7 @@ export class DeepSpace extends Renderable {
 			totalParticles: 500,
 			frequency: 20,
 			// straight at the camera, give or take
-			elevation: -Math.PI / 2,
+			elevation: -math.ETA,
 			elevationVariation: 0.12,
 			speed: 3.2,
 			speedVariation: 1.6,
@@ -451,8 +452,8 @@ export class DeepSpace extends Renderable {
 		const halfH = Math.tan(this.camera.fov / 2) * NOVA_DEPTH * 0.6;
 		const halfW = halfH * (this.camera.width / this.camera.height);
 		// the spawn area hangs from the emitter's top left: centre it
-		e.pos.x = (Math.random() * 2 - 1) * halfW - NOVA_SIZE / 2;
-		e.pos.y = (Math.random() * 2 - 1) * halfH - NOVA_SIZE / 2;
+		e.pos.x = math.randomFloat(-halfW, halfW) - NOVA_SIZE / 2;
+		e.pos.y = math.randomFloat(-halfH, halfH) - NOVA_SIZE / 2;
 		e.burstParticles(Math.round(70 + 150 * size));
 	}
 

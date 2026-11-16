@@ -24,8 +24,6 @@ export const Tile = {
 	ARROW_LEFT: 7,
 	/** gives way once Bolt steps off it, then grows back */
 	CRACK: 8,
-	/** where monsters come out */
-	PORTAL: 9,
 	/** sticky: monsters avoid it, and wade through it slowly */
 	GOO: 10,
 	/** a wall until a switch is lit, then a floor */
@@ -86,19 +84,19 @@ export const inBounds = (x: number, y: number) =>
 
 /**
  * Each tile `kind` the tileset uses (its `kind` property in Tiled), and the
- * tile it is to the rules. `start` is a floor where Bolt begins.
+ * tile it is to the rules. A `pad` is a floor with a ring, where a map
+ * usually puts Bolt.
  */
 export const KIND_TILES: Readonly<Record<string, Tile>> = {
 	wall: Tile.WALL,
 	floor: Tile.FLOOR,
-	start: Tile.FLOOR,
+	pad: Tile.FLOOR,
 	ice: Tile.ICE,
 	"arrow-up": Tile.ARROW_UP,
 	"arrow-right": Tile.ARROW_RIGHT,
 	"arrow-down": Tile.ARROW_DOWN,
 	"arrow-left": Tile.ARROW_LEFT,
 	crack: Tile.CRACK,
-	portal: Tile.PORTAL,
 	goo: Tile.GOO,
 	gate: Tile.GATE,
 	"gate-open": Tile.GATE_OPEN,
@@ -116,43 +114,45 @@ interface Board {
 }
 
 /**
- * Read a level's board from its cells' tile kinds.
+ * Read a level's board: its cells' tile kinds, and where its map's objects
+ * put Bolt and the portals.
  * @param kinds - each cell's `kind`, row by row, null for open space
+ * @param start - where Bolt begins
+ * @param portals - where monsters come out
  * @returns the board
  * @throws {Error} when the board is not {@link COLS} by {@link ROWS}, uses
- * an unknown kind, or does not have exactly one start and some portals
+ * an unknown kind, has no portal, or puts Bolt or a portal off solid ground
  */
-export const readBoard = (kinds: readonly (string | null)[]): Board => {
+export const readBoard = (
+	kinds: readonly (string | null)[],
+	start: Cell,
+	portals: readonly Cell[],
+): Board => {
 	if (kinds.length !== COLS * ROWS) {
 		throw new Error(`board has ${kinds.length} cells, expected ${COLS * ROWS}`);
 	}
-	const tiles: Tile[] = [];
-	let start: Cell | null = null;
-	const portals: Cell[] = [];
-	kinds.forEach((kind, i) => {
-		const { x, y } = cellOf(i);
+	const tiles = kinds.map((kind, i) => {
 		const tile = kind === null ? Tile.VOID : KIND_TILES[kind];
 		if (tile === undefined) {
+			const { x, y } = cellOf(i);
 			throw new Error(`unknown tile kind "${kind}" at ${x},${y}`);
 		}
-		if (kind === "start") {
-			if (start) {
-				throw new Error(`more than one start tile, at ${x},${y}`);
-			}
-			start = { x, y };
-		}
-		if (tile === Tile.PORTAL) {
-			portals.push({ x, y });
-		}
-		tiles.push(tile);
+		return tile;
 	});
-	if (!start) {
-		throw new Error("the board has no start tile");
-	}
 	if (portals.length === 0) {
 		throw new Error("the board has no portal for the monsters");
 	}
-	return { tiles, start, portals };
+	const onGround = (at: Cell) =>
+		inBounds(at.x, at.y) && isSolidGround(tiles[idx(at.x, at.y)]);
+	if (!onGround(start)) {
+		throw new Error(`Bolt, at ${start.x},${start.y}, is not on solid ground`);
+	}
+	for (const p of portals) {
+		if (!onGround(p)) {
+			throw new Error(`the portal at ${p.x},${p.y} is not on solid ground`);
+		}
+	}
+	return { tiles, start, portals: [...portals] };
 };
 
 /** Tiles that count towards clearing the level (a gate, once it opens). */

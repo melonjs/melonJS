@@ -12,6 +12,7 @@
  */
 import {
 	type Container,
+	math,
 	ProgressBar,
 	type Renderable,
 	type Text,
@@ -208,8 +209,8 @@ export class Hud {
 				x,
 				TIMERS.y,
 				TIMERS.radius,
-				-Math.PI / 2,
-				-Math.PI / 2 + Math.PI * 2 * (seconds / POWER_TIME[kind]),
+				-math.ETA,
+				-math.ETA + math.TAU * (seconds / POWER_TIME[kind]),
 			);
 			r.setGlobalAlpha(0.9);
 			r.fillEllipse(x, TIMERS.y, 7, 7);

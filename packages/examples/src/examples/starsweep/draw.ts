@@ -12,6 +12,7 @@
  */
 import {
 	type CanvasRenderer,
+	math,
 	Polygon,
 	Text,
 	type WebGLRenderer,
@@ -98,10 +99,11 @@ export const makeStars = (count: number, w: number, h: number): Star[] => {
 	const stars: Star[] = [];
 	for (let i = 0; i < count; i++) {
 		stars.push({
-			x: Math.random() * w,
-			y: Math.random() * h,
-			size: Math.random() < 0.2 ? 2 : 1,
-			phase: Math.random() * Math.PI * 2,
+			x: math.randomFloat(0, w),
+			y: math.randomFloat(0, h),
+			// one star in five is bigger
+			size: math.random(0, 5) === 0 ? 2 : 1,
+			phase: math.randomFloat(0, math.TAU),
 		});
 	}
 	return stars;
@@ -295,7 +297,7 @@ export const drawPower = (
 			r.fillEllipse(cx, y, 13, 13);
 			r.setColor(color);
 			r.lineWidth = 3;
-			r.strokeArc(cx, y, 9, 0, Math.PI * 2);
+			r.strokeArc(cx, y, 9, 0, math.TAU);
 			r.fillEllipse(cx, y, 4, 4);
 			break;
 		case "burst":

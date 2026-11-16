@@ -47,6 +47,7 @@ import {
 } from "./fx";
 import { BACKGROUND, HEIGHT, OX, OY, STAND_LIFT, TILE, WIDTH } from "./layout";
 import { type LevelDef, THEMES } from "./levels";
+import { Bolt } from "./objects";
 import { formatScore, loadHiscore } from "./score";
 import * as sfx from "./sfx";
 
@@ -386,7 +387,11 @@ export class PlayScreen extends Stage {
 					});
 					const layer = (name: string) =>
 						board.getChildByName(name)[0] as unknown as TMXLayer;
-					return { station: layer("station"), power: layer("power") };
+					return {
+						layers: { station: layer("station"), power: layer("power") },
+						// built from the map's `Bolt` object (see objects.ts)
+						bolt: board.getChildByType(Bolt)[0] as Bolt,
+					};
 				},
 			},
 			this.levels,
