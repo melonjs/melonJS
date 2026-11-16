@@ -24,10 +24,10 @@ import {
 	PathfindingDebug,
 } from "@melonjs/pathfinding-plugin";
 import type { Container } from "melonjs";
-import { type Cell, COLS, cellOf, idx, isBlocking, ROWS } from "./board";
-import { drawGlow, POWER_COLORS, type Renderer } from "./draw";
-import { centreX, centreY, OX, OY, STAND_LIFT, TILE } from "./layout";
-import { kindOf, type Station } from "./station";
+import { centreX, centreY, OX, OY, STAND_LIFT, TILE } from "../config/layout";
+import { type Cell, COLS, cellOf, idx, isBlocking, ROWS } from "../rules/board";
+import { drawGlow, POWER_COLORS, type Renderer } from "../utils/draw";
+import { kindOf, type Station } from "./Station";
 
 /** what crossing goo costs a monster's search: it goes round when it can */
 const GOO_COST = 4;

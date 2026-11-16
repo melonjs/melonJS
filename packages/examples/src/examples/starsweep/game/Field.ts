@@ -28,6 +28,24 @@ import {
 	Tween,
 	Vector2d,
 } from "melonjs";
+import * as sfx from "../audio/sfx";
+import {
+	ACTOR_Z,
+	cellUnder,
+	centreX,
+	centreY,
+	HEIGHT,
+	TILE,
+	WIDTH,
+} from "../config/layout";
+import { Actor, boltAnimation, GLOW, placeFalling } from "../entities/Actor";
+import type { Bolt } from "../entities/Bolt";
+import type { DeepSpace } from "../fx/DeepSpace";
+import type { Effects } from "../fx/Effects";
+import type { NebulaBackdrop } from "../fx/NebulaBackdrop";
+import type { SpaceBackdrop } from "../fx/SpaceBackdrop";
+import { aberrationBurst } from "../fx/screenFx";
+import type { Controls } from "../input/Controls";
 import {
 	type Cell,
 	canStep,
@@ -39,28 +57,17 @@ import {
 	inBounds,
 	isSolidGround,
 	Tile,
-} from "./board";
-import { Actor, boltAnimation, GLOW, placeFalling } from "./cast";
-import type { Controls } from "./controls";
-import { drawGlow, POWER_COLORS, type PowerKind, type Renderer } from "./draw";
+} from "../rules/board";
+import { LEVEL_FILES, type LevelDef } from "../rules/levels";
+import { Hud, MAX_LIVES } from "../ui/Hud";
 import {
-	aberrationBurst,
-	type DeepSpace,
-	type Effects,
-	type NebulaBackdrop,
-	type SpaceBackdrop,
-} from "./fx";
-import { Hud, MAX_LIVES } from "./hud";
-import {
-	ACTOR_Z,
-	cellUnder,
-	centreX,
-	centreY,
-	HEIGHT,
-	TILE,
-	WIDTH,
-} from "./layout";
-import { LEVEL_FILES, type LevelDef } from "./levels";
+	drawGlow,
+	POWER_COLORS,
+	type PowerKind,
+	type Renderer,
+} from "../utils/draw";
+import { loadHiscore, saveHiscore } from "../utils/score";
+import { FieldFront } from "./FieldFront";
 import {
 	ENEMY_SCORE,
 	type Enemy,
@@ -68,7 +75,7 @@ import {
 	enemyY,
 	isActive,
 	Monsters,
-} from "./monsters";
+} from "./Monsters";
 import {
 	beginStep,
 	land,
@@ -79,12 +86,9 @@ import {
 	standingOn,
 	walk,
 } from "./movers";
-import { Navigation } from "./navigation";
-import type { Bolt } from "./objects";
-import { POWER_TIME, Powers } from "./powers";
-import { loadHiscore, saveHiscore } from "./score";
-import * as sfx from "./sfx";
-import { type Board, Station } from "./station";
+import { Navigation } from "./Navigation";
+import { POWER_TIME, Powers } from "./Powers";
+import { type Board, Station } from "./Station";
 
 /** Bolt's walking speed, in cells per second */
 const WALK_SPEED = 5.2;
@@ -989,18 +993,5 @@ export class Field extends Renderable {
 			}
 		}
 		this.shieldRing.place(sprite.pos.x, sprite.pos.y, 1, shield ? 1 : 0);
-	}
-}
-
-/** draws the field's front layer, over the characters */
-class FieldFront extends Renderable {
-	constructor(private readonly field: Field) {
-		super(0, 0, WIDTH, HEIGHT);
-		this.anchorPoint.set(0, 0);
-		this.isPersistent = true;
-	}
-
-	override draw(r: Renderer) {
-		this.field.drawFront(r);
 	}
 }

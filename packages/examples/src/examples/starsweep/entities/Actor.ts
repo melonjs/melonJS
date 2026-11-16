@@ -18,8 +18,8 @@
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
 import { loader, Sprite, TextureAtlas } from "melonjs";
-import { DIR_NAMES, type Dir } from "./board";
-import type { EnemyKind } from "./levels";
+import { DIR_NAMES, type Dir } from "../rules/board";
+import type { EnemyKind } from "../rules/levels";
 
 /** the asset name of the sheet, image and JSON alike */
 export const CAST = "starsweep-cast";

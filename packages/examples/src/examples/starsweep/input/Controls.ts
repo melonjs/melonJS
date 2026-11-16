@@ -23,7 +23,7 @@
  */
 import { GamepadPlugin } from "@melonjs/gamepad-plugin";
 import { device, input, plugin } from "melonjs";
-import { DIR_NAMES, type Dir } from "./board";
+import { DIR_NAMES, type Dir } from "../rules/board";
 
 /**
  * Every key the game binds: the key, the action it presses, and whether

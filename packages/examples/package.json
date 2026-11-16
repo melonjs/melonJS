@@ -9,7 +9,7 @@
 		"backends": "node scripts/backends.mjs",
 		"sprites": "node scripts/generate-physics-shape-sprites.mjs",
 		"bake:starsweep": "node scripts/bake-starsweep-cast.mjs",
-		"check:starsweep": "tsx src/examples/starsweep/check-levels.ts",
+		"check:starsweep": "tsx src/examples/starsweep/rules/check-levels.ts",
 		"test:types": "tsc"
 	},
 	"dependencies": {

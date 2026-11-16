@@ -30,21 +30,23 @@
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
-import { Application, loader, state } from "melonjs";
+import { Application, loader, registerTiledObjectClass, state } from "melonjs";
 import { createExampleComponent } from "../utils";
-import { CAST } from "./cast";
-import { controls } from "./controls";
-import { FONT } from "./draw";
-import { BACKGROUND, HEIGHT, WIDTH } from "./layout";
+import { BACKGROUND, HEIGHT, WIDTH } from "./config/layout";
+import { CAST } from "./entities/Actor";
+import { Bolt } from "./entities/Bolt";
+import { Portal } from "./entities/Portal";
+import { controls } from "./input/Controls";
 import {
 	LEVEL_FILES,
 	levelFromTiled,
 	TILESET_FILE,
 	type TiledMap,
 	type TiledTileset,
-} from "./levels";
-import { registerObjects } from "./objects";
-import { PlayScreen, TitleScreen } from "./scenes";
+} from "./rules/levels";
+import { PlayScreen } from "./scenes/PlayScreen";
+import { TitleScreen } from "./scenes/TitleScreen";
+import { FONT } from "./utils/draw";
 
 const createGame = async () => {
 	const app = new Application(WIDTH, HEIGHT, {
@@ -90,8 +92,10 @@ const createGame = async () => {
 		levelFromTiled(loader.getTMX(name) as TiledMap, tileset, name),
 	);
 
-	// the classes the maps' objects (Bolt, the portals) are built with
-	registerObjects();
+	// the classes the maps' objects are built with: `level.load` makes a Bolt
+	// and the portals where each map's `actors` layer puts them
+	registerTiledObjectClass("Bolt", Bolt);
+	registerTiledObjectClass("Portal", Portal);
 	state.set(state.MENU, new TitleScreen());
 	state.set(state.PLAY, new PlayScreen(levels));
 	state.transition("fade", BACKGROUND, 250);

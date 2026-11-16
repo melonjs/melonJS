@@ -12,10 +12,10 @@
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
 import { math, utils } from "melonjs";
-import { type Cell, COLS, idx, ROWS, Tile } from "./board";
-import { drawPower, type PowerKind, type Renderer } from "./draw";
-import { centreX, centreY, STAND_LIFT, TILE } from "./layout";
-import type { Station } from "./station";
+import { centreX, centreY, STAND_LIFT, TILE } from "../config/layout";
+import { type Cell, COLS, idx, ROWS, Tile } from "../rules/board";
+import { drawPower, type PowerKind, type Renderer } from "../utils/draw";
+import type { Station } from "./Station";
 
 /** the power-ups that last a while, and how long, in seconds */
 export const POWER_TIME = {

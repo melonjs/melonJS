@@ -18,8 +18,8 @@ import {
 	type WebGLRenderer,
 	type WebGPURenderer,
 } from "melonjs";
-import { DX, DY } from "./board";
-import { TILE } from "./layout";
+import { TILE } from "../config/layout";
+import { DX, DY } from "../rules/board";
 
 /** Kenney Future, a CC0 sci-fi face, loaded by the bootstrap */
 export const FONT = "starsweepFuture";

@@ -40,7 +40,7 @@ import {
 } from "./levels.ts";
 
 const DIR = new URL(
-	"../../../public/assets/starsweep/levels/",
+	"../../../../public/assets/starsweep/levels/",
 	import.meta.url,
 );
 const readJson = (name: string) =>

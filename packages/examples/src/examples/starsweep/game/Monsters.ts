@@ -20,6 +20,15 @@
  */
 import type { DebugPath, PathResult } from "@melonjs/pathfinding-plugin";
 import { type Container, math, utils } from "melonjs";
+import * as sfx from "../audio/sfx";
+import {
+	ACTOR_Z,
+	cellUnder,
+	STAND_LIFT,
+	standOn,
+	TILE,
+} from "../config/layout";
+import { Actor, GLOW, monsterAnimation, placeFalling } from "../entities/Actor";
 import {
 	type Cell,
 	COLS,
@@ -32,11 +41,9 @@ import {
 	opposite,
 	ROWS,
 	Tile,
-} from "./board";
-import { Actor, GLOW, monsterAnimation, placeFalling } from "./cast";
-import { drawGlow, type Renderer } from "./draw";
-import { ACTOR_Z, cellUnder, STAND_LIFT, standOn, TILE } from "./layout";
-import type { EnemyKind, LevelDef } from "./levels";
+} from "../rules/board";
+import type { EnemyKind, LevelDef } from "../rules/levels";
+import { drawGlow, type Renderer } from "../utils/draw";
 import {
 	beginStep,
 	land,
@@ -47,9 +54,8 @@ import {
 	standingOn,
 	walk,
 } from "./movers";
-import type { Navigation } from "./navigation";
-import * as sfx from "./sfx";
-import type { Station } from "./station";
+import type { Navigation } from "./Navigation";
+import type { Station } from "./Station";
 
 /** each kind's walking speed, in cells per second */
 const SPEED: Record<EnemyKind, number> = {

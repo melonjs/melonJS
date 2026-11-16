@@ -26,8 +26,8 @@ import {
 	isPaintable,
 	readBoard,
 	Tile,
-} from "./board";
-import type { LevelDef } from "./levels";
+} from "../rules/board";
+import type { LevelDef } from "../rules/levels";
 
 /** how long a cracked panel holds once Bolt steps off it, in seconds */
 const CRUMBLE_DELAY = 0.3;

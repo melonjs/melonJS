@@ -8,7 +8,7 @@
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
-import { COLS, ROWS } from "./board";
+import { COLS, ROWS } from "../rules/board";
 
 /** the screen, portrait 9:16, so it fills a phone held upright */
 export const WIDTH = 576;

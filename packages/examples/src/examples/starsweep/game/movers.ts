@@ -10,8 +10,8 @@
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
 import { math } from "melonjs";
-import { type Cell, type Dir, DX, DY } from "./board";
-import { centreX, centreY, STAND_LIFT } from "./layout";
+import { centreX, centreY, STAND_LIFT } from "../config/layout";
+import { type Cell, type Dir, DX, DY } from "../rules/board";
 
 /** something that walks the board, one cell at a time */
 export interface Mover {
