@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.1.2 - _unreleased_
+## 1.1.2 - _2026-11-16_
 
 ### Fixed
 - A body removed inside an `onCollisionStart`, `onCollisionActive` or shape-level hook no longer makes the other renderable hear `onCollisionEnd` before its `onCollisionStart`, with no end after it: the side going out hears the end at once, the other once the pair's hooks are done, and only a side that heard the start hears the end. Removing that body again from the partner's end hook no longer crashes Rapier (`RuntimeError: unreachable`)
