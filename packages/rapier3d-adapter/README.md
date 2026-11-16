@@ -50,7 +50,37 @@ As on every melonJS adapter:
 - `Rapier3dAdapter.create(options)` waits for `load()`, then constructs the adapter.
 - `Rapier3dAdapter.loaded` is `true` once `load()` has finished.
 
-Rapier is imported with `import()`, so bundlers put it (about 4.3 MB, 1.6 MB compressed) in a chunk of its own, downloaded when `load()` is first called. Start it alongside the game's assets:
+Rapier is imported with `import()`, so bundlers put it (about 4.3 MB, 1.6 MB compressed) in a chunk of its own, downloaded when `load()` is first called.
+
+#### Behind the loading screen
+
+Rapier is the largest download a game with it has, so load it with the game's other assets, where the loading screen counts it. Teach the loader an asset type for it with `loader.setParser`, list it in the preload, and switch the world to Rapier once the preload is done:
+
+```ts
+import { Application, Camera3d, loader } from "melonjs";
+import { Rapier3dAdapter } from "@melonjs/rapier3d-adapter";
+
+// once: registering the same type twice logs a warning
+loader.setParser("rapier3d", (_asset, onload, onerror) => {
+    Rapier3dAdapter.load().then(() => onload(), onerror);
+    return 1; // one asset, for the loading screen's progress
+});
+
+// no `physic` here: the built-in physics runs until the switch below
+const app = new Application(800, 600, { parent: "screen", cameraClass: Camera3d });
+await app.init();
+
+await loader.preload([
+    { name: "rapier3d", type: "rapier3d", src: "" },
+    ...assets,
+]);
+app.world.setAdapter(new Rapier3dAdapter({ gravity: { x: 0, y: 980, z: 0 } }));
+// build the scene from here
+```
+
+`world.setAdapter()` rebuilds any body made before it from its `bodyDef`, so the order is safe either way; building the scene after it is simply cheaper. The [Slingshot](https://melonjs.github.io/melonJS/examples/#/slingshot) example loads this way.
+
+Without a loading screen, start `load()` early and await it before constructing:
 
 ```ts
 const rapierReady = Rapier3dAdapter.load();

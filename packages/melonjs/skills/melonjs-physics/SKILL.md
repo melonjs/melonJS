@@ -142,6 +142,33 @@ await rapierReady;
 app.world.setAdapter(new RapierAdapter());
 ```
 
+**Better: load it behind the loading screen.** Rapier (about 3 MB for 2D,
+4.3 MB for 3D) is usually the largest thing a game downloads, and the loading
+screen only counts what goes through the loader. Teach the loader an asset
+type for it, list it with the other assets, and switch once they are in. The
+same works for the 2D and 3D adapters:
+
+```js
+// once per page: registering the same type twice logs a warning
+loader.setParser("rapier", (_asset, onload, onerror) => {
+    RapierAdapter.load().then(() => onload(), onerror); // or Rapier3dAdapter
+    return 1; // one asset, for the progress bar
+});
+
+// no `physic` option: the built-in physics runs until the switch
+const app = new Application(800, 600, { parent: "screen" });
+await app.init();
+await loader.preload([{ name: "rapier", type: "rapier", src: "" }, ...assets]);
+app.world.setAdapter(new RapierAdapter({ gravity: { x: 0, y: 900 } }));
+// build the scene here
+```
+
+`setAdapter()` rebuilds any body made before it from its `bodyDef`, so the
+order is safe either way; building the scene after the switch skips that
+rebuild. Do not `await X.create()` inside the `Application` settings for a
+WebAssembly adapter: the page stays blank, with no loading screen, while
+it downloads.
+
 `PlanckAdapter` also takes `velocityIterations` (default `8`) and
 `positionIterations` (default `3`). `MatterAdapter` takes a different set —
 `gravity` (default `{x: 0, y: 1}`, matter's own convention), `subSteps` and
@@ -1218,7 +1245,7 @@ yourself through `adapter.world` with `world.removeImpulseJoint()` /
 | `return false` from a handler does nothing | return values are only honoured by legacy `onCollision` — use `isSensor` / `isTrigger` |
 | crash or a null body when spawning from `onCollisionStart` | world mutated during contact dispatch (locked world under planck) |
 | `raycast` / `queryAABB` finds nothing | `isKinematic` still `true`, or no `world.update` yet (built-in) |
-| `new RapierAdapter()` throws "Rapier is not loaded yet" | its WebAssembly loads asynchronously; use `await RapierAdapter.create(options)`, or `await RapierAdapter.load()` first |
+| `new RapierAdapter()` (or `Rapier3dAdapter`) throws "Rapier is not loaded yet" | its WebAssembly loads asynchronously; preload it as an asset with `loader.setParser` (see *Picking one*), or `await X.load()` / `X.create(options)` first |
 | a fast body passes through a thin one (Rapier) | continuous collision is per body and off by default: `(body as RapierAdapter.Body).enableCcd(true)` |
 | `normal` is `(0, 0)` and `depth` is `0` (Rapier) | a sensor contact or an `onCollisionEnd`: Rapier computes no contact there |
 | `querySphere` / `raycast3d` is not a function | matter, planck or Rapier: all are 2D-only and omit them |
@@ -1275,6 +1302,7 @@ yourself through `adapter.world` with `world.removeImpulseJoint()` /
 | a mesh under the Rapier 3D adapter snaps back after its `currentTransform` is changed | the adapter writes the turn every step, from the transform the mesh had when its body was made; turn it with `setRotation` |
 | 3D bodies start one behind the other along Z | added without a depth, so `autoDepth` numbered them; `addChild(child, child.depth)` |
 | `raycast3d` or `querySphere` finds nothing right after the body is added (Rapier 3D) | Rapier indexes bodies when its world steps; query from the next frame |
+| a blank page for seconds before the loading screen appears (Rapier) | the adapter was made with `await X.create()` in the `Application` settings; load it through the preloader with `loader.setParser`, then `world.setAdapter()` |
 
 ## Related skills
 
