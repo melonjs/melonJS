@@ -1,12 +1,16 @@
 # Changelog
 
-## 1.8.0 - _unreleased_
-
-### Added
-- `isSleeping()`: whether matter has put a body to sleep (with `matterEngineOptions.enableSleeping`)
+## 1.7.2 - _2026-11-16_
 
 ### Fixed
-- With sleeping enabled, `setVelocity`, `applyForce`, `applyImpulse`, `setPosition`, `setAngle`, `setAngularVelocity` and `applyTorque` wake a sleeping body; matter skipped it, so the change was lost
+- A body removed inside an `onCollisionStart`, `onCollisionActive` or shape-level hook no longer makes its partner hear `onCollisionEnd` before its own start or active hook, then that hook after the end: the side going out hears the end at once, the other once the pair's hooks are done, and only a side that heard the start hears the end. A partner touching the removed body through a pair whose start had not been told yet no longer hears an end for it
+- Removing that body again from its partner's `onCollisionEnd` no longer overflows the stack (`Maximum call stack size exceeded`)
+- `step()` with a `dt` that is `NaN`, infinite, zero or negative simulates nothing; a `NaN` or `Infinity` step turned the position of every body it moved into `NaN` for good
+- A `NaN` `maxVelocity` on an axis no longer turns the body's velocity into `NaN`: it caps nothing. A negative one caps by its size; it used to pin the velocity at that speed, even on a body at rest
+- `setMaxVelocity()` on a renderable with no body yet no longer keeps the renderable alive until `destroy()`: the cap is held weakly, and still applies once `addChild()` builds the body, unless the `bodyDef` has a `maxVelocity` of its own
+- A second `addBody()` for the same renderable replaces its body; the first matter body was left in the world, still colliding
+- `removeBody()` forgets the body's shapes; they were kept until `destroy()`
+- A contact normal has no negative zero: the side of an axis-aligned contact that is handed the negated normal got `{ x: -0, y: -1 }`, so `toEqual({ x: 0, y: -1 })` failed; so did the shape-level `normal`, `overlapN` and `overlapV`
 
 ## 1.7.1 - _2026-11-14_
 

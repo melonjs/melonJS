@@ -642,7 +642,8 @@ export interface RaycastHit3d {
  *   come closer (a pendulum, a grappling hook, a cap on a chain's length).
  * - `"weld"`: the two bodies move and turn as one, as they stand when the
  *   joint is made (parts glued together that can break apart).
- * - `"slider"`: the second body slides along `axis` and keeps its angle (a
+ * - `"slider"`: the second body slides along `axis` and keeps its angle to
+ *   the first, as it was when the joint was made (a
  *   lift, a piston). Optional `limits` bound the travel.
  */
 export type JointType = "hinge" | "rope" | "weld" | "slider";
@@ -891,7 +892,9 @@ export interface PhysicsAdapter {
 	 * Portable velocity / force / position API. Every adapter implements
 	 * these by routing to its native engine. Use these instead of
 	 * mutating the body handle directly when writing adapter-agnostic
-	 * code.
+	 * code. They act on the live body, which a renderable has once it is in
+	 * the world: call them from its `onActivateEvent()`, which runs after the
+	 * body is built, or later, never from its constructor.
 	 */
 	getVelocity(renderable: Renderable, out?: Vector2d): Vector2d;
 	/**
@@ -964,7 +967,11 @@ export interface PhysicsAdapter {
 	 * {@link BodyDefinition} field and lets game code change a body's
 	 * physical properties without re-creating it. Adapter implementations
 	 * route to their native engine (BuiltinAdapter writes to the `Body`
-	 * handle; MatterAdapter calls Matter's `Body.set*` helpers).
+	 * handle; MatterAdapter calls Matter's `Body.set*` helpers). They act on
+	 * the live body: what a body starts with goes in its
+	 * {@link BodyDefinition}, and what is set on it from the start goes in
+	 * the renderable's `onActivateEvent()`, which runs after the body is
+	 * built, each time it enters the world.
 	 */
 	setStatic(renderable: Renderable, isStatic: boolean): void;
 	setGravityScale(renderable: Renderable, scale: number): void;

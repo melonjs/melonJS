@@ -39,6 +39,40 @@ declare const __VERSION__: string;
 export const REQUIRED_MELONJS_VERSION = "20.0.0";
 
 /**
+ * A pair whose start or active hooks are running. When one of them takes a
+ * body of the pair out, the pair's end is told in the order a hook can rely
+ * on: to the side going out at once, while it is whole, and to the other once
+ * the hooks are done; and only to a side that heard the start.
+ */
+interface Dispatch {
+	pair: Matter.Pair;
+	rA: Renderable;
+	rB: Renderable;
+	/** the pair's normal and depth when the hooks began, for a later end */
+	normal: { x: number; y: number };
+	depth: number;
+	/** the shapes the two parts were built from, kept for a later end */
+	entryA: ShapeEntry | undefined;
+	entryB: ShapeEntry | undefined;
+	/** the sides that may hear the end: those the start reached */
+	reached: number;
+	/** the sides already told the end */
+	told: number;
+	/** true once a body of the pair was taken out */
+	ended: boolean;
+}
+
+/** The melonJS shape a part was built from, and its index in the body. */
+type ShapeEntry = { shape: BodyShape; index: number };
+
+/** Which hooks of a pair a dispatch reaches: one bit per side and level. */
+const SIDE_A = 1;
+const SIDE_B = 2;
+const SHAPE_A = 4;
+const SHAPE_B = 8;
+const EVERY_SIDE = SIDE_A | SIDE_B | SHAPE_A | SHAPE_B;
+
+/**
  * Options accepted by the {@link MatterAdapter} constructor.
  */
 export interface MatterAdapterOptions {
@@ -211,6 +245,15 @@ export class MatterAdapter implements PhysicsAdapter {
 		Renderable,
 		{ x: number; y: number }
 	>();
+	/**
+	 * Caps set before the renderable had a body, applied when `addBody`
+	 * builds one. Held weakly: a renderable never added is not kept alive.
+	 */
+	private pendingLimits = new WeakMap<Renderable, { x: number; y: number }>();
+	/** the ids of touching pairs, from their start hooks until their end */
+	private readonly started = new Set<string>();
+	/** the pairs whose start or active hooks are running, innermost last */
+	private readonly dispatching: Dispatch[] = [];
 	/** per-body bodyDef hash kept for shape introspection / removeBody */
 	private readonly defMap = new Map<Renderable, BodyDefinition>();
 	/**
@@ -383,7 +426,10 @@ export class MatterAdapter implements PhysicsAdapter {
 		this.bodyMap.clear();
 		this.renderableMap.clear();
 		this.partShapeMap.clear();
+		this.started.clear();
+		this.dispatching.length = 0;
 		this.velocityLimits.clear();
+		this.pendingLimits = new WeakMap();
 		this.defMap.clear();
 		this.bodyGravityScale.clear();
 		this.posOffsets.clear();
@@ -398,6 +444,11 @@ export class MatterAdapter implements PhysicsAdapter {
 		// — bodies with `updateWhenPaused = true` are not preserved here,
 		// which is a documented difference from BuiltinAdapter.
 		if (state.isPaused()) {
+			return;
+		}
+		// a step of no length simulates nothing, and one that is not a
+		// number would turn every body it touched into NaN for good
+		if (!(dt > 0) || !Number.isFinite(dt)) {
 			return;
 		}
 		// mirror gravity (user may have mutated this.gravity since init)
@@ -501,13 +552,19 @@ export class MatterAdapter implements PhysicsAdapter {
 		// The index carried into `partShapeMap` is the shape's index in the
 		// ORIGINAL list, so collision events still name the right shape.
 		const parts: Matter.Body[] = [];
+		const origins: { shape: BodyShape; index: number }[] = [];
 		def.shapes.forEach((s, i) => {
 			if ((s as { isActive?: boolean }).isActive === false) {
 				return;
 			}
-			const part = this._shapeToMatter(s, baseX, baseY);
-			this.partShapeMap.set(part, { shape: s, index: i });
-			parts.push(part);
+			parts.push(this._shapeToMatter(s, baseX, baseY));
+			origins.push({ shape: s, index: i });
+		});
+		// every part is built, so a refused shape has left nothing behind;
+		// a renderable has one body: a second one replaces the first
+		this.removeBody(renderable);
+		parts.forEach((part, i) => {
+			this.partShapeMap.set(part, origins[i]);
 		});
 		if (parts.length === 0) {
 			// every shape disabled: matter cannot build a body from nothing, so
@@ -550,12 +607,6 @@ export class MatterAdapter implements PhysicsAdapter {
 			// matter-js 0.20 has no per-body gravityScale — store it and
 			// apply a counter-force each step in the beforeUpdate handler.
 			this.bodyGravityScale.set(body, def.gravityScale);
-		}
-		if (def.maxVelocity) {
-			this.velocityLimits.set(renderable, {
-				x: def.maxVelocity.x,
-				y: def.maxVelocity.y,
-			});
 		}
 		// Install live getter/setter aliases so the matter-native form
 		// (`body.collisionFilter.category` / `body.collisionFilter.mask`)
@@ -612,6 +663,12 @@ export class MatterAdapter implements PhysicsAdapter {
 		this.bodyMap.set(renderable, body);
 		this.renderableMap.set(body, renderable);
 		this.defMap.set(renderable, def);
+		// the definition's cap, or else one set before the body was built
+		const limit = def.maxVelocity ?? this.pendingLimits.get(renderable);
+		this.pendingLimits.delete(renderable);
+		if (limit) {
+			this.setMaxVelocity(renderable, limit);
+		}
 		// Track the offset between renderable.pos (top-left) and the
 		// matter body's centroid so syncFromPhysics places the sprite
 		// correctly.
@@ -748,17 +805,15 @@ export class MatterAdapter implements PhysicsAdapter {
 			// a partner still touching this body learns the contact ended, as
 			// on the other adapters: matter only reports the end of a pair
 			// whose bodies it still holds
-			const touching = this.engine.pairs.list.filter((pair: Matter.Pair) => {
-				return (
-					pair.isActive &&
-					(this._renderableForPart(pair.bodyA) === renderable ||
-						this._renderableForPart(pair.bodyB) === renderable)
-				);
-			});
-			if (touching.length > 0) {
-				this._dispatchCollisions(touching, "end");
+			this._endContacts(renderable);
+			// one of their hooks may have taken this body out already
+			if (this.bodyMap.get(renderable) !== body) {
+				return;
 			}
 			Matter.Composite.remove(this.engine.world, body);
+			for (const part of body.parts) {
+				this.partShapeMap.delete(part);
+			}
 			this.bodyMap.delete(renderable);
 			this.renderableMap.delete(body);
 			this.velocityLimits.delete(renderable);
@@ -823,7 +878,6 @@ export class MatterAdapter implements PhysicsAdapter {
 	setVelocity(renderable: Renderable, v: Vector2d): void {
 		const body = this.bodyMap.get(renderable);
 		if (body) {
-			this.wake(body);
 			Matter.Body.setVelocity(body, { x: v.x, y: v.y });
 		}
 	}
@@ -836,7 +890,6 @@ export class MatterAdapter implements PhysicsAdapter {
 		// "set velocity to this value each frame" pattern (what
 		// BuiltinAdapter's force-accumulator gave you under the hood)
 		// should use `setVelocity` instead.
-		this.wake(body);
 		Matter.Body.applyForce(body, point ?? body.position, {
 			x: force.x,
 			y: force.y,
@@ -850,7 +903,6 @@ export class MatterAdapter implements PhysicsAdapter {
 		const body = this.bodyMap.get(renderable);
 		if (!body) return;
 		const invMass = body.mass > 0 ? 1 / body.mass : 0;
-		this.wake(body);
 		Matter.Body.setVelocity(body, {
 			x: body.velocity.x + impulse.x * invMass,
 			y: body.velocity.y + impulse.y * invMass,
@@ -865,7 +917,6 @@ export class MatterAdapter implements PhysicsAdapter {
 			// at addBody time so syncFromPhysics keeps renderable.pos at the
 			// requested value.
 			const off = this.posOffsets.get(renderable);
-			this.wake(body);
 			Matter.Body.setPosition(body, {
 				x: p.x - (off?.x ?? 0),
 				y: p.y - (off?.y ?? 0),
@@ -883,20 +934,6 @@ export class MatterAdapter implements PhysicsAdapter {
 		}
 		renderable.pos.x = p.x;
 		renderable.pos.y = p.y;
-	}
-
-	/**
-	 * Wakes a sleeping body before a velocity, force, angle or position is
-	 * written to it. matter skips a sleeping body in its step, so a write
-	 * to one was dropped (a `setVelocity` on a crate at rest did nothing);
-	 * planck and Rapier wake the body themselves. Only reachable with
-	 * `matterEngineOptions.enableSleeping`.
-	 * @param body - the body about to be written to
-	 */
-	private wake(body: Matter.Body): void {
-		if (body.isSleeping) {
-			Matter.Sleeping.set(body, false);
-		}
 	}
 
 	private invalidateContactsFor(body: Matter.Body): void {
@@ -931,7 +968,6 @@ export class MatterAdapter implements PhysicsAdapter {
 	setAngle(renderable: Renderable, angle: number): void {
 		const body = this.bodyMap.get(renderable);
 		if (body) {
-			this.wake(body);
 			Matter.Body.setAngle(body, angle);
 		}
 	}
@@ -944,7 +980,6 @@ export class MatterAdapter implements PhysicsAdapter {
 	setAngularVelocity(renderable: Renderable, omega: number): void {
 		const body = this.bodyMap.get(renderable);
 		if (body) {
-			this.wake(body);
 			Matter.Body.setAngularVelocity(body, omega);
 		}
 	}
@@ -957,7 +992,6 @@ export class MatterAdapter implements PhysicsAdapter {
 	applyTorque(renderable: Renderable, torque: number): void {
 		const body = this.bodyMap.get(renderable);
 		if (body) {
-			this.wake(body);
 			body.torque += torque;
 		}
 	}
@@ -1025,13 +1059,21 @@ export class MatterAdapter implements PhysicsAdapter {
 		renderable: Renderable,
 		limit: { x: number; y: number },
 	): void {
-		this.velocityLimits.set(renderable, { x: limit.x, y: limit.y });
+		const copy = { x: limit.x, y: limit.y };
+		if (this.bodyMap.has(renderable)) {
+			this.velocityLimits.set(renderable, copy);
+		} else {
+			// no body yet: kept for the one `addBody` builds, unless the
+			// body definition has a cap of its own
+			this.pendingLimits.set(renderable, copy);
+		}
 	}
 
 	getMaxVelocity(renderable: Renderable): { x: number; y: number } {
 		// a copy, so changing it does not change the cap; and no cap reads as
 		// Infinity, where `{ 0, 0 }` read as a cap that holds the body still
-		const limit = this.velocityLimits.get(renderable);
+		const limit =
+			this.velocityLimits.get(renderable) ?? this.pendingLimits.get(renderable);
 		return limit ? { x: limit.x, y: limit.y } : { x: Infinity, y: Infinity };
 	}
 
@@ -1163,17 +1205,6 @@ export class MatterAdapter implements PhysicsAdapter {
 			}
 		}
 		return cached;
-	}
-
-	/**
-	 * Whether matter has put the body to sleep. `false` for a static or
-	 * kinematic body and for a renderable this adapter does not know.
-	 * @param renderable - the renderable whose body to read
-	 * @returns `true` while the body sleeps
-	 */
-	isSleeping(renderable: Renderable): boolean {
-		const body = this.bodyMap.get(renderable);
-		return body !== undefined && !body.isStatic && body.isSleeping;
 	}
 
 	isGrounded(renderable: Renderable): boolean {
@@ -1332,8 +1363,15 @@ export class MatterAdapter implements PhysicsAdapter {
 		for (const [renderable, limit] of this.velocityLimits) {
 			const body = this.bodyMap.get(renderable);
 			if (!body) continue;
-			const vx = Math.max(-limit.x, Math.min(limit.x, body.velocity.x));
-			const vy = Math.max(-limit.y, Math.min(limit.y, body.velocity.y));
+			const clamp = (value: number, cap: number) => {
+				// one that is not a number caps nothing (it would turn the
+				// velocity itself into NaN); a negative one caps by its size
+				if (Number.isNaN(cap)) return value;
+				const m = Math.abs(cap);
+				return Math.max(-m, Math.min(m, value));
+			};
+			const vx = clamp(body.velocity.x, limit.x);
+			const vy = clamp(body.velocity.y, limit.y);
 			if (vx !== body.velocity.x || vy !== body.velocity.y) {
 				Matter.Body.setVelocity(body, { x: vx, y: vy });
 			}
@@ -1344,11 +1382,178 @@ export class MatterAdapter implements PhysicsAdapter {
 		pairs: Matter.Pair[],
 		phase: "start" | "active" | "end",
 	): void {
-		// Pick the single handler to dispatch for each side per pair.
-		// The supersedes rule (modern `onCollisionActive` wins over legacy
-		// `onCollision` when both are defined) is baked into the picker,
-		// so the per-pair loop becomes a straight dispatch with no
-		// skip-flag bookkeeping.
+		for (const pair of pairs) {
+			// matter reports collisions between PARTS. A compound body's parts
+			// are not in `renderableMap` (only the parent is), so looking the
+			// pair bodies up directly meant every multi-shape body silently
+			// received NO collision events at all — not the new shape-level
+			// ones, and not `onCollision` / `onCollisionStart` either. Resolve
+			// through `.parent`, which matter sets to the body itself for a
+			// simple body, so both cases take one path. A hook earlier in this
+			// event may have removed one of them.
+			const rA = this._renderableForPart(pair.bodyA);
+			const rB = this._renderableForPart(pair.bodyB);
+			if (!rA || !rB) continue;
+			this._dispatchPair(pair, rA, rB, phase);
+		}
+	}
+
+	/**
+	 * Fire the hooks of one pair, on both renderables. A start or active
+	 * hook may take a body of the pair out: see {@link Dispatch}.
+	 * @param pair the matter pair
+	 * @param rA the renderable owning `pair.bodyA`
+	 * @param rB the renderable owning `pair.bodyB`
+	 * @param phase which lifecycle hook to fire
+	 */
+	private _dispatchPair(
+		pair: Matter.Pair,
+		rA: Renderable,
+		rB: Renderable,
+		phase: "start" | "active" | "end",
+	): void {
+		if (phase === "end") {
+			// a pair already ended (one of its bodies was removed), or never
+			// started, is not ended again
+			if (this.started.delete(pair.id)) {
+				this._dispatch(pair, rA, rB, phase, EVERY_SIDE);
+			}
+			return;
+		}
+		if (phase === "start") {
+			this.started.add(pair.id);
+		} else if (!this.started.has(pair.id)) {
+			return;
+		}
+		const normal = pair.collision.normal;
+		const current: Dispatch = {
+			pair,
+			rA,
+			rB,
+			normal: { x: normal.x, y: normal.y },
+			depth: pair.collision.depth,
+			entryA: this.partShapeMap.get(pair.bodyA),
+			entryB: this.partShapeMap.get(pair.bodyB),
+			// a pair already active had its start on every side
+			reached: phase === "start" ? 0 : EVERY_SIDE,
+			told: 0,
+			ended: false,
+		};
+		this.dispatching.push(current);
+		try {
+			this._dispatch(
+				pair,
+				rA,
+				rB,
+				phase,
+				EVERY_SIDE,
+				phase === "start" ? current : undefined,
+				current,
+			);
+		} finally {
+			this.dispatching.splice(this.dispatching.indexOf(current), 1);
+		}
+		if (current.ended) {
+			this._dispatch(
+				pair,
+				rA,
+				rB,
+				"end",
+				current.reached & ~current.told,
+				undefined,
+				current,
+			);
+		}
+	}
+
+	/**
+	 * Tell the pairs touching a renderable whose body is about to go that
+	 * they ended.
+	 * @param renderable the renderable whose body is leaving the world
+	 */
+	private _endContacts(renderable: Renderable): void {
+		// a pair whose start or active hooks are running: the side going out
+		// hears the end now, the other once those hooks are done, so that no
+		// one hears of an end before its start
+		for (const d of this.dispatching) {
+			const going =
+				(d.rA === renderable ? SIDE_A | SHAPE_A : 0) |
+				(d.rB === renderable ? SIDE_B | SHAPE_B : 0);
+			if (going !== 0 && (this.started.delete(d.pair.id) || d.ended)) {
+				d.ended = true;
+				const sides = going & d.reached & ~d.told;
+				d.told |= sides;
+				this._dispatch(d.pair, d.rA, d.rB, "end", sides, undefined, d);
+			}
+		}
+		const ending = this.engine.pairs.list.filter((pair: Matter.Pair) => {
+			return (
+				this.started.has(pair.id) &&
+				(this._renderableForPart(pair.bodyA) === renderable ||
+					this._renderableForPart(pair.bodyB) === renderable)
+			);
+		});
+		this._dispatchCollisions(ending, "end");
+	}
+
+	/**
+	 * Fire one phase of a pair's hooks: the renderables' own, then the
+	 * shape-level ones. A renderable whose body is gone hears nothing.
+	 * @param pair the matter pair
+	 * @param rA the renderable owning `pair.bodyA`
+	 * @param rB the renderable owning `pair.bodyB`
+	 * @param phase which lifecycle hook to fire
+	 * @param sides the sides and levels to fire it on, as bits
+	 * @param [record] where to note each side reached, before its hook runs
+	 * @param [known] the pair as its hooks began, when a body of it may
+	 * since have gone
+	 */
+	private _dispatch(
+		pair: Matter.Pair,
+		rA: Renderable,
+		rB: Renderable,
+		phase: "start" | "active" | "end",
+		sides: number,
+		record?: Dispatch,
+		known?: Dispatch,
+	): void {
+		// Detachment handling. `ancestor === null` means the renderable
+		// was attached to a container and later detached (removeChild,
+		// mid-step level reload). `ancestor === undefined` means it was
+		// never in a tree at all (unit tests adding bodies directly to
+		// the adapter) — leave those alone.
+		//
+		// For START / ACTIVE phases: if either partner is detached the
+		// pair is stale, skip the whole dispatch.
+		//
+		// For END phase: dispatch to whichever partner is still attached
+		// — they want to know their neighbor just left. Skip only when
+		// both are gone.
+		const ancA = (rA as Renderable & { ancestor?: object | null }).ancestor;
+		const ancB = (rB as Renderable & { ancestor?: object | null }).ancestor;
+		// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- runtime guard: ancestor is set to null by Container on removeChild; TS narrows it away on the cast
+		const aDetached = ancA === null;
+		// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- runtime guard: ancestor is set to null by Container on removeChild; TS narrows it away on the cast
+		const bDetached = ancB === null;
+		if (phase === "end") {
+			if (aDetached && bDetached) return;
+		} else if (aDetached || bDetached) {
+			return;
+		}
+		// a hook earlier in this dispatch may have removed a body: its
+		// renderable hears nothing from then on
+		const reaches = (side: number, receiver: Renderable, detached: boolean) => {
+			if ((sides & side) === 0 || detached || !this.bodyMap.has(receiver)) {
+				return false;
+			}
+			if (record !== undefined) {
+				record.reached |= side;
+			}
+			return true;
+		};
+		// Pick the single handler to dispatch for each side. The supersedes
+		// rule (modern `onCollisionActive` wins over legacy `onCollision`
+		// when both are defined) is baked into the picker.
 		//
 		// `onCollision` is the legacy every-frame alias; legacy melonJS
 		// SAT fires it every frame two bodies overlap, which maps to
@@ -1363,111 +1568,63 @@ export class MatterAdapter implements PhysicsAdapter {
 				? "onCollisionActive"
 				: "onCollision";
 		};
-		for (const pair of pairs) {
-			// matter reports collisions between PARTS. A compound body's parts
-			// are not in `renderableMap` (only the parent is), so looking the
-			// pair bodies up directly meant every multi-shape body silently
-			// received NO collision events at all — not the new shape-level
-			// ones, and not `onCollision` / `onCollisionStart` either. Resolve
-			// through `.parent`, which matter sets to the body itself for a
-			// simple body, so both cases take one path.
-			const partA = pair.bodyA;
-			const partB = pair.bodyB;
-			const rA = this._renderableForPart(partA);
-			const rB = this._renderableForPart(partB);
-			if (!rA || !rB) continue;
-			// Detachment handling. `ancestor === null` means the renderable
-			// was attached to a container and later detached (removeChild,
-			// mid-step level reload). `ancestor === undefined` means it was
-			// never in a tree at all (unit tests adding bodies directly to
-			// the adapter) — leave those alone.
-			//
-			// For START / ACTIVE phases: if either partner is detached the
-			// pair is stale, skip the whole dispatch.
-			//
-			// For END phase: dispatch to whichever partner is still attached
-			// — they want to know their neighbor just left. Skip only when
-			// both are gone.
-			const ancA = (rA as Renderable & { ancestor?: object | null }).ancestor;
-			const ancB = (rB as Renderable & { ancestor?: object | null }).ancestor;
-			// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- runtime guard: ancestor is set to null by Container on removeChild; TS narrows it away on the cast
-			const aDetached = ancA === null;
-			// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- runtime guard: ancestor is set to null by Container on removeChild; TS narrows it away on the cast
-			const bDetached = ancB === null;
-			if (phase === "end") {
-				if (aDetached && bDetached) continue;
-			} else if (aDetached || bDetached) {
-				continue;
-			}
-			// Matter-native response shape passed to user handlers.
-			//
-			//   - `a` / `b` — receiver and partner renderables. We dispatch
-			//     once per side, so each side sees itself as `a`.
-			//   - `normal` — unit MTV (minimum translation vector) for the
-			//     receiver. Direction `this` must move to separate from
-			//     `other`. Matter's `pair.collision.normal` is already the
-			//     MTV of `bodyA`; for the B-side dispatch we negate so each
-			//     handler sees the normal from its own perspective.
-			//       `normal.y < -0.7`  → push me up to escape  (I'm on top → stomp)
-			//       `normal.y >  0.7`  → push me down to escape (I'm below → being stomped on)
-			//   - `depth` — penetration depth (matter native name).
-			//   - `pair` — raw `Matter.Pair`, exposed for advanced use
-			//     (supports, tangent, body refs, etc.).
-			const collision = pair.collision;
-			const depth = collision.depth;
-			const normal = collision.normal;
-			const responseAB = {
-				a: rA,
-				b: rB,
-				normal: { x: normal.x, y: normal.y },
-				depth,
-				pair,
-			};
-			const responseBA = {
-				a: rB,
-				b: rA,
-				normal: { x: -normal.x, y: -normal.y },
-				depth,
-				pair,
-			};
-			// a handler earlier in this dispatch may have removed this body
-			if (!aDetached && this.bodyMap.has(rA)) {
-				const mA = methodForSide(rA);
-				const fnA = (rA as Renderable & Record<string, unknown>)[mA];
-				if (typeof fnA === "function") {
-					(fnA as (response: unknown, other: Renderable) => unknown).call(
-						rA,
-						responseAB,
-						rB,
-					);
-				}
-			}
-			if (!bDetached && this.bodyMap.has(rB)) {
-				const mB = methodForSide(rB);
-				const fnB = (rB as Renderable & Record<string, unknown>)[mB];
-				if (typeof fnB === "function") {
-					(fnB as (response: unknown, other: Renderable) => unknown).call(
-						rB,
-						responseBA,
-						rA,
-					);
-				}
-			}
-
-			// shape-level hooks, after the pair-level ones so ordering matches
-			// the builtin adapter (melonjs#1596)
-			this._dispatchShapeContacts(
-				rA,
-				rB,
-				partA,
-				partB,
-				normal,
-				depth,
-				phase,
-				aDetached,
-				bDetached,
+		// Matter-native response shape passed to user handlers.
+		//
+		//   - `a` / `b` — receiver and partner renderables. We dispatch
+		//     once per side, so each side sees itself as `a`.
+		//   - `normal` — unit MTV (minimum translation vector) for the
+		//     receiver. Direction `this` must move to separate from
+		//     `other`. Matter's `pair.collision.normal` is already the
+		//     MTV of `bodyA`; for the B-side dispatch we negate so each
+		//     handler sees the normal from its own perspective.
+		//       `normal.y < -0.7`  → push me up to escape  (I'm on top → stomp)
+		//       `normal.y >  0.7`  → push me down to escape (I'm below → being stomped on)
+		//   - `depth` — penetration depth (matter native name).
+		//   - `pair` — raw `Matter.Pair`, exposed for advanced use
+		//     (supports, tangent, body refs, etc.).
+		const { normal, depth } = known ?? pair.collision;
+		const emit = (receiver: Renderable, other: Renderable, sign: number) => {
+			const fn = (receiver as Renderable & Record<string, unknown>)[
+				methodForSide(receiver)
+			];
+			if (typeof fn !== "function") return;
+			(fn as (response: unknown, other: Renderable) => unknown).call(
+				receiver,
+				{
+					a: receiver,
+					b: other,
+					// (`+ 0` keeps a zero component from reading as -0)
+					normal: { x: sign * normal.x + 0, y: sign * normal.y + 0 },
+					depth,
+					pair,
+				},
+				other,
 			);
+		};
+		if (reaches(SIDE_A, rA, aDetached)) {
+			emit(rA, rB, 1);
 		}
+		if (reaches(SIDE_B, rB, bDetached)) {
+			emit(rB, rA, -1);
+		}
+
+		// shape-level hooks, after the pair-level ones so ordering matches
+		// the builtin adapter (melonjs#1596)
+		this._dispatchShapeContacts(
+			known ? known.entryA : this.partShapeMap.get(pair.bodyA),
+			known ? known.entryB : this.partShapeMap.get(pair.bodyB),
+			rA,
+			rB,
+			normal,
+			depth,
+			phase,
+			() => {
+				return reaches(SHAPE_A, rA, aDetached);
+			},
+			() => {
+				return reaches(SHAPE_B, rB, bDetached);
+			},
+		);
 	}
 
 	/**
@@ -1494,32 +1651,30 @@ export class MatterAdapter implements PhysicsAdapter {
 	 * through several parts produces several pairs and every one of them is
 	 * reported — which is exactly the enumeration melonjs#1596 asks for.
 	 * Bodies whose parts were not built from a melonJS shape are skipped.
+	 * @param entryA the shape the part on A's side was built from
+	 * @param entryB the shape the part on B's side was built from
 	 * @param rA renderable owning part A
 	 * @param rB renderable owning part B
-	 * @param partA the matter part on A's side
-	 * @param partB the matter part on B's side
 	 * @param normal the pair's `collision.normal`: the direction A must move
 	 * to separate from B, as the body-level hooks hand it to A
 	 * @param normal.x normal x component
 	 * @param normal.y normal y component
 	 * @param depth penetration depth
 	 * @param phase which lifecycle hook to fire
-	 * @param aDetached true when A has left the world
-	 * @param bDetached true when B has left the world
+	 * @param toA whether A's hook fires, asked just before it would
+	 * @param toB whether B's hook fires, asked just before it would
 	 */
 	private _dispatchShapeContacts(
+		entryA: ShapeEntry | undefined,
+		entryB: ShapeEntry | undefined,
 		rA: Renderable,
 		rB: Renderable,
-		partA: Matter.Body,
-		partB: Matter.Body,
 		normal: { x: number; y: number },
 		depth: number,
 		phase: "start" | "active" | "end",
-		aDetached: boolean,
-		bDetached: boolean,
+		toA: () => boolean,
+		toB: () => boolean,
 	): void {
-		const entryA = this.partShapeMap.get(partA);
-		const entryB = this.partShapeMap.get(partB);
 		if (entryA === undefined || entryB === undefined) {
 			return;
 		}
@@ -1541,8 +1696,7 @@ export class MatterAdapter implements PhysicsAdapter {
 			ny: number,
 		): void => {
 			const fn = (receiver as Renderable & Record<string, unknown>)[method];
-			// skipped too when an earlier handler removed this body
-			if (typeof fn !== "function" || !this.bodyMap.has(receiver)) {
+			if (typeof fn !== "function") {
 				return;
 			}
 			// separated contacts carry identity only, matching the builtin
@@ -1559,13 +1713,14 @@ export class MatterAdapter implements PhysicsAdapter {
 					isTrigger,
 					depth: d,
 					overlap: d,
-					normal: { x: nx, y: ny },
+					// (`+ 0` keeps a zero component from reading as -0)
+					normal: { x: nx + 0, y: ny + 0 },
 					// the legacy SAT fields `ShapeCollisionContact` declares, in
 					// the builtin's convention: `overlapN` is the opposite of
 					// `normal`, `overlapV` is `overlapN` scaled by the depth, and
 					// a 2D engine has no Z
-					overlapN: { x: -nx, y: -ny },
-					overlapV: { x: -nx * d, y: -ny * d },
+					overlapN: { x: -nx + 0, y: -ny + 0 },
+					overlapV: { x: -nx * d + 0, y: -ny * d + 0 },
 					overlapZ: 0,
 					overlapNZ: 0,
 					normalZ: 0,
@@ -1577,10 +1732,10 @@ export class MatterAdapter implements PhysicsAdapter {
 		// direction it must move to separate. These were negated, so a
 		// shape hook pointed into the partner while `onCollisionStart`
 		// pointed away from it.
-		if (!aDetached) {
+		if (toA()) {
 			emit(rA, rB, entryA, entryB, normal.x, normal.y);
 		}
-		if (!bDetached) {
+		if (toB()) {
 			emit(rB, rA, entryB, entryA, -normal.x, -normal.y);
 		}
 	}
