@@ -619,6 +619,24 @@ keep the cap and apply it to the body `addChild()` builds, unless the
 `bodyDef` has a `maxVelocity` of its own. A renderable removed and added again
 loses such a cap: only the `bodyDef` is built again.
 
+The cap is the only setting that waits for the body. Every other adapter
+setter acts on the live body, which `addChild()` builds: called before it, in a
+constructor say, it throws on the built-in adapter and does nothing on matter,
+planck and Rapier. Give the body what it starts with through the `bodyDef`:
+
+| before `addChild()` | in the `bodyDef` |
+|---|---|
+| `setStatic(r, true)` | `type: "static"` |
+| `setGravityScale(r, s)` | `gravityScale` |
+| `setSensor(r, true)` | `isSensor` |
+| `setFrictionAir(r, f)` | `frictionAir` |
+| `setCollisionType(r, t)` / `setCollisionMask(r, m)` | `collisionType` / `collisionMask` |
+| `setMaxVelocity(r, v)` | `maxVelocity` (the setter also works) |
+
+A velocity, an angle, a spin, a force or an impulse has no `bodyDef` field: set
+it once the renderable is in the world, in `onActivateEvent()` or the first
+`update()`. `setPosition()` works either way; the body is built at `pos`.
+
 Under matter, planck and Rapier, `syncFromPhysics()` copies the engine body's position
 back onto `renderable.pos` after every step, so a direct write is simply erased
 — no error. The built-in world integrates `pos` in place instead, so a write
@@ -1270,6 +1288,7 @@ yourself through `adapter.world` with `world.removeImpulseJoint()` /
 | a pickup or a landing sound fires twice (matter, planck, Rapier) | contacts are reported per shape pair, and `onCollisionActive` once per sub-step on matter; guard with a flag |
 | a `type: "kinematic"` platform falls (built-in, matter) | only planck and Rapier have kinematic bodies; use `type: "static"` and `adapter.setPosition()` |
 | `this.body.setMaxVelocity is not a function` (matter, planck, Rapier) | it is a built-in `Body` method; use `app.world.adapter.setMaxVelocity(this, { x, y })` |
+| a body setter called in the constructor has no effect (matter, planck, Rapier), or throws a `TypeError` (built-in) | there is no body before `addChild()`: put the setting in the `bodyDef`, or call the setter once the renderable is in the world |
 | every force got weaker after raising `subSteps` (matter, planck) | forces are cleared after each sub-step, so they act on the first one only; re-tune (Rapier keeps a force for the whole frame) |
 | `isActive = false` on a shape changes nothing (matter, planck, Rapier) | read only when the body is built; call `adapter.updateShape(renderable, shapes)` |
 | `onCollisionEnd` handler throws on `response` | built-in dispatches it with `undefined` |
