@@ -3,7 +3,7 @@
 ## 1.8.3 - _2026-11-16_
 
 ### Fixed
-- A `"slider"` joint keeps the second body's angle as it stood when the joint was made, as `JointDefinition` says, and slides it along the first body's axis; it turned the second body onto the first body's angle. Bodies joined at the same angle behave as before. A game that relied on the turn sets the second body's angle with `setAngle()` before `addJoint()`
+- A `"slider"` joint keeps the angle between the two bodies as it was when the joint was made, as `JointDefinition` says and as a Box2D prismatic joint set up from the bodies does: the second body slides along the first body's axis and turns with it. It used to turn the second body onto the first body's angle. Bodies joined at the same angle behave as before. A game that relied on the turn sets the second body's angle with `setAngle()` before `addJoint()`
 
 ## 1.8.2 - _2026-11-16_
 

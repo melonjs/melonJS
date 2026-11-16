@@ -758,7 +758,7 @@ if (app.world.adapter.capabilities.constraints) {
 | `"hinge"` | the bodies share a point and turn about it: chain links, doors, wheels | `limits`: b's angle minus a's, in radians |
 | `"rope"` | the anchors stay within `maxLength` of each other, and can come closer | `maxLength` in pixels; default the distance when made |
 | `"weld"` | the bodies move as one, in the pose they had when joined | |
-| `"slider"` | b slides along `axis` and keeps its own angle, as it stood when joined: lifts, pistons | `axis` in a's space; `limits` in pixels along it |
+| `"slider"` | b slides along `axis`, and the angle between the bodies stays as it was when joined (b turns with a): lifts, pistons | `axis` in a's space; `limits` in pixels along it |
 
 - **Add both renderables first.** The joint needs their bodies, which
   `addChild()` builds; `addJoint()` throws for a renderable not in the world,
