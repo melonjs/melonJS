@@ -3,14 +3,15 @@
  *
  * Pull a pet back in the slingshot and let go: it flies along the dotted arc
  * and crashes into towers of wood and stone, which topple and tumble in three
- * dimensions. Knock every golden orb to the ground with the pets you have.
+ * dimensions. Knock out every rival perched on the towers, with a hard hit or
+ * a fall to the ground, using the pets you have; pets left over score a bonus.
  *
  * What it shows:
  *
  * - **`@melonjs/rapier3d-adapter`**, passed as the `physic` option with a
- *   `Camera3d`. Every block, orb and pet is a `Mesh` with a `bodyDef`; the
+ *   `Camera3d`. Every block, pet and rival is a `Mesh` with a `bodyDef`; the
  *   adapter writes each body's position and turn back onto its mesh.
- * - **The 3D shapes.** Blocks are `Box3d`, orbs `Sphere`, and each pet the
+ * - **The 3D shapes.** Blocks are `Box3d`, and each pet and rival the
  *   `ConvexHull3d` of its own model, built with `ConvexHull3d.fromMesh()`, so
  *   it tumbles as the shape it is drawn.
  * - **The `Vector3d` adapter API.** The pet waits in the pouch as a static
@@ -19,8 +20,11 @@
  *   dynamic (`setStatic(false)`) and launches it with `setVelocity` and
  *   `setAngularVelocity`, with Rapier's continuous collision on so a fast pet
  *   cannot pass through a thin plank.
- * - **Collision hooks**: an orb's `onCollisionStart` tells when it reaches the
- *   ground.
+ * - **Collision hooks**: a rival's `onCollisionStart` tells when it lands on
+ *   the ground or is struck hard, from the speed of the two bodies
+ *   (`getVelocity3d`).
+ * - **The UI widgets**: the end-of-round card is a `UIPanel` with a
+ *   `UITextButton`, and the score pops come up with a `Tween`.
  *
  * The pets are Kenney's Cube Pets (CC0, see `packages/examples/LICENSE.md`).
  *
@@ -42,11 +46,13 @@ import {
 	type Pointer,
 	plugin,
 	Renderable,
-	Sphere,
 	Stage,
 	state,
 	Text,
 	Tween,
+	UIPanel,
+	UITextButton,
+	Vector2d,
 	Vector3d,
 	video,
 } from "melonjs";
@@ -69,7 +75,20 @@ const GROUND_Y = 0;
 // in the physics too: gravity pulls along +Y, in pixels per second²
 const GRAVITY = 980;
 const PET = 64;
-const ORB = 36;
+// the rivals perched on the towers, and how big they are
+const RIVALS = [
+	"animal-fox",
+	"animal-crab",
+	"animal-monkey",
+	"animal-lion",
+	"animal-tiger",
+];
+const RIVAL = 56;
+// a rival struck at this speed or more (pixels per second, the two bodies'
+// speed relative to each other) is knocked out
+const KNOCKOUT_SPEED = 260;
+const RIVAL_POINTS = 5000;
+const SPARE_PET_POINTS = 10000;
 // the raised deck the slingshot stands on, and the next pets wait on
 const DECK_TOP = -70;
 // where the pet waits in the pouch, how far it can be pulled, and how hard;
@@ -388,7 +407,7 @@ const createGame = async () => {
 				.scale(length, 1, 1);
 		};
 
-		// ── the towers, and the orbs to knock off them ───────────────────
+		// ── the towers ───────────────────────────────────────────────────
 		const blocks: Mesh[] = [];
 		const block = (
 			x: number,
@@ -420,8 +439,8 @@ const createGame = async () => {
 			block(x + 45, -202, 20, 100, "wood", z);
 			block(x, -263, 140, 22, "wood", z);
 			return [
-				{ x, y: -152 - ORB / 2, z },
-				{ x, y: -274 - ORB / 2, z },
+				{ x, y: -152 - RIVAL / 2, z },
+				{ x, y: -274 - RIVAL / 2, z },
 			];
 		};
 		// stone columns with a wooden lintel
@@ -432,49 +451,105 @@ const createGame = async () => {
 				}
 			}
 			block(x, -191, 200, 22, "wood", z);
-			return [{ x, y: -202 - ORB / 2, z }];
+			return [{ x, y: -202 - RIVAL / 2, z }];
 		};
 
-		const orbs: Mesh[] = [];
-		let orbsDown = 0;
-		const knock = (orb: Mesh) => {
-			if (orb.tint.r < 255) {
+		// ── the rivals: Kenney animals perched on the towers ────────────
+		const rivals = new Set<Mesh>();
+		let score = 0;
+		const popPoints = (at: Mesh, points: number) => {
+			const screen = camera.worldToScreen(
+				new Vector3d(at.pos.x, at.pos.y - RIVAL, at.depth),
+				new Vector2d(),
+			);
+			if (screen === null) {
 				return;
 			}
-			orbsDown++;
-			orb.tint.setColor(120, 110, 100);
-			camera.shake(5, 220);
+			const label = new Text(screen.x, screen.y, {
+				font: "sans-serif",
+				size: 30,
+				fillStyle: "#ffffff",
+				strokeStyle: "#1d2a3a",
+				lineWidth: 5,
+				textAlign: "center",
+				text: `+${points}`,
+			});
+			label.floating = true;
+			world.addChild(label, 2);
+			const rise = { y: screen.y, a: 1 };
+			new Tween(rise)
+				.to({ y: screen.y - 70, a: 0 }, { duration: 900 })
+				.onUpdate(() => {
+					label.pos.y = rise.y;
+					label.alpha = rise.a;
+				})
+				.onComplete(() => {
+					world.removeChild(label);
+				})
+				.start();
+		};
+		const knockOut = (rival: Mesh) => {
+			if (!rivals.delete(rival)) {
+				return;
+			}
+			score += RIVAL_POINTS;
+			popPoints(rival, RIVAL_POINTS);
+			camera.shake(6, 250);
+			// a flash, then it fades away and leaves the field
+			rival.tint.setColor(255, 120, 120);
+			const fade = { a: 1 };
+			new Tween(fade)
+				.to({ a: 0 }, { duration: 450, delay: 150 })
+				.onUpdate(() => {
+					rival.alpha = fade.a;
+				})
+				.onComplete(() => {
+					world.removeChild(rival);
+				})
+				.start();
 			refresh();
 		};
+		const speedBetween = (a: Renderable, b: Renderable) => {
+			const va = adapter.getVelocity3d(a);
+			const vb = adapter.getVelocity3d(b);
+			return Math.hypot(va.x - vb.x, va.y - vb.y, va.z - vb.z);
+		};
 		const spots = [...tower(180, 10), ...gate(470, -15), ...tower(720, 20)];
-		for (const spot of spots) {
-			const orb = new Mesh(spot.x, spot.y, {
-				model: "sphere",
-				texture: white,
-				width: ORB,
-				height: ORB,
+		spots.forEach((spot, i) => {
+			const name = RIVALS[i % RIVALS.length];
+			const rival = new Mesh(spot.x, spot.y, {
+				model: name,
+				material: name,
+				texture: "colormap",
+				width: RIVAL,
+				height: RIVAL,
 				lit: true,
 				castGroundShadow: true,
 				shadowGroundY: GROUND_Y,
 			});
-			orb.tint.setColor(255, 205, 60);
-			orb.bodyDef = {
+			// facing the slingshot, turned a little toward the camera
+			rival.rotate((Math.PI * 4) / 3, AXIS_Y);
+			rival.bodyDef = {
 				type: "dynamic",
-				shapes: [new Sphere(0, 0, 0, ORB / 2)],
-				density: 0.8,
-				friction: 0.5,
+				shapes: [ConvexHull3d.fromMesh(rival)],
+				density: 1,
+				friction: 0.6,
 			};
-			// golden until it reaches the ground
-			Object.assign(orb, {
+			// out once it lands on the ground, or is struck hard
+			Object.assign(rival, {
 				onCollisionStart: (_response: unknown, other: Renderable) => {
-					if (other === ground) {
-						knock(orb);
+					if (
+						other === ground ||
+						speedBetween(rival, other) >= KNOCKOUT_SPEED
+					) {
+						knockOut(rival);
 					}
 				},
 			});
-			world.addChild(orb, spot.z);
-			orbs.push(orb);
-		}
+			world.addChild(rival, spot.z);
+			rivals.add(rival);
+		});
+		const rivalCount = rivals.size;
 
 		// ── the dotted arc the pet will fly along ────────────────────────
 		const dots = Array.from({ length: 18 }, () => {
@@ -504,30 +579,135 @@ const createGame = async () => {
 			});
 		};
 
-		// ── the HUD ──────────────────────────────────────────────────────
-		const hud = new Text(16, 16, {
+		// ── the HUD: the score, the rivals left, and a first-shot hint ────
+		const hudStyle = {
 			font: "sans-serif",
-			size: 20,
-			fillStyle: "#1d2a3a",
+			size: 30,
+			fillStyle: "#ffffff",
+			strokeStyle: "#1d2a3a",
+			lineWidth: 5,
+		};
+		const scoreText = new Text(20, 16, { ...hudStyle, text: "" });
+		scoreText.floating = true;
+		world.addChild(scoreText, 3);
+		const rivalsText = new Text(app.viewport.width - 20, 16, {
+			...hudStyle,
+			textAlign: "right",
 			text: "",
 		});
-		hud.floating = true;
-		world.addChild(hud, 100);
+		rivalsText.floating = true;
+		world.addChild(rivalsText, 3);
+		const hint = new Text(app.viewport.width / 2, app.viewport.height - 70, {
+			...hudStyle,
+			size: 22,
+			lineWidth: 4,
+			textAlign: "center",
+			text: "press anywhere, drag back and let go",
+		});
+		hint.floating = true;
+		world.addChild(hint, 3);
+
 		let shotsLeft = PETS.length;
 		let over = false;
 		const refresh = () => {
-			const lines = [
-				`orbs down ${orbsDown} / ${orbs.length}    pets left ${shotsLeft}`,
-			];
-			if (orbsDown === orbs.length) {
-				over = true;
-				lines.push("every orb is down! click to play again");
-			} else if (over) {
-				lines.push("out of pets: click to try again");
-			} else {
-				lines.push("press anywhere, drag back and let go");
+			scoreText.setText(`SCORE ${score}`);
+			rivalsText.setText(`RIVALS ${rivals.size} / ${rivalCount}`);
+		};
+
+		// the end-of-round card: the result, the stars, and a button to go again
+		const endRound = (cleared: boolean) => {
+			if (over) {
+				return;
 			}
-			hud.setText(lines);
+			over = true;
+			hint.alpha = 0;
+			// every pet not launched is a bonus, once the towers are cleared
+			const spare = cleared ? shotsLeft : 0;
+			const bonus = spare * SPARE_PET_POINTS;
+			score += bonus;
+			refresh();
+			const best =
+				rivalCount * RIVAL_POINTS + (PETS.length - 1) * SPARE_PET_POINTS;
+			const stars = !cleared
+				? 0
+				: score >= best * 0.7
+					? 3
+					: score >= best * 0.5
+						? 2
+						: 1;
+			const w = 420;
+			const h = 300;
+			const card = new UIPanel(
+				(app.viewport.width - w) / 2,
+				(app.viewport.height - h) / 2,
+				{
+					width: w,
+					height: h,
+					fillColor: "#1d3b57",
+					borderColor: "#f6c445",
+					borderWidth: 4,
+					radius: 22,
+					shadowColor: "rgba(0, 0, 0, 0.35)",
+					shadowOffsetY: 8,
+					shadowBlur: 16,
+					blocking: true,
+				},
+			);
+			const line = (
+				y: number,
+				text: string,
+				size: number,
+				fill = "#ffffff",
+			) => {
+				card.addChild(
+					new Text(w / 2, y, {
+						font: "sans-serif",
+						size,
+						fillStyle: fill,
+						strokeStyle: "#10243a",
+						lineWidth: size > 30 ? 6 : 0,
+						textAlign: "center",
+						text,
+					}),
+				);
+			};
+			line(26, cleared ? "TOWERS CLEARED!" : "OUT OF PETS", 38);
+			line(
+				84,
+				"\u2605".repeat(stars) + "\u2606".repeat(3 - stars),
+				56,
+				"#f6c445",
+			);
+			line(160, `score ${score}`, 26);
+			line(
+				194,
+				bonus > 0
+					? `${spare} spare pet${spare > 1 ? "s" : ""}: +${bonus}`
+					: " ",
+				18,
+				"#bcd3e6",
+			);
+			card.addChild(
+				new UITextButton(w / 2 - 110, 228, {
+					width: 220,
+					height: 52,
+					font: "sans-serif",
+					fontSize: 24,
+					text: "PLAY AGAIN",
+					labelFillStyle: "#ffffff",
+					hoverOffColor: "#e8892c",
+					hoverOnColor: "#f6a23f",
+					pressedColor: "#c86e1c",
+					borderColor: "#7a3f0c",
+					hoverScale: 1.05,
+					pressScale: 0.95,
+					// a new round, once this frame is done with the world
+					onClick: () => {
+						event.once(event.GAME_AFTER_UPDATE, restart);
+					},
+				}),
+			);
+			world.addChild(card, 0);
 		};
 
 		// ── the pet in the pouch, and the one in flight ──────────────────
@@ -666,13 +846,7 @@ const createGame = async () => {
 		event.on(event.POINTERMOVE, onMove);
 
 		const release = () => {
-			if (over) {
-				// the round is over: a click starts another, once this frame
-				// is done with the world
-				event.once(event.GAME_AFTER_UPDATE, restart);
-				return;
-			}
-			if (!aiming || loaded === null) {
+			if (over || !aiming || loaded === null) {
 				return;
 			}
 			aiming = false;
@@ -699,6 +873,7 @@ const createGame = async () => {
 			for (const band of bands) {
 				band.alpha = 0;
 			}
+			hint.alpha = 0;
 			refresh();
 		};
 		input.registerPointerEvent("pointerup", app.viewport, release);
@@ -719,11 +894,14 @@ const createGame = async () => {
 			}
 
 			override update(dt: number) {
-				for (const orb of orbs) {
-					// one that left the field counts as down too
-					if (orb.pos.y > 400) {
-						knock(orb);
+				for (const rival of rivals) {
+					// one that left the field is out too
+					if (rival.pos.y > 400) {
+						knockOut(rival);
 					}
+				}
+				if (!over && rivals.size === 0) {
+					endRound(true);
 				}
 				const pet = flying;
 				if (pet === null) {
@@ -734,14 +912,13 @@ const createGame = async () => {
 				const gone = pet.pos.y > 400 || Math.abs(pet.pos.x) > 1700;
 				if (body.isSleeping() || gone || flightTime > SHOT_SECONDS) {
 					flying = null;
-					if (orbsDown === orbs.length) {
+					if (over) {
 						return false;
 					}
 					if (shotsLeft > 0) {
 						load();
 					} else {
-						over = true;
-						refresh();
+						endRound(false);
 					}
 				}
 				return false;
@@ -796,7 +973,7 @@ const createGame = async () => {
 			type: "image",
 			src: `${PETS_BASE}Textures/colormap.png`,
 		},
-		...PETS.flatMap((name) => {
+		...[...PETS, ...RIVALS].flatMap((name) => {
 			return [
 				{ name, type: "obj", src: `${PETS_BASE}${name}.obj` },
 				{ name, type: "mtl", src: `${PETS_BASE}${name}.mtl` },
