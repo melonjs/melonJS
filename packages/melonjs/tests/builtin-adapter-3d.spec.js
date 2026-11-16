@@ -8,20 +8,34 @@
  * written before these existed makes, behaves exactly as it did.
  */
 
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import {
+	afterAll,
+	afterEach,
+	beforeAll,
+	beforeEach,
+	describe,
+	expect,
+	it,
+	vi,
+} from "vitest";
 import {
 	Application,
 	Box3d,
 	BuiltinAdapter,
 	boot,
+	Capsule3d,
+	ConvexHull3d,
 	Quaternion,
 	Rect,
 	Renderable,
+	Sphere,
+	TriangleMesh3d,
 	Vector2d,
 	Vector3d,
 	video,
 	World,
 } from "../src/index.js";
+import { resetWarnOnce } from "../src/lang/console.js";
 
 describe("Physics : BuiltinAdapter 3D interface", () => {
 	/** @type {BuiltinAdapter} */
@@ -341,6 +355,94 @@ describe("Physics : BuiltinAdapter 3D interface", () => {
 			adapter.setAngularVelocity(r, new Vector3d(9, 9, -0.5));
 			expect(body.angularVelocity).toBe(-0.5);
 			expect(adapter.getAngularVelocity(r)).toBe(-0.5);
+		});
+	});
+
+	describe("a warning when real 3D is asked of it, and only then", () => {
+		let warn;
+		beforeEach(() => {
+			resetWarnOnce();
+			warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+		});
+		afterEach(() => {
+			warn.mockRestore();
+		});
+		const warnings = () => {
+			return warn.mock.calls.map((c) => {
+				return String(c[0]);
+			});
+		};
+
+		it("stays quiet for a 2D or 2.5D game: Box3d, Sphere, Vector3d motion, turns about Z", () => {
+			const box = make(new Box3d(0, 0, 0, 32, 32, 32));
+			const ball = make(new Sphere(0, 0, 0, 16));
+			const flat = make();
+			for (const { r } of [box, ball, flat]) {
+				adapter.setVelocity(r, new Vector3d(1, 2, 3));
+				adapter.applyForce(r, new Vector3d(1, 2, 3));
+				adapter.applyImpulse(r, new Vector3d(1, 2, 3));
+				adapter.setPosition(r, new Vector3d(1, 2, 3));
+				adapter.setAngularVelocity(r, 0.5);
+				adapter.setAngularVelocity(r, new Vector3d(0, 0, 0.5));
+				adapter.setRotation(
+					r,
+					new Quaternion().setFromAxisAngle(new Vector3d(0, 0, 1), 1),
+				);
+				adapter.getRotation(r);
+				adapter.getVelocity3d(r);
+			}
+			adapter.gravity = new Vector3d(0, 1, 1);
+			adapter.step(16);
+			expect(warnings()).toEqual([]);
+		});
+
+		it("names the 3D adapter for a shape it can only approximate, once per shape type", () => {
+			make(new Capsule3d(0, 0, 0, 8, 40));
+			make(new Capsule3d(0, 0, 0, 8, 40));
+			make(new ConvexHull3d([0, 0, 0, 9, 0, 0, 0, 9, 0, 0, 0, 9]));
+			make(new TriangleMesh3d([0, 0, 0, 9, 0, 0, 0, 0, 9], [0, 1, 2]));
+			const said = warnings();
+			expect(said).toHaveLength(3);
+			for (const [i, type] of [
+				"Capsule3d",
+				"ConvexHull3d",
+				"TriangleMesh3d",
+			].entries()) {
+				expect(said[i]).toContain(type);
+				expect(said[i]).toContain("@melonjs/rapier3d-adapter");
+			}
+		});
+
+		it("names the 3D adapter for a turn about X or Y, once", () => {
+			const { r, body } = make();
+			const tilt = new Quaternion().setFromAxisAngle(
+				new Vector3d(1, 0, 0),
+				0.5,
+			);
+			adapter.setRotation(r, tilt);
+			adapter.setRotation(r, tilt);
+			const said = warnings();
+			expect(said).toHaveLength(1);
+			expect(said[0]).toContain("setRotation");
+			expect(said[0]).toContain("@melonjs/rapier3d-adapter");
+			// and it still does what it says: the part about Z, none here
+			expect(body.angle).toBeCloseTo(0, 6);
+		});
+
+		it("names the 3D adapter for a spin about X or Y, once, and keeps the spin about Z", () => {
+			const { r, body } = make();
+			adapter.setAngularVelocity(r, new Vector3d(2, 0, 0.25));
+			adapter.setAngularVelocity(r, new Vector3d(0, 3, 0.25));
+			const said = warnings();
+			expect(said).toHaveLength(1);
+			expect(said[0]).toContain("setAngularVelocity");
+			expect(body.angularVelocity).toBe(0.25);
+		});
+
+		it("says nothing for a spin about X or Y that is not a number", () => {
+			const { r } = make();
+			adapter.setAngularVelocity(r, new Vector3d(Number.NaN, 0, 1));
+			expect(warnings()).toEqual([]);
 		});
 	});
 });

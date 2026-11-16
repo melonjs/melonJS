@@ -1,5 +1,6 @@
 import type { Rect } from "../../geometries/rectangle.ts";
 import { Sphere } from "../../geometries/sphere.ts";
+import { warnOnce } from "../../lang/console.js";
 import { Quaternion } from "../../math/quaternion.ts";
 import { Vector2d } from "../../math/vector2d.ts";
 import { Vector3d } from "../../math/vector3d.ts";
@@ -24,6 +25,9 @@ import { raycastQuery } from "./raycast.ts";
 
 // the axis the built-in bodies turn about, and a scratch for setRotation
 const _AXIS_Z = new Vector3d(0, 0, 1);
+
+/** where the warnings about the built-in's 3D limits point to */
+const FULL_3D = "For bodies that turn in 3D, use @melonjs/rapier3d-adapter.";
 const _rotScratch = new Vector3d();
 
 /** world-space AABB scratch for `raycast3d`; never escapes the call */
@@ -735,6 +739,12 @@ export default class BuiltinAdapter implements PhysicsAdapter {
 	 * @param q - the orientation
 	 */
 	setRotation(renderable: Renderable, q: Quaternion): void {
+		// a turn with a part about X or Y: say once what is left out
+		if (Math.abs(q.x) > 1e-6 || Math.abs(q.y) > 1e-6) {
+			warnOnce(
+				`melonJS: the built-in physics turns bodies about Z only, so setRotation() keeps the part of a turn about Z. ${FULL_3D}`,
+			);
+		}
 		q.apply(_rotScratch.set(1, 0, 0));
 		const planar =
 			_rotScratch.x * _rotScratch.x + _rotScratch.y * _rotScratch.y;
@@ -760,6 +770,15 @@ export default class BuiltinAdapter implements PhysicsAdapter {
 	}
 
 	setAngularVelocity(renderable: Renderable, omega: number | Vector3d): void {
+		if (
+			typeof omega !== "number" &&
+			((omega.x !== 0 && Number.isFinite(omega.x)) ||
+				(omega.y !== 0 && Number.isFinite(omega.y)))
+		) {
+			warnOnce(
+				`melonJS: the built-in physics turns bodies about Z only, so setAngularVelocity() keeps the spin about Z. ${FULL_3D}`,
+			);
+		}
 		// a Vector3d's turn about Z, the only one the built-in bodies have
 		(renderable.body as Body).setAngularVelocity(
 			typeof omega === "number" ? omega : omega.z,

@@ -9,7 +9,7 @@ import { Rect } from "../../geometries/rectangle.ts";
 import { RoundRect, roundedRectanglePool } from "../../geometries/roundrect.ts";
 import { Sphere, spherePool } from "../../geometries/sphere.ts";
 import { TriangleMesh3d } from "../../geometries/trianglemesh3d.ts";
-import { warning } from "../../lang/console.js";
+import { warning, warnOnce } from "../../lang/console.js";
 import { clamp } from "../../math/math.ts";
 import { Vector2d, vector2dPool } from "../../math/vector2d.ts";
 import { vector3dPool } from "../../math/vector3d.ts";
@@ -999,7 +999,11 @@ export default class Body {
 		) {
 			// The built-in narrowphase resolves boxes and spheres only: the
 			// shape's bounding Box3d stands in for it, as a Rect becomes a
-			// Polygon above. Exact on a 3D physics adapter.
+			// Polygon above. Exact on a 3D physics adapter, which the
+			// warning points to, once per shape type and page.
+			warnOnce(
+				`melonJS: the built-in physics resolves a ${shape.type} as its bounding Box3d, which never turns. For exact 3D shapes and bodies that tumble and stack, use @melonjs/rapier3d-adapter.`,
+			);
 			const box = shape.toBox3d();
 			stored = box;
 			this.shapes.push(box);

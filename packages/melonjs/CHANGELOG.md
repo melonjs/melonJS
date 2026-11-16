@@ -11,8 +11,8 @@
 - 3D: `Camera3d` `projection: "orthographic"`, sized by `orthoHeight` or `orthoWidth` and zoomed by `zoom`, for isometric, top-down and diorama views
 - 3D: toon shading and outlines on lit meshes: `toonBands`, `outlineWidth`, `outlineColor` and `outlineMode` (world units or screen pixels), and a `rimLight` / `rimColor` glow along the silhouette; `GLTFModel`, `GLTFScene` and `level.load` options too
 - glTF: the parsed descriptor carries the asset's `skins`, and each skinned primitive its `joints`, `weights` and `skin`
-- Physics: `Capsule3d`, `ConvexHull3d` and `TriangleMesh3d` collision shapes, the last two built from a model with `fromMesh()`; the built-in physics resolves them as their bounding box ([#1846](https://github.com/melonjs/melonJS/issues/1846))
-- Physics: the adapter API takes a `Vector3d` in `setVelocity`, `applyForce`, `applyImpulse`, `setPosition` and `gravity`, and adds `getVelocity3d`, `getRotation` / `setRotation` and `getAngularVelocity3d` for a 3D adapter; on the built-in they act on the depth axis. A `Vector2d` works as before
+- Physics: `Capsule3d`, `ConvexHull3d` and `TriangleMesh3d` collision shapes, the last two built from a model with `fromMesh()`; the built-in physics resolves them as their bounding box, and says once in the console to use `@melonjs/rapier3d-adapter` for exact ones ([#1846](https://github.com/melonjs/melonJS/issues/1846))
+- Physics: the adapter API takes a `Vector3d` in `setVelocity`, `applyForce`, `applyImpulse`, `setPosition` and `gravity`, and adds `getVelocity3d`, `getRotation` / `setRotation` and `getAngularVelocity3d` for a 3D adapter; on the built-in they act on the depth axis, and a turn or spin about X or Y, which it cannot do, is left out with a one-time console pointer to the Rapier 3D adapter. A `Vector2d` works as before
 - Math: `Quaternion`, an orientation in 3D
 
 ### Fixed
