@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.8.2 - _unreleased_
+## 1.8.2 - _2026-11-16_
 
 ### Fixed
 - A body removed inside an `onCollisionStart` or shape-level start hook no longer leaves its partner without an `onCollisionEnd`: the body was destroyed once the step ended, when the adapter had already forgotten it, so the end was never told. The partner now hears the end after its own start, and the side going out hears it at once; only a side that heard the start hears the end

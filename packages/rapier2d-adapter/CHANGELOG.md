@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.1.2 - _unreleased_
+## 1.1.2 - _2026-11-16_
 
 ### Fixed
 - A body removed inside an `onCollisionStart`, `onCollisionActive` or shape-level hook no longer makes the other renderable hear `onCollisionEnd` before its `onCollisionStart`, with no end after it: the side going out hears the end at once, the other once the pair's hooks are done, and only a side that heard the start hears the end. Removing that body again from the partner's end hook no longer crashes Rapier (`RuntimeError: unreachable`)
@@ -10,7 +10,7 @@
 - A `NaN` `maxVelocity` on an axis no longer turns the body's velocity into `NaN`: it caps nothing. A negative one caps by its size; it used to pin the velocity at that speed, even on a body at rest
 - `setMaxVelocity()` on a renderable with no body yet no longer keeps the renderable alive until `destroy()`: the cap is held weakly, and still applies once `addChild()` builds the body, unless the `bodyDef` has a `maxVelocity` of its own
 - A second `addBody()` for the same renderable replaces its body; the first Rapier body and its records were leaked, and kept colliding. An `addBody()` refused for an unsupported shape no longer leaves an orphan Rapier body in the world
-- The normal of an `onCollisionEnd` and of a sensor contact is `{ x: 0, y: 0 }`, not `-0` on one side, so `toEqual({ x: 0, y: 0 })` holds; so are the shape-level `normal`, `overlapN` and `overlapV`
+- A contact normal has no negative zero: the side of an axis-aligned contact that is handed the negated normal got `{ x: -0, y: -1 }`, so `toEqual({ x: 0, y: -1 })` failed; so did the zero normal of an `onCollisionEnd` and of a sensor contact, and the shape-level `normal`, `overlapN` and `overlapV`
 
 ## 1.1.1 - _2026-11-14_
 

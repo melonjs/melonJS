@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.7.2 - _unreleased_
+## 1.7.2 - _2026-11-16_
 
 ### Fixed
 - A body removed inside an `onCollisionStart`, `onCollisionActive` or shape-level hook no longer makes its partner hear `onCollisionEnd` before its own start or active hook, then that hook after the end: the side going out hears the end at once, the other once the pair's hooks are done, and only a side that heard the start hears the end. A partner touching the removed body through a pair whose start had not been told yet no longer hears an end for it
