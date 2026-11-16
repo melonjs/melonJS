@@ -182,3 +182,6 @@ export class Controls {
 		input.isKeyPressed("fire");
 	}
 }
+
+/** the game's controls, shared by both screens; bound once by the bootstrap */
+export const controls = new Controls();

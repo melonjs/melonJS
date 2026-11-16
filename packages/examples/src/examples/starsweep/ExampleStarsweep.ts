@@ -3,22 +3,23 @@
  *
  * Guide Bolt, a little sweeper robot, around floating space stations and
  * power up every deck panel while monsters roam. Wobblers wander, munchers
- * eat the power back off and chasers come for you. Frozen panels keep you
- * sliding, conveyor pads push you, damaged panels drop away behind you.
- * Zap the monsters, grab power-ups, and don't fall off into space.
+ * eat the power back off, chasers come for you and drones fly over the
+ * gaps. Frozen panels keep you sliding, conveyor pads push you, damaged
+ * panels drop away behind you, goo slows the monsters and switches open
+ * gates. Zap the monsters, grab power-ups, and don't fall off into space.
  *
  * The levels are Tiled maps (`public/assets/starsweep/levels/*.tmj`),
  * loaded with the engine's Tiled loader: see `levels.ts` for how to edit
- * them. The monsters find their way with `@melonjs/pathfinding-plugin`:
- * wobblers walk to panels they pick, chasers plan round walls, gates and
- * goo and flank Bolt, drones fly straight over the gaps, and every plan is
- * drawn on the board (see `field.ts`). Portrait, for phones held upright. On touch screens the
- * `@melonjs/gamepad-plugin` virtual gamepad (a stick and a ZAP button)
- * sits under the board and presses the same keys as the keyboard.
+ * them, and run `pnpm check:starsweep` to check them. The monsters find
+ * their way with `@melonjs/pathfinding-plugin`, and every route they plan
+ * is drawn on the board (see `monsters.ts` and `navigation.ts`). Portrait,
+ * for phones held upright. On touch screens the `@melonjs/gamepad-plugin`
+ * virtual gamepad (a stick and a ZAP button) sits under the board and
+ * presses the same keys as the keyboard.
  *
  * The characters are sprites from one sheet, `cast.png`, baked from
  * Kenney's Monster Builder Pack (CC0) with every animation in its JSON (see
- * `cast.ts`). On GPU renderers a custom nebula shader animates the sky,
+ * `cast.ts`; `pnpm bake:starsweep` bakes it again). On GPU renderers a custom nebula shader animates the sky,
  * bloom, vignette and chromatic aberration post-effects polish the frame,
  * and a second, 3D camera draws star dust and novas behind the game (see
  * `fx.ts`). Every sound is synthesised with `audio.tone` / `audio.noise`.
@@ -26,26 +27,26 @@
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
-import { Application, loader, save, state } from "melonjs";
+import { Application, loader, state } from "melonjs";
 import { createExampleComponent } from "../utils";
 import { CAST } from "./cast";
+import { controls } from "./controls";
 import { FONT } from "./draw";
-import { HEIGHT, HISCORE_KEY, WIDTH } from "./field";
+import { BACKGROUND, HEIGHT, WIDTH } from "./layout";
 import {
 	LEVEL_FILES,
-	LEVELS,
 	levelFromTiled,
 	TILESET_FILE,
 	type TiledMap,
 	type TiledTileset,
 } from "./levels";
-import { controls, PlayScreen, TitleScreen } from "./scenes";
+import { PlayScreen, TitleScreen } from "./scenes";
 
 const createGame = async () => {
 	const app = new Application(WIDTH, HEIGHT, {
 		parent: "screen",
 		scale: "auto",
-		backgroundColor: "#0b0a24",
+		backgroundColor: BACKGROUND,
 		// smooth cartoon art: soft edges, and parts drawn smaller than
 		// the atlas stay clean
 		antiAlias: true,
@@ -53,11 +54,8 @@ const createGame = async () => {
 	});
 	await app.init();
 
-	// keep the best score between visits
-	save.add({ [HISCORE_KEY]: 0 });
-
 	const base = import.meta.env.BASE_URL;
-	const levels = `${base}assets/starsweep/levels/`;
+	const levelDir = `${base}assets/starsweep/levels/`;
 	await loader.preload([
 		// the characters, and their animations
 		{ name: CAST, type: "image", src: `${base}assets/starsweep/cast.png` },
@@ -69,25 +67,28 @@ const createGame = async () => {
 			src: `${base}assets/ui/font/kenvector_future.woff2`,
 		},
 		// the levels, edited in Tiled, the tileset they share and its image
-		{ name: TILESET_FILE, type: "tsx", src: `${levels}${TILESET_FILE}.tsj` },
-		{ name: TILESET_FILE, type: "image", src: `${levels}${TILESET_FILE}.png` },
+		{ name: TILESET_FILE, type: "tsx", src: `${levelDir}${TILESET_FILE}.tsj` },
+		{
+			name: TILESET_FILE,
+			type: "image",
+			src: `${levelDir}${TILESET_FILE}.png`,
+		},
 		...LEVEL_FILES.map((name) => ({
 			name,
 			type: "tmx",
-			src: `${levels}${name}.tmj`,
+			src: `${levelDir}${name}.tmj`,
 		})),
 	]);
 
 	// turn each Tiled map into a level the game can play
 	const tileset = loader.getTMX(TILESET_FILE) as TiledTileset;
-	LEVELS.length = 0;
-	for (const name of LEVEL_FILES) {
-		LEVELS.push(levelFromTiled(loader.getTMX(name) as TiledMap, tileset, name));
-	}
+	const levels = LEVEL_FILES.map((name) =>
+		levelFromTiled(loader.getTMX(name) as TiledMap, tileset, name),
+	);
 
 	state.set(state.MENU, new TitleScreen());
-	state.set(state.PLAY, new PlayScreen());
-	state.transition("fade", "#0b0a24", 250);
+	state.set(state.PLAY, new PlayScreen(levels));
+	state.transition("fade", BACKGROUND, 250);
 	controls.bind();
 	state.change(state.MENU);
 
@@ -95,4 +96,5 @@ const createGame = async () => {
 	return () => controls.unbind();
 };
 
+/** the Starsweep example, as a component of the examples site */
 export const ExampleStarsweep = createExampleComponent(createGame);

@@ -1,24 +1,31 @@
 /**
- * melonJS — Starsweep: tile types and movement rules.
+ * melonJS — Starsweep: the board's tiles and the rules of movement.
  *
- * Pure logic with no engine import, so `levels.test.ts` can check every
- * level with plain `tsx`.
+ * Pure logic with no engine import, so the level checker
+ * (`check-levels.ts`) runs it with plain Node, on the very maps the game
+ * loads.
  *
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
 
+/** What a board cell holds, as the rules see it. */
 export const Tile = {
+	/** open space: anything that steps there falls */
 	VOID: 0,
 	WALL: 1,
 	FLOOR: 2,
+	/** keeps whoever lands on it sliding the same way */
 	ICE: 3,
+	/** conveyor pads: push whoever lands on them that way */
 	ARROW_UP: 4,
 	ARROW_RIGHT: 5,
 	ARROW_DOWN: 6,
 	ARROW_LEFT: 7,
+	/** gives way once Bolt steps off it, then grows back */
 	CRACK: 8,
-	NEST: 9,
+	/** where monsters come out */
+	PORTAL: 9,
 	/** sticky: monsters avoid it, and wade through it slowly */
 	GOO: 10,
 	/** a wall until a switch is lit, then a floor */
@@ -40,69 +47,112 @@ export const DIR_NAMES = ["up", "right", "down", "left"] as const;
 /** the direction back the way a step came */
 export const opposite = (d: Dir) => ((d + 2) % 4) as Dir;
 
-export const COLS = 11;
-export const ROWS = 15;
-
-const CHARS: Record<string, Tile> = {
-	" ": Tile.VOID,
-	"#": Tile.WALL,
-	".": Tile.FLOOR,
-	P: Tile.FLOOR,
-	"~": Tile.ICE,
-	"^": Tile.ARROW_UP,
-	">": Tile.ARROW_RIGHT,
-	v: Tile.ARROW_DOWN,
-	"<": Tile.ARROW_LEFT,
-	"%": Tile.CRACK,
-	E: Tile.NEST,
-	g: Tile.GOO,
-	D: Tile.GATE,
-	O: Tile.GATE_OPEN,
-	S: Tile.SWITCH,
+/**
+ * The direction that best matches a move: along the longer of its two
+ * axes, so a one-cell step gives its own direction and a diagonal flight
+ * the way it mostly goes.
+ * @param dx - the move along x
+ * @param dy - the move along y
+ * @returns the direction
+ */
+export const dirOf = (dx: number, dy: number): Dir => {
+	if (Math.abs(dx) > Math.abs(dy)) {
+		return dx > 0 ? 1 : 3;
+	}
+	return dy > 0 ? 2 : 0;
 };
 
-export interface ParsedMap {
-	tiles: Tile[];
-	start: { x: number; y: number };
-	nests: { x: number; y: number }[];
+/** the board's width, in cells */
+export const COLS = 11;
+/** the board's height, in cells */
+export const ROWS = 15;
+
+/** a cell, by its column and row */
+export interface Cell {
+	x: number;
+	y: number;
 }
 
-export const parseMap = (rows: readonly string[]): ParsedMap => {
-	if (rows.length !== ROWS) {
-		throw new Error(`map has ${rows.length} rows, expected ${ROWS}`);
+/** a cell's index in the board's arrays */
+export const idx = (x: number, y: number) => y * COLS + x;
+/** the cell at an index of the board's arrays */
+export const cellOf = (i: number): Cell => ({
+	x: i % COLS,
+	y: Math.floor(i / COLS),
+});
+/** whether a cell is on the board */
+export const inBounds = (x: number, y: number) =>
+	x >= 0 && y >= 0 && x < COLS && y < ROWS;
+
+/**
+ * Each tile `kind` the tileset uses (its `kind` property in Tiled), and the
+ * tile it is to the rules. `start` is a floor where Bolt begins.
+ */
+export const KIND_TILES: Readonly<Record<string, Tile>> = {
+	wall: Tile.WALL,
+	floor: Tile.FLOOR,
+	start: Tile.FLOOR,
+	ice: Tile.ICE,
+	"arrow-up": Tile.ARROW_UP,
+	"arrow-right": Tile.ARROW_RIGHT,
+	"arrow-down": Tile.ARROW_DOWN,
+	"arrow-left": Tile.ARROW_LEFT,
+	crack: Tile.CRACK,
+	portal: Tile.PORTAL,
+	goo: Tile.GOO,
+	gate: Tile.GATE,
+	"gate-open": Tile.GATE_OPEN,
+	switch: Tile.SWITCH,
+};
+
+/** a level's board, as the rules see it */
+interface Board {
+	/** each cell's tile, row by row (see {@link idx}) */
+	tiles: Tile[];
+	/** where Bolt begins */
+	start: Cell;
+	/** where monsters come out */
+	portals: Cell[];
+}
+
+/**
+ * Read a level's board from its cells' tile kinds.
+ * @param kinds - each cell's `kind`, row by row, null for open space
+ * @returns the board
+ * @throws {Error} when the board is not {@link COLS} by {@link ROWS}, uses
+ * an unknown kind, or does not have exactly one start and some portals
+ */
+export const readBoard = (kinds: readonly (string | null)[]): Board => {
+	if (kinds.length !== COLS * ROWS) {
+		throw new Error(`board has ${kinds.length} cells, expected ${COLS * ROWS}`);
 	}
 	const tiles: Tile[] = [];
-	let start: { x: number; y: number } | null = null;
-	const nests: { x: number; y: number }[] = [];
-	rows.forEach((row, y) => {
-		if (row.length !== COLS) {
-			throw new Error(`row ${y} is ${row.length} wide, expected ${COLS}`);
+	let start: Cell | null = null;
+	const portals: Cell[] = [];
+	kinds.forEach((kind, i) => {
+		const { x, y } = cellOf(i);
+		const tile = kind === null ? Tile.VOID : KIND_TILES[kind];
+		if (tile === undefined) {
+			throw new Error(`unknown tile kind "${kind}" at ${x},${y}`);
 		}
-		for (let x = 0; x < COLS; x++) {
-			const ch = row[x];
-			const tile = CHARS[ch];
-			if (tile === undefined) {
-				throw new Error(`unknown map char "${ch}" at ${x},${y}`);
+		if (kind === "start") {
+			if (start) {
+				throw new Error(`more than one start tile, at ${x},${y}`);
 			}
-			if (ch === "P") {
-				if (start) {
-					throw new Error(`more than one start tile (P), at ${x},${y}`);
-				}
-				start = { x, y };
-			}
-			if (tile === Tile.NEST) {
-				nests.push({ x, y });
-			}
-			tiles.push(tile);
+			start = { x, y };
 		}
+		if (tile === Tile.PORTAL) {
+			portals.push({ x, y });
+		}
+		tiles.push(tile);
 	});
 	if (!start) {
-		throw new Error("map has no start tile (P)");
+		throw new Error("the board has no start tile");
 	}
-	if (nests.length === 0) {
-		throw new Error("map has no enemy nest (E)");
+	if (portals.length === 0) {
+		throw new Error("the board has no portal for the monsters");
 	}
-	return { tiles, start, nests };
+	return { tiles, start, portals };
 };
 
 /** Tiles that count towards clearing the level (a gate, once it opens). */
@@ -127,35 +177,30 @@ export const isBlocking = (t: Tile) => t === Tile.WALL || t === Tile.GATE;
 export const canStep = (t: Tile, forced: boolean) =>
 	forced ? !isBlocking(t) : isSolidGround(t);
 
-/** The same map with every gate open, as after a switch is lit. */
+/** The same board with every gate open, as after a switch is lit. */
 export const withGatesOpen = (tiles: readonly Tile[]) =>
 	tiles.map((t) => (t === Tile.GATE ? Tile.GATE_OPEN : t));
-
-/** Direction a tile pushes you in when you land on it, or -1. */
-export const arrowDir = (t: Tile): Dir | -1 =>
-	t >= Tile.ARROW_UP && t <= Tile.ARROW_LEFT
-		? ((t - Tile.ARROW_UP) as Dir)
-		: -1;
 
 /**
  * Where you get carried after landing on `tile` while moving in `dir`.
  * Ice keeps you going, arrows redirect you, anything else lets you stop.
+ * @returns the direction of the forced step, or -1 for none
  */
 export const forcedDir = (tile: Tile, dir: Dir): Dir | -1 => {
 	if (tile === Tile.ICE) {
 		return dir;
 	}
-	return arrowDir(tile);
+	return tile >= Tile.ARROW_UP && tile <= Tile.ARROW_LEFT
+		? ((tile - Tile.ARROW_UP) as Dir)
+		: -1;
 };
 
-export const inBounds = (x: number, y: number) =>
-	x >= 0 && y >= 0 && x < COLS && y < ROWS;
-
-export interface MoveTrace {
+/** where one move goes, from {@link traceMove} */
+interface MoveTrace {
 	/** every tile entered, in order */
-	path: { x: number; y: number }[];
+	path: Cell[];
 	/** where the move came to rest (last tile of `path` unless it fell) */
-	end: { x: number; y: number };
+	end: Cell;
 	fell: boolean;
 	/** the move never comes to rest (two arrows facing each other, …) */
 	loops: boolean;
@@ -163,9 +208,10 @@ export interface MoveTrace {
 
 /**
  * Follow one voluntary step from (x, y) in `dir`, including every ice
- * slide and arrow push it sets off. Returns null when the step itself is
- * blocked. Cracks are treated as intact: they only crumble behind you and
- * grow back, so they never change where a move can go.
+ * slide and arrow push it sets off. Cracks are treated as intact: they
+ * only crumble behind you and grow back, so they never change where a move
+ * can go.
+ * @returns where it goes, or null when the step itself is blocked
  */
 export const traceMove = (
 	tiles: readonly Tile[],
@@ -174,7 +220,7 @@ export const traceMove = (
 	dir: Dir,
 ): MoveTrace | null => {
 	const at = (cx: number, cy: number) =>
-		inBounds(cx, cy) ? tiles[cy * COLS + cx] : Tile.VOID;
+		inBounds(cx, cy) ? tiles[idx(cx, cy)] : Tile.VOID;
 	let nx = x + DX[dir];
 	let ny = y + DY[dir];
 	if (!canStep(at(nx, ny), false)) {

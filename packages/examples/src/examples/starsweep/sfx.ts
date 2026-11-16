@@ -11,7 +11,28 @@ import { audio } from "melonjs";
 
 // a pentatonic run, so a long painting streak climbs without going sour
 const SCALE = [0, 2, 4, 7, 9, 12, 14, 16, 19, 21, 24];
+/** a note's frequency, in semitones from A 440 Hz */
 const note = (semitones: number) => 440 * 2 ** (semitones / 12);
+
+/**
+ * A run of notes, one after the other: the jingles.
+ * @param semitones - each note, from A 440 Hz
+ * @param gap - seconds between two notes
+ * @param tone - how each note sounds
+ */
+const arpeggio = (
+	semitones: readonly number[],
+	gap: number,
+	tone: {
+		duration: number;
+		wave: "square" | "triangle";
+		gain: number;
+	},
+) => {
+	semitones.forEach((s, i) => {
+		audio.tone({ freq: note(s), delay: i * gap, ...tone });
+	});
+};
 
 /** One tile lit. `streak` counts tiles lit in a row without pausing. */
 export const sfxPaint = (streak: number) => {
@@ -25,6 +46,7 @@ export const sfxPaint = (streak: number) => {
 	});
 };
 
+/** A spark zapped. */
 export const sfxShoot = () => {
 	audio.tone({
 		freq: 1200,
@@ -36,6 +58,7 @@ export const sfxShoot = () => {
 	});
 };
 
+/** A monster popped. */
 export const sfxPop = () => {
 	audio.noise({
 		type: "white",
@@ -53,6 +76,7 @@ export const sfxPop = () => {
 	});
 };
 
+/** A lit tile eaten by a muncher. */
 export const sfxUnpaint = () => {
 	audio.tone({
 		freq: 180,
@@ -63,18 +87,16 @@ export const sfxUnpaint = () => {
 	});
 };
 
+/** A power-up picked up, or the gates opening. */
 export const sfxPickup = () => {
-	[0, 4, 7, 12].forEach((s, i) => {
-		audio.tone({
-			freq: note(s + 12),
-			duration: 0.1,
-			wave: "square",
-			gain: 0.05,
-			delay: i * 0.05,
-		});
+	arpeggio([12, 16, 19, 24], 0.05, {
+		duration: 0.1,
+		wave: "square",
+		gain: 0.05,
 	});
 };
 
+/** Bolt caught by a monster. */
 export const sfxDie = () => {
 	audio.noise({
 		type: "brown",
@@ -92,6 +114,7 @@ export const sfxDie = () => {
 	});
 };
 
+/** Something falling off into space. */
 export const sfxFall = () => {
 	audio.tone({
 		freq: 900,
@@ -102,6 +125,7 @@ export const sfxFall = () => {
 	});
 };
 
+/** A cracked panel giving way. */
 export const sfxCrumble = () => {
 	audio.noise({
 		type: "pink",
@@ -111,6 +135,7 @@ export const sfxCrumble = () => {
 	});
 };
 
+/** A monster coming out of a portal. */
 export const sfxSpawn = () => {
 	audio.tone({
 		freq: 110,
@@ -122,38 +147,29 @@ export const sfxSpawn = () => {
 	});
 };
 
+/** A level cleared. */
 export const sfxClear = () => {
-	[0, 4, 7, 12, 16, 19, 24].forEach((s, i) => {
-		audio.tone({
-			freq: note(s),
-			duration: 0.22,
-			wave: "triangle",
-			gain: 0.12,
-			delay: i * 0.08,
-		});
+	arpeggio([0, 4, 7, 12, 16, 19, 24], 0.08, {
+		duration: 0.22,
+		wave: "triangle",
+		gain: 0.12,
 	});
 };
 
+/** The run lost: a falling run of notes. */
 export const sfxGameOver = () => {
-	[12, 7, 3, 0].forEach((s, i) => {
-		audio.tone({
-			freq: note(s - 12),
-			duration: 0.35,
-			wave: "triangle",
-			gain: 0.14,
-			delay: i * 0.22,
-		});
+	arpeggio([0, -5, -9, -12], 0.22, {
+		duration: 0.35,
+		wave: "triangle",
+		gain: 0.14,
 	});
 };
 
+/** The game starting, from the title. */
 export const sfxStart = () => {
-	[0, 7, 12].forEach((s, i) => {
-		audio.tone({
-			freq: note(s),
-			duration: 0.12,
-			wave: "square",
-			gain: 0.05,
-			delay: i * 0.07,
-		});
+	arpeggio([0, 7, 12], 0.07, {
+		duration: 0.12,
+		wave: "square",
+		gain: 0.05,
 	});
 };

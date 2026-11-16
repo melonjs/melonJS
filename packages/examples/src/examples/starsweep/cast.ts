@@ -54,8 +54,6 @@ export class Actor extends Sprite {
 		);
 		super(0, 0, atlas.getAnimationSettings());
 		this.anchorPoint.set(CENTRE.x, CENTRE.y);
-		// the play screen loads levels into the world: keep the cast across it
-		this.isPersistent = true;
 		this.place(0, 0);
 		this.play(animation);
 	}
@@ -79,9 +77,32 @@ export class Actor extends Sprite {
 	}
 }
 
-/** the walk or idle animation for a direction */
+/** how far a falling character sinks, in pixels, as it shrinks away */
+const FALL_DROP = 20;
+
+/**
+ * Place a character falling off into space: sinking, shrinking and fading
+ * as `falling` goes from 1 down to 0.
+ * @param actor - the character
+ * @param x - where it stood
+ * @param y - where it stood
+ * @param falling - 1 as it starts to fall, 0 once gone
+ */
+export const placeFalling = (
+	actor: Actor,
+	x: number,
+	y: number,
+	falling: number,
+) => {
+	actor.place(x, y + (1 - falling) * FALL_DROP, falling, falling);
+};
+
+/** Bolt's walk or idle animation for a direction */
 export const boltAnimation = (walking: boolean, facing: Dir) =>
 	`bolt-${walking ? "walk" : "idle"}-${DIR_NAMES[facing]}`;
 
+/**
+ * a monster's animation: walking a way, or standing still (`-1`)
+ */
 export const monsterAnimation = (kind: EnemyKind, dir: Dir | -1) =>
 	dir === -1 ? `${kind}-idle` : `${kind}-walk-${DIR_NAMES[dir]}`;

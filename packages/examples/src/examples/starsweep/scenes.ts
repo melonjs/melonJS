@@ -1,5 +1,11 @@
 /**
- * melonJS — Starsweep: title and play screens.
+ * melonJS — Starsweep: the title and play screens.
+ *
+ * Both are `Stage`s drawn in two layers: the space behind (a shader nebula
+ * and, where the renderer can do 3D, star dust and novas seen by a second,
+ * perspective camera) and the game in front. The title shows Bolt running
+ * across a strip of deck with monsters after it, the best score, a start
+ * button and the credits; the play screen hosts the playing field.
  *
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
@@ -11,26 +17,25 @@ import {
 	level,
 	Renderable,
 	Stage,
-	save,
 	state,
-	Text,
 	type TMXLayer,
 	UITextButton,
 } from "melonjs";
+import { COLS } from "./board";
 import { Actor, GLOW } from "./cast";
-import { Controls } from "./controls";
+import { controls } from "./controls";
 import {
 	drawGlow,
 	drawPanelDetail,
 	drawSky,
 	drawSlab,
 	FONT,
+	makeLabel,
 	makeStars,
 	type Renderer,
 	type Star,
-	TILE,
 } from "./draw";
-import { Field, HEIGHT, HISCORE_KEY, OX, OY, WIDTH } from "./field";
+import { Field } from "./field";
 import {
 	DeepSpace,
 	Effects,
@@ -40,10 +45,10 @@ import {
 	SpaceBackdrop,
 	setupScreenFx,
 } from "./fx";
+import { BACKGROUND, HEIGHT, OX, OY, STAND_LIFT, TILE, WIDTH } from "./layout";
+import { type LevelDef, THEMES } from "./levels";
+import { formatScore, loadHiscore } from "./score";
 import * as sfx from "./sfx";
-
-/** shared by both screens; bound once in `ExampleStarsweep` */
-export const controls = new Controls();
 
 /**
  * Sets a screen up in two layers.
@@ -92,40 +97,50 @@ const withSpaceCamera = () => {
 	return { camera, settings: camera ? { cameras: [camera] } : {} };
 };
 
-/** the play screen loads a level into the world: keep these across it */
-const keep = <T extends { isPersistent: boolean }>(r: T) => {
-	r.isPersistent = true;
-	return r;
+/** the title's colours: the cyan and pink themes */
+const TITLE = {
+	sky: BACKGROUND,
+	clouds: THEMES.pink.litSide,
+	deepClouds: THEMES.cyan.wallSide,
+	novas: [THEMES.pink.lit, THEMES.cyan.lit],
+	dust: [THEMES.pink.lit, THEMES.cyan.lit, "#ffffff", THEMES.violet.lit],
+	lit: THEMES.cyan.lit,
+	litSide: THEMES.cyan.litSide,
 };
 
-/** A strip of tiles lighting up as Bolt runs over it, a blot in pursuit. */
+/** the title's strip of deck: where it is, and its unlit colours */
+const DECK = { y: 500, face: "#2b3052", side: "#161a32" };
+/** seconds Bolt takes to run across the deck and come round again */
+const LAP_TIME = 7;
+/** Bolt, then the monsters after it, and how many cells behind each runs */
+const RUNNERS = [
+	{ kind: "bolt", behind: 0 },
+	{ kind: "wobbler", behind: 1.8 },
+	{ kind: "muncher", behind: 3.1 },
+	{ kind: "chaser", behind: 4.4 },
+] as const;
+
+/** A strip of tiles lighting up as Bolt runs over it, monsters in pursuit. */
 class TitleBackdrop extends Renderable {
-	private time = 0;
-	private stars: Star[] = makeStars(140, WIDTH, HEIGHT);
-	private onStart: () => void;
 	/** false when a shader sky is drawn behind instead */
 	drawnSky = true;
 	/** the 3D space behind, for a nova now and then */
 	deep: DeepSpace | null = null;
-	private nextNova = 1;
-	/** Bolt, then the monsters after it */
-	readonly runners = [
-		new Actor("bolt-walk-right"),
-		new Actor("wobbler-walk-right"),
-		new Actor("muncher-walk-right"),
-		new Actor("chaser-walk-right"),
-	];
+	/** the runners' sprites, for the screen to add */
+	readonly runners = RUNNERS.map(({ kind }) => new Actor(`${kind}-walk-right`));
 
+	private time = 0;
+	private readonly stars: Star[] = makeStars(140, WIDTH, HEIGHT);
+	private nextNova = 1;
 	private started = false;
 
-	constructor(onStart: () => void) {
+	constructor(private readonly onStart: () => void) {
 		super(0, 0, WIDTH, HEIGHT);
 		this.anchorPoint.set(0, 0);
 		this.alwaysUpdate = true;
-		this.onStart = onStart;
 	}
 
-	/** start the game, once: the start button, or a tap or a key anywhere */
+	/** start the game, once: the start button, or a key */
 	start() {
 		if (!this.started) {
 			this.started = true;
@@ -142,60 +157,92 @@ class TitleBackdrop extends Renderable {
 		this.nextNova -= dt / 1000;
 		if (this.nextNova <= 0) {
 			this.nextNova = 2 + Math.random() * 3;
-			this.deep?.burst(Math.random() < 0.5 ? "#ff5fb8" : "#2ee6d6");
+			this.deep?.burst(TITLE.novas[Math.random() < 0.5 ? 0 : 1]);
 		}
-		const { x, y } = this.boltAt();
-		const gaps = [0, 1.8, 3.1, 4.4];
+		const y = DECK.y + TILE / 2 - STAND_LIFT;
+		const at = this.boltCell();
 		this.runners.forEach((runner, i) => {
-			runner.place(x - TILE * gaps[i], y);
+			runner.place(OX + (at - RUNNERS[i].behind) * TILE + TILE / 2, y);
 		});
 		return true;
 	}
 
-	/** Bolt loops across the deck, powering it up, monsters in pursuit */
-	private boltAt() {
-		const loop = 7;
-		const u = (this.time % loop) / loop;
-		const tile = -1 + u * (11 + 5);
-		return {
-			tile,
-			x: (WIDTH - 11 * TILE) / 2 + tile * TILE + TILE / 2,
-			y: DECK_Y + TILE / 2 - 4,
-		};
+	/**
+	 * Where Bolt is along the deck, in cells: it runs in from off the left,
+	 * and out past the right until the last monster has gone too.
+	 */
+	private boltCell() {
+		const start = -1;
+		const end = COLS + RUNNERS[RUNNERS.length - 1].behind + 1;
+		const u = (this.time % LAP_TIME) / LAP_TIME;
+		return start + u * (end - start);
 	}
 
 	override draw(r: Renderer) {
 		if (this.drawnSky) {
-			drawSky(r, "#0b0a24", this.stars, WIDTH, HEIGHT, this.time, "#a12a6f");
+			drawSky(r, TITLE.sky, this.stars, WIDTH, HEIGHT, this.time, TITLE.clouds);
 		}
-		const cols = 11;
-		const x0 = (WIDTH - cols * TILE) / 2;
-		const y0 = DECK_Y;
-		const boltX = this.boltAt().tile;
-		for (let i = 0; i < cols; i++) {
-			const lit = i < boltX;
+		// the deck lights up behind Bolt
+		const lit = this.boltCell();
+		for (let i = 0; i < COLS; i++) {
+			const on = i < lit;
+			const x = OX + i * TILE;
 			drawSlab(
 				r,
-				x0 + i * TILE,
-				y0,
-				lit ? "#2ee6d6" : "#2b3052",
-				lit ? "#128a87" : "#161a32",
+				x,
+				DECK.y,
+				on ? TITLE.lit : DECK.face,
+				on ? TITLE.litSide : DECK.side,
 			);
-			drawPanelDetail(r, x0 + i * TILE, y0, lit);
+			drawPanelDetail(r, x, DECK.y, on);
 		}
 		// a glow under each runner; the sprites draw over it
-		const glows = [GLOW.bolt, GLOW.wobbler, GLOW.muncher, GLOW.chaser];
 		this.runners.forEach((runner, i) => {
-			drawGlow(r, runner.pos.x, runner.pos.y, 26, glows[i], 0.75);
+			drawGlow(r, runner.pos.x, runner.pos.y, 26, GLOW[RUNNERS[i].kind], 0.75);
 		});
 	}
 }
 
-/** the title screen's strip of deck */
-const DECK_Y = 500;
+/** the title's start button */
+const START = { x: WIDTH / 2 - 140, y: 812, width: 280, height: 68 };
+/** seconds between two rings of the start button's beacon */
+const BEACON_TIME = 1.4;
 
+/** rings pulsing out of the start button, to draw the eye to it */
+class StartBeacon extends Renderable {
+	private t = 0;
+
+	constructor() {
+		super(0, 0, WIDTH, HEIGHT);
+		this.anchorPoint.set(0, 0);
+		this.alwaysUpdate = true;
+		this.floating = true;
+	}
+
+	override update(dt: number) {
+		this.t = (this.t + dt / 1000) % BEACON_TIME;
+		return true;
+	}
+
+	override draw(r: Renderer) {
+		const k = this.t / BEACON_TIME;
+		const grow = 4 + k * 22;
+		r.setGlobalAlpha(0.7 * (1 - k));
+		r.setColor(THEMES.pink.lit);
+		r.lineWidth = 3;
+		r.strokeRoundRect(
+			START.x - grow,
+			START.y - grow,
+			START.width + grow * 2,
+			START.height + grow * 2,
+			18 + grow,
+		);
+		r.setGlobalAlpha(1);
+	}
+}
+
+/** The title screen: the game's name, how to play, and a start button. */
 export class TitleScreen extends Stage {
-	private backdrop?: TitleBackdrop;
 	private deep: DeepSpace | null = null;
 	private readonly space: Camera3d | null;
 
@@ -208,45 +255,28 @@ export class TitleScreen extends Stage {
 	override onResetEvent(app: Application) {
 		app.reset();
 		const { game, sky, deep } = setUpLayers(app, this.space);
-		this.backdrop = new TitleBackdrop(() => {
+		const backdrop = new TitleBackdrop(() => {
 			sfx.sfxStart();
 			state.change(state.PLAY);
 		});
-		game.addChild(this.backdrop, 0);
-		for (const runner of this.backdrop.runners) {
-			runner.isPersistent = false;
+		game.addChild(backdrop, 0);
+		for (const runner of backdrop.runners) {
 			game.addChild(runner, 1);
 		}
 		this.deep = deep;
-		this.backdrop.deep = deep;
-		deep?.setColors(["#ff5fb8", "#2ee6d6", "#ffffff", "#b98bff"]);
+		backdrop.deep = deep;
+		deep?.setColors(TITLE.dust);
 		if (sky) {
-			sky.setTheme("#0b0a24", "#a12a6f", "#2e2766");
-			this.backdrop.drawnSky = false;
+			sky.setTheme(TITLE.sky, TITLE.clouds, TITLE.deepClouds);
+			backdrop.drawnSky = false;
 		}
 		controls.attach(false);
 
-		const text = (
-			y: number,
-			size: number,
-			color: string,
-			value: string,
-			bold = false,
-		) => {
-			const t = new Text(WIDTH / 2, y, {
-				font: FONT,
-				size,
-				bold,
-				fillStyle: color,
-				textAlign: "center",
-				textBaseline: "top",
-				text: value,
-			});
-			t.floating = true;
-			game.addChild(t, 10);
-			return t;
+		const text = (y: number, size: number, color: string, words: string) => {
+			const label = makeLabel(WIDTH / 2, y, size, color, "center", words);
+			game.addChild(label, 10);
+			return label;
 		};
-		// a drop shadow, then the title over it
 		// the title on two lines, each over its own drop shadow
 		for (const [y, word] of [
 			[110, "STAR"],
@@ -259,46 +289,16 @@ export class TitleScreen extends Stage {
 		text(390, 19, "#c9c3ff", "DODGE THE MONSTERS!");
 		text(620, 15, "#8f88c9", "MOVE: DRAG LEFT, ARROWS OR WASD");
 		text(646, 15, "#8f88c9", "ZAP: TOUCH RIGHT, SPACE OR X");
-		const best = (save as unknown as Record<string, number>)[HISCORE_KEY] ?? 0;
-		text(740, 22, "#ffd23d", `HI ${best.toString().padStart(6, "0")}`);
-		// the start button, with a beacon pulsing out of it (a tap or a key
-		// anywhere starts too)
-		const button = { x: WIDTH / 2 - 140, y: 812, w: 280, h: 68 };
-		const beacon = new (class extends Renderable {
-			private t = 0;
-			constructor() {
-				super(0, 0, WIDTH, HEIGHT);
-				this.anchorPoint.set(0, 0);
-				this.alwaysUpdate = true;
-				this.floating = true;
-			}
-			override update(dt: number) {
-				this.t = (this.t + dt / 1000) % 1.4;
-				return true;
-			}
-			override draw(r: Renderer) {
-				const k = this.t / 1.4;
-				const grow = 4 + k * 22;
-				r.setGlobalAlpha(0.7 * (1 - k));
-				r.setColor("#ff5fb8");
-				r.lineWidth = 3;
-				r.strokeRoundRect(
-					button.x - grow,
-					button.y - grow,
-					button.w + grow * 2,
-					button.h + grow * 2,
-					18 + grow,
-				);
-				r.setGlobalAlpha(1);
-			}
-		})();
-		game.addChild(beacon, 9);
-		const play = new UITextButton(button.x, button.y, {
+		text(740, 22, "#ffd23d", `HI ${formatScore(loadHiscore())}`);
+		// the start button, with a beacon pulsing out of it (Enter or Space
+		// starts too)
+		game.addChild(new StartBeacon(), 9);
+		const play = new UITextButton(START.x, START.y, {
 			text: "TAP TO START",
 			font: FONT,
 			fontSize: 26,
-			width: button.w,
-			height: button.h,
+			width: START.width,
+			height: START.height,
 			labelFillStyle: "#ffffff",
 			hoverOffColor: "#e8459f",
 			hoverOnColor: "#ff6fbd",
@@ -307,7 +307,7 @@ export class TitleScreen extends Stage {
 			hoverScale: 1.05,
 			pressScale: 0.94,
 			onClick: () => {
-				this.backdrop?.start();
+				backdrop.start();
 			},
 		});
 		play.floating = true;
@@ -325,6 +325,7 @@ export class TitleScreen extends Stage {
 	}
 }
 
+/** The play screen: the board, the characters, and the field that runs them. */
 export class PlayScreen extends Stage {
 	private field: Field | null = null;
 	/** what this screen put in the world and must take out again */
@@ -333,7 +334,10 @@ export class PlayScreen extends Stage {
 	private deep: DeepSpace | null = null;
 	private readonly space: Camera3d | null;
 
-	constructor() {
+	/**
+	 * @param levels - the levels, in play order
+	 */
+	constructor(private readonly levels: readonly LevelDef[]) {
 		const { camera, settings } = withSpaceCamera();
 		super(settings);
 		this.space = camera;
@@ -347,8 +351,9 @@ export class PlayScreen extends Stage {
 		// `level.load` empties the world of everything not persistent: keep
 		// what this screen added, and take it out again when leaving
 		for (const child of world.getChildren()) {
-			keep(child as Renderable);
-			this.kept.push(child as Renderable);
+			const kept = child as Renderable;
+			kept.isPersistent = true;
+			this.kept.push(kept);
 		}
 		// the planet, and the whole sky when there is no shader for it
 		const backdrop = new SpaceBackdrop(WIDTH, HEIGHT, sky === null, {
@@ -365,29 +370,32 @@ export class PlayScreen extends Stage {
 		game.addChild(actors, 2);
 		this.effects = new Effects(game, 3);
 
-		const field = new Field({
-			controls,
-			effects: this.effects,
-			actors,
-			backdrop,
-			sky,
-			space: deep,
-			loadBoard: async (file) => {
-				await level.load(file, {
-					container: board,
-					setViewportBounds: false,
-					async: true,
-				});
-				const layer = (name: string) =>
-					board.getChildByName(name)[0] as unknown as TMXLayer;
-				return { station: layer("station"), power: layer("power") };
+		const field = new Field(
+			{
+				controls,
+				effects: this.effects,
+				actors,
+				backdrop,
+				sky,
+				space: deep,
+				loadBoard: async (file) => {
+					await level.load(file, {
+						container: board,
+						setViewportBounds: false,
+						async: true,
+					});
+					const layer = (name: string) =>
+						board.getChildByName(name)[0] as unknown as TMXLayer;
+					return { station: layer("station"), power: layer("power") };
+				},
 			},
-		});
+			this.levels,
+		);
 		field.onExit = () => state.change(state.MENU);
 		game.addChild(field, 1);
 		game.addChild(field.front, 4);
-		for (const t of field.hud) {
-			game.addChild(t, 10);
+		for (const item of field.hudItems) {
+			game.addChild(item, 10);
 		}
 		this.field = field;
 		controls.attach(true);

@@ -24,7 +24,6 @@ import {
 	Color,
 	type Container,
 	game,
-	getPool,
 	ParticleEmitter,
 	Renderable,
 	ShaderEffect,
@@ -32,7 +31,7 @@ import {
 	Trail,
 	Tween,
 	timer,
-	Vector2d,
+	type Vector2d,
 	VignetteEffect,
 } from "melonjs";
 import {
@@ -42,7 +41,8 @@ import {
 	type Renderer,
 	type Star,
 } from "./draw";
-import type { Theme } from "./levels";
+import { BACKGROUND } from "./layout";
+import { THEMES, type Theme } from "./levels";
 
 // ---------------------------------------------------------------------------
 // nebula background shader
@@ -162,10 +162,8 @@ fn apply(color : vec4f, uv : vec2f) -> vec4f {
 }
 `;
 
-const rgb = (css: string) => {
-	const c = new Color().parseCSS(css);
-	return new Float32Array([c.r / 255, c.g / 255, c.b / 255]);
-};
+/** a CSS colour as the shader's vec3: red, green and blue from 0 to 1 */
+const rgb = (css: string) => new Color().parseCSS(css).toArray().slice(0, 3);
 
 const blankQuad = (size: number) => {
 	const canvas = document.createElement("canvas");
@@ -206,12 +204,19 @@ export class NebulaBackdrop extends Sprite {
 		return this.fx.enabled;
 	}
 
+	/**
+	 * the sky's colours
+	 * @param sky - the background
+	 * @param a - the first layer of clouds
+	 * @param b - the second layer of clouds
+	 */
 	setTheme(sky: string, a: string, b: string) {
 		this.fx.setUniform("uSky", rgb(sky));
 		this.fx.setUniform("uColorA", rgb(a));
 		this.fx.setUniform("uColorB", rgb(b));
 	}
 
+	/** take on a level's colours */
 	setLevelTheme(theme: Theme) {
 		this.setTheme(theme.sky, theme.litSide, theme.wallSide);
 	}
@@ -271,8 +276,7 @@ export const aberrationBurst = (peak = 7, duration = 450) => {
 	}
 	const driver = { offset: peak };
 	fx.setOffset(peak);
-	const tween = getPool("tween").get(driver) as Tween;
-	tween
+	new Tween(driver)
 		.to({ offset: 0 }, { duration })
 		.easing(Tween.Easing.Cubic.Out)
 		.onUpdate(() => fx.setOffset(driver.offset))
@@ -333,6 +337,8 @@ const softDot = (size = 64) => {
 const DUST = { near: 900, far: 4200, halfWidth: 1700, halfHeight: 2800 };
 /** how far away the novas go off */
 const NOVA_DEPTH = 2200;
+/** a nova's spawn area, in each axis: tiny, so it bursts from a point */
+const NOVA_SIZE = 30;
 
 /**
  * Space, in 3D: star dust streaming past the camera, and novas, spheres of
@@ -407,9 +413,9 @@ export class DeepSpace extends Renderable {
 	private makeNova(image: HTMLCanvasElement) {
 		return new ParticleEmitter(0, 0, {
 			image,
-			width: 30,
-			height: 30,
-			depth: 30,
+			width: NOVA_SIZE,
+			height: NOVA_SIZE,
+			depth: NOVA_SIZE,
 			totalParticles: 220,
 			// every way at once: a sphere
 			maxSpread: Math.PI,
@@ -444,8 +450,9 @@ export class DeepSpace extends Renderable {
 		// somewhere in view at that depth, kept clear of the very edges
 		const halfH = Math.tan(this.camera.fov / 2) * NOVA_DEPTH * 0.6;
 		const halfW = halfH * (this.camera.width / this.camera.height);
-		e.pos.x = (Math.random() * 2 - 1) * halfW - 15;
-		e.pos.y = (Math.random() * 2 - 1) * halfH - 15;
+		// the spawn area hangs from the emitter's top left: centre it
+		e.pos.x = (Math.random() * 2 - 1) * halfW - NOVA_SIZE / 2;
+		e.pos.y = (Math.random() * 2 - 1) * halfH - NOVA_SIZE / 2;
 		e.burstParticles(Math.round(70 + 150 * size));
 	}
 
@@ -476,6 +483,15 @@ export class DeepSpace extends Renderable {
 // particles and trails
 // ---------------------------------------------------------------------------
 
+/** a burst's spawn area, in each axis: small, so it comes from a point */
+const BURST_SIZE = 10;
+/**
+ * Bursts are given in pixels per second; the emitter's speed is in pixels
+ * per frame at 60 fps, and a particle also eases out as it flies, so it
+ * goes about this much less far than its start speed alone would take it.
+ */
+const BURST_SPEED_SCALE = 0.65;
+
 /**
  * Bursts of particles and spark trails, from the engine's `ParticleEmitter`
  * and `Trail`.
@@ -495,10 +511,9 @@ export class Effects {
 		private readonly world: Container,
 		private readonly z: number,
 	) {
-		const SPAWN = 10;
 		this.emitter = new ParticleEmitter(0, 0, {
-			width: SPAWN,
-			height: SPAWN,
+			width: BURST_SIZE,
+			height: BURST_SIZE,
 			textureSize: 4,
 			totalParticles: 30,
 			angle: 0,
@@ -531,13 +546,12 @@ export class Effects {
 		const e = this.emitter;
 		const s = e.settings;
 		s.tint = color;
-		// the emitter's speed is in pixels per frame at 60 fps
-		s.speed = (speed / 60) * 0.65;
+		s.speed = (speed / 60) * BURST_SPEED_SCALE;
 		s.speedVariation = s.speed * 0.6;
 		s.minLife = life * 0.6;
 		s.maxLife = life * 1.2;
 		// the spawn area hangs from the emitter's top left: centre it
-		e.pos.set(x - 5, y - 5);
+		e.pos.set(x - BURST_SIZE / 2, y - BURST_SIZE / 2);
 		e.burstParticles(count);
 	}
 
@@ -583,9 +597,6 @@ export class Effects {
 	}
 }
 
-/** a point a trail can follow */
-export const trailPoint = (x: number, y: number) => new Vector2d(x, y);
-
 // ---------------------------------------------------------------------------
 // the backdrop behind the station
 // ---------------------------------------------------------------------------
@@ -597,8 +608,8 @@ export const trailPoint = (x: number, y: number) => new Vector2d(x, y);
 export class SpaceBackdrop extends Renderable {
 	private time = 0;
 	private readonly stars: Star[];
-	private planet = "#128a87";
-	private sky = "#0b0a24";
+	private planet = THEMES.cyan.litSide;
+	private sky = BACKGROUND;
 
 	constructor(
 		w: number,
@@ -614,6 +625,7 @@ export class SpaceBackdrop extends Renderable {
 		this.stars = makeStars(120, w, h);
 	}
 
+	/** take on a level's colours */
 	setTheme(theme: Theme) {
 		this.planet = theme.litSide;
 		this.sky = theme.sky;

@@ -1,24 +1,61 @@
 /**
- * melonJS — Starsweep: drawing helpers.
+ * melonJS — Starsweep: drawing helpers, and the game's text labels.
  *
- * The power-ups, glows, the drawn sky and the HUD are drawn from shapes
- * (rects, ellipses, arcs, lines, polygons) through the renderer, so they run
- * the same on Canvas, WebGL and WebGPU. The station is a Tiled map and the
- * characters are sprites (see `cast.ts`), both drawn by the engine.
+ * The power-ups, glows, the drawn sky and the title's strip of deck are
+ * drawn from shapes (rects, ellipses, arcs, lines, polygons) through the
+ * renderer, so they run the same on Canvas, WebGL and WebGPU. The station
+ * is a Tiled map and the characters are sprites (see `cast.ts`), both
+ * drawn by the engine; the words on screen are the engine's `Text`.
  *
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
-import { type CanvasRenderer, Polygon, type WebGLRenderer } from "melonjs";
+import {
+	type CanvasRenderer,
+	Polygon,
+	Text,
+	type WebGLRenderer,
+	type WebGPURenderer,
+} from "melonjs";
 import { DX, DY } from "./board";
-
-export const TILE = 48;
+import { TILE } from "./layout";
 
 /** Kenney Future, a CC0 sci-fi face, loaded by the bootstrap */
 export const FONT = "starsweepFuture";
 
-/** the renderers that can draw every shape used here */
-export type Renderer = CanvasRenderer | WebGLRenderer;
+/** the renderers the game runs on, which all draw every shape used here */
+export type Renderer = CanvasRenderer | WebGLRenderer | WebGPURenderer;
+
+/**
+ * A line of text in the game's font, fixed on the screen (it does not move
+ * with the camera), hung from its top.
+ * @param x - where it is anchored across, by `align`
+ * @param y - its top
+ * @param size - the font size, in pixels
+ * @param color - its colour
+ * @param align - which side of it `x` is
+ * @param text - what it says; set it later with `setText`
+ * @returns the label, to add to a container
+ */
+export const makeLabel = (
+	x: number,
+	y: number,
+	size: number,
+	color: string,
+	align: "left" | "center" | "right" = "center",
+	text = " ",
+) => {
+	const label = new Text(x, y, {
+		font: FONT,
+		size,
+		fillStyle: color,
+		textAlign: align,
+		textBaseline: "top",
+		text,
+	});
+	label.floating = true;
+	return label;
+};
 
 const poly = (points: [number, number][]) =>
 	new Polygon(
@@ -39,24 +76,24 @@ const HEART_TIP = poly([
 	[11.5, -1],
 	[0, 12],
 ]);
-export const fillShape = (
-	r: Renderer,
-	shape: Polygon,
-	x: number,
-	y: number,
-) => {
+/** fill a shape built around (0, 0), centred on (x, y) */
+const fillShape = (r: Renderer, shape: Polygon, x: number, y: number) => {
 	r.translate(x, y);
 	r.fillPolygon(shape);
 	r.translate(-x, -y);
 };
 
+/** a star of the drawn sky */
 export interface Star {
 	x: number;
 	y: number;
+	/** in pixels: 1 or 2 */
 	size: number;
+	/** where in its twinkle it starts */
 	phase: number;
 }
 
+/** stars scattered over a w × h sky */
 export const makeStars = (count: number, w: number, h: number): Star[] => {
 	const stars: Star[] = [];
 	for (let i = 0; i < count; i++) {
@@ -70,6 +107,12 @@ export const makeStars = (count: number, w: number, h: number): Star[] => {
 	return stars;
 };
 
+/**
+ * The sky drawn without a shader (on the Canvas renderer): a flat colour,
+ * two faint nebula clouds, twinkling stars and a ringed planet.
+ * @param sky - the background colour
+ * @param planet - the clouds' and the planet's colour
+ */
 export const drawSky = (
 	r: Renderer,
 	sky: string,
@@ -77,7 +120,7 @@ export const drawSky = (
 	w: number,
 	h: number,
 	time: number,
-	planet = "#ff8fb4",
+	planet: string,
 ) => {
 	r.setGlobalAlpha(1);
 	r.setColor(sky);
@@ -123,22 +166,21 @@ export const drawPlanet = (
 	r.setGlobalAlpha(1);
 };
 
-/** A floor slab: a darker front edge with the face on top. */
+/**
+ * A floor slab, one cell wide, its top left at (x, y): a darker front edge
+ * with the face on top.
+ */
 export const drawSlab = (
 	r: Renderer,
 	x: number,
 	y: number,
 	face: string,
 	side: string,
-	scale = 1,
 ) => {
-	const s = TILE * scale;
-	const ox = x + (TILE - s) / 2;
-	const oy = y + (TILE - s) / 2;
 	r.setColor(side);
-	r.fillRoundRect(ox + 2, oy + s - 14, s - 4, 12, 5);
+	r.fillRoundRect(x + 2, y + TILE - 14, TILE - 4, 12, 5);
 	r.setColor(face);
-	r.fillRoundRect(ox + 2, oy + 2, s - 4, s - 10, 6);
+	r.fillRoundRect(x + 2, y + 2, TILE - 4, TILE - 10, 6);
 };
 
 /** Rivets and a seam, so a slab reads as a metal deck panel. */
@@ -181,6 +223,7 @@ export const drawGlow = (
 	r.setGlobalAlpha(1);
 };
 
+/** the power-ups Bolt can pick up */
 export type PowerKind =
 	| "gem"
 	| "freeze"
@@ -189,6 +232,7 @@ export type PowerKind =
 	| "life"
 	| "field";
 
+/** each power-up's colour, also its glow and its timer's */
 export const POWER_COLORS: Record<PowerKind, string> = {
 	gem: "#5cf2ff",
 	freeze: "#bff4ff",
@@ -198,6 +242,13 @@ export const POWER_COLORS: Record<PowerKind, string> = {
 	field: "#7ff7c8",
 };
 
+/**
+ * A power-up's icon, bobbing over its cell with a shadow under it.
+ * @param cx - the cell's centre across
+ * @param cy - the cell's centre down
+ * @param time - the game's clock, in seconds, for the bobbing
+ * @param alpha - 1, or less while it blinks before it goes
+ */
 export const drawPower = (
 	r: Renderer,
 	kind: PowerKind,
