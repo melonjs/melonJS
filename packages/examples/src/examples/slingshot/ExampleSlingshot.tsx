@@ -25,6 +25,10 @@
  *   (`getVelocity3d`).
  * - **The UI widgets**: the end-of-round card is a `UIPanel` with a
  *   `UITextButton`, and the score pops come up with a `Tween`.
+ * - **A camera that orbits the field**: the turn buttons, the arrow keys and
+ *   the VIEW button (side on, or behind the slingshot) turn a `Camera3d`, and
+ *   the aim follows it, so a shot from behind can go anywhere in 3D. The
+ *   slingshot's bands are turned in 3D with a `Quaternion`.
  *
  * The pets are Kenney's Cube Pets (CC0, see `packages/examples/LICENSE.md`).
  *
@@ -45,6 +49,7 @@ import {
 	Mesh,
 	type Pointer,
 	plugin,
+	Quaternion,
 	Renderable,
 	Stage,
 	state,
@@ -101,7 +106,13 @@ const POWER = 11;
 // a pet is done once it rests, leaves the field, or after this long
 const SHOT_SECONDS = 7;
 const AXIS_Y = new Vector3d(0, 1, 0);
-const AXIS_Z = new Vector3d(0, 0, 1);
+// the camera orbits this point, the middle of the field, at this distance
+const PIVOT = new Vector3d(100, -210, 0);
+const ORBIT_DISTANCE = 1150;
+// a press of a turn button turns the camera this far; a held arrow key, this
+// fast (radians per second)
+const ORBIT_STEP = Math.PI / 6;
+const ORBIT_SPEED = 1.6;
 
 /** a canvas texture: wood planks, stone, grass, or plain white */
 const paint = (kind: "wood" | "stone" | "grass" | "white") => {
@@ -338,21 +349,34 @@ const createGame = async () => {
 			new Light3d({ type: "ambient", color: "#8fa3c2", intensity: 0.75 }),
 		);
 
-		// ── the backdrop, and the ground running back to meet it ─────────
-		// the backdrop's horizon is 55% of the way down the picture
+		// ── the backdrop all round, and the ground running out to meet it
 		const BACK_Z = 1700;
-		// tall enough that its top edge stays above the view
-		const backdrop = createBackdrop(9600, 3600);
-		backdrop.pos.set(0, 3600 * (0.5 - 0.55));
-		world.addChild(backdrop, BACK_Z);
+		const SIDE_X = 3000;
+		// one wall per side, so the camera finds trees whichever way it turns;
+		// tall enough that a wall's top edge stays above the view, and placed
+		// so the picture's horizon, 55% of the way down it, meets the ground
+		const WALL_H = 4200;
+		for (const [x, z, width, turn] of [
+			[0, BACK_Z, SIDE_X * 2, 0],
+			[0, -BACK_Z, SIDE_X * 2, 0],
+			[-SIDE_X, 0, BACK_Z * 2, Math.PI / 2],
+			[SIDE_X, 0, BACK_Z * 2, Math.PI / 2],
+		]) {
+			const wall = createBackdrop(width, WALL_H);
+			wall.pos.set(x, WALL_H * (0.5 - 0.55));
+			if (turn !== 0) {
+				wall.rotate(turn, AXIS_Y);
+			}
+			world.addChild(wall, z);
+		}
 
 		// a thick static slab, its top at y = 0
-		const ground = createBox(6000, 40, BACK_Z * 2, grass);
+		const ground = createBox(SIDE_X * 2, 40, BACK_Z * 2, grass);
 		ground.pos.set(0, GROUND_Y + 20);
 		ground.castGroundShadow = false;
 		ground.bodyDef = {
 			type: "static",
-			shapes: [new Box3d(0, 0, 0, 6000, 40, BACK_Z * 2)],
+			shapes: [new Box3d(0, 0, 0, SIDE_X * 2, 40, BACK_Z * 2)],
 			friction: 0.8,
 		};
 		world.addChild(ground, 0);
@@ -394,17 +418,43 @@ const createGame = async () => {
 			return band;
 		});
 		const tipY = prongTop;
-		const stretch = (band: Mesh, to: { x: number; y: number }) => {
+		const turn = new Quaternion();
+		const turnAxis = new Vector3d();
+		// a band from its prong's tip to `to`, in 3D: a unit box along X,
+		// turned onto the band and stretched to its length
+		const stretch = (band: Mesh, to: { x: number; y: number; z: number }) => {
 			const dx = to.x - POUCH.x;
 			const dy = to.y - tipY;
-			const length = Math.max(Math.hypot(dx, dy), 1);
+			const dz = to.z - band.depth;
+			const length = Math.max(Math.hypot(dx, dy, dz), 1);
 			band.pos.set(POUCH.x + dx / 2, tipY + dy / 2);
-			// the mesh turns in its model's Y-up space, where the Y-down
-			// angle runs the other way
-			band.currentTransform
-				.identity()
-				.rotate(-Math.atan2(dy, dx), AXIS_Z)
-				.scale(length, 1, 1);
+			// the mesh turns in its model's Y-up space: Y the other way
+			const ux = dx / length;
+			const uy = -dy / length;
+			const uz = dz / length;
+			// the turn that takes +X onto the band: about X × u
+			turnAxis.set(0, -uz, uy);
+			if (turnAxis.length() < 1e-6) {
+				turn.setFromAxisAngle(AXIS_Y, ux < 0 ? Math.PI : 0);
+			} else {
+				turn.setFromAxisAngle(turnAxis.normalize(), Math.acos(ux));
+			}
+			band.currentTransform.identity();
+			turn.toMatrix3d(band.currentTransform);
+			band.currentTransform.scale(length, 1, 1);
+		};
+		// where the bands hold the pet: just behind it, away from the shot
+		const pouchBack = (at: Vector3d, pulled: Vector3d) => {
+			const length = pulled.length();
+			const back =
+				length > 1e-6
+					? { x: pulled.x / length, y: pulled.y / length, z: pulled.z / length }
+					: { x: -1, y: 0, z: 0 };
+			return {
+				x: at.x + (back.x * PET) / 2,
+				y: at.y + (back.y * PET) / 2,
+				z: at.z + (back.z * PET) / 2,
+			};
 		};
 
 		// ── the towers ───────────────────────────────────────────────────
@@ -716,8 +766,6 @@ const createGame = async () => {
 		let flightTime = 0;
 		let aiming = false;
 		const pull = new Vector3d();
-		// where the pull started, on the plane of the slingshot
-		const grab = new Vector3d();
 		const launchVelocity = new Vector3d();
 
 		/** a pet's mesh, facing the towers, turned a little toward the camera */
@@ -776,7 +824,8 @@ const createGame = async () => {
 				loaded = pet;
 				for (const band of bands) {
 					band.alpha = 1;
-					stretch(band, { x: POUCH.x - PET / 2, y: POUCH.y });
+					// at rest: no pull, so held from just behind
+					stretch(band, pouchBack(POUCH, new Vector3d()));
 				}
 			};
 			if (!queued) {
@@ -802,48 +851,145 @@ const createGame = async () => {
 				.start();
 		};
 
-		// the point under the pointer on the plane of the slingshot (z = 0)
-		const onPlane = (pointer: Pointer, out: Vector3d) => {
-			const ray = camera.screenToRay(pointer.gameScreenX, pointer.gameScreenY);
-			if (Math.abs(ray.direction.z) < 1e-6) {
-				return null;
-			}
-			const t = (POUCH.z - ray.origin.z) / ray.direction.z;
-			return out.set(
-				ray.origin.x + ray.direction.x * t,
-				ray.origin.y + ray.direction.y * t,
-				POUCH.z,
+		// ── the camera: it orbits the field; `yaw` 0 is the side view, a
+		// quarter turn is from behind the slingshot ──────────────────────
+		let yaw = 0;
+		let targetYaw = 0;
+		// the camera's forward and right, along the ground
+		const forward = new Vector3d();
+		const right = new Vector3d();
+		const placeCamera = () => {
+			forward.set(Math.sin(yaw), 0, Math.cos(yaw));
+			right.set(Math.cos(yaw), 0, -Math.sin(yaw));
+			// further back and higher behind the slingshot, to see over the
+			// pets waiting in line
+			const behind = Math.abs(Math.sin(yaw));
+			const height = 30 + 260 * behind;
+			const distance = ORBIT_DISTANCE + 380 * behind;
+			camera.setPosition(
+				PIVOT.x - forward.x * distance,
+				PIVOT.y - height,
+				PIVOT.z - forward.z * distance,
 			);
+			camera.lookAt(PIVOT.x, PIVOT.y, PIVOT.z);
 		};
+
 		// a press anywhere takes hold of the loaded pet: a pet is a small
-		// target under a finger, and a finger on it would hide it. The pull is
-		// how far the pointer has moved since the press.
+		// target under a finger, and a finger on it would hide it. The pull
+		// follows the pointer from there, relative to the camera: sideways on
+		// screen is sideways to the view, and down on screen is down from the
+		// side, back toward the camera from behind.
+		const pressed = { x: 0, y: 0 };
+		// world pixels per screen pixel, at the pouch, for this press
+		let perPixel = 1;
+		const onButtons = (pointer: Pointer) => {
+			return buttons.some((b) => {
+				return b.getBounds().contains(pointer.gameScreenX, pointer.gameScreenY);
+			});
+		};
 		input.registerPointerEvent("pointerdown", app.viewport, (pointer) => {
-			if (loaded !== null && !over && onPlane(pointer, grab) !== null) {
-				aiming = true;
-				pull.set(0, 0, 0);
-			}
-		});
-		const at = new Vector3d();
-		const onMove = (pointer: Pointer) => {
-			if (!aiming || loaded === null || onPlane(pointer, at) === null) {
+			if (loaded === null || over || onButtons(pointer)) {
 				return;
 			}
-			pull.set(at.x - grab.x, at.y - grab.y, 0);
+			const a = camera.worldToScreen(POUCH, new Vector2d());
+			const b = camera.worldToScreen(
+				new Vector3d(POUCH.x + right.x * 100, POUCH.y, POUCH.z + right.z * 100),
+				new Vector2d(),
+			);
+			perPixel =
+				a && b ? 100 / Math.max(Math.hypot(b.x - a.x, b.y - a.y), 1) : 1;
+			pressed.x = pointer.gameScreenX;
+			pressed.y = pointer.gameScreenY;
+			aiming = true;
+			pull.set(0, 0, 0);
+		});
+		const onMove = (pointer: Pointer) => {
+			if (!aiming || loaded === null) {
+				return;
+			}
+			const dx = (pointer.gameScreenX - pressed.x) * perPixel;
+			const dy = (pointer.gameScreenY - pressed.y) * perPixel;
+			// 0 from the side, 1 from behind
+			const behind = Math.abs(Math.sin(yaw));
+			pull.set(
+				right.x * dx - forward.x * dy * behind,
+				dy * (1 - behind),
+				right.z * dx - forward.z * dy * behind,
+			);
 			const length = pull.length();
 			if (length > MAX_PULL) {
 				pull.scale(MAX_PULL / length);
 			}
-			const p = new Vector3d(POUCH.x + pull.x, POUCH.y + pull.y, POUCH.z);
+			const p = new Vector3d(
+				POUCH.x + pull.x,
+				POUCH.y + pull.y,
+				POUCH.z + pull.z,
+			);
 			adapter.setPosition(loaded, p);
+			const held = pouchBack(p, pull);
 			for (const band of bands) {
-				stretch(band, { x: p.x - PET / 2, y: p.y });
+				stretch(band, held);
 			}
-			// released now, it would leave opposite the pull
-			launchVelocity.set(-pull.x * POWER, -pull.y * POWER, 0);
+			// released now, it would leave opposite the pull; from behind, a
+			// pull straight back is lofted upward too
+			launchVelocity.set(
+				-pull.x * POWER,
+				-pull.y * POWER - behind * pull.length() * POWER * 0.45,
+				-pull.z * POWER,
+			);
 			showArc(p, launchVelocity);
 		};
 		event.on(event.POINTERMOVE, onMove);
+
+		// ── the turn buttons, and the arrow keys ─────────────────────────
+		const buttonStyle = {
+			width: 60,
+			height: 60,
+			font: "sans-serif",
+			fontSize: 26,
+			labelFillStyle: "#ffffff",
+			hoverOffColor: "#1d3b57cc",
+			hoverOnColor: "#2c5a82",
+			pressedColor: "#16324a",
+			borderColor: "#f6c445",
+			hoverScale: 1.06,
+			pressScale: 0.94,
+		};
+		const bottom = app.viewport.height - 80;
+		const buttons = [
+			new UITextButton(20, bottom, {
+				...buttonStyle,
+				text: "\u25C0",
+				onClick: () => {
+					targetYaw += ORBIT_STEP;
+				},
+			}),
+			new UITextButton(90, bottom, {
+				...buttonStyle,
+				text: "\u25B6",
+				onClick: () => {
+					targetYaw -= ORBIT_STEP;
+				},
+			}),
+			new UITextButton(160, bottom, {
+				...buttonStyle,
+				width: 96,
+				fontSize: 20,
+				text: "VIEW",
+				// between the side view and the view from behind the slingshot
+				onClick: () => {
+					const behindNow = Math.abs(Math.sin(targetYaw)) > 0.5;
+					targetYaw = behindNow ? 0 : Math.PI / 2;
+				},
+			}),
+		];
+		for (const button of buttons) {
+			world.addChild(button, 1);
+		}
+		input.bindKey(input.KEY.LEFT, "turnLeft");
+		input.bindKey(input.KEY.A, "turnLeft");
+		input.bindKey(input.KEY.RIGHT, "turnRight");
+		input.bindKey(input.KEY.D, "turnRight");
 
 		const release = () => {
 			if (over || !aiming || loaded === null) {
@@ -864,10 +1010,15 @@ const createGame = async () => {
 			adapter.setStatic(pet, false);
 			(pet.body as Rapier3dAdapter.Body).enableCcd(true);
 			adapter.setVelocity(pet, launchVelocity);
-			// a forward roll, and a little twist out of the plane
+			// a forward roll about the axis across the shot, and a little twist
+			const across = Math.hypot(launchVelocity.x, launchVelocity.z) || 1;
 			adapter.setAngularVelocity(
 				pet,
-				new Vector3d(0, (Math.random() - 0.5) * 3, 6),
+				new Vector3d(
+					(-launchVelocity.z / across) * 6,
+					(Math.random() - 0.5) * 3,
+					(launchVelocity.x / across) * 6,
+				),
 			);
 			// the bands go slack, out of sight, until the next pet is in
 			for (const band of bands) {
@@ -894,6 +1045,18 @@ const createGame = async () => {
 			}
 
 			override update(dt: number) {
+				// the camera: arrow keys turn it, and it eases to where it is
+				// asked to be
+				if (input.isKeyPressed("turnLeft")) {
+					targetYaw += (ORBIT_SPEED * dt) / 1000;
+				}
+				if (input.isKeyPressed("turnRight")) {
+					targetYaw -= (ORBIT_SPEED * dt) / 1000;
+				}
+				if (Math.abs(targetYaw - yaw) > 1e-4) {
+					yaw += (targetYaw - yaw) * (1 - Math.exp(-dt / 120));
+					placeCamera();
+				}
 				for (const rival of rivals) {
 					// one that left the field is out too
 					if (rival.pos.y > 400) {
@@ -909,7 +1072,10 @@ const createGame = async () => {
 				}
 				flightTime += dt / 1000;
 				const body = pet.body as Rapier3dAdapter.Body;
-				const gone = pet.pos.y > 400 || Math.abs(pet.pos.x) > 1700;
+				const gone =
+					pet.pos.y > 400 ||
+					Math.abs(pet.pos.x) > SIDE_X ||
+					Math.abs(pet.depth) > BACK_Z;
 				if (body.isSleeping() || gone || flightTime > SHOT_SECONDS) {
 					flying = null;
 					if (over) {
@@ -929,10 +1095,9 @@ const createGame = async () => {
 		load();
 		refresh();
 
-		// ── a side view of the field, from just above the deck ───────────
+		// ── it opens on the side view ────────────────────────────────────
 		camera.setClipPlanes(10, 10000);
-		camera.setPosition(0, -240, -1120);
-		camera.lookAt(0, -210, 0);
+		placeCamera();
 
 		addKenneyCredit(app, "#1d2a3a");
 
@@ -941,6 +1106,14 @@ const createGame = async () => {
 			globalThis.removeEventListener("pointerup", releaseOutside);
 			input.releasePointerEvent("pointerdown", app.viewport);
 			input.releasePointerEvent("pointerup", app.viewport);
+			for (const key of [
+				input.KEY.LEFT,
+				input.KEY.A,
+				input.KEY.RIGHT,
+				input.KEY.D,
+			]) {
+				input.unbindKey(key);
+			}
 		};
 	};
 
