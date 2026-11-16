@@ -1133,7 +1133,8 @@ export class PlanckAdapter implements PhysicsAdapter {
 				joint = new planck.PrismaticJoint({
 					...base,
 					localAxisA: new planck.Vec2(axis.x / length, axis.y / length),
-					referenceAngle: 0,
+					// joined as they stand: b keeps its own angle, as on a weld
+					referenceAngle: bodyB.getAngle() - bodyA.getAngle(),
 					enableLimit: limited,
 					lowerTranslation: this.px2m(def.limits?.min ?? 0),
 					upperTranslation: this.px2m(def.limits?.max ?? 0),

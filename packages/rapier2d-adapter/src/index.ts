@@ -56,6 +56,20 @@ type WorldJointHook = {
 };
 
 /**
+ * The raw joint set behind an `ImpulseJoint`: protected in Rapier's types,
+ * and the only way to set a joint's frame in 2D, which `ImpulseJoint` has no
+ * method for.
+ */
+type RawJointAccess = {
+	rawSet: {
+		jointSetFrameX2: (
+			handle: number,
+			rotation: ReturnType<typeof RAPIER.RotationOps.intoRaw>,
+		) => void;
+	};
+};
+
+/**
  * Options accepted by the {@link RapierAdapter} constructor and by
  * {@link RapierAdapter.create}.
  */
@@ -848,6 +862,21 @@ export class RapierAdapter implements PhysicsAdapter {
 				);
 		}
 		const joint = this.world.createImpulseJoint(data, bodyA, bodyB, true);
+		if (def.type === "slider") {
+			// Rapier gives both bodies the axis's frame, which would turn b
+			// onto a's angle: b's frame is a's turned by the angle between
+			// them, so b keeps its own. The 2D joint has no setter for it,
+			// so the raw joint set's is used.
+			const axis = data.axis;
+			const frame2 = this.rapier.RotationOps.intoRaw(
+				Math.atan2(axis.y, axis.x) + bodyA.rotation() - bodyB.rotation(),
+			);
+			(joint as unknown as RawJointAccess).rawSet.jointSetFrameX2(
+				joint.handle,
+				frame2,
+			);
+			frame2.free();
+		}
 		joint.setContactsEnabled(def.collideConnected === true);
 		if (
 			def.limits !== undefined &&
