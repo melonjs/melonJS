@@ -375,7 +375,8 @@ world.addChild(skybox, 100000);  // equally far: sign does not matter
 
 Both hold at any camera position. A HUD given the huge z that would put it on
 top in 2D lands at the far end of the level instead, with the scenery drawing
-over it.
+over it. Pointer events follow the same order (20.16): of two overlapping
+floating regions, the one at the smaller depth is asked first.
 
 ## Transparency
 

@@ -175,7 +175,10 @@ input.registerPointerEvent("pointerdown", this, () => {
 
 Three things decide the order, and only the first is obvious:
 
-- **`pos.z`, among siblings of one container.** Higher is on top.
+- **`pos.z`, among siblings of one container.** Higher is on top, except
+  under a `Camera3d`, where the world sorts on `"depth"` and the regions follow
+  that sort: a `floating` region is ordered by `|z|` alone, the **smaller** on
+  top, so a dialog at depth 1 is asked before a full-screen region at depth 4.
 - **Across containers, the common ancestor decides.** `pos.z` is
   container-local, since `autoDepth` numbers each container's children from 1,
   so a button at `z = 8` inside one panel does not outrank a second panel at
@@ -446,6 +449,7 @@ input.triggerKeyEvent(input.KEY.LEFT, false);   // release
 | moving the mouse got slow under a `Camera3d` | a big mesh or `InstancedMesh` listens for `pointermove` / `pointerenter` / `pointerleave`: each move ray-tests all its triangles. Listen for presses only, or hover with `camera.pick` on a smaller set |
 | `pointer.hit3d` is `null` | not a mesh's event, a `pointerleave`, or read after the callback returned (the record is reused) |
 | pointer handler never fires | `isKinematic` left at its `true` default |
+| under a `Camera3d`, a full-screen `floating` region takes the presses meant for a button drawn over it (before 20.16) | regions were asked by raw z, highest first, though a `Camera3d` draws the smaller depth on top: update |
 | touches never arrive where there is no DOM (nx.js, a Web Worker) | melonJS older than 20.14 listened for mouse events there; update. Touch is then read from `TouchEvent`s dispatched on the canvas given as `settings.canvas` |
 | handlers fire twice, or on dead objects | registered in the constructor instead of `onActivateEvent` |
 | camera drag jumps around | using world coordinates instead of `gameScreenX`/`gameScreenY` |
