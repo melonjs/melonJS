@@ -1547,18 +1547,6 @@ export default class Container extends Renderable {
 		}
 
 		const parent = nodeA.ancestor;
-		// under the camera-distance sort, `draw` paints by distance from the
-		// camera (by |z| for a floating child), nearest last, not by raw z:
-		// compare as it does, or a floating region deeper on screen is asked
-		// before the overlay painted over it
-		if (parent?.sortOn === "depth") {
-			captureDepthCamera();
-			captureDepthOffset(parent);
-			return (
-				depthKey(nodeB) - depthKey(nodeA) ||
-				parent.getChildIndex(nodeB) - parent.getChildIndex(nodeA)
-			);
-		}
 		return (
 			nodeA.pos.z - nodeB.pos.z ||
 			(parent ? parent.getChildIndex(nodeB) - parent.getChildIndex(nodeA) : 0)

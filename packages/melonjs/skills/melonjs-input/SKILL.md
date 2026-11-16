@@ -175,13 +175,7 @@ input.registerPointerEvent("pointerdown", this, () => {
 
 Three things decide the order, and only the first is obvious:
 
-- **`pos.z`, among siblings of one container.** Higher is on top. Under a
-  `Camera3d` the world sorts on `"depth"` instead, and its children are asked
-  in the order it draws them: a `floating` one by `|pos.z|`, **smaller** on
-  top (a HUD at 1 over a full-screen region at 50), a world one nearest the
-  camera first (melonJS 20.16; before, the larger `pos.z` was asked first
-  there too, against what was drawn). A plain `Container` (a UI panel) keeps
-  the `"z"` rule for its own children.
+- **`pos.z`, among siblings of one container.** Higher is on top.
 - **Across containers, the common ancestor decides.** `pos.z` is
   container-local, since `autoDepth` numbers each container's children from 1,
   so a button at `z = 8` inside one panel does not outrank a second panel at
@@ -476,7 +470,6 @@ input.triggerKeyEvent(input.KEY.LEFT, false);   // release
 | a key stays pressed after its pad is unplugged, or a stick bound on one side holds its key after coming back to the centre (before 20.12) | update: an unplugged pad lets go of what it held, and a stick lets go when it returns to rest, even just past the centre |
 | a widget under an overlapping panel still lights up | the panel consumes no hover: return `false` from its `onOver` (presses already stop at UI elements; `UIPanel` with `blocking` does both) |
 | a widget stays highlighted after the pointer moves onto a panel over it | the panel consumes no `pointermove`, so nothing takes the pointer off the widget |
-| under a `Camera3d`, a full-screen floating region takes the press of a button drawn over it (before 20.16) | the hit-test asked the larger `pos.z` first while the depth sort draws the smaller `|z|` on top: update; no negative-depth workaround is needed |
 | a child's big `z` does not put it in front of another container | `pos.z` is container-local — use `ancestor.moveToTop()` on the container |
 | every click in the game stops working | a handler on `app.viewport` returning `false`, which is asked first |
 | touch controls do nothing | nothing bound to their slot — `bindGamepad` on the plugin's `index` (0 by default), or give the buttons a `key` |

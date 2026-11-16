@@ -21,7 +21,6 @@
 ### Fixed
 - `Mesh#shadowGroundNormal`: a normal with a part along Z was not normalized on Z, so the ground shadow was laid on a wrongly tilted plane
 - `World#setAdapter`: a body a 3D adapter tilted (turned about X or Y) is built again with its whole rotation on an adapter with `setRotation`; it lost all but its turn about Z
-- Input: under a `Camera3d`, overlapping floating regions are offered a pointer event in the order they are drawn (the smaller `|z|` on top); the larger `pos.z` was asked first, so a full-screen region added after a button took the button's press
 - Input: under a `Camera3d`, pointer events on a mesh are hit-tested by the ray through the pointer against its triangles; they were tested against 2D bounds that a perspective view misplaces
 - glTF: a skinned mesh was placed and bounded by its own node's transform, which glTF says it ignores, so a rigged character could load offset and with wrong `bounds`
 - `GLTFModel`: a clip at a negative `speed` froze on its first frame and never ended; it now plays backwards
