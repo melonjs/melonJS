@@ -1087,6 +1087,17 @@ export class RapierAdapter implements PhysicsAdapter {
 		return cached;
 	}
 
+	/**
+	 * Whether Rapier has put the body to sleep. `false` for a static or
+	 * kinematic body and for a renderable this adapter does not know.
+	 * @param renderable - the renderable whose body to read
+	 * @returns `true` while the body sleeps
+	 */
+	isSleeping(renderable: Renderable): boolean {
+		const body = this.bodyMap.get(renderable);
+		return body !== undefined && body.isDynamic() && body.isSleeping();
+	}
+
 	isGrounded(renderable: Renderable): boolean {
 		const body = this.bodyMap.get(renderable);
 		if (!body) return false;

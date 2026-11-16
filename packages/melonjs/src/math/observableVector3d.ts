@@ -197,10 +197,14 @@ export class ObservableVector3d {
 	}
 
 	/**
-	 * Multiply this vector values by the given scalar
+	 * Multiply this vector values by the given scalar, per axis. `y`
+	 * defaults to `x` but `z` defaults to 1, so `scale(n)` scales x and y
+	 * only and leaves z, a renderable's depth (its draw order), as it was.
+	 * To scale all three, pass all three, `scale(n, n, n)`, or divide with
+	 * {@link ObservableVector3d#div}.
 	 * @param x x component
-	 * @param [y] y component
-	 * @param [z] z component
+	 * @param [y] y component, `x` when left out
+	 * @param [z] z component, 1 (unchanged) when left out
 	 * @returns Reference to this object for method chaining
 	 */
 	scale(x: number, y = x, z = 1) {

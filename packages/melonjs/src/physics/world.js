@@ -21,6 +21,7 @@ import BuiltinAdapter from "./builtin/builtin-adapter.ts";
  * @import Application from "./../application/application.ts";
  * @import Detector from "./builtin/detector.js";
  * @import { Vector2d } from "../math/vector2d.ts";
+ * @import { Quaternion } from "../math/quaternion.ts";
  * @import { JointDefinition, PhysicsAdapter, PhysicsJoint } from "./adapter.ts";
  */
 
@@ -84,21 +85,30 @@ function releaseDefinedBodies(node) {
 }
 
 /**
- * The angle of every body {@link World#setAdapter} is about to build again,
- * at any depth, read from the outgoing adapter: a body is built at angle 0,
- * and is turned back to this once it is.
+ * The orientation of every body {@link World#setAdapter} is about to build
+ * again, at any depth, read from the outgoing adapter: a body is built
+ * unturned, and is turned back to this once it is. The angle about Z, and
+ * for a body a 3D adapter tilted (a part about X or Y), its whole rotation.
  * @ignore
  * @internal
  * @param {object} node - a renderable leaving the outgoing adapter
  * @param {PhysicsAdapter} adapter - the outgoing adapter
- * @param {Map<object, number>} out - receives each turned body's angle
+ * @param {Map<object, {angle: number, rotation: Quaternion | null}>} out - receives each turned body's orientation
  */
 function collectBodyAngles(node, adapter, out) {
 	const shapes = node.bodyDef?.shapes;
 	if (node.body !== undefined && shapes !== undefined && shapes.length > 0) {
 		const angle = adapter.getAngle?.(node) ?? 0;
-		if (angle !== 0) {
-			out.set(node, angle);
+		let rotation = adapter.getRotation?.(node) ?? null;
+		// a turn about Z alone is the angle: only a tilt needs the rotation
+		if (
+			rotation !== null &&
+			!(Math.abs(rotation.x) > 1e-9 || Math.abs(rotation.y) > 1e-9)
+		) {
+			rotation = null;
+		}
+		if (angle !== 0 || rotation !== null) {
+			out.set(node, { angle, rotation });
 		}
 	}
 	if (node instanceof Container) {
@@ -394,7 +404,7 @@ export default class World extends Container {
 		// taking the bodies out below removes their joints: keep the list to
 		// build them again on the new adapter
 		const joints = [...this._joints];
-		// and the bodies' angles: each is built again as it stands, turned
+		// and the bodies' orientations: each is built again as it stands, turned
 		const angles = new Map();
 		if (previous !== undefined) {
 			// take every body out of the outgoing simulation, at any depth,
@@ -415,8 +425,15 @@ export default class World extends Container {
 		this.forEach((child) => {
 			registerTreeBodies(child, this, refused);
 		});
-		for (const [node, angle] of angles) {
-			if (hasRegisteredBody(node, this)) {
+		for (const [node, { angle, rotation }] of angles) {
+			if (!hasRegisteredBody(node, this)) {
+				continue;
+			}
+			// a tilted body keeps its tilt on an adapter that can hold it;
+			// one that cannot (the builtin) keeps the turn about Z, and says so
+			if (rotation !== null && adapter.setRotation !== undefined) {
+				adapter.setRotation(node, rotation);
+			} else {
 				adapter.setAngle?.(node, angle);
 			}
 		}

@@ -823,6 +823,7 @@ export class MatterAdapter implements PhysicsAdapter {
 	setVelocity(renderable: Renderable, v: Vector2d): void {
 		const body = this.bodyMap.get(renderable);
 		if (body) {
+			this.wake(body);
 			Matter.Body.setVelocity(body, { x: v.x, y: v.y });
 		}
 	}
@@ -835,6 +836,7 @@ export class MatterAdapter implements PhysicsAdapter {
 		// "set velocity to this value each frame" pattern (what
 		// BuiltinAdapter's force-accumulator gave you under the hood)
 		// should use `setVelocity` instead.
+		this.wake(body);
 		Matter.Body.applyForce(body, point ?? body.position, {
 			x: force.x,
 			y: force.y,
@@ -848,6 +850,7 @@ export class MatterAdapter implements PhysicsAdapter {
 		const body = this.bodyMap.get(renderable);
 		if (!body) return;
 		const invMass = body.mass > 0 ? 1 / body.mass : 0;
+		this.wake(body);
 		Matter.Body.setVelocity(body, {
 			x: body.velocity.x + impulse.x * invMass,
 			y: body.velocity.y + impulse.y * invMass,
@@ -862,6 +865,7 @@ export class MatterAdapter implements PhysicsAdapter {
 			// at addBody time so syncFromPhysics keeps renderable.pos at the
 			// requested value.
 			const off = this.posOffsets.get(renderable);
+			this.wake(body);
 			Matter.Body.setPosition(body, {
 				x: p.x - (off?.x ?? 0),
 				y: p.y - (off?.y ?? 0),
@@ -879,6 +883,20 @@ export class MatterAdapter implements PhysicsAdapter {
 		}
 		renderable.pos.x = p.x;
 		renderable.pos.y = p.y;
+	}
+
+	/**
+	 * Wakes a sleeping body before a velocity, force, angle or position is
+	 * written to it. matter skips a sleeping body in its step, so a write
+	 * to one was dropped (a `setVelocity` on a crate at rest did nothing);
+	 * planck and Rapier wake the body themselves. Only reachable with
+	 * `matterEngineOptions.enableSleeping`.
+	 * @param body - the body about to be written to
+	 */
+	private wake(body: Matter.Body): void {
+		if (body.isSleeping) {
+			Matter.Sleeping.set(body, false);
+		}
 	}
 
 	private invalidateContactsFor(body: Matter.Body): void {
@@ -913,6 +931,7 @@ export class MatterAdapter implements PhysicsAdapter {
 	setAngle(renderable: Renderable, angle: number): void {
 		const body = this.bodyMap.get(renderable);
 		if (body) {
+			this.wake(body);
 			Matter.Body.setAngle(body, angle);
 		}
 	}
@@ -925,6 +944,7 @@ export class MatterAdapter implements PhysicsAdapter {
 	setAngularVelocity(renderable: Renderable, omega: number): void {
 		const body = this.bodyMap.get(renderable);
 		if (body) {
+			this.wake(body);
 			Matter.Body.setAngularVelocity(body, omega);
 		}
 	}
@@ -937,6 +957,7 @@ export class MatterAdapter implements PhysicsAdapter {
 	applyTorque(renderable: Renderable, torque: number): void {
 		const body = this.bodyMap.get(renderable);
 		if (body) {
+			this.wake(body);
 			body.torque += torque;
 		}
 	}
@@ -1142,6 +1163,17 @@ export class MatterAdapter implements PhysicsAdapter {
 			}
 		}
 		return cached;
+	}
+
+	/**
+	 * Whether matter has put the body to sleep. `false` for a static or
+	 * kinematic body and for a renderable this adapter does not know.
+	 * @param renderable - the renderable whose body to read
+	 * @returns `true` while the body sleeps
+	 */
+	isSleeping(renderable: Renderable): boolean {
+		const body = this.bodyMap.get(renderable);
+		return body !== undefined && !body.isStatic && body.isSleeping;
 	}
 
 	isGrounded(renderable: Renderable): boolean {

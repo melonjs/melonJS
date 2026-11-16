@@ -278,7 +278,6 @@ const createGame = async () => {
 			const pet = new Mesh((col - 1) * SPACING, restY, {
 				model: name,
 				material: name,
-				texture: "colormap",
 				width: PET,
 				height: PET,
 				lit: true,

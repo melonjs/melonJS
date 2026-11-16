@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.8.0 - _unreleased_
+
+### Added
+- `isSleeping()`: whether matter has put a body to sleep (with `matterEngineOptions.enableSleeping`)
+
+### Fixed
+- With sleeping enabled, `setVelocity`, `applyForce`, `applyImpulse`, `setPosition`, `setAngle`, `setAngularVelocity` and `applyTorque` wake a sleeping body; matter skipped it, so the change was lost
+
 ## 1.7.1 - _2026-11-14_
 
 ### Fixed

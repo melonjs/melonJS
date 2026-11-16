@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.0 - _unreleased_
+
+### Added
+- `isSleeping()`: whether Rapier has put a body to sleep
+
 ## 1.1.1 - _2026-11-14_
 
 ### Fixed
