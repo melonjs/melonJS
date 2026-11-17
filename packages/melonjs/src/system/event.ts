@@ -273,6 +273,14 @@ export const POINTERUP = "me.event.pointerup";
  * stuck. <br>
  * Data passed : {me.Pointer} a Pointer object, in screen coordinates
  * @see event.on
+ * @example
+ * import { event, input } from "melonjs";
+ * // a drag that ends wherever the pointer comes up, and is dropped, not
+ * // acted on, when the browser takes the pointer away
+ * input.registerPointerEvent("pointerdown", ball, () => { dragging = true; });
+ * event.on(event.POINTERMOVE, (pointer) => { if (dragging) aimAt(pointer); });
+ * event.on(event.POINTERUP, () => { if (dragging) shoot(); dragging = false; });
+ * event.on(event.POINTERCANCEL, () => { dragging = false; });
  */
 export const POINTERCANCEL = "me.event.pointercancel";
 
