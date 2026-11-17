@@ -675,8 +675,9 @@ export class Matrix3d {
 	 * rotate this matrix (counter-clockwise) by the specified angle (in radians),
 	 * or by the rotation a {@link Quaternion} holds.
 	 * @param angle - Rotation angle in radians, or a quaternion. A quaternion
-	 * need not be of unit length: its direction is the rotation. One of length
-	 * 0, or not a number, rotates nothing.
+	 * need not be of unit length: its direction is the rotation. An angle, an
+	 * axis or a quaternion that is not a finite number, or an axis or a
+	 * quaternion of length 0, rotates nothing.
 	 * @param [v] - the axis to rotate around (defaults to Z axis); not used with a quaternion
 	 * @returns Reference to this object for method chaining
 	 * @example
@@ -689,7 +690,9 @@ export class Matrix3d {
 		if (typeof angle === "object") {
 			return this.rotateQuaternion(angle);
 		}
-		if (angle !== 0) {
+		// an angle that is not a number turns nothing: it would fill the
+		// whole matrix with NaN
+		if (angle !== 0 && Number.isFinite(angle)) {
 			const a = this.val;
 			let x = v ? v.x : 0;
 			let y = v ? v.y : 0;
@@ -697,7 +700,8 @@ export class Matrix3d {
 
 			let len = Math.sqrt(x * x + y * y + z * z);
 
-			if (len < EPSILON) {
+			// too short to turn about, or not a number (`NaN < EPSILON` is false)
+			if (!(len >= EPSILON) || !Number.isFinite(len)) {
 				return this;
 			}
 
@@ -802,7 +806,7 @@ export class Matrix3d {
 	 * @example
 	 * const m = new Matrix3d().compose(
 	 *     new Vector3d(10, 0, -5),
-	 *     new Quaternion().setFromAxisAngle(new Vector3d(0, 1, 0), Math.PI / 2),
+	 *     new Quaternion().rotate(Math.PI / 2, new Vector3d(0, 1, 0)),
 	 *     new Vector3d(2, 2, 2),
 	 * );
 	 */

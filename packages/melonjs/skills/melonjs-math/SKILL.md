@@ -293,9 +293,15 @@ A `Quaternion` is an orientation in 3D: what a 3D physics adapter's
 lock of three angles, and blends between two orientations along the shortest
 arc with `slerp`.
 
+It reads as a `Matrix3d` does: a new one is no turn, and the same calls build
+the same turn, so code moves between the two unchanged.
+
 ```js
-const q = new Quaternion().setFromAxisAngle(new Vector3d(0, 1, 0), Math.PI / 2);
+const q = new Quaternion().rotate(Math.PI / 2, new Vector3d(0, 1, 0));
+const m = new Matrix3d().rotate(Math.PI / 2, new Vector3d(0, 1, 0)); // the same turn
+q.rotate(0.3);                    // turned further, about Z by default, as m.rotate(0.3)
 q.apply(v);                       // turns v IN PLACE (+X goes to -Z here)
+q.applyInverse(v);                // and back
 a.multiply(b);                    // a = a × b: b is applied first, then a
 a.slerp(b, 0.25);                 // a quarter of the way from a to b, in place
 q.setFromUnitVectors(from, to);   // the shortest turn taking direction `from` onto `to`
@@ -309,12 +315,15 @@ wrote, as their `Matrix3d` namesakes do: `apply(v)` returns `v`, and
 `toMatrix3d(out)` returns the matrix. `length2()` is the squared length, as on
 a vector.
 
-`setFromAxisAngle(axis, angle)` takes the **axis first**, the other way round
-from `Matrix3d#rotate(angle, axis)`. `setFromMatrix3d(m)` reads a turn back
-out of a matrix and takes a scale out on the way, so a renderable's
-`currentTransform` can be read as it is. A zero or `NaN` axis, an angle that
-is not finite, or a zero quaternion normalized, gives the identity rather than
-`NaN`.
+`rotate(angle, axis)` **adds** to the turn, `this = this × R`, the new turn
+applied first, exactly as `Matrix3d#rotate` does: to set a turn outright,
+`identity()` first. `fromMat3d(m)` reads a turn back out of a matrix, as
+`Matrix2d#fromMat3d` does, and takes a scale out on the way, so a
+renderable's `currentTransform` can be read as it is; `toMatrix3d(out)` goes
+the other way. An angle or an axis that is not finite, or an axis too short to
+turn about (under `1e-6`, the same cut-off as `Matrix3d#rotate`), turns
+nothing, on a quaternion and on a matrix alike; a zero quaternion normalized
+gives the identity rather than `NaN`.
 
 To point something modeled along an axis at a direction, use
 `setFromUnitVectors(axis, direction)`, which needs neither the angle nor the
@@ -400,7 +409,7 @@ const rgb = color.toArray().slice(0, 3);   // three numbers in 0..1, yours
 | `.z` is a type error | `Renderable.pos` is declared `Vector2d` (#1510) |
 | rotation eases oddly between directions | `lerp` on directions; use `slerp` |
 | an orientation came back applied in the wrong order | `a.multiply(b)` applies `b` first; `premultiply` for the other order |
-| `setFromAxisAngle` gives no rotation at all | the arguments are `(axis, angle)`; `(angle, axis)`, the order of `Matrix3d#rotate`, reads as no axis |
+| a quaternion built in a loop turns further every frame | `rotate` adds to the turn, as on a matrix: `q.identity().rotate(angle, axis)` to set it |
 | you built your own 16-number array | `Renderable.currentTransform` is already a `Matrix3d`; write its `val` |
 | a value read back from a matrix differs | `val` is `Float32Array`; it holds float32 |
 | easing differs at 120fps | per-frame `lerp`; use `damp` |

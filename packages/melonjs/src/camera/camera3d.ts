@@ -45,10 +45,8 @@ const _groundNormal = new Vector3d(0, -1, 0);
 const _groundPoint = new Vector3d();
 // scratch reused by the orientation-basis accessors (getBasis / getRight / …),
 // to avoid per-call allocation on the billboard draw path.
-// the three turns the camera's orientation is built from
-const _qYaw = new Quaternion();
-const _qPitch = new Quaternion();
-const _qRoll = new Quaternion();
+// the camera's orientation, built from its three angles
+const _orientationTurn = new Quaternion();
 const _bScratchA = new Vector3d();
 const _bScratchB = new Vector3d();
 // scratch for setBasis, kept apart from the pair above because those belong to
@@ -406,20 +404,16 @@ export default class Camera3d extends Camera2d {
 	 */
 	private readonly _viewRotation = new Matrix3d();
 	/**
+	 * The transforms {@link Camera3d#_saveContainerTransform} kept, innermost
+	 * last.
+	 * @ignore
+	 */
+	private readonly _savedTransforms: Matrix3d[] = [];
+	/**
 	 * The yaw, pitch and roll {@link Camera3d#_orientation} was built from.
 	 * @ignore
 	 */
 	private readonly _orientationAngles = new Float64Array([NaN, NaN, NaN]);
-	/**
-	 * Each container's transform before {@link Camera3d#_applyContainerViewTransform},
-	 * put back by {@link Camera3d#_revertContainerViewTransform}: restored
-	 * exactly, where turning it back by the opposite angles left a rounding
-	 * error in it every frame. A stack, for a camera drawing a container
-	 * inside another.
-	 * @ignore
-	 */
-	private readonly _savedTransforms: Matrix3d[] = [];
-	private _savedDepth = 0;
 
 	/**
 	 * Rebuild the orientation if yaw, pitch or roll changed since it was
@@ -436,10 +430,13 @@ export default class Camera3d extends Camera2d {
 		a[0] = yaw;
 		a[1] = pitch;
 		a[2] = roll;
-		_qYaw
-			.setFromAxisAngle(AXIS_Y, yaw)
-			.multiply(_qPitch.setFromAxisAngle(AXIS_X, pitch))
-			.multiply(_qRoll.setFromAxisAngle(AXIS_Z, roll))
+		// yaw, then pitch, then roll: the chain of Matrix3d#rotate calls the
+		// camera built its turn from, on a quaternion
+		_orientationTurn
+			.identity()
+			.rotate(yaw, AXIS_Y)
+			.rotate(pitch, AXIS_X)
+			.rotate(roll, AXIS_Z)
 			.toMatrix3d(this._orientation);
 		this._viewRotation.copy(this._orientation).transpose();
 	}
@@ -1400,13 +1397,7 @@ export default class Camera3d extends Camera2d {
 		// The three turns, roll included, are the camera's cached view
 		// rotation `R⁻¹`, one multiply. The transform it had is kept, so
 		// the revert can put it back exactly.
-		const depth = this._savedDepth++;
-		let saved = this._savedTransforms[depth] as Matrix3d | undefined;
-		if (saved === undefined) {
-			saved = new Matrix3d();
-			this._savedTransforms[depth] = saved;
-		}
-		saved.copy(container.currentTransform);
+		this._saveContainerTransform(container);
 		this._refreshOrientation();
 		container.currentTransform.multiply(this._viewRotation);
 		container.translate(-translateX, -translateY, -this.depth);
@@ -1427,6 +1418,41 @@ export default class Camera3d extends Camera2d {
 	}
 
 	/**
+	 * Keep a container's whole transform before the view is put on it: the
+	 * 3D view turns it as well as moving it.
+	 * @param container - the container about to get the view
+	 * @ignore
+	 * @internal
+	 */
+	override _saveContainerTransform(container: Container): void {
+		const depth = this._savedDepth++;
+		let saved = this._savedTransforms[depth] as Matrix3d | undefined;
+		if (saved === undefined) {
+			saved = new Matrix3d();
+			this._savedTransforms[depth] = saved;
+		}
+		saved.copy(container.currentTransform);
+	}
+
+	/**
+	 * Put back the whole transform {@link Camera3d#_saveContainerTransform}
+	 * kept, exactly.
+	 * @param container - the container the view is taken off
+	 * @returns false when nothing was kept, for the caller to undo by hand
+	 * @ignore
+	 * @internal
+	 */
+	override _restoreContainerTransform(container: Container): boolean {
+		if (this._savedDepth === 0) {
+			return false;
+		}
+		this._savedDepth--;
+		container.currentTransform.copy(this._savedTransforms[this._savedDepth]);
+		this._containerMoved(container);
+		return true;
+	}
+
+	/**
 	 * Revert {@link Camera3d#_applyContainerViewTransform} in reverse
 	 * order to restore the container's `currentTransform` to its
 	 * pre-camera state.
@@ -1439,11 +1465,7 @@ export default class Camera3d extends Camera2d {
 		translateY: number,
 	): void {
 		// the transform the container had before the apply, exactly
-		if (this._savedDepth > 0) {
-			this._savedDepth--;
-			container.currentTransform.copy(this._savedTransforms[this._savedDepth]);
-			container.updateBounds();
-			container.isDirty = true;
+		if (this._restoreContainerTransform(container)) {
 			return;
 		}
 		// a revert with no apply before it: undo by the opposite turns, as
