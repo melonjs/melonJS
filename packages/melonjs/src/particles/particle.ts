@@ -656,7 +656,9 @@ export default class Particle extends Renderable {
 			return emitter;
 		}
 		if (space === "world") {
-			return (emitter.ancestor as Renderable) ?? emitter;
+			// a detached emitter has no ancestor, whatever its type says
+			const parent: Renderable | undefined = emitter.ancestor;
+			return parent ?? emitter;
 		}
 		// a destroyed container has no `pos` left to measure against
 		const target = space as unknown as Renderable;
