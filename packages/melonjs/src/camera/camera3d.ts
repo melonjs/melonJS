@@ -8,6 +8,7 @@ import { Vector2d } from "../math/vector2d.ts";
 import { Vector3d } from "../math/vector3d.ts";
 import type Container from "./../renderable/container.js";
 import type Renderable from "./../renderable/renderable.js";
+import type { XYPoint } from "../utils/types.ts";
 import type Renderer from "./../video/renderer.js";
 import Camera2d from "./camera2d.ts";
 import type { Fog3dState, FogMode, FogOptions } from "./fog.ts";
@@ -1618,6 +1619,77 @@ export default class Camera3d extends Camera2d {
 			}
 		}
 
+		return this;
+	}
+
+	/**
+	 * Place the camera on a sphere around a point, looking at it: turned by
+	 * `yaw` and `pitch`, `distance` away. The orbiting camera of a model
+	 * viewer, a level overview or a third-person view, which a drag, the
+	 * keys or the wheel turn and zoom by changing the three numbers and
+	 * calling this again.
+	 *
+	 * The angles are the camera's own {@link Camera3d#yaw} and
+	 * {@link Camera3d#pitch}, which it is left with: a `yaw` of 0 looks down
+	 * +Z, a positive one turns it to the right, so it circles the point the
+	 * other way; a negative `pitch` looks down, from above the point. It is
+	 * {@link Camera3d#lookAt} the other way round: that one keeps the
+	 * position and finds the angles, this one keeps the angles and finds the
+	 * position. `roll` is left as it is.
+	 *
+	 * It places the camera once; it does not keep it there. A camera
+	 * following a target (see {@link Camera3d#setFollowOffset}) is moved to
+	 * that target again on its next update.
+	 *
+	 * An angle or a distance that is not a finite number, or a negative
+	 * distance, leaves the camera as it is.
+	 * @param target - the point to orbit, in world space: a
+	 * {@link Vector3d}, or a renderable's `pos`; `z` defaults to 0
+	 * @param yaw - the camera's yaw, in radians
+	 * @param pitch - the camera's pitch, in radians: negative looks down
+	 * @param distance - how far from `target`, in world units
+	 * @returns this camera
+	 * @example
+	 * // a model viewer: 30° to the right, 20° down, 600 units out
+	 * camera.orbit(model.pos, Math.PI / 6, -Math.PI / 9, 600);
+	 * @example
+	 * // turned by a drag, in screen coordinates (world ones move as the
+	 * // camera does), and zoomed by the wheel
+	 * view.yaw += dx * 0.005;
+	 * view.pitch = math.clamp(view.pitch - dy * 0.005, -1.4, 1.4);
+	 * camera.orbit(centre, view.yaw, view.pitch, view.distance);
+	 */
+	orbit(
+		target: XYPoint & { z?: number },
+		yaw: number,
+		pitch: number,
+		distance: number,
+	): this {
+		const tz = target.z ?? 0;
+		if (
+			!Number.isFinite(target.x) ||
+			!Number.isFinite(target.y) ||
+			!Number.isFinite(tz) ||
+			!Number.isFinite(yaw) ||
+			!Number.isFinite(pitch) ||
+			!(distance >= 0) ||
+			!Number.isFinite(distance)
+		) {
+			return this;
+		}
+		// the direction the camera looks at these angles, as `lookAt`
+		// derives them from it: (sin yaw cos pitch, -sin pitch,
+		// cos yaw cos pitch) under Y-down. Stepping back along it from the
+		// target leaves the target straight ahead.
+		const cosPitch = Math.cos(pitch);
+		this.yaw = yaw;
+		this.pitch = pitch;
+		this.setPosition(
+			target.x - Math.sin(yaw) * cosPitch * distance,
+			target.y + Math.sin(pitch) * distance,
+			tz - Math.cos(yaw) * cosPitch * distance,
+		);
+		this.isDirty = true;
 		return this;
 	}
 

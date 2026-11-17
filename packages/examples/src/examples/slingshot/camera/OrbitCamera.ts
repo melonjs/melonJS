@@ -3,7 +3,8 @@
  *
  * At a yaw of 0 it looks at the field side on; a quarter turn puts it
  * behind the slingshot. It eases to where it is asked to be with
- * `math.damp`. The turn buttons and the arrow keys ask it to turn.
+ * `math.damp`. The turn buttons and the arrow keys ask it to turn, and
+ * `Camera3d#orbit` puts the camera where the yaw says.
  *
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
@@ -103,14 +104,15 @@ export class OrbitCamera {
 		this.forward.set(Math.sin(this.yaw), 0, Math.cos(this.yaw));
 		this.right.set(Math.cos(this.yaw), 0, -Math.sin(this.yaw));
 		// further back and higher behind the slingshot, to see over the pets
-		// waiting in line
+		// waiting in line: `height` above the pivot, `out` from it along
+		// the ground, which is a look down of atan(height / out)
 		const height = 30 + 260 * this.behind;
-		const distance = ORBIT_DISTANCE + 380 * this.behind;
-		this.camera.setPosition(
-			PIVOT.x - this.forward.x * distance,
-			PIVOT.y - height,
-			PIVOT.z - this.forward.z * distance,
+		const out = ORBIT_DISTANCE + 380 * this.behind;
+		this.camera.orbit(
+			PIVOT,
+			this.yaw,
+			-Math.atan2(height, out),
+			Math.hypot(height, out),
 		);
-		this.camera.lookAt(PIVOT.x, PIVOT.y, PIVOT.z);
 	}
 }
