@@ -11,8 +11,9 @@
  */
 import { type Camera3d, input, math, Vector3d } from "melonjs";
 import {
-	ORBIT_DISTANCE,
+	ORBIT_BEHIND,
 	ORBIT_EASE,
+	ORBIT_SIDE,
 	ORBIT_SPEED,
 	ORBIT_STEP,
 	PIVOT,
@@ -103,16 +104,12 @@ export class OrbitCamera {
 	private place() {
 		this.forward.set(Math.sin(this.yaw), 0, Math.cos(this.yaw));
 		this.right.set(Math.cos(this.yaw), 0, -Math.sin(this.yaw));
-		// further back and higher behind the slingshot, to see over the pets
-		// waiting in line: `height` above the pivot, `out` from it along
-		// the ground, which is a look down of atan(height / out)
-		const height = 30 + 260 * this.behind;
-		const out = ORBIT_DISTANCE + 380 * this.behind;
+		const behind = this.behind;
 		this.camera.orbit(
 			PIVOT,
 			this.yaw,
-			-Math.atan2(height, out),
-			Math.hypot(height, out),
+			math.lerp(ORBIT_SIDE.pitch, ORBIT_BEHIND.pitch, behind),
+			math.lerp(ORBIT_SIDE.distance, ORBIT_BEHIND.distance, behind),
 		);
 	}
 }
