@@ -539,12 +539,23 @@ export class Rapier3dAdapter implements PhysicsAdapter {
 	/**
 	 * Move the body and its renderable, at once. A {@link Vector3d} sets the
 	 * depth too; a {@link Vector2d} keeps it. A renderable with no body here
-	 * is moved all the same, as on every adapter.
+	 * is moved all the same, as on every adapter. A coordinate that is not a
+	 * finite number leaves the body and its renderable where they are.
 	 * @param renderable - the body's renderable
 	 * @param p - the new position, in `renderable.pos` space
 	 */
 	setPosition(renderable: Renderable, p: Vector2d | Vector3d): void {
 		const depth = zOf(p) ?? renderable.depth;
+		// a coordinate that is not a number leaves the body where it is, as
+		// `setAngle` does: Rapier would keep the body there, at NaN, until
+		// the next position, and the renderable's depth with it
+		if (
+			!Number.isFinite(p.x) ||
+			!Number.isFinite(p.y) ||
+			!Number.isFinite(depth)
+		) {
+			return;
+		}
 		// one batched write, as the pose is written each frame
 		renderable.setPosition(p.x, p.y, depth);
 		renderable.isDirty = true;

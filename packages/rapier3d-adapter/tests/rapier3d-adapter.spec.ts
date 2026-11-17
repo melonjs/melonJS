@@ -761,6 +761,30 @@ describe("Rapier3dAdapter", () => {
 			expect(adapter.queryAABB(new Rect(80, 80, 40, 40))).toEqual([deep]);
 		});
 
+		it("setPosition with a coordinate that is not a number leaves the body where it is", () => {
+			const r = cube(100, 100, 0, { gravityScale: 0 });
+			const other = cube(300, 100, 0, { gravityScale: 0 });
+			adapter.setPosition(r, new Vector3d(120, 140, 30));
+			const bad = [
+				new Vector3d(Number.NaN, 140, 30),
+				new Vector3d(120, Infinity, 30),
+				new Vector3d(120, 140, Number.NaN),
+				new Vector3d(120, 140, -Infinity),
+				new Vector2d(Number.NaN, 1),
+			];
+			for (const p of bad) {
+				adapter.setPosition(r, p);
+				run(2);
+				expect([r.pos.x, r.pos.y, r.depth]).toEqual([120, 140, 30]);
+				const t = colliderOf(r).translation();
+				expect(Number.isFinite(t.x + t.y + t.z)).toBe(true);
+			}
+			// and a valid position afterwards still moves it, and only it
+			adapter.setPosition(r, new Vector3d(50, 60, 70));
+			expect([r.pos.x, r.pos.y, r.depth]).toEqual([50, 60, 70]);
+			expect(other.pos.x).toBe(300);
+		});
+
 		it("setAngle with an angle that is not a number leaves the body as it is", () => {
 			const r = cube(100, 100, 0, { gravityScale: 0 });
 			adapter.setAngle(r, 0.4);

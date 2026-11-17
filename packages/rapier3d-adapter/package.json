@@ -1,6 +1,6 @@
 {
 	"name": "@melonjs/rapier3d-adapter",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "melonJS physics adapter for Rapier 3D (WebAssembly)",
 	"homepage": "https://www.npmjs.com/package/@melonjs/rapier3d-adapter",
 	"type": "module",
