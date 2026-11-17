@@ -166,7 +166,9 @@ check for:
 - **Effects and motion:** `ParticleEmitter`, `Trail` / `Trail3d`, `Tween` with
   easing, the built-in `ShaderEffect` presets (vignette, scanline, chromatic
   aberration, glow, outline, dissolve, bloom and more), `Light2d` / `Light3d`,
-  `viewport.shake` / `fadeIn` / `fadeOut`.
+  `viewport.shake` / `fadeIn` / `fadeOut`, and `Camera3d#orbit` for a 3D camera
+  that circles a point (rather than placing it with `sin` / `cos` and
+  `lookAt`).
 - **UI:** `UIPanel` (laid out, scrolling, skinnable), `UITextButton`,
   `UICheckbox` (a radio button with a `group`), `UISlider`, `ProgressBar`,
   `UISpriteElement`, keyboard and gamepad navigation between widgets once one

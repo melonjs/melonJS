@@ -258,6 +258,9 @@ need one specific space, read `gameWorldX`/`gameWorldY` or
 
 Using world coordinates for a camera-orbit drag means the same pixel maps to a
 different world point every frame as the camera moves — the drag jumps wildly.
+Read `gameScreenX` / `gameScreenY`, turn your own yaw and pitch by the change,
+and place the camera with `camera.orbit(target, yaw, pitch, distance)` (see
+`melonjs-3d`).
 
 ## Pointer move and release outside a region
 

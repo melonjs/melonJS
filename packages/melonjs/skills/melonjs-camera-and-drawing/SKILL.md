@@ -1,6 +1,6 @@
 ---
 name: melonjs-camera-and-drawing
-description: "Use this skill for camera control and immediate-mode drawing in melonJS — following a target, viewport bounds, shake and fade, secondary cameras and what each one draws, and drawing shapes, lines and gradients inside a custom draw(). Covers world versus screen coordinate conversion, clipping and masking, baking with CanvasRenderTarget, and reading pixels back. Triggers on: Camera2d, viewport, follow, offset, look ahead, setBounds, minimap, second camera, split screen, cullMask, visibilityLayer, hide from a camera, zoom, roll, shake, fadeIn, fadeOut, CameraEffect, addCameraEffect, MaskEffect, PixelateTransitionEffect, worldToLocal, localToWorld, worldToScreen, screenToRay, screenToWorld, colorMatrix, renderer.fill, renderer.stroke, setGlobalAlpha, fillArc, Rect, Ellipse, Polygon, Line, Path2D, SVG path, Gradient, clipRect, mask, CanvasRenderTarget, NoiseTexture2d, lookAt, setBasis, toImageData, getImageData, toBlob, toDataURL, screenshot, read pixels."
+description: "Use this skill for camera control and immediate-mode drawing in melonJS — following a target, viewport bounds, shake and fade, secondary cameras and what each one draws, and drawing shapes, lines and gradients inside a custom draw(). Covers world versus screen coordinate conversion, clipping and masking, baking with CanvasRenderTarget, and reading pixels back. Triggers on: Camera2d, viewport, follow, offset, look ahead, setBounds, minimap, second camera, split screen, cullMask, visibilityLayer, hide from a camera, zoom, roll, shake, fadeIn, fadeOut, CameraEffect, addCameraEffect, MaskEffect, PixelateTransitionEffect, worldToLocal, localToWorld, worldToScreen, screenToRay, screenToWorld, colorMatrix, renderer.fill, renderer.stroke, setGlobalAlpha, fillArc, Rect, Ellipse, Polygon, Line, Path2D, SVG path, Gradient, clipRect, mask, CanvasRenderTarget, NoiseTexture2d, lookAt, setBasis, orbit, toImageData, getImageData, toBlob, toDataURL, screenshot, read pixels."
 license: MIT
 ---
 
@@ -256,7 +256,14 @@ camera.lookAt(target);                  // pitch and yaw; roll untouched
 camera.lookAt(target, up);              // and bank, where `up` is what should
                                         // appear UP ON SCREEN
 camera.setBasis(right, up, forward);    // or pose it from a basis outright
+camera.orbit(target, yaw, pitch, distance); // or circle the target, looking
+                                        // at it: a model viewer, an overview
 ```
+
+`orbit` is `lookAt` the other way round: it keeps the angles you give it and
+works out the position, so a drag or the wheel turns and zooms by changing the
+three numbers. A negative `pitch` looks down, from above. `melonjs-3d` covers
+it, with a drag-and-wheel sample.
 
 `up` has no default, so the one-argument form behaves exactly as it always
 did. Because this engine renders Y-down, a level horizon is `(0, -1, 0)`.
@@ -537,6 +544,7 @@ const data = await rt.toImageData(0, 0, w, h);
 | a hole in a path fills in, on Canvas only | it is wound the same way as the outline; wind it the opposite way |
 | `fill(new Path2D(...))` throws `Invalid geometry for fill/stroke` | that is the browser's `Path2D`; build on `renderer.path2D` and call `fill()` |
 | a repainted `CanvasRenderTarget` still shows the old pixels | call `rt.invalidate(renderer)` after painting |
+| a 3D camera should circle a point at a distance, turned by a drag or zoomed by the wheel | `camera.orbit(target, yaw, pitch, distance)` with the three numbers in your own state; see `melonjs-3d` |
 | a 3D camera cannot be given an arbitrary up | `Camera3d#lookAt(target, up)` or `setBasis(right, up, forward)`; see `melonjs-3d` |
 | particles or effects clutter a minimap | every camera draws everything: put them on their own `visibilityLayer` and leave it out of the minimap's `cullMask` |
 | something is missing from one camera only | its `visibilityLayer`, or a container's above it, shares no bit with that camera's `cullMask` |
