@@ -376,17 +376,17 @@ class PlayScreen extends Stage {
 		// buttons' clicks through by returning nothing
 		input.registerPointerEvent("pointerdown", app.viewport, this.onDown);
 		event.on(event.POINTERMOVE, this.onMove);
-		// let go anywhere: a region only hears a release over the canvas, so
-		// a ball dragged out of it and let go there would stay held
-		globalThis.addEventListener("pointerup", this.onUp);
-		globalThis.addEventListener("pointercancel", this.onUp);
+		// let go anywhere: a region only hears a release over it, so a ball
+		// dragged off the canvas and let go there would stay held
+		event.on(event.POINTERUP, this.onUp);
+		event.on(event.POINTERCANCEL, this.onUp);
 	}
 
 	override onDestroyEvent() {
 		input.releasePointerEvent("pointerdown", this.app.viewport);
 		event.off(event.POINTERMOVE, this.onMove);
-		globalThis.removeEventListener("pointerup", this.onUp);
-		globalThis.removeEventListener("pointercancel", this.onUp);
+		event.off(event.POINTERUP, this.onUp);
+		event.off(event.POINTERCANCEL, this.onUp);
 	}
 
 	/** The cliffs, the bridge, the wrecking ball, the stack and the header. */

@@ -1,6 +1,6 @@
 ---
 name: melonjs-3d
-description: "Use this skill for anything 3D or 2.5D in melonJS — Camera3d, Mesh, InstancedMesh, Sprite3d billboards, Light3d, ground shadows, glTF/GLB scenes, and depth sorting. Covers the Y-down/+Z-forward convention (the inverse of OpenGL), the cameraClass opt-in, orthographic (isometric) projection, clip planes, and the Canvas fallback's limits. Triggers on: Camera3d, toon, cel shading, toonBands, outlineWidth, outlineMode, rimLight, orthographic, isometric, orthoHeight, orthoWidth, projection, Mesh, InstancedMesh, Sprite3d, Trail3d, Light3d, billboard, glTF, glb, 3D, 2.5D, depth, cameraClass, fov, setClipPlanes, setFog, fog, heightFalloff, transparent, transparency, blendMode, castGroundShadow, shadowGroundPoint, lit, emissive, specular, shininess, normalMap, alphaCutoff, depthTest, vertexColors, worldToScreen, screenToRay, screenToWorld, pick, pickable, Ray3d, intersectRay, hit3d, followOffset, setBasis, getBasis, lookAt, up vector, gimbal, slerp, turn a direction, physics, rapier3d, Capsule3d, TriangleMesh3d."
+description: "Use this skill for anything 3D or 2.5D in melonJS — Camera3d, Mesh, InstancedMesh, Sprite3d billboards, Light3d, ground shadows, glTF/GLB scenes, and depth sorting. Covers the Y-down/+Z-forward convention (OpenGL's inverse), the cameraClass opt-in, orthographic (isometric) projection, clip planes, and the Canvas fallback's limits. Triggers on: Camera3d, toon, cel shading, toonBands, outlineWidth, outlineMode, rimLight, orthographic, isometric, orthoHeight, orthoWidth, projection, Mesh, InstancedMesh, Sprite3d, Trail3d, Light3d, billboard, glTF, glb, 3D, 2.5D, depth, cameraClass, fov, setClipPlanes, setFog, fog, heightFalloff, transparent, transparency, blendMode, castGroundShadow, shadowGroundPoint, lit, emissive, specular, shininess, normalMap, alphaCutoff, depthTest, vertexColors, worldToScreen, screenToRay, screenToWorld, pick, pickable, Ray3d, intersectRay, hit3d, followOffset, setBasis, getBasis, lookAt, orbit, up vector, gimbal, slerp, turn a direction, physics, rapier3d, Capsule3d, TriangleMesh3d."
 license: MIT
 ---
 
@@ -203,6 +203,56 @@ class GameStage extends Stage {
   deadzone and damping are not applied. For a damped chase camera, leave the
   target unset and move the camera yourself (`math.damp`, or `slerp` below for
   its facing).
+
+## Orbiting a point: `orbit`
+
+`camera.orbit(target, yaw, pitch, distance)` places the camera on a sphere
+around a point, looking at it: the camera of a model viewer, a level overview,
+a turn-table, a third-person view. The angles are the camera's own `yaw` and
+`pitch`, which it keeps: `lookAt` the other way round (that one keeps the
+position and finds the angles, this one keeps the angles and finds the
+position). A **negative** `pitch` looks down, from above the point.
+
+Keep the three numbers in your own state and call `orbit` again when they
+change. A drag reads screen coordinates (`gameScreenX` / `gameScreenY`), not
+world ones, which move with the camera; clamp the pitch short of a quarter
+turn; ease toward where the player asks with `math.damp`:
+
+```js
+const view = { yaw: 0.6, pitch: -0.4, distance: 900 };
+const want = { ...view };
+let dragging = false;
+let lastX = 0;
+let lastY = 0;
+input.registerPointerEvent("pointerdown", camera, (ev) => {
+	dragging = true;
+	lastX = ev.gameScreenX;
+	lastY = ev.gameScreenY;
+});
+// let go anywhere, on the canvas or off it
+event.on(event.POINTERUP, () => {
+	dragging = false;
+});
+input.registerPointerEvent("pointermove", camera, (ev) => {
+	if (!dragging) return;
+	want.yaw += (ev.gameScreenX - lastX) * 0.005;
+	want.pitch = math.clamp(want.pitch - (ev.gameScreenY - lastY) * 0.005, -1.4, 1.4);
+	lastX = ev.gameScreenX;
+	lastY = ev.gameScreenY;
+});
+input.registerPointerEvent("wheel", camera, (ev) => {
+	want.distance = math.clamp(want.distance * (1 + ev.deltaY * 0.001), 200, 4000);
+});
+// in update(dt), dt in ms
+for (const k of ["yaw", "pitch", "distance"]) {
+	view[k] = math.damp(view[k], want[k], 8, dt / 1000);
+}
+camera.orbit(model.pos, view.yaw, view.pitch, view.distance);
+```
+
+Release the three pointer events (`input.releasePointerEvent`) and
+`event.off` the release when the stage ends. `orbit` places the camera once: a camera with a `follow()` target is put
+back at the target on its next update, so orbit with no target set.
 
 ## Orthographic projection: the isometric look
 
@@ -1388,6 +1438,10 @@ if (!app.renderer.supportsDepthBuffer) {
 
 | symptom | cause |
 |---|---|
+| an orbiting camera sits below the point when it should look down on it | a positive `pitch` looks up: `orbit` with a **negative** pitch puts the camera above |
+| an orbiting camera snaps back every frame | it has a `follow()` target, which puts it back at the target on each update: orbit with no target set |
+| an orbiting camera flips or spins as it passes over the top | the pitch reached a quarter turn, where yaw has no meaning: clamp it short, e.g. to ±1.4 |
+| a drag to orbit jumps or runs away | it reads `gameX` / `gameY`, which move with the camera: use `gameScreenX` / `gameScreenY` |
 | `toonBands` changes nothing | the mesh is not `lit`, or the scene has only ambient light: banding needs a directional, point or spot light |
 | an outline covers the mesh instead of ringing it | the model is wound inside out (its normals point in); the hull is pushed along them |
 | no rim light shows | the mesh is not `lit`, or `rimLight` is 0, or its normals face the camera everywhere (a flat card) |

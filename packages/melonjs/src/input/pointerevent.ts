@@ -14,8 +14,10 @@ import {
 	emit,
 	GAME_INIT,
 	on,
+	POINTERCANCEL,
 	POINTERLOCKCHANGE,
 	POINTERMOVE,
+	POINTERUP,
 } from "../system/event.ts";
 import timer from "./../system/timer.ts";
 import { remove } from "./../utils/array.ts";
@@ -349,6 +351,23 @@ function enablePointerEvent(): void {
 				}
 			}
 		}
+		// a release or a cancel anywhere, for the global POINTERUP /
+		// POINTERCANCEL broadcast: on the window, so a mouse released off the
+		// canvas is heard too; the regions keep hearing theirs from the canvas
+		if (typeof globalThis.addEventListener === "function") {
+			const releases = device.pointerEvent
+				? [POINTER_UP[0], POINTER_CANCEL[0]]
+				: [POINTER_UP[1]].concat(
+						device.touch ? [POINTER_UP[2], POINTER_CANCEL[2]] : [],
+					);
+			for (const type of releases) {
+				globalThis.addEventListener(type, onGlobalRelease, {
+					capture: true,
+					passive: true,
+				});
+			}
+		}
+
 		// disable all gesture by default
 		setTouchAction(pointerEventTarget as HTMLCanvasElement);
 
@@ -872,6 +891,66 @@ function normalizeEvent(originalEvent: any): Pointer[] {
 	pointer.bind = bind;
 
 	return normalizedEvents;
+}
+
+/**
+ * the pointer handed to the global {@link POINTERUP} / {@link POINTERCANCEL}
+ * broadcast: its own, not the pooled ones the dispatcher hands out and takes
+ * back, nor the shared `pointer` whose state the dispatcher keeps
+ * @ignore
+ */
+let releasePointer: Pointer | undefined;
+
+/**
+ * Broadcast a release, or a cancel, wherever it happened. Listened for on the
+ * window, in the capture phase: the canvas only hears a mouse released over
+ * it, and a page script stopping the event on its way must not hide it.
+ * @ignore
+ * @internal
+ */
+function onGlobalRelease(e: Event): void {
+	const name = POINTER_CANCEL.includes(e.type) ? POINTERCANCEL : POINTERUP;
+	releasePointer ??= new Pointer();
+	const touches = (e as TouchEvent).changedTouches as TouchList | undefined;
+	if (touches !== undefined) {
+		// one broadcast per finger lifted
+		for (let i = 0; i < touches.length; i++) {
+			const touch = touches[i];
+			releasePointer.setEvent(
+				e,
+				hasDOM() ? touch.pageX : touch.clientX,
+				hasDOM() ? touch.pageY : touch.clientY,
+				touch.clientX,
+				touch.clientY,
+				touch.identifier,
+			);
+			emitRelease(name, releasePointer);
+		}
+		return;
+	}
+	const me = e as MouseEvent;
+	releasePointer.setEvent(
+		e,
+		me.pageX,
+		me.pageY,
+		me.clientX,
+		me.clientY,
+		(e as PointerEvent).pointerId ?? 1,
+	);
+	emitRelease(name, releasePointer);
+}
+
+/**
+ * Emit one release broadcast, in screen coordinates as POINTERMOVE is.
+ * @ignore
+ */
+function emitRelease(
+	name: typeof POINTERUP | typeof POINTERCANCEL,
+	released: Pointer,
+): void {
+	released.gameX = released.gameLocalX = released.gameScreenX;
+	released.gameY = released.gameLocalY = released.gameScreenY;
+	emit(name, released);
 }
 
 /**

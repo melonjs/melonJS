@@ -15,8 +15,10 @@
 - Physics: the adapter API takes a `Vector3d` wherever it takes a `Vector2d` (`setVelocity`, `applyForce`, `applyImpulse`, `setPosition`, `gravity`), with optional `getVelocity3d`, `getRotation` / `setRotation` and `getAngularVelocity3d` for a 3D adapter; the built-in applies them along its depth axis. A `Vector2d` works as before. A joint's anchors and axis and a body's `maxVelocity` may carry a `z`, which a 2D adapter ignores
 - Physics: the built-in says once in the console when it is asked for 3D it can only approximate (those three shapes, or a turn or spin about X or Y), naming `@melonjs/rapier3d-adapter`
 - Physics: optional `isSleeping()` on the adapter API, whether the engine has put a body to rest; always `false` on the built-in, which has no sleeping
+- 3D: `Camera3d#orbit(target, yaw, pitch, distance)` places the camera on a sphere around a point, looking at it, for a model viewer, a level overview or a third-person view; `lookAt` the other way round
 - Math: `Quaternion`, an orientation in 3D, built and used as a `Matrix3d` is: `rotate(angle, axis)`, `multiply`, `invert`, `apply` / `applyInverse`, `fromMat3d` / `toMatrix3d`; `slerp` between two, and `setFromUnitVectors(from, to)`, the shortest turn that takes one direction onto another
 - Math: `Matrix3d#compose(translation, rotation, scale)` sets a matrix from a position, a `Quaternion` and a scale; `Matrix3d#rotate()` and `Renderable#rotate()` also take a `Quaternion`
+- Input: `event.POINTERUP` and `event.POINTERCANCEL`, a pointer released, or taken away by the browser, wherever it happened: over a region or not, over the canvas or not. The end of a drag, as `event.POINTERMOVE` follows it, in place of a raw `pointerup` listener on the page
 - State: `state.reload()` builds the current stage again, for a "play again" or a level restart, with the arguments it was entered with or new ones; `state.change()` to the current state still does nothing
 
 ### Performance

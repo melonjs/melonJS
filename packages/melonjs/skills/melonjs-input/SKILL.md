@@ -1,6 +1,6 @@
 ---
 name: melonjs-input
-description: "Use this skill for keyboard, pointer, mouse, touch and gamepad input in melonJS. Covers the bindKey action indirection, registerPointerEvent on regions, the isKinematic requirement that silently blocks pointer events, which of several overlapping objects receives an event and how to consume it, world vs screen pointer coordinates, pointer events on 3D meshes, and gamepad mapping onto the same actions. Triggers on: input, bindKey, isKeyPressed, KEY, bindPointer, mouse button, vibrateGamepad, rumble, activeGamepad, registerPointerEvent, releasePointerEvent, pointerdown, pointerup, pointermove, POINTERMOVE, gamepad, bindGamepad, triggerKeyEvent, virtual gamepad, touch controls, joystick, gamepad-plugin, floating stick, floating button, floating joystick, two thumbs, tap to fire, hideAtRest, mobile controls, KEYDOWN, KEYUP, press any key, splash screen, click, touch, drag, hit test, event propagation, stop propagating, overlapping, which object gets the click, click a mesh, hit3d, 3D picking."
+description: "Use this skill for keyboard, pointer, mouse, touch and gamepad input in melonJS. Covers the bindKey action indirection, registerPointerEvent on regions, the isKinematic requirement that silently blocks pointer events, which of several overlapping objects receives an event and how to consume it, world vs screen pointer coordinates, pointer events on 3D meshes, and gamepad mapping onto the same actions. Triggers on: input, bindKey, isKeyPressed, KEY, bindPointer, mouse button, vibrateGamepad, rumble, activeGamepad, registerPointerEvent, releasePointerEvent, pointerdown, pointerup, pointermove, POINTERMOVE, gamepad, bindGamepad, triggerKeyEvent, virtual gamepad, touch controls, joystick, gamepad-plugin, floating stick, floating button, floating joystick, two thumbs, tap to fire, hideAtRest, mobile controls, KEYDOWN, KEYUP, press any key, splash screen, click, touch, drag, POINTERUP, hit test, event propagation, stop propagating, overlapping, which object gets the click, click a mesh, hit3d, 3D picking."
 license: MIT
 ---
 
@@ -258,24 +258,36 @@ need one specific space, read `gameWorldX`/`gameWorldY` or
 
 Using world coordinates for a camera-orbit drag means the same pixel maps to a
 different world point every frame as the camera moves — the drag jumps wildly.
+Read `gameScreenX` / `gameScreenY`, turn your own yaw and pitch by the change,
+and place the camera with `camera.orbit(target, yaw, pitch, distance)` (see
+`melonjs-3d`).
 
 ## Pointer move and release outside a region
 
-Region handlers only fire while the pointer is over the region. For drag
-tracking, listen globally:
+Region handlers only fire while the pointer is over the region. For a drag,
+press on the region, then follow and end it with the global events, which fire
+wherever the pointer is: over a region or not, over the canvas or not, and for
+a release, even outside the browser window while it was held:
 
 ```js
-import { event } from "melonjs";
-event.on(event.POINTERMOVE, (pointer) => { /* … */ });
+import { event, input } from "melonjs";
+input.registerPointerEvent("pointerdown", handle, startDrag);
+event.on(event.POINTERMOVE, followDrag);
+event.on(event.POINTERUP, endDrag);       // let go, anywhere
+event.on(event.POINTERCANCEL, dropDrag);  // the browser took the pointer away
+// and `event.off` the three when the drag's owner goes away
 ```
 
-There is **no global pointer-up system event** — `event.ts` publishes only
-`POINTERMOVE`, `POINTERLOCKCHANGE`, `DRAGSTART` and `DRAGEND`. For "released
-anywhere" you need a raw listener:
+All three hand over a `Pointer` in **screen** coordinates (`gameScreenX` /
+`gameScreenY`, and `gameX` / `gameY` set to the same), outside the canvas's
+range when the pointer was. `POINTERCANCEL` is a touch that became a scroll or
+a pinch, a pen out of range, a system gesture: a drag that only ends on
+`POINTERUP` stays stuck after one. Usually it should drop the drag rather than
+act on it (no shot, no throw). Each finger has its own `pointerId`.
 
-```js
-globalThis.addEventListener("pointerup", onRelease);
-```
+Do not use a raw `globalThis.addEventListener("pointerup", …)` for this any
+more: it hands over the browser's coordinates, not the game's, and is easy to
+forget to remove.
 
 For plain drag-and-drop, `Draggable` / `DropTarget` already wire all of this up
 (`pointerdown` / `pointerup` / `pointercancel` regions plus a global
@@ -444,6 +456,8 @@ input.triggerKeyEvent(input.KEY.LEFT, false);   // release
 
 | symptom | cause |
 |---|---|
+| a drag stays stuck when released off its region or off the canvas | it ends on the region's own `"pointerup"`, which only fires over it: end it on `event.POINTERUP`, heard anywhere |
+| a drag stays stuck after a touch turned into a scroll or a pinch | it ends on `POINTERUP` alone: the browser sent a cancel, `event.POINTERCANCEL` |
 | clicks on a 3D mesh land in the wrong place or not at all (before 20.16) | meshes were hit-tested by their 2D bounds, which a perspective camera makes meaningless: update — they are hit-tested by the pointer's ray now |
 | a click on a mesh also reaches the floor or mesh behind it | the handler did not `return false` |
 | moving the mouse got slow under a `Camera3d` | a big mesh or `InstancedMesh` listens for `pointermove` / `pointerenter` / `pointerleave`: each move ray-tests all its triangles. Listen for presses only, or hover with `camera.pick` on a smaller set |
@@ -455,7 +469,6 @@ input.triggerKeyEvent(input.KEY.LEFT, false);   // release
 | camera drag jumps around | using world coordinates instead of `gameScreenX`/`gameScreenY` |
 | `gameX` holds screen coords where world coords were expected | read on `event.POINTERMOVE`, or on a floating region — use `gameWorldX`/`gameWorldY` |
 | drag stops when leaving the object | region events end at the region — use `event.POINTERMOVE` |
-| release never detected outside the region | no global pointer-up event — add a raw listener |
 | jump fires every frame while held | `bindKey` without its third `lock` argument |
 | the arrow keys or Space scroll the page around the game, in a portal's frame | the key is read from `event.KEYDOWN` without a binding, bound with `preventDefault` `false`, or bound after `input.setPreventDefault(false)`; before 20.15.1, also the keys the UI focus takes: bind the key, leaving its `preventDefault` and `input.setPreventDefault` on |
 | the hero keeps walking after an Alt-Tab, until the key is pressed again (before 20.14) | the key's release went to another window: update, held keys are now released on blur |

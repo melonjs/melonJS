@@ -7,8 +7,10 @@
  * any UI element, and never reaches it. The pull then follows the pointer,
  * relative to the camera: sideways on screen is sideways to the view, and
  * down on screen is down from the side, back toward the camera from behind.
- * The release is the page's own `pointerup`, since a pull often ends past
- * the edge of the canvas, where no region of the game is told.
+ * The release is `event.POINTERUP`, heard wherever the pointer comes up,
+ * since a pull often ends past the edge of the canvas, where no region of
+ * the game is told. A pointer the browser takes away (`event.POINTERCANCEL`)
+ * drops the pet back into the pouch rather than launching it.
  *
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
@@ -72,13 +74,15 @@ export class AimArea extends Renderable {
 	override onActivateEvent() {
 		input.registerPointerEvent("pointerdown", this, this.press);
 		event.on(event.POINTERMOVE, this.move);
-		globalThis.addEventListener("pointerup", this.release);
+		event.on(event.POINTERUP, this.release);
+		event.on(event.POINTERCANCEL, this.cancel);
 	}
 
 	override onDeactivateEvent() {
 		input.releasePointerEvent("pointerdown", this);
 		event.off(event.POINTERMOVE, this.move);
-		globalThis.removeEventListener("pointerup", this.release);
+		event.off(event.POINTERUP, this.release);
+		event.off(event.POINTERCANCEL, this.cancel);
 	}
 
 	/**
@@ -143,5 +147,12 @@ export class AimArea extends Renderable {
 		if (this.host.canAim()) {
 			this.host.onRelease(this.pull, this.velocity);
 		}
+	};
+
+	/** The browser took the pointer away: no shot, the pet goes back. */
+	private readonly cancel = () => {
+		this.pull.set(0, 0, 0);
+		this.velocity.set(0, 0, 0);
+		this.release();
 	};
 }

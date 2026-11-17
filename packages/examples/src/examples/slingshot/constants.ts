@@ -7,7 +7,7 @@
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
-import { Vector3d } from "melonjs";
+import { math, Vector3d } from "melonjs";
 
 // ── where the assets are ──────────────────────────────────────────────────
 export const PETS_BASE = `${import.meta.env.BASE_URL}assets/mesh3d/kenney/`;
@@ -72,9 +72,13 @@ export const RIVAL_POINTS = 5000;
 export const SPARE_PET_POINTS = 10000;
 
 // ── the camera ────────────────────────────────────────────────────────────
-// it orbits this point, the middle of the field, at this distance
+// it orbits this point, the middle of the field
 export const PIVOT = new Vector3d(100, -210, 0);
-export const ORBIT_DISTANCE = 1150;
+// how far out it is and how far it looks down (radians, negative is down):
+// side on, and from behind the slingshot, further back and higher to see
+// over the pets waiting in line. In between, it blends from one to the other.
+export const ORBIT_SIDE = { distance: 1150, pitch: math.degToRad(-1.5) };
+export const ORBIT_BEHIND = { distance: 1557, pitch: math.degToRad(-10.7) };
 // a press of a turn button turns it this far; a held arrow key, this fast
 // (radians per second)
 export const ORBIT_STEP = Math.PI / 6;

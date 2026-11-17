@@ -42,6 +42,7 @@ const MIN_DRAG_PX = 4;
  *   - pointerdown on cue ball (and all balls at rest)  → start aim
  *   - pointermove anywhere                             → update aim
  *   - pointerup anywhere                               → apply impulse
+ *   - pointercancel (the browser took the pointer)     → drop the aim
  *
  * Drag distance maps to impulse magnitude up to MAX_DRAG. The impulse
  * vector points from the pointer back toward the cue — the player
@@ -50,6 +51,7 @@ const MIN_DRAG_PX = 4;
 export class CueBall extends Ball {
 	private boundOnMove: (p: Pointer) => void;
 	private boundOnUp: () => void;
+	private boundOnCancel: () => void;
 
 	constructor(x: number, y: number) {
 		super(x, y, 0); // 0 → ball_16 (white)
@@ -71,6 +73,9 @@ export class CueBall extends Ball {
 		this.boundOnUp = () => {
 			this._onUp();
 		};
+		this.boundOnCancel = () => {
+			gameState.aiming = false;
+		};
 	}
 
 	/**
@@ -80,23 +85,24 @@ export class CueBall extends Ball {
 	 *     is automatic and consistent with the rest of the engine.
 	 *   - pointermove uses melonJS's global POINTERMOVE system event so
 	 *     the drag tracks even when the pointer leaves the cue's bounds.
-	 *   - pointerup is a raw DOM listener on the window — melonJS has no
-	 *     global POINTERUP system event, and a region-based registration
-	 *     would only fire if the player released over the cue itself
-	 *     (rarely true during a drag-back-to-strike gesture).
+	 *   - pointerup uses the global POINTERUP system event, heard wherever
+	 *     the pointer comes up: a region-based registration would only fire
+	 *     if the player released over the cue itself (rarely true during a
+	 *     drag-back-to-strike gesture). POINTERCANCEL, a pointer the browser
+	 *     took away, drops the aim without striking.
 	 */
 	override onActivateEvent() {
 		input.registerPointerEvent("pointerdown", this, this._onDown.bind(this));
 		event.on(event.POINTERMOVE, this.boundOnMove);
-		window.addEventListener("pointerup", this.boundOnUp);
-		window.addEventListener("pointercancel", this.boundOnUp);
+		event.on(event.POINTERUP, this.boundOnUp);
+		event.on(event.POINTERCANCEL, this.boundOnCancel);
 	}
 
 	override onDeactivateEvent() {
 		input.releasePointerEvent("pointerdown", this);
 		event.off(event.POINTERMOVE, this.boundOnMove);
-		window.removeEventListener("pointerup", this.boundOnUp);
-		window.removeEventListener("pointercancel", this.boundOnUp);
+		event.off(event.POINTERUP, this.boundOnUp);
+		event.off(event.POINTERCANCEL, this.boundOnCancel);
 	}
 
 	/**
