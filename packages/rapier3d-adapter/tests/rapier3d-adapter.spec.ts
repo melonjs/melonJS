@@ -761,6 +761,17 @@ describe("Rapier3dAdapter", () => {
 			expect(adapter.queryAABB(new Rect(80, 80, 40, 40))).toEqual([deep]);
 		});
 
+		it("setAngle with an angle that is not a number leaves the body as it is", () => {
+			const r = cube(100, 100, 0, { gravityScale: 0 });
+			adapter.setAngle(r, 0.4);
+			for (const bad of [Number.NaN, Infinity, -Infinity]) {
+				adapter.setAngle(r, bad);
+				expect(adapter.getAngle(r)).toBeCloseTo(0.4, 6);
+				const q = adapter.getRotation(r);
+				expect(Number.isFinite(q.x + q.y + q.z + q.w)).toBe(true);
+			}
+		});
+
 		it("getBodyAABB is the XY footprint as the body is turned now", () => {
 			const r = cube(100, 100, 0, { gravityScale: 0 });
 			const b = adapter.getBodyAABB(r, new Bounds());

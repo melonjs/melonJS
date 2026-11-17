@@ -8,7 +8,7 @@
  * leaves them only the turn about its axis.
  */
 import type * as RAPIER from "@dimforge/rapier3d-compat";
-import { conjugate, multiply, rotate } from "../math/quaternion";
+import { Quaternion, Vector3d } from "melonjs";
 import type { XYZ } from "../math/units";
 import type { Simulation } from "../Simulation";
 import type { Rapier3dJointDefinition, Vector3Like } from "../types";
@@ -60,7 +60,7 @@ export class Joints {
 		};
 		def.anchorB ??= { x: 0, y: 0, z: 0 };
 		// the turn that brings b's space onto a's, as the two stand
-		const aInB = multiply(conjugate(bodyB.rotation()), bodyA.rotation());
+		const aInB = turnOf(bodyB).invert().multiply(turnOf(bodyA));
 
 		let data: RAPIER.JointData;
 		switch (def.type) {
@@ -73,7 +73,7 @@ export class Joints {
 					anchorA,
 					anchorB,
 					axis,
-					rotate(aInB, axis),
+					aInB.apply(new Vector3d(axis.x, axis.y, axis.z)),
 				);
 				break;
 			}
@@ -110,7 +110,12 @@ export class Joints {
 		if (def.type === "slider") {
 			// Rapier gives both bodies the same frame, which would turn b onto
 			// a: b's frame is a's as b sees it, so b keeps its turn
-			joint.setFrameX2(multiply(aInB, joint.frameX1()));
+			const frame = joint.frameX1();
+			joint.setFrameX2(
+				aInB
+					.clone()
+					.multiply(new Quaternion(frame.x, frame.y, frame.z, frame.w)),
+			);
 		}
 		joint.setContactsEnabled(def.collideConnected === true);
 		if (
@@ -204,11 +209,9 @@ function unitAxis(axis: Vector3Like | undefined, fallback: XYZ): XYZ {
  */
 function localPoint(body: RAPIER.RigidBody, world: XYZ): XYZ {
 	const t = body.translation();
-	return rotate(conjugate(body.rotation()), {
-		x: world.x - t.x,
-		y: world.y - t.y,
-		z: world.z - t.z,
-	});
+	return turnOf(body).applyInverse(
+		new Vector3d(world.x - t.x, world.y - t.y, world.z - t.z),
+	);
 }
 
 /**
@@ -219,6 +222,16 @@ function localPoint(body: RAPIER.RigidBody, world: XYZ): XYZ {
  */
 function worldPoint(body: RAPIER.RigidBody, local: XYZ): XYZ {
 	const t = body.translation();
-	const p = rotate(body.rotation(), local);
+	const p = turnOf(body).apply(new Vector3d(local.x, local.y, local.z));
 	return { x: t.x + p.x, y: t.y + p.y, z: t.z + p.z };
+}
+
+/**
+ * A body's turn, as a quaternion of its own.
+ * @param body - the body
+ * @returns a new quaternion
+ */
+function turnOf(body: RAPIER.RigidBody): Quaternion {
+	const q = body.rotation();
+	return new Quaternion(q.x, q.y, q.z, q.w);
 }

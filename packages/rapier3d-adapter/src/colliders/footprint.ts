@@ -3,7 +3,6 @@
  * reports and `queryAABB` tests against.
  */
 import type * as RAPIER from "@dimforge/rapier3d-compat";
-import { rotate } from "../math/quaternion";
 import type { ColliderEntry } from "./types";
 
 /** A box in XY: min x, min y, max x, max y. */
@@ -34,22 +33,36 @@ export function growFootprint(
 	// body, a radius wider. Any other: the eight corners of its box, turned
 	// with the body
 	const r = round?.r ?? 0;
+	const { x, y, z, w } = q;
+	// the X and Y rows of the turn's matrix, once for every corner: a
+	// footprint is in XY, so the turned point's z is never needed. Written
+	// out rather than through `Quaternion#apply` on a shared vector, which
+	// measured slower: a query runs this for every corner of every collider
+	const r00 = 1 - 2 * (y * y + z * z);
+	const r01 = 2 * (x * y - w * z);
+	const r02 = 2 * (x * z + w * y);
+	const r10 = 2 * (x * y + w * z);
+	const r11 = 1 - 2 * (x * x + z * z);
+	const r12 = 2 * (y * z - w * x);
 	for (let i = 0; i < (round ? 2 : 8); i++) {
-		const p = rotate(
-			q,
-			round
-				? i === 0
-					? round.a
-					: round.b
-				: {
-						x: i & 1 ? max.x : min.x,
-						y: i & 2 ? max.y : min.y,
-						z: i & 4 ? max.z : min.z,
-					},
-		);
-		if (p.x - r < box[0]) box[0] = p.x - r;
-		if (p.y - r < box[1]) box[1] = p.y - r;
-		if (p.x + r > box[2]) box[2] = p.x + r;
-		if (p.y + r > box[3]) box[3] = p.y + r;
+		let px: number;
+		let py: number;
+		let pz: number;
+		if (round) {
+			const end = i === 0 ? round.a : round.b;
+			px = end.x;
+			py = end.y;
+			pz = end.z;
+		} else {
+			px = i & 1 ? max.x : min.x;
+			py = i & 2 ? max.y : min.y;
+			pz = i & 4 ? max.z : min.z;
+		}
+		const tx = r00 * px + r01 * py + r02 * pz;
+		const ty = r10 * px + r11 * py + r12 * pz;
+		if (tx - r < box[0]) box[0] = tx - r;
+		if (ty - r < box[1]) box[1] = ty - r;
+		if (tx + r > box[2]) box[2] = tx + r;
+		if (ty + r > box[3]) box[3] = ty + r;
 	}
 }

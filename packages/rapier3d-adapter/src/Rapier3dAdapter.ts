@@ -46,7 +46,6 @@ import type { ColliderEntry, ColliderPart } from "./colliders/types";
 import { ContactDispatcher } from "./contacts/ContactDispatcher";
 import { Joints } from "./joints/Joints";
 import { loadedRapier, loadRapier } from "./loader";
-import { rotate } from "./math/quaternion";
 import { Units, zOf } from "./math/units";
 import * as queries from "./queries/queries";
 import { Simulation } from "./Simulation";
@@ -56,6 +55,9 @@ import {
 	REQUIRED_MELONJS_VERSION,
 	type Vector3Like,
 } from "./types";
+
+// a body's turn about Z, set by `setAngle`
+const _turn = new Quaternion();
 
 declare const __VERSION__: string;
 
@@ -592,11 +594,10 @@ export class Rapier3dAdapter implements PhysicsAdapter {
 	 */
 	setAngle(renderable: Renderable, angle: number): void {
 		const body = this.sim.bodies.get(renderable);
-		if (!body) return;
-		body.setRotation(
-			{ x: 0, y: 0, z: Math.sin(angle / 2), w: Math.cos(angle / 2) },
-			true,
-		);
+		// an angle that is not a number leaves the body as it is, as
+		// `Quaternion#rotate` and `Matrix3d#rotate` do
+		if (!body || !Number.isFinite(angle)) return;
+		body.setRotation(_turn.identity().rotate(angle), true);
 		this.writePose(renderable, body);
 	}
 
@@ -608,8 +609,12 @@ export class Rapier3dAdapter implements PhysicsAdapter {
 	getAngle(renderable: Renderable): number {
 		const body = this.sim.bodies.get(renderable);
 		if (!body) return 0;
-		const x = rotate(body.rotation(), { x: 1, y: 0, z: 0 });
-		return x.x * x.x + x.y * x.y < 1e-12 ? 0 : Math.atan2(x.y, x.x);
+		// where the turn takes +X, its x and y: the first column of the
+		// quaternion's matrix, which is all of `apply` this needs
+		const { x, y, z, w } = body.rotation();
+		const tx = 1 - 2 * (y * y + z * z);
+		const ty = 2 * (x * y + w * z);
+		return tx * tx + ty * ty < 1e-12 ? 0 : Math.atan2(ty, tx);
 	}
 
 	/**
