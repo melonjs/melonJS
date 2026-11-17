@@ -1,8 +1,8 @@
 # Changelog
 
-## [20.16.0] (melonJS 2) - _unreleased_
+## [20.16.0] (melonJS 2) - _2026-11-17_
 
-**Highlights:** skinned glTF characters with crossfades, mesh picking, an orthographic `Camera3d` for isometric views, toon shading with outlines, a faster `Camera3d` (its work per frame up to **72%** faster, with no change to your game), and real 3D physics: with the new `@melonjs/rapier3d-adapter`, bodies tumble, stack and topple in 3D, with collision shapes built straight from your models. The new features are opt-in: a game that sets none of them renders as before.
+**Highlights:** a faster `Camera3d`, its work per frame up to **72%** faster with no change to your game, and real 3D physics: with the new `@melonjs/rapier3d-adapter`, bodies tumble, stack and topple in 3D, with collision shapes built straight from your models. Also new: skinned glTF characters with crossfades, mesh picking, an orthographic `Camera3d` for isometric views, and toon shading with outlines. The new features are opt-in: a game that sets none of them renders as before.
 
 ### Added
 - 3D: skinned glTF meshes (`JOINTS_0` / `WEIGHTS_0`, as exported by Mixamo and Quaternius) deform with their skeleton, on the CPU, so alike on WebGPU, WebGL and Canvas; up to four joints per vertex, no morph targets. A skinned asset loads as one `GLTFModel`, whose nodes and joints are reached by name with `getNodeNames()`, `getNodeTransform()` and `addChildToNode()` (a sword in a hand)
