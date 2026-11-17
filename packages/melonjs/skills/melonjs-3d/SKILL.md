@@ -229,7 +229,8 @@ input.registerPointerEvent("pointerdown", camera, (ev) => {
 	lastX = ev.gameScreenX;
 	lastY = ev.gameScreenY;
 });
-input.registerPointerEvent("pointerup", camera, () => {
+// let go anywhere, on the canvas or off it
+event.on(event.POINTERUP, () => {
 	dragging = false;
 });
 input.registerPointerEvent("pointermove", camera, (ev) => {
@@ -249,8 +250,8 @@ for (const k of ["yaw", "pitch", "distance"]) {
 camera.orbit(model.pos, view.yaw, view.pitch, view.distance);
 ```
 
-Release the four pointer events (`input.releasePointerEvent`) when the stage
-ends. `orbit` places the camera once: a camera with a `follow()` target is put
+Release the three pointer events (`input.releasePointerEvent`) and
+`event.off` the release when the stage ends. `orbit` places the camera once: a camera with a `follow()` target is put
 back at the target on its next update, so orbit with no target set.
 
 ## Orthographic projection: the isometric look

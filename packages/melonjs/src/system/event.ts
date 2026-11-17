@@ -251,6 +251,32 @@ export const GAMEPAD_UPDATE = "gamepad.update";
 export const POINTERMOVE = "me.event.pointermove";
 
 /**
+ * Event for a pointer released anywhere: over a region or not, over the
+ * canvas or not, even outside the browser window while it was held. The
+ * end of a drag, wherever the player lets go. A region's own `"pointerup"`
+ * only fires when the release lands on it. <br>
+ * Data passed : {me.Pointer} a Pointer object, in screen coordinates
+ * (`gameScreenX` / `gameScreenY`, outside the canvas when the release was)
+ * @see event.on
+ * @example
+ * import { event } from "melonjs";
+ * event.on(event.POINTERUP, (pointer) => {
+ *     launch(pointer.gameScreenX, pointer.gameScreenY);
+ * });
+ */
+export const POINTERUP = "me.event.pointerup";
+
+/**
+ * Event for a pointer the browser took away mid-press: a touch that became a
+ * scroll or a pinch, a pen lifted out of range, a system gesture. A drag
+ * that listens for {@link POINTERUP} should end on this too, or it stays
+ * stuck. <br>
+ * Data passed : {me.Pointer} a Pointer object, in screen coordinates
+ * @see event.on
+ */
+export const POINTERCANCEL = "me.event.pointercancel";
+
+/**
  * Event for onPointerLockChange event <br>
  * Data passed : {boolean} pointer lock status (true/false)
  * @see event.on
@@ -440,6 +466,8 @@ interface Events {
 		current: { value: number; pressed: boolean },
 	) => void;
 	[POINTERMOVE]: (pointer: Pointer) => void;
+	[POINTERUP]: (pointer: Pointer) => void;
+	[POINTERCANCEL]: (pointer: Pointer) => void;
 	[POINTERLOCKCHANGE]: (locked: boolean) => void;
 	[DRAGSTART]: (event: unknown, draggable: Draggable) => void;
 	[DRAGEND]: (event: unknown, draggable: Draggable) => void;
