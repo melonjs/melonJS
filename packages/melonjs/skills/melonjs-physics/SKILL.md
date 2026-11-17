@@ -163,8 +163,9 @@ app.world.setAdapter(new RapierAdapter({ gravity: { x: 0, y: 900 } }));
 // build the scene here
 ```
 
-`setAdapter()` rebuilds any body made before it from its `bodyDef`, so the
-order is safe either way; building the scene after the switch skips that
+`setAdapter()` rebuilds any body made before it from its `bodyDef`, turned as
+it stood (a body a 3D adapter tilted keeps its whole rotation on an adapter
+with `setRotation`, since 20.16), so the order is safe either way; building the scene after the switch skips that
 rebuild. Do not `await X.create()` inside the `Application` settings for a
 WebAssembly adapter: the page stays blank, with no loading screen, while
 it downloads.
@@ -348,7 +349,9 @@ Rapier read it only when the body is built, so after changing it call
 works on every adapter. On those three `updateShape()` builds a new body: its
 velocity carries over, and on planck and Rapier its angle and the joints
 `world.addJoint()` made too; on matter the angle does not. On planck, called
-from a collision handler, it takes effect when the step ends. The built-in also
+from a collision handler, it takes effect when the step ends. The Rapier 3D
+adapter keeps the body and replaces its colliders, so everything set on it at
+run time, its joints and the handle on `renderable.body` stay. The built-in also
 reads `isActive` live, from the shapes the body holds; those are not always
 the ones you authored, since a `Rect` is stored as a converted `Polygon`, so
 toggle `body.getShape(i)` there.
@@ -726,6 +729,10 @@ app.world.addChild(crate, crate.depth);   // the depth, or autoDepth renumbers i
   geometry. A moving prop is a `ConvexHull3d`, or several shapes.
 - **Move a 3D body with `setPosition` and `setRotation`**, never by writing
   `pos` or `currentTransform`: the next step writes them back from the body.
+- **Joints take a `z`**: `anchorA`, `anchorB` and `axis` may carry one, and a
+  hinge turns about `axis` (default Z, as in 2D), given in `a`'s own space.
+  Bodies are joined as they stand, however each is turned. `maxVelocity`
+  takes a `z` too; left out, the depth axis has no cap.
 - **On the built-in, a capsule, hull or triangle mesh is its bounding box**,
   which never turns, and a flat triangle mesh is a box of no thickness that a
   fast body steps straight through. Give it a thick slab, or use the Rapier 3D

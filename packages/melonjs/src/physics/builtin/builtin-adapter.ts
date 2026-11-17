@@ -915,6 +915,16 @@ export default class BuiltinAdapter implements PhysicsAdapter {
 		return body.onSurface && !body.falling && !body.jumping;
 	}
 
+	/**
+	 * Always `false`: the builtin simulation steps every body each frame and
+	 * has no sleeping (`capabilities.sleepingBodies` is `false`).
+	 * @param _renderable - the renderable whose body to read
+	 * @returns `false`
+	 */
+	isSleeping(_renderable: Renderable): boolean {
+		return false;
+	}
+
 	raycast(from: Vector2d, to: Vector2d): RaycastHit | null {
 		// Goes through the same SAT-based broadphase walk as the legacy
 		// `Detector.rayCast` (both share `raycastQuery` in `./raycast.ts`),

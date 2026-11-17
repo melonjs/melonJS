@@ -511,6 +511,16 @@ describe("Physics : BuiltinAdapter (Body parity with body.spec.js)", () => {
 			expect(adapter.capabilities.velocityLimit).toEqual(true);
 			expect(adapter.capabilities.isGrounded).toEqual(true);
 		});
+
+		it("never reports a body asleep: it has no sleeping", () => {
+			const r = new Renderable(0, 0, 32, 32);
+			adapter.addBody(r, {
+				type: "dynamic",
+				shapes: [new Rect(0, 0, 32, 32)],
+			});
+			expect(adapter.isSleeping(r)).toBe(false);
+			expect(adapter.isSleeping(new Renderable(0, 0, 8, 8))).toBe(false);
+		});
 	});
 
 	describe("runtime setters", () => {

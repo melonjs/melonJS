@@ -111,7 +111,6 @@ const createGame = async () => {
 						return new Mesh(512, 384, {
 							model: name,
 							material: name,
-							texture: "colormap",
 							width: 400,
 							height: 400,
 							cullBackFaces: true,
