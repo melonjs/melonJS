@@ -3,6 +3,7 @@ import { Color } from "../math/color.ts";
 import { clamp, EPSILON } from "../math/math.ts";
 import { Matrix3d } from "../math/matrix3d.ts";
 import type { ObservableVector3d } from "../math/observableVector3d.ts";
+import { Quaternion } from "../math/quaternion.ts";
 import { Vector2d } from "../math/vector2d.ts";
 import { Vector3d } from "../math/vector3d.ts";
 import type Container from "./../renderable/container.js";
@@ -44,7 +45,8 @@ const _groundNormal = new Vector3d(0, -1, 0);
 const _groundPoint = new Vector3d();
 // scratch reused by the orientation-basis accessors (getBasis / getRight / …),
 // to avoid per-call allocation on the billboard draw path.
-const _basis = new Matrix3d();
+// the camera's orientation, built from its three angles
+const _orientationTurn = new Quaternion();
 const _bScratchA = new Vector3d();
 const _bScratchB = new Vector3d();
 // scratch for setBasis, kept apart from the pair above because those belong to
@@ -386,6 +388,57 @@ export default class Camera3d extends Camera2d {
 	 */
 	override get roll(): number {
 		return this._roll;
+	}
+
+	/**
+	 * The camera's orientation `R = R(yaw, Y) · R(pitch, X) · R(roll, Z)`,
+	 * camera to world: its columns are the right / up / forward axes. Built
+	 * from a `Quaternion` once the angles change, then reused by everything
+	 * that reads the camera's turn in a frame (view, frustum, fog, basis).
+	 * @ignore
+	 */
+	private readonly _orientation = new Matrix3d();
+	/**
+	 * Its inverse, world to camera: the view's rotation, `R⁻¹ = Rᵀ`.
+	 * @ignore
+	 */
+	private readonly _viewRotation = new Matrix3d();
+	/**
+	 * The transforms {@link Camera3d#_saveContainerTransform} kept, innermost
+	 * last.
+	 * @ignore
+	 */
+	private readonly _savedTransforms: Matrix3d[] = [];
+	/**
+	 * The yaw, pitch and roll {@link Camera3d#_orientation} was built from.
+	 * @ignore
+	 */
+	private readonly _orientationAngles = new Float64Array([NaN, NaN, NaN]);
+
+	/**
+	 * Rebuild the orientation if yaw, pitch or roll changed since it was
+	 * last built.
+	 * @ignore
+	 * @internal
+	 */
+	_refreshOrientation(): void {
+		const a = this._orientationAngles;
+		const { yaw, pitch, roll } = this;
+		if (a[0] === yaw && a[1] === pitch && a[2] === roll) {
+			return;
+		}
+		a[0] = yaw;
+		a[1] = pitch;
+		a[2] = roll;
+		// yaw, then pitch, then roll: the chain of Matrix3d#rotate calls the
+		// camera built its turn from, on a quaternion
+		_orientationTurn
+			.identity()
+			.rotate(yaw, AXIS_Y)
+			.rotate(pitch, AXIS_X)
+			.rotate(roll, AXIS_Z)
+			.toMatrix3d(this._orientation);
+		this._viewRotation.copy(this._orientation).transpose();
 	}
 
 	override set roll(value: number) {
@@ -1014,11 +1067,8 @@ export default class Camera3d extends Camera2d {
 		// that produced it. The falloff `k` multiplies in here rather than in
 		// the shader, so the exponent is a single dot product.
 		const k = this._fogHeightFalloff;
-		_basis.identity();
-		_basis.rotate(this.yaw, AXIS_Y);
-		_basis.rotate(this.pitch, AXIS_X);
-		_basis.rotate(this.roll, AXIS_Z);
-		const b = _basis.val;
+		this._refreshOrientation();
+		const b = this._orientation.val;
 		state.heightAxis[0] = k * b[1];
 		state.heightAxis[1] = k * b[5];
 		state.heightAxis[2] = k * b[9];
@@ -1054,11 +1104,8 @@ export default class Camera3d extends Camera2d {
 		// R(-pitch, X) ∘ R(-yaw, Y) (see _applyContainerViewTransform), so
 		// R = R(yaw, Y) ∘ R(pitch, X); the columns of R (column-major `val`) are
 		// the camera's right / up / forward axes in world space.
-		_basis.identity();
-		_basis.rotate(this.yaw, AXIS_Y);
-		_basis.rotate(this.pitch, AXIS_X);
-		_basis.rotate(this.roll, AXIS_Z);
-		const v = _basis.val;
+		this._refreshOrientation();
+		const v = this._orientation.val;
 		right.set(v[0], v[1], v[2]);
 		up.set(v[4], v[5], v[6]);
 		forward.set(v[8], v[9], v[10]);
@@ -1347,15 +1394,12 @@ export default class Camera3d extends Camera2d {
 		//   1. rotate(-pitch, X)  → currentTransform = R(-pitch)
 		//   2. rotate(-yaw,   Y)  → currentTransform = R(-pitch) ∘ R(-yaw)
 		//   3. translate(-pos)    → currentTransform = R(-pitch) ∘ R(-yaw) ∘ T(-pos)
-		if (this.roll !== 0) {
-			container.rotate(-this.roll, AXIS_Z);
-		}
-		if (this.pitch !== 0) {
-			container.rotate(-this.pitch, AXIS_X);
-		}
-		if (this.yaw !== 0) {
-			container.rotate(-this.yaw, AXIS_Y);
-		}
+		// The three turns, roll included, are the camera's cached view
+		// rotation `R⁻¹`, one multiply. The transform it had is kept, so
+		// the revert can put it back exactly.
+		this._saveContainerTransform(container);
+		this._refreshOrientation();
+		container.currentTransform.multiply(this._viewRotation);
 		container.translate(-translateX, -translateY, -this.depth);
 
 		// Refresh the container's painter's-algorithm order from the
@@ -1374,6 +1418,41 @@ export default class Camera3d extends Camera2d {
 	}
 
 	/**
+	 * Keep a container's whole transform before the view is put on it: the
+	 * 3D view turns it as well as moving it.
+	 * @param container - the container about to get the view
+	 * @ignore
+	 * @internal
+	 */
+	override _saveContainerTransform(container: Container): void {
+		const depth = this._savedDepth++;
+		let saved = this._savedTransforms[depth] as Matrix3d | undefined;
+		if (saved === undefined) {
+			saved = new Matrix3d();
+			this._savedTransforms[depth] = saved;
+		}
+		saved.copy(container.currentTransform);
+	}
+
+	/**
+	 * Put back the whole transform {@link Camera3d#_saveContainerTransform}
+	 * kept, exactly.
+	 * @param container - the container the view is taken off
+	 * @returns false when nothing was kept, for the caller to undo by hand
+	 * @ignore
+	 * @internal
+	 */
+	override _restoreContainerTransform(container: Container): boolean {
+		if (this._savedDepth === 0) {
+			return false;
+		}
+		this._savedDepth--;
+		container.currentTransform.copy(this._savedTransforms[this._savedDepth]);
+		this._containerMoved(container);
+		return true;
+	}
+
+	/**
 	 * Revert {@link Camera3d#_applyContainerViewTransform} in reverse
 	 * order to restore the container's `currentTransform` to its
 	 * pre-camera state.
@@ -1385,7 +1464,12 @@ export default class Camera3d extends Camera2d {
 		translateX: number,
 		translateY: number,
 	): void {
-		// reverse of apply: undo translate first, then yaw, then pitch
+		// the transform the container had before the apply, exactly
+		if (this._restoreContainerTransform(container)) {
+			return;
+		}
+		// a revert with no apply before it: undo by the opposite turns, as
+		// before; translate first, then yaw, then pitch
 		container.translate(translateX, translateY, this.depth);
 		if (this.yaw !== 0) {
 			container.rotate(this.yaw, AXIS_Y);
@@ -1840,16 +1924,8 @@ export default class Camera3d extends Camera2d {
 	 * @internal
 	 */
 	_buildViewProjection(): void {
-		_viewMatrix.identity();
-		if (this.roll !== 0) {
-			_viewMatrix.rotate(-this.roll, AXIS_Z);
-		}
-		if (this.pitch !== 0) {
-			_viewMatrix.rotate(-this.pitch, AXIS_X);
-		}
-		if (this.yaw !== 0) {
-			_viewMatrix.rotate(-this.yaw, AXIS_Y);
-		}
+		this._refreshOrientation();
+		_viewMatrix.copy(this._viewRotation);
 		_viewMatrix.translate(-this.pos.x, -this.pos.y, -this.depth);
 		_viewProjection.copy(this.frustum.projectionMatrix);
 		_viewProjection.multiply(_viewMatrix);
@@ -2003,16 +2079,8 @@ export default class Camera3d extends Camera2d {
 		// build the view matrix R⁻¹ ∘ T(-pos) the same way
 		// `_applyContainerViewTransform` builds it on the container —
 		// rotate first (pitch then yaw), then translate.
-		_viewMatrix.identity();
-		if (this.roll !== 0) {
-			_viewMatrix.rotate(-this.roll, AXIS_Z);
-		}
-		if (this.pitch !== 0) {
-			_viewMatrix.rotate(-this.pitch, AXIS_X);
-		}
-		if (this.yaw !== 0) {
-			_viewMatrix.rotate(-this.yaw, AXIS_Y);
-		}
+		this._refreshOrientation();
+		_viewMatrix.copy(this._viewRotation);
 		_viewMatrix.translate(-this.pos.x, -this.pos.y, -this.depth);
 
 		// projectionMatrix × viewMatrix — the matrix that maps world

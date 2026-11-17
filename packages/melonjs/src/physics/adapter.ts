@@ -940,7 +940,7 @@ export interface PhysicsAdapter {
 	 * bodies turn about Z only, applies the part of it about Z.
 	 * @example
 	 * // stand a crate on its side
-	 * world.adapter.setRotation?.(crate, new Quaternion().setFromAxisAngle(new Vector3d(0, 0, 1), Math.PI / 2));
+	 * world.adapter.setRotation?.(crate, new Quaternion().rotate(Math.PI / 2, new Vector3d(0, 0, 1)));
 	 */
 	setRotation?(renderable: Renderable, q: Quaternion): void;
 	setAngle?(renderable: Renderable, angle: number): void;

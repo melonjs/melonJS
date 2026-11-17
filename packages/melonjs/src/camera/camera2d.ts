@@ -455,6 +455,18 @@ export default class Camera2d extends Renderable {
 		return this._roll;
 	}
 
+	/**
+	 * The translation columns {@link Camera2d#_saveContainerTransform} kept,
+	 * four numbers a container, innermost last.
+	 * @ignore
+	 */
+	private readonly _savedColumns: number[] = [];
+	/**
+	 * How many containers have the view on them, one inside the other.
+	 * @ignore
+	 */
+	protected _savedDepth = 0;
+
 	set roll(value: number) {
 		if (value === this._roll) {
 			return;
@@ -1467,6 +1479,7 @@ export default class Camera2d extends Renderable {
 		translateX: number,
 		translateY: number,
 	): void {
+		this._saveContainerTransform(container);
 		container.translate(-translateX, -translateY);
 	}
 
@@ -1482,7 +1495,67 @@ export default class Camera2d extends Renderable {
 		translateX: number,
 		translateY: number,
 	): void {
+		if (this._restoreContainerTransform(container)) {
+			return;
+		}
+		// a revert with no apply before it: undo by the opposite move
 		container.translate(translateX, translateY);
+	}
+
+	/**
+	 * Keep what the view is about to change in a container's transform, for
+	 * {@link Camera2d#_restoreContainerTransform}. Moving it back by the
+	 * opposite offset left a rounding error in it every frame, in 32-bit
+	 * floats, growing with the camera's distance from the origin; putting
+	 * back what was there is exact. The 2D view is a move, which changes
+	 * only the translation column, so that is all that is kept. A stack, for
+	 * a container drawn inside another.
+	 * @param container - the container about to get the view
+	 * @ignore
+	 * @internal
+	 */
+	_saveContainerTransform(container: Container): void {
+		const v = container.currentTransform.val;
+		const saved = this._savedColumns;
+		const o = this._savedDepth++ * 4;
+		saved[o] = v[12];
+		saved[o + 1] = v[13];
+		saved[o + 2] = v[14];
+		saved[o + 3] = v[15];
+	}
+
+	/**
+	 * Put back what {@link Camera2d#_saveContainerTransform} kept, exactly,
+	 * and the bounds and the redraw that come with it.
+	 * @param container - the container the view is taken off
+	 * @returns false when nothing was kept, for the caller to undo by hand
+	 * @ignore
+	 * @internal
+	 */
+	_restoreContainerTransform(container: Container): boolean {
+		if (this._savedDepth === 0) {
+			return false;
+		}
+		const v = container.currentTransform.val;
+		const saved = this._savedColumns;
+		const o = --this._savedDepth * 4;
+		v[12] = saved[o];
+		v[13] = saved[o + 1];
+		v[14] = saved[o + 2];
+		v[15] = saved[o + 3];
+		this._containerMoved(container);
+		return true;
+	}
+
+	/**
+	 * What a change to a container's transform brings with it: its bounds
+	 * follow, and it redraws.
+	 * @param container - the container whose transform changed
+	 * @ignore
+	 */
+	protected _containerMoved(container: Container): void {
+		container.updateBounds();
+		container.isDirty = true;
 	}
 
 	/**

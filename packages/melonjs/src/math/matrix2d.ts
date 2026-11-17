@@ -355,7 +355,9 @@ export class Matrix2d {
 	 * @returns Reference to this object for method chaining
 	 */
 	rotate(angle: number) {
-		if (angle !== 0) {
+		// an angle that is not a number turns nothing: it would fill the
+		// whole matrix with NaN
+		if (angle !== 0 && Number.isFinite(angle)) {
 			const a00 = this.val[0];
 			const a01 = this.val[1];
 			const a02 = this.val[2];

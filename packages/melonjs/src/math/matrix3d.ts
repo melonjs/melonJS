@@ -3,8 +3,13 @@ import { createPool } from "../system/pool.ts";
 import { XYPoint } from "../utils/types.ts";
 import { EPSILON } from "./math.ts";
 import { Matrix2d } from "./matrix2d.ts";
+import type { Quaternion } from "./quaternion.ts";
+import { writeRotationScale } from "./rotation.ts";
 import { Vector2d } from "./vector2d.ts";
 import { Vector3d } from "./vector3d.ts";
+
+// a quaternion's rotation, for `rotate(q)`
+const _qRotation = new Float64Array(16);
 
 type SixteenNumbers = [
 	number,
@@ -667,13 +672,27 @@ export class Matrix3d {
 	}
 
 	/**
-	 * rotate this matrix (counter-clockwise) by the specified angle (in radians).
-	 * @param angle - Rotation angle in radians.
-	 * @param [v] - the axis to rotate around (defaults to Z axis)
+	 * rotate this matrix (counter-clockwise) by the specified angle (in radians),
+	 * or by the rotation a {@link Quaternion} holds.
+	 * @param angle - Rotation angle in radians, or a quaternion. A quaternion
+	 * need not be of unit length: its direction is the rotation. An angle, an
+	 * axis or a quaternion that is not a finite number, or an axis or a
+	 * quaternion of length 0, rotates nothing.
+	 * @param [v] - the axis to rotate around (defaults to Z axis); not used with a quaternion
 	 * @returns Reference to this object for method chaining
+	 * @example
+	 * // turn a mesh's model matrix to an orientation from a physics body
+	 * mesh.currentTransform.identity().rotate(adapter.getRotation(mesh));
 	 */
-	rotate(angle: number, v?: Vector3d) {
-		if (angle !== 0) {
+	rotate(angle: number, v?: Vector3d): this;
+	rotate(q: Quaternion): this;
+	rotate(angle: number | Quaternion, v?: Vector3d) {
+		if (typeof angle === "object") {
+			return this.rotateQuaternion(angle);
+		}
+		// an angle that is not a number turns nothing: it would fill the
+		// whole matrix with NaN
+		if (angle !== 0 && Number.isFinite(angle)) {
 			const a = this.val;
 			let x = v ? v.x : 0;
 			let y = v ? v.y : 0;
@@ -681,7 +700,8 @@ export class Matrix3d {
 
 			let len = Math.sqrt(x * x + y * y + z * z);
 
-			if (len < EPSILON) {
+			// too short to turn about, or not a number (`NaN < EPSILON` is false)
+			if (!(len >= EPSILON) || !Number.isFinite(len)) {
 				return this;
 			}
 
@@ -732,6 +752,86 @@ export class Matrix3d {
 			a[10] = a02 * b20 + a12 * b21 + a22 * b22;
 			a[11] = a03 * b20 + a13 * b21 + a23 * b22;
 		}
+		return this;
+	}
+
+	/**
+	 * Post-multiply by a quaternion's rotation: `this = this × R(q)`, as
+	 * {@link Matrix3d#rotate} does with an axis and an angle.
+	 * @param q - the rotation; normalized, a zero one rotates nothing
+	 * @returns Reference to this object for method chaining
+	 * @ignore
+	 */
+	private rotateQuaternion(q: Quaternion) {
+		const len = Math.hypot(q.x, q.y, q.z, q.w);
+		if (!(len > 0) || !Number.isFinite(len)) {
+			return this;
+		}
+		const r = _qRotation;
+		writeRotationScale(r, q.x / len, q.y / len, q.z / len, q.w / len, 1, 1, 1);
+		const a = this.val;
+		const a00 = a[0];
+		const a01 = a[1];
+		const a02 = a[2];
+		const a03 = a[3];
+		const a10 = a[4];
+		const a11 = a[5];
+		const a12 = a[6];
+		const a13 = a[7];
+		const a20 = a[8];
+		const a21 = a[9];
+		const a22 = a[10];
+		const a23 = a[11];
+		for (let col = 0; col < 3; col++) {
+			const o = col * 4;
+			const b0 = r[o];
+			const b1 = r[o + 1];
+			const b2 = r[o + 2];
+			a[o] = a00 * b0 + a10 * b1 + a20 * b2;
+			a[o + 1] = a01 * b0 + a11 * b1 + a21 * b2;
+			a[o + 2] = a02 * b0 + a12 * b1 + a22 * b2;
+			a[o + 3] = a03 * b0 + a13 * b1 + a23 * b2;
+		}
+		return this;
+	}
+
+	/**
+	 * Set this matrix to a translation, a rotation and a scale, applied to a
+	 * point scale first, then rotation, then translation: `T · R · S`. The
+	 * way a glTF node, or a physics body's pose, is turned into a matrix.
+	 * @param translation - where the origin goes; a missing `z` is 0
+	 * @param rotation - the orientation; normalized, a zero one is no turn
+	 * @param [scale] - the scale along each axis; default 1, and a missing `z` is 1
+	 * @returns Reference to this object for method chaining
+	 * @example
+	 * const m = new Matrix3d().compose(
+	 *     new Vector3d(10, 0, -5),
+	 *     new Quaternion().rotate(Math.PI / 2, new Vector3d(0, 1, 0)),
+	 *     new Vector3d(2, 2, 2),
+	 * );
+	 */
+	compose(
+		translation: XYPoint & { z?: number },
+		rotation: Quaternion,
+		scale?: XYPoint & { z?: number },
+	) {
+		const len = Math.hypot(rotation.x, rotation.y, rotation.z, rotation.w);
+		const unit = len > 0 && Number.isFinite(len);
+		const a = this.val;
+		writeRotationScale(
+			a,
+			unit ? rotation.x / len : 0,
+			unit ? rotation.y / len : 0,
+			unit ? rotation.z / len : 0,
+			unit ? rotation.w / len : 1,
+			scale ? scale.x : 1,
+			scale ? scale.y : 1,
+			scale ? (scale.z ?? 1) : 1,
+		);
+		a[12] = translation.x;
+		a[13] = translation.y;
+		a[14] = translation.z ?? 0;
+		a[15] = 1;
 		return this;
 	}
 

@@ -2,7 +2,7 @@
 
 ## [20.16.0] (melonJS 2) - _unreleased_
 
-**Highlights:** skinned glTF characters with crossfades, mesh picking, an orthographic `Camera3d` for isometric views, toon shading with outlines, and the groundwork for 3D physics: 3D collision shapes and an adapter API that takes a `Vector3d`, which the new `@melonjs/rapier3d-adapter` builds on. All opt-in: a game that sets none of it renders as before.
+**Highlights:** skinned glTF characters with crossfades, mesh picking, an orthographic `Camera3d` for isometric views, toon shading with outlines, a faster `Camera3d` (its work per frame up to **72%** faster, with no change to your game), and real 3D physics: with the new `@melonjs/rapier3d-adapter`, bodies tumble, stack and topple in 3D, with collision shapes built straight from your models. The new features are opt-in: a game that sets none of them renders as before.
 
 ### Added
 - 3D: skinned glTF meshes (`JOINTS_0` / `WEIGHTS_0`, as exported by Mixamo and Quaternius) deform with their skeleton, on the CPU, so alike on WebGPU, WebGL and Canvas; up to four joints per vertex, no morph targets. A skinned asset loads as one `GLTFModel`, whose nodes and joints are reached by name with `getNodeNames()`, `getNodeTransform()` and `addChildToNode()` (a sword in a hand)
@@ -15,10 +15,16 @@
 - Physics: the adapter API takes a `Vector3d` wherever it takes a `Vector2d` (`setVelocity`, `applyForce`, `applyImpulse`, `setPosition`, `gravity`), with optional `getVelocity3d`, `getRotation` / `setRotation` and `getAngularVelocity3d` for a 3D adapter; the built-in applies them along its depth axis. A `Vector2d` works as before. A joint's anchors and axis and a body's `maxVelocity` may carry a `z`, which a 2D adapter ignores
 - Physics: the built-in says once in the console when it is asked for 3D it can only approximate (those three shapes, or a turn or spin about X or Y), naming `@melonjs/rapier3d-adapter`
 - Physics: optional `isSleeping()` on the adapter API, whether the engine has put a body to rest; always `false` on the built-in, which has no sleeping
-- Math: `Quaternion`, an orientation in 3D
+- Math: `Quaternion`, an orientation in 3D, built and used as a `Matrix3d` is: `rotate(angle, axis)`, `multiply`, `invert`, `apply` / `applyInverse`, `fromMat3d` / `toMatrix3d`; `slerp` between two, and `setFromUnitVectors(from, to)`, the shortest turn that takes one direction onto another
+- Math: `Matrix3d#compose(translation, rotation, scale)` sets a matrix from a position, a `Quaternion` and a scale; `Matrix3d#rotate()` and `Renderable#rotate()` also take a `Quaternion`
 - State: `state.reload()` builds the current stage again, for a "play again" or a level restart, with the arguments it was entered with or new ones; `state.change()` to the current state still does nothing
 
+### Performance
+- `Camera3d`: the camera builds its orientation once, from a `Quaternion`, when `yaw`, `pitch` or `roll` changes, and the view, the frustum, the fog and `getBasis()` all reuse it, where each rebuilt it from three rotations; the view is taken off the world container by restoring its transform instead of turning it back. The camera's view work per frame is about **48%** faster with the camera moving (1.49 to **0.78 µs**) and **72%** faster with it still (1.15 to **0.32 µs**)
+
 ### Fixed
+- `Matrix3d#rotate`, `Matrix2d#rotate` and `Renderable#rotate`: an angle or an axis that is not a finite number filled the whole matrix with NaN, and the renderable vanished; it now turns nothing
+- `Camera2d` and `Camera3d`: taking the view back off the world container every frame, by the opposite move (and turns), left a rounding error in its transform, larger the farther the camera was from the origin; it is now restored exactly, at no extra cost in 2D. A `yaw`, `pitch` or `roll` that is not a number no longer fills the view with NaN: that turn is left out
 - `Mesh#shadowGroundNormal`: a normal with a part along Z was not normalized on Z, so the ground shadow was laid on a wrongly tilted plane
 - `World#setAdapter`: a body a 3D adapter tilted (turned about X or Y) is built again with its whole rotation on an adapter with `setRotation`; it lost all but its turn about Z. A turned body is also turned back on the outgoing adapter first, so an adapter that turns a renderable from how it stood when its body was made does not turn it a second time
 - Input: under a `Camera3d`, pointer events on a mesh are hit-tested by the ray through the pointer against its triangles; they were tested against 2D bounds that a perspective view misplaces

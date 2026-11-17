@@ -123,7 +123,7 @@ describe("World#setAdapter keeps each body's orientation", () => {
 		const first = new Tilting();
 		app.world.setAdapter(first);
 		const r = crate();
-		first.setRotation(r, new Quaternion().setFromAxisAngle(AXIS_Z, 0.7));
+		first.setRotation(r, new Quaternion().rotate(0.7, AXIS_Z));
 		const next = new Tilting();
 		app.world.setAdapter(next);
 		expect(next.calls).toEqual(["setAngle"]);
@@ -144,8 +144,8 @@ describe("World#setAdapter keeps each body's orientation", () => {
 		app.world.setAdapter(first);
 		const r = crate();
 		const tilt = new Quaternion()
-			.setFromAxisAngle(AXIS_X, 0.4)
-			.multiply(new Quaternion().setFromAxisAngle(AXIS_Z, 0.3));
+			.rotate(0.4, AXIS_X)
+			.multiply(new Quaternion().rotate(0.3, AXIS_Z));
 		first.rotations.set(r, tilt.clone());
 		const next = new Tilting();
 		app.world.setAdapter(next);
@@ -163,8 +163,8 @@ describe("World#setAdapter keeps each body's orientation", () => {
 		first.rotations.set(
 			r,
 			new Quaternion()
-				.setFromAxisAngle(AXIS_Z, 0.3)
-				.multiply(new Quaternion().setFromAxisAngle(AXIS_X, 0.4)),
+				.rotate(0.3, AXIS_Z)
+				.multiply(new Quaternion().rotate(0.4, AXIS_X)),
 		);
 		const next = new Flat();
 		app.world.setAdapter(next);
@@ -180,8 +180,8 @@ describe("World#setAdapter keeps each body's orientation", () => {
 		first.rotations.set(
 			r,
 			new Quaternion()
-				.setFromAxisAngle(AXIS_Z, 0.3)
-				.multiply(new Quaternion().setFromAxisAngle(AXIS_X, 0.4)),
+				.rotate(0.3, AXIS_Z)
+				.multiply(new Quaternion().rotate(0.4, AXIS_X)),
 		);
 		const next = new BuiltinAdapter();
 		app.world.setAdapter(next);
@@ -197,7 +197,7 @@ describe("World#setAdapter keeps each body's orientation", () => {
 			const first = new Tilting();
 			app.world.setAdapter(first);
 			const r = crate();
-			const tilt = new Quaternion().setFromAxisAngle(AXIS_X, 0.4);
+			const tilt = new Quaternion().rotate(0.4, AXIS_X);
 			first.rotations.set(r, tilt.clone());
 			const unturned = [];
 			const setRotation = first.setRotation.bind(first);

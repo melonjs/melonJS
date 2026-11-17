@@ -12,6 +12,7 @@ import Body from "./../physics/builtin/body.js";
 /**
  * additional import for TypeScript
  * @import {Matrix3d} from "../math/matrix3d.ts";
+ * @import {Quaternion} from "../math/quaternion.ts";
  * @import Entity from "./entity/entity.js";
  * @import Container from "./container.js";
  * @import {Line} from "./../geometries/line.ts";
@@ -1066,9 +1067,13 @@ export default class Renderable extends Rect {
 	 * Rotate this renderable by the specified angle (in radians).
 	 * When called with just an angle, rotates around the Z axis (2D rotation).
 	 * When called with an angle and a Vector3d axis, rotates around that axis in 3D.
-	 * @param {number} angle - The angle to rotate (in radians)
-	 * @param {Vector3d} [v] - the axis to rotate around (defaults to Z axis for 2D)
+	 * When called with a {@link Quaternion}, rotates by the rotation it holds.
+	 * @param {number|Quaternion} angle - The angle to rotate (in radians), or a quaternion
+	 * @param {Vector3d} [v] - the axis to rotate around (defaults to Z axis for 2D); not used with a quaternion
 	 * @returns {this} Reference to this object for method chaining
+	 * @example
+	 * // turn a mesh from facing +X to facing along `dir`
+	 * mesh.rotate(new Quaternion().setFromUnitVectors(new Vector3d(1, 0, 0), dir));
 	 */
 	rotate(angle, v) {
 		if (angle !== 0) {

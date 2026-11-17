@@ -4,6 +4,7 @@ import {
 	skinVertices,
 } from "../../level/gltf/gltf_skin.js";
 import { level } from "../../level/level.js";
+import { writeRotationScale } from "../../math/rotation.ts";
 import { transformedBounds } from "../../math/vertex.ts";
 import { hasDOM } from "../../system/dom.ts";
 import { fetchData } from "../../utils/fetchdata.js";
@@ -383,36 +384,21 @@ const IDENTITY = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
  * @internal
  */
 export function composeTRSInto(out, translation, rotation, scale) {
-	const [tx, ty, tz] = translation;
-	const [qx, qy, qz, qw] = rotation;
-	const [sx, sy, sz] = scale;
-	const x2 = qx + qx;
-	const y2 = qy + qy;
-	const z2 = qz + qz;
-	const xx = qx * x2;
-	const xy = qx * y2;
-	const xz = qx * z2;
-	const yy = qy * y2;
-	const yz = qy * z2;
-	const zz = qz * z2;
-	const wx = qw * x2;
-	const wy = qw * y2;
-	const wz = qw * z2;
-	out[0] = (1 - (yy + zz)) * sx;
-	out[1] = (xy + wz) * sx;
-	out[2] = (xz - wy) * sx;
-	out[3] = 0;
-	out[4] = (xy - wz) * sy;
-	out[5] = (1 - (xx + zz)) * sy;
-	out[6] = (yz + wx) * sy;
-	out[7] = 0;
-	out[8] = (xz + wy) * sz;
-	out[9] = (yz - wx) * sz;
-	out[10] = (1 - (xx + yy)) * sz;
-	out[11] = 0;
-	out[12] = tx;
-	out[13] = ty;
-	out[14] = tz;
+	// the rotation-and-scale part `Matrix3d#compose` and
+	// `Quaternion#toMatrix3d` write too, in this array's own precision
+	writeRotationScale(
+		out,
+		rotation[0],
+		rotation[1],
+		rotation[2],
+		rotation[3],
+		scale[0],
+		scale[1],
+		scale[2],
+	);
+	out[12] = translation[0];
+	out[13] = translation[1];
+	out[14] = translation[2];
 	out[15] = 1;
 	return out;
 }
