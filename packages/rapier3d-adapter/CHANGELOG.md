@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.0 - _unreleased_
+## 1.0.0 - _2026-11-17_
 
 ### Added
 - A melonJS physics adapter for Rapier 3D, compiled to WebAssembly: bodies that move and turn in three dimensions, written back onto a `Mesh`, `Sprite3d` or `GLTFModel` ([#1846](https://github.com/melonjs/melonJS/issues/1846))
