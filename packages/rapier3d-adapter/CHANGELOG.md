@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.1 - _2026-11-17_
+
+### Fixed
+- `setPosition()` with a coordinate that is not a finite number (`NaN`, `Infinity`) leaves the body and its renderable where they are, as `setAngle()` and the velocity, force and turn setters already do. The body and its renderable, `depth` included, were put at `NaN` and stayed there until the next valid position
+
 ## 1.0.0 - _2026-11-17_
 
 ### Added
