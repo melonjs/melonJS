@@ -124,7 +124,8 @@ function readShadowNormal(value) {
 	const length = Math.hypot(out.x, out.y, out.z);
 	// a zero normal describes no plane at all; fall back to level rather than
 	// dividing by it
-	return length > 1e-6 ? out.scale(1 / length) : out.set(0, -1, 0);
+	// `div`, not `scale(1 / length)`: `scale` leaves z alone unless told
+	return length > 1e-6 ? out.div(length) : out.set(0, -1, 0);
 }
 
 /**

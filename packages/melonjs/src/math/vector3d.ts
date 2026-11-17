@@ -89,11 +89,18 @@ export class Vector3d {
 	}
 
 	/**
-	 * Multiply this vector values by the given scalar
+	 * Multiply this vector values by the given scalar, per axis. `y`
+	 * defaults to `x` but `z` defaults to 1, so `scale(n)` scales x and y
+	 * only, as it does on a 2D vector, and leaves z, a 2D renderable's depth
+	 * (its draw order), as it was. To scale all three, pass all three,
+	 * `scale(n, n, n)`, or divide with {@link Vector3d#div}.
 	 * @param x x component
-	 * @param [y] y component
-	 * @param [z] z component
+	 * @param [y] y component, `x` when left out
+	 * @param [z] z component, 1 (unchanged) when left out
 	 * @returns Reference to this object for method chaining
+	 * @example
+	 * v.scale(2);       // (2x, 2y, z)
+	 * v.scale(2, 2, 2); // (2x, 2y, 2z)
 	 */
 	scale(x: number, y = x, z = 1) {
 		return this.set(this.x * x, this.y * y, this.z * z);
