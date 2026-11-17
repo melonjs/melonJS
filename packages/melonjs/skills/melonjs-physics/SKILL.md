@@ -1262,11 +1262,12 @@ Same call, different magnitude — these are the ones that waste an afternoon:
 - **`isSleeping(renderable)`** (optional, melonJS 20.16) reads whether the
   engine put a dynamic body to rest: the way to tell a throw, a stack or a
   level has settled. Call it as `world.adapter.isSleeping?.(r) ?? false`.
-  matter-adapter 1.8, planck-adapter 1.9 and rapier2d-adapter 1.2 implement
-  it; matter sleeps only with `matterEngineOptions: { enableSleeping: true }`.
-  Always `false` on the built-in (no sleeping), for a static or kinematic body
-  (a `"kinematic"` body on matter is a dynamic one, and sleeps like one), and
-  for a renderable with no body. A velocity, force, impulse or position
+  matter-adapter 1.8, planck-adapter 1.9, rapier2d-adapter 1.2 and the
+  Rapier 3D adapter implement it; matter sleeps only with
+  `matterEngineOptions: { enableSleeping: true }`. Always `false` on the
+  built-in (no sleeping), for a static or kinematic body (a `"kinematic"`
+  body on matter is a dynamic one, and sleeps like one), and for a
+  renderable with no body. A velocity, force, impulse or position
   written to a sleeping body wakes it on every adapter (on matter since 1.8.0;
   before, it was dropped).
 

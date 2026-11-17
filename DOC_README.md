@@ -72,6 +72,7 @@ engine, and each entry carries that package's own README.
 | **Matter physics** | `@melonjs/matter-adapter` | {@link MatterAdapter | MatterAdapter} |
 | **Box2D physics** | `@melonjs/planck-adapter` | {@link PlanckAdapter | PlanckAdapter} |
 | **Rapier physics** | `@melonjs/rapier2d-adapter` | {@link RapierAdapter | RapierAdapter} |
+| **Rapier 3D physics** | `@melonjs/rapier3d-adapter` | {@link Rapier3dAdapter | Rapier3dAdapter} |
 | **Spine animation** | `@melonjs/spine-plugin` | {@link SpinePlugin | SpinePlugin} |
 | **Debug panel** | `@melonjs/debug-plugin` | {@link DebugPanelPlugin | DebugPanelPlugin} |
 | **Touch controls** | `@melonjs/gamepad-plugin` | {@link GamepadPlugin | GamepadPlugin} |
