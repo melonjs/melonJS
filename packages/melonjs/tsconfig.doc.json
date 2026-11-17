@@ -4,7 +4,10 @@
 	"compilerOptions": {
 		"allowJs": true,
 		"noEmit": true,
-		"skipLibCheck": true
+		"skipLibCheck": true,
+		"paths": {
+			"melonjs": ["./src/index.ts"]
+		}
 	},
 	"include": [
 		"src",

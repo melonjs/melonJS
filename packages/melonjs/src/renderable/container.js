@@ -1664,7 +1664,6 @@ export default class Container extends Renderable {
 	/**
 	 * container update function. <br>
 	 * automatically called by the application update loop {@link Application}
-	 * @protected
 	 * @param {number} dt - time since the last update in milliseconds.
 	 * @returns {boolean} true if the Container is dirty
 	 */
