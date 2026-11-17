@@ -276,9 +276,9 @@ describe("Physics : BuiltinAdapter 3D interface", () => {
 			const { r, body } = make();
 			body.setAngle(Math.PI / 3);
 			const q = adapter.getRotation(r);
-			const expected = new Quaternion().setFromAxisAngle(
-				new Vector3d(0, 0, 1),
+			const expected = new Quaternion().rotate(
 				Math.PI / 3,
+				new Vector3d(0, 0, 1),
 			);
 			expect(q.equals(expected, 1e-6)).toBe(true);
 		});
@@ -294,7 +294,7 @@ describe("Physics : BuiltinAdapter 3D interface", () => {
 			const { r, body } = make();
 			adapter.setRotation(
 				r,
-				new Quaternion().setFromAxisAngle(new Vector3d(0, 0, 1), -1.2),
+				new Quaternion().rotate(-1.2, new Vector3d(0, 0, 1)),
 			);
 			expect(body.angle).toBeCloseTo(-1.2, 6);
 		});
@@ -313,18 +313,13 @@ describe("Physics : BuiltinAdapter 3D interface", () => {
 		it("setRotation keeps only the part about Z of a tilted turn", () => {
 			const { r, body } = make();
 			// a turn about X takes +X to itself: no part about Z
-			adapter.setRotation(
-				r,
-				new Quaternion().setFromAxisAngle(new Vector3d(1, 0, 0), 1),
-			);
+			adapter.setRotation(r, new Quaternion().rotate(1, new Vector3d(1, 0, 0)));
 			expect(body.angle).toBeCloseTo(0, 6);
 			// about Z then about X: +X lands on the Z-turned direction, seen
 			// down Z
 			const q = new Quaternion()
-				.setFromAxisAngle(new Vector3d(1, 0, 0), 0.7)
-				.multiply(
-					new Quaternion().setFromAxisAngle(new Vector3d(0, 0, 1), 0.5),
-				);
+				.rotate(0.7, new Vector3d(1, 0, 0))
+				.multiply(new Quaternion().rotate(0.5, new Vector3d(0, 0, 1)));
 			adapter.setRotation(r, q);
 			const seen = new Vector3d(1, 0, 0);
 			q.apply(seen);
@@ -336,7 +331,7 @@ describe("Physics : BuiltinAdapter 3D interface", () => {
 			body.setAngle(0.4);
 			adapter.setRotation(
 				r,
-				new Quaternion().setFromAxisAngle(new Vector3d(0, 1, 0), Math.PI / 2),
+				new Quaternion().rotate(Math.PI / 2, new Vector3d(0, 1, 0)),
 			);
 			// +X goes to -Z, give or take float noise, which must not be
 			// read as a turn about Z
@@ -386,7 +381,7 @@ describe("Physics : BuiltinAdapter 3D interface", () => {
 				adapter.setAngularVelocity(r, new Vector3d(0, 0, 0.5));
 				adapter.setRotation(
 					r,
-					new Quaternion().setFromAxisAngle(new Vector3d(0, 0, 1), 1),
+					new Quaternion().rotate(1, new Vector3d(0, 0, 1)),
 				);
 				adapter.getRotation(r);
 				adapter.getVelocity3d(r);
@@ -415,10 +410,7 @@ describe("Physics : BuiltinAdapter 3D interface", () => {
 
 		it("names the 3D adapter for a turn about X or Y, once", () => {
 			const { r, body } = make();
-			const tilt = new Quaternion().setFromAxisAngle(
-				new Vector3d(1, 0, 0),
-				0.5,
-			);
+			const tilt = new Quaternion().rotate(0.5, new Vector3d(1, 0, 0));
 			adapter.setRotation(r, tilt);
 			adapter.setRotation(r, tilt);
 			const said = warnings();

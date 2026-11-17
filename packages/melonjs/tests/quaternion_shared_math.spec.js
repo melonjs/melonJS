@@ -9,7 +9,13 @@
  * slerp and matrix, so a change in what they compute shows here.
  */
 import { describe, expect, it } from "vitest";
-import { Matrix3d, Quaternion, Renderable, Vector3d } from "../src/index.js";
+import {
+	Matrix2d,
+	Matrix3d,
+	Quaternion,
+	Renderable,
+	Vector3d,
+} from "../src/index.js";
 import { slerpQuat } from "../src/level/gltf/gltf_sampler.js";
 import { composeTRSInto } from "../src/loader/parsers/gltf.js";
 import { slerpInto, writeRotationScale } from "../src/math/rotation.ts";
@@ -202,10 +208,10 @@ describe("the shared rotation arithmetic", () => {
 			const pairs = [];
 			for (let k = 0; k < 100; k++) {
 				pairs.push([randomUnit(), randomUnit()]);
-				const a = new Quaternion().setFromAxisAngle(axis, rand() * 6);
+				const a = new Quaternion().rotate(rand() * 6, axis);
 				const b = a
 					.clone()
-					.multiply(new Quaternion().setFromAxisAngle(axis, 0.017 * rand()));
+					.multiply(new Quaternion().rotate(0.017 * rand(), axis));
 				pairs.push([a.toArray(), b.toArray()]);
 			}
 			for (const [a, b] of pairs) {
@@ -255,11 +261,8 @@ describe("the shared rotation arithmetic", () => {
 		});
 
 		it("two all but identical rotations blend without dividing by zero", () => {
-			const a = new Quaternion().setFromAxisAngle(new Vector3d(1, 2, 3), 1);
-			const b = new Quaternion().setFromAxisAngle(
-				new Vector3d(1, 2, 3),
-				1 + 1e-9,
-			);
+			const a = new Quaternion().rotate(1, new Vector3d(1, 2, 3));
+			const b = new Quaternion().rotate(1 + 1e-9, new Vector3d(1, 2, 3));
 			const out = [0, 0, 0, 0];
 			slerpInto(a.toArray(), 0, b.toArray(), 0, 0.5, out);
 			for (const c of out) {
@@ -332,7 +335,7 @@ describe("Matrix3d#compose", () => {
 	});
 
 	it("a non-unit rotation is normalized; a zero or NaN one is no turn", () => {
-		const unit = new Quaternion().setFromAxisAngle(new Vector3d(0, 1, 0), 0.8);
+		const unit = new Quaternion().rotate(0.8, new Vector3d(0, 1, 0));
 		const scaled = new Quaternion(
 			unit.x * 5,
 			unit.y * 5,
@@ -376,9 +379,7 @@ describe("Matrix3d#rotate and Renderable#rotate with a Quaternion", () => {
 				.translate(rand() * 10, rand() * 10, rand() * 10)
 				.scale(rand() + 0.5, rand() + 0.5, rand() + 0.5);
 			const byAngle = base.clone().rotate(angle, axis);
-			const byQuat = base
-				.clone()
-				.rotate(new Quaternion().setFromAxisAngle(axis, angle));
+			const byQuat = base.clone().rotate(new Quaternion().rotate(angle, axis));
 			for (let k = 0; k < 16; k++) {
 				expect(byQuat.val[k]).toBeCloseTo(byAngle.val[k], 4);
 			}
@@ -387,9 +388,7 @@ describe("Matrix3d#rotate and Renderable#rotate with a Quaternion", () => {
 
 	it("keeps the translation column, and returns the matrix", () => {
 		const m = new Matrix3d().translate(5, 6, 7);
-		expect(
-			m.rotate(new Quaternion().setFromAxisAngle(new Vector3d(1, 0, 0), 1)),
-		).toBe(m);
+		expect(m.rotate(new Quaternion().rotate(1, new Vector3d(1, 0, 0)))).toBe(m);
 		expect([m.val[12], m.val[13], m.val[14], m.val[15]]).toEqual([5, 6, 7, 1]);
 	});
 
@@ -399,7 +398,7 @@ describe("Matrix3d#rotate and Renderable#rotate with a Quaternion", () => {
 		expect(Array.from(base.clone().rotate(new Quaternion()).val)).toEqual(
 			before,
 		);
-		const q = new Quaternion().setFromAxisAngle(new Vector3d(0, 0, 1), 0.9);
+		const q = new Quaternion().rotate(0.9, new Vector3d(0, 0, 1));
 		const a = base.clone().rotate(q);
 		const b = base
 			.clone()
@@ -426,9 +425,7 @@ describe("Matrix3d#rotate and Renderable#rotate with a Quaternion", () => {
 		const r = new Renderable(0, 0, 40, 10);
 		r.isDirty = false;
 		const before = r.getBounds().width;
-		r.rotate(
-			new Quaternion().setFromAxisAngle(new Vector3d(0, 0, 1), Math.PI / 2),
-		);
+		r.rotate(new Quaternion().rotate(Math.PI / 2, new Vector3d(0, 0, 1)));
 		expect(r.isDirty).toBe(true);
 		// a quarter turn about Z swaps the bounds' width and height
 		expect(r.getBounds().width).toBeCloseTo(10, 4);
@@ -513,10 +510,7 @@ describe("Quaternion#setFromUnitVectors", () => {
 			new Vector3d(1e200, 0, 0),
 			new Vector3d(0, 1e200, 0),
 		);
-		const ref = new Quaternion().setFromAxisAngle(
-			new Vector3d(0, 0, 1),
-			Math.PI / 2,
-		);
+		const ref = new Quaternion().rotate(Math.PI / 2, new Vector3d(0, 0, 1));
 		sameTurn(q1, ref, 10);
 		sameTurn(q2, ref, 10);
 	});
@@ -526,5 +520,118 @@ describe("Quaternion#setFromUnitVectors", () => {
 		const b = new Vector3d(0, 0, 5);
 		new Quaternion().setFromUnitVectors(a, b);
 		expect([a.x, a.y, a.z, b.x, b.y, b.z]).toEqual([3, 0, 0, 0, 0, 5]);
+	});
+});
+
+describe("Quaternion reads as a Matrix3d does", () => {
+	/** a quaternion and a matrix turned alike, compared through a vector */
+	const expectSameTurn = (q, m, digits = 6) => {
+		for (const v of [
+			new Vector3d(1, 0, 0),
+			new Vector3d(0, 1, 0),
+			new Vector3d(0.3, -0.7, 0.2),
+		]) {
+			const a = q.apply(v.clone());
+			const b = m.apply(v.clone());
+			expectVec(a, b.x, b.y, b.z, digits);
+		}
+	};
+
+	it("rotate(angle, axis) chains turn as Matrix3d#rotate chains do", () => {
+		for (let i = 0; i < 100; i++) {
+			const steps = [];
+			for (let k = 0; k < 4; k++) {
+				steps.push([(rand() - 0.5) * 8, randomVec()]);
+			}
+			const q = new Quaternion();
+			const m = new Matrix3d();
+			for (const [angle, axis] of steps) {
+				q.rotate(angle, axis);
+				m.rotate(angle, axis);
+			}
+			expectSameTurn(q, m, 5);
+		}
+	});
+
+	it("rotate turns further, the new turn first, as on a matrix", () => {
+		const q = new Quaternion().rotate(0.6, new Vector3d(1, 0, 0));
+		const m = new Matrix3d().rotate(0.6, new Vector3d(1, 0, 0));
+		q.rotate(1.1, new Vector3d(0, 1, 0));
+		m.rotate(1.1, new Vector3d(0, 1, 0));
+		expectSameTurn(q, m);
+		// and the same as composing with multiply
+		const composed = new Quaternion()
+			.rotate(0.6, new Vector3d(1, 0, 0))
+			.multiply(new Quaternion().rotate(1.1, new Vector3d(0, 1, 0)));
+		sameTurn(q, composed, 12);
+	});
+
+	it("the axis defaults to Z, as on a matrix", () => {
+		const q = new Quaternion().rotate(0.8);
+		const m = new Matrix3d().rotate(0.8);
+		expectSameTurn(q, m);
+		sameTurn(q, new Quaternion().rotate(0.8, new Vector3d(0, 0, 1)), 12);
+	});
+
+	it("an angle of 0, or not a number, or a zero or NaN axis, turns nothing, on both", () => {
+		const start = new Quaternion().rotate(0.4, new Vector3d(1, 1, 0));
+		const startM = new Matrix3d().rotate(0.4, new Vector3d(1, 1, 0));
+		const before = Array.from(startM.val);
+		for (const [angle, axis] of [
+			[0, new Vector3d(0, 1, 0)],
+			[Number.NaN, new Vector3d(0, 1, 0)],
+			[Infinity, new Vector3d(0, 1, 0)],
+			[1, new Vector3d(0, 0, 0)],
+			[1, new Vector3d(Number.NaN, 1, 0)],
+			[1, new Vector3d(Infinity, 0, 0)],
+		]) {
+			const q = start.clone().rotate(angle, axis);
+			expect([q.x, q.y, q.z, q.w]).toEqual([
+				start.x,
+				start.y,
+				start.z,
+				start.w,
+			]);
+			const m = startM.clone().rotate(angle, axis);
+			expect(Array.from(m.val)).toEqual(before);
+		}
+	});
+
+	it("Matrix2d#rotate with an angle that is not a number turns nothing", () => {
+		for (const bad of [Number.NaN, Infinity, -Infinity]) {
+			const m = new Matrix2d().rotate(0.3);
+			const before = Array.from(m.val);
+			m.rotate(bad);
+			expect(Array.from(m.val)).toEqual(before);
+		}
+	});
+
+	it("a renderable turned by an angle that is not a number keeps its turn", () => {
+		const r = new Renderable(0, 0, 10, 10);
+		r.rotate(0.5);
+		const before = Array.from(r.currentTransform.val);
+		r.rotate(Number.NaN, new Vector3d(0, 1, 0));
+		expect(Array.from(r.currentTransform.val)).toEqual(before);
+	});
+
+	it("applyInverse undoes apply, as on a matrix", () => {
+		for (let i = 0; i < 100; i++) {
+			const q = quat(randomUnit());
+			const v = randomVec();
+			const back = q.applyInverse(q.apply(v.clone()));
+			expectVec(back, v.x, v.y, v.z, 9);
+			const m = q.toMatrix3d();
+			const viaMatrix = m.applyInverse(v.clone());
+			const viaQuat = q.applyInverse(v.clone());
+			expectVec(viaQuat, viaMatrix.x, viaMatrix.y, viaMatrix.z, 4);
+		}
+	});
+
+	it("fromMat3d reads back what toMatrix3d wrote, as Matrix2d#fromMat3d does", () => {
+		for (let i = 0; i < 100; i++) {
+			const q = quat(randomUnit());
+			const back = new Quaternion().fromMat3d(q.toMatrix3d());
+			sameTurn(back, q, 6);
+		}
 	});
 });

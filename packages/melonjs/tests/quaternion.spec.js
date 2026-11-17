@@ -53,7 +53,7 @@ describe("Quaternion", () => {
 
 	it("turns a vector as Matrix3d#rotate does, about any axis", () => {
 		for (const [axis, angle] of CASES) {
-			const q = new Quaternion().setFromAxisAngle(axis, angle);
+			const q = new Quaternion().rotate(angle, axis);
 			const m = new Matrix3d().rotate(angle, axis.clone().normalize());
 			for (const v of [X, Y, Z, new Vector3d(2, -3, 7)]) {
 				close(q.apply(v.clone()), rotated(m, v), 4);
@@ -63,13 +63,13 @@ describe("Quaternion", () => {
 
 	it("follows the right-hand rule in the engine's space", () => {
 		// a quarter turn about +Z takes +X to +Y
-		const q = new Quaternion().setFromAxisAngle(Z, Math.PI / 2);
+		const q = new Quaternion().rotate(Math.PI / 2, Z);
 		close(q.apply(X.clone()), Y);
 	});
 
 	it("does not mind the axis's length", () => {
-		const unit = new Quaternion().setFromAxisAngle(Y, 1);
-		const long = new Quaternion().setFromAxisAngle(new Vector3d(0, 40, 0), 1);
+		const unit = new Quaternion().rotate(1, Y);
+		const long = new Quaternion().rotate(1, new Vector3d(0, 40, 0));
 		sameRotation(unit, long);
 		expect(long.length()).toBeCloseTo(1);
 	});
@@ -80,14 +80,14 @@ describe("Quaternion", () => {
 			new Vector3d(Number.NaN, 0, 0),
 			new Vector3d(Number.POSITIVE_INFINITY, 0, 0),
 		]) {
-			const q = new Quaternion(1, 2, 3, 4).setFromAxisAngle(axis, 1);
+			const q = new Quaternion(1, 2, 3, 4).identity().rotate(1, axis);
 			expect(q.isIdentity()).toBe(true);
 		}
 	});
 
 	it("writes the same matrix Matrix3d#rotate builds", () => {
 		for (const [axis, angle] of CASES) {
-			const q = new Quaternion().setFromAxisAngle(axis, angle);
+			const q = new Quaternion().rotate(angle, axis);
 			const m = new Matrix3d().rotate(angle, axis.clone().normalize());
 			const fromQ = q.toMatrix3d();
 			expect(fromQ).toBeInstanceOf(Matrix3d);
@@ -99,7 +99,7 @@ describe("Quaternion", () => {
 
 	it("leaves the translation of the matrix it writes into alone", () => {
 		const m = new Matrix3d().translate(10, 20, 30);
-		new Quaternion().setFromAxisAngle(Y, 1).toMatrix3d(m);
+		new Quaternion().rotate(1, Y).toMatrix3d(m);
 		expect([m.val[12], m.val[13], m.val[14], m.val[15]]).toEqual([
 			10, 20, 30, 1,
 		]);
@@ -108,15 +108,15 @@ describe("Quaternion", () => {
 	it("reads back the rotation of a matrix, on every branch", () => {
 		// the 180° turns take the branches where w is near 0
 		for (const [axis, angle] of CASES) {
-			const q = new Quaternion().setFromAxisAngle(axis, angle);
-			const back = new Quaternion().setFromMatrix3d(q.toMatrix3d());
+			const q = new Quaternion().rotate(angle, axis);
+			const back = new Quaternion().fromMat3d(q.toMatrix3d());
 			sameRotation(back, q, 4);
 		}
 	});
 
 	it("composes in matrix order: a.multiply(b) applies b first", () => {
-		const a = new Quaternion().setFromAxisAngle(Z, Math.PI / 2);
-		const b = new Quaternion().setFromAxisAngle(X, Math.PI / 2);
+		const a = new Quaternion().rotate(Math.PI / 2, Z);
+		const b = new Quaternion().rotate(Math.PI / 2, X);
 		const ab = a.clone().multiply(b);
 		const m = new Matrix3d()
 			.rotate(Math.PI / 2, Z)
@@ -136,7 +136,7 @@ describe("Quaternion", () => {
 
 	it("inverts: a turn and its inverse cancel", () => {
 		for (const [axis, angle] of CASES) {
-			const q = new Quaternion().setFromAxisAngle(axis, angle);
+			const q = new Quaternion().rotate(angle, axis);
 			const back = q.clone().multiply(q.clone().invert());
 			expect(back.isIdentity() || back.equals(new Quaternion(), 1e-6)).toBe(
 				true,
@@ -148,24 +148,24 @@ describe("Quaternion", () => {
 
 	it("slerps along the shortest arc, at an even speed", () => {
 		const a = new Quaternion();
-		const b = new Quaternion().setFromAxisAngle(Y, Math.PI / 2);
+		const b = new Quaternion().rotate(Math.PI / 2, Y);
 		sameRotation(a.clone().slerp(b, 0), a);
 		sameRotation(a.clone().slerp(b, 1), b);
 		sameRotation(
 			a.clone().slerp(b, 0.5),
-			new Quaternion().setFromAxisAngle(Y, Math.PI / 4),
+			new Quaternion().rotate(Math.PI / 4, Y),
 		);
 		// -b is the same orientation: the result must not take the long way
 		const negB = new Quaternion(-b.x, -b.y, -b.z, -b.w);
 		sameRotation(
 			a.clone().slerp(negB, 0.5),
-			new Quaternion().setFromAxisAngle(Y, Math.PI / 4),
+			new Quaternion().rotate(Math.PI / 4, Y),
 		);
 	});
 
 	it("slerps between two nearly equal turns without NaN", () => {
-		const a = new Quaternion().setFromAxisAngle(Y, 1);
-		const b = new Quaternion().setFromAxisAngle(Y, 1 + 1e-9);
+		const a = new Quaternion().rotate(1, Y);
+		const b = new Quaternion().rotate(1 + 1e-9, Y);
 		const mid = a.clone().slerp(b, 0.5);
 		expect(mid.toArray().every(Number.isFinite)).toBe(true);
 		expect(mid.length()).toBeCloseTo(1);

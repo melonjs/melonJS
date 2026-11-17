@@ -65,7 +65,7 @@ const X = new Vector3d(1, 0, 0);
 const Y = new Vector3d(0, 1, 0);
 const Z = new Vector3d(0, 0, 1);
 const turn = (axis: Vector3d, angle: number) => {
-	return new Quaternion().setFromAxisAngle(axis.clone().normalize(), angle);
+	return new Quaternion().rotate(angle, axis.clone().normalize());
 };
 /**
  * How alike two turns are: 1 for the same turn, whatever the sign of q.

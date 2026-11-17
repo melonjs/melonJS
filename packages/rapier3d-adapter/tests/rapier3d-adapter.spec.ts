@@ -458,9 +458,9 @@ describe("Rapier3dAdapter", () => {
 					gravityScale: 0,
 				};
 				world.addChild(mesh, 40);
-				const q = new Quaternion().setFromAxisAngle(
-					new Vector3d(1, 2, -0.5).normalize(),
+				const q = new Quaternion().rotate(
 					1.1,
+					new Vector3d(1, 2, -0.5).normalize(),
 				);
 				adapter.setRotation(mesh, q);
 				// moving and spinning, then read where it draws
@@ -492,7 +492,7 @@ describe("Rapier3dAdapter", () => {
 				gravityScale: 0,
 			};
 			world.addChild(r, 0);
-			const q = new Quaternion().setFromAxisAngle(new Vector3d(0, 0, 1), 0.5);
+			const q = new Quaternion().rotate(0.5, new Vector3d(0, 0, 1));
 			adapter.setRotation(r, q);
 			const t = r.currentTransform.val;
 			// R · scale(2): the first column is 2 × (cos, sin, 0)
@@ -503,7 +503,7 @@ describe("Rapier3dAdapter", () => {
 
 		it("updateShape keeps the transform the turn is written from", () => {
 			const r = cube(100, 100, 0, { gravityScale: 0 });
-			const q = new Quaternion().setFromAxisAngle(new Vector3d(0, 0, 1), 0.5);
+			const q = new Quaternion().rotate(0.5, new Vector3d(0, 0, 1));
 			adapter.setRotation(r, q);
 			adapter.setVelocity(r, new Vector3d(5, 6, 7));
 			adapter.updateShape(r, [new Sphere(0, 0, 0, 16)]);
@@ -524,7 +524,7 @@ describe("Rapier3dAdapter", () => {
 			});
 			adapter.setRotation(
 				r,
-				new Quaternion().setFromAxisAngle(new Vector3d(0, 1, 0), Math.PI / 2),
+				new Quaternion().rotate(Math.PI / 2, new Vector3d(0, 1, 0)),
 			);
 			// +X turns to -Z about Y
 			expect(r.currentTransform.val[2]).toBeCloseTo(-1, 6);
@@ -550,15 +550,11 @@ describe("Rapier3dAdapter", () => {
 		};
 
 		it("a tilted body moved to another adapter is drawn as it was, turned once", () => {
-			swapKeepsTurn(
-				new Quaternion().setFromAxisAngle(new Vector3d(1, 0, 0), 0.6),
-			);
+			swapKeepsTurn(new Quaternion().rotate(0.6, new Vector3d(1, 0, 0)));
 		});
 
 		it("a body turned about Z moved to another adapter is drawn as it was", () => {
-			swapKeepsTurn(
-				new Quaternion().setFromAxisAngle(new Vector3d(0, 0, 1), 0.7),
-			);
+			swapKeepsTurn(new Quaternion().rotate(0.7, new Vector3d(0, 0, 1)));
 		});
 
 		it("getRotation / setRotation round-trip, a non-unit quaternion normalized", () => {
@@ -577,15 +573,12 @@ describe("Rapier3dAdapter", () => {
 			expect(adapter.getAngle(r)).toBeCloseTo(-0.8, 6);
 			expect(r.body.getAngle?.()).toBeCloseTo(-0.8, 6);
 			// a turn about X leaves +X in place: no turn about Z
-			adapter.setRotation(
-				r,
-				new Quaternion().setFromAxisAngle(new Vector3d(1, 0, 0), 1),
-			);
+			adapter.setRotation(r, new Quaternion().rotate(1, new Vector3d(1, 0, 0)));
 			expect(adapter.getAngle(r)).toBeCloseTo(0, 6);
 			// +X pointed straight down Z reads as no turn, not as noise
 			adapter.setRotation(
 				r,
-				new Quaternion().setFromAxisAngle(new Vector3d(0, 1, 0), Math.PI / 2),
+				new Quaternion().rotate(Math.PI / 2, new Vector3d(0, 1, 0)),
 			);
 			expect(adapter.getAngle(r)).toBe(0);
 		});
@@ -835,7 +828,7 @@ describe("Rapier3dAdapter", () => {
 			const b = cube(140, 100, 0, { gravityScale: 0 });
 			adapter.setRotation(
 				b,
-				new Quaternion().setFromAxisAngle(new Vector3d(0, 1, 0), 0.6),
+				new Quaternion().rotate(0.6, new Vector3d(0, 1, 0)),
 			);
 			world.addJoint({ type: "weld", a, b });
 			adapter.applyImpulse(a, new Vector3d(0, -20, 0));
@@ -950,7 +943,7 @@ describe("Rapier3dAdapter", () => {
 				(b) => {
 					adapter.setRotation(
 						b,
-						new Quaternion().setFromAxisAngle(new Vector3d(0, 1, 0), 0.5),
+						new Quaternion().rotate(0.5, new Vector3d(0, 1, 0)),
 					);
 				},
 			];

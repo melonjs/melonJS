@@ -729,7 +729,7 @@ export default class BuiltinAdapter implements PhysicsAdapter {
 	 */
 	getRotation(renderable: Renderable, out?: Quaternion): Quaternion {
 		const angle = (renderable.body as Body | undefined)?.angle ?? 0;
-		return (out ?? new Quaternion()).setFromAxisAngle(_AXIS_Z, angle);
+		return (out ?? new Quaternion()).identity().rotate(angle, _AXIS_Z);
 	}
 	/**
 	 * Turn the body to an orientation. The built-in bodies turn about Z

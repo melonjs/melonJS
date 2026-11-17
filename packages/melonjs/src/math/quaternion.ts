@@ -1,12 +1,8 @@
+import { EPSILON } from "./math.ts";
 import { Matrix3d } from "./matrix3d.ts";
 import { slerpInto, writeRotationScale } from "./rotation.ts";
 import type { Vector3d } from "./vector3d.ts";
 
-/**
- * How near two orientations have to be before {@link Quaternion.slerp} stops
- * dividing by the sine of the angle between them, which vanishes as they meet,
- * and blends them linearly instead. A cosine, so the test costs no `acos`.
- */
 // the two quaternions a slerp blends, side by side
 const _pair = new Float64Array(8);
 
@@ -20,16 +16,21 @@ const _pair = new Float64Array(8);
  * `(0, 0, 0, 1)` is no rotation. Rotations follow the right-hand rule in the
  * engine's own space (Y-down, +Z forward, the {@link Camera3d} convention), as
  * {@link Matrix3d#rotate} does.
+ *
+ * Its methods read as a {@link Matrix3d}'s do: a new one is no rotation,
+ * `rotate(angle, axis)` turns it further, `multiply` composes, `invert`,
+ * `apply(v)` / `applyInverse(v)` turn a vector, and `fromMat3d` /
+ * `toMatrix3d` convert, as `Matrix2d#fromMat3d` and `Matrix3d#toMatrix2d` do.
  * @category Math
  * @example
  * import { Quaternion, Vector3d } from "melonjs";
  *
- * // a quarter turn about the vertical axis
- * const turn = new Quaternion().setFromAxisAngle(new Vector3d(0, 1, 0), Math.PI / 2);
+ * // a quarter turn about the vertical axis, as a Matrix3d would be turned
+ * const turn = new Quaternion().rotate(Math.PI / 2, new Vector3d(0, 1, 0));
  * // where it takes +X
  * const v = turn.apply(new Vector3d(1, 0, 0));
- * // and the same turn as a matrix, for a renderable's transform
- * mesh.currentTransform.identity().multiply(turn.toMatrix3d());
+ * // and a renderable turned by it
+ * mesh.currentTransform.identity().rotate(turn);
  */
 export class Quaternion {
 	x: number;
@@ -118,23 +119,44 @@ export class Quaternion {
 	}
 
 	/**
-	 * The rotation of `angle` radians about `axis`. The axis need not be of
-	 * unit length; one of length 0, or an angle that is not a finite number,
-	 * gives no rotation.
-	 *
-	 * Mind the order: the axis comes first here, where
-	 * {@link Matrix3d#rotate} takes the angle first.
-	 * @param axis - the axis to turn about
+	 * Turn this rotation further by `angle` radians about an axis, as
+	 * {@link Matrix3d#rotate} turns a matrix: `this = this × R(axis, angle)`,
+	 * so the new turn is applied first, then this one. On a new quaternion,
+	 * that is simply the turn. The axis defaults to Z and need not be of unit
+	 * length; an axis of length 0, or an angle or axis that is not a finite
+	 * number, turns nothing.
 	 * @param angle - the angle, in radians
+	 * @param [v] - the axis to turn about (defaults to Z)
 	 * @returns this, for chaining
+	 * @example
+	 * // yaw, then pitch, as a camera turns
+	 * const q = new Quaternion()
+	 *     .rotate(yaw, new Vector3d(0, 1, 0))
+	 *     .rotate(pitch, new Vector3d(1, 0, 0));
 	 */
-	setFromAxisAngle(axis: Vector3d, angle: number) {
-		const len = Math.hypot(axis.x, axis.y, axis.z);
-		if (!(len > 0) || !Number.isFinite(len) || !Number.isFinite(angle)) {
-			return this.identity();
+	rotate(angle: number, v?: Vector3d) {
+		if (angle === 0 || !Number.isFinite(angle)) {
+			return this;
+		}
+		const ax = v ? v.x : 0;
+		const ay = v ? v.y : 0;
+		const az = v ? v.z : 1;
+		const len = Math.hypot(ax, ay, az);
+		if (!(len >= EPSILON) || !Number.isFinite(len)) {
+			return this;
 		}
 		const s = Math.sin(angle / 2) / len;
-		return this.set(axis.x * s, axis.y * s, axis.z * s, Math.cos(angle / 2));
+		const bx = ax * s;
+		const by = ay * s;
+		const bz = az * s;
+		const bw = Math.cos(angle / 2);
+		const { x, y, z, w } = this;
+		return this.set(
+			w * bx + x * bw + y * bz - z * by,
+			w * by - x * bz + y * bw + z * bx,
+			w * bz + x * by - y * bx + z * bw,
+			w * bw - x * bx - y * by - z * bz,
+		);
 	}
 
 	/**
@@ -192,7 +214,7 @@ export class Quaternion {
 	 * @param m - the matrix to read
 	 * @returns this, for chaining
 	 */
-	setFromMatrix3d(m: Matrix3d) {
+	fromMat3d(m: Matrix3d) {
 		const v = m.val;
 		// the length of each column is the scale along that axis
 		const sx = Math.hypot(v[0], v[1], v[2]);
@@ -365,6 +387,32 @@ export class Quaternion {
 		const ty = 2 * (z * v.x - x * v.z);
 		const tz = 2 * (x * v.y - y * v.x);
 		// through `set`, so an observable vector reports the change once
+		return v.set(
+			v.x + w * tx + (y * tz - z * ty),
+			v.y + w * ty + (z * tx - x * tz),
+			v.z + w * tz + (x * ty - y * tx),
+		);
+	}
+	/**
+	 * Turn a vector by the inverse of this rotation, in place: what
+	 * {@link Matrix3d#applyInverse} does with a matrix. The vector is changed
+	 * and returned, not this quaternion.
+	 * @param v - the vector to turn back
+	 * @returns `v`, turned back
+	 * @example
+	 * // a world direction in a turned body's own space
+	 * const local = body.applyInverse(worldDir.clone());
+	 */
+	applyInverse(v: Vector3d) {
+		// the inverse of a unit quaternion is its conjugate: the same turn,
+		// the vector part negated
+		const { w } = this;
+		const x = -this.x;
+		const y = -this.y;
+		const z = -this.z;
+		const tx = 2 * (y * v.z - z * v.y);
+		const ty = 2 * (z * v.x - x * v.z);
+		const tz = 2 * (x * v.y - y * v.x);
 		return v.set(
 			v.x + w * tx + (y * tz - z * ty),
 			v.y + w * ty + (z * tx - x * tz),

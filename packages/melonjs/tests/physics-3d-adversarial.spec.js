@@ -40,9 +40,9 @@ const rng = (seed) => {
 	};
 };
 const randomQuaternion = (next) => {
-	return new Quaternion().setFromAxisAngle(
-		new Vector3d(next() * 2 - 1, next() * 2 - 1, next() * 2 - 1),
+	return new Quaternion().rotate(
 		(next() * 2 - 1) * Math.PI,
+		new Vector3d(next() * 2 - 1, next() * 2 - 1, next() * 2 - 1),
 	);
 };
 const finite = (q) => {
@@ -87,7 +87,7 @@ describe("Quaternion, adversarial", () => {
 		});
 
 		it("apply turns the vector it is given and returns that vector, as Matrix3d#apply does", () => {
-			const q = new Quaternion().setFromAxisAngle(new Vector3d(0, 0, 1), 1);
+			const q = new Quaternion().rotate(1, new Vector3d(0, 0, 1));
 			const m = q.toMatrix3d();
 			const v = new Vector3d(3, -2, 5);
 			const w = v.clone();
@@ -97,7 +97,7 @@ describe("Quaternion, adversarial", () => {
 			// the quaternion itself is untouched
 			expectSameRotation(
 				q,
-				new Quaternion().setFromAxisAngle(new Vector3d(0, 0, 1), 1),
+				new Quaternion().rotate(1, new Vector3d(0, 0, 1)),
 				12,
 			);
 		});
@@ -107,9 +107,7 @@ describe("Quaternion, adversarial", () => {
 			const v = new ObservableVector3d(1, 0, 0, () => {
 				fired++;
 			});
-			new Quaternion()
-				.setFromAxisAngle(new Vector3d(0, 0, 1), Math.PI / 2)
-				.apply(v);
+			new Quaternion().rotate(Math.PI / 2, new Vector3d(0, 0, 1)).apply(v);
 			expectVector(v, 0, 1, 0);
 			expect(fired).toBe(1);
 		});
@@ -120,8 +118,8 @@ describe("Quaternion, adversarial", () => {
 			expect(q.set(0, 0, 0, 1)).toBe(q);
 			expect(q.identity()).toBe(q);
 			expect(q.copy(other)).toBe(q);
-			expect(q.setFromAxisAngle(new Vector3d(1, 0, 0), 1)).toBe(q);
-			expect(q.setFromMatrix3d(new Matrix3d())).toBe(q);
+			expect(q.identity().rotate(1, new Vector3d(1, 0, 0))).toBe(q);
+			expect(q.fromMat3d(new Matrix3d())).toBe(q);
 			expect(q.multiply(other)).toBe(q);
 			expect(q.premultiply(other)).toBe(q);
 			expect(q.invert()).toBe(q);
@@ -130,7 +128,7 @@ describe("Quaternion, adversarial", () => {
 			expect(q.fromArray([0, 0, 0, 1])).toBe(q);
 			// one chain, start to end
 			const end = new Quaternion()
-				.setFromAxisAngle(new Vector3d(0, 1, 0), 0.3)
+				.rotate(0.3, new Vector3d(0, 1, 0))
 				.multiply(other)
 				.invert()
 				.normalize();
@@ -162,11 +160,11 @@ describe("Quaternion, adversarial", () => {
 	describe("aliasing", () => {
 		it("a.multiply(a) and a.premultiply(a) double the turn", () => {
 			const axis = new Vector3d(0.3, -1, 0.4);
-			const twice = new Quaternion().setFromAxisAngle(axis, 1.4);
-			const a = new Quaternion().setFromAxisAngle(axis, 0.7);
+			const twice = new Quaternion().rotate(1.4, axis);
+			const a = new Quaternion().rotate(0.7, axis);
 			a.multiply(a);
 			expectSameRotation(a, twice, 10);
-			const b = new Quaternion().setFromAxisAngle(axis, 0.7);
+			const b = new Quaternion().rotate(0.7, axis);
 			b.premultiply(b);
 			expectSameRotation(b, twice, 10);
 		});
@@ -262,7 +260,7 @@ describe("Quaternion, adversarial", () => {
 				expect(r.length()).toBeCloseTo(1, 12);
 				expectSameRotation(
 					r,
-					new Quaternion().setFromAxisAngle(new Vector3d(1, 0, 0), Math.PI * t),
+					new Quaternion().rotate(Math.PI * t, new Vector3d(1, 0, 0)),
 					9,
 				);
 			}
@@ -271,15 +269,15 @@ describe("Quaternion, adversarial", () => {
 		it("past either end keeps turning along the same arc, still a rotation", () => {
 			const axis = new Vector3d(0, 1, 0);
 			const a = new Quaternion();
-			const b = new Quaternion().setFromAxisAngle(axis, 0.4);
+			const b = new Quaternion().rotate(0.4, axis);
 			expectSameRotation(
 				a.clone().slerp(b, 2),
-				new Quaternion().setFromAxisAngle(axis, 0.8),
+				new Quaternion().rotate(0.8, axis),
 				9,
 			);
 			expectSameRotation(
 				a.clone().slerp(b, -1),
-				new Quaternion().setFromAxisAngle(axis, -0.4),
+				new Quaternion().rotate(-0.4, axis),
 				9,
 			);
 		});
@@ -327,17 +325,14 @@ describe("Quaternion, adversarial", () => {
 				new Quaternion(0, Math.SQRT1_2, Math.SQRT1_2, 0),
 				new Quaternion(Math.SQRT1_2, 0, Math.SQRT1_2, 0),
 				// a trace of exactly 0
-				new Quaternion().setFromAxisAngle(
-					new Vector3d(1, 1, 1),
-					(2 * Math.PI) / 3,
-				),
+				new Quaternion().rotate((2 * Math.PI) / 3, new Vector3d(1, 1, 1)),
 				new Quaternion(),
 			];
 			for (let i = 0; i < 60; i++) {
 				cases.push(randomQuaternion(next));
 			}
 			for (const q of cases) {
-				const back = new Quaternion().setFromMatrix3d(q.toMatrix3d());
+				const back = new Quaternion().fromMat3d(q.toMatrix3d());
 				expect(back.length()).toBeCloseTo(1, 6);
 				expectSameRotation(back, q, 4);
 			}
@@ -345,7 +340,7 @@ describe("Quaternion, adversarial", () => {
 
 		it("reads the turn out of a scaled transform, a mesh's currentTransform as it is", () => {
 			const axis = new Vector3d(0.2, 1, -0.5);
-			const want = new Quaternion().setFromAxisAngle(axis, 2.5);
+			const want = new Quaternion().rotate(2.5, axis);
 			for (const [sx, sy, sz] of [
 				[2, 2, 2],
 				[10, 1, 3],
@@ -356,23 +351,21 @@ describe("Quaternion, adversarial", () => {
 					.rotate(2.5, axis.clone().normalize());
 				// Matrix3d#scale(x, y, z) scales the columns
 				m.scale(sx, sy, sz);
-				expectSameRotation(new Quaternion().setFromMatrix3d(m), want, 4);
+				expectSameRotation(new Quaternion().fromMat3d(m), want, 4);
 			}
 		});
 
 		it("gives no rotation for a matrix that holds none", () => {
 			const zero = new Matrix3d();
 			zero.val.fill(0);
-			expect(
-				new Quaternion(1, 0, 0, 0).setFromMatrix3d(zero).isIdentity(),
-			).toBe(true);
-			const nan = new Matrix3d();
-			nan.val.fill(NaN);
-			expect(new Quaternion(1, 0, 0, 0).setFromMatrix3d(nan).isIdentity()).toBe(
+			expect(new Quaternion(1, 0, 0, 0).fromMat3d(zero).isIdentity()).toBe(
 				true,
 			);
+			const nan = new Matrix3d();
+			nan.val.fill(NaN);
+			expect(new Quaternion(1, 0, 0, 0).fromMat3d(nan).isIdentity()).toBe(true);
 			const flat = new Matrix3d().scale(1, 1, 0);
-			expect(finite(new Quaternion().setFromMatrix3d(flat))).toBe(true);
+			expect(finite(new Quaternion().fromMat3d(flat))).toBe(true);
 		});
 
 		it("toMatrix3d writes into out, returns it, and keeps its translation and w", () => {
@@ -423,29 +416,37 @@ describe("Quaternion, adversarial", () => {
 				[new Vector3d(0, 1, 0), -Infinity],
 			]) {
 				expect(
-					q.set(1, 0, 0, 0).setFromAxisAngle(axis, angle).isIdentity(),
+					q.set(1, 0, 0, 0).identity().rotate(angle, axis).isIdentity(),
 				).toBe(true);
 			}
 		});
 
 		it("a whole turn, or many, is no rotation to anything it turns", () => {
 			for (const turns of [1, 2, -3, 100]) {
-				const q = new Quaternion().setFromAxisAngle(
-					new Vector3d(1, 2, 3),
+				const q = new Quaternion().rotate(
 					turns * 2 * Math.PI,
+					new Vector3d(1, 2, 3),
 				);
 				expectVector(q.apply(new Vector3d(4, 5, 6)), 4, 5, 6, 6);
 			}
 		});
 
-		it("a tiny or a huge axis is as good as a unit one", () => {
-			const want = new Quaternion().setFromAxisAngle(new Vector3d(0, 1, 0), 1);
-			for (const len of [1e-150, 1e-20, 1e20, 1e150]) {
+		it("a short or a huge axis is as good as a unit one", () => {
+			const want = new Quaternion().rotate(1, new Vector3d(0, 1, 0));
+			for (const len of [1e-3, 1e20, 1e150]) {
 				expectSameRotation(
-					new Quaternion().setFromAxisAngle(new Vector3d(0, len, 0), 1),
+					new Quaternion().rotate(1, new Vector3d(0, len, 0)),
 					want,
 					10,
 				);
+			}
+		});
+
+		it("an axis too short to turn about turns nothing, as Matrix3d#rotate", () => {
+			for (const len of [1e-7, 1e-20, 1e-150]) {
+				const axis = new Vector3d(0, len, 0);
+				expect(new Quaternion().rotate(1, axis).isIdentity()).toBe(true);
+				expect(new Matrix3d().rotate(1, axis).isIdentity()).toBe(true);
 			}
 		});
 
@@ -1184,7 +1185,7 @@ describe("BuiltinAdapter 3D interface, adversarial", () => {
 				// setRotation reads q and leaves it as it was
 				expectSameRotation(
 					q,
-					new Quaternion().setFromAxisAngle(new Vector3d(0, 0, 1), angle),
+					new Quaternion().rotate(angle, new Vector3d(0, 0, 1)),
 					12,
 				);
 			}
@@ -1192,16 +1193,10 @@ describe("BuiltinAdapter 3D interface, adversarial", () => {
 
 		it("a half turn about Z is a half turn, and -q is the same turn as q", () => {
 			const { r, body } = make();
-			const q = new Quaternion().setFromAxisAngle(
-				new Vector3d(0, 0, 1),
-				Math.PI,
-			);
+			const q = new Quaternion().rotate(Math.PI, new Vector3d(0, 0, 1));
 			adapter.setRotation(r, q);
 			expect(Math.abs(body.angle)).toBeCloseTo(Math.PI, 10);
-			const turn = new Quaternion().setFromAxisAngle(
-				new Vector3d(0, 0, 1),
-				0.8,
-			);
+			const turn = new Quaternion().rotate(0.8, new Vector3d(0, 0, 1));
 			adapter.setRotation(
 				r,
 				new Quaternion(-turn.x, -turn.y, -turn.z, -turn.w),
@@ -1215,7 +1210,7 @@ describe("BuiltinAdapter 3D interface, adversarial", () => {
 			adapter.setAngle(a.r, 0.6);
 			adapter.setRotation(
 				b.r,
-				new Quaternion().setFromAxisAngle(new Vector3d(0, 0, 1), 0.6),
+				new Quaternion().rotate(0.6, new Vector3d(0, 0, 1)),
 			);
 			expect(b.body.angle).toBeCloseTo(a.body.angle, 12);
 			for (let i = 0; i < 16; i++) {
