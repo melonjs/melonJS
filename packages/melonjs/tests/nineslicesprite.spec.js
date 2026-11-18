@@ -437,4 +437,38 @@ describe("NineSliceSprite", () => {
 		expect(nss.nss_width).toBe(200);
 		expect(nss.nss_height).toBe(120);
 	});
+	it("draws its slices through drawFrame, and blinks with flicker() like a Sprite", () => {
+		const nss = new NineSliceSprite(10, 20, {
+			image: makeImage(32, 32),
+			width: 80,
+			height: 60,
+		});
+		const target = {
+			calls: [],
+			translate() {},
+			rotate() {},
+			drawImage(...args) {
+				this.calls.push(args);
+			},
+		};
+		// drawn at the place it is given, not at its own position
+		nss.drawFrame(target, 0, 0);
+		expect(target.calls.length).toBe(9);
+		const right = Math.max(
+			...target.calls.map((c) => {
+				return c[5] + c[7];
+			}),
+		);
+		expect(right).toBe(80);
+		// draw() is Sprite's, so a flickering panel skips its hidden beats
+		const drawFrame = vi.spyOn(nss, "drawFrame");
+		nss.flicker(1000);
+		nss._flicker.elapsed = 33 * 1 + 1;
+		nss.draw(target);
+		expect(drawFrame).not.toHaveBeenCalled();
+		nss._flicker.elapsed = 33 * 2 + 1;
+		nss.draw(target);
+		expect(drawFrame).toHaveBeenCalledWith(target, 10, 20);
+		drawFrame.mockRestore();
+	});
 });

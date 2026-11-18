@@ -1,6 +1,6 @@
 ---
 name: melonjs-scenes-and-state
-description: "Use this skill for scene structure and game flow in melonJS — Stage subclasses, the state manager, transitions, pausing, the update loop, timers and tweens. Covers onResetEvent versus the constructor, state.set before state.change, the camera and world lifecycle per stage, and pause-aware timing. Triggers on: Tween, easing, fade out, flash, pulse, punch, shrink back, ease in, ease out, animate over time, countdown in update, Stage, state, state.set, state.change, state.transition, pixelate, Trigger transition, retry level, play again, restart, state.reload, state.pause, pauseOnBlur, resumeOnFocus, onResetEvent, onDestroyEvent, onActivateEvent, onDeactivateEvent, PLAY, MENU, LOADING, update loop, GAME_UPDATE, timer, setTimeout, setInterval, Tween, freeze, setFocusEvents, focusEvents, host or portal pause, YouTube Playables onPause, save, save.add, setStorage, createCloudStorage, flush, localStorage, cloud save, high score persistence."
+description: "Use this skill for scene structure and game flow in melonJS — Stage subclasses, the state manager, transitions, pausing, the update loop, timers and tweens. Covers onResetEvent versus the constructor, state.set before state.change, the camera and world lifecycle per stage, and pause-aware timing. Triggers on: Tween, easing, fade out, flash, pulse, punch, shrink back, ease in, ease out, animate over time, countdown in update, Stage, state, state.set, state.change, state.transition, pixelate, iris, star wipe, Trigger transition, retry level, play again, restart, state.reload, state.pause, pauseOnBlur, resumeOnFocus, onResetEvent, onDestroyEvent, onActivateEvent, onDeactivateEvent, PLAY, MENU, LOADING, update loop, GAME_UPDATE, timer, setTimeout, setInterval, Tween, freeze, setFocusEvents, focusEvents, host or portal pause, YouTube Playables onPause, save, save.add, setStorage, createCloudStorage, flush, localStorage, cloud save, high score persistence."
 license: MIT
 ---
 
@@ -133,6 +133,9 @@ included (before 20.13 the children's bodies were dropped by the reset).
 ```js
 state.transition("fade", "#FFFFFF", 250);
 state.transition("mask", "#000", 500, new Ellipse(0, 0, 1, 1));  // shape required
+state.transition("mask", "#000", 500, "star_mask");          // a preloaded image's silhouette
+state.transition("mask", "#000", 500, player, { center: player }); // the player's shape, closing on it
+state.transition("mask", "#000", 400, new Ellipse(0, 0, 1, 1), { center: player, invert: true });
 state.transition("pixelate", "#000", 300);  // blocks up to 32px; a 4th argument sets the size
 state.pause();                               // freeze update, keep drawing
 state.resume();
@@ -143,8 +146,26 @@ app.freeze(150);                             // brief hit-stop (proxies state.fr
 `state.change`; `state.setTransition(id, false)` turns it off for changes
 into one state.
 The duration (1000 ms when omitted) is for each half: the cover, then the
-reveal. The `"mask"` form needs its fourth argument, an `Ellipse` or
-`Polygon`; without one it warns and falls back to a direct switch. The
+reveal. The `"mask"` form needs its fourth argument, the shape: an `Ellipse`
+or `Polygon` (unit-sized, centred on the origin), an image or the name of a
+preloaded one (its silhouette: transparent pixels are covered, the rest shows
+the scene; colours do not matter and gaps inside the outline are filled), or a
+`Sprite` (the silhouette of the frame it shows, facing its way). Without a
+shape it warns and falls back to a direct switch. Its fifth argument is
+`{ center, invert }`: `center` is where the shape closes and the reveal opens,
+a renderable (where it is drawn on screen as the transition starts) or a
+screen point, the centre of the screen by default; `invert: true` makes the
+shape the cover, filled with the colour and growing out of `center`. The
+shape grows about its thickest part (a U or a sprite drawn off-centre in its
+frame too), until the screen is wholly inside it, so the reveal ends with the
+scene uncovered.
+
+A sprite or renderable given here is read when the transition starts, and
+the reveal reuses what the hide read, so the old stage destroying the player
+in between is fine. It is then let go: the transition is sticky, but one
+level's player is not the next one's, so later changes are an iris on the
+centre of the screen until you set it again. Give it this level's player
+right before each `state.change`. The
 `"pixelate"` form breaks the screen up into blocks (its fourth argument is the
 largest block size in pixels; the color is not used). It is a shader effect,
 so on Canvas it does nothing and the state changes directly.
@@ -152,9 +173,12 @@ so on Canvas it does nothing and the state changes directly.
 A level change is not a state change, so `state.transition` does not apply to
 it. A Tiled `Trigger` that loads a level has a transition of its own, set on
 the trigger: `color` and `duration` (both needed, or the level loads with
-none), and `transition: "fade"` (the default) or `"mask"` with a `shape`.
-A `"mask"` without a `shape` fades instead, without a warning, and there is
-no pixelate form for a trigger. See `melonjs-tilemaps`.
+none), and `transition: "fade"` (the default) or `"mask"` with a `shape`,
+plus `center` and `invert` as above. On a trigger, `shape: "touching"` and
+`center: "touching"` mean whoever walked in: the player's own silhouette
+closing on the player, with no code to find it. A `"mask"` without a `shape`
+fades instead, without a warning, and there is no pixelate form for a
+trigger. See `melonjs-tilemaps`.
 
 A `state.change` asked for while a transition covers the screen (Enter pressed
 twice on a menu, a timer firing as the player skips a screen) needs no guard:
@@ -571,6 +595,8 @@ When `setStorage()` switches storage:
 | a host's pause does nothing, after turning `pauseOnBlur` off so the tab would not pause the game | the flags apply to every `event.BLUR`, the host's included; keep them, and stop the window reporting with `device.setFocusEvents(false)` |
 | `Undefined Stage for state 'N'` thrown | no `state.set` for that id first |
 | `state.change(state.PLAY)` from `PLAY` does nothing ("Retry" ignored) | a change to the current state is a no-op — `state.reload()` (20.16), `level.reload()` for the map alone |
+| a mask transition closes on the middle of the screen, not on the player | pass `{ center: player }` as the fifth argument; on a `Trigger`, `center: "touching"` |
+| the first mask transition is the player's shape, later ones a plain iris on the middle of the screen | a sprite or renderable given to `state.transition` is used by one transition, then let go: set it again, with this level's player, right before each `state.change` |
 | a level change through a `Trigger` ignores `state.transition` | it is a level change, not a state change: set `color` and `duration` (and `transition`) on the trigger |
 | the game stops updating for good after one very slow update, such as a heavy first frame (20.12 and 20.13) | the loop could no longer save enough time to step the world: update |
 | the game resumes under its own pause menu after a tab switch (before 20.9) | focus undid any pause; update, only the blur pause is undone |

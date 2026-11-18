@@ -3,7 +3,11 @@ import { pauseTrack, resumeTrack } from "./../audio/audio.ts";
 import type Camera2d from "../camera/camera2d.ts";
 import type CameraEffect from "../camera/effects/camera_effect.ts";
 import FadeEffect from "../camera/effects/fade_effect.ts";
-import MaskEffect from "../camera/effects/mask_effect.ts";
+import MaskEffect, {
+	isRenderable,
+	type MaskCenter,
+	type MaskShape,
+} from "../camera/effects/mask_effect.ts";
 import PixelateTransitionEffect from "../camera/effects/pixelate_transition_effect.ts";
 import DefaultLoadingScreen from "./../loader/loadingscreen.js";
 import Stage from "./../state/stage.ts";
@@ -48,10 +52,13 @@ let _transitionType: "fade" | "mask" | "pixelate" = "fade";
 const _transitionConfig: {
 	color: string;
 	duration: number;
-	shape?:
-		| import("../geometries/ellipse.ts").Ellipse
-		| import("../geometries/polygon.ts").Polygon
-		| undefined;
+	shape?: MaskShape | undefined;
+	// where a mask transition closes and opens, and whether it is inverted
+	center?: MaskCenter | undefined;
+	invert?: boolean | undefined;
+	// a sprite shape or a renderable center was used, and let go: later
+	// changes are an iris on the centre of the screen until it is set again
+	released?: boolean | undefined;
 	// the largest blocks of a pixelate transition, in screen pixels
 	size?: number | undefined;
 } = {
@@ -715,9 +722,20 @@ const state = {
 	 * @param color - a CSS color value (not used by "pixelate")
 	 * @param [duration=1000] - expressed in milliseconds, for each half: the
 	 * cover, then the reveal
-	 * @param [shape] - an Ellipse or Polygon defining the mask shape (required
-	 * when effect is "mask"), or for "pixelate" the size of the largest
-	 * blocks, in screen pixels (32 by default)
+	 * @param [shape] - for "mask" (required) the mask shape: an `Ellipse` or
+	 * `Polygon` (unit-sized, centred on the origin), an image or the name of a
+	 * preloaded one (its silhouette), or a `Sprite` (the silhouette of the
+	 * frame it shows when the transition starts); see {@link MaskEffect}. For
+	 * "pixelate", the size of the largest blocks, in screen pixels (32 by
+	 * default)
+	 * @param [options] - for "mask" only
+	 * @param [options.center] - where the shape closes and opens: a
+	 * renderable, such as the player, at the place it is drawn when the
+	 * transition starts, or a point on screen. The centre of the screen by
+	 * default. The reveal opens from the same place
+	 * @param [options.invert=false] - make the shape the cover rather than
+	 * the window: filled with the color, it grows out of `center` until it
+	 * covers the screen, and shrinks away to reveal it
 	 * @example
 	 * // classic fade to black
 	 * state.transition("fade", "#000", 500);
@@ -731,6 +749,20 @@ const state = {
 	 *     { x: 0, y: 1 }, { x: -1, y: 0 },
 	 * ]));
 	 * @example
+	 * // a star wipe, from a preloaded silhouette image
+	 * state.transition("mask", "#000", 500, "star_mask");
+	 * @example
+	 * // the player's own silhouette, closing on the player: set right before
+	 * // the change, as the player of one level is not the next one's
+	 * state.transition("mask", "#000", 500, player, { center: player });
+	 * state.change(state.GAME_END);
+	 * @example
+	 * // a black circle growing out of the player until it covers the screen
+	 * state.transition("mask", "#000", 400, new Ellipse(0, 0, 1, 1), {
+	 *     center: player,
+	 *     invert: true,
+	 * });
+	 * @example
 	 * // the screen breaks up into 32 pixel blocks, and comes back
 	 * state.transition("pixelate", "#000", 300);
 	 * // into 16 pixel blocks
@@ -740,16 +772,17 @@ const state = {
 		effect: "fade" | "mask" | "pixelate",
 		color: string,
 		duration: number = 1000,
-		shape?:
-			| import("../geometries/ellipse.ts").Ellipse
-			| import("../geometries/polygon.ts").Polygon
-			| number,
+		shape?: MaskShape | number,
+		options?: { center?: MaskCenter | undefined; invert?: boolean | undefined },
 	): void {
 		_transitionType = effect;
 		_transitionConfig.color = color;
 		_transitionConfig.duration = duration;
 		_transitionConfig.shape = typeof shape === "number" ? undefined : shape;
 		_transitionConfig.size = typeof shape === "number" ? shape : undefined;
+		_transitionConfig.center = options?.center;
+		_transitionConfig.invert = options?.invert;
+		_transitionConfig.released = false;
 	},
 
 	/**
@@ -891,39 +924,51 @@ const state = {
 						break;
 					}
 					case "mask": {
-						if (!_transitionConfig.shape) {
+						if (!_transitionConfig.shape && !_transitionConfig.released) {
 							console.warn(
 								"melonJS: mask transition requires a shape, falling back to direct switch",
 							);
 							onComplete();
 							break;
 						}
-						const shape = _transitionConfig.shape;
-						const color = _transitionConfig.color;
-						const duration = _transitionConfig.duration;
 						const maskEffect = new MaskEffect(_app.viewport, {
-							shape,
-							color,
-							duration,
+							shape: _transitionConfig.shape,
+							color: _transitionConfig.color,
+							duration: _transitionConfig.duration,
 							direction: "hide",
+							center: _transitionConfig.center,
+							invert: _transitionConfig.invert,
 							onComplete,
 						});
+						// The transition is set once and kept, but a sprite or a
+						// renderable is one level's player: read now, it is let
+						// go, rather than held (and read again, destroyed or
+						// recycled into something else) by every later change
+						if (isRenderable(_transitionConfig.shape)) {
+							_transitionConfig.shape = undefined;
+							_transitionConfig.released = true;
+						}
+						if (isRenderable(_transitionConfig.center)) {
+							_transitionConfig.center = undefined;
+						}
 						// see the note in the fade case: persistent is what
 						// keeps the closed iris on screen until the switch
 						// lands, and the owner is what takes it away again
 						maskEffect.isPersistent = true;
 						const hidCamera = _app.viewport;
 						_onSwitchComplete = () => {
+							// The reveal opens from where the hide closed, with
+							// the shape it closed with: both were settled when
+							// the hide started, from a sprite and a renderable
+							// the switch may well have destroyed since. Made
+							// before the hide is taken away, which frees them.
+							const reveal = new MaskEffect(
+								_app.viewport,
+								maskEffect.reverseOptions(),
+							);
 							hidCamera.removeCameraEffect(maskEffect);
 							// create reveal with the post-switch viewport
-							_app.viewport.addCameraEffect(
-								new MaskEffect(_app.viewport, {
-									shape,
-									color,
-									duration,
-									direction: "reveal",
-								}),
-							);
+							_app.viewport.addCameraEffect(reveal);
 						};
 						_app.viewport.addCameraEffect(maskEffect);
 						covering(maskEffect);

@@ -1,6 +1,6 @@
 ---
 name: melonjs-camera-and-drawing
-description: "Use this skill for camera control and immediate-mode drawing in melonJS — following a target, viewport bounds, shake and fade, secondary cameras and what each one draws, and drawing shapes, lines and gradients inside a custom draw(). Covers world versus screen coordinate conversion, clipping and masking, baking with CanvasRenderTarget, and reading pixels back. Triggers on: Camera2d, viewport, follow, offset, look ahead, setBounds, minimap, second camera, split screen, cullMask, visibilityLayer, hide from a camera, zoom, roll, shake, fadeIn, fadeOut, CameraEffect, addCameraEffect, MaskEffect, PixelateTransitionEffect, worldToLocal, localToWorld, worldToScreen, screenToRay, screenToWorld, colorMatrix, renderer.fill, renderer.stroke, setGlobalAlpha, fillArc, Rect, Ellipse, Polygon, Line, Path2D, SVG path, Gradient, clipRect, mask, CanvasRenderTarget, NoiseTexture2d, lookAt, setBasis, orbit, toImageData, getImageData, toBlob, toDataURL, screenshot, read pixels."
+description: "Use this skill for camera control and immediate-mode drawing in melonJS — following a target, viewport bounds, shake and fade, secondary cameras and what each one draws, and drawing shapes, lines and gradients inside a custom draw(). Covers world versus screen coordinate conversion, clipping and masking, baking with CanvasRenderTarget, and reading pixels back. Triggers on: Camera2d, viewport, follow, offset, look ahead, setBounds, minimap, second camera, split screen, cullMask, visibilityLayer, hide from a camera, zoom, roll, shake, fadeIn, fadeOut, CameraEffect, addCameraEffect, MaskEffect, iris, image mask, PixelateTransitionEffect, worldToLocal, localToWorld, worldToScreen, screenToRay, screenToWorld, colorMatrix, renderer.fill, renderer.stroke, setGlobalAlpha, fillArc, Rect, Ellipse, Polygon, Line, Path2D, SVG path, Gradient, clipRect, mask, CanvasRenderTarget, NoiseTexture2d, lookAt, setBasis, orbit, toImageData, getImageData, toBlob, toDataURL, screenshot, read pixels."
 license: MIT
 ---
 
@@ -153,13 +153,32 @@ returns it), found with `getCameraEffect(Class)` and taken off with
 |---|---|---|
 | `ShakeEffect` | `intensity`, `duration`, `axis`, `onComplete` | jitters `offset`; what `shake()` adds. Several can run at once this way |
 | `FadeEffect` | `color`, `duration` (1000), `direction: "in" \| "out"`, `onComplete` | what `fadeIn()` / `fadeOut()` add |
-| `MaskEffect` | `shape`, `color`, `duration` (500), `direction: "hide" \| "reveal"`, `onComplete` | an iris or a wipe through a unit-sized `Ellipse` or `Polygon` centred on the origin |
+| `MaskEffect` | `shape`, `color`, `duration` (500), `direction: "hide" \| "reveal"`, `center`, `invert`, `onComplete` | an iris (the default) or a wipe through a unit-sized `Ellipse` or `Polygon`, an image's silhouette (the image, or a preloaded one's name) or a `Sprite`'s current frame (a `NineSliceSprite` at its full size), closing on `center` (a renderable or a screen point; the screen's centre by default). `invert` fills the shape instead and grows it to cover. Plain images and fills: the same on Canvas, WebGL and WebGPU |
 | `PixelateTransitionEffect` | `renderer`, `size` (32), `duration` (500), `direction: "hide" \| "reveal"`, `onComplete` | the view breaks into blocks up to `size` screen pixels, or comes back from them. A shader: on Canvas it keeps its timing and draws nothing |
+
+```js
+// the player's own silhouette closing on the player, then a heart image
+// growing out of it until it covers the screen
+camera.addCameraEffect(new MaskEffect(camera, {
+    shape: player, center: player, color: "#000", duration: 500,
+}));
+camera.addCameraEffect(new MaskEffect(camera, {
+    shape: "heart_mask", center: player, invert: true, color: "#000", duration: 400,
+}));
+```
+
+A sprite or renderable is read once, when the effect is made: its frame, its
+facing and its place on screen (not its scale or rotation: the shape is grown
+to the screen's size anyway). The shape grows about its thickest part, which
+sits on `center`. An image is read through a canvas, so a compressed texture
+or a cross-origin image without CORS cannot shape a mask (it warns and uses an
+iris).
 
 `state.transition("fade" | "mask" | "pixelate", …)` drives the last three
 for a state change (see `melonjs-scenes-and-state`). A `Trigger` that loads a
 level transitions only with both a `color` and a `duration`, and takes only
-`transition: "fade"` (the default) or `"mask"` with a `shape`: anything else,
+`transition: "fade"` (the default) or `"mask"` with a `shape` (and `center`,
+`invert`; `"touching"` for either is whoever walked in): anything else,
 `"pixelate"` included, is a fade.
 
 For an effect of your own, extend `CameraEffect`: `update(dt)` runs every
@@ -539,6 +558,8 @@ const data = await rt.toImageData(0, 0, w, h);
 | a second `shake()` does nothing | one is still running: pass `force` (the fifth argument) to replace it |
 | a `Trigger` with `transition: "pixelate"` fades instead | a trigger takes only `"fade"` or `"mask"`; add a `PixelateTransitionEffect` yourself |
 | a `Trigger` loads its level with no transition | it needs both `color` and `duration` |
+| an image or sprite `MaskEffect` is a plain circle, with a console warning | the shape could not be used: an unknown image name, a compressed texture, a cross-origin image without CORS, a fully transparent image or frame, a destroyed sprite, a renderable that is not a `Sprite`, or a value that is not a shape at all |
+| a `MaskEffect` closes on the middle of the screen | it closes on `center`, the screen's centre by default: pass the renderable or point |
 | a `rotate()` or `scale()` on the camera is lost | `roll` owns the camera's `currentTransform` and rebuilds it; use `roll` and `zoom` |
 | an SVG path from an editor comes out scrambled | `parseSVGPath` reads absolute commands only, and `H` / `V` as offsets |
 | a hole in a path fills in, on Canvas only | it is wound the same way as the outline; wind it the opposite way |

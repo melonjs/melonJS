@@ -1,5 +1,13 @@
 # Changelog
 
+## [20.17.0] (melonJS 2) - _unreleased_
+
+### Added
+- Transitions: a mask transition can be shaped like an image or a `Sprite`, close on the player with `center`, and fill the shape with `invert`, on `state.transition`, `MaskEffect` and `Trigger` ([#1399](https://github.com/melonjs/melonJS/issues/1399))
+
+### Fixed
+- `NineSliceSprite` blinks with `flicker()`, as a `Sprite` does; it ignored it
+
 ## [20.16.0] (melonJS 2) - _2026-11-17_
 
 **Highlights:** a faster `Camera3d`, its work per frame up to **72%** faster with no change to your game, and real 3D physics: with the new `@melonjs/rapier3d-adapter`, bodies tumble, stack and topple in 3D, with collision shapes built straight from your models. Also new: skinned glTF characters with crossfades, mesh picking, an orthographic `Camera3d` for isometric views, and toon shading with outlines. The new features are opt-in: a game that sets none of them renders as before.

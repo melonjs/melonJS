@@ -205,6 +205,16 @@ knowing before you spend an afternoon on a map that loads at the wrong scale.
 `async` is excluded deliberately — the trigger needs to sequence its own
 transition.
 
+That transition is the trigger's own, and every part of it can be a property
+of the trigger object in Tiled, with no code: `color` and `duration` (both, or
+there is none), `transition` (`"fade"` or `"mask"`), and for a mask `shape`,
+`center` and `invert`. A `shape` property is text, so it names a preloaded
+image (its silhouette) or is `"touching"`; `center: "touching"` closes the
+mask on whoever walked in. So a door that closes the player's own silhouette
+onto the player is the properties `transition = mask`, `shape = touching`,
+`center = touching`, `color = #000`, `duration = 400`. See
+`melonjs-scenes-and-state` for the shapes and what `invert` does.
+
 ## Reading and changing tiles at run time
 
 A tile layer is a live grid, not just a picture: read it as the game board,
