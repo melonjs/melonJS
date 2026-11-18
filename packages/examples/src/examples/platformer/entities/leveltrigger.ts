@@ -3,25 +3,40 @@
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
-import { Trigger } from "melonjs";
+import { Polygon, Trigger } from "melonjs";
 
-type TriggerSettings = ConstructorParameters<typeof Trigger>[2];
+// 5-pointed star polygon (unit-sized, centered at origin)
+const starPoints: [
+	{ x: number; y: number },
+	{ x: number; y: number },
+	{ x: number; y: number },
+	...{ x: number; y: number }[],
+] = [
+	{ x: 0.0, y: -1.0 },
+	{ x: 0.224, y: -0.309 },
+	{ x: 0.951, y: -0.309 },
+	{ x: 0.363, y: 0.118 },
+	{ x: 0.588, y: 0.809 },
+	{ x: 0.0, y: 0.382 },
+	{ x: -0.588, y: 0.809 },
+	{ x: -0.363, y: 0.118 },
+	{ x: -0.951, y: -0.309 },
+	{ x: -0.224, y: -0.309 },
+];
 
 /**
- * The door to the next level. Its mask transition is the player's own
- * silhouette, the frame it shows as it walks in, closing on the player;
- * the next level opens from the same place. "touching" is whoever set the
- * trigger off, so nothing here needs to find the player.
+ * A custom level trigger that uses a star-shaped mask transition.
  */
+type TriggerSettings = ConstructorParameters<typeof Trigger>[2];
+
 export class LevelTrigger extends Trigger {
 	constructor(x: number, y: number, settings: TriggerSettings) {
 		super(x, y, {
 			...settings,
 			transition: "mask",
-			shape: "touching",
-			center: "touching",
+			shape: new Polygon(0, 0, starPoints),
 			color: "#000",
-			duration: 400,
+			duration: 300,
 		});
 	}
 }
