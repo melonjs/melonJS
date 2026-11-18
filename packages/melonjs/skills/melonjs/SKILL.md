@@ -176,7 +176,9 @@ check for:
 - **Art:** `TextureAtlas` (TexturePacker, ShoeBox, Aseprite),
   `CanvasRenderTarget` for bake-once drawing, `NoiseTexture2d`.
 - **Game flow:** `state.transition()` (`"fade"`, `"mask"` or `"pixelate"`)
-  between screens, `state.pause()` / `state.resume()` behind a pause menu,
+  between screens, with a mask shaped like an image or the player's own sprite
+  and closing on the player (`center`), and a `Trigger`'s own transition for a
+  level door (`shape: "touching"`, `center: "touching"`), `state.pause()` / `state.resume()` behind a pause menu,
   `save` for localStorage-backed persistence, `createPool` / `getPool` for
   recycling.
 - **Levels:** Tiled tile layers read and changed with `cellAt` / `setTile`,

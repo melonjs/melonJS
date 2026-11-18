@@ -1,5 +1,6 @@
 import FadeEffect from "../camera/effects/fade_effect.ts";
 import MaskEffect from "../camera/effects/mask_effect.ts";
+import { Ellipse } from "../geometries/ellipse.ts";
 import { polygonPool } from "../geometries/polygon.ts";
 import { LEVEL_LOAD_OPTIONS, level } from "./../level/level.js";
 import { vector2dPool } from "../math/vector2d.ts";
@@ -13,7 +14,7 @@ import Renderable from "./renderable.js";
  * @import ResponseObject from "./../physics/response.js";
  * @import {Color} from "../math/color.ts";
  * @import Container from "./container.js";
- * @import {Ellipse} from "../geometries/ellipse.ts";
+ * @import {MaskCenter, MaskShape} from "../camera/effects/mask_effect.ts";
  * @import {Line} from "../geometries/line.ts";
  * @import {Vector3d} from "../math/vector3d.ts";
  * @import {Polygon} from "../geometries/polygon.ts";
@@ -75,7 +76,9 @@ export default class Trigger extends Renderable {
 	 * @param {number} [settings.duration] - Transition duration (in ms)
 	 * @param {string|Color} [settings.color] - Transition color (also accepts legacy `fade` property)
 	 * @param {string} [settings.transition="fade"] - Transition type: "fade" for a color fade, "mask" for a shape-based mask transition
-	 * @param {Ellipse|Polygon} [settings.shape] - Mask shape for "mask" transition type (e.g. an Ellipse for iris, a Polygon for diamond/star)
+	 * @param {MaskShape|"touching"} [settings.shape] - Mask shape for the "mask" transition type: an `Ellipse` (an iris) or a `Polygon`, an image or the name of a preloaded one (its silhouette), a `Sprite`, or `"touching"` for the silhouette of the object that set the trigger off. See {@link MaskEffect}
+	 * @param {MaskCenter|"touching"} [settings.center] - Where the mask closes and opens: a renderable, a point on screen, or `"touching"` for the object that set the trigger off. The centre of the screen by default
+	 * @param {boolean} [settings.invert=false] - Make the mask the cover rather than the window: filled with the color, it grows out of `center` until it covers the screen
 	 * @param {string} [settings.event="level"] - the type of event to trigger (only "level" supported for now)
 	 * @param {string} [settings.to] - level to load if level trigger
 	 * @param {string|Container} [settings.container] - Target container. See {@link level.load}
@@ -115,6 +118,31 @@ export default class Trigger extends Renderable {
 	 *     to: "mymap2",
 	 * }));
 	 * @example
+	 * // the player's own silhouette, closing on the player as it walks in
+	 * world.addChild(new Trigger(x, y, {
+	 *     shapes: [new Rect(0, 0, 100, 100)],
+	 *     transition: "mask",
+	 *     shape: "touching",
+	 *     center: "touching",
+	 *     color: "#000",
+	 *     duration: 300,
+	 *     to: "mymap2",
+	 * }));
+	 * @example
+	 * // a preloaded star image, growing out of the player until it covers
+	 * // the screen. In Tiled, the same as properties of the trigger object:
+	 * // transition "mask", shape "star_mask", center "touching", invert true
+	 * world.addChild(new Trigger(x, y, {
+	 *     shapes: [new Rect(0, 0, 100, 100)],
+	 *     transition: "mask",
+	 *     shape: "star_mask",
+	 *     center: "touching",
+	 *     invert: true,
+	 *     color: "#000",
+	 *     duration: 400,
+	 *     to: "mymap2",
+	 * }));
+	 * @example
 	 * // mask transition with diamond polygon
 	 * world.addChild(new Trigger(x, y, {
 	 *     shapes: [new Rect(0, 0, 100, 100)],
@@ -137,6 +165,8 @@ export default class Trigger extends Renderable {
 		this.duration = settings.duration;
 		this.transition = settings.transition || "fade";
 		this.transitionShape = settings.shape;
+		this.transitionCenter = settings.center;
+		this.transitionInvert = settings.invert === true;
 		this.fading = false;
 
 		// Tiled settings
@@ -204,8 +234,10 @@ export default class Trigger extends Renderable {
 	/**
 	 * Trigger this event. Override in subclasses to customize behavior.
 	 * @protected
+	 * @param {Renderable} [other] - the object that set the trigger off, which
+	 * a mask transition's `shape` and `center` of `"touching"` stand for
 	 */
-	triggerEvent() {
+	triggerEvent(other) {
 		const triggerSettings = this.getTriggerSettings();
 		const world = this.ancestor.getRootAncestor();
 		const app = world.app;
@@ -221,13 +253,29 @@ export default class Trigger extends Renderable {
 					const color = this.color;
 					const duration = this.duration;
 					const useMask = this.transition === "mask" && this.transitionShape;
-					const shape = this.transitionShape;
+					// "touching" is the object that walked in; with none (an
+					// event fired by hand), an iris on the centre of the screen
+					let shape = this.transitionShape;
+					if (shape === "touching") {
+						shape = other ?? new Ellipse(0, 0, 1, 1);
+					}
+					let center = this.transitionCenter;
+					if (center === "touching") {
+						center = other;
+					}
+					const invert = this.transitionInvert;
+					// what the reveal opens with: the shape and the point the
+					// hide settled when it started, from an object the level
+					// change destroys
+					let hide;
 
 					// Await the load rather than intercepting the caller's
 					// `onLoaded`: the reveal used to be injected by wrapping
 					// `settings.onLoaded` and calling the user's through it,
 					// which meant rewriting an option the caller passed in.
 					const onComplete = () => {
+						const revealShape = hide ? hide.resolvedShape : shape;
+						const revealCenter = hide ? hide.center : undefined;
 						level
 							.load(gotolevel, { ...settings, async: true })
 							.then(() => {
@@ -239,10 +287,12 @@ export default class Trigger extends Renderable {
 								if (useMask) {
 									vp.addCameraEffect(
 										new MaskEffect(vp, {
-											shape,
+											shape: revealShape,
 											color,
 											duration,
 											direction: "reveal",
+											center: revealCenter,
+											invert,
 										}),
 									);
 								} else {
@@ -267,15 +317,16 @@ export default class Trigger extends Renderable {
 
 					// hide effect, then load level + reveal
 					if (useMask) {
-						viewport.addCameraEffect(
-							new MaskEffect(viewport, {
-								shape,
-								color,
-								duration,
-								direction: "hide",
-								onComplete,
-							}),
-						);
+						hide = new MaskEffect(viewport, {
+							shape,
+							color,
+							duration,
+							direction: "hide",
+							center,
+							invert,
+							onComplete,
+						});
+						viewport.addCameraEffect(hide);
 					} else {
 						viewport.addCameraEffect(
 							new FadeEffect(viewport, {
@@ -301,9 +352,9 @@ export default class Trigger extends Renderable {
 	 * runs exactly once per entry — under the legacy alias this would
 	 * fire every frame the entity was inside the trigger.
 	 */
-	onCollisionStart() {
+	onCollisionStart(_response, other) {
 		if (this.name === "Trigger") {
-			this.triggerEvent();
+			this.triggerEvent(other);
 		}
 	}
 }

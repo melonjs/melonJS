@@ -131,6 +131,11 @@ export type {
 	SoundEvents,
 	TrackOptions,
 } from "./audio/types.ts";
+export type {
+	MaskCenter,
+	MaskImage,
+	MaskShape,
+} from "./camera/effects/mask_effect.ts";
 export type { FrustumOptions, ProjectionMode } from "./camera/frustum.ts";
 // export all public constants
 export * from "./const.ts";

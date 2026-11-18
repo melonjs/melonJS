@@ -1,5 +1,14 @@
 # Changelog
 
+## [20.17.0] (melonJS 2) - _unreleased_
+
+### Added
+- Transitions: a mask transition can be shaped like an image or a sprite, not only an `Ellipse` or a `Polygon`. `MaskEffect`, `state.transition("mask", …)` and a `Trigger` take as `shape` an image, the name of a preloaded one, or a `Sprite`, whose silhouette is the mask: transparent pixels are covered, the rest shows the scene, colours do not matter and gaps inside the outline are filled. A sprite gives the frame it shows when the transition starts, facing its way, so the player's own silhouette can close the level. The same on Canvas, WebGL and WebGPU ([#1399](https://github.com/melonjs/melonJS/issues/1399))
+- Transitions: `center` closes a mask transition on a renderable, such as the player, or a point on screen, and opens the reveal from the same place, rather than on the centre of the screen; `invert` makes the shape the cover, filled with the colour and growing out of that point. `state.transition` takes them as a fifth argument, `{ center, invert }`; `MaskEffect` and `Trigger` as settings. On a `Trigger`, `shape: "touching"` and `center: "touching"` stand for whoever walked in, so a level door can close on the player with its silhouette from Tiled properties alone ([#1399](https://github.com/melonjs/melonJS/issues/1399))
+
+### Changed
+- Transitions: a `Polygon` mask (a diamond, a star) grows until the whole screen is inside it, so its reveal ends with the scene uncovered instead of jumping open at the last frame. It opens a little faster as a result; an `Ellipse` iris is unchanged
+
 ## [20.16.0] (melonJS 2) - _2026-11-17_
 
 **Highlights:** a faster `Camera3d`, its work per frame up to **72%** faster with no change to your game, and real 3D physics: with the new `@melonjs/rapier3d-adapter`, bodies tumble, stack and topple in 3D, with collision shapes built straight from your models. Also new: skinned glTF characters with crossfades, mesh picking, an orthographic `Camera3d` for isometric views, and toon shading with outlines. The new features are opt-in: a game that sets none of them renders as before.
