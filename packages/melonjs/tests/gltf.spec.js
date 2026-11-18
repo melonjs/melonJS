@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import {
 	Application,
 	boot,
@@ -271,6 +271,92 @@ describe("parseGLTF()", () => {
 // ── Adversarial / malformed-input robustness ─────────────────────────────────
 // A malformed asset must degrade gracefully (empty-but-valid descriptor or a
 // clear thrown error) — never crash the engine or silently render nothing.
+
+describe("parseGLTF() with mesh compression it cannot decode", () => {
+	/** a one-triangle model, its mesh compressed with `ext` */
+	const compressed = (ext, required) => {
+		const positions = new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]);
+		return packGLB(
+			{
+				asset: { version: "2.0" },
+				extensionsUsed: [ext],
+				extensionsRequired: required ? [ext] : undefined,
+				scene: 0,
+				scenes: [{ nodes: [0] }],
+				nodes: [{ mesh: 0 }],
+				meshes: [
+					{
+						primitives: [
+							{
+								attributes: { POSITION: required ? 1 : 0 },
+								extensions: { [ext]: { bufferView: 0, attributes: {} } },
+							},
+						],
+					},
+				],
+				accessors: [
+					{ bufferView: 0, componentType: 5126, count: 3, type: "VEC3" },
+					// compressed: no data of its own
+					{ componentType: 5126, count: 3, type: "VEC3" },
+				],
+				bufferViews: [
+					{ buffer: 0, byteOffset: 0, byteLength: positions.byteLength },
+				],
+				buffers: [{ byteLength: positions.byteLength }],
+			},
+			new Uint8Array(positions.buffer),
+		);
+	};
+
+	for (const [ext, name] of [
+		["KHR_draco_mesh_compression", "Draco"],
+		["EXT_meshopt_compression", "meshopt"],
+		["KHR_meshopt_compression", "meshopt"],
+	]) {
+		it(`${ext}, required: warns, and fails naming it`, async () => {
+			const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+			try {
+				await expect(parseGLTF(compressed(ext, true))).rejects.toThrow(
+					new RegExp(`${name}.*${ext}`),
+				);
+				expect(warn).toHaveBeenCalledTimes(1);
+				expect(warn.mock.calls[0][0]).toMatch(ext);
+				expect(warn.mock.calls[0][0]).toMatch(/export it again/);
+			} finally {
+				warn.mockRestore();
+			}
+		});
+
+		it(`${ext}, only used: warns, and loads the uncompressed copy`, async () => {
+			const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+			try {
+				const scene = await parseGLTF(compressed(ext, false));
+				expect(scene.nodes).toHaveLength(1);
+				expect(warn).toHaveBeenCalledTimes(1);
+				expect(warn.mock.calls[0][0]).toMatch(/uncompressed copy/);
+			} finally {
+				warn.mockRestore();
+			}
+		});
+	}
+
+	it("an extension it can read is not warned about", async () => {
+		const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+		try {
+			const json = {
+				asset: { version: "2.0" },
+				extensionsUsed: ["KHR_materials_unlit"],
+				scene: 0,
+				scenes: [{ nodes: [] }],
+				nodes: [],
+			};
+			await parseGLTF(packGLB(json, new Uint8Array(0)));
+			expect(warn).not.toHaveBeenCalled();
+		} finally {
+			warn.mockRestore();
+		}
+	});
+});
 
 describe("parseGLTF() robustness", () => {
 	it("synthesizes a sequential index buffer for non-indexed primitives", async () => {

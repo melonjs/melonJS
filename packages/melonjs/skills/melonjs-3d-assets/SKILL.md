@@ -160,9 +160,12 @@ arrives without them, which reads as "flatter than the preview in my authoring
 tool". Bake what you need into the base colour. (OBJ/MTL does carry a normal
 map, see below.)
 
-**Draco compression is the exception that does error.** Its geometry sits in
-accessors with no buffer view, which the parser rejects outright, so the whole
-asset fails to load. Export uncompressed.
+**Mesh compression is the exception that does error.** Draco
+(`KHR_draco_mesh_compression`) and meshopt (`EXT_meshopt_compression`,
+`KHR_meshopt_compression`) cannot be decoded. A file that requires one warns in
+the console, naming it, and fails to load; a file that only uses one (it also
+carries its meshes uncompressed) warns and loads the uncompressed copy. Export
+without mesh compression.
 
 `textureFilter` on the Application settings (`"auto"` / `"nearest"` /
 `"linear"` / `"linear-mipmap"`) drives sampling; glTF materials that declare
@@ -689,7 +692,7 @@ need a prefix.
 | model mirrored — text backwards, gear on the wrong side | `Mesh` defaults `rightHanded` to `false`; pass `true` |
 | model upside down | a manual axis flip on top of the loader's conversion |
 | scene is enormous or invisibly small | `scale` left at 1 against a metre-scale export |
-| the asset fails to load entirely | an external buffer/image `uri` that 404s, or Draco-compressed geometry |
+| the asset fails to load entirely | an external buffer/image `uri` that 404s, or mesh compression the loader cannot decode (Draco, meshopt): the console names it |
 | everything is blown out white | authored lux/candela intensities; use `lightIntensityScale` |
 | materials flatter than the authoring-tool preview | no normal or metallic/roughness *textures* are imported |
 | a glTF `alphaMode: "BLEND"` material draws opaque | the loader does not set `transparent`; set it on that part yourself |

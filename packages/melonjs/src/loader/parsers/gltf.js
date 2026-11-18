@@ -659,6 +659,49 @@ function loadImageFromUrl(url, revoke = false, crossOrigin) {
 }
 
 /**
+ * The glTF mesh compression extensions the loader cannot decode, and what
+ * to call each in a message.
+ * @ignore
+ */
+const MESH_COMPRESSION = {
+	KHR_draco_mesh_compression: "Draco mesh compression",
+	EXT_meshopt_compression: "meshopt compression",
+	KHR_meshopt_compression: "meshopt compression",
+};
+
+/**
+ * Say so in the console when a model's meshes are compressed in a way the
+ * loader cannot decode, rather than failing on an accessor with no data.
+ *
+ * A file that only uses the extension (`extensionsUsed`) also carries its
+ * meshes uncompressed, and loads from those, with a warning. One that
+ * requires it (`extensionsRequired`) has nothing else to read: it warns, and
+ * the load fails with the same message.
+ * @ignore
+ * @internal
+ * @param {object} json - the glTF JSON
+ * @param {string} [baseURI] - where the file came from, for the message
+ */
+export function checkMeshCompression(json, baseURI) {
+	const required = json.extensionsRequired || [];
+	for (const ext of json.extensionsUsed || []) {
+		const name = MESH_COMPRESSION[ext];
+		if (name === undefined) {
+			continue;
+		}
+		const where = baseURI ? ` (${baseURI})` : "";
+		if (required.includes(ext)) {
+			const message = `melonJS: this glTF model${where} uses ${name} (${ext}), which the loader cannot decode: export it again without mesh compression`;
+			console.warn(message);
+			throw new Error(message);
+		}
+		console.warn(
+			`melonJS: this glTF model${where} uses ${name} (${ext}), which the loader cannot decode: its uncompressed copy is loaded instead`,
+		);
+	}
+}
+
+/**
  * Parse a glTF/GLB ArrayBuffer into a flat, instantiable scene descriptor.
  * @param {ArrayBuffer} arrayBuffer - the .glb / .gltf bytes
  * @param {string} [baseURI] - the asset's own URL, used to resolve external
@@ -721,6 +764,7 @@ function readSkinInfluences(json, buffers, prim, vertexCount, skin) {
 
 export async function parseGLTF(arrayBuffer, baseURI, settings) {
 	const { json, bin } = parseGLB(arrayBuffer);
+	checkMeshCompression(json, baseURI);
 	const buffers = await resolveBuffers(json, bin, baseURI, settings);
 
 	// decode every image once, keyed by image index
