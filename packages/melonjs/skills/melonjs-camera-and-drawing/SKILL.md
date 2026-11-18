@@ -153,7 +153,7 @@ returns it), found with `getCameraEffect(Class)` and taken off with
 |---|---|---|
 | `ShakeEffect` | `intensity`, `duration`, `axis`, `onComplete` | jitters `offset`; what `shake()` adds. Several can run at once this way |
 | `FadeEffect` | `color`, `duration` (1000), `direction: "in" \| "out"`, `onComplete` | what `fadeIn()` / `fadeOut()` add |
-| `MaskEffect` | `shape`, `color`, `duration` (500), `direction: "hide" \| "reveal"`, `center`, `invert`, `onComplete` | an iris (the default) or a wipe through a unit-sized `Ellipse` or `Polygon`, an image's silhouette (the image, or a preloaded one's name) or a `Sprite`'s current frame (a `NineSliceSprite` at its full size), closing on `center` (a renderable or a screen point; the screen's centre by default). `invert` fills the shape instead and grows it to cover. `reverseOptions()` gives the settings to play it back. Plain images and fills: the same on Canvas, WebGL and WebGPU |
+| `MaskEffect` | `shape`, `color`, `duration` (500), `direction: "hide" \| "reveal"`, `center`, `invert`, `onComplete` | an iris (the default) or a wipe through a unit-sized `Ellipse` or `Polygon`, an image's silhouette (the image, or a preloaded one's name) or a `Sprite`'s current frame (a `NineSliceSprite` at its full size), closing on `center` (a renderable or a screen point; the screen's centre by default). `invert` fills the shape instead and grows it to cover. Plain images and fills: the same on Canvas, WebGL and WebGPU |
 | `PixelateTransitionEffect` | `renderer`, `size` (32), `duration` (500), `direction: "hide" \| "reveal"`, `onComplete` | the view breaks into blocks up to `size` screen pixels, or comes back from them. A shader: on Canvas it keeps its timing and draws nothing |
 
 ```js
@@ -172,9 +172,7 @@ facing and its place on screen (not its scale or rotation: the shape is grown
 to the screen's size anyway). The shape grows about its thickest part, which
 sits on `center`. An image is read through a canvas, so a compressed texture
 or a cross-origin image without CORS cannot shape a mask (it warns and uses an
-iris). To play an effect back, as a transition's reveal does, make a new one
-from `effect.reverseOptions()` while the first is still on its camera: it
-keeps the silhouette and the point, though the sprite may be gone.
+iris).
 
 `state.transition("fade" | "mask" | "pixelate", …)` drives the last three
 for a state change (see `melonjs-scenes-and-state`). A `Trigger` that loads a

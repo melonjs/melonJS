@@ -3,15 +3,7 @@
 ## [20.17.0] (melonJS 2) - _unreleased_
 
 ### Added
-- Transitions: a mask transition can be shaped like an image or a sprite, not only an `Ellipse` or a `Polygon`. `MaskEffect`, `state.transition("mask", …)` and a `Trigger` take as `shape` an image, the name of a preloaded one, or a `Sprite`, whose silhouette is the mask: transparent pixels are covered, the rest shows the scene, colours do not matter and gaps inside the outline are filled. A sprite gives the frame it shows when the transition starts, facing its way, so the player's own silhouette can close the level. The same on Canvas, WebGL and WebGPU ([#1399](https://github.com/melonjs/melonJS/issues/1399))
-- Transitions: `center` closes a mask transition on a renderable, such as the player, or a point on screen, and opens the reveal from the same place, rather than on the centre of the screen; `invert` makes the shape the cover, filled with the colour and growing out of that point. `state.transition` takes them as a fifth argument, `{ center, invert }`; `MaskEffect` and `Trigger` as settings. On a `Trigger`, `shape: "touching"` and `center: "touching"` stand for whoever walked in, so a level door can close on the player with its silhouette from Tiled properties alone. A sprite or renderable given to `state.transition` is used by the next transition and let go, so a later level never reads the last one's destroyed player ([#1399](https://github.com/melonjs/melonJS/issues/1399))
-- Transitions: `MaskEffect#reverseOptions()` gives the settings of the effect that plays one back, with the shape and point it settled; a `MaskEffect` with no `shape` is an iris ([#1399](https://github.com/melonjs/melonJS/issues/1399))
-
-### Changed
-- Transitions: a `Polygon` mask (a diamond, a star) grows until the whole screen is inside it, about a point inside it even when it does not surround its origin, so its reveal ends with the scene uncovered instead of jumping open at the last frame. It opens a little faster as a result; an `Ellipse` iris is unchanged
-
-### Fixed
-- `NineSliceSprite` blinks with `flicker()`, as a `Sprite` does; it ignored it
+- Transitions: a mask transition can be shaped like an image or a `Sprite`, close on the player with `center`, and fill the shape with `invert`, on `state.transition`, `MaskEffect` and `Trigger` ([#1399](https://github.com/melonjs/melonJS/issues/1399))
 
 ## [20.16.0] (melonJS 2) - _2026-11-17_
 

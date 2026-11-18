@@ -517,17 +517,6 @@ function isImage(value: unknown): value is MaskImage {
  *     color: "#000",
  *     duration: 400,
  * }));
- * @example
- * // the same transition played back, once the screen is covered: it
- * // opens from where this one closed, with the same shape
- * const hide = camera.addCameraEffect(new MaskEffect(camera, {
- *     shape: player,
- *     center: player,
- *     color: "#000",
- *     onComplete: () => {
- *         camera.addCameraEffect(new MaskEffect(camera, hide.reverseOptions()));
- *     },
- * }));
  */
 export default class MaskEffect extends CameraEffect {
 	/**
@@ -681,11 +670,12 @@ export default class MaskEffect extends CameraEffect {
 	 * direction, with the same color, duration and `invert`, the shape this
 	 * one settled when it started (the silhouette a sprite gave, though the
 	 * sprite may be gone by then) and the point it closed on. Read them
-	 * while this effect is still on its camera.
+	 * while this effect is still on its camera. Used by `state.transition`
+	 * and `Trigger` for their reveal.
+	 * @ignore
+	 * @internal
 	 * @param [onComplete] - a callback for the new effect
 	 * @returns the settings for a new `MaskEffect`
-	 * @example
-	 * const reveal = new MaskEffect(camera, hide.reverseOptions());
 	 */
 	reverseOptions(onComplete?: () => void): MaskEffectOptions {
 		return {
