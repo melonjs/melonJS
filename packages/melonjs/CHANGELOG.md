@@ -7,6 +7,7 @@
 
 ### Fixed
 - `NineSliceSprite` blinks with `flicker()`, as a `Sprite` does; it ignored it
+- glTF: a model compressed with Draco or meshopt, which the loader cannot decode, says so in the console, naming the extension, instead of failing on an accessor error that did not mention it
 
 ## [20.16.0] (melonJS 2) - _2026-11-17_
 
