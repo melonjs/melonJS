@@ -133,6 +133,7 @@ export type {
 } from "./audio/types.ts";
 export type {
 	MaskCenter,
+	MaskEffectOptions,
 	MaskImage,
 	MaskShape,
 } from "./camera/effects/mask_effect.ts";

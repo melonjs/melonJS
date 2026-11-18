@@ -4,6 +4,7 @@ import type Camera2d from "../camera/camera2d.ts";
 import type CameraEffect from "../camera/effects/camera_effect.ts";
 import FadeEffect from "../camera/effects/fade_effect.ts";
 import MaskEffect, {
+	isRenderable,
 	type MaskCenter,
 	type MaskShape,
 } from "../camera/effects/mask_effect.ts";
@@ -55,6 +56,9 @@ const _transitionConfig: {
 	// where a mask transition closes and opens, and whether it is inverted
 	center?: MaskCenter | undefined;
 	invert?: boolean | undefined;
+	// a sprite shape or a renderable center was used, and let go: later
+	// changes are an iris on the centre of the screen until it is set again
+	released?: boolean | undefined;
 	// the largest blocks of a pixelate transition, in screen pixels
 	size?: number | undefined;
 } = {
@@ -778,6 +782,7 @@ const state = {
 		_transitionConfig.size = typeof shape === "number" ? shape : undefined;
 		_transitionConfig.center = options?.center;
 		_transitionConfig.invert = options?.invert;
+		_transitionConfig.released = false;
 	},
 
 	/**
@@ -919,26 +924,33 @@ const state = {
 						break;
 					}
 					case "mask": {
-						if (!_transitionConfig.shape) {
+						if (!_transitionConfig.shape && !_transitionConfig.released) {
 							console.warn(
 								"melonJS: mask transition requires a shape, falling back to direct switch",
 							);
 							onComplete();
 							break;
 						}
-						const shape = _transitionConfig.shape;
-						const color = _transitionConfig.color;
-						const duration = _transitionConfig.duration;
-						const invert = _transitionConfig.invert;
 						const maskEffect = new MaskEffect(_app.viewport, {
-							shape,
-							color,
-							duration,
+							shape: _transitionConfig.shape,
+							color: _transitionConfig.color,
+							duration: _transitionConfig.duration,
 							direction: "hide",
 							center: _transitionConfig.center,
-							invert,
+							invert: _transitionConfig.invert,
 							onComplete,
 						});
+						// The transition is set once and kept, but a sprite or a
+						// renderable is one level's player: read now, it is let
+						// go, rather than held (and read again, destroyed or
+						// recycled into something else) by every later change
+						if (isRenderable(_transitionConfig.shape)) {
+							_transitionConfig.shape = undefined;
+							_transitionConfig.released = true;
+						}
+						if (isRenderable(_transitionConfig.center)) {
+							_transitionConfig.center = undefined;
+						}
 						// see the note in the fade case: persistent is what
 						// keeps the closed iris on screen until the switch
 						// lands, and the owner is what takes it away again
@@ -950,14 +962,10 @@ const state = {
 							// the hide started, from a sprite and a renderable
 							// the switch may well have destroyed since. Made
 							// before the hide is taken away, which frees them.
-							const reveal = new MaskEffect(_app.viewport, {
-								shape: maskEffect.resolvedShape,
-								color,
-								duration,
-								direction: "reveal",
-								center: maskEffect.center,
-								invert,
-							});
+							const reveal = new MaskEffect(
+								_app.viewport,
+								maskEffect.reverseOptions(),
+							);
 							hidCamera.removeCameraEffect(maskEffect);
 							// create reveal with the post-switch viewport
 							_app.viewport.addCameraEffect(reveal);

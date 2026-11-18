@@ -155,15 +155,17 @@ shape it warns and falls back to a direct switch. Its fifth argument is
 `{ center, invert }`: `center` is where the shape closes and the reveal opens,
 a renderable (where it is drawn on screen as the transition starts) or a
 screen point, the centre of the screen by default; `invert: true` makes the
-shape the cover, filled with the colour and growing out of `center`. Whatever
-the shape and the point, it is grown until the screen is wholly inside it, so
-the reveal ends with the scene uncovered.
+shape the cover, filled with the colour and growing out of `center`. The
+shape grows about its thickest part (a U or a sprite drawn off-centre in its
+frame too), until the screen is wholly inside it, so the reveal ends with the
+scene uncovered.
 
-A sprite or renderable given here is read when each transition starts, and
+A sprite or renderable given here is read when the transition starts, and
 the reveal reuses what the hide read, so the old stage destroying the player
-in between is fine. But the setting is sticky: give it this level's player
-right before the `state.change`, or the next transition reads a player that
-is gone (it warns, and uses an iris or the centre of the screen). The
+in between is fine. It is then let go: the transition is sticky, but one
+level's player is not the next one's, so later changes are an iris on the
+centre of the screen until you set it again. Give it this level's player
+right before each `state.change`. The
 `"pixelate"` form breaks the screen up into blocks (its fourth argument is the
 largest block size in pixels; the color is not used). It is a shader effect,
 so on Canvas it does nothing and the state changes directly.
@@ -594,8 +596,7 @@ When `setStorage()` switches storage:
 | `Undefined Stage for state 'N'` thrown | no `state.set` for that id first |
 | `state.change(state.PLAY)` from `PLAY` does nothing ("Retry" ignored) | a change to the current state is a no-op — `state.reload()` (20.16), `level.reload()` for the map alone |
 | a mask transition closes on the middle of the screen, not on the player | pass `{ center: player }` as the fifth argument; on a `Trigger`, `center: "touching"` |
-| a mask transition shaped like the player warns that the sprite was destroyed, or closes where the last level's player stood | `state.transition` is sticky and reads the sprite when each transition starts: set it again, with this level's player, right before the `state.change` |
-| an image mask jumps open at the very end of the reveal | the image has nothing opaque at its centre (a ring, a hollow logo), so there is no circle inside it to grow until it holds the screen: fill its middle |
+| the first mask transition is the player's shape, later ones a plain iris on the middle of the screen | a sprite or renderable given to `state.transition` is used by one transition, then let go: set it again, with this level's player, right before each `state.change` |
 | a level change through a `Trigger` ignores `state.transition` | it is a level change, not a state change: set `color` and `duration` (and `transition`) on the trigger |
 | the game stops updating for good after one very slow update, such as a heavy first frame (20.12 and 20.13) | the loop could no longer save enough time to step the world: update |
 | the game resumes under its own pause menu after a tab switch (before 20.9) | focus undid any pause; update, only the blur pause is undone |

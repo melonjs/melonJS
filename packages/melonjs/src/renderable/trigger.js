@@ -1,6 +1,5 @@
 import FadeEffect from "../camera/effects/fade_effect.ts";
 import MaskEffect from "../camera/effects/mask_effect.ts";
-import { Ellipse } from "../geometries/ellipse.ts";
 import { polygonPool } from "../geometries/polygon.ts";
 import { LEVEL_LOAD_OPTIONS, level } from "./../level/level.js";
 import { vector2dPool } from "../math/vector2d.ts";
@@ -254,28 +253,26 @@ export default class Trigger extends Renderable {
 					const duration = this.duration;
 					const useMask = this.transition === "mask" && this.transitionShape;
 					// "touching" is the object that walked in; with none (an
-					// event fired by hand), an iris on the centre of the screen
-					let shape = this.transitionShape;
-					if (shape === "touching") {
-						shape = other ?? new Ellipse(0, 0, 1, 1);
-					}
-					let center = this.transitionCenter;
-					if (center === "touching") {
-						center = other;
-					}
-					const invert = this.transitionInvert;
-					// what the reveal opens with: the shape and the point the
-					// hide settled when it started, from an object the level
-					// change destroys
+					// event fired by hand), the mask's own default, an iris on
+					// the centre of the screen
+					const shape =
+						this.transitionShape === "touching" ? other : this.transitionShape;
+					const center =
+						this.transitionCenter === "touching"
+							? other
+							: this.transitionCenter;
+					// the reveal, read from the hide as it completes: the shape
+					// and the point it settled when it started, from an object
+					// the level change destroys
 					let hide;
+					let reveal;
 
 					// Await the load rather than intercepting the caller's
 					// `onLoaded`: the reveal used to be injected by wrapping
 					// `settings.onLoaded` and calling the user's through it,
 					// which meant rewriting an option the caller passed in.
 					const onComplete = () => {
-						const revealShape = hide ? hide.resolvedShape : shape;
-						const revealCenter = hide ? hide.center : undefined;
+						reveal = hide?.reverseOptions();
 						level
 							.load(gotolevel, { ...settings, async: true })
 							.then(() => {
@@ -285,16 +282,7 @@ export default class Trigger extends Renderable {
 								const vp = app.viewport;
 								// reveal effect (same type as hide)
 								if (useMask) {
-									vp.addCameraEffect(
-										new MaskEffect(vp, {
-											shape: revealShape,
-											color,
-											duration,
-											direction: "reveal",
-											center: revealCenter,
-											invert,
-										}),
-									);
+									vp.addCameraEffect(new MaskEffect(vp, reveal));
 								} else {
 									vp.addCameraEffect(
 										new FadeEffect(vp, {
@@ -323,7 +311,7 @@ export default class Trigger extends Renderable {
 							duration,
 							direction: "hide",
 							center,
-							invert,
+							invert: this.transitionInvert,
 							onComplete,
 						});
 						viewport.addCameraEffect(hide);

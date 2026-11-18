@@ -124,16 +124,21 @@ export default class NineSliceSprite extends Sprite {
 	}
 
 	/**
+	 * The nine slices of the current frame, stretched over this sprite's
+	 * size, with its top left corner at (`x`, `y`). See {@link Sprite#drawFrame}.
 	 * @ignore
 	 * @internal
+	 * @param {Renderer|CanvasRenderingContext2D} renderer - where to draw
+	 * @param {number} x - the left of the sprite
+	 * @param {number} y - the top of the sprite
 	 */
-	draw(renderer) {
+	drawFrame(renderer, x, y) {
 		// the frame to draw
 		const frame = this.current;
 
 		// cache the current position and size
-		let dx = this.pos.x;
-		const dy = this.pos.y;
+		let dx = x;
+		const dy = y;
 
 		let w = frame.width;
 		let h = frame.height;

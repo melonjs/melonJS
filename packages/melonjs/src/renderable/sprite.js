@@ -1011,13 +1011,26 @@ export default class Sprite extends Renderable {
 		) {
 			return;
 		}
+		this.drawFrame(renderer, this.pos.x, this.pos.y);
+	}
 
+	/**
+	 * Draw the current frame with its top left corner at (`x`, `y`): the
+	 * atlas region, trimmed or stored turned, put back as the frame is meant
+	 * to look. `target` is the renderer, or anything with the same
+	 * `translate`, `rotate` and `drawImage`, such as a 2D canvas context (a
+	 * mask transition draws the frame into one to take its silhouette).
+	 * @ignore
+	 * @param {Renderer|CanvasRenderingContext2D} target - where to draw
+	 * @param {number} x - the left of the frame
+	 * @param {number} y - the top of the frame
+	 */
+	drawFrame(target, x, y) {
 		// the frame to draw
 		const frame = this.current;
 
-		// cache the current position and size
-		let xpos = this.pos.x;
-		let ypos = this.pos.y;
+		let xpos = x;
+		let ypos = y;
 
 		let w = frame.width;
 		let h = frame.height;
@@ -1028,8 +1041,8 @@ export default class Sprite extends Renderable {
 
 		// remove image's TexturePacker/ShoeBox rotation
 		if (frame.angle !== 0) {
-			renderer.translate(-xpos, -ypos);
-			renderer.rotate(frame.angle);
+			target.translate(-xpos, -ypos);
+			target.rotate(frame.angle);
 			xpos -= h;
 			w = frame.height;
 			h = frame.width;
@@ -1044,7 +1057,7 @@ export default class Sprite extends Renderable {
 			ypos += frame.trim.y;
 		}
 
-		renderer.drawImage(
+		target.drawImage(
 			this.image,
 			g_offset.x + frame_offset.x, // sx
 			g_offset.y + frame_offset.y, // sy

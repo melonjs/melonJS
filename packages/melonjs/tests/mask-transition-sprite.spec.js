@@ -8,6 +8,7 @@ import {
 	state,
 	video,
 } from "../src/index.js";
+import { readPixel } from "./helpers/pixels.js";
 
 /**
  * `state.transition("mask", …, sprite, { center: sprite })` (#1399): the
@@ -118,7 +119,7 @@ describe("a mask transition shaped like, and closing on, a sprite", () => {
 		expect(hide._silhouette).toBeDefined();
 		// the middle of the player's frame
 		expect(hide.center).toEqual({ x: 210, y: 65 });
-		const silhouette = hide.resolvedShape;
+		const silhouette = hide._silhouette.target.canvas;
 
 		// the switch lands, the player goes with the old stage
 		let reveal;
@@ -132,10 +133,49 @@ describe("a mask transition shaped like, and closing on, a sprite", () => {
 		expect(player.offset).toBeUndefined();
 		expect(reveal.invert).toBe(true);
 		expect(reveal.center).toEqual({ x: 210, y: 65 });
-		expect(reveal._silhouette.canvas).toBe(silhouette);
+		expect(reveal._silhouette.target.canvas).toBe(silhouette);
+
+		// just before it ends, nothing is covered any more: drawn over white,
+		// every corner and the middle read white
+		reveal.tween.stop();
+		reveal.progress.value = 0.995;
+		const renderer = app.renderer;
+		renderer.save();
+		renderer.resetTransform();
+		renderer.setColor("#ffffff");
+		renderer.fillRect(0, 0, 320, 240);
+		renderer.restore();
+		reveal.draw(renderer, 320, 240);
+		for (const [x, y] of [
+			[1, 1],
+			[318, 1],
+			[1, 238],
+			[318, 238],
+			[160, 120],
+		]) {
+			expect((await readPixel(renderer, x, y))[0]).toBeGreaterThan(200);
+		}
+		reveal.progress.value = 1;
 
 		// and the screen ends uncovered
 		await runUntil(() => {
+			expect(app.viewport.cameraEffects).toHaveLength(0);
+		});
+
+		// The player it was given is gone: a later change does not read it
+		// again (destroyed, or recycled into something else), but closes an
+		// iris on the centre of the screen, with nothing to warn about
+		const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+		state.setTransition(start, true);
+		state.change(start);
+		const again = app.viewport.getCameraEffect(MaskEffect);
+		expect(again._maskShape?.type).toBe("Ellipse");
+		expect(again.center).toBeUndefined();
+		expect(again.invert).toBe(true);
+		expect(warn).not.toHaveBeenCalled();
+		warn.mockRestore();
+		await runUntil(() => {
+			expect(state.isCurrent(start)).toBe(true);
 			expect(app.viewport.cameraEffects).toHaveLength(0);
 		});
 	});
