@@ -166,8 +166,15 @@ export default class TMXIsometricRenderer extends TMXRenderer {
 		// missing along the bottom of the view, where their cell is below it
 		// and their image still reaches in, and so did tiles moved into view
 		// by an offset larger than a tile
-		const reachX = layer.maxTileSize.width + (layer.maxTileOffset?.x ?? 0);
-		const reachY = layer.maxTileSize.height + (layer.maxTileOffset?.y ?? 0);
+		// (by a cell at least: the corners below are rounded to whole
+		// cells, half a cell either way, which a tile narrower than that
+		// does not make up for)
+		const reachX =
+			Math.max(layer.maxTileSize.width, this.tilewidth) +
+			(layer.maxTileOffset?.x ?? 0);
+		const reachY =
+			Math.max(layer.maxTileSize.height, this.tileheight) +
+			(layer.maxTileOffset?.y ?? 0);
 		const rowItr = this.pixelToTileCoords(
 			rect.pos.x - reachX,
 			rect.pos.y - reachY,

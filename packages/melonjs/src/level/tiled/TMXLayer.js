@@ -276,8 +276,13 @@ export default class TMXLayer extends Renderable {
 		// A tile larger than its cell reaches past it: up and to the right,
 		// as a tile stands on the bottom left of its cell (any way on an
 		// oblique map)
-		const overX = Math.max(this.maxTileSize.width - this.tilewidth, 0);
-		const overY = Math.max(this.maxTileSize.height - this.tileheight, 0);
+		// (a staggered or a hexagonal map is laid on the even size below its
+		// tiles': a tile of odd size stands a pixel past its cell)
+		const evenGrid = orientation === "staggered" || orientation === "hexagonal";
+		const cellWidth = evenGrid ? this.tilewidth & ~1 : this.tilewidth;
+		const cellHeight = evenGrid ? this.tileheight & ~1 : this.tileheight;
+		const overX = Math.max(this.maxTileSize.width - cellWidth, 0);
+		const overY = Math.max(this.maxTileSize.height - cellHeight, 0);
 		const upRight = orientation !== "oblique";
 		/**
 		 * How far past the layer's grid its tiles can be drawn, on each
@@ -541,6 +546,32 @@ export default class TMXLayer extends Renderable {
 
 	// called when the layer is added to the game world or a container
 	onActivateEvent() {
+		// afresh: a layer taken out of a container and put back is
+		// activated again
+		this.animatedTilesets = [];
+		// A container with a size of its own (one a level was loaded into)
+		// is in view by its bounds, before its children are asked: it is
+		// told how far past them this layer's tiles reach
+		const reach = this._reach;
+		if (
+			reach.left > 0 ||
+			reach.top > 0 ||
+			reach.right > 0 ||
+			reach.bottom > 0
+		) {
+			for (let node = this.ancestor; node; node = node.ancestor) {
+				const kept = (node._drawReach ??= {
+					left: 0,
+					top: 0,
+					right: 0,
+					bottom: 0,
+				});
+				kept.left = Math.max(kept.left, reach.left);
+				kept.top = Math.max(kept.top, reach.top);
+				kept.right = Math.max(kept.right, reach.right);
+				kept.bottom = Math.max(kept.bottom, reach.bottom);
+			}
+		}
 		if (this.tilesets) {
 			const tileset = this.tilesets.tilesets;
 			for (let i = 0; i < tileset.length; i++) {
@@ -586,8 +617,14 @@ export default class TMXLayer extends Renderable {
 		// an oversized tile reaches past its cell (which way depends on the
 		// orientation: up and to the right, any way on an oblique map), and
 		// a tileset's offset moves all of its tiles
-		const overX = Math.max(this.maxTileSize.width - this.tilewidth, 0);
-		const overY = Math.max(this.maxTileSize.height - this.tileheight, 0);
+		const overX = Math.max(
+			this.maxTileSize.width - (renderer.tilewidth ?? this.tilewidth),
+			0,
+		);
+		const overY = Math.max(
+			this.maxTileSize.height - (renderer.tileheight ?? this.tileheight),
+			0,
+		);
 		let left = bounds.left - overX;
 		let top = bounds.top - overY;
 		let right = bounds.right + overX;
@@ -798,8 +835,17 @@ export default class TMXLayer extends Renderable {
 		if (!this.tilesets || this.tilesets.tilesets.length === 0) {
 			return { ok: false, reason: "no tilesets" };
 		}
+		// the path keeps a texel per cell: no more of them, either way, than
+		// the largest texture has
+		const maxTexture = renderer.maxTextureSize ?? Infinity;
+		if (this.cols > maxTexture || this.rows > maxTexture) {
+			return {
+				ok: false,
+				reason: `more columns or rows than the largest texture has pixels (${maxTexture})`,
+			};
+		}
 		if (this.orientation !== "orthogonal") {
-			return this._checkOverlappingShaderEligibility();
+			return this._checkOverlappingShaderEligibility(renderer);
 		}
 		// the shader iterates a fixed-size loop over candidate cells to
 		// support oversized tiles (tile dim > cell dim) drawn bottom-aligned.
@@ -807,14 +853,9 @@ export default class TMXLayer extends Renderable {
 		// so refuse the shader path for layers with extreme oversampling.
 		const MAX_OVERFLOW_CELLS = ORTHOGONAL_MAX_OVERFLOW;
 		for (const ts of this.tilesets.tilesets) {
-			if (ts.isCollection) {
-				return { ok: false, reason: "collection-of-image tileset" };
-			}
-			if (ts.tilerendersize !== "tile") {
-				return {
-					ok: false,
-					reason: `tilerendersize "${ts.tilerendersize}" not supported`,
-				};
+			const reason = this._tilesetReason(ts, renderer);
+			if (reason !== undefined) {
+				return { ok: false, reason };
 			}
 			if (ts.tileoffset.x !== 0 || ts.tileoffset.y !== 0) {
 				return { ok: false, reason: "non-zero tileoffset" };
@@ -827,6 +868,10 @@ export default class TMXLayer extends Renderable {
 					reason: `tile overflow exceeds shader limit (${MAX_OVERFLOW_CELLS} cells)`,
 				};
 			}
+		}
+		const overlap = this._checkOrthogonalOverlap();
+		if (overlap !== undefined) {
+			return { ok: false, reason: overlap };
 		}
 		if (this._hasDiagonalFlipNotSquare()) {
 			return { ok: false, reason: DIAGONAL_NOT_SQUARE };
@@ -864,6 +909,116 @@ export default class TMXLayer extends Renderable {
 	}
 
 	/**
+	 * Why the shader path cannot draw the tiles of a tileset, on any map, if
+	 * it cannot.
+	 * @param {TMXTileset} tileset - the tileset
+	 * @param {object} [renderer] - the renderer, for its largest texture
+	 * @returns {string|undefined} the reason, or undefined when it can
+	 * @ignore
+	 * @internal
+	 */
+	_tilesetReason(tileset, renderer) {
+		if (tileset.isCollection) {
+			return "collection-of-image tileset";
+		}
+		if (tileset.tilerendersize !== "tile") {
+			return `tilerendersize "${tileset.tilerendersize}" not supported`;
+		}
+		// an animated tileset has a texel per tile, in one row
+		const maxTexture = renderer?.maxTextureSize ?? Infinity;
+		if (
+			tileset.isAnimated &&
+			tileset.lastgid - tileset.firstgid + 1 > maxTexture
+		) {
+			return `an animated tileset of more tiles than the largest texture has pixels (${maxTexture})`;
+		}
+		return undefined;
+	}
+
+	/**
+	 * Whether a tileset's tiles are larger than a cell: they overlap the
+	 * cells around theirs.
+	 * @param {TMXTileset} tileset - the tileset
+	 * @returns {boolean}
+	 * @ignore
+	 * @internal
+	 */
+	_largerThanCell(tileset) {
+		return (
+			tileset.tilewidth > this.tilewidth || tileset.tileheight > this.tileheight
+		);
+	}
+
+	/**
+	 * Check an orthogonal layer for tiles that overlap in a way the shader
+	 * path does not keep, and note the tilesets its tiles come from.
+	 *
+	 * Tiles the size of a cell never overlap, and any layer of them is fine.
+	 * Tiles larger than a cell lie over their neighbours, the one drawn last
+	 * on top: the shader keeps that order among the tiles of ONE tileset (it
+	 * draws a pass per tileset, each whole pass over the last), and for the
+	 * map's default order alone, from the top down and the left across
+	 * ("right-down").
+	 * @returns {string|undefined} why the path cannot draw the layer, or
+	 * undefined when it can
+	 * @ignore
+	 * @internal
+	 */
+	_checkOrthogonalOverlap() {
+		/**
+		 * the tilesets an orthogonal layer's tiles come from, when some of
+		 * the map's are larger than a cell (`setTile` adds to them):
+		 * undefined when none is, and nothing can overlap
+		 * @ignore
+		 */
+		this._usedTilesets = undefined;
+		if (
+			!this.tilesets.tilesets.some((tileset) => {
+				return this._largerThanCell(tileset);
+			})
+		) {
+			return undefined;
+		}
+		const used = new Set();
+		const data = this.layerData;
+		let tileset = null;
+		for (let i = 0; i < data.length; i += 2) {
+			const gid = data[i];
+			if (gid !== 0 && (tileset === null || !tileset.contains(gid))) {
+				tileset = this.tilesets.getTilesetByGid(gid);
+				used.add(tileset);
+			}
+		}
+		this._usedTilesets = used;
+		return this._orthogonalOverlapReason();
+	}
+
+	/**
+	 * Why the tiles of the tilesets an orthogonal layer uses overlap in a way
+	 * the shader path does not keep, if they do (see
+	 * {@link TMXLayer#_checkOrthogonalOverlap}).
+	 * @returns {string|undefined} the reason, or undefined
+	 * @ignore
+	 * @internal
+	 */
+	_orthogonalOverlapReason() {
+		let larger = false;
+		for (const tileset of this._usedTilesets) {
+			larger = larger || this._largerThanCell(tileset);
+		}
+		if (!larger) {
+			return undefined;
+		}
+		if (this._usedTilesets.size > 1) {
+			return "tiles larger than the grid, of more than one tileset in a layer";
+		}
+		if (this.renderorder !== "right-down") {
+			return `render order "${this.renderorder}" with tiles larger than the grid`;
+		}
+		return undefined;
+	}
+
+	/**
 	 * Check whether this layer of an isometric, staggered or hexagonal map
 	 * can take the shader path, and note the tileset it would draw with.
 	 *
@@ -877,7 +1032,7 @@ export default class TMXLayer extends Renderable {
 	 * @ignore
 	 * @internal
 	 */
-	_checkOverlappingShaderEligibility() {
+	_checkOverlappingShaderEligibility(renderer) {
 		this._shaderTileset = null;
 		const kind = kindOf(this.orientation);
 		// Half the cells of a grid of odd size stand half a pixel off (on a
@@ -914,7 +1069,7 @@ export default class TMXLayer extends Renderable {
 			}
 		}
 		if (tileset !== null) {
-			const reason = this._overlappingTilesetReason(tileset);
+			const reason = this._overlappingTilesetReason(tileset, renderer);
 			if (reason !== undefined) {
 				return { ok: false, reason };
 			}
@@ -935,12 +1090,10 @@ export default class TMXLayer extends Renderable {
 	 * @ignore
 	 * @internal
 	 */
-	_overlappingTilesetReason(tileset) {
-		if (tileset.isCollection) {
-			return "collection-of-image tileset";
-		}
-		if (tileset.tilerendersize !== "tile") {
-			return `tilerendersize "${tileset.tilerendersize}" not supported`;
+	_overlappingTilesetReason(tileset, renderer) {
+		const unfit = this._tilesetReason(tileset, renderer);
+		if (unfit !== undefined) {
+			return unfit;
 		}
 		// The shader looks, for each pixel, at every cell whose tile image
 		// could cover it: a bounded number, of lines of cells and of cells
@@ -974,16 +1127,25 @@ export default class TMXLayer extends Renderable {
 	 */
 	_keepShaderEligible(gid, flipMask) {
 		let reason;
-		if (
-			this.orientation !== "orthogonal" &&
-			this._shaderTileset?.contains(gid) !== true
-		) {
+		if (this.orientation === "orthogonal") {
+			// a tileset the layer did not use yet, where tiles can overlap
+			if (this._usedTilesets !== undefined) {
+				const tileset = this.tilesets.getTilesetByGid(gid);
+				if (!this._usedTilesets.has(tileset)) {
+					this._usedTilesets.add(tileset);
+					reason = this._orthogonalOverlapReason();
+				}
+			}
+		} else if (this._shaderTileset?.contains(gid) !== true) {
 			if (this._shaderTileset) {
 				reason = oneTilesetReason(this.orientation);
 			} else {
 				// an empty layer takes its tileset from its first tile
 				const tileset = this.tilesets.getTilesetByGid(gid);
-				reason = this._overlappingTilesetReason(tileset);
+				reason = this._overlappingTilesetReason(
+					tileset,
+					this.parentApp?.renderer,
+				);
 				if (reason === undefined) {
 					this._shaderTileset = tileset;
 				}
@@ -1013,7 +1175,7 @@ export default class TMXLayer extends Renderable {
 		// renderer-side caches keyed by this layer (e.g. the WebGL2 shader
 		// path's per-layer GID index texture) are cleared from the renderer's
 		// own `reset()` path — tile layers only come and go on game reset.
-		this.animatedTilesets = undefined;
+		this.animatedTilesets = [];
 		// keep canvasRenderer for reuse — dropping the reference would leak
 		// event listeners registered by CanvasRenderer's constructor
 	}
@@ -1264,6 +1426,10 @@ export default class TMXLayer extends Renderable {
 			this.canvasRenderer.renderTarget.invalidate(renderer);
 			renderer.cache.tinted?.delete(this.canvasRenderer.getCanvas());
 		}
+		// whether the view is the default camera's, which draws the world
+		// where its `pos` puts it (any other draws it unmoved): asked of the
+		// camera, before a plain rectangle stands in for it below
+		const unmovedWorld = rect.isDefault === false;
 		// the camera's offset (a look ahead, a shake) shifts what it shows
 		// without moving it: the tiles to draw are the ones in that view
 		const offset = rect.offset;
@@ -1284,7 +1450,7 @@ export default class TMXLayer extends Renderable {
 			const at = parent.getAbsolutePosition();
 			shiftX = at.x;
 			shiftY = at.y;
-			if (rect.isDefault === false) {
+			if (unmovedWorld) {
 				let root = parent;
 				while (root.ancestor) {
 					root = root.ancestor;

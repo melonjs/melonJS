@@ -160,6 +160,11 @@ bool tryRenderCell(int cx, int cy, vec2 worldPx, Footprint fp, out vec4 outColor
 	// may land a hair under the row it should
 	int cols = int(uTilesetCols.x);
 	int row = localId / cols;
+	// a tile the tileset's image does not hold (an image cropped since the
+	// map was saved): nothing to draw
+	if (row >= int(uTilesetCols.y)) {
+		return false;
+	}
 	vec2 tileOriginPx = uTilesetMargin.xy
 		+ vec2(float(localId - row * cols), float(row)) * (uTileSize + uTilesetMargin.zw);
 	vec2 texelPx = tileOriginPx + inTile * uTileSize;

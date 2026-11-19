@@ -46,8 +46,12 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 			}
 		}
 
-		this.sideoffsetx = (this.tilewidth - this.sidelengthx) / 2;
-		this.sideoffsety = (this.tileheight - this.sidelengthy) / 2;
+		// in whole numbers, as Tiled's own (libtiled's `RenderParams`): a
+		// side of odd length leaves an odd number of pixels to halve, and
+		// the half pixel is dropped, not kept: columns and rows stay on
+		// whole pixels, where Tiled has them
+		this.sideoffsetx = Math.trunc((this.tilewidth - this.sidelengthx) / 2);
+		this.sideoffsety = Math.trunc((this.tileheight - this.sidelengthy) / 2);
 
 		this.columnwidth = this.sideoffsetx + this.sidelengthx;
 		this.rowheight = this.sideoffsety + this.sidelengthy;
@@ -498,7 +502,10 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 							);
 						}
 					}
-					rowPos.x += this.tilewidth + this.sidelengthx;
+					// the next cell of the line, two columns on: where
+					// `tileToPixelCoords` puts it (a side of odd length
+					// leaves the tile's width a pixel more than that)
+					rowPos.x += this.columnwidth * 2;
 				}
 
 				if (staggeredRow) {
@@ -559,7 +566,10 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 							);
 						}
 					}
-					rowPos.x += this.tilewidth + this.sidelengthx;
+					// the next cell of the line, two columns on: where
+					// `tileToPixelCoords` puts it (a side of odd length
+					// leaves the tile's width a pixel more than that)
+					rowPos.x += this.columnwidth * 2;
 				}
 				startPos.y += this.rowheight;
 			}

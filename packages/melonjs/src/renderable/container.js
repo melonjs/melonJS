@@ -1,5 +1,6 @@
 import { colorPool } from "../math/color.ts";
 import { Matrix3d } from "../math/matrix3d.ts";
+import { boundsPool } from "../physics/bounds.ts";
 import Body from "../physics/builtin/body.js";
 import {
 	needsShapeResolution,
@@ -1128,6 +1129,36 @@ export default class Container extends Renderable {
 	getChildByGUID(guid) {
 		const obj = this.getChildByProp("GUID", guid);
 		return obj.length > 0 ? obj[0] : null;
+	}
+
+	/**
+	 * The area this container draws in, when something in it draws past its
+	 * own bounds and has said so (a tile layer whose tiles stand above its
+	 * grid, see `TMXLayer#getDrawBounds`): the container's bounds, grown by
+	 * as much. A camera has the container in view by this area, as it would
+	 * the layer (see `Camera2d#isVisible`).
+	 * @returns {Bounds|undefined} that area, or undefined when it is the
+	 * container's bounds (or the container has no size of its own)
+	 * @ignore
+	 */
+	getDrawBounds() {
+		const reach = this._drawReach;
+		if (reach === undefined) {
+			return undefined;
+		}
+		const bounds = this.getBounds();
+		if (!bounds.isFinite()) {
+			return undefined;
+		}
+		/** @ignore */
+		this._drawBounds ??= boundsPool.get();
+		this._drawBounds.setMinMax(
+			bounds.left - reach.left,
+			bounds.top - reach.top,
+			bounds.right + reach.right,
+			bounds.bottom + reach.bottom,
+		);
+		return this._drawBounds;
 	}
 
 	/**

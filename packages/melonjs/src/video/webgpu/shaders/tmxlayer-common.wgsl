@@ -163,6 +163,11 @@ fn tryRenderCell(cx : i32, cy : i32, worldPx : vec2f, fp : Footprint) -> CellSam
 	// may land a hair under the row it should
 	let cols = i32(tmx.uTilesetCols.x);
 	let row = localId / cols;
+	// a tile the tileset's image does not hold (an image cropped since the
+	// map was saved): nothing to draw
+	if (row >= i32(tmx.uTilesetCols.y)) {
+		return miss;
+	}
 	let tileOriginPx = tmx.uTilesetMargin.xy
 		+ vec2f(f32(localId - row * cols), f32(row)) * (tmx.uTileSize + tmx.uTilesetMargin.zw);
 	var texelPx = tileOriginPx + inTile * tmx.uTileSize;

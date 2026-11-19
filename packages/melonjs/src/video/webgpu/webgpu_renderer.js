@@ -199,6 +199,7 @@ export default class WebGPURenderer extends Renderer {
 		this.supportsDepthBuffer = true;
 		this.supportsRetainedMesh = true;
 		this.supportsInstancing = true;
+		// (`maxTextureSize` is the device's, once there is one: see `init`)
 		// `rgba16float` is renderable, blendable and filterable in core
 		// WebGPU, with no optional feature to request and nothing to probe —
 		// unlike WebGL2, where it takes an extension that some drivers do
@@ -555,6 +556,8 @@ export default class WebGPURenderer extends Renderer {
 				return adapter.features.has(feature);
 			}),
 		});
+		this.maxTextureSize =
+			this.device.limits?.maxTextureDimension2D ?? this.maxTextureSize;
 
 		// identify the driver in the console header, same as the WebGL
 		// backend does through its debug-renderer-info strings. The

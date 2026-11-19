@@ -521,6 +521,7 @@ export default class WebGLRenderer extends Renderer {
 
 		// this backend renders TMX tile layers on the GPU (see TMXLayer)
 		this.supportsShaderTileLayers = true;
+		this.maxTextureSize = this.gl.getParameter(this.gl.MAX_TEXTURE_SIZE);
 
 		// this backend keeps mesh geometry resident on the GPU, so meshes can
 		// hand it their model matrix instead of pre-transformed vertices

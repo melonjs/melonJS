@@ -311,17 +311,22 @@ export function reference(scene, viewX, viewY, width, height) {
 			const side = orientation === "hexagonal" ? hexsidelength : 0;
 			const sideX = staggerX ? side : 0;
 			const sideY = staggerX ? 0 : side;
-			const columnWidth = (tw - sideX) / 2 + sideX;
-			const rowHeight = (th - sideY) / 2 + sideY;
+			// Tiled's own numbers (libtiled's hexagonal `RenderParams`), all
+			// whole: the grid is the even size below the tiles', and half
+			// of what a side leaves of a cell is rounded down
+			const cw = tw & ~1;
+			const ch = th & ~1;
+			const columnWidth = Math.trunc((cw - sideX) / 2) + sideX;
+			const rowHeight = Math.trunc((ch - sideY) / 2) + sideY;
 			const place = ({ col, row }) => {
 				// `& 1` and not `% 2`: an infinite map has negative cells
 				return staggerX
 					? {
 							x: col * columnWidth,
-							y: row * (th + sideY) + ((col & 1) ^ even) * rowHeight,
+							y: row * (ch + sideY) + ((col & 1) ^ even) * rowHeight,
 						}
 					: {
-							x: col * (tw + sideX) + ((row & 1) ^ even) * columnWidth,
+							x: col * (cw + sideX) + ((row & 1) ^ even) * columnWidth,
 							y: row * rowHeight,
 						};
 			};
@@ -332,11 +337,16 @@ export function reference(scene, viewX, viewY, width, height) {
 				return a.y - b.y || a.x - b.x;
 			});
 			for (const { gid, x, y } of placed) {
-				drawTile(gid, ox + x, oy + y + th);
+				drawTile(gid, ox + x, oy + y + ch);
 			}
 		} else {
+			// the map's render order: rows from the top or the bottom, each
+			// from the left or the right ("right-down" unless said)
+			const order = scene.extra?.renderorder ?? "right-down";
+			const down = order.endsWith("down") ? 1 : -1;
+			const right = order.startsWith("right") ? 1 : -1;
 			ordered.sort((a, b) => {
-				return a.row - b.row || a.col - b.col;
+				return down * (a.row - b.row) || right * (a.col - b.col);
 			});
 			for (const { col, row, gid } of ordered) {
 				drawTile(gid, ox + col * tw, oy + (row + 1) * th);

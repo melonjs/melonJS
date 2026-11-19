@@ -860,6 +860,16 @@ export default class TMXTileset {
 			dy += this._renderDyCenter;
 		}
 
+		// a tile the tileset's image does not hold (an image cropped since the
+		// map was saved, a `tilecount` larger than the image has): nothing
+		// to draw, as in Tiled
+		const frame = this.isCollection
+			? undefined
+			: this.atlas[this.getViewTileId(gid)];
+		if (!this.isCollection && frame === undefined) {
+			return;
+		}
+
 		// check if any transformation is required
 		if (flipMask !== 0) {
 			renderer.save();
@@ -892,7 +902,7 @@ export default class TMXTileset {
 				dh,
 			);
 		} else {
-			const offset = this.atlas[this.getViewTileId(gid)].offset;
+			const offset = frame.offset;
 			renderer.drawImage(
 				this.image,
 				offset.x,

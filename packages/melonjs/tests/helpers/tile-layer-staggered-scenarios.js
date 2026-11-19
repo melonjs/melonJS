@@ -461,18 +461,12 @@ export function staggeredScenarios(renderer, type) {
 				expect(said).toMatch(/larger than the shader's limit/);
 			});
 
-			it("a grid whose cells stand half a pixel off", (ctx) => {
+			it("tiles of odd size, which stand a pixel past their cell", (ctx) => {
 				need(ctx);
-				// a hexagon side of odd length: every other column is half a
-				// pixel off
-				const grid = {
-					orientation: "hexagonal",
-					tw: 28,
-					th: 24,
-					hexsidelength: 11,
-				};
+				// the map is laid on the even grid below: 62 x 30 cells
+				const grid = { orientation: "staggered", tw: 63, th: 31 };
 				const [mode, said] = modeOf(
-					staggeredScene(grid, "x", "odd", makeTileset({ tw: 28, th: 24 })),
+					staggeredScene(grid, "y", "odd", makeTileset({ tw: 63, th: 31 })),
 				);
 				expect(mode).toBe("perTile");
 				expect(said).toMatch(/odd size/);
