@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import {
 	Application,
 	boot,
+	FadeEffect,
 	MaskEffect,
 	Sprite,
 	Stage,
@@ -15,6 +16,9 @@ import { readPixel } from "./helpers/pixels.js";
  * hide closes on the player with the player's own silhouette, and the reveal
  * opens from the same place with the same silhouette, though the state
  * change has destroyed the player in between.
+ *
+ * And the way to use one for a single change: set it, call `state.change()`,
+ * set the usual transition back on the next line.
  */
 
 const DURATION = 60;
@@ -57,6 +61,13 @@ const leftHalf = () => {
 	ctx.fillStyle = "#f00";
 	ctx.fillRect(0, 0, 10, 30);
 	return canvas;
+};
+
+/** what is on the camera now, as `Class:direction` */
+const effectsOn = (app) => {
+	return app.viewport.cameraEffects.map((fx) => {
+		return `${fx.constructor.name}:${fx.direction}`;
+	});
 };
 
 describe("a mask transition shaped like, and closing on, a sprite", () => {
@@ -178,5 +189,84 @@ describe("a mask transition shaped like, and closing on, a sprite", () => {
 			expect(state.isCurrent(start)).toBe(true);
 			expect(app.viewport.cameraEffects).toHaveLength(0);
 		});
+	});
+
+	it("set for one change, then set back at once: that change is the mask, the next one the usual fade", async () => {
+		let player;
+		const start = state.USER + 92;
+		const next = state.USER + 93;
+		const last = state.USER + 94;
+		state.set(
+			start,
+			new Stage({
+				onResetEvent(game) {
+					player = new Sprite(200, 50, { image: leftHalf() });
+					game.world.addChild(player);
+				},
+			}),
+		);
+		state.set(next, new Stage());
+		state.set(last, new Stage());
+		state.setTransition(start, false);
+		state.change(start, true);
+		await runUntil(() => {
+			expect(state.isCurrent(start)).toBe(true);
+			expect(player?.ancestor).toBeDefined();
+		});
+
+		// the game's usual transition
+		state.transition("fade", "#000", DURATION);
+
+		// the player's silhouette, for this change only: the usual one is
+		// set back before a single frame of the mask has run
+		state.transition("mask", "#000", DURATION, player);
+		state.change(next);
+		state.transition("fade", "#000", DURATION);
+
+		// the hide was built when the change was asked for, from the mask
+		expect(effectsOn(app)).toEqual(["MaskEffect:hide"]);
+		const hide = app.viewport.getCameraEffect(MaskEffect);
+		expect(hide._silhouette).toBeDefined();
+		const silhouette = hide._silhouette.target.canvas;
+
+		// the reveal comes from the hide, not from the settings, which are
+		// the fade's by now: the same mask, the same silhouette
+		const seen = new Set();
+		let reveal;
+		await runUntil(() => {
+			for (const name of effectsOn(app)) {
+				seen.add(name);
+			}
+			expect(state.isCurrent(next)).toBe(true);
+			reveal = app.viewport.cameraEffects.find((fx) => {
+				return fx instanceof MaskEffect && fx.direction === "reveal";
+			});
+			expect(reveal).toBeDefined();
+		});
+		expect(reveal._silhouette.target.canvas).toBe(silhouette);
+		await runUntil(() => {
+			for (const name of effectsOn(app)) {
+				seen.add(name);
+			}
+			expect(app.viewport.cameraEffects).toHaveLength(0);
+		});
+		// on no frame of that transition was a fade on the camera
+		expect([...seen].sort()).toEqual(["MaskEffect:hide", "MaskEffect:reveal"]);
+
+		// the next change is the usual fade, both ways, and never a mask
+		state.change(last);
+		expect(app.viewport.getCameraEffect(FadeEffect)).toBeDefined();
+		const seenNext = new Set();
+		await runUntil(() => {
+			for (const name of effectsOn(app)) {
+				seenNext.add(name);
+			}
+			expect(state.isCurrent(last)).toBe(true);
+			expect(app.viewport.cameraEffects).toHaveLength(0);
+		});
+		expect(seenNext.size).toBeGreaterThan(0);
+		for (const name of seenNext) {
+			expect(name.startsWith("FadeEffect")).toBe(true);
+		}
 	});
 });
