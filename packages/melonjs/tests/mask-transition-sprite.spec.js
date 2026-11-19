@@ -1,12 +1,23 @@
-import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import {
+	afterAll,
+	afterEach,
+	beforeAll,
+	beforeEach,
+	describe,
+	expect,
+	it,
+	vi,
+} from "vitest";
 import {
 	Application,
 	boot,
+	Container,
 	FadeEffect,
 	MaskEffect,
 	Sprite,
 	Stage,
 	state,
+	TextureAtlas,
 	video,
 } from "../src/index.js";
 import { readPixel } from "./helpers/pixels.js";
@@ -19,6 +30,10 @@ import { readPixel } from "./helpers/pixels.js";
  *
  * And the way to use one for a single change: set it, call `state.change()`,
  * set the usual transition back on the next line.
+ *
+ * A sprite is let go after one transition only when the change takes it: one
+ * the game keeps for itself, outside any level, or a persistent one, is set
+ * once and shapes every change.
  */
 
 const DURATION = 60;
@@ -68,6 +83,51 @@ const effectsOn = (app) => {
 	return app.viewport.cameraEffects.map((fx) => {
 		return `${fx.constructor.name}:${fx.direction}`;
 	});
+};
+
+/** the side of a silhouette that holds more of the shape, "left" or "right" */
+const heavierSide = (silhouette) => {
+	const canvas = silhouette.target.canvas;
+	const { width, height } = canvas;
+	const { data } = canvas.getContext("2d").getImageData(0, 0, width, height);
+	let left = 0;
+	let right = 0;
+	for (let y = 0; y < height; y++) {
+		for (let x = 0; x < width; x++) {
+			const alpha = data[(y * width + x) * 4 + 3];
+			if (x < width / 2) {
+				left += alpha;
+			} else {
+				right += alpha;
+			}
+		}
+	}
+	return left > right ? "left" : "right";
+};
+
+/** a sprite from an atlas, as `atlas.createSpriteFromName()` makes one */
+const atlasSprite = () => {
+	const atlas = new TextureAtlas(
+		{
+			frames: [
+				{
+					filename: "eat_0000",
+					frame: { x: 0, y: 0, w: 20, h: 30 },
+					rotated: false,
+					trimmed: false,
+					spriteSourceSize: { x: 0, y: 0, w: 20, h: 30 },
+					sourceSize: { w: 20, h: 30 },
+				},
+			],
+			meta: {
+				app: "texturepacker",
+				image: "eat-sheet.png",
+				size: { w: 20, h: 30 },
+			},
+		},
+		leftHalf(),
+	);
+	return atlas.createSpriteFromName("eat_0000");
 };
 
 describe("a mask transition shaped like, and closing on, a sprite", () => {
@@ -268,5 +328,212 @@ describe("a mask transition shaped like, and closing on, a sprite", () => {
 		for (const name of seenNext) {
 			expect(name.startsWith("FadeEffect")).toBe(true);
 		}
+	});
+
+	describe("set once, for every change", () => {
+		// two empty stages to go back and forth between
+		const here = state.USER + 95;
+		const there = state.USER + 96;
+		let warn;
+		let current;
+
+		/** change to the other stage, and hand back the hide it starts */
+		const change = () => {
+			current = current === here ? there : here;
+			state.change(current);
+			return app.viewport.getCameraEffect(MaskEffect);
+		};
+		/** let the change land and its reveal end */
+		const settle = async () => {
+			await runUntil(() => {
+				expect(state.isCurrent(current)).toBe(true);
+				expect(app.viewport.cameraEffects).toHaveLength(0);
+			});
+		};
+		const isIris = (effect) => {
+			return (
+				effect._silhouette === undefined &&
+				effect._maskShape?.type === "Ellipse"
+			);
+		};
+
+		beforeAll(async () => {
+			state.set(here, new Stage());
+			state.set(there, new Stage());
+			state.transition("fade", "#000", 0);
+			current = here;
+			state.change(here, true);
+			await runUntil(() => {
+				expect(state.isCurrent(here)).toBe(true);
+			});
+		});
+		beforeEach(() => {
+			warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+		});
+		afterEach(async () => {
+			warn.mockRestore();
+			await settle();
+		});
+
+		it("a sprite the game keeps for itself, never in a level, shapes every change", async () => {
+			// what `atlas.createSpriteFromName()` gives, set once at startup
+			const sprite = atlasSprite();
+			state.transition("mask", "#000", DURATION, sprite);
+
+			for (let i = 0; i < 4; i++) {
+				const hide = change();
+				expect(hide.direction).toBe("hide");
+				expect(hide._silhouette, `change ${i + 1}`).toBeDefined();
+				await settle();
+				// no change destroyed it
+				expect(sprite.offset).toBeDefined();
+			}
+			expect(warn).not.toHaveBeenCalled();
+		});
+
+		it("each change draws the frame the sprite shows by then", async () => {
+			const sprite = atlasSprite();
+			state.transition("mask", "#000", DURATION, sprite);
+
+			// the image's left half is the opaque one
+			expect(heavierSide(change()._silhouette)).toBe("left");
+			await settle();
+
+			// the game turns its sprite around: the next change is not the
+			// picture of the first one, kept, but the sprite read again
+			sprite.flipX(true);
+			expect(heavierSide(change()._silhouette)).toBe("right");
+			await settle();
+
+			sprite.flipX(false);
+			expect(heavierSide(change()._silhouette)).toBe("left");
+		});
+
+		it("a persistent sprite in the world, and one in a persistent container, are kept", async () => {
+			const lone = new Sprite(40, 40, { image: leftHalf() });
+			lone.isPersistent = true;
+			app.world.addChild(lone);
+
+			const hud = new Container(0, 0, 320, 240);
+			hud.isPersistent = true;
+			const inHud = new Sprite(100, 100, { image: leftHalf() });
+			hud.addChild(inHud);
+			app.world.addChild(hud);
+
+			for (const sprite of [lone, inHud]) {
+				state.transition("mask", "#000", DURATION, sprite, { center: sprite });
+				for (let i = 0; i < 3; i++) {
+					const hide = change();
+					expect(hide._silhouette, `change ${i + 1}`).toBeDefined();
+					expect(hide.center, `change ${i + 1}`).toBeDefined();
+					await settle();
+					// the change left it in the world
+					expect(sprite.ancestor).toBeDefined();
+				}
+			}
+			expect(warn).not.toHaveBeenCalled();
+
+			app.world.removeChildNow(lone);
+			app.world.removeChildNow(hud);
+		});
+
+		it("a sprite inside a container of the level goes with it, and is let go", async () => {
+			const room = new Container(0, 0, 320, 240);
+			const inRoom = new Sprite(100, 100, { image: leftHalf() });
+			room.addChild(inRoom);
+			app.world.addChild(room);
+			state.transition("mask", "#000", DURATION, inRoom, { center: inRoom });
+
+			const first = change();
+			expect(first._silhouette).toBeDefined();
+			expect(first.center).toBeDefined();
+			await settle();
+			// the change destroyed it
+			expect(inRoom.offset).toBeUndefined();
+
+			const second = change();
+			expect(isIris(second)).toBe(true);
+			expect(second.center).toBeUndefined();
+			expect(warn).not.toHaveBeenCalled();
+		});
+
+		it("a persistent sprite inside a container of the level is let go with it", async () => {
+			// Persistent is a word to the container a renderable is a child
+			// of, and the world only asks its own children: the room goes,
+			// and what it held is left in a container that is no more.
+			// Nothing to keep reading a place on screen from
+			const room = new Container(0, 0, 320, 240);
+			const inRoom = new Sprite(100, 100, { image: leftHalf() });
+			inRoom.isPersistent = true;
+			room.addChild(inRoom);
+			app.world.addChild(room);
+			state.transition("mask", "#000", DURATION, inRoom, { center: inRoom });
+
+			const first = change();
+			expect(first._silhouette).toBeDefined();
+			expect(first.center).toBeDefined();
+			await settle();
+			expect(room.ancestor).toBeUndefined();
+
+			const second = change();
+			expect(isIris(second)).toBe(true);
+			expect(second.center).toBeUndefined();
+			expect(warn).not.toHaveBeenCalled();
+		});
+
+		it("kept while it is the game's own, let go by the change that finds it in a level", async () => {
+			const sprite = atlasSprite();
+			state.transition("mask", "#000", DURATION, sprite);
+			expect(change()._silhouette).toBeDefined();
+			await settle();
+			expect(change()._silhouette).toBeDefined();
+			await settle();
+
+			// now it joins a level: this change still wears it, and takes it
+			app.world.addChild(sprite);
+			expect(change()._silhouette).toBeDefined();
+			await settle();
+			expect(sprite.offset).toBeUndefined();
+
+			expect(isIris(change())).toBe(true);
+			expect(warn).not.toHaveBeenCalled();
+		});
+
+		it("a sprite in a container that is in no world is kept", async () => {
+			const shelf = new Container(0, 0, 100, 100);
+			const sprite = new Sprite(10, 10, { image: leftHalf() });
+			shelf.addChild(sprite);
+			state.transition("mask", "#000", DURATION, sprite);
+			for (let i = 0; i < 3; i++) {
+				expect(change()._silhouette, `change ${i + 1}`).toBeDefined();
+				await settle();
+			}
+			expect(warn).not.toHaveBeenCalled();
+		});
+
+		it("a kept sprite the game destroys later: an iris from then on, not an error", async () => {
+			const sprite = atlasSprite();
+			state.transition("mask", "#000", DURATION, sprite, { center: sprite });
+			expect(change()._silhouette).toBeDefined();
+			await settle();
+
+			sprite.destroy();
+			const hide = change();
+			expect(isIris(hide)).toBe(true);
+			await settle();
+			expect(isIris(change())).toBe(true);
+		});
+
+		it("setting another transition forgets a kept sprite", async () => {
+			const sprite = atlasSprite();
+			state.transition("mask", "#000", DURATION, sprite);
+			expect(change()._silhouette).toBeDefined();
+			await settle();
+
+			state.transition("fade", "#000", DURATION);
+			state.change((current = current === here ? there : here));
+			expect(app.viewport.getCameraEffect(MaskEffect)).toBeUndefined();
+			expect(app.viewport.getCameraEffect(FadeEffect)).toBeDefined();
+		});
 	});
 });

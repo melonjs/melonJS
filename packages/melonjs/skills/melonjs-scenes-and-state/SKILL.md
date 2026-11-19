@@ -162,11 +162,26 @@ scene uncovered.
 
 A sprite or renderable given here is read when the transition starts, and
 the reveal reuses what the hide read, so the old stage destroying the player
-in between is fine. It is then let go: the transition is sticky, but one
-level's player is not the next one's, so later changes are an iris on the
-centre of the screen until you set it again. Give it this level's player
-right before each `state.change`. The
-`"pixelate"` form breaks the screen up into blocks (its fourth argument is the
+in between is fine. Whether it is kept depends on whose it is:
+
+- **a sprite the game keeps for itself** (never added to a level, such as
+  `atlas.createSpriteFromName("logo")`, or a persistent one in the world): set
+  it once, it shapes every change, with the frame it shows by then.
+- **a sprite that is part of the level** (the player): the change destroys it,
+  so it is let go after that one transition, and later changes are an iris on
+  the centre of the screen until you set it again. Give it this level's
+  player right before each `state.change`.
+
+```js
+// once, at startup: every change wears the logo
+state.transition("mask", "#000", 500, atlas.createSpriteFromName("logo"));
+
+// before each change: this level's player
+state.transition("mask", "#000", 500, player, { center: player });
+state.change(state.GAME_END);
+```
+
+The `"pixelate"` form breaks the screen up into blocks (its fourth argument is the
 largest block size in pixels; the color is not used). It is a shader effect,
 so on Canvas it does nothing and the state changes directly.
 
@@ -596,7 +611,7 @@ When `setStorage()` switches storage:
 | `Undefined Stage for state 'N'` thrown | no `state.set` for that id first |
 | `state.change(state.PLAY)` from `PLAY` does nothing ("Retry" ignored) | a change to the current state is a no-op — `state.reload()` (20.16), `level.reload()` for the map alone |
 | a mask transition closes on the middle of the screen, not on the player | pass `{ center: player }` as the fifth argument; on a `Trigger`, `center: "touching"` |
-| the first mask transition is the player's shape, later ones a plain iris on the middle of the screen | a sprite or renderable given to `state.transition` is used by one transition, then let go: set it again, with this level's player, right before each `state.change` |
+| the first mask transition is the player's shape, later ones a plain iris on the middle of the screen | a sprite that is part of the level is destroyed by the change, so `state.transition` lets it go after one transition: set it again, with this level's player, right before each `state.change`. A sprite kept outside any level (or a persistent one) is set once and shapes every change |
 | a level change through a `Trigger` ignores `state.transition` | it is a level change, not a state change: set `color` and `duration` (and `transition`) on the trigger |
 | the game stops updating for good after one very slow update, such as a heavy first frame (20.12 and 20.13) | the loop could no longer save enough time to step the world: update |
 | the game resumes under its own pause menu after a tab switch (before 20.9) | focus undid any pause; update, only the blur pause is undone |

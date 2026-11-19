@@ -10,6 +10,7 @@ import MaskEffect, {
 } from "../camera/effects/mask_effect.ts";
 import PixelateTransitionEffect from "../camera/effects/pixelate_transition_effect.ts";
 import DefaultLoadingScreen from "./../loader/loadingscreen.js";
+import type Renderable from "./../renderable/renderable.js";
 import Stage from "./../state/stage.ts";
 import {
 	BLUR,
@@ -56,8 +57,8 @@ const _transitionConfig: {
 	// where a mask transition closes and opens, and whether it is inverted
 	center?: MaskCenter | undefined;
 	invert?: boolean | undefined;
-	// a sprite shape or a renderable center was used, and let go: later
-	// changes are an iris on the centre of the screen until it is set again
+	// a sprite shape the change took with its level was used, and let go:
+	// later changes are an iris until it is set again
 	released?: boolean | undefined;
 	// the largest blocks of a pixelate transition, in screen pixels
 	size?: number | undefined;
@@ -65,6 +66,33 @@ const _transitionConfig: {
 	color: "",
 	duration: 0,
 };
+
+/**
+ * Whether a state change takes this away: a renderable in the world, unless
+ * the child of the world it is, or is under, is persistent. The world is
+ * reset with its stage, and spares its persistent children with all they
+ * hold; a renderable in no world (one the game made and keeps for itself) is
+ * not its to destroy.
+ * @param value - the shape or the center of a mask transition
+ * @returns true for a renderable the next state change takes away
+ */
+function goesWithTheStage(value: unknown): boolean {
+	if (!isRenderable(value)) {
+		return false;
+	}
+	let node: Renderable = value;
+	let kept = false;
+	// `ancestor` is undefined on a renderable that is in no container
+	let parent = node.ancestor as Renderable | undefined;
+	while (parent !== undefined) {
+		// persistent is a word to the container a renderable is a child of:
+		// only the world's own children are asked
+		kept = node.isPersistent;
+		node = parent;
+		parent = node.ancestor;
+	}
+	return node === _app.world && !kept;
+}
 
 // callback when state switch is done
 /**
@@ -725,14 +753,18 @@ const state = {
 	 * @param [shape] - for "mask" (required) the mask shape: an `Ellipse` or
 	 * `Polygon` (unit-sized, centred on the origin), an image or the name of a
 	 * preloaded one (its silhouette), or a `Sprite` (the silhouette of the
-	 * frame it shows when the transition starts); see {@link MaskEffect}. For
-	 * "pixelate", the size of the largest blocks, in screen pixels (32 by
-	 * default)
+	 * frame it shows when the transition starts); see {@link MaskEffect}. A
+	 * sprite the game keeps for itself (in no level, or persistent) is kept
+	 * with the transition, and shapes every change. One that is part of the
+	 * level shapes the next change, which destroys it, and is then let go:
+	 * later changes are an iris until it is set again. For "pixelate", the
+	 * size of the largest blocks, in screen pixels (32 by default)
 	 * @param [options] - for "mask" only
 	 * @param [options.center] - where the shape closes and opens: a
 	 * renderable, such as the player, at the place it is drawn when the
 	 * transition starts, or a point on screen. The centre of the screen by
-	 * default. The reveal opens from the same place
+	 * default. The reveal opens from the same place. A renderable is kept or
+	 * let go as a sprite `shape` is
 	 * @param [options.invert=false] - make the shape the cover rather than
 	 * the window: filled with the color, it grows out of `center` until it
 	 * covers the screen, and shrinks away to reveal it
@@ -756,6 +788,10 @@ const state = {
 	 * // the change, as the player of one level is not the next one's
 	 * state.transition("mask", "#000", 500, player, { center: player });
 	 * state.change(state.GAME_END);
+	 * @example
+	 * // a sprite of the game's own, in no level: set once, for every change
+	 * const logo = atlas.createSpriteFromName("logo");
+	 * state.transition("mask", "#000", 500, logo);
 	 * @example
 	 * // a black circle growing out of the player until it covers the screen
 	 * state.transition("mask", "#000", 400, new Ellipse(0, 0, 1, 1), {
@@ -940,15 +976,16 @@ const state = {
 							invert: _transitionConfig.invert,
 							onComplete,
 						});
-						// The transition is set once and kept, but a sprite or a
-						// renderable is one level's player: read now, it is let
-						// go, rather than held (and read again, destroyed or
-						// recycled into something else) by every later change
-						if (isRenderable(_transitionConfig.shape)) {
+						// The transition is set once and kept, and so is a sprite
+						// the game keeps for itself. One this change destroys,
+						// one level's player, is read now and let go, rather
+						// than held (and read again, destroyed or recycled into
+						// something else) by every later change
+						if (goesWithTheStage(_transitionConfig.shape)) {
 							_transitionConfig.shape = undefined;
 							_transitionConfig.released = true;
 						}
-						if (isRenderable(_transitionConfig.center)) {
+						if (goesWithTheStage(_transitionConfig.center)) {
 							_transitionConfig.center = undefined;
 						}
 						// see the note in the fade case: persistent is what
