@@ -226,10 +226,17 @@ export function staggeredRegion(layer, rect, tileset, out) {
 	// bottom of the last line's boxes
 	const left = offsetX;
 	const right = lastBox * columnWidth + tileset.tilewidth + offsetX;
-	const top = layer.tileheight - tileset.tileheight + offsetY;
-	const bottom = (lines - 1) * rowHeight + layer.tileheight + offsetY;
+	// (a tile stands on the cell the map lays out, which can be a pixel
+	// less than the map's tile size: see `TMXHexagonalRenderer`)
+	const top = map.tileheight - tileset.tileheight + offsetY;
+	const bottom = (lines - 1) * rowHeight + map.tileheight + offsetY;
 
-	if (!viewIn(rect, left, top, right, bottom, offsetX, offsetY, out)) {
+	// the shader stands a tile on `uCellSize`, the map's tile size: where
+	// the cell is shorter, its pixels are measured from as much lower
+	const shorter = layer.tileheight - map.tileheight;
+	if (
+		!viewIn(rect, left, top, right, bottom, offsetX, offsetY - shorter, out)
+	) {
 		return false;
 	}
 	// how many cells' images reach a pixel: as many in a line as the image

@@ -276,11 +276,11 @@ export default class TMXLayer extends Renderable {
 		// A tile larger than its cell reaches past it: up and to the right,
 		// as a tile stands on the bottom left of its cell (any way on an
 		// oblique map)
-		// (a staggered or a hexagonal map is laid on the even size below its
-		// tiles': a tile of odd size stands a pixel past its cell)
-		const evenGrid = orientation === "staggered" || orientation === "hexagonal";
-		const cellWidth = evenGrid ? this.tilewidth & ~1 : this.tilewidth;
-		const cellHeight = evenGrid ? this.tileheight & ~1 : this.tileheight;
+		// (the cell is the map renderer's: on a staggered or a hexagonal map
+		// it can be a pixel less than the map's tile size)
+		const grid = map.getRenderer?.();
+		const cellWidth = grid?.tilewidth ?? this.tilewidth;
+		const cellHeight = grid?.tileheight ?? this.tileheight;
 		const overX = Math.max(this.maxTileSize.width - cellWidth, 0);
 		const overY = Math.max(this.maxTileSize.height - cellHeight, 0);
 		const upRight = orientation !== "oblique";
@@ -550,27 +550,14 @@ export default class TMXLayer extends Renderable {
 		// activated again
 		this.animatedTilesets = [];
 		// A container with a size of its own (one a level was loaded into)
-		// is in view by its bounds, before its children are asked: it is
-		// told how far past them this layer's tiles reach
-		const reach = this._reach;
-		if (
-			reach.left > 0 ||
-			reach.top > 0 ||
-			reach.right > 0 ||
-			reach.bottom > 0
-		) {
-			for (let node = this.ancestor; node; node = node.ancestor) {
-				const kept = (node._drawReach ??= {
-					left: 0,
-					top: 0,
-					right: 0,
-					bottom: 0,
-				});
-				kept.left = Math.max(kept.left, reach.left);
-				kept.top = Math.max(kept.top, reach.top);
-				kept.right = Math.max(kept.right, reach.right);
-				kept.bottom = Math.max(kept.bottom, reach.bottom);
-			}
+		// is in view by its bounds, before its children are asked: each one
+		// the layer is in is told that the layer can draw outside them (its
+		// tiles' reach, its offset, an infinite map's first chunks)
+		/** @ignore */
+		this._toldAncestors = [];
+		for (let node = this.ancestor; node; node = node.ancestor) {
+			(node._drawPast ??= new Set()).add(this);
+			this._toldAncestors.push(node);
 		}
 		if (this.tilesets) {
 			const tileset = this.tilesets.tilesets;
@@ -1035,16 +1022,13 @@ export default class TMXLayer extends Renderable {
 	_checkOverlappingShaderEligibility(renderer) {
 		this._shaderTileset = null;
 		const kind = kindOf(this.orientation);
-		// Half the cells of a grid of odd size stand half a pixel off (on a
-		// hexagonal map, of a side of odd length). Tile by tile, each tile
-		// is moved to a whole pixel; the shader has one quad for all of
-		// them, and would draw those a pixel away.
-		const map = this.getRenderer();
+		// Half the tiles of an isometric grid of odd size stand half a pixel
+		// off. Tile by tile, each is moved to a whole pixel; the shader has
+		// one quad for all of them, and would draw those a pixel away. (A
+		// staggered or a hexagonal map is laid out in whole numbers.)
 		if (
-			this.tilewidth % 2 !== 0 ||
-			this.tileheight % 2 !== 0 ||
-			(this.orientation !== "isometric" &&
-				!(Number.isInteger(map.columnwidth) && Number.isInteger(map.rowheight)))
+			this.orientation === "isometric" &&
+			(this.tilewidth % 2 !== 0 || this.tileheight % 2 !== 0)
 		) {
 			return { ok: false, reason: `${kind} grid of odd size` };
 		}
@@ -1176,6 +1160,10 @@ export default class TMXLayer extends Renderable {
 		// path's per-layer GID index texture) are cleared from the renderer's
 		// own `reset()` path — tile layers only come and go on game reset.
 		this.animatedTilesets = [];
+		for (const node of this._toldAncestors ?? []) {
+			node._drawPast?.delete(this);
+		}
+		this._toldAncestors = undefined;
 		// keep canvasRenderer for reuse — dropping the reference would leak
 		// event listeners registered by CanvasRenderer's constructor
 	}

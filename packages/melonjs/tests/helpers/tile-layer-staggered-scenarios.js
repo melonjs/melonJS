@@ -221,6 +221,67 @@ export function staggeredScenarios(renderer, type) {
 				}
 			});
 
+			it("tiles of odd size: on the cell Tiled lays out, a pixel smaller", async (ctx) => {
+				need(ctx);
+				// 63 x 31 tiles of a staggered map stand on 62 x 30 cells;
+				// a hexagon side of 11 on 28 x 25 leaves 7 a side, rows 18
+				// apart
+				for (const [grid, tw, th] of [
+					[{ orientation: "staggered", tw: 63, th: 31 }, 63, 31],
+					[{ orientation: "staggered", tw: 64, th: 33 }, 64, 66],
+					[
+						{ orientation: "hexagonal", tw: 28, th: 25, hexsidelength: 11 },
+						28,
+						25,
+					],
+					[
+						{ orientation: "hexagonal", tw: 27, th: 24, hexsidelength: 12 },
+						27,
+						40,
+					],
+				]) {
+					for (const axis of ["y", "x"]) {
+						expect(
+							await same(
+								staggeredScene(grid, axis, "odd", makeTileset({ tw, th })),
+							),
+							`${grid.orientation} ${grid.tw} x ${grid.th}, axis ${axis}`,
+						).toBeGreaterThan(0);
+					}
+				}
+			});
+
+			it("tiles flipped across and down, on hexagons", async (ctx) => {
+				need(ctx);
+				// (a hexagonal map's third flag is a turn of 60 degrees in
+				// Tiled, which the engine does not draw: left out here)
+				const flips = [0, FLIP_H, FLIP_V, FLIP_H + FLIP_V];
+				for (const axis of ["y", "x"]) {
+					const scene = staggeredScene(
+						HEXAGONAL,
+						axis,
+						"even",
+						makeTileset({
+							tw: 28,
+							th: 40,
+							opaque: (x, y) => {
+								return x + y > 12;
+							},
+						}),
+						{
+							layers: [
+								{
+									data: fill(COLS, ROWS, (c, r) => {
+										return 1 + ((c + r) % 8) + flips[(c * 3 + r) % 4];
+									}),
+								},
+							],
+						},
+					);
+					expect(await same(scene), `axis ${axis}`).toBeGreaterThan(0);
+				}
+			});
+
 			it("tiles flipped, every way", async (ctx) => {
 				need(ctx);
 				const flips = [
@@ -354,6 +415,10 @@ export function staggeredScenarios(renderer, type) {
 										chunk(0, -4),
 										chunk(4, 0),
 										chunk(0, 0),
+										// odd coordinates: the lines that are shifted
+										// are the map's, not the chunk's
+										chunk(-3, 5),
+										chunk(5, -9),
 									],
 								},
 							],
@@ -461,17 +526,6 @@ export function staggeredScenarios(renderer, type) {
 				expect(said).toMatch(/larger than the shader's limit/);
 			});
 
-			it("tiles of odd size, which stand a pixel past their cell", (ctx) => {
-				need(ctx);
-				// the map is laid on the even grid below: 62 x 30 cells
-				const grid = { orientation: "staggered", tw: 63, th: 31 };
-				const [mode, said] = modeOf(
-					staggeredScene(grid, "y", "odd", makeTileset({ tw: 63, th: 31 })),
-				);
-				expect(mode).toBe("perTile");
-				expect(said).toMatch(/odd size/);
-			});
-
 			it("a tile of another tileset set while the game runs", (ctx) => {
 				need(ctx);
 				const scene = staggeredScene(HEXAGONAL, "y", "odd", blocks(HEXAGONAL), {
@@ -515,6 +569,7 @@ export function staggeredScenarios(renderer, type) {
 			})) {
 				const scene = build();
 				const layers = show(app, makeMap(scene), "prerender");
+				let total = 0;
 				for (const [x, y] of STAGGERED_VIEWS.slice(0, 4)) {
 					app.viewport.moveTo(x, y);
 					const { frame } = await drawIn(app, layers, "prerender");
@@ -522,8 +577,9 @@ export function staggeredScenarios(renderer, type) {
 					expect(d.different, `${label}, view (${x}, ${y}): ${d.first}`).toBe(
 						0,
 					);
-					expect(drawn(frame)).toBeGreaterThanOrEqual(0);
+					total += drawn(frame);
 				}
+				expect(total, label).toBeGreaterThan(0);
 			}
 		});
 	});

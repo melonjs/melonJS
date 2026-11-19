@@ -1132,18 +1132,20 @@ export default class Container extends Renderable {
 	}
 
 	/**
-	 * The area this container draws in, when something in it draws past its
-	 * own bounds and has said so (a tile layer whose tiles stand above its
-	 * grid, see `TMXLayer#getDrawBounds`): the container's bounds, grown by
-	 * as much. A camera has the container in view by this area, as it would
-	 * the layer (see `Camera2d#isVisible`).
+	 * The area this container draws in, when something in it draws outside
+	 * the container's own bounds and has said so: a tile layer does (see
+	 * `TMXLayer#getDrawBounds`), whose tiles stand above its grid, which an
+	 * offset can move, and which on an infinite map starts left of and above
+	 * the map's origin. A container with a size of its own (one a level was
+	 * loaded into) is in view by this area, as the layer would be (see
+	 * `Camera2d#isVisible`).
 	 * @returns {Bounds|undefined} that area, or undefined when it is the
 	 * container's bounds (or the container has no size of its own)
 	 * @ignore
 	 */
 	getDrawBounds() {
-		const reach = this._drawReach;
-		if (reach === undefined) {
+		const layers = this._drawPast;
+		if (layers === undefined || layers.size === 0) {
 			return undefined;
 		}
 		const bounds = this.getBounds();
@@ -1153,11 +1155,14 @@ export default class Container extends Renderable {
 		/** @ignore */
 		this._drawBounds ??= boundsPool.get();
 		this._drawBounds.setMinMax(
-			bounds.left - reach.left,
-			bounds.top - reach.top,
-			bounds.right + reach.right,
-			bounds.bottom + reach.bottom,
+			bounds.left,
+			bounds.top,
+			bounds.right,
+			bounds.bottom,
 		);
+		for (const layer of layers) {
+			this._drawBounds.addBounds(layer.getDrawBounds());
+		}
 		return this._drawBounds;
 	}
 

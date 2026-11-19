@@ -753,6 +753,15 @@ export default class TMXTileset {
 			dy += this._renderDyCenter;
 		}
 
+		// a tile the tileset's image does not hold: nothing to draw (see
+		// `drawTileRaw`)
+		const frame = this.isCollection
+			? undefined
+			: this.atlas[this.getViewTileId(tmxTile.tileId)];
+		if (!this.isCollection && frame === undefined) {
+			return;
+		}
+
 		// check if any transformation is required
 		if (tmxTile.flipped) {
 			renderer.save();
@@ -779,7 +788,7 @@ export default class TMXTileset {
 			);
 		} else {
 			// use the tileset texture atlas
-			const offset = this.atlas[this.getViewTileId(tmxTile.tileId)].offset;
+			const offset = frame.offset;
 			renderer.drawImage(
 				this.image,
 				offset.x,

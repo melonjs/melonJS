@@ -311,13 +311,16 @@ export function reference(scene, viewX, viewY, width, height) {
 			const side = orientation === "hexagonal" ? hexsidelength : 0;
 			const sideX = staggerX ? side : 0;
 			const sideY = staggerX ? 0 : side;
-			// Tiled's own numbers (libtiled's hexagonal `RenderParams`), all
-			// whole: the grid is the even size below the tiles', and half
-			// of what a side leaves of a cell is rounded down
-			const cw = tw & ~1;
-			const ch = th & ~1;
-			const columnWidth = Math.trunc((cw - sideX) / 2) + sideX;
-			const rowHeight = Math.trunc((ch - sideY) / 2) + sideY;
+			// Tiled's own numbers (libtiled's hexagonal `RenderParams`, as
+			// of Tiled 1.10), all whole: half of what a side leaves of a
+			// tile, rounded down; a column and a row; and the cell a tile
+			// stands on, the tile's size less the pixel dropped
+			const offsetX = Math.trunc((tw - sideX) / 2);
+			const offsetY = Math.trunc((th - sideY) / 2);
+			const columnWidth = offsetX + sideX;
+			const rowHeight = offsetY + sideY;
+			const cw = columnWidth + offsetX;
+			const ch = rowHeight + offsetY;
 			const place = ({ col, row }) => {
 				// `& 1` and not `% 2`: an infinite map has negative cells
 				return staggerX
@@ -593,6 +596,10 @@ export async function comparePaths(app, scene, options = {}) {
 			}
 			const c = diff(ref, cpu.frame, tolerance);
 			expect(c.different, `${at}, CPU path: ${c.first}`).toBe(0);
+			// and where something is to be seen, the layer was asked for it
+			if (drawn(ref) > 0) {
+				expect(cpu.cpuDraws, `${at}, CPU draws`).toBeGreaterThan(0);
+			}
 			const g = diff(ref, gpu.frame, tolerance);
 			expect(g.different, `${at}, GPU path: ${g.first}`).toBe(0);
 		}

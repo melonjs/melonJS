@@ -123,6 +123,95 @@ export function edgeCases(renderer, type) {
 				}
 			});
 
+			for (const [orientation, tw, th, extra] of [
+				["orthogonal", 32, 32, {}],
+				["isometric", 64, 32, {}],
+				["staggered", 64, 32, { staggeraxis: "y", staggerindex: "odd" }],
+				[
+					"hexagonal",
+					28,
+					24,
+					{ staggeraxis: "x", staggerindex: "even", hexsidelength: 12 },
+				],
+			]) {
+				it(`${orientation}: a sliver of the map, a pixel or a few, at each edge of the view`, async (ctx) => {
+					need(ctx);
+					// tiles larger than a cell, moved by a tileoffset where
+					// the GPU takes one: how far the map reaches is measured
+					// on the reference itself
+					const scene = {
+						orientation,
+						cols: 5,
+						rows: 5,
+						tw,
+						th,
+						tilesets: [
+							makeTileset({
+								tw: tw + 10,
+								th: th * 2,
+								// (an orthogonal tileset with an offset is left
+								// to the CPU renderer)
+								extra:
+									orientation === "orthogonal"
+										? {}
+										: { tileoffset: { x: -7, y: 5 } },
+							}),
+						],
+						layers: [{ data: all(5, 5) }],
+						extra,
+					};
+					const wide = reference(scene, -400, -400, 1200, 1000);
+					let left = Infinity;
+					let top = Infinity;
+					let right = -Infinity;
+					let bottom = -Infinity;
+					for (let y = 0; y < wide.height; y++) {
+						for (let x = 0; x < wide.width; x++) {
+							const i = (y * wide.width + x) * 4;
+							if (
+								wide.data[i] !== 16 ||
+								wide.data[i + 1] !== 24 ||
+								wide.data[i + 2] !== 48
+							) {
+								left = Math.min(left, x - 400);
+								right = Math.max(right, x - 400 + 1);
+								top = Math.min(top, y - 400);
+								bottom = Math.max(bottom, y - 400 + 1);
+							}
+						}
+					}
+					expect(right - left).toBeGreaterThan(100);
+					const middleX = Math.round((left + right - W) / 2);
+					const middleY = Math.round((top + bottom - H) / 2);
+					const views = [];
+					for (const k of [1, 2, 5]) {
+						// the map's left edge at the view's right, and so on
+						views.push([left + k - W, middleY]);
+						views.push([right - k, middleY]);
+						views.push([middleX, top + k - H]);
+						views.push([middleX, bottom - k]);
+					}
+					const layers = show(app, makeMap(scene));
+					expect(layers[0].renderMode).toBe("shader");
+					for (const view of views) {
+						expect(
+							await comparePaths(app, scene, { views: [view], layers }),
+							`view (${view})`,
+						).toBeGreaterThan(0);
+					}
+					// and a pixel out of sight: nothing, either way
+					const out = [
+						[left - W, middleY],
+						[right, middleY],
+						[middleX, top - H],
+						[middleX, bottom],
+					];
+					expect(await comparePaths(app, scene, { views: out, layers })).toBe(
+						0,
+					);
+				});
+			}
+
 			it("a layer in a container with a size: the tops of tall tiles, the grid out of view", async (ctx) => {
 				need(ctx);
 				// a level loaded into a container gives it the map's size:
@@ -163,6 +252,83 @@ export function edgeCases(renderer, type) {
 							`${boxed ? "in a container" : "in the world"}, ${mode}: ${d.first}`,
 						).toBe(0);
 					}
+				}
+			});
+
+			/** a scene put in a container of its own, as a level loaded into one */
+			const boxed = (scene) => {
+				app.world.reset();
+				app.world.pos.set(0, 0, app.world.pos.z);
+				app.renderer.reset?.();
+				app.renderer.backgroundColor.setColor(16, 24, 48);
+				const map = makeMap(scene);
+				const box = new Container();
+				app.world.addChild(box);
+				map.addTo(box, true, false);
+				app.world.sortNow(true);
+				app.viewport.setBounds(-100000, -100000, 200000, 200000);
+				return map.getLayers();
+			};
+
+			it("a layer offset in Tiled, in a container with a size: drawn where it is, the map's rectangle out of view", async (ctx) => {
+				need(ctx);
+				// the container has the map's size: 160 wide, and the layer
+				// is 200 to its right
+				const scene = {
+					orientation: "orthogonal",
+					cols: 5,
+					rows: 4,
+					tw: 32,
+					th: 32,
+					tilesets: [makeTileset({ tw: 32, th: 32 })],
+					layers: [{ data: all(5, 4), offsetx: 200, offsety: 0 }],
+				};
+				const view = [170, -40];
+				const ref = reference(scene, ...view, W, H);
+				expect(drawn(ref)).toBeGreaterThan(0);
+				const layers = boxed(scene);
+				app.viewport.moveTo(...view);
+				for (const mode of ["perTile", "shader"]) {
+					const { frame } = await drawIn(app, layers, mode);
+					const d = diff(ref, frame);
+					expect(d.different, `${mode}: ${d.first}`).toBe(0);
+				}
+			});
+
+			it("an infinite map in a container: the tiles left of and above its origin", async (ctx) => {
+				need(ctx);
+				const chunk = (x, y) => {
+					return { x, y, width: 4, height: 4, data: all(4, 4) };
+				};
+				const scene = {
+					orientation: "orthogonal",
+					cols: 4,
+					rows: 4,
+					tw: 32,
+					th: 32,
+					tilesets: [makeTileset({ tw: 32, th: 32 })],
+					layers: [
+						{
+							startx: -4,
+							starty: -8,
+							width: 8,
+							height: 12,
+							data: undefined,
+							chunks: [chunk(-3, -5), chunk(0, 0)],
+						},
+					],
+					extra: { infinite: true },
+				};
+				// left of and above the map's own rectangle
+				const view = [-W - 4, -H - 4];
+				const ref = reference(scene, ...view, W, H);
+				expect(drawn(ref)).toBeGreaterThan(0);
+				const layers = boxed(scene);
+				app.viewport.moveTo(...view);
+				for (const mode of ["perTile", "shader"]) {
+					const { frame } = await drawIn(app, layers, mode);
+					const d = diff(ref, frame);
+					expect(d.different, `${mode}: ${d.first}`).toBe(0);
 				}
 			});
 
@@ -217,7 +383,7 @@ export function edgeCases(renderer, type) {
 		});
 
 		describe("grids of odd sizes, laid out as Tiled lays them out", () => {
-			it("a staggered map of odd tile size: on the even grid below, tile by tile and baked", async (ctx) => {
+			it("a staggered map of odd tile size: on cells a pixel smaller, every way it is drawn", async (ctx) => {
 				need(ctx);
 				// 63 x 31 tiles stand on 62 x 30 cells: one pixel above and
 				// one to the right of each
@@ -231,15 +397,13 @@ export function edgeCases(renderer, type) {
 					layers: [{ data: all(4, 4) }],
 					extra: { staggeraxis: "y", staggerindex: "odd" },
 				};
-				await fallsBack(scene, /odd size/, [
+				const views = [
 					[-20, -20],
 					[40, 10],
-				]);
+				];
+				expect(await comparePaths(app, scene, { views })).toBeGreaterThan(0);
 				const baked = show(app, makeMap(scene), "prerender");
-				for (const [x, y] of [
-					[-20, -20],
-					[40, 10],
-				]) {
+				for (const [x, y] of views) {
 					app.viewport.moveTo(x, y);
 					const { frame } = await drawIn(app, baked, "prerender");
 					const d = diff(reference(scene, x, y, W, H), frame);
@@ -249,7 +413,10 @@ export function edgeCases(renderer, type) {
 
 			for (const [axis, tw, th, side] of [
 				["x", 28, 24, 11],
+				// on this axis the cell is a pixel shorter than the tile
 				["y", 28, 24, 11],
+				// an odd height: 7 a side, rows 18 apart
+				["y", 28, 25, 11],
 				["x", 30, 24, 7],
 				// longer than the tile: the half left of a cell is negative
 				["x", 28, 24, 33],
@@ -278,6 +445,14 @@ export function edgeCases(renderer, type) {
 						[35, 12],
 					];
 					expect(await comparePaths(app, scene, { views })).toBeGreaterThan(0);
+					// and baked: the canvas holds every tile, to its last pixel
+					const baked = show(app, makeMap(scene), "prerender");
+					for (const [x, y] of views) {
+						app.viewport.moveTo(x, y);
+						const { frame } = await drawIn(app, baked, "prerender");
+						const d = diff(reference(scene, x, y, W, H), frame);
+						expect(d.different, `baked: ${d.first}`).toBe(0);
+					}
 				});
 			}
 		});
@@ -473,6 +648,45 @@ export function edgeCases(renderer, type) {
 				expect(drawn(ref)).toBeGreaterThan(0);
 				expect(diff(ref, cpu.frame).different, "tile by tile").toBe(0);
 				expect(diff(ref, gpu.frame).different, "on the GPU").toBe(0);
+			});
+
+			it("a tile the image does not hold, set on a baked layer: left undrawn", async (ctx) => {
+				need(ctx);
+				const scene = {
+					orientation: "orthogonal",
+					cols: 6,
+					rows: 5,
+					tw: 32,
+					th: 32,
+					tilesets: [
+						makeTileset({ tw: 32, th: 32, count: 4, extra: { tilecount: 8 } }),
+					],
+					layers: [
+						{
+							data: fill(6, 5, (c, r) => {
+								return 1 + ((c + r) % 4);
+							}),
+						},
+					],
+				};
+				const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+				try {
+					const layers = show(app, makeMap(scene), "prerender");
+					const layer = layers[0];
+					// one the image holds, and one it does not
+					scene.layers[0].data[1 * 6 + 1] = 3;
+					layer.setTile(layer.getTileById(3, 1, 1), 1, 1);
+					scene.layers[0].data[2 * 6 + 2] = 0;
+					expect(() => {
+						layer.setTile(layer.getTileById(7, 2, 2), 2, 2);
+					}).not.toThrow();
+					app.viewport.moveTo(0, 0);
+					const { frame } = await drawIn(app, layers, "prerender");
+					const d = diff(reference(scene, 0, 0, W, H), frame);
+					expect(d.different, d.first).toBe(0);
+				} finally {
+					warn.mockRestore();
+				}
 			});
 
 			it("a layer taken out of the world and put back is drawn again", async (ctx) => {

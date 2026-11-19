@@ -29,7 +29,7 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 	 * @param {TMXTileMap} map - the TMX map
 	 */
 	constructor(map) {
-		super(map.cols, map.rows, map.tilewidth & ~1, map.tileheight & ~1);
+		super(map.cols, map.rows, map.tilewidth, map.tileheight);
 
 		this.hexsidelength = map.hexsidelength || 0;
 		this.staggerX = map.staggeraxis === "x";
@@ -46,15 +46,21 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 			}
 		}
 
-		// in whole numbers, as Tiled's own (libtiled's `RenderParams`): a
-		// side of odd length leaves an odd number of pixels to halve, and
-		// the half pixel is dropped, not kept: columns and rows stay on
-		// whole pixels, where Tiled has them
-		this.sideoffsetx = Math.trunc((this.tilewidth - this.sidelengthx) / 2);
-		this.sideoffsety = Math.trunc((this.tileheight - this.sidelengthy) / 2);
+		// In whole numbers, as Tiled's own (libtiled's hexagonal
+		// `RenderParams`): what a side leaves of a tile is halved, and when
+		// that is an odd number of pixels the half pixel is dropped.
+		// Columns and rows stay on whole pixels, where Tiled has them
+		this.sideoffsetx = Math.trunc((map.tilewidth - this.sidelengthx) / 2);
+		this.sideoffsety = Math.trunc((map.tileheight - this.sidelengthy) / 2);
 
 		this.columnwidth = this.sideoffsetx + this.sidelengthx;
 		this.rowheight = this.sideoffsety + this.sidelengthy;
+
+		// and the cell a tile stands on is made of those: the map's tile
+		// size, less the pixel dropped (63 x 31 tiles of a staggered map
+		// stand on 62 x 30 cells)
+		this.tilewidth = this.columnwidth + this.sideoffsetx;
+		this.tileheight = this.rowheight + this.sideoffsety;
 
 		this.centers = [
 			new Vector2d(),

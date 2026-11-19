@@ -227,6 +227,84 @@ describe("where a tile layer is (Canvas renderer)", () => {
 		});
 	});
 
+	describe("getTile, on every kind of map, with the layer moved", () => {
+		const grids = [
+			["orthogonal", 32, 32, {}],
+			["isometric", 64, 32, {}],
+			["staggered", 64, 32, { staggeraxis: "y", staggerindex: "odd" }],
+			["staggered", 64, 32, { staggeraxis: "x", staggerindex: "even" }],
+			[
+				"hexagonal",
+				28,
+				24,
+				{ staggeraxis: "y", staggerindex: "odd", hexsidelength: 12 },
+			],
+			[
+				"hexagonal",
+				28,
+				24,
+				{ staggeraxis: "x", staggerindex: "even", hexsidelength: 11 },
+			],
+		];
+		for (const [orientation, tw, th, extra] of grids) {
+			it(`${orientation}${extra.staggeraxis ? `, axis ${extra.staggeraxis}` : ""}: the middle of every cell is that cell`, () => {
+				const cols = 7;
+				const rows = 6;
+				const scene = {
+					orientation,
+					cols,
+					rows,
+					tw,
+					th,
+					tilesets: [makeTileset({ tw, th })],
+					layers: [{ data: filled(cols, rows), offsetx: 37, offsety: -21 }],
+					extra,
+				};
+				const [layer] = show(app, makeMap(scene));
+				const map = layer.getRenderer();
+				let found = 0;
+				for (const [dx, dy] of [
+					[0, 0],
+					[55, -140],
+				]) {
+					layer.pos.x += dx;
+					layer.pos.y += dy;
+					const movedX = 37 + dx;
+					const movedY = -21 + dy;
+					for (let row = 0; row < rows; row++) {
+						for (let col = 0; col < cols; col++) {
+							// the middle of the cell, where the map's renderer
+							// puts it, moved as the layer is
+							const at =
+								orientation === "isometric"
+									? map.tileToPixelCoords(col + 0.5, row + 0.5)
+									: map.tileToPixelCoords(col, row);
+							if (orientation !== "isometric") {
+								at.x += map.tilewidth / 2;
+								at.y += map.tileheight / 2;
+							}
+							const tile = layer.getTile(at.x + movedX, at.y + movedY);
+							const gid = scene.layers[0].data[row * cols + col];
+							if (gid === 0) {
+								expect(tile, `empty cell (${col}, ${row})`).toBeNull();
+							} else {
+								expect(
+									[tile?.col, tile?.row],
+									`cell (${col}, ${row}), layer moved by (${movedX}, ${movedY})`,
+								).toEqual([col, row]);
+								expect(tile.tileId).toBe(gid);
+								found++;
+							}
+						}
+					}
+				}
+				expect(found).toBeGreaterThan(40);
+				// and far from the layer, nothing
+				expect(layer.getTile(-5000, -5000)).toBeNull();
+			});
+		}
+	});
+
 	describe("moved in the game, by its pos", () => {
 		for (const make of [orthogonal, isometric]) {
 			it(`${make.name}: drawn, and found by getTile, where it was moved to`, async () => {
