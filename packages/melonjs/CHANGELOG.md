@@ -18,6 +18,8 @@
 - Tiled, GPU tile layers: a tileset with a `margin` whose image stops at its last tiles, with no margin after them, draws the right tiles; they were counted a column or a row short
 - Tiled, GPU tile layers: a layer with a tile that is not square, flipped diagonally, is drawn tile by tile; the shader drew such a tile wrong
 - Tiled, GPU tile layers: the shader runs at full precision whatever `highPrecisionShader` says; at a lower one a phone could misplace the tiles of a large map
+- Tiled: a tile layer follows its offset in Tiled (`offsetx`, `offsety`), and its own `pos` when the game moves it: its tiles are drawn there and `getTile()` finds them there, on every renderer and map orientation. Both were ignored, and the layer drawn at the map's origin; only image layers followed their offset. A map whose tile layers have an offset now looks as it does in Tiled
+- Tiled: tiles that reach past their layer's grid (taller or wider than a cell, or moved by a `tileoffset`) are drawn when they are in view and the grid is not; the whole layer was skipped, so the tops of tall tiles vanished once the map scrolled out of view. `getBounds()` of a tile layer covers that reach; its `width` and `height` are still the grid's
 - Tiled, isometric maps drawn tile by tile: tiles of a tileset larger than the map's first one, or moved by a `tileoffset`, went missing along the edges of the view
 - Tiled, orthogonal maps drawn tile by tile: tiles more than two cells tall went missing along the bottom of the view
 - `NineSliceSprite` blinks with `flicker()`, as a `Sprite` does; it ignored it

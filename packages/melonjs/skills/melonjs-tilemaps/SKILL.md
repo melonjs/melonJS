@@ -301,6 +301,15 @@ collision: solid ground comes from collision object layers (below), so a tile
 set or cleared changes what is drawn and what `cellAt` returns, not what a body
 runs into. Keep a layer you edit often off `preRender` (see the symptom table).
 
+A tile layer is where its `pos` says: its offset in Tiled (Layer → Offset)
+to start with, and wherever the game moves it afterwards. Its tiles are drawn
+there, and `getTile(x, y)` answers for where they are drawn:
+
+```js
+board.pos.y -= 8;                    // the whole layer, 8 pixels up
+board.getTile(pointer.x, pointer.y); // still the tile under the pointer
+```
+
 The map's own custom properties (Map → Map Properties in Tiled) are set on the
 map object, which `level.getCurrentLevel()` returns once it is loaded: a
 `theme` string property is `level.getCurrentLevel().theme`. They are set
@@ -525,6 +534,9 @@ layer into the offscreen-bake path instead.
 | the level's `name` is not its id after loading | a map custom property named `name` replaced it: map properties are set over the map's own fields |
 | changing tiles at runtime is slow on a pre-rendered layer | outside an orthogonal map whose tiles fit their cells, a changed tile re-bakes the whole layer before it next draws: keep layers you edit often off `preRender` |
 | thin lines between tiles on the Canvas renderer, with smoothing on | filtering blends in the next tile of the tileset or its spacing, which a canvas cannot prevent: set `antiAlias: false`, or `preRender` the layer. WebGL and WebGPU keep each tile to itself |
+| a tile layer given an offset in Tiled (a roof nudged up, a shadow shifted) is drawn where the others are | before 20.17 a tile layer ignored its offset, and its `pos`; only image layers followed theirs: update |
+| after updating to 20.17 a tile layer sits away from where it did | it has an offset in Tiled that was ignored until then, and now moves it as in the editor: clear the layer's Offset in Tiled if it was not meant |
+| the tops of tall tiles vanish when the map itself scrolls out of view | before 20.17 a layer was skipped once its grid left the view, though tiles larger than a cell (or moved by a `tileoffset`) still reached in: update |
 | tilemap slow on some machines | layer fell back off the shader path — check the console warning for the reason |
 | an isometric layer warns `tiles of more than one tileset in an isometric layer` and is slow | the shader path draws an isometric layer with one tileset: put the tiles of each tileset on a layer of their own, or pack them into one tileset |
 | a half-transparent isometric layer of tall tiles looks flatter than before 20.17 | on the shader path a layer fades as one picture, and a tile no longer shows through the one in front: set that layer's `renderMode` to `"perTile"` (a `renderMode` custom property in Tiled) for the old look |

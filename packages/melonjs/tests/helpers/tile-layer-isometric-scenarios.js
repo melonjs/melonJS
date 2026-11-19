@@ -1376,6 +1376,317 @@ export function isometricScenarios(renderer, type) {
 			});
 		});
 
+		describe("a layer moved, in Tiled or in the game", () => {
+			const ortho = (options) => {
+				return { orientation: "orthogonal", tw: 32, th: 32, ...options };
+			};
+
+			/** the scene baked into one image ("prerender"), from each view */
+			const baked = async (scene, views = VIEWS.slice(0, 4)) => {
+				const layers = show(app, makeMap(scene), "prerender");
+				for (const [x, y] of views) {
+					app.viewport.moveTo(x, y);
+					const { frame } = await drawIn(app, layers, "prerender");
+					const d = diff(reference(scene, x, y, WIDTH, HEIGHT), frame);
+					expect(d.different, `baked, view (${x}, ${y}): ${d.first}`).toBe(0);
+				}
+			};
+
+			for (const [x, y] of [
+				[37, -21],
+				[-130, 75],
+				[0, 200],
+			]) {
+				it(`isometric, offset by (${x}, ${y}) in Tiled`, async (ctx) => {
+					need(ctx);
+					const scene = iso({
+						cols: 8,
+						rows: 6,
+						tilesets: [blocks(64, 128)],
+						layers: [{ data: scattered(8, 6), offsetx: x, offsety: y }],
+					});
+					expect(await same(scene)).toBeGreaterThan(0);
+					await baked(scene);
+				});
+
+				it(`orthogonal, offset by (${x}, ${y}) in Tiled`, async (ctx) => {
+					need(ctx);
+					const scene = ortho({
+						cols: 10,
+						rows: 8,
+						tilesets: [makeTileset({ tw: 32, th: 64 })],
+						layers: [{ data: scattered(10, 8), offsetx: x, offsety: y }],
+					});
+					expect(await same(scene)).toBeGreaterThan(0);
+					await baked(scene);
+				});
+			}
+
+			it("isometric layers, each with an offset of its own, on tilesets moved by a tileoffset", async (ctx) => {
+				need(ctx);
+				const scene = iso({
+					cols: 8,
+					rows: 6,
+					tilesets: [
+						blocks(64, 32, { extra: { tileoffset: { x: 5, y: 9 } } }),
+						blocks(64, 128, { extra: { tileoffset: { x: -20, y: 40 } } }),
+						blocks(128, 64),
+					],
+					layers: [
+						{ data: scattered(8, 6), offsetx: -10, offsety: 30 },
+						{ data: scattered(8, 6, 8, 9), offsetx: 64, offsety: 0 },
+						{
+							data: fill(8, 6, (c, r) => {
+								return (c + r) % 4 === 1 ? 17 + ((c + r * 3) % 8) : 0;
+							}),
+							offsetx: 3,
+							offsety: -70,
+						},
+					],
+				});
+				expect(await same(scene)).toBeGreaterThan(0);
+			});
+
+			it("orthogonal layers, each with an offset of its own", async (ctx) => {
+				need(ctx);
+				const scene = ortho({
+					cols: 10,
+					rows: 8,
+					tilesets: [
+						makeTileset({ tw: 32, th: 32 }),
+						makeTileset({ tw: 64, th: 96 }),
+					],
+					layers: [
+						{ data: scattered(10, 8), offsetx: 16, offsety: 8 },
+						{
+							data: fill(10, 8, (c, r) => {
+								return (c + r * 2) % 4 === 0 ? 9 + ((c + r) % 8) : 0;
+							}),
+							offsetx: -45,
+							offsety: 61,
+						},
+					],
+				});
+				expect(await same(scene)).toBeGreaterThan(0);
+			});
+
+			it("a layer of an infinite isometric map, offset", async (ctx) => {
+				need(ctx);
+				const chunk = (x, y) => {
+					return {
+						x,
+						y,
+						width: 4,
+						height: 4,
+						data: fill(4, 4, (c, r) => {
+							return (c + r + x) % 5 === 0 ? 0 : 1 + ((c + r * 2) % 8);
+						}),
+					};
+				};
+				const scene = iso({
+					cols: 8,
+					rows: 8,
+					tilesets: [blocks(64, 64)],
+					extra: { infinite: true },
+					layers: [
+						{
+							startx: -4,
+							starty: -4,
+							width: 12,
+							height: 8,
+							data: undefined,
+							chunks: [chunk(-4, -4), chunk(0, -4), chunk(4, 0), chunk(0, 0)],
+							offsetx: 48,
+							offsety: -36,
+						},
+					],
+				});
+				const layers = show(app, makeMap(scene));
+				expect(layers[0].renderMode).toBe("shader");
+				const views = [
+					[0, 0],
+					[-200, -150],
+					[150, -100],
+				];
+				expect(await same(scene, { views, layers })).toBeGreaterThan(0);
+			});
+
+			for (const orientation of ["isometric", "orthogonal"]) {
+				it(`${orientation}: moved in the game, by its pos`, async (ctx) => {
+					need(ctx);
+					const layer0 = { offsetx: 12, offsety: 7 };
+					const scene =
+						orientation === "isometric"
+							? iso({
+									cols: 8,
+									rows: 6,
+									tilesets: [blocks(64, 128)],
+									layers: [{ data: scattered(8, 6), ...layer0 }],
+								})
+							: ortho({
+									cols: 10,
+									rows: 8,
+									tilesets: [makeTileset({ tw: 32, th: 32 })],
+									layers: [{ data: scattered(10, 8), ...layer0 }],
+								});
+					const layers = show(app, makeMap(scene));
+					const layer = layers[0];
+					// where Tiled put it
+					const startX = layer.pos.x;
+					const startY = layer.pos.y;
+					expect(await same(scene, { layers })).toBeGreaterThan(0);
+					for (const [dx, dy] of [
+						[50, -30],
+						[-170, 90],
+						[0, 0],
+					]) {
+						layer.pos.x = startX + dx;
+						layer.pos.y = startY + dy;
+						// the reference follows
+						scene.layers[0].offsetx = 12 + dx;
+						scene.layers[0].offsety = 7 + dy;
+						expect(
+							await same(scene, { layers }),
+							`moved by (${dx}, ${dy})`,
+						).toBeGreaterThan(0);
+					}
+				});
+			}
+		});
+
+		describe("tiles that reach past the grid, when only they are in view", () => {
+			const ortho = (options) => {
+				return { orientation: "orthogonal", tw: 32, th: 32, ...options };
+			};
+			const all = (cols, rows) => {
+				return fill(cols, rows, (c, r) => {
+					return 1 + ((c + r * 2) % 8);
+				});
+			};
+
+			/** the scene baked into one image ("prerender"), from each view */
+			const baked = async (scene, views) => {
+				const layers = show(app, makeMap(scene), "prerender");
+				let total = 0;
+				for (const [x, y] of views) {
+					app.viewport.moveTo(x, y);
+					const { frame } = await drawIn(app, layers, "prerender");
+					const d = diff(reference(scene, x, y, WIDTH, HEIGHT), frame);
+					expect(d.different, `baked, view (${x}, ${y}): ${d.first}`).toBe(0);
+					total += drawn(frame);
+				}
+				return total;
+			};
+
+			it("isometric: tall tiles, above the map's top corner", async (ctx) => {
+				need(ctx);
+				// the 64 × 128 tiles of the first rows reach 96 pixels above
+				// the grid, which starts at 0: these views end above it
+				const scene = iso({
+					cols: 10,
+					rows: 8,
+					tilesets: [blocks(64, 128)],
+					layers: [{ data: all(10, 8) }],
+				});
+				const views = [
+					[160, -HEIGHT - 10],
+					[100, -HEIGHT - 40],
+					[220, -HEIGHT - 70],
+					[-126, -300],
+				];
+				expect(await same(scene, { views })).toBeGreaterThan(0);
+				expect(await baked(scene, views)).toBeGreaterThan(0);
+			});
+
+			it("orthogonal: tall tiles, above the first row", async (ctx) => {
+				need(ctx);
+				const scene = ortho({
+					cols: 10,
+					rows: 8,
+					tilesets: [makeTileset({ tw: 32, th: 128 })],
+					layers: [{ data: all(10, 8) }],
+				});
+				const views = [
+					[0, -HEIGHT - 10],
+					[40, -HEIGHT - 50],
+					[-200, -HEIGHT - 80],
+				];
+				expect(await same(scene, { views })).toBeGreaterThan(0);
+				expect(await baked(scene, views)).toBeGreaterThan(0);
+			});
+
+			it("orthogonal: wide tiles, right of the last column", async (ctx) => {
+				need(ctx);
+				// 96 pixels wide on a 32 pixel grid: 64 pixels past the map,
+				// which ends at 320
+				const scene = ortho({
+					cols: 10,
+					rows: 8,
+					tilesets: [makeTileset({ tw: 96, th: 32 })],
+					layers: [{ data: all(10, 8) }],
+				});
+				const views = [
+					[325, 0],
+					[350, 40],
+					[380, -100],
+				];
+				expect(await same(scene, { views })).toBeGreaterThan(0);
+				expect(await baked(scene, views)).toBeGreaterThan(0);
+			});
+
+			it("isometric tiles moved off the grid by their tileset's tileoffset", async (ctx) => {
+				need(ctx);
+				// moved 150 pixels up and to the left: where the grid is not
+				const scene = iso({
+					cols: 6,
+					rows: 6,
+					tilesets: [
+						blocks(64, 64, { extra: { tileoffset: { x: -150, y: -150 } } }),
+					],
+					layers: [{ data: all(6, 6) }],
+				});
+				const views = [
+					[-WIDTH - 10, 0],
+					[-100, -HEIGHT - 20],
+					[-WIDTH - 60, -80],
+				];
+				expect(await same(scene, { views })).toBeGreaterThan(0);
+			});
+
+			it("orthogonal tiles moved off the grid by their tileset's tileoffset", async (ctx) => {
+				need(ctx);
+				// under the map, which ends at 192. An orthogonal tileoffset
+				// leaves the layer to the CPU renderer: it is drawn as well
+				const scene = ortho({
+					cols: 8,
+					rows: 6,
+					tilesets: [
+						makeTileset({
+							tw: 32,
+							th: 32,
+							extra: { tileoffset: { x: 0, y: 90 } },
+						}),
+					],
+					layers: [{ data: all(8, 6) }],
+				});
+				const [mode] = modeOf(scene);
+				expect(mode).toBe("perTile");
+				const layers = app.world.getChildren().filter((child) => {
+					return child.layerData !== undefined;
+				});
+				for (const [x, y] of [
+					[0, 200],
+					[-40, 250],
+				]) {
+					app.viewport.moveTo(x, y);
+					const { frame } = await drawIn(app, layers, "perTile");
+					const d = diff(reference(scene, x, y, WIDTH, HEIGHT), frame);
+					expect(d.different, `view (${x}, ${y}): ${d.first}`).toBe(0);
+					expect(drawn(frame)).toBeGreaterThan(0);
+				}
+			});
+		});
+
 		it("a level change frees what the GPU path kept for its layers", async (ctx) => {
 			need(ctx);
 			const scene = iso({

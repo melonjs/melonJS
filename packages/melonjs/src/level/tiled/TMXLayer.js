@@ -242,8 +242,17 @@ export default class TMXLayer extends Renderable {
 		 * @ignore
 		 */
 		this._shaderTileset = null;
+		// how far a `tileoffset` moves tiles, each way
+		let offsetLeft = 0;
+		let offsetTop = 0;
+		let offsetRight = 0;
+		let offsetBottom = 0;
 		for (let i = 0; i < this.tilesets.length; i++) {
 			const tileset = this.tilesets.getTilesetByIndex(i);
+			offsetLeft = Math.max(offsetLeft, -tileset.tileoffset.x);
+			offsetRight = Math.max(offsetRight, tileset.tileoffset.x);
+			offsetTop = Math.max(offsetTop, -tileset.tileoffset.y);
+			offsetBottom = Math.max(offsetBottom, tileset.tileoffset.y);
 			this.maxTileOffset.x = Math.max(
 				this.maxTileOffset.x,
 				Math.abs(tileset.tileoffset.x),
@@ -261,6 +270,25 @@ export default class TMXLayer extends Renderable {
 				tileset.tileheight,
 			);
 		}
+		// A tile larger than its cell reaches past it: up and to the right
+		// on an orthogonal or an isometric map, where a tile stands on the
+		// bottom left of its cell (any way on the others)
+		const overX = Math.max(this.maxTileSize.width - this.tilewidth, 0);
+		const overY = Math.max(this.maxTileSize.height - this.tileheight, 0);
+		const upRight = orientation === "orthogonal" || orientation === "isometric";
+		/**
+		 * How far past the layer's grid its tiles can be drawn, on each
+		 * side: by tiles larger than a cell, and by a tileset's
+		 * `tileoffset`. The layer is in view as far as they reach (see
+		 * {@link TMXLayer#updateBounds}).
+		 * @ignore
+		 */
+		this._reach = {
+			left: (upRight ? 0 : overX) + offsetLeft,
+			top: overY + offsetTop,
+			right: overX + offsetRight,
+			bottom: (upRight ? 0 : overY) + offsetBottom,
+		};
 
 		/**
 		 * All animated tilesets in this layer
@@ -446,12 +474,42 @@ export default class TMXLayer extends Renderable {
 		// layer left of and above the map's origin
 		const bounds = this.getRenderer().getBounds(this);
 		const origin = this._cellOrigin(vector2dPool.get());
-		this.pos.x = bounds.left + origin.x;
-		this.pos.y = bounds.top + origin.y;
+		/**
+		 * where the layer is in its map, with nothing moving it: what `pos`
+		 * is measured from to know how far the layer was moved
+		 * @ignore
+		 */
+		this._mapPos = { x: bounds.left + origin.x, y: bounds.top + origin.y };
 		this.width = bounds.width;
 		this.height = bounds.height;
+		// the layer's offset in Tiled moves it from there, as setting `pos`
+		// does afterwards: its tiles are drawn, and found, where it is
+		this.pos.x = this._mapPos.x + (+data.offsetx || 0);
+		this.pos.y = this._mapPos.y + (+data.offsety || 0);
 		vector2dPool.release(origin);
 		boundsPool.release(bounds);
+		this.updateBounds();
+	}
+
+	/**
+	 * The layer's bounds: its grid, where it is, and as far past it as its
+	 * tiles reach. A tile larger than its cell, or moved by its tileset's
+	 * `tileoffset`, is drawn outside the grid, and the layer is in view
+	 * while such a tile is. Its `width` and `height` stay the grid's.
+	 * @ignore
+	 */
+	updateBounds(absolute = true) {
+		const bounds = super.updateBounds(absolute);
+		const reach = this._reach;
+		if (reach !== undefined && bounds.isFinite()) {
+			bounds.setMinMax(
+				bounds.left - reach.left,
+				bounds.top - reach.top,
+				bounds.right + reach.right,
+				bounds.bottom + reach.bottom,
+			);
+		}
+		return bounds;
 	}
 
 	/**
@@ -977,9 +1035,10 @@ export default class TMXLayer extends Renderable {
 		let tile = null;
 
 		if (this.contains(x, y)) {
+			// in the map's pixels: back from where the layer was moved to
 			const coord = this.getRenderer().pixelToTileCoords(
-				x,
-				y,
+				x - (this.pos.x - this._mapPos.x),
+				y - (this.pos.y - this._mapPos.y),
 				vector2dPool.get(),
 			);
 			tile = this.cellAt(coord.x, coord.y);
@@ -1180,11 +1239,20 @@ export default class TMXLayer extends Renderable {
 			viewRect.pos.set(rect.pos.x + offset.x, rect.pos.y + offset.y);
 			rect = viewRect.setSize(rect.width, rect.height);
 		}
-		// an infinite map's layer that starts left of or above the map's
-		// origin: its renderer draws the layer's grid from its first cell,
-		// moved to where that cell's tile is in the world
-		if (this.startx !== 0 || this.starty !== 0) {
+		// A layer moved from its place in the map, by its offset in Tiled or
+		// by its `pos`, and an infinite map's layer that starts left of or
+		// above the map's origin: the layer's renderer draws its grid from
+		// its first cell, moved to where that cell's tile is in the world
+		const movedX = this.pos.x - this._mapPos.x;
+		const movedY = this.pos.y - this._mapPos.y;
+		if (
+			movedX !== 0 ||
+			movedY !== 0 ||
+			this.startx !== 0 ||
+			this.starty !== 0
+		) {
 			const origin = this._cellOrigin(vector2dPool.get());
+			origin.set(origin.x + movedX, origin.y + movedY);
 			cellRect ??= new Rect(0, 0, 0, 0);
 			cellRect.pos.set(rect.pos.x - origin.x, rect.pos.y - origin.y);
 			cellRect.setSize(rect.width, rect.height);

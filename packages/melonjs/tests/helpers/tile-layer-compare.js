@@ -202,15 +202,8 @@ export function makeMap(options) {
  * Tiles are drawn whole, bottom-aligned on their cell and moved by their
  * tileset's `tileoffset`; flipped across, down or along the diagonal (the
  * last on square tiles only, where a flip is a quarter turn in place).
- * Layer opacity and tint are for the caller to apply to the picture. A
- * layer is drawn at the map's origin: the engine's tile layers are, whatever
- * their `pos` or Tiled's layer offset.
- *
- * One rule here is the engine's and not Tiled's: a layer whose grid is
- * wholly out of view is not drawn, though a tile taller than its cell, in
- * the map's first rows, reaches above the grid and could still show. The
- * engine draws what is in view going by a layer's bounds, which are its
- * grid's.
+ * A layer is moved by its offset in Tiled (`offsetx`, `offsety`). Layer
+ * opacity and tint are for the caller to apply to the picture.
  * @param {object} scene - what {@link makeMap} was given
  * @param {number} viewX - the view's left, in the map's pixels
  * @param {number} viewY - the view's top
@@ -265,20 +258,8 @@ export function reference(scene, viewX, viewY, width, height) {
 	};
 
 	for (const layer of layers) {
-		if (layer.chunks === undefined) {
-			// the grid's bounds: an isometric map's are its diamond's
-			const isIso = orientation === "isometric";
-			const gridWidth = isIso ? ((cols + rows) * tw) / 2 : cols * tw;
-			const gridHeight = isIso ? ((cols + rows) * th) / 2 : rows * th;
-			if (
-				viewX + width <= 0 ||
-				gridWidth <= viewX ||
-				viewY + height <= 0 ||
-				gridHeight <= viewY
-			) {
-				continue;
-			}
-		}
+		const ox = layer.offsetx ?? 0;
+		const oy = layer.offsety ?? 0;
 		// the layer's cells: a plain grid, or an infinite map's chunks
 		const cells = new Map();
 		const put = (col, row, gid) => {
@@ -313,8 +294,8 @@ export function reference(scene, viewX, viewY, width, height) {
 			for (const { col, row, gid } of ordered) {
 				drawTile(
 					gid,
-					((col - row - 1) * tw) / 2 + (rows * tw) / 2,
-					((col + row + 2) * th) / 2,
+					ox + ((col - row - 1) * tw) / 2 + (rows * tw) / 2,
+					oy + ((col + row + 2) * th) / 2,
 				);
 			}
 		} else {
@@ -322,7 +303,7 @@ export function reference(scene, viewX, viewY, width, height) {
 				return a.row - b.row || a.col - b.col;
 			});
 			for (const { col, row, gid } of ordered) {
-				drawTile(gid, col * tw, (row + 1) * th);
+				drawTile(gid, ox + col * tw, oy + (row + 1) * th);
 			}
 		}
 	}
