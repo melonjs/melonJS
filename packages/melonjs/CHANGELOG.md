@@ -9,6 +9,7 @@
 ### Performance
 - Tiled: thanks to the GPU renderer, drawing an isometric tile layer takes about **90%** less of the main thread's time with 1200 tiles in view (0.68 to 0.07 ms a frame) and about **98%** less with 4000 (2.0 to 0.04 ms), and no longer grows with the number of tiles shown. Staggered and hexagonal maps gain the same
 - Tiled: for reference, orthogonal tile layers, on the GPU since 19.4, measure about **85%** less with 1000 tiles in view (0.62 to 0.09 ms) and about **97%** less with 3600 (1.9 to 0.06 ms)
+- Size: the engine is about **8%** smaller to download: 323 kB minified and gzipped, from 350 kB (1,073 kB minified, from 1,159 kB). The comments in its shaders are no longer published; a shader is bundled as text, which a game's minifier does not touch, so they reached every game. Nothing to change in a game
 
 ### Fixed
 - Tiled: layers follow their offset in Tiled. A tile layer is drawn there, and where its own `pos` moves it, and `getTile()` finds its tiles there; an object layer's objects are created there; a group layer's offset moves the tile layers inside it. All were ignored, so a map with layer offsets now looks as it does in Tiled

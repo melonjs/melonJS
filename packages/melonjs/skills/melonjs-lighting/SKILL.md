@@ -110,6 +110,14 @@ const hero = new Sprite(x, y, {
 canvas, `ImageBitmap`, a `Texture2d`). Assigning anything else — including an
 `HTMLVideoElement`, which would freeze on frame 0 — throws a `TypeError`.
 
+It is lit on the GPU renderers, **WebGL and WebGPU**. On Canvas the sprite is
+drawn unlit and a warning says so once (see "What needs a GPU backend" below).
+
+A normal map is a still image, uploaded once. A sprite that **animates** takes
+its normals from one static sheet laid out exactly like its colour sheet: the
+animation picks the frame, and the same region of both is sampled. There is no
+video or per-frame normal source to set up.
+
 How grazing the light is comes from `light.lightHeight`, its height above the
 sprite plane in the same units as its radius (default `max(radiusX, radiusY) *
 0.075`). Lower it for light raking across the surface, which shows the relief
@@ -154,7 +162,9 @@ Three things worth knowing:
   reflective, 0 is dead matte, so one sprite can be a shiny blade with a matte
   leather grip. A normal map with no alpha detail (the usual case) shines
   uniformly. Note the corollary: if your normal map already uses alpha for
-  something, that channel now also decides gloss.
+  something, that channel now also decides gloss. The mask is in the **normal
+  map's** alpha, never the colour image's: making the grip transparent there
+  would hide it, not dull it.
 - **It accumulates per light.** Each light contributes its own highlight in its
   own colour, so a sprite between a warm lamp and a cool one carries two
   distinct glints that move independently.
@@ -162,6 +172,32 @@ Three things worth knowing:
 The highlight takes the light's own colour and is *added* on top of the lit
 result rather than multiplied into it, which is why a glint blows out toward
 white on a dark sprite instead of tinting with it.
+
+### A matte texel still needs its direction
+
+In a normal map the alpha is a material, not a hole. A texel with an alpha of 0
+is matte, and is still shaded by the direction in its RGB. That direction has to
+survive all the way to the GPU, and image tools are built to assume the opposite
+(that nothing matters under a transparent pixel):
+
+| the normal map comes from | directions under a low alpha |
+|---|---|
+| an image file through the loader (a PNG) | **kept**: the engine uploads normal maps with premultiplied alpha off |
+| `createImageBitmap(source, { premultiplyAlpha: "none" })` | **kept**: the way to build a masked normal map in code |
+| `createImageBitmap(source)`, default options | **wrong** as soon as the alpha is below 255: WebGL uploads a bitmap as it was made, so the directions arrive multiplied by the mask |
+| a canvas you drew or `putImageData` into | **lost** at an alpha of 0, and rounded at a low one: a canvas stores its pixels multiplied by their alpha |
+
+```js
+// a masked normal map made in code: from pixels, never through a canvas
+const pixels = new ImageData(width, height);
+// ... rgb = the direction, a = how much it shines ...
+sprite.normalMap = await createImageBitmap(pixels, { premultiplyAlpha: "none" });
+```
+
+Before the file reaches the game, the same goes for the pipeline: an optimiser
+or a packer that "cleans" or "bleeds" the colour of fully transparent pixels, or
+that premultiplies, erases the directions of every matte texel. Export the
+normal sheet with those options off, and with the same layout as the colour one.
 
 See it running: [Normal Map example](https://melonjs.github.io/melonJS/examples/#/normal-map).
 
@@ -222,6 +258,10 @@ See the `melonjs-3d` skill.
 | changing `radiusX` / `radiusY` does nothing | everything is sized from the bounds, which `setRadii()` updates and a bare field write does not |
 | normal-mapped relief looks flat under a light | `lightHeight` is high relative to the radius; lower it for a grazing light |
 | `TypeError` assigning `normalMap` | not an image-like value (a video element is rejected outright) |
+| the whole sprite glints, not just the metal | the normal map is opaque, which is a full mask: paint the matte parts with a lower alpha in the **normal map** |
+| `shininess` is set and nothing glints | no `normalMap`, an alpha of 0 over the whole normal map, the light behind the surface, or the Canvas backend |
+| the matte part of a sprite (normal alpha 0) is black, or lit from the wrong side | its directions were erased: an optimiser cleared the colour of transparent pixels, or the map came from a canvas or from `createImageBitmap` with its default options. Load the file as it was exported, or build it with `premultiplyAlpha: "none"` |
+| an animated sprite's shading does not follow its pose | the normal sheet is not laid out like the colour sheet: same size, same frames in the same places |
 | lighting misaligned under a 3D camera | the 2D light pass is not projection-aware — use `Light3d` |
 
 ## Related skills

@@ -1,5 +1,7 @@
-import esbuild, { BuildOptions } from "esbuild";
+import { readFile } from "node:fs/promises";
+import esbuild, { BuildOptions, Plugin } from "esbuild";
 import packageJson from "../package.json" with { type: "json" };
+import { stripShaderComments } from "./strip-shader-comments.ts";
 
 const banner = [
 	"/*!",
@@ -10,6 +12,20 @@ const banner = [
 	` * @copyright (C) 2011 - ${new Date().getFullYear()} ${packageJson.author}`,
 	" */",
 ].join("\n");
+
+// Shaders are bundled as text, which no minifier reads: their comments are
+// taken out here, or they are shipped to every game
+const shaders: Plugin = {
+	name: "strip-shader-comments",
+	setup(build) {
+		build.onLoad({ filter: /\.(vert|frag|wgsl)$/ }, async (args) => {
+			return {
+				contents: stripShaderComments(await readFile(args.path, "utf8")),
+				loader: "text",
+			};
+		});
+	},
+};
 
 const buildOptions = {
 	entryPoints: ["src/index.ts"],
@@ -26,6 +42,7 @@ const buildOptions = {
 	target: "es2022",
 	bundle: true,
 	define: { __VERSION__: JSON.stringify(packageJson.version) },
+	plugins: [shaders],
 	banner: {
 		js: banner,
 	},
