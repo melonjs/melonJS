@@ -595,6 +595,14 @@ export class Grid {
 			corner.x += at.x - layer.pos.x;
 			corner.y += at.y - layer.pos.y;
 		}
+		// and where the layer was moved to in its map, by its offset in
+		// Tiled or by its `pos` (an engine that draws it there says where it
+		// stands unmoved; an older one drew it unmoved, whatever its `pos`)
+		const unmoved = (layer as { _mapPos?: { x: number; y: number } })._mapPos;
+		if (unmoved !== undefined) {
+			corner.x += layer.pos.x - unmoved.x;
+			corner.y += layer.pos.y - unmoved.y;
+		}
 		if (isometric) {
 			// the grid's corner is the box around its diamonds
 			corner.x -= (layer.rows * layer.tilewidth) / 2;

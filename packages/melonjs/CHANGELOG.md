@@ -4,8 +4,19 @@
 
 ### Added
 - Transitions: a mask transition can be shaped like an image or a `Sprite`, close on the player with `center`, and fill the shape with `invert`, on `state.transition`, `MaskEffect` and `Trigger` ([#1399](https://github.com/melonjs/melonJS/issues/1399))
+- Tiled: isometric maps are rendered by the GPU on WebGL and WebGPU, as orthogonal ones are, and so are staggered and hexagonal maps. Nothing to enable: a tile layer whose tiles come from one tileset takes it by itself, and any other is drawn as before, the console saying why ([#1897](https://github.com/melonjs/melonJS/issues/1897))
+
+### Performance
+- Tiled: thanks to the GPU renderer, drawing an isometric tile layer takes about **90%** less of the main thread's time with 1200 tiles in view (0.68 to 0.07 ms a frame) and about **98%** less with 4000 (2.0 to 0.04 ms), and no longer grows with the number of tiles shown. Staggered and hexagonal maps gain the same
+- Tiled: for reference, orthogonal tile layers, on the GPU since 19.4, measure about **85%** less with 1000 tiles in view (0.62 to 0.09 ms) and about **97%** less with 3600 (1.9 to 0.06 ms)
 
 ### Fixed
+- Tiled: a tile layer follows its offset in Tiled, and its own `pos` when the game moves it: its tiles are drawn there, and `getTile()` finds them there. Both were ignored; a map whose tile layers have an offset now looks as it does in Tiled
+- Tiled: tiles larger than a cell are drawn wherever they are in view. They were cut off or left out along the edges of the view, above and right of the map, on a map centred in the screen, and once the map itself had scrolled out of view
+- Tiled: staggered and hexagonal maps are drawn where Tiled draws them: a tile larger than its cell stands on it, a tileset's `tileoffset` moves its tiles, and maps of odd sizes stay on whole pixels
+- Tiled: orthogonal layers drawn by the GPU show the soft edges of large tiles over the tiles behind them, lay large tiles over each other in the map's order, and read a tileset with a `margin` right
+- Tiled: an isometric, staggered or hexagonal layer with an `opacity` below 1 fades as one picture on WebGL and WebGPU; each tile showed through the one in front of it
+- Tiled: a tile layer removed from its container and added again, and a tile missing from its tileset's image, no longer throw
 - `NineSliceSprite` blinks with `flicker()`, as a `Sprite` does; it ignored it
 - Text: a stroked multi-line label with `textBaseline: "hanging"` keeps the top of its outline on macOS, where Helvetica's hanging metrics made the ink padding exactly as tall as the ink, shearing its first row off the canvas ([#1870](https://github.com/melonjs/melonJS/issues/1870))
 - glTF: a model compressed with Draco or meshopt, which the loader cannot decode, says so in the console, naming the extension, instead of failing on an accessor error that did not mention it

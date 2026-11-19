@@ -24,6 +24,7 @@ import {
 import AmbientLightEffect from "../effects/ambientlight.js";
 import BlendEffect from "../effects/blendEffect.js";
 import RadialGradientEffect from "../effects/radialGradient.js";
+import { TMX_ORIENTATIONS } from "../gpu/tmxlayer_orientation.js";
 import { Gradient } from "../gradient.js";
 import Renderer from "./../renderer.js";
 import RenderTargetPool from "../rendertarget/render_target_pool.js";
@@ -46,7 +47,7 @@ import PrimitiveBatcher from "./batchers/primitive_batcher";
 import QuadBatcher from "./batchers/quad_batcher";
 import { markContextLost } from "./buffer/deletable.js";
 import { createLightUniformScratch, packLights } from "./lighting/pack.ts";
-import OrthogonalTMXLayerGPURenderer from "./renderers/tmxlayer/orthogonal.js";
+import TMXLayerGPURenderer from "./renderers/tmxlayer/tmxlayer.js";
 import { WebGLTextureStore } from "./texture/store.js";
 import { resolveMaxTextures } from "./utils/maxtextures.js";
 import { getMaxShaderPrecision } from "./utils/precision.js";
@@ -520,6 +521,7 @@ export default class WebGLRenderer extends Renderer {
 
 		// this backend renders TMX tile layers on the GPU (see TMXLayer)
 		this.supportsShaderTileLayers = true;
+		this.maxTextureSize = this.gl.getParameter(this.gl.MAX_TEXTURE_SIZE);
 
 		// this backend keeps mesh geometry resident on the GPU, so meshes can
 		// hand it their model matrix instead of pre-transformed vertices
@@ -1341,7 +1343,9 @@ export default class WebGLRenderer extends Renderer {
 		// drop every per-layer GPU tilemap texture — tile layers churn on
 		// game reset and we'd otherwise leak a WebGLTexture per layer
 		// across each level transition
-		this._orthogonalTMXGPURenderer?.reset();
+		this._tmxGPURenderers?.forEach((gpu) => {
+			gpu?.reset();
+		});
 
 		// initial viewport size
 		this.setViewport();
@@ -1430,7 +1434,7 @@ export default class WebGLRenderer extends Renderer {
 			 * @ignore
 			 * @internal
 			 */
-			this._orthogonalTMXGPURenderer = undefined;
+			this._tmxGPURenderers = undefined;
 		}
 	}
 
@@ -1446,7 +1450,9 @@ export default class WebGLRenderer extends Renderer {
 	drawTileLayer(layer, rect) {
 		if (layer.renderMode === "shader") {
 			const gpu = this._getTMXGPURendererFor(layer.orientation);
-			if (gpu !== undefined) {
+			// a layer asked for this path after it was found unfit for it
+			// is still drawn, tile by tile
+			if (gpu !== undefined && gpu.orientation.draws(layer)) {
 				gpu.draw(layer, rect);
 				return;
 			}
@@ -1487,30 +1493,31 @@ export default class WebGLRenderer extends Renderer {
 	 * @internal
 	 */
 	_getTMXGPURendererFor(orientation) {
-		if (orientation === "orthogonal") {
-			if (this._orthogonalTMXGPURenderer === undefined) {
-				try {
-					this._orthogonalTMXGPURenderer = new OrthogonalTMXLayerGPURenderer(
-						this,
-					);
-				} catch (err) {
-					// shader compile / link failure on this driver — disable
-					// the GPU path permanently for the rest of the session
-					// (the next `drawTileLayer` call falls through to the
-					// legacy renderer). Stored as `null` so subsequent
-					// attempts short-circuit without re-trying the failing
-					// compile every frame.
-					console.warn(
-						"melonJS: GPU tilemap shader failed to compile, falling back to legacy renderer",
-						err,
-					);
-					this._orthogonalTMXGPURenderer = null;
-				}
-			}
-			return this._orthogonalTMXGPURenderer || undefined;
+		if (TMX_ORIENTATIONS[orientation] === undefined) {
+			// an oblique map: drawn by the legacy renderer
+			return undefined;
 		}
-		// isometric / staggered / hexagonal: phase 2
-		return undefined;
+		this._tmxGPURenderers ??= new Map();
+		let gpu = this._tmxGPURenderers.get(orientation);
+		if (gpu === undefined) {
+			try {
+				gpu = new TMXLayerGPURenderer(this, orientation);
+			} catch (err) {
+				// shader compile / link failure on this driver — disable
+				// the GPU path permanently for the rest of the session
+				// (the next `drawTileLayer` call falls through to the
+				// legacy renderer). Stored as `null` so subsequent
+				// attempts short-circuit without re-trying the failing
+				// compile every frame.
+				console.warn(
+					"melonJS: GPU tilemap shader failed to compile, falling back to legacy renderer",
+					err,
+				);
+				gpu = null;
+			}
+			this._tmxGPURenderers.set(orientation, gpu);
+		}
+		return gpu || undefined;
 	}
 
 	/**

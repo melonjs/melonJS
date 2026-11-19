@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { boot } from "../src/index.js";
 import { BufferTextureResource } from "../src/video/texture/resource.js";
-import OrthogonalTMXLayerGPURenderer from "../src/video/webgl/renderers/tmxlayer/orthogonal.js";
+import TMXLayerGPURenderer from "../src/video/webgl/renderers/tmxlayer/tmxlayer.js";
 import {
 	getWebGLRenderer,
 	releaseWebGLRenderer,
@@ -44,7 +44,7 @@ describe("TMXLayer shader path", () => {
 		// `_getTMXGPURendererFor` is the lazy factory on WebGLRenderer
 		const r1 = renderer._getTMXGPURendererFor("orthogonal");
 		const r2 = renderer._getTMXGPURendererFor("orthogonal");
-		expect(r1).toBeInstanceOf(OrthogonalTMXLayerGPURenderer);
+		expect(r1).toBeInstanceOf(TMXLayerGPURenderer);
 		expect(r2).toBe(r1);
 	});
 

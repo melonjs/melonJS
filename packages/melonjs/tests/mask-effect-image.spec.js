@@ -32,257 +32,20 @@ import {
 	video,
 } from "../src/index.js";
 import GLTFScene from "../src/level/gltf/GLTFScene.js";
-import { readPixel } from "./helpers/pixels.js";
+import {
+	at,
+	discWithHole,
+	drawingChecks,
+	drawOverWhite,
+	leftHalf,
+	offOrigin,
+	SIZE,
+	topLeftQuarter,
+} from "./helpers/mask-effect-checks.js";
 import {
 	getWebGLRenderer,
 	releaseWebGLRenderer,
 } from "./helpers/webgl-context.js";
-
-const SIZE = 64;
-
-/** a 32 px disc, radius 14, with a hole of radius 4 at its centre */
-const discWithHole = () => {
-	const canvas = document.createElement("canvas");
-	canvas.width = canvas.height = 32;
-	const ctx = canvas.getContext("2d");
-	ctx.fillStyle = "#3a7";
-	ctx.beginPath();
-	ctx.arc(16, 16, 14, 0, Math.PI * 2);
-	ctx.fill();
-	ctx.globalCompositeOperation = "destination-out";
-	ctx.beginPath();
-	ctx.arc(16, 16, 4, 0, Math.PI * 2);
-	ctx.fill();
-	return canvas;
-};
-
-/** an image whose left half only is opaque */
-const leftHalf = (w = 20, h = 30) => {
-	const canvas = document.createElement("canvas");
-	canvas.width = w;
-	canvas.height = h;
-	const ctx = canvas.getContext("2d");
-	ctx.fillStyle = "#f00";
-	ctx.fillRect(0, 0, w / 2, h);
-	return canvas;
-};
-
-/** a 32 px U: its middle is open to the outside, so not part of it */
-const uShape = () => {
-	const canvas = document.createElement("canvas");
-	canvas.width = canvas.height = 32;
-	const ctx = canvas.getContext("2d");
-	ctx.fillStyle = "#000";
-	ctx.fillRect(2, 2, 8, 28);
-	ctx.fillRect(22, 2, 8, 28);
-	ctx.fillRect(2, 22, 28, 8);
-	return canvas;
-};
-
-/** an image whose top left quarter only is opaque */
-const topLeftQuarter = (w = 20, h = 30) => {
-	const canvas = document.createElement("canvas");
-	canvas.width = w;
-	canvas.height = h;
-	const ctx = canvas.getContext("2d");
-	ctx.fillStyle = "#0f0";
-	ctx.fillRect(0, 0, w / 2, h / 2);
-	return canvas;
-};
-
-/** a unit square that does not surround its origin */
-const offOrigin = () => {
-	return new Polygon(0, 0, [
-		{ x: 0.2, y: 0.2 },
-		{ x: 1, y: 0.2 },
-		{ x: 1, y: 1 },
-		{ x: 0.2, y: 1 },
-	]);
-};
-
-/** an effect at a given progress (1 = all visible, 0 = all covered) */
-const at = (camera, progress, options) => {
-	const effect = new MaskEffect(camera, {
-		color: "#000",
-		duration: 1000,
-		direction: "hide",
-		...options,
-	});
-	effect.tween.stop();
-	effect.progress.value = progress;
-	return effect;
-};
-
-/** draw an effect over a white screen */
-const drawOverWhite = (renderer, effect) => {
-	renderer.save();
-	renderer.resetTransform();
-	renderer.setColor("#ffffff");
-	renderer.fillRect(0, 0, SIZE, SIZE);
-	renderer.restore();
-	effect.draw(renderer, SIZE, SIZE);
-	renderer.flush();
-};
-
-/** 1 where a pixel is covered (dark), 0 where it is visible (light) */
-const covered = async (renderer, x, y) => {
-	return (await readPixel(renderer, x, y))[0] < 128 ? 1 : 0;
-};
-
-const CORNERS = [
-	[1, 1],
-	[SIZE - 2, 1],
-	[1, SIZE - 2],
-	[SIZE - 2, SIZE - 2],
-];
-
-/** the same drawing checks, on one renderer */
-const drawingChecks = (getRenderer) => {
-	const camera = new Camera2d(0, 0, SIZE, SIZE);
-
-	it("an image: the scene shows through its silhouette, hole filled in", async (ctx) => {
-		const renderer = getRenderer(ctx);
-		const effect = at(camera, 0.3, { shape: discWithHole() });
-		drawOverWhite(renderer, effect);
-		// the centre is the image's hole: part of the silhouette, so visible
-		expect(await covered(renderer, 32, 32)).toBe(0);
-		expect(await covered(renderer, 32, 26)).toBe(0);
-		for (const [x, y] of CORNERS) {
-			expect(await covered(renderer, x, y)).toBe(1);
-		}
-		effect.destroy();
-	});
-
-	it("an image: covers everything once closed", async (ctx) => {
-		const renderer = getRenderer(ctx);
-		const effect = at(camera, 0, { shape: discWithHole() });
-		drawOverWhite(renderer, effect);
-		expect(await covered(renderer, 32, 32)).toBe(1);
-		expect(await covered(renderer, 1, 1)).toBe(1);
-		effect.destroy();
-	});
-
-	it("an image: just before the end, the whole screen is already uncovered", async (ctx) => {
-		const renderer = getRenderer(ctx);
-		const effect = at(camera, 0.995, { shape: discWithHole() });
-		drawOverWhite(renderer, effect);
-		for (const [x, y] of CORNERS) {
-			expect(await covered(renderer, x, y)).toBe(0);
-		}
-		effect.destroy();
-	});
-
-	it("a polygon: just before the end, the whole screen is already uncovered", async (ctx) => {
-		const renderer = getRenderer(ctx);
-		const diamond = new Polygon(0, 0, [
-			{ x: 0, y: -1 },
-			{ x: 1, y: 0 },
-			{ x: 0, y: 1 },
-			{ x: -1, y: 0 },
-		]);
-		const effect = at(camera, 0.995, { shape: diamond });
-		drawOverWhite(renderer, effect);
-		for (const [x, y] of CORNERS) {
-			expect(await covered(renderer, x, y)).toBe(0);
-		}
-		effect.destroy();
-	});
-
-	it("inverted: the silhouette is the cover, the scene shows round it", async (ctx) => {
-		const renderer = getRenderer(ctx);
-		const effect = at(camera, 0.7, { shape: discWithHole(), invert: true });
-		drawOverWhite(renderer, effect);
-		expect(await covered(renderer, 32, 32)).toBe(1);
-		for (const [x, y] of CORNERS) {
-			expect(await covered(renderer, x, y)).toBe(0);
-		}
-		effect.destroy();
-	});
-
-	it("inverted: covers everything once closed, nothing at the start", async (ctx) => {
-		const renderer = getRenderer(ctx);
-		const closed = at(camera, 0, { shape: discWithHole(), invert: true });
-		drawOverWhite(renderer, closed);
-		expect(await covered(renderer, 1, 1)).toBe(1);
-		expect(await covered(renderer, 32, 32)).toBe(1);
-		closed.destroy();
-		const open = at(camera, 1, { shape: discWithHole(), invert: true });
-		drawOverWhite(renderer, open);
-		expect(await covered(renderer, 32, 32)).toBe(0);
-		open.destroy();
-	});
-
-	it("inverted geometry: an iris filled, growing out of the centre", async (ctx) => {
-		const renderer = getRenderer(ctx);
-		const effect = at(camera, 0.7, {
-			shape: new Ellipse(0, 0, 1, 1),
-			invert: true,
-		});
-		drawOverWhite(renderer, effect);
-		expect(await covered(renderer, 32, 32)).toBe(1);
-		expect(await covered(renderer, 1, 1)).toBe(0);
-		effect.destroy();
-	});
-
-	it("an image open in its middle (a U): grows about its thickest part, and still uncovers everything", async (ctx) => {
-		const renderer = getRenderer(ctx);
-		// just after the hide starts, the middle of the screen is still seen
-		const start = at(camera, 0.99, { shape: uShape() });
-		drawOverWhite(renderer, start);
-		expect(await covered(renderer, 32, 32)).toBe(0);
-		start.destroy();
-		// and just before a reveal ends, nothing is covered
-		const end = at(camera, 0.995, { shape: uShape() });
-		drawOverWhite(renderer, end);
-		for (const [x, y] of [...CORNERS, [32, 32], [32, 3]]) {
-			expect(await covered(renderer, x, y)).toBe(0);
-		}
-		end.destroy();
-	});
-
-	it("a polygon off its origin: still uncovers everything, and inverted still covers it", async (ctx) => {
-		const renderer = getRenderer(ctx);
-		const open = at(camera, 0.995, { shape: offOrigin() });
-		drawOverWhite(renderer, open);
-		for (const [x, y] of CORNERS) {
-			expect(await covered(renderer, x, y)).toBe(0);
-		}
-		open.destroy();
-		// the cover nearly grown: the screen is covered by the polygon itself
-		const cover = at(camera, 0.005, { shape: offOrigin(), invert: true });
-		drawOverWhite(renderer, cover);
-		for (const [x, y] of [...CORNERS, [32, 32]]) {
-			expect(await covered(renderer, x, y)).toBe(1);
-		}
-		cover.destroy();
-	});
-
-	it("nearly closed, the image is still drawn, a sliver of the scene in the middle", async (ctx) => {
-		const renderer = getRenderer(ctx);
-		const effect = at(camera, 0.05, { shape: discWithHole() });
-		const drawImage = vi.spyOn(renderer, "drawImage");
-		drawOverWhite(renderer, effect);
-		expect(drawImage).toHaveBeenCalled();
-		drawImage.mockRestore();
-		expect(await covered(renderer, 32, 32)).toBe(0);
-		for (const [x, y] of [...CORNERS, [32, 20], [44, 32]]) {
-			expect(await covered(renderer, x, y)).toBe(1);
-		}
-		effect.destroy();
-	});
-
-	it("center: closes on that point, not on the centre of the screen", async (ctx) => {
-		const renderer = getRenderer(ctx);
-		const effect = at(camera, 0.2, {
-			shape: discWithHole(),
-			center: { x: 12, y: 12 },
-		});
-		drawOverWhite(renderer, effect);
-		expect(await covered(renderer, 12, 12)).toBe(0);
-		expect(await covered(renderer, 52, 52)).toBe(1);
-		effect.destroy();
-	});
-};
 
 // One Canvas application for the whole file, made first: the engine gives a
 // viewport only to the application live at the first `init()`
@@ -333,7 +96,7 @@ describe("MaskEffect: image and sprite shapes", () => {
 			return renderer;
 		});
 
-		it("destroy frees the copy of the image uploaded to the GPU", (ctx) => {
+		it("destroy frees the copy of the image uploaded to the GPU", async (ctx) => {
 			if (renderer === undefined) {
 				ctx.skip("WebGL renderer not available in this environment");
 				return;
@@ -341,38 +104,11 @@ describe("MaskEffect: image and sprite shapes", () => {
 			const effect = at(new Camera2d(0, 0, SIZE, SIZE), 0.5, {
 				shape: discWithHole(),
 			});
-			drawOverWhite(renderer, effect);
+			await drawOverWhite(renderer, effect);
 			const canvas = effect._cover.canvas;
 			expect(renderer.cache.has(canvas)).toBe(true);
 			effect.destroy();
 			expect(renderer.cache.has(canvas)).toBe(false);
-		});
-	});
-
-	describe("WebGPU", () => {
-		let gpuApp;
-		let available = false;
-		beforeAll(async () => {
-			try {
-				gpuApp = new Application(SIZE, SIZE, {
-					parent: "screen",
-					renderer: video.WEBGPU,
-					consoleHeader: false,
-				});
-				await gpuApp.init();
-				available = gpuApp.renderer.type === "WebGPU";
-			} catch {
-				available = false;
-			}
-		});
-		afterAll(() => {
-			gpuApp?.destroy();
-		});
-		drawingChecks((ctx) => {
-			if (!available) {
-				ctx.skip("WebGPU not available in this environment");
-			}
-			return gpuApp.renderer;
 		});
 	});
 });

@@ -1,6 +1,15 @@
 import VertexArrayBuffer from "../../../buffer/vertex.js";
 import { transformQuadCorners } from "../../../gpu/quadcorners.ts";
-import tmxLayerWGSL from "../../shaders/tmxlayer.wgsl";
+import {
+	atlasColumns,
+	atlasRows,
+	createRegion,
+	TMX_ORIENTATIONS,
+} from "../../../gpu/tmxlayer_orientation.js";
+import tmxLayerCommonWGSL from "../../shaders/tmxlayer-common.wgsl";
+import isometricWGSL from "../../shaders/tmxlayer-isometric.wgsl";
+import orthogonalWGSL from "../../shaders/tmxlayer-orthogonal.wgsl";
+import staggeredWGSL from "../../shaders/tmxlayer-staggered.wgsl";
 
 /**
  * additional imports for TypeScript
@@ -9,20 +18,36 @@ import tmxLayerWGSL from "../../shaders/tmxlayer.wgsl";
  */
 
 /**
- * byte size of the TMXUniforms block (see tmxlayer.wgsl): ten vec2f (80)
+ * byte size of the TMXUniforms block (see tmxlayer-common.wgsl): ten vec2f (80)
  * interleaved with one vec4f at a 16-aligned offset, two f32, the vec4f
- * tint (ending at 112) and the mipmap flag, rounded up to the block's
- * 16-byte alignment → 128 bytes
+ * tint (ending at 112), the mipmap flag (112), and a staggered map's mode
+ * (116) and two lengths (a vec2f at 120) → 128 bytes, a multiple of the
+ * block's 16-byte alignment
  * @ignore
  * @internal
  */
 const TMX_UNIFORM_SIZE = 128;
 
+// each orientation's part of the shader module, appended to the shared one
+const ORIENTATION_WGSL = {
+	orthogonal: orthogonalWGSL,
+	isometric: isometricWGSL,
+	// one geometry: a hexagonal map's cells are longer, no more
+	staggered: staggeredWGSL,
+	hexagonal: staggeredWGSL,
+};
+
 /**
- * GPU-accelerated renderer for orthogonal TMX tile layers on the WebGPU
- * backend — the WGSL realization of the WebGL shader tile path: the
- * visible region draws as ONE quad per tileset, with the fragment shader
- * sampling a per-layer GID index texture and the tileset atlas.
+ * GPU-accelerated renderer for TMX tile layers on the WebGPU backend, the
+ * part every map orientation shares — the WGSL realization of the WebGL
+ * shader tile path: the visible region draws as ONE quad per tileset, with
+ * the fragment shader sampling a per-layer GID index texture and the
+ * tileset atlas.
+ *
+ * There is one of these per map orientation drawn (see `TMX_ORIENTATIONS`
+ * in `gpu/tmxlayer_orientation.js`). Two things differ from one to the next:
+ * its part of the shader (where a cell's tile is, and which cells can cover
+ * a fragment), and the part of a layer a view shows.
  *
  * Structure mirrors the WebGL twin; the mechanisms are the backend's:
  * - the GID index / animation lookup are renderer-owned `rgba8unorm`
@@ -33,17 +58,34 @@ const TMX_UNIFORM_SIZE = 128;
  *   dynamic offset (each tileset pass gets its own region, per the
  *   queue-write-before-draws ordering)
  * - the tileset atlas rides the standard texture-store material path
- * - pipelines flow through the registered `tmxlayer.wgsl` family, keyed
- *   on the frame's blend/stencil state like every other draw
+ * - pipelines flow through the registered shader family (the shared
+ *   module text plus the orientation's), keyed on the frame's blend/stencil
+ *   state like every other draw
  * @ignore
  * @internal
  */
-export default class OrthogonalTMXLayerGPURenderer {
+export default class TMXLayerGPURenderer {
 	/**
 	 * @param {WebGPURenderer} renderer - the WebGPU renderer instance
+	 * @param {string} orientation - the map orientation to draw, one of
+	 * `TMX_ORIENTATIONS`
 	 */
-	constructor(renderer) {
+	constructor(renderer, orientation) {
 		this.renderer = renderer;
+		/**
+		 * what differs with the map's orientation (see
+		 * `gpu/tmxlayer_orientation.js`)
+		 * @ignore
+		 * @internal
+		 */
+		this.orientation = TMX_ORIENTATIONS[orientation];
+		// the bounds of the shader's loops, declared ahead of its own part
+		const limits = Object.entries(this.orientation.limits)
+			.map(([name, value]) => {
+				return `const ${name} : i32 = ${value};`;
+			})
+			.join("\n");
+		const wgsl = `${limits}\n${ORIENTATION_WGSL[orientation]}`;
 		const cache = renderer.pipelineCache;
 
 		// group-3 shape: the uniform block + the two lookup textures
@@ -60,7 +102,7 @@ export default class OrthogonalTMXLayerGPURenderer {
 			{ binding: 1, visibility: GPUShaderStage.FRAGMENT, texture: {} },
 			{ binding: 2, visibility: GPUShaderStage.FRAGMENT, texture: {} },
 		]);
-		this.key = cache.registerShader(tmxLayerWGSL, {
+		this.key = cache.registerShader(`${tmxLayerCommonWGSL}\n${wgsl}`, {
 			bindGroupLayouts: [
 				cache.frameLayout,
 				cache.materialLayout,
@@ -98,6 +140,18 @@ export default class OrthogonalTMXLayerGPURenderer {
 		 * @type {VertexArrayBuffer|undefined}
 		 */
 		this.vertexScratch = undefined;
+		/**
+		 * what the orientation's `region` fills
+		 * @ignore
+		 * @internal
+		 */
+		this.regionScratch = createRegion();
+		/**
+		 * what the orientation's `tilesetsOf` fills, when it needs to
+		 * @ignore
+		 * @internal
+		 */
+		this.tilesetsScratch = [];
 	}
 
 	/**
@@ -222,36 +276,18 @@ export default class OrthogonalTMXLayerGPURenderer {
 	}
 
 	/**
-	 * Draw an orthogonal TMX layer through the shader path.
-	 * @param {TMXLayer} layer - the layer to draw
-	 * @param {object} rect - the visible viewport rect (world coords)
+	 * Start a layer's draw, for the first tileset the view shows something
+	 * of: the quad (shared by every tileset pass), the layer's uniform
+	 * values, the pipeline and the bindings that do not change per tileset.
+	 * @param {TMXLayer} layer - the layer
+	 * @param {object} region - the region of that first tileset
+	 * @returns {object} what the tileset passes need: the pass, the index
+	 * texture's resource and the layer's bind group cache
+	 * @ignore
+	 * @internal
 	 */
-	draw(layer, rect) {
+	begin(layer, region) {
 		const renderer = this.renderer;
-		const tileWidth = layer.tilewidth;
-		const tileHeight = layer.tileheight;
-		const cols = layer.cols;
-		const rows = layer.rows;
-
-		// visible region in tile-coord space
-		const startTileX = Math.max(0, Math.floor(rect.pos.x / tileWidth));
-		const startTileY = Math.max(0, Math.floor(rect.pos.y / tileHeight));
-		const endTileX = Math.min(
-			cols,
-			Math.ceil((rect.pos.x + rect.width) / tileWidth),
-		);
-		const endTileY = Math.min(
-			rows,
-			Math.ceil((rect.pos.y + rect.height) / tileHeight),
-		);
-		if (endTileX <= startTileX || endTileY <= startTileY) {
-			return;
-		}
-
-		const worldX = startTileX * tileWidth;
-		const worldY = startTileY * tileHeight;
-		const worldW = (endTileX - startTileX) * tileWidth;
-		const worldH = (endTileY - startTileY) * tileHeight;
 
 		// drain pending sprite vertices under their own pipeline, then use
 		// the quad batcher's frozen machinery (staging layout, index buffer)
@@ -267,13 +303,18 @@ export default class OrthogonalTMXLayerGPURenderer {
 		// to its own tiles, so the quad carries no frame
 		// on whole pixels unless `subPixel` is set, as a sprite is: the tiles
 		// move with the quad (see Renderer#_pixelSnapBegin)
-		const snapped = renderer._pixelSnapBegin(worldX, worldY, worldW, worldH);
+		const snapped = renderer._pixelSnapBegin(
+			region.x,
+			region.y,
+			region.width,
+			region.height,
+		);
 		const corners = transformQuadCorners(
 			renderer.currentTransform,
-			worldX,
-			worldY,
-			worldW,
-			worldH,
+			region.x,
+			region.y,
+			region.width,
+			region.height,
 			renderer.currentDepth,
 		);
 		renderer._pixelSnapEnd(snapped);
@@ -307,14 +348,10 @@ export default class OrthogonalTMXLayerGPURenderer {
 
 		// layer-level uniform values (identical for every tileset pass)
 		const scratch = this.uniformScratch;
-		scratch[0] = cols;
-		scratch[1] = rows;
-		scratch[2] = tileWidth;
-		scratch[3] = tileHeight;
-		scratch[18] = startTileX;
-		scratch[19] = startTileY;
-		scratch[20] = endTileX - startTileX;
-		scratch[21] = endTileY - startTileY;
+		scratch[0] = layer.cols;
+		scratch[1] = layer.rows;
+		scratch[2] = layer.tilewidth;
+		scratch[3] = layer.tileheight;
 		// the layer's opacity, and the fade of everything it is drawn in:
 		// set on the renderer by the layer's preDraw
 		scratch[22] = renderer.getGlobalAlpha();
@@ -346,19 +383,40 @@ export default class OrthogonalTMXLayerGPURenderer {
 		);
 		pass.setIndexBuffer(batcher.indexBuffer, "uint32");
 
-		// one pass per tileset — the GID-range guard hides other tilesets
-		const tilesets = layer.tilesets.tilesets;
 		let layerGroups = this.bindGroups.get(layer);
 		if (layerGroups === undefined) {
 			layerGroups = new Map();
 			this.bindGroups.set(layer, layerGroups);
 		}
+		return { pass, resource, layerGroups };
+	}
+
+	/**
+	 * Draw a TMX layer through the shader path.
+	 * @param {TMXLayer} layer - the layer to draw
+	 * @param {object} rect - the visible viewport rect (world coords)
+	 */
+	draw(layer, rect) {
+		const renderer = this.renderer;
+		const device = renderer.device;
+		const scratch = this.uniformScratch;
+		const region = this.regionScratch;
+		let begun;
+
+		// one pass per tileset — the GID-range guard hides other tilesets
+		const tilesets = this.orientation.tilesetsOf(layer, this.tilesetsScratch);
 		for (let i = 0; i < tilesets.length; i++) {
 			const tileset = tilesets[i];
 			// eligibility should have excluded these — guard defensively
 			if (tileset.isCollection || tileset.image === undefined) {
 				continue;
 			}
+			// the view shows nothing of this tileset's tiles
+			if (!this.orientation.region(layer, rect, tileset, region)) {
+				continue;
+			}
+			begun ??= this.begin(layer, region);
+			const { pass, resource, layerGroups } = begun;
 
 			const tsW = tileset.tilewidth;
 			const tsH = tileset.tileheight;
@@ -366,18 +424,12 @@ export default class OrthogonalTMXLayerGPURenderer {
 			const spacing = tileset.spacing;
 			const atlasW = tileset.image.width;
 			const atlasH = tileset.image.height;
-			const atlasCols = Math.max(
-				1,
-				Math.floor((atlasW - margin * 2 + spacing) / (tsW + spacing)),
-			);
-			const atlasRows = Math.max(
-				1,
-				Math.floor((atlasH - margin * 2 + spacing) / (tsH + spacing)),
-			);
+			const atlasCols = atlasColumns(tileset);
+			const atlasRowCount = atlasRows(tileset);
 
 			const animEntry = this.getOrUpdateAnimLookup(
 				tileset,
-				atlasCols * atlasRows,
+				atlasCols * atlasRowCount,
 			);
 			// every declared binding needs a view — reuse the index texture
 			// as the filler (never read: uAnimSize stays 0)
@@ -386,10 +438,10 @@ export default class OrthogonalTMXLayerGPURenderer {
 			// per-tileset uniform values + snapshot into the arena
 			scratch[4] = tsW;
 			scratch[5] = tsH;
-			scratch[6] = Math.max(0, Math.ceil(tsW / tileWidth) - 1);
-			scratch[7] = Math.max(0, Math.ceil(tsH / tileHeight) - 1);
+			scratch[6] = region.overflowX;
+			scratch[7] = region.overflowY;
 			scratch[8] = atlasCols;
-			scratch[9] = atlasRows;
+			scratch[9] = atlasRowCount;
 			scratch[10] = 1 / atlasW;
 			scratch[11] = 1 / atlasH;
 			scratch[12] = margin;
@@ -398,6 +450,10 @@ export default class OrthogonalTMXLayerGPURenderer {
 			scratch[15] = spacing;
 			scratch[16] = tileset.firstgid;
 			scratch[17] = tileset.lastgid;
+			scratch[18] = region.startX;
+			scratch[19] = region.startY;
+			scratch[20] = region.sizeX;
+			scratch[21] = region.sizeY;
 			scratch[23] = animEntry ? animEntry.tileCount : 0;
 			// the "linear-mipmap" filter, on a linear tileset: the binding
 			// below asks the store for a chain, and the shader keeps each
@@ -409,13 +465,18 @@ export default class OrthogonalTMXLayerGPURenderer {
 			const mipmaps =
 				filter === "linear" && renderer.wantsMipmaps(tileset.texture);
 			scratch[28] = mipmaps ? 1 : 0;
-			const region = renderer.effectUniformArena.alloc(
+			// a staggered or hexagonal map's (0 on the others, which have
+			// no use for them)
+			scratch[29] = region.staggerMode;
+			scratch[30] = region.staggerX;
+			scratch[31] = region.staggerY;
+			const uniforms = renderer.effectUniformArena.alloc(
 				TMX_UNIFORM_SIZE,
 				device.limits?.minUniformBufferOffsetAlignment ?? 256,
 			);
 			device.queue.writeBuffer(
-				region.buffer,
-				region.offset,
+				uniforms.buffer,
+				uniforms.offset,
 				scratch.buffer,
 				0,
 				TMX_UNIFORM_SIZE,
@@ -426,11 +487,11 @@ export default class OrthogonalTMXLayerGPURenderer {
 			let cached = layerGroups.get(tileset);
 			if (
 				cached === undefined ||
-				cached.pageLabel !== region.buffer.label ||
+				cached.pageLabel !== uniforms.buffer.label ||
 				cached.animView !== animView
 			) {
 				cached = {
-					pageLabel: region.buffer.label,
+					pageLabel: uniforms.buffer.label,
 					animView,
 					bindGroup: device.createBindGroup({
 						label: "melonJS tmx binding",
@@ -439,7 +500,7 @@ export default class OrthogonalTMXLayerGPURenderer {
 							{
 								binding: 0,
 								resource: {
-									buffer: region.buffer,
+									buffer: uniforms.buffer,
 									size: TMX_UNIFORM_SIZE,
 								},
 							},
@@ -455,7 +516,7 @@ export default class OrthogonalTMXLayerGPURenderer {
 				1,
 				renderer.textureStore.getBinding(tileset.texture, { mipmaps }),
 			);
-			pass.setBindGroup(3, cached.bindGroup, [region.offset]);
+			pass.setBindGroup(3, cached.bindGroup, [uniforms.offset]);
 			pass.drawIndexed(6);
 		}
 	}

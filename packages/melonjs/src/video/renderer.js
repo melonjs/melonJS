@@ -212,6 +212,16 @@ export default class Renderer {
 		this.supportsShaderTileLayers = false;
 
 		/**
+		 * The largest texture this renderer can make, in pixels a side: no
+		 * limit on Canvas. A tile layer drawn by the GPU keeps a texel per
+		 * cell, so a layer with more columns or rows than this is drawn
+		 * tile by tile.
+		 * @type {number}
+		 * @ignore
+		 */
+		this.maxTextureSize = Infinity;
+
+		/**
 		 * Whether this backend can render into a half-float color buffer.
 		 * Renderability alone; {@link Renderer#supportsHDR} is the one to
 		 * branch on.

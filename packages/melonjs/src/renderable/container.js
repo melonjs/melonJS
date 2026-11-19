@@ -1,5 +1,6 @@
 import { colorPool } from "../math/color.ts";
 import { Matrix3d } from "../math/matrix3d.ts";
+import { boundsPool } from "../physics/bounds.ts";
 import Body from "../physics/builtin/body.js";
 import {
 	needsShapeResolution,
@@ -1128,6 +1129,41 @@ export default class Container extends Renderable {
 	getChildByGUID(guid) {
 		const obj = this.getChildByProp("GUID", guid);
 		return obj.length > 0 ? obj[0] : null;
+	}
+
+	/**
+	 * The area this container draws in, when something in it draws outside
+	 * the container's own bounds and has said so: a tile layer does (see
+	 * `TMXLayer#getDrawBounds`), whose tiles stand above its grid, which an
+	 * offset can move, and which on an infinite map starts left of and above
+	 * the map's origin. A container with a size of its own (one a level was
+	 * loaded into) is in view by this area, as the layer would be (see
+	 * `Camera2d#isVisible`).
+	 * @returns {Bounds|undefined} that area, or undefined when it is the
+	 * container's bounds (or the container has no size of its own)
+	 * @ignore
+	 */
+	getDrawBounds() {
+		const layers = this._drawPast;
+		if (layers === undefined || layers.size === 0) {
+			return undefined;
+		}
+		const bounds = this.getBounds();
+		if (!bounds.isFinite()) {
+			return undefined;
+		}
+		/** @ignore */
+		this._drawBounds ??= boundsPool.get();
+		this._drawBounds.setMinMax(
+			bounds.left,
+			bounds.top,
+			bounds.right,
+			bounds.bottom,
+		);
+		for (const layer of layers) {
+			this._drawBounds.addBounds(layer.getDrawBounds());
+		}
+		return this._drawBounds;
 	}
 
 	/**
