@@ -1,12 +1,15 @@
-// melonJS WebGPU orthogonal TMX layer shader — the WGSL port of
-// orthogonal-tmxlayer.vert/frag (WebGL2).
+// melonJS WebGPU TMX layer shader — the WGSL port of tmxlayer.vert and
+// tmxlayer-common.frag (WebGL2): the part every map orientation shares. An
+// orientation's own file follows it in the module (tmxlayer-orthogonal.wgsl,
+// tmxlayer-isometric.wgsl) and gives the two things that differ: where a
+// cell's tile is drawn (`tileOrigin`), and which cells could cover a
+// fragment, front to back (`fragment_main`).
 //
-// Per fragment: recover the world-pixel position from the quad UV, walk
-// candidate cells (the geometric cell, plus cells whose oversized
-// bottom-aligned tiles could reach this fragment), fetch GIDs from the
-// per-layer index texture, and sample the tileset atlas at the correct
-// sub-region. One draw per tileset — the GID-range guard discards cells
-// belonging to other tilesets.
+// Per fragment: recover the fragment's position in the layer from the quad
+// UV, walk the cells whose tile could cover it, the one drawn last first,
+// fetch GIDs from the per-layer index texture, and sample the tileset atlas
+// at the correct sub-region. One draw per tileset — the GID-range guard
+// discards cells belonging to other tilesets.
 //
 // Index texture encoding (rgba8unorm, one cell per texel):
 //   R = GID low byte, G = GID high byte, B = flip mask (H|V<<1|AD<<2)
@@ -27,7 +30,7 @@ struct TMXUniforms {
 	uMapSize : vec2f,
 	uCellSize : vec2f,
 	uTileSize : vec2f,
-	uOverflow : vec2f,
+	uOverflow : vec2f,      // how far a tile reaches past its cell (see each fragment_main)
 	uTilesetCols : vec2f,
 	uInvTilesetSize : vec2f,
 	uTilesetMargin : vec4f, // (marginX, marginY, spacingX, spacingY)
@@ -69,8 +72,6 @@ fn vertex_main(
 	return out;
 }
 
-const MAX_OVERFLOW : i32 = 4;
-
 struct CellSample {
 	hit : bool,
 	color : vec4f,
@@ -110,12 +111,8 @@ fn tryRenderCell(
 		return miss;
 	}
 
-	// oversized tiles are bottom-aligned vertically, left-aligned horizontally
-	let tileWorldOrigin = vec2f(
-		f32(cx) * tmx.uCellSize.x,
-		(f32(cy) + 1.0) * tmx.uCellSize.y - tmx.uTileSize.y,
-	);
-	var inTile = (worldPx - tileWorldOrigin) / tmx.uTileSize;
+	// where the cell's tile is drawn from: the orientation's own
+	var inTile = (worldPx - tileOrigin(cx, cy)) / tmx.uTileSize;
 	if (inTile.x < 0.0 || inTile.x >= 1.0 || inTile.y < 0.0 || inTile.y >= 1.0) {
 		return miss;
 	}
@@ -186,57 +183,3 @@ fn layerColor(texel : vec4f) -> vec4f {
 	return texel * tmx.uOpacity * vec4f(tmx.uTint.rgb, 1.0);
 }
 
-@fragment
-fn fragment_main(in : VSOut) -> @location(0) vec4f {
-	let tileCoord = tmx.uVisibleStart + in.vRegion * tmx.uVisibleSize;
-	let geomCell = floor(tileCoord);
-	let worldPx = tileCoord * tmx.uCellSize;
-	let dWorldX = dpdx(worldPx);
-	let dWorldY = dpdy(worldPx);
-
-	let gx = i32(geomCell.x);
-	let gy = i32(geomCell.y);
-	let overflowX = i32(tmx.uOverflow.x + 0.5);
-	let overflowY = i32(tmx.uOverflow.y + 0.5);
-
-	var result : CellSample;
-
-	// fast path: tiles fit the cell exactly — only the geometric cell can
-	// contain this fragment's tile
-	if (overflowX == 0 && overflowY == 0) {
-		result = tryRenderCell(gx, gy, worldPx, dWorldX, dWorldY);
-		if (!result.hit) {
-			discard;
-		}
-		return layerColor(result.color);
-	}
-
-	// slow path: oversized tiles. Scan candidates dy high→low, dx low→high
-	// and take the FIRST match — "right-down" render order puts later
-	// cells on top
-	var found = false;
-	for (var idy = 0; idy <= MAX_OVERFLOW; idy++) {
-		let dy = MAX_OVERFLOW - idy;
-		if (dy > overflowY) {
-			continue;
-		}
-		for (var dx = 0; dx <= MAX_OVERFLOW; dx++) {
-			if (dx > overflowX) {
-				break;
-			}
-			let candidate = tryRenderCell(gx - dx, gy + dy, worldPx, dWorldX, dWorldY);
-			if (candidate.hit) {
-				result = candidate;
-				found = true;
-				break;
-			}
-		}
-		if (found) {
-			break;
-		}
-	}
-	if (!found) {
-		discard;
-	}
-	return layerColor(result.color);
-}

@@ -26,6 +26,13 @@ const FLIP_H_BIT = 1 << 0;
 const FLIP_V_BIT = 1 << 1;
 const FLIP_AD_BIT = 1 << 2;
 
+// The largest tiles the isometric shader path draws, in grid cells: the
+// bounds of the loops in `isometric-tmxlayer.frag` and its WGSL twin.
+const ISOMETRIC_MAX_TILE_WIDTHS = 4;
+const ISOMETRIC_MAX_TILE_HEIGHTS = 8;
+const ISOMETRIC_ONE_TILESET =
+	"tiles of more than one tileset in an isometric layer";
+
 // the area an offset camera shows, handed to the tile renderers in its place
 // (made on first use)
 let viewRect;
@@ -680,7 +687,7 @@ export default class TMXLayer extends Renderable {
 		if (!renderer || renderer.supportsShaderTileLayers !== true) {
 			return { ok: false, reason: "no-gpu-renderer" };
 		}
-		if (this.orientation !== "orthogonal") {
+		if (this.orientation !== "orthogonal" && this.orientation !== "isometric") {
 			return {
 				ok: false,
 				reason: `no gpu renderer supported yet for "${this.orientation}" orientation`,
@@ -688,6 +695,9 @@ export default class TMXLayer extends Renderable {
 		}
 		if (!this.tilesets || this.tilesets.tilesets.length === 0) {
 			return { ok: false, reason: "no tilesets" };
+		}
+		if (this.orientation === "isometric") {
+			return this._checkIsometricShaderEligibility();
 		}
 		// the shader iterates a fixed-size loop over candidate cells to
 		// support oversized tiles (tile dim > cell dim) drawn bottom-aligned.
@@ -717,6 +727,102 @@ export default class TMXLayer extends Renderable {
 			}
 		}
 		return { ok: true };
+	}
+
+	/**
+	 * Check whether this isometric layer can take the shader path, and note
+	 * the tileset it would draw with.
+	 *
+	 * Isometric tiles overlap (each is drawn as its whole image, over the
+	 * rows behind it), and the shader path draws one tileset at a time: it
+	 * can keep the tile drawn last among those of one tileset, not across
+	 * two. So the layer's tiles must all come from the same tileset. Which
+	 * one is found by looking at the tiles, not at the map's list: a map
+	 * commonly has a tileset per layer.
+	 * @returns {{ok: boolean, reason?: string}}
+	 * @ignore
+	 * @internal
+	 */
+	_checkIsometricShaderEligibility() {
+		/**
+		 * the one tileset an isometric layer on the shader path draws with
+		 * @ignore
+		 */
+		this._shaderTileset = undefined;
+		const data = this.layerData;
+		let tileset = null;
+		for (let i = 0; i < data.length; i += 2) {
+			const gid = data[i];
+			if (gid !== 0 && (tileset === null || !tileset.contains(gid))) {
+				if (tileset !== null) {
+					return { ok: false, reason: ISOMETRIC_ONE_TILESET };
+				}
+				tileset = this.tilesets.getTilesetByGid(gid);
+			}
+		}
+		// an empty layer: its tileset is the first one a tile is set from
+		if (tileset !== null) {
+			const reason = this._isometricTilesetReason(tileset);
+			if (reason !== undefined) {
+				return { ok: false, reason };
+			}
+			this._shaderTileset = tileset;
+		}
+		return { ok: true };
+	}
+
+	/**
+	 * Why the isometric shader path cannot draw the tiles of a tileset, if
+	 * it cannot.
+	 * @param {TMXTileset} tileset - the tileset
+	 * @returns {string|undefined} the reason, or undefined when it can
+	 * @ignore
+	 * @internal
+	 */
+	_isometricTilesetReason(tileset) {
+		if (tileset.isCollection) {
+			return "collection-of-image tileset";
+		}
+		if (tileset.tilerendersize !== "tile") {
+			return `tilerendersize "${tileset.tilerendersize}" not supported`;
+		}
+		// the shader looks, for each pixel, at every cell whose tile image
+		// could cover it: a bounded number
+		if (
+			tileset.tilewidth > this.tilewidth * ISOMETRIC_MAX_TILE_WIDTHS ||
+			tileset.tileheight > this.tileheight * ISOMETRIC_MAX_TILE_HEIGHTS
+		) {
+			return `tiles larger than the shader's limit (${ISOMETRIC_MAX_TILE_WIDTHS} grid widths by ${ISOMETRIC_MAX_TILE_HEIGHTS} grid heights)`;
+		}
+		return undefined;
+	}
+
+	/**
+	 * An isometric layer on the shader path draws with one tileset: a tile
+	 * set at run time from another one, or from one the path cannot draw,
+	 * moves the layer back to the legacy renderer.
+	 * @param {number} gid - the gid of the tile just set
+	 * @ignore
+	 * @internal
+	 */
+	_keepIsometricShaderTileset(gid) {
+		const current = this._shaderTileset;
+		if (current?.contains(gid)) {
+			return;
+		}
+		let reason = ISOMETRIC_ONE_TILESET;
+		if (current === undefined) {
+			const tileset = this.tilesets.getTilesetByGid(gid);
+			reason = this._isometricTilesetReason(tileset);
+			if (reason === undefined) {
+				this._shaderTileset = tileset;
+				return;
+			}
+		}
+		console.warn(
+			`melonJS: layer "${this.name}" back to the legacy tile renderer (${reason})`,
+		);
+		this.renderMode = "perTile";
 	}
 
 	// called when the layer is removed from the game world or a container
@@ -825,6 +931,9 @@ export default class TMXLayer extends Renderable {
 		this.dataVersion++;
 		this.isDirty = true;
 		this._preRenderCell(x, y);
+		if (this.renderMode === "shader" && this.orientation === "isometric") {
+			this._keepIsometricShaderTileset(cleanGid);
+		}
 		return tile;
 	}
 

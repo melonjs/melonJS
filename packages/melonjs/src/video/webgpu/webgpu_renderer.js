@@ -54,6 +54,7 @@ import WebGPUBufferArena from "./buffer/arena.js";
 import WebGPUUniformRing from "./buffer/uniformring.js";
 import { buildEffectGPU } from "./effect_binding.js";
 import WebGPUPipelineCache, { DEPTH_STENCIL_FORMAT } from "./pipeline/cache.js";
+import IsometricTMXLayerGPURenderer from "./renderers/tmxlayer/isometric.js";
 import OrthogonalTMXLayerGPURenderer from "./renderers/tmxlayer/orthogonal.js";
 import { COMPRESSION_FEATURES } from "./texture/compressed.js";
 import { WebGPUFrameTexture } from "./texture/frametexture.js";
@@ -103,6 +104,15 @@ export function resolveDepthOps(meshDepthActive, pendingDepthClear) {
 		depthStoreOp: "store",
 	};
 }
+
+/**
+ * the GPU tile layer renderer of each map orientation that has one
+ * @ignore
+ */
+const TMX_GPU_RENDERERS = {
+	orthogonal: OrthogonalTMXLayerGPURenderer,
+	isometric: IsometricTMXLayerGPURenderer,
+};
 
 /**
  * The **experimental** WebGPU renderer.
@@ -213,11 +223,11 @@ export default class WebGPURenderer extends Renderer {
 		this._resolveToneMapping();
 		// presentation is settled again by init(), once the surface exists
 		this.setHDROutput(this.settings.hdrOutput === true);
-		// lazy orientation-specific GPU tilemap renderer (device-scoped:
-		// dropped on device loss, rebuilt on first use)
+		// lazy orientation-specific GPU tilemap renderers, by orientation
+		// (device-scoped: dropped on device loss, rebuilt on first use)
 		/** @ignore
 		 * @internal */
-		this.orthogonalTMXRenderer = undefined;
+		this.tmxRenderers = new Map();
 
 		// create a texture cache
 		/**
@@ -2509,16 +2519,16 @@ export default class WebGPURenderer extends Renderer {
 	 * @override
 	 */
 	drawTileLayer(layer, rect) {
-		if (layer.renderMode === "shader" && layer.orientation === "orthogonal") {
+		const Class = TMX_GPU_RENDERERS[layer.orientation];
+		if (layer.renderMode === "shader" && Class !== undefined) {
 			// device-scoped, lazily (re)built: a device loss rebuilds the
 			// pipeline cache, detected via the epoch stamp
-			if (
-				this.orthogonalTMXRenderer === undefined ||
-				this.orthogonalTMXRenderer.epoch !== this.pipelineCache.epoch
-			) {
-				this.orthogonalTMXRenderer = new OrthogonalTMXLayerGPURenderer(this);
+			let tmx = this.tmxRenderers.get(layer.orientation);
+			if (tmx === undefined || tmx.epoch !== this.pipelineCache.epoch) {
+				tmx = new Class(this);
+				this.tmxRenderers.set(layer.orientation, tmx);
 			}
-			this.orthogonalTMXRenderer.draw(layer, rect);
+			tmx.draw(layer, rect);
 			return;
 		}
 		super.drawTileLayer(layer, rect);
@@ -4744,8 +4754,8 @@ export default class WebGPURenderer extends Renderer {
 		this.stubTextureView = null;
 		this.currentRenderTarget = null;
 		// tile-path lookup textures died with the device; the epoch check
-		// in drawTileLayer rebuilds the renderer lazily
-		this.orthogonalTMXRenderer = undefined;
+		// in drawTileLayer rebuilds the renderers lazily
+		this.tmxRenderers.clear();
 		this.depthTexture = null;
 		this.msaaDepthTexture = null;
 		this.msaaColorTexture = null;
@@ -4802,7 +4812,9 @@ export default class WebGPURenderer extends Renderer {
 		this.effectPassDepth = 0;
 		this.customShader = undefined;
 		// level transition: free the per-layer/per-tileset lookup textures
-		this.orthogonalTMXRenderer?.reset();
+		this.tmxRenderers.forEach((tmx) => {
+			tmx.reset();
+		});
 		super.reset();
 		// re-init batchers when recovering from a device loss, plain reset
 		// otherwise — the same split as the WebGL restore path. A reset
@@ -4867,7 +4879,7 @@ export default class WebGPURenderer extends Renderer {
 			this.pipelineCache?.clear();
 			this.captureTexture?.destroy();
 			this.captureTexture = undefined;
-			this.orthogonalTMXRenderer = undefined;
+			this.tmxRenderers.clear();
 			this._renderTargetPool?.destroy();
 			this._renderTargetPool = null;
 			this.effectUniformArena?.destroy();

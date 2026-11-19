@@ -1,0 +1,488 @@
+import { createRegion } from "../../../gpu/tmxlayer_region.js";
+import { BufferTextureResource } from "../../../texture/resource.js";
+import GLShader from "../../glshader.js";
+import tmxLayerVertex from "../../shaders/tmxlayer.vert";
+import tmxLayerCommonFragment from "../../shaders/tmxlayer-common.frag";
+
+/**
+ * additional imports for TypeScript
+ * @import { default as TMXLayer } from "../../../../level/tiled/TMXLayer.js";
+ * @import { default as WebGLRenderer } from "../../webgl_renderer.js";
+ */
+
+// Default `uTint` when the layer has no tint set. Module-scoped so the
+// fallback path doesn't allocate per frame.
+const DEFAULT_TINT = new Float32Array([1, 1, 1, 1]);
+
+/**
+ * GPU-accelerated renderer for TMX tile layers (WebGL2): what every map
+ * orientation shares. Draws the visible region of a layer as one
+ * screen-aligned quad per tileset — the fragment shader samples a per-layer
+ * GID index texture and the tileset atlas, eliminating the per-tile draw
+ * loop. The visible rect, GID range, tile size, opacity, and tint are
+ * pushed as uniforms; the index texture is uploaded once at activation
+ * and re-uploaded only when `layer.dataVersion` changes (mutations from
+ * `setTile`/`clearTile`).
+ *
+ * An orientation's renderer extends this one with the two things that
+ * differ: its part of the fragment shader (where a cell's tile is, and which
+ * cells can cover a fragment), and {@link TMXLayerGPURenderer#_region}, the
+ * part of the layer a view shows.
+ *
+ * The per-layer index texture is a `BufferTextureResource` flowing
+ * through the standard `TextureCache` / batcher path — same lane as
+ * every other texture in the engine. Dynamic unit allocation, correct
+ * `boundTextures` bookkeeping, and per-resource premultiplied-alpha /
+ * filter all come for free; nothing here pokes `gl.bindTexture` or
+ * `gl.activeTexture` directly.
+ *
+ * Cache lifecycle: one `BufferTextureResource` per `TMXLayer`. Tile
+ * layers don't come and go individually — they only churn on game reset
+ * — so the cache is freed in bulk via `reset()`, called from
+ * `WebGLRenderer.reset()` (which the `GAME_RESET` event already
+ * triggers).
+ *
+ * @ignore
+ * @internal
+ */
+export default class TMXLayerGPURenderer {
+	/**
+	 * @param {WebGLRenderer} renderer - the WebGL renderer instance
+	 * @param {string} fragment - the orientation's part of the fragment
+	 * shader, appended to the shared one
+	 */
+	constructor(renderer, fragment) {
+		this.renderer = renderer;
+		this.gl = renderer.gl;
+		// Standalone `GLShader` (not `ShaderEffect`) so we own both the
+		// vertex and the fragment source — they're paired in GLSL ES 3.00,
+		// which lets the fragment shader use `texelFetch` for byte-exact
+		// reads from the index / animation lookup textures (samplers stay
+		// `sampler2D` and decode the 8-bit channels as normalized floats;
+		// `usampler2D` would conflict with the engine's multi-texture
+		// batching cache). `setBatcher("quad", this.shader)` integrates
+		// the program with the quad batcher just like a `ShaderEffect` —
+		// only the per-fragment math gets cleaner.
+		this.shader = new GLShader(
+			renderer.gl,
+			tmxLayerVertex,
+			`${tmxLayerCommonFragment}\n${fragment}`,
+			renderer.shaderPrecision,
+		);
+		// per-layer `BufferTextureResource`. `Map` (not `WeakMap`) so we
+		// can iterate on `reset()` to walk through the global texture
+		// cache and free GL handles. The world's container holds the
+		// strong ref to each layer anyway, so this doesn't change layer
+		// lifetime.
+		this.resources = new Map();
+		// per-tileset animation-lookup resources, keyed by `TMXTileset`.
+		// Only allocated for tilesets that actually have animated tiles
+		// (`tileset.isAnimated === true`).
+		this.animLookups = new Map();
+		// pre-allocated scratch for uniform uploads — avoids per-frame
+		// allocation in the hot path
+		/**
+		 * @ignore
+		 * @internal
+		 */
+		this._v2 = new Float32Array(2);
+		/**
+		 * @ignore
+		 * @internal
+		 */
+		this._v4 = new Float32Array(4);
+		/**
+		 * the texture unit of the index texture of the layer being drawn
+		 * @ignore
+		 * @internal
+		 */
+		this._indexUnit = 0;
+		/**
+		 * what {@link TMXLayerGPURenderer#_region} fills: the quad to draw,
+		 * in the layer's pixels, and what the shader needs to find a
+		 * fragment's place in the layer from its place in the quad
+		 * @ignore
+		 * @internal
+		 */
+		this._regionScratch = createRegion();
+	}
+
+	/**
+	 * The part of a layer a view shows, for the tiles of one tileset: the
+	 * quad to draw (`x`, `y`, `width`, `height`, in the layer's pixels), the
+	 * shader's `uVisibleStart` and `uVisibleSize` (the quad's corner and
+	 * size, in the units its fragment shader works in) and `uOverflow`.
+	 * @param {TMXLayer} layer - the layer
+	 * @param {object} rect - the visible viewport rect (world coords)
+	 * @param {object} tileset - the tileset whose tiles are drawn
+	 * @param {object} out - the region to fill
+	 * @returns {boolean} false when the view shows nothing of the layer
+	 * @abstract
+	 * @ignore
+	 * @internal
+	 */
+	// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+	_region(layer, rect, tileset, out) {
+		return false;
+	}
+
+	/**
+	 * The tilesets a layer is drawn with, one pass each.
+	 * @param {TMXLayer} layer - the layer
+	 * @returns {object[]} the tilesets
+	 * @ignore
+	 * @internal
+	 */
+	_tilesetsOf(layer) {
+		return layer.tilesets.tilesets;
+	}
+
+	/**
+	 * Free every cached per-layer index texture and empty the local
+	 * resource map. Called from `WebGLRenderer.reset()` (which
+	 * `GAME_RESET` triggers) so each level transition starts clean.
+	 * @ignore
+	 * @internal
+	 */
+	reset() {
+		// Uploads happen via the quad batcher (see `_drawLayer`), so pin
+		// the cleanup to that same batcher rather than whatever happens
+		// to be `currentBatcher` at reset time. `currentBatcher` may
+		// legitimately be a `PrimitiveBatcher` (e.g. debug-plugin drew
+		// its quadtree overlay on the previous frame) which has no
+		// `deleteTexture2D` and would crash the reset. Issue #1471.
+		const batcher = this.renderer.batchers.get("quad");
+		const cache = this.renderer.cache;
+		const drop = (resource) => {
+			// route through the batcher so its `boundTextures` bookkeeping
+			// stays in sync. When no batcher is available (context tear-
+			// down) or the registered "quad" batcher is a user-supplied
+			// custom class that doesn't extend `MaterialBatcher`, we
+			// don't have a clean GL deletion path — still need to free
+			// the unit assignment, since `cache.delete()` only touches
+			// the image→atlas map and would leave the unit slot held
+			// forever otherwise.
+			if (typeof batcher?.deleteTexture2D === "function") {
+				batcher.deleteTexture2D(resource);
+			} else {
+				cache.freeTextureUnit(resource);
+				cache.delete(resource);
+			}
+		};
+		for (const resource of this.resources.values()) {
+			drop(resource);
+		}
+		for (const entry of this.animLookups.values()) {
+			drop(entry.resource);
+		}
+		this.resources.clear();
+		this.animLookups.clear();
+	}
+
+	/**
+	 * Write a `vec2` uniform without allocating a fresh Float32Array per
+	 * call. Both components flow into the shared `_v2` scratch buffer,
+	 * which `setUniform` reads synchronously and forwards to
+	 * `gl.uniform2fv` — so reusing the buffer across calls is safe.
+	 * @param {string} name
+	 * @param {number} x
+	 * @param {number} y
+	 * @private
+	 * @ignore
+	 * @internal
+	 */
+	_setV2(name, x, y) {
+		this._v2[0] = x;
+		this._v2[1] = y;
+		this.shader.setUniform(name, this._v2);
+	}
+
+	/**
+	 * `vec4` counterpart to {@link _setV2}.
+	 * @param {string} name
+	 * @param {number} x
+	 * @param {number} y
+	 * @param {number} z
+	 * @param {number} w
+	 * @private
+	 * @ignore
+	 * @internal
+	 */
+	_setV4(name, x, y, z, w) {
+		this._v4[0] = x;
+		this._v4[1] = y;
+		this._v4[2] = z;
+		this._v4[3] = w;
+		this.shader.setUniform(name, this._v4);
+	}
+
+	/**
+	 * Get-or-create the per-tileset animation-lookup entry. Returns
+	 * `undefined` for tilesets that have no animated tiles (the shader's
+	 * `uAnimEnabled` uniform is then set to 0 and the lookup texture is
+	 * not bound).
+	 *
+	 * The entry holds a `tileCount × 1` RGBA8 `BufferTextureResource`
+	 * where texel `localId` encodes the CURRENT frame's local id as
+	 * `R = lo byte, G = hi byte` (same encoding as the GID index
+	 * texture). Each call walks `tileset.animations` and rewrites
+	 * dirty texels — `tileset.update(dt)` (driven by the layer) advances
+	 * `anim.cur.tileid` independently of this renderer.
+	 *
+	 * @param {object} tileset
+	 * @param {number} tileCount - tiles in the tileset's atlas grid
+	 *   (`atlasCols * atlasRows`)
+	 * @returns {{resource: BufferTextureResource, data: Uint8Array,
+	 *   tileCount: number, dirty: boolean}|undefined}
+	 * @ignore
+	 * @internal
+	 */
+	_getOrUpdateAnimLookup(tileset, tileCount) {
+		if (!tileset.isAnimated || tileset.animations.size === 0) {
+			return undefined;
+		}
+		let entry = this.animLookups.get(tileset);
+		if (entry === undefined) {
+			// allocate the lookup texture and initialize it to identity
+			// (localId → localId); animated entries get overwritten below
+			const data = new Uint8Array(tileCount * 4);
+			for (let id = 0; id < tileCount; id++) {
+				data[id * 4 + 0] = id & 0xff;
+				data[id * 4 + 1] = (id >> 8) & 0xff;
+			}
+			const resource = new BufferTextureResource(data, {
+				width: tileCount,
+				height: 1,
+				premultipliedAlpha: false,
+				repeat: "no-repeat",
+				// NEAREST so the shader's `texelFetch` reads byte-exact
+				// channel values back as normalized floats
+				filter: this.gl.NEAREST,
+				format: "rgba8",
+			});
+			// new entry → first upload happens unconditionally via the
+			// batcher's `boundTextures[unit] === undefined` path
+			entry = { resource, data, tileCount, dirty: false };
+			this.animLookups.set(tileset, entry);
+		}
+		// walk animations and rewrite the current-frame ids. The dirty
+		// flag flips true only when at least one texel actually changed
+		// — the batcher then force-reuploads on the next bind, otherwise
+		// reuses the existing GL texture untouched.
+		const data = entry.data;
+		for (const [localId, anim] of tileset.animations) {
+			const off = localId * 4;
+			const cur = anim.cur.tileid;
+			const lo = cur & 0xff;
+			const hi = (cur >> 8) & 0xff;
+			if (data[off] !== lo || data[off + 1] !== hi) {
+				data[off] = lo;
+				data[off + 1] = hi;
+				entry.dirty = true;
+			}
+		}
+		return entry;
+	}
+
+	/**
+	 * Get-or-create the per-layer index `BufferTextureResource`.
+	 * @param {TMXLayer} layer
+	 * @returns {BufferTextureResource}
+	 * @ignore
+	 * @internal
+	 */
+	_getResource(layer) {
+		let resource = this.resources.get(layer);
+		if (resource === undefined) {
+			// reinterpret the layer's `Uint16Array` payload as RGBA bytes
+			// (zero-copy on every little-endian platform = every browser)
+			resource = new BufferTextureResource(
+				new Uint8Array(layer.layerData.buffer),
+				{
+					width: layer.cols,
+					height: layer.rows,
+					// raw GID bytes — must NOT have alpha pre-multiplied
+					// into RGB, otherwise A=0 cells wipe their R/G/B
+					premultipliedAlpha: false,
+					repeat: "no-repeat",
+					// NEAREST so `texelFetch` returns the original byte
+					// values (as normalized floats) for the GID/flip
+					// decode below
+					filter: this.gl.NEAREST,
+					format: "rgba8",
+				},
+			);
+			// track the last-uploaded version so we know when to force a
+			// re-upload after `setTile` / `clearTile` mutations
+			resource._uploadedVersion = -1;
+			this.resources.set(layer, resource);
+		}
+		return resource;
+	}
+
+	/**
+	 * Bind the layer's shader and what all its tilesets share: called for
+	 * the first tileset the view shows something of.
+	 * @param {TMXLayer} layer - the layer
+	 * @returns {object} the quad batcher, on this renderer's shader
+	 * @ignore
+	 * @internal
+	 */
+	_begin(layer) {
+		const renderer = this.renderer;
+		const cols = layer.cols;
+		const rows = layer.rows;
+
+		// switch the quad batcher to our custom shader. This flushes any
+		// queued sprite vertices first so they render under their original
+		// shader, then re-binds for our pass.
+		const batcher = renderer.setBatcher("quad", this.shader);
+
+		// upload (or rebind) the index texture through the standard cache
+		// path: dynamic unit allocation, correct `boundTextures` tracking,
+		// per-resource premultiply / filter applied automatically
+		const resource = this._getResource(layer);
+		this._indexUnit = batcher.uploadTexture(
+			resource,
+			cols,
+			rows,
+			resource._uploadedVersion !== layer.dataVersion,
+		);
+		resource._uploadedVersion = layer.dataVersion;
+
+		this.shader.setUniform("uTileIndex", this._indexUnit);
+		this._setV2("uMapSize", cols, rows);
+		this._setV2("uCellSize", layer.tilewidth, layer.tileheight);
+		// the layer's opacity, and the fade of everything it is drawn in:
+		// set on the renderer by the layer's preDraw
+		this.shader.setUniform("uOpacity", renderer.getGlobalAlpha());
+		this.shader.setUniform(
+			"uTint",
+			layer.tint ? layer.tint.toArray() : DEFAULT_TINT,
+		);
+		return batcher;
+	}
+
+	/**
+	 * Draw a TMX layer through the shader path.
+	 * @param {TMXLayer} layer
+	 * @param {object} rect - the visible viewport rect (world coords)
+	 */
+	draw(layer, rect) {
+		const region = this._regionScratch;
+		let batcher;
+
+		// one pass per tileset — the shader's uGidRange uniform + discard
+		// hides cells outside the active tileset's GID range
+		const tilesets = this._tilesetsOf(layer);
+		for (let i = 0; i < tilesets.length; i++) {
+			const tileset = tilesets[i];
+			// skip collection-of-image tilesets (caller's eligibility check
+			// should have downgraded these layers to the legacy path, but
+			// guard defensively — we can't compute uTilesetCols for them)
+			if (tileset.isCollection || tileset.image === undefined) {
+				continue;
+			}
+			// the view shows nothing of this tileset's tiles
+			if (!this._region(layer, rect, tileset, region)) {
+				continue;
+			}
+			batcher ??= this._begin(layer);
+			const indexUnit = this._indexUnit;
+
+			const tsW = tileset.tilewidth;
+			const tsH = tileset.tileheight;
+			const margin = tileset.margin;
+			const spacing = tileset.spacing;
+			const atlasW = tileset.image.width;
+			const atlasH = tileset.image.height;
+
+			// atlas geometry (margin + spacing) — number of tiles per row/col
+			// in the atlas image
+			const atlasCols = Math.max(
+				1,
+				Math.floor((atlasW - margin * 2 + spacing) / (tsW + spacing)),
+			);
+			const atlasRows = Math.max(
+				1,
+				Math.floor((atlasH - margin * 2 + spacing) / (tsH + spacing)),
+			);
+
+			// per-tileset animation lookup. Only allocated/bound for
+			// tilesets that actually have animated tiles — static tilesets
+			// pay neither a texture-unit nor an upload.
+			const tileCount = atlasCols * atlasRows;
+			const animEntry = this._getOrUpdateAnimLookup(tileset, tileCount);
+			if (animEntry !== undefined) {
+				const animUnit = batcher.uploadTexture(
+					animEntry.resource,
+					animEntry.tileCount,
+					1,
+					animEntry.dirty,
+				);
+				animEntry.dirty = false;
+				this.shader.setUniform("uAnimLookup", animUnit);
+				this.shader.setUniform("uAnimSize", animEntry.tileCount);
+			} else {
+				// shader skips the animation lookup when uAnimSize == 0,
+				// but every declared sampler must still point at a valid
+				// unit — reuse the index unit so WebGL's draw-time
+				// validation is happy (the sampler is never read because
+				// of the uAnimSize guard)
+				this.shader.setUniform("uAnimLookup", indexUnit);
+				this.shader.setUniform("uAnimSize", 0);
+			}
+
+			this._setV2("uTileSize", tsW, tsH);
+			this._setV2("uTilesetCols", atlasCols, atlasRows);
+			this._setV2("uInvTilesetSize", 1 / atlasW, 1 / atlasH);
+			this._setV4("uTilesetMargin", margin, margin, spacing, spacing);
+			this._setV2("uVisibleStart", region.startX, region.startY);
+			this._setV2("uVisibleSize", region.sizeX, region.sizeY);
+			this._setV2("uOverflow", region.overflowX, region.overflowY);
+			this._setV2("uGidRange", tileset.firstgid, tileset.lastgid);
+			// the tileset samples its mipmaps when the batcher binds it a
+			// mip sampler: the "linear-mipmap" filter, on a linear texture
+			const filter =
+				typeof tileset.texture.filter !== "undefined"
+					? tileset.texture.filter
+					: batcher.renderer._glTextureFilter();
+			this.shader.setUniform(
+				"uMipmaps",
+				(filter === this.gl.LINEAR || filter === "linear") &&
+					batcher.renderer.wantsMipmaps(tileset.texture)
+					? 1
+					: 0,
+			);
+
+			// emit one screen-quad. The batcher will bind the tileset's
+			// TextureAtlas to uSampler (single-texture fallback path is
+			// active because we have a custom ShaderEffect).
+			// on whole pixels unless `subPixel` is set, as a sprite is: the
+			// tiles move with the quad (see Renderer#_pixelSnapBegin)
+			const snapped = batcher.renderer._pixelSnapBegin(
+				region.x,
+				region.y,
+				region.width,
+				region.height,
+			);
+			batcher.addQuad(
+				tileset.texture,
+				region.x,
+				region.y,
+				region.width,
+				region.height,
+				0,
+				0,
+				1,
+				1,
+				0xffffffff,
+			);
+			batcher.renderer._pixelSnapEnd(snapped);
+
+			// flush per-pass so each tileset's draw call uses its own
+			// uniforms (uGidRange / uTileSize / uTilesetCols differ)
+			batcher.flush();
+		}
+	}
+}
