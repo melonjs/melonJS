@@ -1,7 +1,14 @@
 import VertexArrayBuffer from "../../../buffer/vertex.js";
 import { transformQuadCorners } from "../../../gpu/quadcorners.ts";
-import { createRegion } from "../../../gpu/tmxlayer_region.js";
+import {
+	atlasColumns,
+	atlasRows,
+	createRegion,
+	TMX_ORIENTATIONS,
+} from "../../../gpu/tmxlayer_orientation.js";
 import tmxLayerCommonWGSL from "../../shaders/tmxlayer-common.wgsl";
+import isometricWGSL from "../../shaders/tmxlayer-isometric.wgsl";
+import orthogonalWGSL from "../../shaders/tmxlayer-orthogonal.wgsl";
 
 /**
  * additional imports for TypeScript
@@ -18,6 +25,12 @@ import tmxLayerCommonWGSL from "../../shaders/tmxlayer-common.wgsl";
  * @internal
  */
 const TMX_UNIFORM_SIZE = 128;
+
+// each orientation's part of the shader module, appended to the shared one
+const ORIENTATION_WGSL = {
+	orthogonal: orthogonalWGSL,
+	isometric: isometricWGSL,
+};
 
 /**
  * GPU-accelerated renderer for TMX tile layers on the WebGPU backend, the
@@ -49,11 +62,25 @@ const TMX_UNIFORM_SIZE = 128;
 export default class TMXLayerGPURenderer {
 	/**
 	 * @param {WebGPURenderer} renderer - the WebGPU renderer instance
-	 * @param {string} wgsl - the orientation's part of the shader module,
-	 * appended to the shared one
+	 * @param {string} orientation - the map orientation to draw, one of
+	 * `TMX_ORIENTATIONS`
 	 */
-	constructor(renderer, wgsl) {
+	constructor(renderer, orientation) {
 		this.renderer = renderer;
+		/**
+		 * what differs with the map's orientation (see
+		 * `gpu/tmxlayer_orientation.js`)
+		 * @ignore
+		 * @internal
+		 */
+		this.orientation = TMX_ORIENTATIONS[orientation];
+		// the bounds of the shader's loops, declared ahead of its own part
+		const limits = Object.entries(this.orientation.limits)
+			.map(([name, value]) => {
+				return `const ${name} : i32 = ${value};`;
+			})
+			.join("\n");
+		const wgsl = `${limits}\n${ORIENTATION_WGSL[orientation]}`;
 		const cache = renderer.pipelineCache;
 
 		// group-3 shape: the uniform block + the two lookup textures
@@ -109,40 +136,17 @@ export default class TMXLayerGPURenderer {
 		 */
 		this.vertexScratch = undefined;
 		/**
-		 * what {@link TMXLayerGPURenderer#region} fills
+		 * what the orientation's `region` fills
 		 * @ignore
 		 * @internal
 		 */
 		this.regionScratch = createRegion();
-	}
-
-	/**
-	 * The part of a layer a view shows, for the tiles of one tileset (see
-	 * `gpu/tmxlayer_region.js`). The quad it gives must be the same for
-	 * every tileset of a layer: it is written once, for the first one.
-	 * @param {TMXLayer} layer - the layer
-	 * @param {object} rect - the visible viewport rect (world coords)
-	 * @param {object} tileset - the tileset whose tiles are drawn
-	 * @param {object} out - the region to fill
-	 * @returns {boolean} false when the view shows nothing of the layer
-	 * @abstract
-	 * @ignore
-	 * @internal
-	 */
-	// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
-	region(layer, rect, tileset, out) {
-		return false;
-	}
-
-	/**
-	 * The tilesets a layer is drawn with, one pass each.
-	 * @param {TMXLayer} layer - the layer
-	 * @returns {object[]} the tilesets
-	 * @ignore
-	 * @internal
-	 */
-	tilesetsOf(layer) {
-		return layer.tilesets.tilesets;
+		/**
+		 * what the orientation's `tilesetsOf` fills, when it needs to
+		 * @ignore
+		 * @internal
+		 */
+		this.tilesetsScratch = [];
 	}
 
 	/**
@@ -395,7 +399,7 @@ export default class TMXLayerGPURenderer {
 		let begun;
 
 		// one pass per tileset — the GID-range guard hides other tilesets
-		const tilesets = this.tilesetsOf(layer);
+		const tilesets = this.orientation.tilesetsOf(layer, this.tilesetsScratch);
 		for (let i = 0; i < tilesets.length; i++) {
 			const tileset = tilesets[i];
 			// eligibility should have excluded these — guard defensively
@@ -403,7 +407,7 @@ export default class TMXLayerGPURenderer {
 				continue;
 			}
 			// the view shows nothing of this tileset's tiles
-			if (!this.region(layer, rect, tileset, region)) {
+			if (!this.orientation.region(layer, rect, tileset, region)) {
 				continue;
 			}
 			begun ??= this.begin(layer, region);
@@ -415,18 +419,12 @@ export default class TMXLayerGPURenderer {
 			const spacing = tileset.spacing;
 			const atlasW = tileset.image.width;
 			const atlasH = tileset.image.height;
-			const atlasCols = Math.max(
-				1,
-				Math.floor((atlasW - margin * 2 + spacing) / (tsW + spacing)),
-			);
-			const atlasRows = Math.max(
-				1,
-				Math.floor((atlasH - margin * 2 + spacing) / (tsH + spacing)),
-			);
+			const atlasCols = atlasColumns(tileset);
+			const atlasRowCount = atlasRows(tileset);
 
 			const animEntry = this.getOrUpdateAnimLookup(
 				tileset,
-				atlasCols * atlasRows,
+				atlasCols * atlasRowCount,
 			);
 			// every declared binding needs a view — reuse the index texture
 			// as the filler (never read: uAnimSize stays 0)
@@ -438,7 +436,7 @@ export default class TMXLayerGPURenderer {
 			scratch[6] = region.overflowX;
 			scratch[7] = region.overflowY;
 			scratch[8] = atlasCols;
-			scratch[9] = atlasRows;
+			scratch[9] = atlasRowCount;
 			scratch[10] = 1 / atlasW;
 			scratch[11] = 1 / atlasH;
 			scratch[12] = margin;

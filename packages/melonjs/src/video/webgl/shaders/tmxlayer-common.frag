@@ -1,4 +1,11 @@
 #version 300 es
+// Full precision, whatever the application asked for its other shaders
+// (`highPrecisionShader`): a fragment's position is in pixels of the map,
+// and a gid has 16 bits, which the 16 bits a phone can give a `mediump`
+// value do not hold past a small map. The engine's `setPrecision` step
+// leaves a shader that declares its own alone.
+precision highp float;
+precision highp int;
 
 // Fragment shader for the TMX layer GPU renderers (WebGL2 / GLSL ES 3.00):
 // the part every map orientation shares. An orientation's own file follows
@@ -38,12 +45,6 @@
 // it bypasses interpolation, so the integer byte values come out
 // unmolested even on a normalized-float sampler.
 
-// The engine's `setPrecision` step injects precision declarations for
-// float and int after the `#version` line, using whatever precision the
-// renderer was configured with (`highPrecisionShader` setting on the
-// Application). Individual shader files don't hardcode precision so the
-// engine-wide preference applies.
-
 in vec2 vRegion;
 in vec4 vColor;
 
@@ -72,21 +73,52 @@ out vec4 fragColor;
 // image, in the same pixels as `worldPx`. Defined per orientation.
 vec2 tileOrigin(int cx, int cy);
 
+// What sampling the atlas needs of a fragment, the same for every cell
+// tried for it: taken once, in `main`, where control flow is still uniform.
+//
+// `gradX` / `gradY` are the atlas coordinate's screen derivatives. The atlas
+// coordinate itself jumps from one tile to the next, so its own derivatives
+// would pick a tiny mip level along every tile edge; a texel of the atlas is
+// a world pixel, so the world's derivatives are the atlas's.
+//
+// `inset` keeps a sample half a texel of the level it reads inside its tile,
+// so filtering never blends in the next tile of the tileset, or the spacing
+// around it, along the tile's edge: a seam between two tiles (never past the
+// tile's centre). Without mipmaps that level is the full-size art; under
+// them, the deepest level read is the next one up once the level is past a
+// whole number, by more than a rounding error: drawn at its size, the
+// derivatives are 1 give or take a few ulps, and level 0 it is. Sampled
+// nearest, the sample stays in the same texel
+struct Footprint {
+	vec2 gradX;
+	vec2 gradY;
+	vec2 inset;
+};
+
+Footprint footprint(vec2 worldPx) {
+	vec2 dWorldX = dFdx(worldPx);
+	vec2 dWorldY = dFdy(worldPx);
+	float lod = ceil(log2(max(max(length(dWorldX), length(dWorldY)), 1.0)) - 0.01);
+	vec2 inset = min(vec2(0.5 * exp2(lod * uMipmaps)), uTileSize * 0.5);
+	return Footprint(dWorldX * uInvTilesetSize, dWorldY * uInvTilesetSize, inset);
+}
+
 // Try to render the tile at cell (cx, cy) for the current fragment.
 // Returns true and writes the sampled color to `outColor` when the cell
 // contains a visible, in-range tile whose pixel covers this fragment.
 // Identical logic for both fast and slow paths — GLSL inlines this
 // trivially so there's no function-call overhead at runtime.
-//
-// `dWorldX` / `dWorldY` are the world position's screen derivatives, taken
-// in `main` where control flow is still uniform: the atlas coordinate jumps
-// from one tile to the next, so its own derivatives would pick a tiny mip
-// level along every tile edge. A texel of the atlas is a world pixel, so
-// the world's derivatives are the atlas's.
-bool tryRenderCell(int cx, int cy, vec2 worldPx, vec2 dWorldX, vec2 dWorldY, out vec4 outColor) {
+bool tryRenderCell(int cx, int cy, vec2 worldPx, Footprint fp, out vec4 outColor) {
 	int mapW = int(uMapSize.x);
 	int mapH = int(uMapSize.y);
 	if (cx < 0 || cx >= mapW || cy < 0 || cy >= mapH) {
+		return false;
+	}
+
+	// the cell's tile does not reach the fragment: known before anything
+	// is fetched
+	vec2 inTile = (worldPx - tileOrigin(cx, cy)) / uTileSize;
+	if (inTile.x < 0.0 || inTile.x >= 1.0 || inTile.y < 0.0 || inTile.y >= 1.0) {
 		return false;
 	}
 
@@ -97,11 +129,6 @@ bool tryRenderCell(int cx, int cy, vec2 worldPx, vec2 dWorldX, vec2 dWorldY, out
 	int firstGid = int(uGidRange.x);
 	int gid = int(cell.r) | (int(cell.g) << 8);
 	if (gid < firstGid || gid > int(uGidRange.y)) {
-		return false;
-	}
-
-	vec2 inTile = (worldPx - tileOrigin(cx, cy)) / uTileSize;
-	if (inTile.x < 0.0 || inTile.x >= 1.0 || inTile.y < 0.0 || inTile.y >= 1.0) {
 		return false;
 	}
 
@@ -129,30 +156,16 @@ bool tryRenderCell(int cx, int cy, vec2 worldPx, vec2 dWorldX, vec2 dWorldY, out
 		localId = int(animTexel.r) | (int(animTexel.g) << 8);
 	}
 
-	float row = floor(float(localId) / uTilesetCols.x);
-	float col = float(localId) - row * uTilesetCols.x;
+	// the tile's place in the atlas, in whole numbers: a float division
+	// may land a hair under the row it should
+	int cols = int(uTilesetCols.x);
+	int row = localId / cols;
 	vec2 tileOriginPx = uTilesetMargin.xy
-		+ vec2(col, row) * (uTileSize + uTilesetMargin.zw);
+		+ vec2(float(localId - row * cols), float(row)) * (uTileSize + uTilesetMargin.zw);
 	vec2 texelPx = tileOriginPx + inTile * uTileSize;
-	// keep the sample half a texel of the level it reads inside the tile,
-	// so filtering never blends in the next tile of the tileset, or the
-	// spacing around it, along the tile's edge: a seam between two tiles
-	// (never past the tile's centre). Without mipmaps that level is the
-	// full-size art; under them, the deepest level read is the next one up
-	// once the level is past a whole number, by more than a rounding error:
-	// drawn at its size, the derivatives are 1 give or take a few ulps, and
-	// level 0 it is. Sampled nearest, the sample stays in the same texel
-	float lod = ceil(log2(max(max(length(dWorldX), length(dWorldY)), 1.0)) - 0.01);
-	vec2 inset = min(vec2(0.5 * exp2(lod * uMipmaps)), uTileSize * 0.5);
-	texelPx = clamp(texelPx, tileOriginPx + inset, tileOriginPx + uTileSize - inset);
-	vec2 texelUV = texelPx * uInvTilesetSize;
+	texelPx = clamp(texelPx, tileOriginPx + fp.inset, tileOriginPx + uTileSize - fp.inset);
 
-	vec4 sampled = textureGrad(
-		uSampler,
-		texelUV,
-		dWorldX * uInvTilesetSize,
-		dWorldY * uInvTilesetSize
-	);
+	vec4 sampled = textureGrad(uSampler, texelPx * uInvTilesetSize, fp.gradX, fp.gradY);
 	if (sampled.a <= 0.0) {
 		return false;
 	}
@@ -161,8 +174,8 @@ bool tryRenderCell(int cx, int cy, vec2 worldPx, vec2 dWorldX, vec2 dWorldY, out
 }
 
 // A fragment is opaque from this alpha on: nothing behind it would change a
-// channel by a whole step of 8 bits
-const float OPAQUE = 0.996;
+// channel by half a step of 8 bits
+const float OPAQUE = 0.998;
 
 // Put a texel behind what a fragment has so far, both premultiplied: what
 // drawing the tiles back to front, each over the last, comes to, taken from

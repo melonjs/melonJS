@@ -5,6 +5,7 @@ import { boundsPool } from "../../physics/bounds.ts";
 import Renderable from "../../renderable/renderable.js";
 import CanvasRenderer from "../../video/canvas/canvas_renderer";
 import { createCanvas } from "../../video/canvas_factory.js";
+import { TMX_ORIENTATIONS } from "../../video/gpu/tmxlayer_orientation.js";
 import {
 	TMX_CLEAR_BIT_MASK,
 	TMX_FLIP_AD,
@@ -26,10 +27,14 @@ const FLIP_H_BIT = 1 << 0;
 const FLIP_V_BIT = 1 << 1;
 const FLIP_AD_BIT = 1 << 2;
 
-// The largest tiles the isometric shader path draws, in grid cells: the
-// bounds of the loops in `isometric-tmxlayer.frag` and its WGSL twin.
-const ISOMETRIC_MAX_TILE_WIDTHS = 4;
-const ISOMETRIC_MAX_TILE_HEIGHTS = 8;
+// The largest tiles the shader path draws: the bounds of the loops of the
+// fragment shaders, which are declared from the same numbers. An orthogonal
+// tile can reach so many cells past its own; an isometric one be so many
+// grid cells wide and tall.
+const ORTHOGONAL_MAX_OVERFLOW = TMX_ORIENTATIONS.orthogonal.limits.MAX_OVERFLOW;
+const ISOMETRIC_MAX_TILE_WIDTHS = TMX_ORIENTATIONS.isometric.limits.MAX_COLS;
+const ISOMETRIC_MAX_TILE_HEIGHTS =
+	TMX_ORIENTATIONS.isometric.limits.MAX_ROWS / 2;
 const ISOMETRIC_ONE_TILESET =
 	"tiles of more than one tileset in an isometric layer";
 // A diagonal flip turns a tile a quarter: one that is not square then covers
@@ -229,6 +234,14 @@ export default class TMXLayer extends Renderable {
 		 * @ignore
 		 */
 		this.maxTileOffset = { x: 0, y: 0 };
+		/**
+		 * The one tileset an isometric layer on the shader path draws with:
+		 * `undefined` for an empty layer (it takes the tileset of the first
+		 * tile set), `null` for a layer that path cannot draw, or that was
+		 * not checked for it.
+		 * @ignore
+		 */
+		this._shaderTileset = null;
 		for (let i = 0; i < this.tilesets.length; i++) {
 			const tileset = this.tilesets.getTilesetByIndex(i);
 			this.maxTileOffset.x = Math.max(
@@ -385,7 +398,7 @@ export default class TMXLayer extends Renderable {
 
 		/**
 		 * How this layer is rendered. Resolved by `onActivateEvent` to one of:
-		 *   - `"shader"`   — WebGL2 procedural shader path (single quad per tileset, fragment GID lookup)
+		 *   - `"shader"`   — GPU procedural shader path, on WebGL 2 and WebGPU, for orthogonal and isometric maps (single quad per tileset, fragment GID lookup)
 		 *   - `"prerender"`— offscreen-canvas bake at activation, blitted as one drawImage per frame
 		 *   - `"perTile"`  — per-frame loop, one drawImage per visible tile
 		 *
@@ -722,7 +735,7 @@ export default class TMXLayer extends Renderable {
 		// support oversized tiles (tile dim > cell dim) drawn bottom-aligned.
 		// Loop bound is MAX_OVERFLOW + 1; anything beyond would silently clip,
 		// so refuse the shader path for layers with extreme oversampling.
-		const MAX_OVERFLOW_CELLS = 4;
+		const MAX_OVERFLOW_CELLS = ORTHOGONAL_MAX_OVERFLOW;
 		for (const ts of this.tilesets.tilesets) {
 			if (ts.isCollection) {
 				return { ok: false, reason: "collection-of-image tileset" };
@@ -795,11 +808,22 @@ export default class TMXLayer extends Renderable {
 	 * @internal
 	 */
 	_checkIsometricShaderEligibility() {
-		/**
-		 * the one tileset an isometric layer on the shader path draws with
-		 * @ignore
-		 */
-		this._shaderTileset = undefined;
+		this._shaderTileset = null;
+		// Half the tiles of a grid of odd size stand half a pixel off. Tile
+		// by tile, each is moved to a whole pixel; the shader has one quad
+		// for all of them, and would draw those a pixel away.
+		if (this.tilewidth % 2 !== 0 || this.tileheight % 2 !== 0) {
+			return { ok: false, reason: "an isometric grid of odd size" };
+		}
+		// Tiles overlap, and the shader draws the layer flat, then blends it
+		// as one picture: where tile by tile each tile is blended over the
+		// ones behind it, which shows with every mode but the normal one.
+		if (this.blendMode !== "normal") {
+			return {
+				ok: false,
+				reason: `blend mode "${this.blendMode}" on an isometric layer`,
+			};
+		}
 		const data = this.layerData;
 		let tileset = null;
 		for (let i = 0; i < data.length; i += 2) {
@@ -811,17 +835,17 @@ export default class TMXLayer extends Renderable {
 				tileset = this.tilesets.getTilesetByGid(gid);
 			}
 		}
-		// an empty layer: its tileset is the first one a tile is set from
 		if (tileset !== null) {
 			const reason = this._isometricTilesetReason(tileset);
 			if (reason !== undefined) {
 				return { ok: false, reason };
 			}
-			this._shaderTileset = tileset;
 		}
 		if (this._hasDiagonalFlipNotSquare()) {
 			return { ok: false, reason: DIAGONAL_NOT_SQUARE };
 		}
+		// an empty layer: its tileset is the first one a tile is set from
+		this._shaderTileset = tileset ?? undefined;
 		return { ok: true };
 	}
 
@@ -869,7 +893,7 @@ export default class TMXLayer extends Renderable {
 			this.orientation === "isometric" &&
 			this._shaderTileset?.contains(gid) !== true
 		) {
-			if (this._shaderTileset !== undefined) {
+			if (this._shaderTileset) {
 				reason = ISOMETRIC_ONE_TILESET;
 			} else {
 				// an empty layer takes its tileset from its first tile
@@ -891,6 +915,7 @@ export default class TMXLayer extends Renderable {
 				`melonJS: layer "${this.name}" back to the legacy tile renderer (${reason})`,
 			);
 			this.renderMode = "perTile";
+			this._shaderTileset = null;
 		}
 	}
 

@@ -15,7 +15,9 @@
 // ones before it until the fragment is opaque. `uOverflow` is how many
 // cells a tile reaches past its own, across and up.
 
-const int MAX_OVERFLOW = 4;
+// `MAX_OVERFLOW`, the bound of both loops, is declared ahead of this file
+// (see `TMX_ORIENTATIONS` in `gpu/tmxlayer_orientation.js`): a layer whose
+// tiles reach further is left to the CPU renderer.
 
 // a tile is bottom-aligned on its cell, and left-aligned
 vec2 tileOrigin(int cx, int cy) {
@@ -29,8 +31,7 @@ void main(void) {
 	vec2 tileCoord = uVisibleStart + vRegion * uVisibleSize;
 	vec2 geomCell = floor(tileCoord);
 	vec2 worldPx = tileCoord * uCellSize;
-	vec2 dWorldX = dFdx(worldPx);
-	vec2 dWorldY = dFdy(worldPx);
+	Footprint fp = footprint(worldPx);
 
 	int gx = int(geomCell.x);
 	int gy = int(geomCell.y);
@@ -42,7 +43,7 @@ void main(void) {
 	// Fast path: tiles fit the cell exactly (the common case) — only the
 	// geometric cell can contain this fragment's tile.
 	if (overflowX == 0 && overflowY == 0) {
-		if (!tryRenderCell(gx, gy, worldPx, dWorldX, dWorldY, result)) {
+		if (!tryRenderCell(gx, gy, worldPx, fp, result)) {
 			discard;
 		}
 		fragColor = layerColor(result);
@@ -59,7 +60,7 @@ void main(void) {
 		if (dy > overflowY) continue;
 		for (int dx = 0; dx <= MAX_OVERFLOW; dx++) {
 			if (dx > overflowX) break;
-			if (tryRenderCell(gx - dx, gy + dy, worldPx, dWorldX, dWorldY, texel)) {
+			if (tryRenderCell(gx - dx, gy + dy, worldPx, fp, texel)) {
 				if (under(result, texel)) {
 					opaque = true;
 					break;

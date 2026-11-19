@@ -25,6 +25,7 @@ import BlendEffect from "../effects/blendEffect.js";
 import { meshHostingBlocker } from "../effects/mesh_splice.js";
 import RadialGradientEffect from "../effects/radialGradient.js";
 import { frameClampMode } from "../gpu/frame.js";
+import { TMX_ORIENTATIONS } from "../gpu/tmxlayer_orientation.js";
 import { Gradient } from "../gradient.js";
 import Renderer from "../renderer.js";
 import RenderTargetPool from "../rendertarget/render_target_pool.js";
@@ -54,8 +55,7 @@ import WebGPUBufferArena from "./buffer/arena.js";
 import WebGPUUniformRing from "./buffer/uniformring.js";
 import { buildEffectGPU } from "./effect_binding.js";
 import WebGPUPipelineCache, { DEPTH_STENCIL_FORMAT } from "./pipeline/cache.js";
-import IsometricTMXLayerGPURenderer from "./renderers/tmxlayer/isometric.js";
-import OrthogonalTMXLayerGPURenderer from "./renderers/tmxlayer/orthogonal.js";
+import TMXLayerGPURenderer from "./renderers/tmxlayer/tmxlayer.js";
 import { COMPRESSION_FEATURES } from "./texture/compressed.js";
 import { WebGPUFrameTexture } from "./texture/frametexture.js";
 import WebGPUTextureStore from "./texture/store.js";
@@ -104,15 +104,6 @@ export function resolveDepthOps(meshDepthActive, pendingDepthClear) {
 		depthStoreOp: "store",
 	};
 }
-
-/**
- * the GPU tile layer renderer of each map orientation that has one
- * @ignore
- */
-const TMX_GPU_RENDERERS = {
-	orthogonal: OrthogonalTMXLayerGPURenderer,
-	isometric: IsometricTMXLayerGPURenderer,
-};
 
 /**
  * The **experimental** WebGPU renderer.
@@ -2519,13 +2510,17 @@ export default class WebGPURenderer extends Renderer {
 	 * @override
 	 */
 	drawTileLayer(layer, rect) {
-		const Class = TMX_GPU_RENDERERS[layer.orientation];
-		if (layer.renderMode === "shader" && Class !== undefined) {
+		// a layer asked for this path after it was found unfit for it is
+		// still drawn, tile by tile
+		if (
+			layer.renderMode === "shader" &&
+			TMX_ORIENTATIONS[layer.orientation]?.draws(layer) === true
+		) {
 			// device-scoped, lazily (re)built: a device loss rebuilds the
 			// pipeline cache, detected via the epoch stamp
 			let tmx = this.tmxRenderers.get(layer.orientation);
 			if (tmx === undefined || tmx.epoch !== this.pipelineCache.epoch) {
-				tmx = new Class(this);
+				tmx = new TMXLayerGPURenderer(this, layer.orientation);
 				this.tmxRenderers.set(layer.orientation, tmx);
 			}
 			tmx.draw(layer, rect);

@@ -1,6 +1,13 @@
-import { createRegion } from "../../../gpu/tmxlayer_region.js";
+import {
+	atlasColumns,
+	atlasRows,
+	createRegion,
+	TMX_ORIENTATIONS,
+} from "../../../gpu/tmxlayer_orientation.js";
 import { BufferTextureResource } from "../../../texture/resource.js";
 import GLShader from "../../glshader.js";
+import isometricFragment from "../../shaders/isometric-tmxlayer.frag";
+import orthogonalFragment from "../../shaders/orthogonal-tmxlayer.frag";
 import tmxLayerVertex from "../../shaders/tmxlayer.vert";
 import tmxLayerCommonFragment from "../../shaders/tmxlayer-common.frag";
 
@@ -9,6 +16,12 @@ import tmxLayerCommonFragment from "../../shaders/tmxlayer-common.frag";
  * @import { default as TMXLayer } from "../../../../level/tiled/TMXLayer.js";
  * @import { default as WebGLRenderer } from "../../webgl_renderer.js";
  */
+
+// each orientation's part of the fragment shader, appended to the shared one
+const FRAGMENTS = {
+	orthogonal: orthogonalFragment,
+	isometric: isometricFragment,
+};
 
 // Default `uTint` when the layer has no tint set. Module-scoped so the
 // fallback path doesn't allocate per frame.
@@ -24,10 +37,10 @@ const DEFAULT_TINT = new Float32Array([1, 1, 1, 1]);
  * and re-uploaded only when `layer.dataVersion` changes (mutations from
  * `setTile`/`clearTile`).
  *
- * An orientation's renderer extends this one with the two things that
- * differ: its part of the fragment shader (where a cell's tile is, and which
- * cells can cover a fragment), and {@link TMXLayerGPURenderer#_region}, the
- * part of the layer a view shows.
+ * There is one of these per map orientation drawn (see `TMX_ORIENTATIONS`
+ * in `gpu/tmxlayer_orientation.js`). Two things differ from one to the next:
+ * its part of the fragment shader (where a cell's tile is, and which cells
+ * can cover a fragment), and the part of a layer a view shows.
  *
  * The per-layer index texture is a `BufferTextureResource` flowing
  * through the standard `TextureCache` / batcher path — same lane as
@@ -48,11 +61,23 @@ const DEFAULT_TINT = new Float32Array([1, 1, 1, 1]);
 export default class TMXLayerGPURenderer {
 	/**
 	 * @param {WebGLRenderer} renderer - the WebGL renderer instance
-	 * @param {string} fragment - the orientation's part of the fragment
-	 * shader, appended to the shared one
+	 * @param {string} orientation - the map orientation to draw, one of
+	 * `TMX_ORIENTATIONS`
 	 */
-	constructor(renderer, fragment) {
+	constructor(renderer, orientation) {
 		this.renderer = renderer;
+		/**
+		 * what differs with the map's orientation
+		 * @ignore
+		 * @internal
+		 */
+		this.orientation = TMX_ORIENTATIONS[orientation];
+		// the bounds of the shader's loops, declared ahead of its own part
+		const limits = Object.entries(this.orientation.limits)
+			.map(([name, value]) => {
+				return `const int ${name} = ${value};`;
+			})
+			.join("\n");
 		this.gl = renderer.gl;
 		// Standalone `GLShader` (not `ShaderEffect`) so we own both the
 		// vertex and the fragment source — they're paired in GLSL ES 3.00,
@@ -66,7 +91,7 @@ export default class TMXLayerGPURenderer {
 		this.shader = new GLShader(
 			renderer.gl,
 			tmxLayerVertex,
-			`${tmxLayerCommonFragment}\n${fragment}`,
+			`${tmxLayerCommonFragment}\n${limits}\n${FRAGMENTS[orientation]}`,
 			renderer.shaderPrecision,
 		);
 		// per-layer `BufferTextureResource`. `Map` (not `WeakMap`) so we
@@ -98,43 +123,19 @@ export default class TMXLayerGPURenderer {
 		 */
 		this._indexUnit = 0;
 		/**
-		 * what {@link TMXLayerGPURenderer#_region} fills: the quad to draw,
+		 * what the orientation's `region` fills: the quad to draw,
 		 * in the layer's pixels, and what the shader needs to find a
 		 * fragment's place in the layer from its place in the quad
 		 * @ignore
 		 * @internal
 		 */
 		this._regionScratch = createRegion();
-	}
-
-	/**
-	 * The part of a layer a view shows, for the tiles of one tileset: the
-	 * quad to draw (`x`, `y`, `width`, `height`, in the layer's pixels), the
-	 * shader's `uVisibleStart` and `uVisibleSize` (the quad's corner and
-	 * size, in the units its fragment shader works in) and `uOverflow`.
-	 * @param {TMXLayer} layer - the layer
-	 * @param {object} rect - the visible viewport rect (world coords)
-	 * @param {object} tileset - the tileset whose tiles are drawn
-	 * @param {object} out - the region to fill
-	 * @returns {boolean} false when the view shows nothing of the layer
-	 * @abstract
-	 * @ignore
-	 * @internal
-	 */
-	// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
-	_region(layer, rect, tileset, out) {
-		return false;
-	}
-
-	/**
-	 * The tilesets a layer is drawn with, one pass each.
-	 * @param {TMXLayer} layer - the layer
-	 * @returns {object[]} the tilesets
-	 * @ignore
-	 * @internal
-	 */
-	_tilesetsOf(layer) {
-		return layer.tilesets.tilesets;
+		/**
+		 * what the orientation's `tilesetsOf` fills, when it needs to
+		 * @ignore
+		 * @internal
+		 */
+		this._tilesetsScratch = [];
 	}
 
 	/**
@@ -374,7 +375,7 @@ export default class TMXLayerGPURenderer {
 
 		// one pass per tileset — the shader's uGidRange uniform + discard
 		// hides cells outside the active tileset's GID range
-		const tilesets = this._tilesetsOf(layer);
+		const tilesets = this.orientation.tilesetsOf(layer, this._tilesetsScratch);
 		for (let i = 0; i < tilesets.length; i++) {
 			const tileset = tilesets[i];
 			// skip collection-of-image tilesets (caller's eligibility check
@@ -384,7 +385,7 @@ export default class TMXLayerGPURenderer {
 				continue;
 			}
 			// the view shows nothing of this tileset's tiles
-			if (!this._region(layer, rect, tileset, region)) {
+			if (!this.orientation.region(layer, rect, tileset, region)) {
 				continue;
 			}
 			batcher ??= this._begin(layer);
@@ -399,19 +400,13 @@ export default class TMXLayerGPURenderer {
 
 			// atlas geometry (margin + spacing) — number of tiles per row/col
 			// in the atlas image
-			const atlasCols = Math.max(
-				1,
-				Math.floor((atlasW - margin * 2 + spacing) / (tsW + spacing)),
-			);
-			const atlasRows = Math.max(
-				1,
-				Math.floor((atlasH - margin * 2 + spacing) / (tsH + spacing)),
-			);
+			const atlasCols = atlasColumns(tileset);
+			const atlasRowCount = atlasRows(tileset);
 
 			// per-tileset animation lookup. Only allocated/bound for
 			// tilesets that actually have animated tiles — static tilesets
 			// pay neither a texture-unit nor an upload.
-			const tileCount = atlasCols * atlasRows;
+			const tileCount = atlasCols * atlasRowCount;
 			const animEntry = this._getOrUpdateAnimLookup(tileset, tileCount);
 			if (animEntry !== undefined) {
 				const animUnit = batcher.uploadTexture(
@@ -434,7 +429,7 @@ export default class TMXLayerGPURenderer {
 			}
 
 			this._setV2("uTileSize", tsW, tsH);
-			this._setV2("uTilesetCols", atlasCols, atlasRows);
+			this._setV2("uTilesetCols", atlasCols, atlasRowCount);
 			this._setV2("uInvTilesetSize", 1 / atlasW, 1 / atlasH);
 			this._setV4("uTilesetMargin", margin, margin, spacing, spacing);
 			this._setV2("uVisibleStart", region.startX, region.startY);

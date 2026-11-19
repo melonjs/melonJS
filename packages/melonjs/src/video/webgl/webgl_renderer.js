@@ -24,6 +24,7 @@ import {
 import AmbientLightEffect from "../effects/ambientlight.js";
 import BlendEffect from "../effects/blendEffect.js";
 import RadialGradientEffect from "../effects/radialGradient.js";
+import { TMX_ORIENTATIONS } from "../gpu/tmxlayer_orientation.js";
 import { Gradient } from "../gradient.js";
 import Renderer from "./../renderer.js";
 import RenderTargetPool from "../rendertarget/render_target_pool.js";
@@ -46,8 +47,7 @@ import PrimitiveBatcher from "./batchers/primitive_batcher";
 import QuadBatcher from "./batchers/quad_batcher";
 import { markContextLost } from "./buffer/deletable.js";
 import { createLightUniformScratch, packLights } from "./lighting/pack.ts";
-import IsometricTMXLayerGPURenderer from "./renderers/tmxlayer/isometric.js";
-import OrthogonalTMXLayerGPURenderer from "./renderers/tmxlayer/orthogonal.js";
+import TMXLayerGPURenderer from "./renderers/tmxlayer/tmxlayer.js";
 import { WebGLTextureStore } from "./texture/store.js";
 import { resolveMaxTextures } from "./utils/maxtextures.js";
 import { getMaxShaderPrecision } from "./utils/precision.js";
@@ -72,15 +72,6 @@ import { GLSamplerCache } from "./utils/samplercache.js";
  */
 
 // reusable constants for 2D→3D matrix operations
-/**
- * the GPU tile layer renderer of each map orientation that has one
- * @ignore
- */
-const TMX_GPU_RENDERERS = {
-	orthogonal: OrthogonalTMXLayerGPURenderer,
-	isometric: IsometricTMXLayerGPURenderer,
-};
-
 const _tempMatrix = new Matrix3d();
 
 // pre-allocated matrices for blitEffect (avoids per-frame allocation)
@@ -1458,7 +1449,9 @@ export default class WebGLRenderer extends Renderer {
 	drawTileLayer(layer, rect) {
 		if (layer.renderMode === "shader") {
 			const gpu = this._getTMXGPURendererFor(layer.orientation);
-			if (gpu !== undefined) {
+			// a layer asked for this path after it was found unfit for it
+			// is still drawn, tile by tile
+			if (gpu !== undefined && gpu.orientation.draws(layer)) {
 				gpu.draw(layer, rect);
 				return;
 			}
@@ -1499,8 +1492,7 @@ export default class WebGLRenderer extends Renderer {
 	 * @internal
 	 */
 	_getTMXGPURendererFor(orientation) {
-		const Class = TMX_GPU_RENDERERS[orientation];
-		if (Class === undefined) {
+		if (TMX_ORIENTATIONS[orientation] === undefined) {
 			// staggered, hexagonal, oblique: drawn by the legacy renderer
 			return undefined;
 		}
@@ -1508,7 +1500,7 @@ export default class WebGLRenderer extends Renderer {
 		let gpu = this._tmxGPURenderers.get(orientation);
 		if (gpu === undefined) {
 			try {
-				gpu = new Class(this);
+				gpu = new TMXLayerGPURenderer(this, orientation);
 			} catch (err) {
 				// shader compile / link failure on this driver — disable
 				// the GPU path permanently for the rest of the session

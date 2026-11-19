@@ -5,7 +5,21 @@
 ### Added
 - Transitions: a mask transition can be shaped like an image or a `Sprite`, close on the player with `center`, and fill the shape with `invert`, on `state.transition`, `MaskEffect` and `Trigger` ([#1399](https://github.com/melonjs/melonJS/issues/1399))
 
+### Changed
+- Tiled: an isometric tile layer with an `opacity` below 1 fades as one flat picture on WebGL and WebGPU, where each tile was faded over the ones behind it and showed through the one in front. Set the layer's `renderMode` to `"perTile"` for the look it had
+
+### Performance
+- Tiled: isometric tile layers are drawn by the GPU on WebGL and WebGPU, as orthogonal ones are: one quad for the layer, its tiles found by the fragment shader, in place of a quad per tile in view found and placed in JavaScript every frame. On a 100 × 100 map with about 4000 tiles in view, drawing the layer takes under **0.1 ms** of main-thread time a frame, down from about **2 ms**, and no longer grows with the number of tiles shown. A layer takes this path by itself when all its tiles come from one tileset, up to 4 grid widths wide and 8 grid heights tall (a `tileoffset`, flipped and animated tiles, and `setTile` are all fine); any other is drawn as before, and the console says why ([#1897](https://github.com/melonjs/melonJS/issues/1897))
+- Tiled: a reminder that orthogonal tile layers have been drawn this way since 19.4, with the same gain (about 1.9 ms down to under 0.1 ms for 3600 tiles in view). A layer that is not says why in the console when it is activated: most often a tileset with a `tileoffset`, a collection of images, or the Canvas renderer.
+
 ### Fixed
+- Tiled, GPU tile layers: the soft edge of a tile larger than the grid shows the tile behind it; it was drawn over the background instead, a thin outline round such tiles
+- Tiled, GPU tile layers: tiles larger than the grid are drawn whole above the map's first row and right of its last column, where they were cut off
+- Tiled, GPU tile layers: a tileset with a `margin` whose image stops at its last tiles, with no margin after them, draws the right tiles; they were counted a column or a row short
+- Tiled, GPU tile layers: a layer with a tile that is not square, flipped diagonally, is drawn tile by tile; the shader drew such a tile wrong
+- Tiled, GPU tile layers: the shader runs at full precision whatever `highPrecisionShader` says; at a lower one a phone could misplace the tiles of a large map
+- Tiled, isometric maps drawn tile by tile: tiles of a tileset larger than the map's first one, or moved by a `tileoffset`, went missing along the edges of the view
+- Tiled, orthogonal maps drawn tile by tile: tiles more than two cells tall went missing along the bottom of the view
 - `NineSliceSprite` blinks with `flicker()`, as a `Sprite` does; it ignored it
 - glTF: a model compressed with Draco or meshopt, which the loader cannot decode, says so in the console, naming the extension, instead of failing on an accessor error that did not mention it
 

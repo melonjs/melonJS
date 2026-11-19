@@ -1,11 +1,19 @@
 /**
- * The part of a tile layer a view shows, as the GPU tile layer renderers
- * need it: the same on WebGL and WebGPU, so both read it from here.
+ * What the GPU tile layer renderers need to know of a map orientation, the
+ * same on WebGL and WebGPU: each backend brings the shader text, and reads
+ * the rest from here ({@link TMX_ORIENTATIONS}).
  *
- * A region is the quad to draw (`x`, `y`, `width`, `height`, in the layer's
- * pixels), the shader's `uVisibleStart` and `uVisibleSize` (the quad's
- * corner and size, in the units the orientation's fragment shader works in)
- * and its `uOverflow`.
+ * - `region`: the part of a layer a view shows, for the tiles of one
+ *   tileset. A region is the quad to draw (`x`, `y`, `width`, `height`, in
+ *   the layer's pixels), the shader's `uVisibleStart` and `uVisibleSize`
+ *   (the quad's corner and size, in the units the orientation's fragment
+ *   shader works in) and its `uOverflow`.
+ * - `tilesetsOf`: the tilesets a layer is drawn with, one pass each.
+ * - `draws`: whether a layer can be drawn at all (its `renderMode` can be
+ *   set to "shader" by hand, after it was found unfit for it).
+ * - `limits`: the bounds of the loops of the orientation's fragment shader,
+ *   declared in it as constants of the same names, and what a layer is
+ *   checked against before it takes the GPU path.
  * @import { default as TMXLayer } from "../../level/tiled/TMXLayer.js";
  */
 
@@ -154,3 +162,96 @@ export function isometricRegion(layer, rect, tileset, out) {
 	out.overflowY = Math.ceil(tileset.tileheight / halfHeight);
 	return true;
 }
+
+/**
+ * How many tiles a tileset's image has across: counted from the margin, a
+ * tile plus the spacing apart, the last column going without its outer
+ * margin, as Tiled and the tileset's own atlas count them.
+ * @param {object} tileset - the tileset
+ * @returns {number} the number of columns
+ * @ignore
+ * @internal
+ */
+export function atlasColumns(tileset) {
+	return Math.max(
+		1,
+		Math.floor(
+			(tileset.image.width - tileset.margin + tileset.spacing) /
+				(tileset.tilewidth + tileset.spacing),
+		),
+	);
+}
+
+/**
+ * How many tiles a tileset's image has down (see {@link atlasColumns}).
+ * @param {object} tileset - the tileset
+ * @returns {number} the number of rows
+ * @ignore
+ * @internal
+ */
+export function atlasRows(tileset) {
+	return Math.max(
+		1,
+		Math.floor(
+			(tileset.image.height - tileset.margin + tileset.spacing) /
+				(tileset.tileheight + tileset.spacing),
+		),
+	);
+}
+
+/**
+ * The map orientations the GPU tile layer renderers draw.
+ * @ignore
+ * @internal
+ */
+export const TMX_ORIENTATIONS = {
+	orthogonal: {
+		region: orthogonalRegion,
+		/**
+		 * every tileset of the map: a pass shows the tiles of its own
+		 * @param {TMXLayer} layer - the layer
+		 * @returns {object[]} the tilesets
+		 */
+		tilesetsOf(layer) {
+			return layer.tilesets.tilesets;
+		},
+		draws() {
+			return true;
+		},
+		// how many cells a tile can reach past its own, across and up
+		limits: { MAX_OVERFLOW: 4 },
+	},
+	isometric: {
+		region: isometricRegion,
+		/**
+		 * The one tileset an isometric layer draws with: its tiles overlap,
+		 * and a pass keeps the order of the tiles of one tileset, not across
+		 * two (`layer._shaderTileset`, found by the layer when it is checked
+		 * for this path).
+		 * @param {TMXLayer} layer - the layer
+		 * @param {object[]} scratch - an array to fill
+		 * @returns {object[]} that tileset, or none for an empty layer
+		 */
+		tilesetsOf(layer, scratch) {
+			scratch.length = 0;
+			if (layer._shaderTileset) {
+				scratch.push(layer._shaderTileset);
+			}
+			return scratch;
+		},
+		/**
+		 * not a layer with no tileset to draw with: one that was never
+		 * checked, or whose tiles come from several (`null`; an empty layer
+		 * has `undefined`, and draws nothing)
+		 * @param {TMXLayer} layer - the layer
+		 * @returns {boolean} whether the layer can be drawn
+		 */
+		draws(layer) {
+			return layer._shaderTileset !== null;
+		},
+		// the cells whose image can reach a pixel: rows of them, half a
+		// grid height apart, and in each, cells a grid width apart. So
+		// tiles up to MAX_ROWS / 2 grid heights tall, MAX_COLS wide
+		limits: { MAX_ROWS: 16, MAX_COLS: 4 },
+	},
+};

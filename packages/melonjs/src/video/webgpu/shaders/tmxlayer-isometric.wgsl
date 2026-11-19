@@ -9,10 +9,8 @@
 // the CPU renderer draws in, each texel put behind the ones before it until
 // the fragment is opaque.
 
-// bounds of the two runs: tiles up to 8 grid heights tall and 4 grid widths
-// wide (the layer falls back to the CPU renderer past them)
-const MAX_ROWS : i32 = 16;
-const MAX_COLS : i32 = 4;
+// `MAX_ROWS` and `MAX_COLS`, the bounds of the two runs, are declared ahead
+// of this file (see `TMX_ORIENTATIONS` in gpu/tmxlayer_orientation.js).
 
 // the left of the cell's diamond, and as far above its bottom as the tile
 // is tall
@@ -26,8 +24,7 @@ fn tileOrigin(cx : i32, cy : i32) -> vec2f {
 @fragment
 fn fragment_main(in : VSOut) -> @location(0) vec4f {
 	let worldPx = tmx.uVisibleStart + in.vRegion * tmx.uVisibleSize;
-	let dWorldX = dpdx(worldPx);
-	let dWorldY = dpdy(worldPx);
+	let fp = footprint(worldPx);
 
 	let halfCell = tmx.uCellSize * 0.5;
 	// the rightmost and the lowest cell whose image can reach the fragment
@@ -38,18 +35,21 @@ fn fragment_main(in : VSOut) -> @location(0) vec4f {
 
 	var result = vec4f(0.0);
 	var opaque = false;
-	for (var j = 0; j < MAX_ROWS; j++) {
-		if (j >= spanS) {
+	// rows past the map's last one, or before its first, hold no cell: most
+	// of a fragment's run, along the bottom of the map and above its top
+	let sLast = i32(tmx.uMapSize.x) + i32(tmx.uMapSize.y) - 2;
+	for (var j = max(sMax - sLast, 0); j < MAX_ROWS; j++) {
+		let s = sMax - j;
+		if (j >= spanS || s < 0) {
 			break;
 		}
-		let s = sMax - j;
 		// the first u of this row's parity, then every other one
 		var u = uMax - ((uMax + s) & 1);
 		for (var i = 0; i < MAX_COLS; i++) {
 			if (uMax - u >= spanU) {
 				break;
 			}
-			let candidate = tryRenderCell((s + u) / 2, (s - u) / 2, worldPx, dWorldX, dWorldY);
+			let candidate = tryRenderCell((s + u) / 2, (s - u) / 2, worldPx, fp);
 			if (candidate.hit && under(&result, candidate.color)) {
 				opaque = true;
 				break;

@@ -21,10 +21,9 @@
 // opaque texel ends it at once, and the soft edge of a tile shows the tiles
 // behind it.
 
-// bounds of the two runs: tiles up to 8 grid heights tall and 4 grid widths
-// wide (the layer falls back to the CPU renderer past them)
-const int MAX_ROWS = 16;
-const int MAX_COLS = 4;
+// `MAX_ROWS` and `MAX_COLS`, the bounds of the two runs, are declared ahead
+// of this file (see `TMX_ORIENTATIONS` in `gpu/tmxlayer_orientation.js`): a
+// layer of larger tiles is left to the CPU renderer.
 
 // the left of the cell's diamond, and as far above its bottom as the tile
 // is tall
@@ -37,8 +36,7 @@ vec2 tileOrigin(int cx, int cy) {
 
 void main(void) {
 	vec2 worldPx = uVisibleStart + vRegion * uVisibleSize;
-	vec2 dWorldX = dFdx(worldPx);
-	vec2 dWorldY = dFdy(worldPx);
+	Footprint fp = footprint(worldPx);
 
 	vec2 halfCell = uCellSize * 0.5;
 	// the rightmost and the lowest cell whose image can reach the fragment
@@ -50,14 +48,17 @@ void main(void) {
 	vec4 result = vec4(0.0);
 	vec4 texel;
 	bool opaque = false;
-	for (int j = 0; j < MAX_ROWS; j++) {
-		if (j >= spanS) break;
+	// rows past the map's last one, or before its first, hold no cell: most
+	// of a fragment's run, along the bottom of the map and above its top
+	int sLast = int(uMapSize.x) + int(uMapSize.y) - 2;
+	for (int j = max(sMax - sLast, 0); j < MAX_ROWS; j++) {
 		int s = sMax - j;
+		if (j >= spanS || s < 0) break;
 		// the first u of this row's parity, then every other one
 		int u = uMax - ((uMax + s) & 1);
 		for (int i = 0; i < MAX_COLS; i++) {
 			if (uMax - u >= spanU) break;
-			if (tryRenderCell((s + u) / 2, (s - u) / 2, worldPx, dWorldX, dWorldY, texel)) {
+			if (tryRenderCell((s + u) / 2, (s - u) / 2, worldPx, fp, texel)) {
 				if (under(result, texel)) {
 					opaque = true;
 					break;

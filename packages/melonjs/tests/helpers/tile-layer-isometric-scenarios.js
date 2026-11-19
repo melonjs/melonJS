@@ -531,6 +531,21 @@ export function isometricScenarios(renderer, type) {
 				expect(await same(scene)).toBeGreaterThan(0);
 			});
 
+			it("from a tileset whose image has no margin after its last tiles", async (ctx) => {
+				need(ctx);
+				// as Tiled lets one be: the tiles are counted from the first
+				// margin, not as if there were two
+				const scene = iso({
+					cols: 8,
+					rows: 6,
+					tilesets: [
+						blocks(64, 64, { margin: 7, spacing: 2, outerMargin: false }),
+					],
+					layers: [{ data: scattered(8, 6) }],
+				});
+				expect(await same(scene)).toBeGreaterThan(0);
+			});
+
 			for (const [x, y] of [
 				[0, 16],
 				[-12, 0],
@@ -1095,6 +1110,76 @@ export function isometricScenarios(renderer, type) {
 				expect(said).toMatch(/not square, flipped diagonally/);
 			});
 
+			it("a grid of odd size, whose tiles stand half a pixel off", async (ctx) => {
+				need(ctx);
+				for (const [tw, th] of [
+					[33, 17],
+					[64, 31],
+					[63, 32],
+				]) {
+					const scene = {
+						orientation: "isometric",
+						cols: 9,
+						rows: 7,
+						tw,
+						th,
+						tilesets: [makeTileset({ tw, th: th * 2 })],
+						layers: [{ data: scattered(9, 7) }],
+					};
+					const [mode, said] = modeOf(scene);
+					expect(mode, `${tw} × ${th}`).toBe("perTile");
+					expect(said).toMatch(/isometric grid of odd size/);
+				}
+			});
+
+			it("a layer blended another way than the normal one", (ctx) => {
+				need(ctx);
+				for (const mode of ["add", "multiply", "screen"]) {
+					const [took, said] = modeOf(
+						iso({
+							cols: 4,
+							rows: 4,
+							tilesets: [blocks(64, 128)],
+							layers: [{ data: scattered(4, 4), mode }],
+						}),
+					);
+					expect(took, mode).toBe("perTile");
+					expect(said).toMatch(/blend mode/);
+				}
+			});
+
+			it("and one asked for by hand afterwards is still drawn, tile by tile", async (ctx) => {
+				need(ctx);
+				// two tilesets in one layer: the layer has no tileset to
+				// draw with on the GPU
+				const scene = iso({
+					cols: 6,
+					rows: 6,
+					tilesets: [blocks(64, 32), blocks(64, 96)],
+					layers: [
+						{
+							data: fill(6, 6, (c, r) => {
+								return 1 + ((c + r) % 16);
+							}),
+						},
+					],
+				});
+				const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+				let layers;
+				try {
+					layers = show(app, makeMap(scene));
+				} finally {
+					warn.mockRestore();
+				}
+				expect(layers[0].renderMode).toBe("perTile");
+				app.viewport.moveTo(0, 0);
+				const forced = await drawIn(app, layers, "shader");
+				expect(forced.cpuDraws).toBe(1);
+				const d = diff(reference(scene, 0, 0, WIDTH, HEIGHT), forced.frame);
+				expect(d.different, d.first).toBe(0);
+				expect(drawn(forced.frame)).toBeGreaterThan(0);
+			});
+
 			it("a staggered map, still", (ctx) => {
 				need(ctx);
 				const [mode, said] = modeOf({
@@ -1191,6 +1276,25 @@ export function isometricScenarios(renderer, type) {
 					expect(await same(scene, { views: ORTHO_VIEWS })).toBeGreaterThan(0);
 				});
 			}
+
+			it("a tileset whose image has no margin after its last tiles", async (ctx) => {
+				need(ctx);
+				const scene = ortho({
+					cols: 10,
+					rows: 8,
+					tilesets: [
+						makeTileset({
+							tw: 32,
+							th: 32,
+							margin: 5,
+							spacing: 3,
+							outerMargin: false,
+						}),
+					],
+					layers: [{ data: scattered(10, 8) }],
+				});
+				expect(await same(scene, { views: ORTHO_VIEWS })).toBeGreaterThan(0);
+			});
 
 			it("layers on tilesets of several sizes", async (ctx) => {
 				need(ctx);

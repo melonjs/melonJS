@@ -61,6 +61,9 @@ export function inBlock(x, y, w, h, tw, th) {
  * @param {(x: number, y: number, id: number) => number} [options.alpha]
  * how opaque each pixel is, 0 to 255, for soft edges and see-through tiles
  * (in place of `opaque`)
+ * @param {boolean} [options.outerMargin=true] - false for an image that
+ * stops at its last column and row, with no margin after them, as Tiled
+ * lets one
  * @param {object} [options.extra] - more Tiled tileset properties
  * (`tileoffset`, `tiles` with animations...)
  * @returns {object} the tileset's Tiled JSON, without its `firstgid`
@@ -75,12 +78,14 @@ export function makeTileset(options) {
 		spacing = 0,
 		opaque,
 		alpha,
+		outerMargin = true,
 		extra = {},
 	} = options;
 	const rows = Math.ceil(count / columns);
 	const canvas = document.createElement("canvas");
-	canvas.width = margin * 2 + columns * tw + (columns - 1) * spacing;
-	canvas.height = margin * 2 + rows * th + (rows - 1) * spacing;
+	const outer = outerMargin ? margin : 0;
+	canvas.width = margin + outer + columns * tw + (columns - 1) * spacing;
+	canvas.height = margin + outer + rows * th + (rows - 1) * spacing;
 	const ctx = canvas.getContext("2d");
 	const image = ctx.createImageData(canvas.width, canvas.height);
 	const seed = nextName * 37;

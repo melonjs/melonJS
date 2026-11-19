@@ -44,7 +44,7 @@ import WebGPULitQuadBatcher from "../src/video/webgpu/batchers/lit_quad_batcher.
 import WebGPUQuadBatcher from "../src/video/webgpu/batchers/quad_batcher.js";
 import WebGPUUniformRing from "../src/video/webgpu/buffer/uniformring.js";
 import { FRAME_UNIFORM_SIZE } from "../src/video/webgpu/pipeline/bindgroups.js";
-import WebGPUTMXRenderer from "../src/video/webgpu/renderers/tmxlayer/orthogonal.js";
+import WebGPUTMXRenderer from "../src/video/webgpu/renderers/tmxlayer/tmxlayer.js";
 import quadWGSL from "../src/video/webgpu/shaders/quad.wgsl";
 import quadLitWGSL from "../src/video/webgpu/shaders/quad-lit.wgsl";
 import WebGPURenderer from "../src/video/webgpu/webgpu_renderer.js";
@@ -1191,7 +1191,7 @@ describe("sprites keep to their frame (WebGPU, mock renderer)", () => {
 		renderer.setBatcher = () => {
 			return batcher;
 		};
-		const tmx = new WebGPUTMXRenderer(renderer);
+		const tmx = new WebGPUTMXRenderer(renderer, "orthogonal");
 		tmx.draw(
 			{
 				cols: 4,

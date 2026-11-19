@@ -22,7 +22,7 @@ import Renderer from "../src/video/renderer.js";
 import { createAtlas, TextureAtlas } from "../src/video/texture/atlas.js";
 import WebGPULitQuadBatcher from "../src/video/webgpu/batchers/lit_quad_batcher.js";
 import WebGPUQuadBatcher from "../src/video/webgpu/batchers/quad_batcher.js";
-import WebGPUTMXRenderer from "../src/video/webgpu/renderers/tmxlayer/orthogonal.js";
+import WebGPUTMXRenderer from "../src/video/webgpu/renderers/tmxlayer/tmxlayer.js";
 import tmxlayerCommonWGSL from "../src/video/webgpu/shaders/tmxlayer-common.wgsl";
 import tmxlayerOrthogonalWGSL from "../src/video/webgpu/shaders/tmxlayer-orthogonal.wgsl";
 import {
@@ -556,7 +556,7 @@ describe("linear-mipmap texture filter (WebGPU, mock renderer)", () => {
 			renderer.setBatcher = () => {
 				return batcher;
 			};
-			const tmx = new WebGPUTMXRenderer(renderer);
+			const tmx = new WebGPUTMXRenderer(renderer, "orthogonal");
 			tmx.draw(layer(atlas()), {
 				pos: { x: 0, y: 0 },
 				width: 64,
@@ -600,7 +600,7 @@ describe("linear-mipmap texture filter (WebGPU, mock renderer)", () => {
 				"let inset = min(vec2f(0.5 * exp2(lod * tmx.uMipmaps)), tmx.uTileSize * 0.5);",
 			);
 			expect(code).toContain(
-				"texelPx = clamp(texelPx, tileOriginPx + inset, tileOriginPx + tmx.uTileSize - inset);",
+				"texelPx = clamp(texelPx, tileOriginPx + fp.inset, tileOriginPx + tmx.uTileSize - fp.inset);",
 			);
 		});
 	});

@@ -453,11 +453,28 @@ per-pixel GID lookup in the fragment shader. It requires **all** of:
 
 - a renderer that reports GPU tile-layer support (WebGL 2 / WebGPU — not Canvas),
 - `world.gpuTilemap !== false` (the `gpuTilemap` application setting, default `true`),
-- an **orthogonal** layer — isometric, hexagonal, staggered and oblique always
-  fall back,
-- no collection-of-image tileset, no non-zero `tileoffset`, a tileset tile
-  render size of "Tile size" (`tilerendersize`, not "Map grid size"), and tile
-  overflow within the shader's 4-cell limit.
+- an **orthogonal** or **isometric** layer — hexagonal, staggered and oblique
+  always fall back,
+- no collection-of-image tileset, and a tileset tile render size of "Tile
+  size" (`tilerendersize`, not "Map grid size"),
+- on an orthogonal map: no non-zero `tileoffset`, and tiles that reach at most
+  4 cells past their own,
+- on an isometric map: every tile of the layer from **one tileset** (tiles
+  overlap, and their order is kept within a tileset, not across two: split
+  floor and walls into a layer each, which a map usually does already), tiles
+  at most 4 grid widths wide and 8 grid heights tall, a grid of even size
+  (64 × 32, not 65 × 33), and the normal blend mode. A `tileoffset` is fine,
+- no tile that is not square flipped diagonally (rotated, in Tiled).
+
+A tile set at run time with `setTile` that breaks one of these moves the layer
+back to `"perTile"`, with a warning. The two paths draw the same picture, with
+one difference: a layer with `opacity` below 1 is faded as one flat picture on
+the shader path (as `preRender` does), where tile by tile each tile is faded
+over the ones behind it, which shows where tiles overlap.
+
+The gain is main-thread time: tile by tile, every tile in view is found and
+placed in JavaScript each frame (about 2 ms for 4000 tiles); the shader path
+draws one quad whatever is in view.
 
 When a layer falls back, melonJS `console.warn`s the reason each time the
 layer is activated (once per page when the renderer has no GPU tile support at
@@ -509,6 +526,9 @@ layer into the offscreen-bake path instead.
 | changing tiles at runtime is slow on a pre-rendered layer | outside an orthogonal map whose tiles fit their cells, a changed tile re-bakes the whole layer before it next draws: keep layers you edit often off `preRender` |
 | thin lines between tiles on the Canvas renderer, with smoothing on | filtering blends in the next tile of the tileset or its spacing, which a canvas cannot prevent: set `antiAlias: false`, or `preRender` the layer. WebGL and WebGPU keep each tile to itself |
 | tilemap slow on some machines | layer fell back off the shader path — check the console warning for the reason |
+| an isometric layer warns `tiles of more than one tileset in an isometric layer` and is slow | the shader path draws an isometric layer with one tileset: put the tiles of each tileset on a layer of their own, or pack them into one tileset |
+| a half-transparent isometric layer of tall tiles looks flatter than before 20.17 | on the shader path a layer fades as one picture, and a tile no longer shows through the one in front: set that layer's `renderMode` to `"perTile"` (a `renderMode` custom property in Tiled) for the old look |
+| the soft edges of tiles larger than the grid showed a thin dark outline on the shader path | before 20.17 the edge of such a tile was not blended over the tile behind it: update |
 
 ## Related skills
 
