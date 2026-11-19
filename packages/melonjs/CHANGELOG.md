@@ -11,7 +11,7 @@
 - Tiled: for reference, orthogonal tile layers, on the GPU since 19.4, measure about **85%** less with 1000 tiles in view (0.62 to 0.09 ms) and about **97%** less with 3600 (1.9 to 0.06 ms)
 
 ### Fixed
-- Tiled: a tile layer follows its offset in Tiled, and its own `pos` when the game moves it: its tiles are drawn there, and `getTile()` finds them there. Both were ignored; a map whose tile layers have an offset now looks as it does in Tiled
+- Tiled: layers follow their offset in Tiled. A tile layer is drawn there, and where its own `pos` moves it, and `getTile()` finds its tiles there; an object layer's objects are created there; a group layer's offset moves the tile layers inside it. All were ignored, so a map with layer offsets now looks as it does in Tiled
 - Tiled: tiles larger than a cell are drawn wherever they are in view. They were cut off or left out along the edges of the view, above and right of the map, on a map centred in the screen, and once the map itself had scrolled out of view
 - Tiled: staggered and hexagonal maps are drawn where Tiled draws them: a tile larger than its cell stands on it, a tileset's `tileoffset` moves its tiles, and maps of odd sizes stay on whole pixels
 - Tiled: orthogonal layers drawn by the GPU show the soft edges of large tiles over the tiles behind them, lay large tiles over each other in the map's order, and read a tileset with a `margin` right

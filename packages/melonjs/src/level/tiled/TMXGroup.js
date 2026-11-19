@@ -63,6 +63,19 @@ export default class TMXGroup {
 		 */
 		this.blendMode = tiledBlendMode(data.mode);
 
+		/**
+		 * the layer's horizontal offset in Tiled, in pixels: an object layer
+		 * moves its objects by it, a group layer the tile layers inside it
+		 * @type {number}
+		 */
+		this.offsetx = +data.offsetx || 0;
+
+		/**
+		 * the layer's vertical offset in Tiled, in pixels
+		 * @type {number}
+		 */
+		this.offsety = +data.offsety || 0;
+
 		// check if we have any user-defined properties
 		applyTMXProperties(this, data);
 
@@ -71,7 +84,12 @@ export default class TMXGroup {
 			const objects = data.objects;
 			for (let i = 0, len = objects.length; i < len; i++) {
 				objects[i].tintcolor = this.tintcolor;
-				this.objects.push(new TMXObject(map, objects[i], z));
+				const object = new TMXObject(map, objects[i], z);
+				// Moved on the screen, so once the object stands where its
+				// map puts it (an isometric map projects it)
+				object.x += this.offsetx;
+				object.y += this.offsety;
+				this.objects.push(object);
 			}
 		}
 
@@ -88,6 +106,9 @@ export default class TMXGroup {
 					z,
 				);
 				z++;
+				// the group's offset, on top of the layer's own
+				layer.pos.x += this.offsetx;
+				layer.pos.y += this.offsety;
 				// set a renderer
 				layer.setRenderer(map.getRenderer());
 				// resize container accordingly
