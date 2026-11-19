@@ -1091,8 +1091,14 @@ export default class Camera2d extends Renderable {
 			);
 		}
 		// non-floating objects use world coordinates, check against
-		// the camera's visible world area (accounts for position and zoom)
-		return obj.getBounds().overlaps(this.worldView);
+		// the camera's visible world area (accounts for position and zoom).
+		// What a renderable draws can reach past its bounds (a tile layer's
+		// tiles, taller than their cell, stand above its grid): it says so
+		// with `getDrawBounds`
+		const drawn = (
+			obj as Renderable & { getDrawBounds?: () => Bounds }
+		).getDrawBounds?.();
+		return (drawn ?? obj.getBounds()).overlaps(this.worldView);
 	}
 
 	/**

@@ -107,6 +107,39 @@ export function orthogonalRegion(layer, rect, tileset, out) {
 }
 
 /**
+ * The view, cut to where a layer's tiles can be, on whole pixels: the quad
+ * to draw, for an orientation whose shader works in the layer's pixels.
+ * @param {object} rect - the visible viewport rect (world coords)
+ * @param {number} left - where the tiles can be, in the layer's pixels
+ * @param {number} top - where the tiles can be
+ * @param {number} right - where the tiles can be
+ * @param {number} bottom - where the tiles can be
+ * @param {number} originX - where the shader's pixels are measured from
+ * @param {number} originY - where the shader's pixels are measured from
+ * @param {object} out - the region to fill
+ * @returns {boolean} false when the view shows none of it
+ * @ignore
+ */
+function viewIn(rect, left, top, right, bottom, originX, originY, out) {
+	const x0 = Math.floor(Math.max(rect.pos.x, left));
+	const y0 = Math.floor(Math.max(rect.pos.y, top));
+	const x1 = Math.ceil(Math.min(rect.pos.x + rect.width, right));
+	const y1 = Math.ceil(Math.min(rect.pos.y + rect.height, bottom));
+	if (x1 <= x0 || y1 <= y0) {
+		return false;
+	}
+	out.x = x0;
+	out.y = y0;
+	out.width = x1 - x0;
+	out.height = y1 - y0;
+	out.startX = x0 - originX;
+	out.startY = y0 - originY;
+	out.sizeX = out.width;
+	out.sizeY = out.height;
+	return true;
+}
+
+/**
  * The part of an isometric layer a view shows, for the tiles of one tileset:
  * the same on every GPU backend, so their renderers share it.
  *
@@ -143,23 +176,11 @@ export function isometricRegion(layer, rect, tileset, out) {
 	const top = layer.tileheight - tileset.tileheight + offsetY;
 	const bottom = (cols + rows) * halfHeight + offsetY;
 
-	// the view, cut to it, on whole pixels
-	const x0 = Math.floor(Math.max(rect.pos.x, left));
-	const y0 = Math.floor(Math.max(rect.pos.y, top));
-	const x1 = Math.ceil(Math.min(rect.pos.x + rect.width, right));
-	const y1 = Math.ceil(Math.min(rect.pos.y + rect.height, bottom));
-	if (x1 <= x0 || y1 <= y0) {
+	if (
+		!viewIn(rect, left, top, right, bottom, originX + offsetX, offsetY, out)
+	) {
 		return false;
 	}
-
-	out.x = x0;
-	out.y = y0;
-	out.width = x1 - x0;
-	out.height = y1 - y0;
-	out.startX = x0 - originX - offsetX;
-	out.startY = y0 - offsetY;
-	out.sizeX = out.width;
-	out.sizeY = out.height;
 	// how many cells' images reach a pixel: as many across as the image is
 	// wide in half grid widths, as many down as it is tall in half grid
 	// heights
@@ -208,23 +229,9 @@ export function staggeredRegion(layer, rect, tileset, out) {
 	const top = layer.tileheight - tileset.tileheight + offsetY;
 	const bottom = (lines - 1) * rowHeight + layer.tileheight + offsetY;
 
-	// the view, cut to it, on whole pixels
-	const x0 = Math.floor(Math.max(rect.pos.x, left));
-	const y0 = Math.floor(Math.max(rect.pos.y, top));
-	const x1 = Math.ceil(Math.min(rect.pos.x + rect.width, right));
-	const y1 = Math.ceil(Math.min(rect.pos.y + rect.height, bottom));
-	if (x1 <= x0 || y1 <= y0) {
+	if (!viewIn(rect, left, top, right, bottom, offsetX, offsetY, out)) {
 		return false;
 	}
-
-	out.x = x0;
-	out.y = y0;
-	out.width = x1 - x0;
-	out.height = y1 - y0;
-	out.startX = x0 - offsetX;
-	out.startY = y0 - offsetY;
-	out.sizeX = out.width;
-	out.sizeY = out.height;
 	// how many cells' images reach a pixel: as many in a line as the image
 	// is wide in cell spacings, as many lines as it is tall in row heights
 	out.overflowX = Math.ceil(tileset.tilewidth / (columnWidth * 2));
@@ -298,7 +305,7 @@ const ONE_TILESET = {
 	 * @returns {boolean} whether the layer can be drawn
 	 */
 	draws(layer) {
-		return layer._shaderTileset !== null;
+		return layer._shaderTileset !== null && layer._shaderFit !== false;
 	},
 };
 
@@ -318,8 +325,14 @@ export const TMX_ORIENTATIONS = {
 		tilesetsOf(layer) {
 			return layer.tilesets.tilesets;
 		},
-		draws() {
-			return true;
+		/**
+		 * not a layer found unfit for this path, or made so by a tile set
+		 * since (a layer never checked is drawn)
+		 * @param {TMXLayer} layer - the layer
+		 * @returns {boolean} whether the layer can be drawn
+		 */
+		draws(layer) {
+			return layer._shaderFit !== false;
 		},
 		// how many cells a tile can reach past its own, across and up
 		limits: { MAX_OVERFLOW: 4 },

@@ -230,6 +230,27 @@ describe("grids from a level", () => {
 			grid.refresh();
 			expect(grid.isSolid(2, 1)).toBe(true);
 		});
+
+		it("stands where the layer's tiles are drawn, when the layer was moved", () => {
+			// by its offset in Tiled, or as here by its `pos`: the tiles
+			// are drawn there, and the grid's cells are theirs
+			const layer = wallsLayer();
+			const before = Grid.fromTileLayer(layer).getPointPosition(2, 1);
+			const { x, y } = layer.pos;
+			layer.pos.x = x + 24;
+			layer.pos.y = y - 10;
+			try {
+				const grid = Grid.fromTileLayer(layer);
+				const at = grid.getPointPosition(2, 1);
+				expect([at.x - before.x, at.y - before.y]).toEqual([24, -10]);
+				// the same cells, moved
+				expect(grid.isSolid(2, 0)).toBe(true);
+				expect(grid.isSolid(0, 0)).toBe(false);
+			} finally {
+				layer.pos.x = x;
+				layer.pos.y = y;
+			}
+		});
 	});
 
 	describe("Grid.fromBodies", () => {

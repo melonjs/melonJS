@@ -20,8 +20,9 @@ import staggeredWGSL from "../../shaders/tmxlayer-staggered.wgsl";
 /**
  * byte size of the TMXUniforms block (see tmxlayer-common.wgsl): ten vec2f (80)
  * interleaved with one vec4f at a 16-aligned offset, two f32, the vec4f
- * tint (ending at 112) and the mipmap flag, rounded up to the block's
- * 16-byte alignment → 128 bytes
+ * tint (ending at 112), the mipmap flag (112), and a staggered map's mode
+ * (116) and two lengths (a vec2f at 120) → 128 bytes, a multiple of the
+ * block's 16-byte alignment
  * @ignore
  * @internal
  */
@@ -43,10 +44,10 @@ const ORIENTATION_WGSL = {
  * the fragment shader sampling a per-layer GID index texture and the
  * tileset atlas.
  *
- * An orientation's renderer extends this one with the two things that
- * differ: its part of the shader (where a cell's tile is, and which cells
- * can cover a fragment), and {@link TMXLayerGPURenderer#region}, the part of
- * the layer a view shows.
+ * There is one of these per map orientation drawn (see `TMX_ORIENTATIONS`
+ * in `gpu/tmxlayer_orientation.js`). Two things differ from one to the next:
+ * its part of the shader (where a cell's tile is, and which cells can cover
+ * a fragment), and the part of a layer a view shows.
  *
  * Structure mirrors the WebGL twin; the mechanisms are the backend's:
  * - the GID index / animation lookup are renderer-owned `rgba8unorm`

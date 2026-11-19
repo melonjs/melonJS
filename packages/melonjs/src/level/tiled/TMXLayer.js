@@ -237,7 +237,8 @@ export default class TMXLayer extends Renderable {
 		 */
 		this.maxTileOffset = { x: 0, y: 0 };
 		/**
-		 * The one tileset an isometric layer on the shader path draws with:
+		 * The one tileset a layer of an isometric, staggered or hexagonal
+		 * map draws with on the shader path:
 		 * `undefined` for an empty layer (it takes the tileset of the first
 		 * tile set), `null` for a layer that path cannot draw, or that was
 		 * not checked for it.
@@ -282,7 +283,7 @@ export default class TMXLayer extends Renderable {
 		 * How far past the layer's grid its tiles can be drawn, on each
 		 * side: by tiles larger than a cell, and by a tileset's
 		 * `tileoffset`. The layer is in view as far as they reach (see
-		 * {@link TMXLayer#updateBounds}).
+		 * {@link TMXLayer#getDrawBounds}).
 		 * @ignore
 		 */
 		this._reach = {
@@ -490,28 +491,30 @@ export default class TMXLayer extends Renderable {
 		this.pos.y = this._mapPos.y + (+data.offsety || 0);
 		vector2dPool.release(origin);
 		boundsPool.release(bounds);
-		this.updateBounds();
 	}
 
 	/**
-	 * The layer's bounds: its grid, where it is, and as far past it as its
-	 * tiles reach. A tile larger than its cell, or moved by its tileset's
-	 * `tileoffset`, is drawn outside the grid, and the layer is in view
-	 * while such a tile is. Its `width` and `height` stay the grid's.
+	 * The area the layer draws in: its bounds, which are its grid's, and as
+	 * far past them as its tiles reach. A tile larger than its cell, or
+	 * moved by its tileset's `tileoffset`, is drawn outside the grid, and a
+	 * camera has the layer in view while such a tile is (see
+	 * `Camera2d#isVisible`). The layer's bounds, `width` and `height` stay
+	 * the grid's.
+	 * @returns {Bounds} that area, in the same coordinates as `getBounds()`
 	 * @ignore
 	 */
-	updateBounds(absolute = true) {
-		const bounds = super.updateBounds(absolute);
+	getDrawBounds() {
+		const bounds = this.getBounds();
 		const reach = this._reach;
-		if (reach !== undefined && bounds.isFinite()) {
-			bounds.setMinMax(
-				bounds.left - reach.left,
-				bounds.top - reach.top,
-				bounds.right + reach.right,
-				bounds.bottom + reach.bottom,
-			);
-		}
-		return bounds;
+		/** @ignore */
+		this._drawBounds ??= boundsPool.get();
+		this._drawBounds.setMinMax(
+			bounds.left - reach.left,
+			bounds.top - reach.top,
+			bounds.right + reach.right,
+			bounds.bottom + reach.bottom,
+		);
+		return this._drawBounds;
 	}
 
 	/**
@@ -707,6 +710,13 @@ export default class TMXLayer extends Renderable {
 			typeof this.preRender === "boolean" ? this.preRender : root?.preRender;
 
 		const elig = this._checkShaderEligibility(renderer, gpuAllowed);
+		/**
+		 * whether the shader path can draw the layer, as its tiles are now
+		 * (kept up to date by `setTile`): a layer asked for that path by
+		 * hand when it cannot is drawn tile by tile
+		 * @ignore
+		 */
+		this._shaderFit = elig.ok;
 
 		const requested = this.renderMode;
 		// explicit "shader" — honor if eligible, warn otherwise
@@ -986,11 +996,15 @@ export default class TMXLayer extends Renderable {
 			}
 		}
 		if (reason !== undefined) {
-			console.warn(
-				`melonJS: layer "${this.name}" back to the legacy tile renderer (${reason})`,
-			);
-			this.renderMode = "perTile";
+			this._shaderFit = false;
 			this._shaderTileset = null;
+			// drawn another way for now (by hand): nothing to move back
+			if (this.renderMode === "shader") {
+				console.warn(
+					`melonJS: layer "${this.name}" back to the legacy tile renderer (${reason})`,
+				);
+				this.renderMode = "perTile";
+			}
 		}
 	}
 
@@ -1101,7 +1115,9 @@ export default class TMXLayer extends Renderable {
 		this.dataVersion++;
 		this.isDirty = true;
 		this._preRenderCell(x, y);
-		if (this.renderMode === "shader") {
+		// whichever way the layer is drawn now: it may be asked for the
+		// shader path again
+		if (this._shaderFit === true) {
 			this._keepShaderEligible(cleanGid, this.layerData[idx + 1]);
 		}
 		return tile;
@@ -1256,6 +1272,27 @@ export default class TMXLayer extends Renderable {
 			viewRect.pos.set(rect.pos.x + offset.x, rect.pos.y + offset.y);
 			rect = viewRect.setSize(rect.width, rect.height);
 		}
+		// The view is the camera's, in the world's coordinates, and the layer
+		// is drawn where its ancestors put it: a world moved to centre a map
+		// smaller than the view, a container the game moved. Read in the
+		// layer's own coordinates, the view starts that much earlier. (A
+		// camera other than the default one draws the world unmoved.)
+		let shiftX = 0;
+		let shiftY = 0;
+		const parent = this.ancestor;
+		if (parent !== undefined && parent !== null) {
+			const at = parent.getAbsolutePosition();
+			shiftX = at.x;
+			shiftY = at.y;
+			if (rect.isDefault === false) {
+				let root = parent;
+				while (root.ancestor) {
+					root = root.ancestor;
+				}
+				shiftX -= root.pos.x;
+				shiftY -= root.pos.y;
+			}
+		}
 		// A layer moved from its place in the map, by its offset in Tiled or
 		// by its `pos`, and an infinite map's layer that starts left of or
 		// above the map's origin: the layer's renderer draws its grid from
@@ -1265,13 +1302,18 @@ export default class TMXLayer extends Renderable {
 		if (
 			movedX !== 0 ||
 			movedY !== 0 ||
+			shiftX !== 0 ||
+			shiftY !== 0 ||
 			this.startx !== 0 ||
 			this.starty !== 0
 		) {
 			const origin = this._cellOrigin(vector2dPool.get());
 			origin.set(origin.x + movedX, origin.y + movedY);
 			cellRect ??= new Rect(0, 0, 0, 0);
-			cellRect.pos.set(rect.pos.x - origin.x, rect.pos.y - origin.y);
+			cellRect.pos.set(
+				rect.pos.x - shiftX - origin.x,
+				rect.pos.y - shiftY - origin.y,
+			);
 			cellRect.setSize(rect.width, rect.height);
 			renderer.translate(origin.x, origin.y);
 			renderer.drawTileLayer(this, cellRect);

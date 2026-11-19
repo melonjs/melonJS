@@ -1,7 +1,8 @@
 // melonJS WebGPU TMX layer shader — the WGSL port of tmxlayer.vert and
 // tmxlayer-common.frag (WebGL2): the part every map orientation shares. An
 // orientation's own file follows it in the module (tmxlayer-orthogonal.wgsl,
-// tmxlayer-isometric.wgsl) and gives the two things that differ: where a
+// tmxlayer-isometric.wgsl, tmxlayer-staggered.wgsl for staggered and
+// hexagonal maps) and gives the two things that differ: where a
 // cell's tile is drawn (`tileOrigin`), and which cells could cover a
 // fragment, front to back (`fragment_main`).
 //
@@ -17,9 +18,9 @@
 // local id, same R/G byte-pair encoding.
 //
 // textureLoad replaces texelFetch (byte-exact, no sampler); the atlas
-// sample uses textureSampleLevel — the sample sites sit in non-uniform
-// control flow, where implicit-derivative sampling is not allowed (WGSL
-// uniformity rule; atlases are single-level so the output is identical).
+// sample uses textureSampleGrad, with derivatives taken once per fragment —
+// the sample sites sit in non-uniform control flow, where
+// implicit-derivative sampling is not allowed (WGSL uniformity rule).
 
 struct FrameUniforms {
 	projection : mat4x4<f32>,

@@ -307,17 +307,31 @@ describe("where a tile layer is (Canvas renderer)", () => {
 			).toBeGreaterThan(0);
 		});
 
-		it("the bounds cover the reach, the size stays the grid's", () => {
+		it("its bounds stay the grid's: the reach is for what is in view alone", () => {
 			const [layer] = show(app, makeMap(orthogonal({ tall: 128 })));
 			expect([layer.width, layer.height]).toEqual([320, 256]);
 			const bounds = layer.getBounds();
+			expect([bounds.left, bounds.top, bounds.right, bounds.bottom]).toEqual([
+				0, 0, 320, 256,
+			]);
 			// 128 pixel tiles on a 32 pixel grid stand 96 above their cell
-			expect(bounds.top).toBe(-96);
-			expect([bounds.left, bounds.right, bounds.bottom]).toEqual([0, 320, 256]);
+			const reach = layer.getDrawBounds();
+			expect([reach.left, reach.top, reach.right, reach.bottom]).toEqual([
+				0, -96, 320, 256,
+			]);
 			// and getTile has nothing above the grid: no cell is there
 			expect(layer.getTile(10, -50)).toBeNull();
+			// moved, both move with it
+			layer.pos.x = 40;
+			layer.pos.y = -10;
+			expect([layer.getBounds().left, layer.getBounds().top]).toEqual([
+				40, -10,
+			]);
+			expect([layer.getDrawBounds().left, layer.getDrawBounds().top]).toEqual([
+				40, -106,
+			]);
 			// tiles the size of the grid: the grid, no more
-			const plain = show(app, makeMap(orthogonal()))[0].getBounds();
+			const plain = show(app, makeMap(orthogonal()))[0].getDrawBounds();
 			expect([plain.left, plain.top, plain.right, plain.bottom]).toEqual([
 				0, 0, 320, 256,
 			]);

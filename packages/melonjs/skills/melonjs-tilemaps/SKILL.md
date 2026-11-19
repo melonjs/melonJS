@@ -301,9 +301,11 @@ collision: solid ground comes from collision object layers (below), so a tile
 set or cleared changes what is drawn and what `cellAt` returns, not what a body
 runs into. Keep a layer you edit often off `preRender` (see the symptom table).
 
-A tile layer is where its `pos` says: its offset in Tiled (Layer → Offset)
-to start with, and wherever the game moves it afterwards. Its tiles are drawn
-there, and `getTile(x, y)` answers for where they are drawn:
+A tile layer moves with its `pos`. It starts where its offset in Tiled puts
+it (Layer → Offset), and the game moves it from there; its tiles are drawn
+where it is, and `getTile(x, y)` answers for where they are drawn. Move it
+by a difference, not to a point: `pos` is not (0, 0) to begin with on every
+map (an infinite one, an oblique one).
 
 ```js
 board.pos.y -= 8;                    // the whole layer, 8 pixels up
@@ -537,6 +539,7 @@ layer into the offscreen-bake path instead.
 | thin lines between tiles on the Canvas renderer, with smoothing on | filtering blends in the next tile of the tileset or its spacing, which a canvas cannot prevent: set `antiAlias: false`, or `preRender` the layer. WebGL and WebGPU keep each tile to itself |
 | a tile layer given an offset in Tiled (a roof nudged up, a shadow shifted) is drawn where the others are | before 20.17 a tile layer ignored its offset, and its `pos`; only image layers followed theirs: update |
 | after updating to 20.17 a tile layer sits away from where it did | it has an offset in Tiled that was ignored until then, and now moves it as in the editor: clear the layer's Offset in Tiled if it was not meant |
+| a map smaller than the screen (centred by `level.load`) had the tops of its tall tiles cut on WebGL or WebGPU | before 20.17 a layer read the camera's view as if it stood at the world's origin, and so did a layer in a container the game had moved: update |
 | the tops of tall tiles vanish when the map itself scrolls out of view | before 20.17 a layer was skipped once its grid left the view, though tiles larger than a cell (or moved by a `tileoffset`) still reached in: update |
 | tilemap slow on some machines | layer fell back off the shader path — check the console warning for the reason |
 | a staggered or hexagonal map sits higher than before 20.17, by how much its tiles are taller than a cell (or by its tileset's `tileoffset`) | it is drawn as Tiled draws it: until then a tile hung from the top of its cell and the offset was ignored, away from the map's objects |

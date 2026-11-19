@@ -9,8 +9,8 @@ precision highp int;
 
 // Fragment shader for the TMX layer GPU renderers (WebGL2 / GLSL ES 3.00):
 // the part every map orientation shares. An orientation's own file follows
-// it in the program (`orthogonal-tmxlayer.frag`, `isometric-tmxlayer.frag`)
-// and gives the two things that differ: where a cell's tile is drawn
+// it in the program (`orthogonal-tmxlayer.frag`, `isometric-tmxlayer.frag`,
+// `staggered-tmxlayer.frag` for staggered and hexagonal maps) and gives the two things that differ: where a cell's tile is drawn
 // (`tileOrigin`), and which cells could cover a fragment, front to back
 // (`main`).
 //

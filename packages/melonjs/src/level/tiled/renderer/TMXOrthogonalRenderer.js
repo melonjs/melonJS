@@ -96,8 +96,8 @@ export default class TMXOrthogonalRenderer extends TMXRenderer {
 		// view.) A tileset's `tileoffset` moves its tiles either way.
 		const overX = Math.max(layer.maxTileSize.width - layer.tilewidth, 0);
 		const overY = Math.max(layer.maxTileSize.height - layer.tileheight, 0);
-		const offsetX = layer.maxTileOffset.x;
-		const offsetY = layer.maxTileOffset.y;
+		const offsetX = layer.maxTileOffset?.x ?? 0;
+		const offsetY = layer.maxTileOffset?.y ?? 0;
 		const start = this.pixelToTileCoords(
 			Math.max(rect.pos.x - overX - offsetX, 0),
 			Math.max(rect.pos.y - offsetY, 0),

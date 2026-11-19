@@ -408,10 +408,14 @@ export async function makeApp(renderer, type, width = 320, height = 240) {
  * @param {TMXTileMap} map - the map
  * @param {string} [renderMode] - a render mode to ask of every layer before
  * it is activated ("prerender" needs asking then: it bakes at activation)
+ * @param {boolean} [centered=false] - as `level.load` adds a map: one
+ * smaller than the view is centred in it, by moving the world (`world.pos`)
  * @returns {object[]} the map's tile layers
  */
-export function show(app, map, renderMode) {
+export function show(app, map, renderMode, centered = false) {
 	app.world.reset();
+	// where a map centred before this one left it
+	app.world.pos.set(0, 0, app.world.pos.z);
 	app.renderer.reset?.();
 	app.renderer.backgroundColor.setColor(16, 24, 48);
 	if (renderMode !== undefined) {
@@ -419,7 +423,7 @@ export function show(app, map, renderMode) {
 			layer.renderMode = renderMode;
 		}
 	}
-	map.addTo(app.world, true, false);
+	map.addTo(app.world, true, centered);
 	// the layers in their order now: the world sorts its children later, on
 	// a timer no frame of these tests waits for
 	app.world.sortNow(true);
@@ -539,6 +543,8 @@ const DEFAULT_VIEWS = [
  * channel that is not counted
  * @param {number} [options.share=0] - the largest share of the pixels
  * drawn that the two paths may differ by
+ * @param {number[]} [options.origin] - where the map's origin is drawn,
+ * when the world or a container the layers are in was moved
  * @returns {Promise<number>} how many pixels were drawn, in all
  */
 export async function comparePaths(app, scene, options = {}) {
@@ -548,6 +554,7 @@ export async function comparePaths(app, scene, options = {}) {
 		expected,
 		tolerance = 0,
 		share = 0,
+		origin = [0, 0],
 	} = options;
 	const { width, height } = app.viewport;
 	let layers = options.layers;
@@ -570,7 +577,7 @@ export async function comparePaths(app, scene, options = {}) {
 		const count = drawn(gpu.frame);
 		const allowed = Math.floor(count * share);
 		if (oracle) {
-			let ref = reference(scene, x, y, width, height);
+			let ref = reference(scene, x - origin[0], y - origin[1], width, height);
 			if (expected !== undefined) {
 				ref = expected(ref);
 			}

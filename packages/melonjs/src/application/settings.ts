@@ -481,12 +481,13 @@ export type ApplicationSettings = {
 	 * `renderer.supportsShaderTileLayers` — WebGL 2 and WebGPU). When
 	 * `true` (default), eligible layers render via a single quad per
 	 * tileset + a fragment shader doing per-fragment GID lookup, bypassing
-	 * the per-tile draw loop entirely. Layers that don't qualify (Canvas
-	 * renderer, an oblique map, collection-of-image tilesets,
-	 * tilerendersize "grid", tiles larger than the shader walks; on an
-	 * orthogonal map a non-zero tileoffset, on the others tiles of
-	 * several tilesets in one layer) fall back to the legacy path
-	 * automatically, saying why in the console.
+	 * the per-tile draw loop entirely. Layers that don't qualify fall
+	 * back to the legacy path automatically, saying why in the console:
+	 * among them the Canvas renderer, an oblique map, collection-of-image
+	 * tilesets, tilerendersize "grid", tiles larger than the shader walks;
+	 * on an orthogonal map a non-zero tileoffset; on the others tiles of
+	 * several tilesets in one layer, a grid of odd size, or a blend mode
+	 * other than the normal one.
 	 * Set to `false` to disable globally.
 	 * @default true
 	 */

@@ -225,11 +225,13 @@ export default class World extends Container {
 		 * tiles, per-layer opacity and tint, and tiles larger than the
 		 * grid: up to 4 cells of overflow on an orthogonal map, up to 4
 		 * cells wide and 8 tall on the others.
-		 * Layers that don't qualify (Canvas, an oblique map,
-		 * collection-of-image tilesets, larger tiles; on an orthogonal map
-		 * a non-zero `tileoffset`, on the others tiles of several tilesets
-		 * in one layer) fall back to the legacy
-		 * path automatically. Set to `false` to disable globally.
+		 * Layers that don't qualify fall back to the legacy path
+		 * automatically, saying why in the console: among them Canvas, an
+		 * oblique map, collection-of-image tilesets, a `tilerendersize`
+		 * of "grid", larger tiles; on an orthogonal map a non-zero
+		 * `tileoffset`; on the others tiles of several tilesets in one
+		 * layer, a grid of odd size, or a blend mode other than the
+		 * normal one. Set to `false` to disable globally.
 		 * @type {boolean}
 		 * @default true
 		 */

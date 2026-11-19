@@ -1493,7 +1493,7 @@ export default class WebGLRenderer extends Renderer {
 	 */
 	_getTMXGPURendererFor(orientation) {
 		if (TMX_ORIENTATIONS[orientation] === undefined) {
-			// staggered, hexagonal, oblique: drawn by the legacy renderer
+			// an oblique map: drawn by the legacy renderer
 			return undefined;
 		}
 		this._tmxGPURenderers ??= new Map();
