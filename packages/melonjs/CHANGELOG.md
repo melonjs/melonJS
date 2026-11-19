@@ -4,32 +4,19 @@
 
 ### Added
 - Transitions: a mask transition can be shaped like an image or a `Sprite`, close on the player with `center`, and fill the shape with `invert`, on `state.transition`, `MaskEffect` and `Trigger` ([#1399](https://github.com/melonjs/melonJS/issues/1399))
-
-### Changed
-- Tiled: an isometric, staggered or hexagonal tile layer with an `opacity` below 1 fades as one flat picture on WebGL and WebGPU, where each tile was faded over the ones behind it and showed through the one in front. Set the layer's `renderMode` to `"perTile"` for the look it had
+- Tiled: isometric maps are rendered by the GPU on WebGL and WebGPU, as orthogonal ones are, and so are staggered and hexagonal maps. Nothing to enable: a tile layer whose tiles come from one tileset takes it by itself, and any other is drawn as before, the console saying why ([#1897](https://github.com/melonjs/melonJS/issues/1897))
 
 ### Performance
-- Tiled: isometric, staggered and hexagonal tile layers are drawn by the GPU on WebGL and WebGPU, as orthogonal ones are: one quad for the layer, its tiles found by the fragment shader, in place of a quad per tile in view found and placed in JavaScript every frame. On a 100 × 100 isometric map with about 4000 tiles in view, drawing the layer takes under **0.1 ms** of main-thread time a frame, down from about **2 ms**, and no longer grows with the number of tiles shown. A layer takes this path by itself when all its tiles come from one tileset, up to 4 cells wide and 8 tall (a `tileoffset`, flipped and animated tiles, and `setTile` are all fine); any other is drawn as before, and the console says why ([#1897](https://github.com/melonjs/melonJS/issues/1897))
-- Tiled: a reminder that orthogonal tile layers have been drawn this way since 19.4, with the same gain (about 1.9 ms down to under 0.1 ms for 3600 tiles in view). A layer that is not says why in the console when it is activated: most often a tileset with a `tileoffset`, a collection of images, or the Canvas renderer.
+- Tiled: thanks to the GPU renderer, drawing an isometric tile layer takes about **90%** less of the main thread's time with 1200 tiles in view (0.68 to 0.07 ms a frame) and about **98%** less with 4000 (2.0 to 0.04 ms), and no longer grows with the number of tiles shown. Staggered and hexagonal maps gain the same
+- Tiled: for reference, orthogonal tile layers, on the GPU since 19.4, measure about **85%** less with 1000 tiles in view (0.62 to 0.09 ms) and about **97%** less with 3600 (1.9 to 0.06 ms)
 
 ### Fixed
-- Tiled, GPU tile layers: the soft edge of a tile larger than the grid shows the tile behind it; it was drawn over the background instead, a thin outline round such tiles
-- Tiled, GPU tile layers: tiles larger than the grid are drawn whole above the map's first row and right of its last column, where they were cut off
-- Tiled, GPU tile layers: a tileset with a `margin` whose image stops at its last tiles, with no margin after them, draws the right tiles; they were counted a column or a row short
-- Tiled, GPU tile layers: an orthogonal layer whose tiles are larger than the grid and come from more than one tileset, or whose map has a render order other than "right-down", is drawn tile by tile; on the GPU such tiles lay over each other in the wrong order
-- Tiled, GPU tile layers: a layer with more columns or rows than the largest texture the GPU takes is drawn tile by tile; it drew nothing
-- Tiled, GPU tile layers: a layer with a tile that is not square, flipped diagonally, is drawn tile by tile; the shader drew such a tile wrong
-- Tiled, GPU tile layers: the shader runs at full precision whatever `highPrecisionShader` says; at a lower one a phone could misplace the tiles of a large map
-- Tiled: a tile layer follows its offset in Tiled (`offsetx`, `offsety`), and its own `pos` when the game moves it: its tiles are drawn there and `getTile()` finds them there, on every renderer and map orientation. Both were ignored, and the layer drawn at the map's origin; only image layers followed their offset. A map whose tile layers have an offset now looks as it does in Tiled
-- Tiled: tiles that reach past their layer's grid (taller or wider than a cell, or moved by a `tileoffset`) are drawn when they are in view and the grid is not; the whole layer was skipped, so the tops of tall tiles vanished once the map scrolled out of view. The layer's bounds are still its grid's
-- Tiled: a map centred in the view because it is smaller (as `level.load` centres it), and a tile layer in a container that was moved, are drawn whole. The layer read the camera's view as if it stood at the world's origin: on WebGL, WebGPU and a pre-rendered layer the tiles reaching above or left of the grid were cut, and tile by tile a layer far from the origin lost tiles
-- Tiled, staggered and hexagonal maps: a tile larger than its cell stands on the cell, and a tileset's `tileoffset` moves its tiles, as in Tiled and on every other map. Drawn tile by tile, such a tile hung down from the top of its cell and the offset was ignored, so the map sat lower than its objects (and than a tile redrawn in a baked layer); tiles of a large tileset also went missing along the edges of the view
-- Tiled, staggered and hexagonal maps of odd sizes are laid out in whole numbers, as Tiled 1.10 lays them out: a tile of odd size stands on a cell a pixel smaller, and a hexagon side that leaves an odd number of pixels of a tile drops the half pixel. Every other column or row drifted half a pixel further, and a pre-rendered layer lost a row and a column of pixels
-- Tiled: a level loaded into a container of its own is in view as far as its tile layers draw: their tiles' reach, a layer's offset, and an infinite map's chunks left of and above its origin were cut off once the map's own rectangle left the view
-- Tiled: a tile layer taken out of its container and added again is drawn; it threw. A tile its tileset's image does not hold (an image cropped since the map was saved) is not drawn; drawing it threw every frame
-- Tiled, isometric maps drawn tile by tile: tiles narrower than half a cell are no longer left out at the right edge of the view
-- Tiled, isometric maps drawn tile by tile: tiles of a tileset larger than the map's first one, or moved by a `tileoffset`, went missing along the edges of the view
-- Tiled, orthogonal maps drawn tile by tile: tiles more than two cells tall went missing along the bottom of the view
+- Tiled: a tile layer follows its offset in Tiled, and its own `pos` when the game moves it: its tiles are drawn there, and `getTile()` finds them there. Both were ignored; a map whose tile layers have an offset now looks as it does in Tiled
+- Tiled: tiles larger than a cell are drawn wherever they are in view. They were cut off or left out along the edges of the view, above and right of the map, on a map centred in the screen, and once the map itself had scrolled out of view
+- Tiled: staggered and hexagonal maps are drawn where Tiled draws them: a tile larger than its cell stands on it, a tileset's `tileoffset` moves its tiles, and maps of odd sizes stay on whole pixels
+- Tiled: orthogonal layers drawn by the GPU show the soft edges of large tiles over the tiles behind them, lay large tiles over each other in the map's order, and read a tileset with a `margin` right
+- Tiled: an isometric, staggered or hexagonal layer with an `opacity` below 1 fades as one picture on WebGL and WebGPU; each tile showed through the one in front of it
+- Tiled: a tile layer removed from its container and added again, and a tile missing from its tileset's image, no longer throw
 - `NineSliceSprite` blinks with `flicker()`, as a `Sprite` does; it ignored it
 - glTF: a model compressed with Draco or meshopt, which the loader cannot decode, says so in the console, naming the extension, instead of failing on an accessor error that did not mention it
 
