@@ -8,17 +8,22 @@ import setContextStyle, { strokeReach } from "./textstyle.js";
  * @import Renderable from "../renderable.js";
  */
 /**
- * One pixel of slack on top of the reported ink extent.
+ * Two pixels of slack on top of the reported ink extent.
  *
  * `actualBoundingBox*` describes the OUTLINE, and the rasterizer paints past
  * it: antialiasing and pixel snapping both put ink outside what the metrics
  * promise. Measured against two engines, the painted ink reached a full pixel
- * beyond the reported bound — enough to shear the top row off a stroke. Over-
- * padding costs nothing but invisible canvas headroom.
+ * beyond the reported bound — enough to shear the top row off a stroke. One
+ * more is needed when the padding rounds to the demand exactly: on macOS,
+ * Helvetica under the "hanging" baseline reports an ascent of -0.05px at
+ * 20px, so `ceil(ascent + stroke)` leaves 0.05px of headroom and the painted
+ * ink — ascent plus the stroke's reach plus its own spill — starts on the
+ * canvas' first row. A second pixel absorbs that worst case. Over-padding
+ * costs nothing but invisible canvas headroom.
  * @ignore
  * @internal
  */
-const INK_SLACK = 1;
+const INK_SLACK = 2;
 
 /**
  * The share of the em to pad by when the ink extent cannot be measured at all.

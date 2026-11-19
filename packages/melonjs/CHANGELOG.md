@@ -7,6 +7,7 @@
 
 ### Fixed
 - `NineSliceSprite` blinks with `flicker()`, as a `Sprite` does; it ignored it
+- Text: a stroked multi-line label with `textBaseline: "hanging"` keeps the top of its outline on macOS, where Helvetica's hanging metrics made the ink padding exactly as tall as the ink, shearing its first row off the canvas ([#1870](https://github.com/melonjs/melonJS/issues/1870))
 - glTF: a model compressed with Draco or meshopt, which the loader cannot decode, says so in the console, naming the extension, instead of failing on an accessor error that did not mention it
 
 ## [20.16.0] (melonJS 2) - _2026-11-17_
