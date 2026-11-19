@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { boot, Sprite } from "../src/index.js";
 import { buildLitMultiTextureFragment } from "../src/video/webgl/shaders/multitexture-lit.js";
 import litQuadVertex from "../src/video/webgl/shaders/quad-multi-lit.vert?raw";
+import { pngImage } from "./helpers/png.js";
 import {
 	getWebGLRenderer,
 	releaseWebGLRenderer,
@@ -214,6 +215,128 @@ describe("2D specular", () => {
 			expect(litQuadVertex).toContain("in float aShininess;");
 			expect(litQuadVertex).toContain("vShininess = aShininess;");
 			expect(fragment).toContain("in float vShininess;");
+		});
+	});
+
+	/**
+	 * The mask, drawn: one grey sprite, 16 pixels across, whose normal map
+	 * tilts every texel toward the right, lit by one light, and the red of
+	 * its middle read back. The light on the right is on the side the
+	 * surface faces; on the left, behind it.
+	 */
+	describe("the normal map's alpha, in pixels", () => {
+		const SPRITE = 16;
+		// n = normalize(0.7, 0, 0.7), encoded
+		const TILT = [217, 128, 217];
+		let diffuse;
+
+		const pixels = (alpha) => {
+			const data = new ImageData(SPRITE, SPRITE);
+			for (let i = 0; i < SPRITE * SPRITE; i++) {
+				data.data.set([...TILT, alpha], i * 4);
+			}
+			return data;
+		};
+
+		/** the red of the sprite's middle, lit from `lightX` */
+		const lit = (normalMap, lightX, shininess = 0) => {
+			const gl = renderer.gl;
+			const litQuad = renderer.batchers.get("litQuad");
+			const lights = renderer.activeLightCount;
+			try {
+				renderer.activeLightCount = 1;
+				renderer.currentNormalMap = normalMap;
+				renderer.currentShininess = shininess;
+				litQuad.setLightUniforms({
+					positions: new Float32Array([lightX, 32, 80, 1]),
+					colors: new Float32Array([1, 1, 1]),
+					heights: new Float32Array([12]),
+					count: 1,
+					ambient: [0, 0, 0],
+				});
+				renderer.clearColor("#000000ff");
+				renderer.drawImage(diffuse, 24, 24);
+				renderer.flush();
+				const out = new Uint8Array(4);
+				gl.readPixels(32, 64 - 1 - 32, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, out);
+				return out[0];
+			} finally {
+				renderer.activeLightCount = lights;
+				renderer.currentNormalMap = null;
+				renderer.currentShininess = 0;
+				litQuad.setLightUniforms({
+					positions: new Float32Array(4),
+					colors: new Float32Array(3),
+					count: 0,
+					ambient: [0, 0, 0],
+				});
+			}
+		};
+		const RIGHT = 70;
+		const LEFT = -6;
+
+		beforeAll(() => {
+			diffuse = document.createElement("canvas");
+			diffuse.width = diffuse.height = SPRITE;
+			const context = diffuse.getContext("2d");
+			context.fillStyle = "#808080";
+			context.fillRect(0, 0, SPRITE, SPRITE);
+		});
+
+		it("a normal map from an image file: the alpha scales the highlight, and nothing else", async (ctx) => {
+			requireWebGL(ctx, renderer);
+			const shiny = await pngImage(pixels(255));
+			const half = await pngImage(pixels(128));
+			const matte = await pngImage(pixels(0));
+
+			// with no shininess the alpha changes nothing: the diffuse
+			// shading is the surface's direction, the same in all three
+			const flat = lit(shiny, RIGHT);
+			expect(flat).toBeGreaterThan(10);
+			expect(lit(half, RIGHT)).toBe(flat);
+			expect(lit(matte, RIGHT)).toBe(flat);
+
+			// with it, the highlight is added in proportion to the alpha
+			const full = lit(shiny, RIGHT, 8);
+			const partly = lit(half, RIGHT, 8);
+			expect(full).toBeGreaterThan(flat + 20);
+			expect(partly).toBeGreaterThan(flat + 10);
+			expect(partly).toBeLessThan(full - 10);
+			// half the mask, half the highlight
+			expect((partly - flat) / (full - flat)).toBeCloseTo(128 / 255, 1);
+			// and a matte texel has none at all
+			expect(lit(matte, RIGHT, 8)).toBe(flat);
+		});
+
+		it("a matte texel keeps the direction it faces", async (ctx) => {
+			requireWebGL(ctx, renderer);
+			// Alpha 0 here is a material, not a hole: the direction under it
+			// still has to reach the shader, or the matte part of a sprite is
+			// lit from the wrong side. Normal maps are uploaded with
+			// premultiplied alpha off for that.
+			const matte = await pngImage(pixels(0));
+			expect(lit(matte, RIGHT)).toBeGreaterThan(10);
+			expect(lit(matte, LEFT)).toBe(0);
+			// as the same surface does with a full mask
+			const shiny = await pngImage(pixels(255));
+			expect(lit(matte, RIGHT)).toBe(lit(shiny, RIGHT));
+			expect(lit(shiny, LEFT)).toBe(0);
+		});
+
+		it('an ImageBitmap made with `premultiplyAlpha: "none"` does the same', async (ctx) => {
+			requireWebGL(ctx, renderer);
+			// the way to make a masked normal map in code: a canvas cannot
+			// hold a direction under an alpha of 0, and a bitmap made with
+			// the default options has its directions multiplied by the mask
+			const options = { premultiplyAlpha: "none" };
+			const shiny = await createImageBitmap(pixels(255), options);
+			const matte = await createImageBitmap(pixels(0), options);
+			const flat = lit(shiny, RIGHT);
+			expect(flat).toBeGreaterThan(10);
+			expect(lit(matte, RIGHT)).toBe(flat);
+			expect(lit(matte, LEFT)).toBe(0);
+			expect(lit(shiny, RIGHT, 8)).toBeGreaterThan(flat + 20);
+			expect(lit(matte, RIGHT, 8)).toBe(flat);
 		});
 	});
 });

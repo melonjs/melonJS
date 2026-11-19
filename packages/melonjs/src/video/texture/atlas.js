@@ -123,7 +123,7 @@ export class TextureAtlas extends Texture2d {
 	/**
 	 * @param {object|object[]} atlases - atlas information. See {@link loader.getJSON}
 	 * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|CompressedImage|string|OffscreenCanvas[]|HTMLImageElement[]|HTMLCanvasElement[]|string[]} [src=atlas.meta.image] - Image source
-	 * @param {boolean|object} [options] - either a boolean (legacy `cache` flag — `false` disables `TextureCache` registration; default behavior is to cache) or an options object `{ cache?: boolean, normalMap?: HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap|string }`. When `normalMap` is provided, the atlas exposes a paired normal-map texture sharing the same UVs as the color texture (used by the WebGL renderer's lit pipeline). `HTMLVideoElement` is intentionally not supported as a normal map (would freeze on frame 0 due to per-image GL texture caching).
+	 * @param {boolean|object} [options] - either a boolean (legacy `cache` flag — `false` disables `TextureCache` registration; default behavior is to cache) or an options object `{ cache?: boolean, normalMap?: HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap|string }`. When `normalMap` is provided, the atlas exposes a paired normal-map texture sharing the same UVs as the color texture, used for per-pixel lighting by the GPU renderers, WebGL and WebGPU (the Canvas renderer draws its sprites unlit; see {@link Sprite#normalMap}). An `HTMLVideoElement` is refused with a `TypeError`: a normal map is uploaded to the GPU once, so a video would stay on its first frame.
 	 * @example
 	 * // create a texture atlas from a JSON Object
 	 * game.texture = new me.TextureAtlas(
@@ -179,7 +179,7 @@ export class TextureAtlas extends Texture2d {
 		/**
 		 * paired normal-map source(s), keyed identically to `sources`.
 		 * Populated from the constructor's `options.normalMap`. Used by
-		 * the WebGL renderer's lit pipeline for per-pixel lighting.
+		 * the GPU renderers' lit pipeline for per-pixel lighting.
 		 * @type {Map}
 		 * @ignore
 		 * @internal

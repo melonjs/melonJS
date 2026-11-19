@@ -46,7 +46,7 @@ export default class Sprite extends Renderable {
 	 * @param {number} [settings.flipX] - flip the sprite on the horizontal axis
 	 * @param {number} [settings.flipY] - flip the sprite on the vertical axis
 	 * @param {string|Vector2d|{x:number,y:number}} [settings.anchorPoint={x:0.5, y:0.5}] - Anchor point to draw the frame at (defaults to the center of the frame). Also accepts the named presets `"center"`, `"top"`, `"bottom"`, `"left"`, `"right"`, `"top-left"`, `"top-right"`, `"bottom-left"`, `"bottom-right"`. For spritesheet atlases the anchor also becomes the cached atlas's per-frame pivot (see {@link TextureAtlas}).
-	 * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap|Texture2d|string} [settings.normalMap] - optional normal-map texture used for per-pixel lighting (SpriteIlluminator-style). Same layout/UVs as `settings.image`. When omitted (default), the sprite renders unlit and pays no extra cost. Ignored by the Canvas renderer. Note: `HTMLVideoElement` is intentionally not supported — normal maps encode static surface directions in RGB, and the engine caches the GL texture per image reference (a video would freeze on frame 0).
+	 * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap|Texture2d|string} [settings.normalMap] - optional normal-map texture used for per-pixel lighting (SpriteIlluminator-style). Same layout/UVs as `settings.image`. When omitted (default), the sprite renders unlit and pays no extra cost. Lit on the GPU renderers, WebGL and WebGPU. The Canvas renderer cannot light a sprite per pixel: it draws the sprite unlit, and logs one console warning when lights are on (see {@link Sprite#normalMap}). An `HTMLVideoElement` is refused with a `TypeError`: a normal map is uploaded to the GPU once, so a video would stay on its first frame. For animated artwork, use one static normal atlas laid out like the color atlas (see {@link TextureAtlas}).
 	 * @param {object} [settings.bodyDef] - declarative, adapter-portable body definition, applied when this sprite is added to a container. Its `shapes` may name a collision shape file preloaded as JSON, paired with `id`. See {@link Renderable#bodyDef} and {@link BodyDefinitionInit}
 	 * @param {number} [settings.shininess=0] - specular exponent: how tight this sprite's highlight is, or 0 for none. Needs a `normalMap` — see {@link Sprite#shininess}
 	 * @example
@@ -162,7 +162,16 @@ export default class Sprite extends Renderable {
 		 * have a shiny blade and a matte leather grip; a normal map with no
 		 * alpha detail (the usual case) shines uniformly.
 		 *
-		 * Ignored by the Canvas renderer.
+		 * That alpha is a material, not coverage: a matte texel (alpha 0) is
+		 * still shaded by the direction in its RGB, which has to reach the
+		 * GPU. It does from an image file, and from an `ImageBitmap` made
+		 * with `premultiplyAlpha: "none"`. It does not from a canvas (which
+		 * stores nothing under an alpha of 0) nor from an `ImageBitmap` made
+		 * with the default options (whose directions arrive multiplied by the
+		 * mask), nor from a file whose transparent pixels a tool has cleared.
+		 *
+		 * Needs a GPU renderer (WebGL or WebGPU), as the normal map does: the
+		 * Canvas renderer draws the sprite unlit (see {@link Sprite#normalMap}).
 		 * @type {number}
 		 * @default 0
 		 * @see [Normal Map example](https://melonjs.github.io/melonJS/examples/#/normal-map) — three orbs across the
@@ -360,7 +369,8 @@ export default class Sprite extends Renderable {
 		}
 
 		// resolve the optional normal-map paired with this sprite (used by
-		// the GPU backends' lit pipeline; silently ignored by Canvas).
+		// the GPU backends' lit pipeline; Canvas draws the sprite unlit, and
+		// says so once when lights are on).
 		// When the source is a TextureAtlas, prefer its paired normal-map
 		// over an explicit `settings.normalMap` (the atlas drove the layout).
 		if (
@@ -533,9 +543,21 @@ export default class Sprite extends Renderable {
 	 * lit pipeline samples this texture for per-pixel lighting using
 	 * `Stage._activeLights`. `null` when unlit.
 	 * Setting any non-image value (or anything without numeric
-	 * `width`/`height`) throws — assign `null` to clear.
+	 * `width`/`height`) throws — assign `null` to clear. So does a video
+	 * element: a normal map is uploaded to the GPU once, and a video would
+	 * stay on its first frame. A sprite whose animation changes pose takes
+	 * its normals from one static atlas laid out like the color one.
 	 *
-	 * Silently ignored by the Canvas renderer.
+	 * The alpha of a normal map is the mask of the sprite's
+	 * {@link Sprite#shininess}, and the RGB under a low alpha still shades
+	 * the sprite: see there for the sources that keep it.
+	 *
+	 * Lit on the GPU renderers, WebGL and WebGPU. The Canvas renderer cannot
+	 * light a sprite per pixel: the sprite is drawn there as it would be
+	 * with no normal map, and the first one drawn while lights are on logs
+	 * a console warning, once. `Light2d` glows and the stage's ambient light
+	 * still draw. For a presentation of your own on Canvas, test
+	 * `renderer.shaderLanguage === null`.
 	 * @type {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap|null}
 	 * @see {@link Sprite#shininess} to add a specular highlight on top
 	 * @see [Normal Map example](https://melonjs.github.io/melonJS/examples/#/normal-map)
