@@ -312,6 +312,13 @@ board.pos.y -= 8;                    // the whole layer, 8 pixels up
 board.getTile(pointer.x, pointer.y); // still the tile under the pointer
 ```
 
+The other layers follow their offset in Tiled too: an image layer is placed by
+it, an object layer's objects are created that far from where they were drawn
+(collision shapes with them), and a group layer's offset moves the tile layers
+inside it, on top of their own. A group can only hold tile layers: with an
+object layer, an image layer or another group inside a group, the map fails
+to load.
+
 The map's own custom properties (Map → Map Properties in Tiled) are set on the
 map object, which `level.getCurrentLevel()` returns once it is loaded: a
 `theme` string property is `level.getCurrentLevel().theme`. They are set
@@ -540,8 +547,9 @@ layer into the offscreen-bake path instead.
 | the level's `name` is not its id after loading | a map custom property named `name` replaced it: map properties are set over the map's own fields |
 | changing tiles at runtime is slow on a pre-rendered layer | outside an orthogonal map whose tiles fit their cells, a changed tile re-bakes the whole layer before it next draws: keep layers you edit often off `preRender` |
 | thin lines between tiles on the Canvas renderer, with smoothing on | filtering blends in the next tile of the tileset or its spacing, which a canvas cannot prevent: set `antiAlias: false`, or `preRender` the layer. WebGL and WebGPU keep each tile to itself |
-| a tile layer given an offset in Tiled (a roof nudged up, a shadow shifted) is drawn where the others are | before 20.17 a tile layer ignored its offset, and its `pos`; only image layers followed theirs: update |
-| after updating to 20.17 a tile layer sits away from where it did | it has an offset in Tiled that was ignored until then, and now moves it as in the editor: clear the layer's Offset in Tiled if it was not meant |
+| a tile layer given an offset in Tiled (a roof nudged up, a shadow shifted) is drawn where the others are, or the objects of an object layer with an offset are not where Tiled shows them | before 20.17 only image layers followed their offset; tile layers (and their `pos`), object layers and group layers ignored it: update |
+| after updating to 20.17 a tile layer, or the objects of an object layer, sit away from where they did | the layer (or the group it is in) has an offset in Tiled that was ignored until then, and now moves it as in the editor: clear the layer's Offset in Tiled if it was not meant |
+| the map fails to load with a group layer in it | the group holds an object layer, an image layer or another group: a group can only hold tile layers. Move those layers out of the group |
 | a map smaller than the screen (centred by `level.load`) had the tops of its tall tiles cut on WebGL or WebGPU | before 20.17 a layer read the camera's view as if it stood at the world's origin, and so did a layer in a container the game had moved: update |
 | the tops of tall tiles vanish when the map itself scrolls out of view | before 20.17 a layer was skipped once its grid left the view, though tiles larger than a cell (or moved by a `tileoffset`) still reached in: update |
 | an orthogonal layer warns `tiles larger than the grid, of more than one tileset in a layer` | tiles larger than a cell overlap, and the shader path keeps their order within one tileset: put each tileset's large tiles on a layer of their own (trees apart from the ground they stand on) |

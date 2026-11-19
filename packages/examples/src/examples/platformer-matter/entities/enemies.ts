@@ -175,11 +175,133 @@ class PathEnemyEntity extends Sprite {
 	}
 }
 
+// the purple of the slime's body, as it is in the texture atlas
+const SLIME_COLOR = "#E98AF4";
+
+// a drop of slime, in pixels: wider than tall, as a drop lies on the ground
+const DROP_WIDTH = 16;
+const DROP_HEIGHT = 6;
+
+let dropImage: HTMLCanvasElement | undefined;
+
+/**
+ * A drop of slime: a white blob, made once and tinted by the emitter that
+ * draws it.
+ */
+function dropTexture() {
+	if (dropImage === undefined) {
+		dropImage = document.createElement("canvas");
+		dropImage.width = DROP_WIDTH;
+		dropImage.height = DROP_HEIGHT;
+		const context = dropImage.getContext("2d");
+		if (context) {
+			context.fillStyle = "#fff";
+			context.beginPath();
+			context.ellipse(
+				DROP_WIDTH / 2,
+				DROP_HEIGHT / 2,
+				DROP_WIDTH / 2,
+				DROP_HEIGHT / 2,
+				0,
+				0,
+				Math.PI * 2,
+			);
+			context.fill();
+		}
+	}
+	return dropImage;
+}
+
+// the slime pooled under the body: how thick, and how far it reaches past
+// each end of the sprite
+const POOL_HEIGHT = 6;
+const POOL_MARGIN = 2;
+
+const poolImages = new Map<number, HTMLCanvasElement>();
+
+/**
+ * The pool of slime a slime stands in: a bar with round ends, in its colour,
+ * made once for each width.
+ */
+function poolTexture(width: number) {
+	let image = poolImages.get(width);
+	if (image === undefined) {
+		image = document.createElement("canvas");
+		image.width = width;
+		image.height = POOL_HEIGHT;
+		const context = image.getContext("2d");
+		if (context) {
+			context.fillStyle = SLIME_COLOR;
+			context.beginPath();
+			context.roundRect(0, 0, width, POOL_HEIGHT, POOL_HEIGHT / 2);
+			context.fill();
+		}
+		poolImages.set(width, image);
+	}
+	return image;
+}
+
+/**
+ * The trail a slime leaves on the ground: drops that stay where they fell
+ * (`referenceSpace: "world"`) while the slime moves on, and shrink away.
+ *
+ * They are dropped along the base of the sprite, on one line, and drawn
+ * behind it, where the pool the slime stands in ends.
+ */
+class SlimeTrail extends ParticleEmitter {
+	slime: SlimeEnemyEntity;
+
+	constructor(slime: SlimeEnemyEntity) {
+		// the emitter centres its spawn area on the point it is given: the
+		// middle of the slime's base
+		super(slime.centerX, slime.pos.y + slime.height, {
+			image: dropTexture(),
+			// a drop is born whole inside the base, not hanging off its ends
+			width: slime.width - DROP_WIDTH,
+			height: 1,
+			referenceSpace: "world",
+			tint: SLIME_COLOR,
+			totalParticles: 80,
+			// one drop at a time, over thirty a second: they run into each
+			// other under the slime, and break up as they dry behind it
+			maxParticles: 1,
+			frequency: 30,
+			// they do not move: a drop settles where it fell
+			speed: 0,
+			speedVariation: 0,
+			minLife: 1200,
+			maxLife: 2200,
+			minStartScale: 0.8,
+			maxStartScale: 1.1,
+			minEndScale: 0,
+			maxEndScale: 0.2,
+			// gone by itself once the stream is stopped and the last drop
+			// has dried
+			autoDestroyOnComplete: true,
+		});
+		this.slime = slime;
+	}
+
+	override update(dt: number) {
+		// follow the slime: `pos` is the top left of the spawn area
+		if (this.slime.alive) {
+			this.setPosition(
+				this.slime.centerX - this.width / 2,
+				this.slime.pos.y + this.slime.height - this.height / 2,
+			);
+		}
+		return super.update(dt);
+	}
+}
+
 /**
  * A Slime enemy entity
  * follow a horizontal path defined by the box size in Tiled
  */
 export class SlimeEnemyEntity extends PathEnemyEntity {
+	trail: SlimeTrail | undefined;
+	pool: Sprite | undefined;
+
 	constructor(x, y, settings) {
 		super(x, y, settings, [
 			"slime_normal.png",
@@ -195,6 +317,63 @@ export class SlimeEnemyEntity extends PathEnemyEntity {
 		this.addAnimation("dead", ["slime_dead.png"]);
 		this.setCurrentAnimation("walk");
 		this.particleTint = "#FF35B8";
+	}
+
+	/**
+	 * Where the pool of slime under the body is: along the base of the
+	 * sprite, half behind it and half below. The body stands a couple of
+	 * pixels above the tile it walks on (its walk frame is shorter still),
+	 * and the pool fills that strip from one end of the sprite to the other
+	 */
+	placePool() {
+		this.pool?.setPosition(
+			this.pos.x - POOL_MARGIN,
+			this.pos.y + this.height - POOL_HEIGHT / 2,
+		);
+	}
+
+	/**
+	 * In the level: a pool of slime under the body and a trail behind it,
+	 * both drawn just behind the slime
+	 */
+	override onActivateEvent() {
+		super.onActivateEvent();
+		this.pool = new Sprite(0, 0, {
+			image: poolTexture(this.width + POOL_MARGIN * 2),
+			anchorPoint: { x: 0, y: 0 },
+		});
+		this.placePool();
+		this.ancestor.addChild(this.pool, this.pos.z - 0.5);
+
+		this.trail = new SlimeTrail(this);
+		this.ancestor.addChild(this.trail, this.pos.z - 0.5);
+		this.trail.streamParticles();
+	}
+
+	/**
+	 * the pool follows the slime
+	 */
+	update(dt) {
+		const updated = super.update(dt);
+		this.placePool();
+		return updated;
+	}
+
+	/**
+	 * Out of the level (squashed, or the level is over): the pool goes with
+	 * the slime, and no new drops fall. The ones on the ground dry up, and
+	 * the emitter goes with the last of them
+	 */
+	onDeactivateEvent() {
+		// unless the level took them away first
+		if (this.pool?.ancestor) {
+			this.pool.ancestor.removeChild(this.pool);
+		}
+		if (this.trail?.ancestor) {
+			this.trail.stopStream();
+		}
+		this.pool = undefined;
+		this.trail = undefined;
 	}
 }
 
