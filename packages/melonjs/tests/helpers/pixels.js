@@ -43,16 +43,129 @@ export async function readPixel(renderer, x, y) {
 		return Array.from(out);
 	}
 
-	// WebGPU: async readback off the presented texture
-	if (typeof renderer.readCanvasPixels === "function") {
-		const data = await renderer.readCanvasPixels(px, py, 1, 1);
-		return Array.from(data.data ?? data).slice(0, 4);
+	// WebGPU: its canvas has no synchronous readback, but still holds the
+	// frame just submitted until this task ends
+	if (renderer.type === "WebGPU") {
+		const frame = await grabFrame(renderer);
+		const o = (py * frame.width + px) * 4;
+		return Array.from(frame.data.subarray(o, o + 4));
 	}
 
 	// Canvas 2D: top-down rows already
 	const ctx = renderer.getContext();
 	renderer.flush?.();
 	return Array.from(ctx.getImageData(px, py, 1, 1).data);
+}
+
+/**
+ * Have a WebGPU renderer draw its frames into a texture of its own, in place
+ * of its canvas's, and return that renderer.
+ *
+ * A test reads a frame back from the texture it was drawn into (see
+ * {@link grabFrame}), and a canvas's texture is only there until the browser
+ * presents it. Presenting is also what a headless browser on a software
+ * adapter cannot do: the device is lost the moment a canvas texture is
+ * asked for. Drawn into a plain texture, the renderer's own work (its
+ * pipelines, shaders and passes) runs and reads back the same everywhere.
+ *
+ * Call it right after `app.init()`, before the first frame. A renderer that
+ * is not WebGPU is returned as it is.
+ * @param {object} renderer - any melonJS renderer
+ * @returns {object} the renderer
+ */
+export function drawOffscreen(renderer) {
+	if (renderer.type !== "WebGPU" || renderer.context.__offscreen === true) {
+		return renderer;
+	}
+	const canvas = renderer.getCanvas();
+	const context = renderer.context;
+	const format =
+		context.getConfiguration?.()?.format ??
+		navigator.gpu.getPreferredCanvasFormat();
+	let texture;
+	context.getCurrentTexture = () => {
+		if (
+			texture === undefined ||
+			texture.width !== canvas.width ||
+			texture.height !== canvas.height
+		) {
+			texture?.destroy();
+			texture = renderer.device.createTexture({
+				label: "test frame",
+				size: [canvas.width, canvas.height],
+				format,
+				usage:
+					GPUTextureUsage.RENDER_ATTACHMENT |
+					GPUTextureUsage.COPY_SRC |
+					GPUTextureUsage.TEXTURE_BINDING,
+			});
+		}
+		return texture;
+	};
+	context.__offscreen = true;
+	return renderer;
+}
+
+/**
+ * The whole frame a renderer has just drawn, as straight-alpha `ImageData`,
+ * rows top-down, on any backend.
+ *
+ * To be called in the task that drew the frame, before anything is awaited:
+ * a GPU canvas only holds its frame until the browser presents it. On WebGPU
+ * the frame must have been begun with `renderer.clear()`; it is submitted
+ * here, and its texture copied into a buffer before this returns its promise
+ * (see {@link drawOffscreen}, which a test on WebGPU wants first).
+ * @param {object} renderer - any melonJS renderer
+ * @returns {Promise<ImageData>} the frame
+ */
+export async function grabFrame(renderer) {
+	renderer.flush?.();
+	const source = renderer.getCanvas();
+	const width = source.width;
+	const height = source.height;
+
+	if (renderer.type === "WebGPU") {
+		// the canvas texture of this frame, still current until presented
+		const device = renderer.device;
+		const texture = renderer.context.getCurrentTexture();
+		const bytesPerRow = Math.ceil((width * 4) / 256) * 256;
+		const buffer = device.createBuffer({
+			size: bytesPerRow * height,
+			usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
+		});
+		const encoder = device.createCommandEncoder();
+		encoder.copyTextureToBuffer(
+			{ texture },
+			{ buffer, bytesPerRow },
+			{ width, height },
+		);
+		device.queue.submit([encoder.finish()]);
+		await buffer.mapAsync(GPUMapMode.READ);
+		const raw = new Uint8Array(buffer.getMappedRange());
+		const bgra = texture.format.startsWith("bgra");
+		const out = new Uint8ClampedArray(width * height * 4);
+		for (let y = 0; y < height; y++) {
+			for (let x = 0; x < width; x++) {
+				const i = y * bytesPerRow + x * 4;
+				const o = (y * width + x) * 4;
+				out[o] = raw[i + (bgra ? 2 : 0)];
+				out[o + 1] = raw[i + 1];
+				out[o + 2] = raw[i + (bgra ? 0 : 2)];
+				out[o + 3] = raw[i + 3];
+			}
+		}
+		buffer.unmap();
+		buffer.destroy();
+		return new ImageData(out, width, height);
+	}
+
+	// WebGL and Canvas: copied through a 2D canvas, while the frame is there
+	const canvas = document.createElement("canvas");
+	canvas.width = width;
+	canvas.height = height;
+	const context = canvas.getContext("2d", { willReadFrequently: true });
+	context.drawImage(source, 0, 0);
+	return context.getImageData(0, 0, width, height);
 }
 
 /**
