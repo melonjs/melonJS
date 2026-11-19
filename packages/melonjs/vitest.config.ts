@@ -6,6 +6,7 @@ import { playwright } from "@vitest/browser-playwright";
 import { PackageJson } from "type-fest";
 import { default as glsl } from "vite-plugin-glsl";
 import { defineConfig } from "vitest/config";
+import { stripShaderComments } from "./scripts/strip-shader-comments.ts";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -110,7 +111,13 @@ export default defineConfig(() =>
 		},
 		publicDir: resolve(__dirname, "tests/public"),
 		plugins: [
-			glsl(),
+			// the shaders as the build ships them, without their comments
+			// (see `scripts/build.ts`): the tests compile the same text
+			glsl({
+				onComplete: (shader) => {
+					return stripShaderComments(shader);
+				},
+			}),
 			{
 				name: "transform-file",
 				transform(src) {
