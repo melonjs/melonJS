@@ -12,7 +12,9 @@
 //   2. walks the cells whose tile could cover it, the one drawn last first,
 //   3. and for each, `tryRenderCell` fetches the GID from the per-layer
 //      index texture and samples the tileset atlas at the right sub-region.
-// The first cell with a texel that is not transparent is the fragment.
+// Each texel found goes behind the ones before it (`under`), until the
+// fragment is opaque: the soft edge of a tile shows the tile behind it, as
+// it does when the tiles are drawn one over the other.
 //
 // Index texture encoding (`RGBA8`, one cell per texel):
 //   R = GID low byte
@@ -156,6 +158,19 @@ bool tryRenderCell(int cx, int cy, vec2 worldPx, vec2 dWorldX, vec2 dWorldY, out
 	}
 	outColor = sampled;
 	return true;
+}
+
+// A fragment is opaque from this alpha on: nothing behind it would change a
+// channel by a whole step of 8 bits
+const float OPAQUE = 0.996;
+
+// Put a texel behind what a fragment has so far, both premultiplied: what
+// drawing the tiles back to front, each over the last, comes to, taken from
+// the front. Returns whether the fragment is opaque now, and nothing behind
+// it can show
+bool under(inout vec4 color, vec4 texel) {
+	color += (1.0 - color.a) * texel;
+	return color.a >= OPAQUE;
 }
 
 // the layer's opacity and tint applied to a texel. The texel is

@@ -26,22 +26,21 @@ fn fragment_main(in : VSOut) -> @location(0) vec4f {
 	let overflowX = i32(tmx.uOverflow.x + 0.5);
 	let overflowY = i32(tmx.uOverflow.y + 0.5);
 
-	var result : CellSample;
-
 	// fast path: tiles fit the cell exactly — only the geometric cell can
 	// contain this fragment's tile
 	if (overflowX == 0 && overflowY == 0) {
-		result = tryRenderCell(gx, gy, worldPx, dWorldX, dWorldY);
-		if (!result.hit) {
+		let only = tryRenderCell(gx, gy, worldPx, dWorldX, dWorldY);
+		if (!only.hit) {
 			discard;
 		}
-		return layerColor(result.color);
+		return layerColor(only.color);
 	}
 
-	// slow path: oversized tiles. Scan candidates dy high→low, dx low→high
-	// and take the FIRST match — "right-down" render order puts later
-	// cells on top
-	var found = false;
+	// slow path: oversized tiles. Scan candidates dy high→low, dx low→high,
+	// front to back — "right-down" render order puts later cells on top —
+	// each texel behind the ones before it, until the fragment is opaque
+	var result = vec4f(0.0);
+	var opaque = false;
 	for (var idy = 0; idy <= MAX_OVERFLOW; idy++) {
 		let dy = MAX_OVERFLOW - idy;
 		if (dy > overflowY) {
@@ -52,18 +51,17 @@ fn fragment_main(in : VSOut) -> @location(0) vec4f {
 				break;
 			}
 			let candidate = tryRenderCell(gx - dx, gy + dy, worldPx, dWorldX, dWorldY);
-			if (candidate.hit) {
-				result = candidate;
-				found = true;
+			if (candidate.hit && under(&result, candidate.color)) {
+				opaque = true;
 				break;
 			}
 		}
-		if (found) {
+		if (opaque) {
 			break;
 		}
 	}
-	if (!found) {
+	if (result.a <= 0.0) {
 		discard;
 	}
-	return layerColor(result.color);
+	return layerColor(result);
 }

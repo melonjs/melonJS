@@ -32,6 +32,10 @@ const ISOMETRIC_MAX_TILE_WIDTHS = 4;
 const ISOMETRIC_MAX_TILE_HEIGHTS = 8;
 const ISOMETRIC_ONE_TILESET =
 	"tiles of more than one tileset in an isometric layer";
+// A diagonal flip turns a tile a quarter: one that is not square then covers
+// other pixels than its own image's rectangle, which is all the shader looks
+// at.
+const DIAGONAL_NOT_SQUARE = "a tile that is not square, flipped diagonally";
 
 // the area an offset camera shows, handed to the tile renderers in its place
 // (made on first use)
@@ -218,8 +222,23 @@ export default class TMXLayer extends Renderable {
 			width: 0,
 			height: 0,
 		};
+		/**
+		 * how far a tileset's `tileoffset` moves its tiles, at most, across
+		 * and down: with `maxTileSize`, how far from its cell a tile of this
+		 * layer can be drawn
+		 * @ignore
+		 */
+		this.maxTileOffset = { x: 0, y: 0 };
 		for (let i = 0; i < this.tilesets.length; i++) {
 			const tileset = this.tilesets.getTilesetByIndex(i);
+			this.maxTileOffset.x = Math.max(
+				this.maxTileOffset.x,
+				Math.abs(tileset.tileoffset.x),
+			);
+			this.maxTileOffset.y = Math.max(
+				this.maxTileOffset.y,
+				Math.abs(tileset.tileoffset.y),
+			);
 			this.maxTileSize.width = Math.max(
 				this.maxTileSize.width,
 				tileset.tilewidth,
@@ -726,7 +745,39 @@ export default class TMXLayer extends Renderable {
 				};
 			}
 		}
+		if (this._hasDiagonalFlipNotSquare()) {
+			return { ok: false, reason: DIAGONAL_NOT_SQUARE };
+		}
 		return { ok: true };
+	}
+
+	/**
+	 * Whether a tile of this layer is flipped diagonally and not square,
+	 * which the shader path cannot draw. Only looks at the tiles when a
+	 * tileset has tiles that are not square.
+	 * @returns {boolean}
+	 * @ignore
+	 * @internal
+	 */
+	_hasDiagonalFlipNotSquare() {
+		const tilesets = this.tilesets.tilesets;
+		if (
+			tilesets.every((tileset) => {
+				return tileset.tilewidth === tileset.tileheight;
+			})
+		) {
+			return false;
+		}
+		const data = this.layerData;
+		for (let i = 0; i < data.length; i += 2) {
+			if (data[i] !== 0 && (data[i + 1] & FLIP_AD_BIT) !== 0) {
+				const tileset = this.tilesets.getTilesetByGid(data[i]);
+				if (tileset.tilewidth !== tileset.tileheight) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	/**
@@ -768,6 +819,9 @@ export default class TMXLayer extends Renderable {
 			}
 			this._shaderTileset = tileset;
 		}
+		if (this._hasDiagonalFlipNotSquare()) {
+			return { ok: false, reason: DIAGONAL_NOT_SQUARE };
+		}
 		return { ok: true };
 	}
 
@@ -798,31 +852,46 @@ export default class TMXLayer extends Renderable {
 	}
 
 	/**
-	 * An isometric layer on the shader path draws with one tileset: a tile
-	 * set at run time from another one, or from one the path cannot draw,
-	 * moves the layer back to the legacy renderer.
+	 * A tile set at run time on a layer on the shader path: one that path
+	 * cannot draw moves the layer back to the legacy renderer.
+	 *
+	 * That is a tile flipped diagonally and not square, and on an isometric
+	 * layer, which draws with one tileset, a tile of another one, or of one
+	 * the path cannot draw.
 	 * @param {number} gid - the gid of the tile just set
+	 * @param {number} flipMask - its flips
 	 * @ignore
 	 * @internal
 	 */
-	_keepIsometricShaderTileset(gid) {
-		const current = this._shaderTileset;
-		if (current?.contains(gid)) {
-			return;
-		}
-		let reason = ISOMETRIC_ONE_TILESET;
-		if (current === undefined) {
-			const tileset = this.tilesets.getTilesetByGid(gid);
-			reason = this._isometricTilesetReason(tileset);
-			if (reason === undefined) {
-				this._shaderTileset = tileset;
-				return;
+	_keepShaderEligible(gid, flipMask) {
+		let reason;
+		if (
+			this.orientation === "isometric" &&
+			this._shaderTileset?.contains(gid) !== true
+		) {
+			if (this._shaderTileset !== undefined) {
+				reason = ISOMETRIC_ONE_TILESET;
+			} else {
+				// an empty layer takes its tileset from its first tile
+				const tileset = this.tilesets.getTilesetByGid(gid);
+				reason = this._isometricTilesetReason(tileset);
+				if (reason === undefined) {
+					this._shaderTileset = tileset;
+				}
 			}
 		}
-		console.warn(
-			`melonJS: layer "${this.name}" back to the legacy tile renderer (${reason})`,
-		);
-		this.renderMode = "perTile";
+		if (reason === undefined && (flipMask & FLIP_AD_BIT) !== 0) {
+			const tileset = this.tilesets.getTilesetByGid(gid);
+			if (tileset.tilewidth !== tileset.tileheight) {
+				reason = DIAGONAL_NOT_SQUARE;
+			}
+		}
+		if (reason !== undefined) {
+			console.warn(
+				`melonJS: layer "${this.name}" back to the legacy tile renderer (${reason})`,
+			);
+			this.renderMode = "perTile";
+		}
 	}
 
 	// called when the layer is removed from the game world or a container
@@ -931,8 +1000,8 @@ export default class TMXLayer extends Renderable {
 		this.dataVersion++;
 		this.isDirty = true;
 		this._preRenderCell(x, y);
-		if (this.renderMode === "shader" && this.orientation === "isometric") {
-			this._keepIsometricShaderTileset(cleanGid);
+		if (this.renderMode === "shader") {
+			this._keepShaderEligible(cleanGid, this.layerData[idx + 1]);
 		}
 		return tile;
 	}

@@ -3,13 +3,14 @@
  * "perTile") and through the GPU one ("shader"), with the whole engine in
  * between (world, camera, renderer), and compare the two frames.
  *
- * The tiles are painted pixel by pixel, with no soft edges, and every pixel
- * of every tile has a colour of its own: a tile that lands one pixel off, is
- * flipped the wrong way, or shows in front of the wrong neighbour, changes
- * pixels. So the two paths are held to the same picture, exactly.
+ * The tiles are painted pixel by pixel, and every pixel of every tile has a
+ * colour of its own: a tile that lands one pixel off, is flipped the wrong
+ * way, or shows in front of the wrong neighbour, changes pixels. With hard
+ * edges (the default) the two paths are held to the same picture, exactly;
+ * with soft ones (`alpha`), to a rounding step or two.
  */
 import { vi } from "vitest";
-import { Application, boot, TMXTileMap } from "../../src/index.js";
+import { Application, boot, TMXTileMap, timer } from "../../src/index.js";
 import { imgList } from "../../src/loader/cache.js";
 import Renderer from "../../src/video/renderer.js";
 import { drawOffscreen, grabFrame } from "./pixels.js";
@@ -55,8 +56,11 @@ export function inBlock(x, y, w, h, tw, th) {
  * @param {number} [options.columns=4] - tiles per row of the image
  * @param {number} [options.margin=0] - margin round the image
  * @param {number} [options.spacing=0] - spacing between tiles
- * @param {(x: number, y: number, id: number) => boolean} [options.opaque] -
+ * @param {(x: number, y: number, id: number) => boolean} [options.opaque]
  * which pixels of a tile are opaque (all of them by default)
+ * @param {(x: number, y: number, id: number) => number} [options.alpha]
+ * how opaque each pixel is, 0 to 255, for soft edges and see-through tiles
+ * (in place of `opaque`)
  * @param {object} [options.extra] - more Tiled tileset properties
  * (`tileoffset`, `tiles` with animations...)
  * @returns {object} the tileset's Tiled JSON, without its `firstgid`
@@ -70,6 +74,7 @@ export function makeTileset(options) {
 		margin = 0,
 		spacing = 0,
 		opaque,
+		alpha,
 		extra = {},
 	} = options;
 	const rows = Math.ceil(count / columns);
@@ -92,7 +97,8 @@ export function makeTileset(options) {
 		for (let y = 0; y < th; y++) {
 			for (let x = 0; x < tw; x++) {
 				const o = ((oy + y) * canvas.width + ox + x) * 4;
-				if (opaque !== undefined && !opaque(x, y, id)) {
+				const a = alpha !== undefined ? alpha(x, y, id) : 255;
+				if (a <= 0 || (opaque !== undefined && !opaque(x, y, id))) {
 					image.data[o + 3] = 0;
 					image.data[o] = image.data[o + 1] = image.data[o + 2] = 0;
 					continue;
@@ -102,7 +108,7 @@ export function makeTileset(options) {
 				image.data[o] = 40 + ((id * 53 + seed) % 180);
 				image.data[o + 1] = 30 + ((x * 7 + id * 11) % 200);
 				image.data[o + 2] = 30 + ((y * 5 + id * 29) % 200);
-				image.data[o + 3] = 255;
+				image.data[o + 3] = a;
 			}
 		}
 	}
@@ -183,6 +189,142 @@ export function makeMap(options) {
 }
 
 /**
+ * The picture of a map, painted here with a 2D canvas and no engine: every
+ * tile of every layer, in the order Tiled draws them (rows from the top,
+ * each from the left), where Tiled draws them, with nothing left out for
+ * being out of view. What both of the engine's renderers are held to.
+ *
+ * Tiles are drawn whole, bottom-aligned on their cell and moved by their
+ * tileset's `tileoffset`; flipped across, down or along the diagonal (the
+ * last on square tiles only, where a flip is a quarter turn in place).
+ * Layer opacity and tint are for the caller to apply to the picture. A
+ * layer is drawn at the map's origin: the engine's tile layers are, whatever
+ * their `pos` or Tiled's layer offset.
+ *
+ * One rule here is the engine's and not Tiled's: a layer whose grid is
+ * wholly out of view is not drawn, though a tile taller than its cell, in
+ * the map's first rows, reaches above the grid and could still show. The
+ * engine draws what is in view going by a layer's bounds, which are its
+ * grid's.
+ * @param {object} scene - what {@link makeMap} was given
+ * @param {number} viewX - the view's left, in the map's pixels
+ * @param {number} viewY - the view's top
+ * @param {number} width - the view's width
+ * @param {number} height - the view's height
+ * @returns {ImageData} the picture
+ */
+export function reference(scene, viewX, viewY, width, height) {
+	const { orientation, cols, rows, tw, th, tilesets, layers } = scene;
+	const canvas = document.createElement("canvas");
+	canvas.width = width;
+	canvas.height = height;
+	const ctx = canvas.getContext("2d", { willReadFrequently: true });
+	ctx.imageSmoothingEnabled = false;
+	ctx.fillStyle = "rgb(16, 24, 48)";
+	ctx.fillRect(0, 0, width, height);
+	ctx.translate(-viewX, -viewY);
+
+	let firstgid = 1;
+	const sets = tilesets.map((tileset) => {
+		const set = { ...tileset, firstgid, image: imgList[tileset.name] };
+		firstgid += tileset.tilecount;
+		return set;
+	});
+	const drawTile = (raw, left, bottom) => {
+		const gid = raw & 0x1fffffff;
+		const set = sets.findLast((candidate) => {
+			return gid >= candidate.firstgid;
+		});
+		const id = gid - set.firstgid;
+		const w = set.tilewidth;
+		const h = set.tileheight;
+		const sx = set.margin + (id % set.columns) * (w + set.spacing);
+		const sy = set.margin + Math.floor(id / set.columns) * (h + set.spacing);
+		const x = left + (set.tileoffset?.x ?? 0);
+		const y = bottom - h + (set.tileoffset?.y ?? 0);
+		ctx.save();
+		ctx.translate(x + w / 2, y + h / 2);
+		if ((raw & FLIP_AD) !== 0) {
+			ctx.rotate(-Math.PI / 2);
+			ctx.scale(-1, 1);
+		}
+		const ad = (raw & FLIP_AD) !== 0;
+		if ((raw & FLIP_H) !== 0) {
+			ctx.scale(ad ? 1 : -1, ad ? -1 : 1);
+		}
+		if ((raw & FLIP_V) !== 0) {
+			ctx.scale(ad ? -1 : 1, ad ? 1 : -1);
+		}
+		ctx.drawImage(set.image, sx, sy, w, h, -w / 2, -h / 2, w, h);
+		ctx.restore();
+	};
+
+	for (const layer of layers) {
+		if (layer.chunks === undefined) {
+			// the grid's bounds: an isometric map's are its diamond's
+			const isIso = orientation === "isometric";
+			const gridWidth = isIso ? ((cols + rows) * tw) / 2 : cols * tw;
+			const gridHeight = isIso ? ((cols + rows) * th) / 2 : rows * th;
+			if (
+				viewX + width <= 0 ||
+				gridWidth <= viewX ||
+				viewY + height <= 0 ||
+				gridHeight <= viewY
+			) {
+				continue;
+			}
+		}
+		// the layer's cells: a plain grid, or an infinite map's chunks
+		const cells = new Map();
+		const put = (col, row, gid) => {
+			if (gid !== 0) {
+				cells.set(`${col},${row}`, gid);
+			}
+		};
+		if (layer.chunks !== undefined) {
+			for (const chunk of layer.chunks) {
+				chunk.data.forEach((gid, i) => {
+					put(
+						chunk.x + (i % chunk.width),
+						chunk.y + Math.floor(i / chunk.width),
+						gid,
+					);
+				});
+			}
+		} else {
+			layer.data.forEach((gid, i) => {
+				put(i % cols, Math.floor(i / cols), gid);
+			});
+		}
+		const ordered = [...cells.entries()].map(([key, gid]) => {
+			const [col, row] = key.split(",").map(Number);
+			return { col, row, gid };
+		});
+		if (orientation === "isometric") {
+			// rows of constant col + row, each from the left
+			ordered.sort((a, b) => {
+				return a.col + a.row - (b.col + b.row) || a.col - b.col;
+			});
+			for (const { col, row, gid } of ordered) {
+				drawTile(
+					gid,
+					((col - row - 1) * tw) / 2 + (rows * tw) / 2,
+					((col + row + 2) * th) / 2,
+				);
+			}
+		} else {
+			ordered.sort((a, b) => {
+				return a.row - b.row || a.col - b.col;
+			});
+			for (const { col, row, gid } of ordered) {
+				drawTile(gid, col * tw, (row + 1) * th);
+			}
+		}
+	}
+	return ctx.getImageData(0, 0, width, height);
+}
+
+/**
  * A layer's data, filled by a function of each cell.
  * @param {number} cols - columns
  * @param {number} rows - rows
@@ -242,18 +384,28 @@ export async function makeApp(renderer, type, width = 320, height = 240) {
  * Put a map's layers in the world, in place of whatever was there.
  * @param {Application} app - the application
  * @param {TMXTileMap} map - the map
+ * @param {string} [renderMode] - a render mode to ask of every layer before
+ * it is activated ("prerender" needs asking then: it bakes at activation)
  * @returns {object[]} the map's tile layers
  */
-export function show(app, map) {
+export function show(app, map, renderMode) {
 	app.world.reset();
 	app.renderer.reset?.();
 	app.renderer.backgroundColor.setColor(16, 24, 48);
+	if (renderMode !== undefined) {
+		for (const layer of map.getLayers()) {
+			layer.renderMode = renderMode;
+		}
+	}
 	map.addTo(app.world, true, false);
+	// the layers in their order now: the world sorts its children later, on
+	// a timer no frame of these tests waits for
+	app.world.sortNow(true);
 	app.viewport.setBounds(-100000, -100000, 200000, 200000);
 	return map.getLayers();
 }
 
-let clock = 1000;
+let clock = 0;
 
 /**
  * Draw one frame with every layer in the given mode, and return it with how
@@ -268,9 +420,12 @@ export async function drawIn(app, layers, mode, dt = 0) {
 	for (const layer of layers) {
 		layer.renderMode = mode;
 	}
-	// the world updated (what is in view, and animated tiles when time
-	// passes), then drawn
-	clock += dt;
+	// time passes (animated tiles advance once per tick of the engine's
+	// clock), then the world is updated: what is in view, what has changed
+	if (dt > 0) {
+		clock = Math.max(clock, timer.getTime()) + dt;
+		timer.update(clock);
+	}
 	app.world.update(dt);
 	app.viewport.update(dt);
 	const cpu = vi.spyOn(Renderer.prototype, "drawTileLayer");

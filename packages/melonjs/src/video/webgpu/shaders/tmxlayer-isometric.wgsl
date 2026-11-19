@@ -6,7 +6,8 @@
 // map's top corner. With u = col - row and s = col + row, the cells whose
 // tile image covers it are a run of `u` and a run of `s`, of the lengths in
 // `uOverflow`, scanned s high→low then u high→low: the reverse of the order
-// the CPU renderer draws in, so the FIRST opaque texel is the fragment.
+// the CPU renderer draws in, each texel put behind the ones before it until
+// the fragment is opaque.
 
 // bounds of the two runs: tiles up to 8 grid heights tall and 4 grid widths
 // wide (the layer falls back to the CPU renderer past them)
@@ -35,8 +36,8 @@ fn fragment_main(in : VSOut) -> @location(0) vec4f {
 	let spanU = i32(tmx.uOverflow.x + 0.5);
 	let spanS = i32(tmx.uOverflow.y + 0.5);
 
-	var result : CellSample;
-	var found = false;
+	var result = vec4f(0.0);
+	var opaque = false;
 	for (var j = 0; j < MAX_ROWS; j++) {
 		if (j >= spanS) {
 			break;
@@ -49,19 +50,18 @@ fn fragment_main(in : VSOut) -> @location(0) vec4f {
 				break;
 			}
 			let candidate = tryRenderCell((s + u) / 2, (s - u) / 2, worldPx, dWorldX, dWorldY);
-			if (candidate.hit) {
-				result = candidate;
-				found = true;
+			if (candidate.hit && under(&result, candidate.color)) {
+				opaque = true;
 				break;
 			}
 			u -= 2;
 		}
-		if (found) {
+		if (opaque) {
 			break;
 		}
 	}
-	if (!found) {
+	if (result.a <= 0.0) {
 		discard;
 	}
-	return layerColor(result.color);
+	return layerColor(result);
 }

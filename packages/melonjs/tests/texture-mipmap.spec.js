@@ -23,12 +23,16 @@ import { createAtlas, TextureAtlas } from "../src/video/texture/atlas.js";
 import WebGPULitQuadBatcher from "../src/video/webgpu/batchers/lit_quad_batcher.js";
 import WebGPUQuadBatcher from "../src/video/webgpu/batchers/quad_batcher.js";
 import WebGPUTMXRenderer from "../src/video/webgpu/renderers/tmxlayer/orthogonal.js";
-import tmxlayerWGSL from "../src/video/webgpu/shaders/tmxlayer.wgsl";
+import tmxlayerCommonWGSL from "../src/video/webgpu/shaders/tmxlayer-common.wgsl";
+import tmxlayerOrthogonalWGSL from "../src/video/webgpu/shaders/tmxlayer-orthogonal.wgsl";
 import {
 	getWebGLRenderer,
 	releaseWebGLRenderer,
 } from "./helpers/webgl-context.js";
 import { createMockWebGPURenderer } from "./helpers/webgpu-mock-renderer.js";
+
+// the orthogonal tile shader's module, as its renderer puts it together
+const tmxlayerWGSL = `${tmxlayerCommonWGSL}\n${tmxlayerOrthogonalWGSL}`;
 
 const SIZE = 64;
 
@@ -582,8 +586,10 @@ describe("linear-mipmap texture filter (WebGPU, mock renderer)", () => {
 			expect(code).toContain(
 				"return texel * tmx.uOpacity * vec4f(tmx.uTint.rgb, 1.0);",
 			);
-			expect(code.match(/layerColor\(result\.color\)/g)).toHaveLength(2);
-			expect(code).not.toMatch(/result\.color\.a \* tmx\.uOpacity/);
+			// every color the fragment stage returns goes through it: the
+			// single cell of the fast path, and what the cells add up to
+			expect(code.match(/return layerColor\(/g)).toHaveLength(2);
+			expect(code).not.toMatch(/\.a \* tmx\.uOpacity/);
 		});
 
 		it("keeps each sample half a texel inside its tile, mipmaps or not", () => {

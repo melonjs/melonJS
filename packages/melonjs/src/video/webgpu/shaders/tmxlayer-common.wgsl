@@ -175,6 +175,19 @@ fn tryRenderCell(
 	return out;
 }
 
+// A fragment is opaque from this alpha on: nothing behind it would change a
+// channel by a whole step of 8 bits
+const OPAQUE : f32 = 0.996;
+
+// Put a texel behind what a fragment has so far, both premultiplied: what
+// drawing the tiles back to front, each over the last, comes to, taken from
+// the front. Returns whether the fragment is opaque now, and nothing behind
+// it can show
+fn under(color : ptr<function, vec4f>, texel : vec4f) -> bool {
+	*color += (1.0 - (*color).a) * texel;
+	return (*color).a >= OPAQUE;
+}
+
 // the layer's opacity and tint applied to a texel. The texel is
 // premultiplied, as the blending expects: the opacity scales its color as
 // well as its alpha. The tint colors it; its alpha is not an opacity, as on

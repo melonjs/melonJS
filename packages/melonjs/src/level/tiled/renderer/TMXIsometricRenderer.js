@@ -159,15 +159,23 @@ export default class TMXIsometricRenderer extends TMXRenderer {
 		// cache a couple of useful references
 		let tileset = layer.tileset;
 
-		// get top-left and bottom-right tile position
+		// get top-left and bottom-right tile position: the view, widened by
+		// the largest tile of ANY of the layer's tilesets, as a tile is drawn
+		// from its cell up, and by how far a `tileoffset` moves one. By the
+		// first tileset's size alone, the tall tiles of another one went
+		// missing along the bottom of the view, where their cell is below it
+		// and their image still reaches in, and so did tiles moved into view
+		// by an offset larger than a tile
+		const reachX = layer.maxTileSize.width + layer.maxTileOffset.x;
+		const reachY = layer.maxTileSize.height + layer.maxTileOffset.y;
 		const rowItr = this.pixelToTileCoords(
-			rect.pos.x - tileset.tilewidth,
-			rect.pos.y - tileset.tileheight,
+			rect.pos.x - reachX,
+			rect.pos.y - reachY,
 			vector2dPool.get(),
 		).floorSelf();
 		const tileEnd = this.pixelToTileCoords(
-			rect.pos.x + rect.width + tileset.tilewidth,
-			rect.pos.y + rect.height + tileset.tileheight,
+			rect.pos.x + rect.width + reachX,
+			rect.pos.y + rect.height + reachY,
 			vector2dPool.get(),
 		).ceilSelf();
 

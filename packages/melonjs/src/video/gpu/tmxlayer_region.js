@@ -43,11 +43,24 @@ export function orthogonalRegion(layer, rect, tileset, out) {
 	const tileWidth = layer.tilewidth;
 	const tileHeight = layer.tileheight;
 
+	// A tile larger than its cell is drawn from the cell's bottom left
+	// corner: it reaches to the right of its cell and above it, so the tiles
+	// of the last column and of the first row reach past the grid. The quad
+	// covers that too, by the layer's LARGEST tile, so that it is the same
+	// for every tileset of the layer (the shader drops what a pass has no
+	// tile for).
+	const largest = layer.maxTileSize ?? {
+		width: tileset.tilewidth,
+		height: tileset.tileheight,
+	};
+	const reachX = Math.max(0, Math.ceil(largest.width / tileWidth) - 1);
+	const reachY = Math.max(0, Math.ceil(largest.height / tileHeight) - 1);
+
 	// compute the visible region in tile-coord space
 	const startTileX = Math.max(0, Math.floor(rect.pos.x / tileWidth));
-	const startTileY = Math.max(0, Math.floor(rect.pos.y / tileHeight));
+	const startTileY = Math.max(-reachY, Math.floor(rect.pos.y / tileHeight));
 	const endTileX = Math.min(
-		layer.cols,
+		layer.cols + reachX,
 		Math.ceil((rect.pos.x + rect.width) / tileWidth),
 	);
 	const endTileY = Math.min(

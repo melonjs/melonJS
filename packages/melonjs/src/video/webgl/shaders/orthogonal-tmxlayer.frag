@@ -11,8 +11,9 @@
 // Slow path: tiles drawing larger than the cell are bottom-aligned
 // vertically and left-aligned horizontally. Render order is "right-down":
 // later cells end up on top, so the candidate loop scans dy high→low,
-// dx low→high and picks the FIRST match. `uOverflow` is how many cells a
-// tile reaches past its own, across and up.
+// dx low→high, the tile in front first, and puts each texel behind the
+// ones before it until the fragment is opaque. `uOverflow` is how many
+// cells a tile reaches past its own, across and up.
 
 const int MAX_OVERFLOW = 4;
 
@@ -36,7 +37,7 @@ void main(void) {
 	int overflowX = int(uOverflow.x + 0.5);
 	int overflowY = int(uOverflow.y + 0.5);
 
-	vec4 result;
+	vec4 result = vec4(0.0);
 
 	// Fast path: tiles fit the cell exactly (the common case) — only the
 	// geometric cell can contain this fragment's tile.
@@ -48,22 +49,25 @@ void main(void) {
 		return;
 	}
 
-	// Slow path: oversized tiles. Walk candidates dy high→low, dx low→high
-	// and pick the FIRST match — render order is "right-down" so later
-	// cells go on top.
-	bool found = false;
+	// Slow path: oversized tiles. Walk candidates dy high→low, dx low→high,
+	// front to back — render order is "right-down" so later cells go on
+	// top — until the fragment is opaque.
+	vec4 texel;
+	bool opaque = false;
 	for (int idy = 0; idy <= MAX_OVERFLOW; idy++) {
 		int dy = MAX_OVERFLOW - idy;
 		if (dy > overflowY) continue;
 		for (int dx = 0; dx <= MAX_OVERFLOW; dx++) {
 			if (dx > overflowX) break;
-			if (tryRenderCell(gx - dx, gy + dy, worldPx, dWorldX, dWorldY, result)) {
-				found = true;
-				break;
+			if (tryRenderCell(gx - dx, gy + dy, worldPx, dWorldX, dWorldY, texel)) {
+				if (under(result, texel)) {
+					opaque = true;
+					break;
+				}
 			}
 		}
-		if (found) break;
+		if (opaque) break;
 	}
-	if (!found) discard;
+	if (result.a <= 0.0) discard;
 	fragColor = layerColor(result);
 }

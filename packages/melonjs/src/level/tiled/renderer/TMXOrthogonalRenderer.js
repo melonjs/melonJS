@@ -87,22 +87,26 @@ export default class TMXOrthogonalRenderer extends TMXRenderer {
 		let incX = 1;
 		let incY = 1;
 
-		// get top-left and bottom-right tile position
+		// get top-left and bottom-right tile position: the cells whose tile
+		// can reach the view. A tile larger than its cell is drawn from the
+		// cell's bottom left corner, so it reaches to the RIGHT of its cell
+		// and ABOVE it: the cells that matter past the view are those to its
+		// left and BELOW it. (The rows above were the ones added, so a tile
+		// more than two cells tall went missing along the bottom of the
+		// view.) A tileset's `tileoffset` moves its tiles either way.
+		const overX = Math.max(layer.maxTileSize.width - layer.tilewidth, 0);
+		const overY = Math.max(layer.maxTileSize.height - layer.tileheight, 0);
+		const offsetX = layer.maxTileOffset.x;
+		const offsetY = layer.maxTileOffset.y;
 		const start = this.pixelToTileCoords(
-			Math.max(
-				rect.pos.x - Math.max(layer.maxTileSize.width - layer.tilewidth, 0),
-				0,
-			),
-			Math.max(
-				rect.pos.y - Math.max(layer.maxTileSize.height - layer.tileheight, 0),
-				0,
-			),
+			Math.max(rect.pos.x - overX - offsetX, 0),
+			Math.max(rect.pos.y - offsetY, 0),
 			vector2dPool.get(),
 		).floorSelf();
 
 		const end = this.pixelToTileCoords(
-			rect.pos.x + rect.width + this.tilewidth,
-			rect.pos.y + rect.height + this.tileheight,
+			rect.pos.x + rect.width + this.tilewidth + offsetX,
+			rect.pos.y + rect.height + this.tileheight + overY + offsetY,
 			vector2dPool.get(),
 		).ceilSelf();
 

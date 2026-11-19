@@ -15,9 +15,11 @@
 // Only pairs of the same parity are cells.
 //
 // The CPU renderer draws rows of constant `s` from the top of the screen
-// down, each from left to right. The last tile drawn is the one seen, so the
-// scan here goes the other way, s high→low then u high→low, and the FIRST
-// cell with an opaque texel is the fragment.
+// down, each from left to right. The last tile drawn is the one in front,
+// so the scan here goes the other way, s high→low then u high→low, and puts
+// each texel behind the ones before it until the fragment is opaque: an
+// opaque texel ends it at once, and the soft edge of a tile shows the tiles
+// behind it.
 
 // bounds of the two runs: tiles up to 8 grid heights tall and 4 grid widths
 // wide (the layer falls back to the CPU renderer past them)
@@ -45,8 +47,9 @@ void main(void) {
 	int spanU = int(uOverflow.x + 0.5);
 	int spanS = int(uOverflow.y + 0.5);
 
-	vec4 result;
-	bool found = false;
+	vec4 result = vec4(0.0);
+	vec4 texel;
+	bool opaque = false;
 	for (int j = 0; j < MAX_ROWS; j++) {
 		if (j >= spanS) break;
 		int s = sMax - j;
@@ -54,14 +57,16 @@ void main(void) {
 		int u = uMax - ((uMax + s) & 1);
 		for (int i = 0; i < MAX_COLS; i++) {
 			if (uMax - u >= spanU) break;
-			if (tryRenderCell((s + u) / 2, (s - u) / 2, worldPx, dWorldX, dWorldY, result)) {
-				found = true;
-				break;
+			if (tryRenderCell((s + u) / 2, (s - u) / 2, worldPx, dWorldX, dWorldY, texel)) {
+				if (under(result, texel)) {
+					opaque = true;
+					break;
+				}
 			}
 			u -= 2;
 		}
-		if (found) break;
+		if (opaque) break;
 	}
-	if (!found) discard;
+	if (result.a <= 0.0) discard;
 	fragColor = layerColor(result);
 }
