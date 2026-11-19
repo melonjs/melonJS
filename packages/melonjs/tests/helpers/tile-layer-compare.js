@@ -9,7 +9,7 @@
  * edges (the default) the two paths are held to the same picture, exactly;
  * with soft ones (`alpha`), to a rounding step or two.
  */
-import { vi } from "vitest";
+import { expect, vi } from "vitest";
 import { Application, boot, TMXTileMap, timer } from "../../src/index.js";
 import { imgList } from "../../src/loader/cache.js";
 import Renderer from "../../src/video/renderer.js";
@@ -199,8 +199,10 @@ export function makeMap(options) {
  * each from the left), where Tiled draws them, with nothing left out for
  * being out of view. What both of the engine's renderers are held to.
  *
- * Tiles are drawn whole, bottom-aligned on their cell and moved by their
- * tileset's `tileoffset`; flipped across, down or along the diagonal (the
+ * Orthogonal, isometric, staggered and hexagonal maps (the last two take
+ * their `staggeraxis`, `staggerindex` and `hexsidelength` from the scene's
+ * `extra`). Tiles are drawn whole, bottom-aligned on their cell and moved by
+ * their tileset's `tileoffset`; flipped across, down or along the diagonal (the
  * last on square tiles only, where a flip is a quarter turn in place).
  * A layer is moved by its offset in Tiled (`offsetx`, `offsety`). Layer
  * opacity and tint are for the caller to apply to the picture.
@@ -297,6 +299,40 @@ export function reference(scene, viewX, viewY, width, height) {
 					ox + ((col - row - 1) * tw) / 2 + (rows * tw) / 2,
 					oy + ((col + row + 2) * th) / 2,
 				);
+			}
+		} else if (orientation === "staggered" || orientation === "hexagonal") {
+			// Every other row (or column, with `staggeraxis` "x") is
+			// shifted by half a cell; a hexagonal map's cells are longer
+			// by `hexsidelength` along the stagger axis. Tiles are drawn
+			// from the top of the screen down, each line from the left.
+			const { staggeraxis, staggerindex, hexsidelength = 0 } = scene.extra;
+			const staggerX = staggeraxis === "x";
+			const even = staggerindex === "even" ? 1 : 0;
+			const side = orientation === "hexagonal" ? hexsidelength : 0;
+			const sideX = staggerX ? side : 0;
+			const sideY = staggerX ? 0 : side;
+			const columnWidth = (tw - sideX) / 2 + sideX;
+			const rowHeight = (th - sideY) / 2 + sideY;
+			const place = ({ col, row }) => {
+				// `& 1` and not `% 2`: an infinite map has negative cells
+				return staggerX
+					? {
+							x: col * columnWidth,
+							y: row * (th + sideY) + ((col & 1) ^ even) * rowHeight,
+						}
+					: {
+							x: col * (tw + sideX) + ((row & 1) ^ even) * columnWidth,
+							y: row * rowHeight,
+						};
+			};
+			const placed = ordered.map((cell) => {
+				return { ...cell, ...place(cell) };
+			});
+			placed.sort((a, b) => {
+				return a.y - b.y || a.x - b.x;
+			});
+			for (const { gid, x, y } of placed) {
+				drawTile(gid, ox + x, oy + y + th);
 			}
 		} else {
 			ordered.sort((a, b) => {
@@ -471,4 +507,84 @@ export function drawn(frame) {
 		}
 	}
 	return count;
+}
+
+/** views over a map: inside, over each edge, and scrolled part way */
+const DEFAULT_VIEWS = [
+	[0, 0],
+	[70, 20],
+	[-40, -80],
+	[230, 110],
+	[-150, 30],
+	[100, -200],
+];
+
+/**
+ * Draw a scene both ways from each view, and expect the reference
+ * picture from both, the GPU path drawing alone.
+ * @param {Application} app - the application, from {@link makeApp}
+ * @param {object} scene - what {@link makeMap} takes
+ * @param {object} [options]
+ * @param {number[][]} [options.views] - where to look from
+ * @param {object[]} [options.layers] - the scene's layers, when
+ * they are in the world already (and were changed there). Without
+ * them the scene is put in the world here, and every layer of it is
+ * expected to take the GPU path of its own accord
+ * @param {boolean} [options.oracle=true] - false where the reference
+ * does not reach (a zoomed camera): the two paths are then compared
+ * with each other alone
+ * @param {(picture: ImageData) => ImageData} [options.expected]
+ * what the reference becomes (a faded or tinted layer)
+ * @param {number} [options.tolerance=0] - the largest difference of a
+ * channel that is not counted
+ * @param {number} [options.share=0] - the largest share of the pixels
+ * drawn that the two paths may differ by
+ * @returns {Promise<number>} how many pixels were drawn, in all
+ */
+export async function comparePaths(app, scene, options = {}) {
+	const {
+		views = DEFAULT_VIEWS,
+		oracle = true,
+		expected,
+		tolerance = 0,
+		share = 0,
+	} = options;
+	const { width, height } = app.viewport;
+	let layers = options.layers;
+	if (layers === undefined) {
+		layers = show(app, makeMap(scene));
+		for (const layer of layers) {
+			expect(layer.renderMode, layer.name).toBe("shader");
+		}
+	}
+	let total = 0;
+	for (const [x, y] of views) {
+		app.viewport.moveTo(x, y);
+		const cpu = await drawIn(app, layers, "perTile");
+		const gpu = await drawIn(app, layers, "shader");
+		// a layer out of view is not drawn at all; one in view is
+		// drawn tile by tile by the CPU path, and never by the GPU one
+		expect(cpu.cpuDraws).toBeLessThanOrEqual(layers.length);
+		expect(gpu.cpuDraws, "the GPU path reaches no CPU renderer").toBe(0);
+		const at = `view (${x}, ${y})`;
+		const count = drawn(gpu.frame);
+		const allowed = Math.floor(count * share);
+		if (oracle) {
+			let ref = reference(scene, x, y, width, height);
+			if (expected !== undefined) {
+				ref = expected(ref);
+			}
+			const c = diff(ref, cpu.frame, tolerance);
+			expect(c.different, `${at}, CPU path: ${c.first}`).toBe(0);
+			const g = diff(ref, gpu.frame, tolerance);
+			expect(g.different, `${at}, GPU path: ${g.first}`).toBe(0);
+		}
+		const d = diff(cpu.frame, gpu.frame, tolerance);
+		expect(
+			d.different,
+			`${at}, CPU against GPU: ${d.first}`,
+		).toBeLessThanOrEqual(allowed);
+		total += count;
+	}
+	return total;
 }

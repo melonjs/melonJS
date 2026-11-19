@@ -9,6 +9,7 @@ import {
 import tmxLayerCommonWGSL from "../../shaders/tmxlayer-common.wgsl";
 import isometricWGSL from "../../shaders/tmxlayer-isometric.wgsl";
 import orthogonalWGSL from "../../shaders/tmxlayer-orthogonal.wgsl";
+import staggeredWGSL from "../../shaders/tmxlayer-staggered.wgsl";
 
 /**
  * additional imports for TypeScript
@@ -30,6 +31,9 @@ const TMX_UNIFORM_SIZE = 128;
 const ORIENTATION_WGSL = {
 	orthogonal: orthogonalWGSL,
 	isometric: isometricWGSL,
+	// one geometry: a hexagonal map's cells are longer, no more
+	staggered: staggeredWGSL,
+	hexagonal: staggeredWGSL,
 };
 
 /**
@@ -460,6 +464,11 @@ export default class TMXLayerGPURenderer {
 			const mipmaps =
 				filter === "linear" && renderer.wantsMipmaps(tileset.texture);
 			scratch[28] = mipmaps ? 1 : 0;
+			// a staggered or hexagonal map's (0 on the others, which have
+			// no use for them)
+			scratch[29] = region.staggerMode;
+			scratch[30] = region.staggerX;
+			scratch[31] = region.staggerY;
 			const uniforms = renderer.effectUniformArena.alloc(
 				TMX_UNIFORM_SIZE,
 				device.limits?.minUniformBufferOffsetAlignment ?? 256,

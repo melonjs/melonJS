@@ -16,6 +16,7 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { grabFrame } from "./pixels.js";
 import {
+	comparePaths,
 	diff,
 	drawIn,
 	drawn,
@@ -158,72 +159,8 @@ export function isometricScenarios(renderer, type) {
 			}
 		};
 
-		/**
-		 * Draw a scene both ways from each view, and expect the reference
-		 * picture from both, the GPU path drawing alone.
-		 * @param {object} scene - what `makeMap` takes
-		 * @param {object} [options]
-		 * @param {number[][]} [options.views] - where to look from
-		 * @param {object[]} [options.layers] - the scene's layers, when
-		 * they are in the world already (and were changed there). Without
-		 * them the scene is put in the world here, and every layer of it is
-		 * expected to take the GPU path of its own accord
-		 * @param {boolean} [options.oracle=true] - false where the reference
-		 * does not reach (a zoomed camera): the two paths are then compared
-		 * with each other alone
-		 * @param {(picture: ImageData) => ImageData} [options.expected]
-		 * what the reference becomes (a faded or tinted layer)
-		 * @param {number} [options.tolerance=0] - the largest difference of a
-		 * channel that is not counted
-		 * @param {number} [options.share=0] - the largest share of the pixels
-		 * drawn that the two paths may differ by
-		 * @returns {Promise<number>} how many pixels were drawn, in all
-		 */
-		const same = async (scene, options = {}) => {
-			const {
-				views = VIEWS,
-				oracle = true,
-				expected,
-				tolerance = 0,
-				share = 0,
-			} = options;
-			let layers = options.layers;
-			if (layers === undefined) {
-				layers = show(app, makeMap(scene));
-				for (const layer of layers) {
-					expect(layer.renderMode, layer.name).toBe("shader");
-				}
-			}
-			let total = 0;
-			for (const [x, y] of views) {
-				app.viewport.moveTo(x, y);
-				const cpu = await drawIn(app, layers, "perTile");
-				const gpu = await drawIn(app, layers, "shader");
-				// a layer out of view is not drawn at all; one in view is
-				// drawn tile by tile by the CPU path, and never by the GPU one
-				expect(cpu.cpuDraws).toBeLessThanOrEqual(layers.length);
-				expect(gpu.cpuDraws, "the GPU path reaches no CPU renderer").toBe(0);
-				const at = `view (${x}, ${y})`;
-				const count = drawn(gpu.frame);
-				const allowed = Math.floor(count * share);
-				if (oracle) {
-					let ref = reference(scene, x, y, WIDTH, HEIGHT);
-					if (expected !== undefined) {
-						ref = expected(ref);
-					}
-					const c = diff(ref, cpu.frame, tolerance);
-					expect(c.different, `${at}, CPU path: ${c.first}`).toBe(0);
-					const g = diff(ref, gpu.frame, tolerance);
-					expect(g.different, `${at}, GPU path: ${g.first}`).toBe(0);
-				}
-				const d = diff(cpu.frame, gpu.frame, tolerance);
-				expect(
-					d.different,
-					`${at}, CPU against GPU: ${d.first}`,
-				).toBeLessThanOrEqual(allowed);
-				total += count;
-			}
-			return total;
+		const same = (scene, options) => {
+			return comparePaths(app, scene, options);
 		};
 
 		/** how a layer of the scene ends up drawn, and what was warned */
@@ -1178,22 +1115,6 @@ export function isometricScenarios(renderer, type) {
 				const d = diff(reference(scene, 0, 0, WIDTH, HEIGHT), forced.frame);
 				expect(d.different, d.first).toBe(0);
 				expect(drawn(forced.frame)).toBeGreaterThan(0);
-			});
-
-			it("a staggered map, still", (ctx) => {
-				need(ctx);
-				const [mode, said] = modeOf({
-					orientation: "staggered",
-					cols: 4,
-					rows: 4,
-					tw: TW,
-					th: TH,
-					tilesets: [blocks()],
-					layers: [{ data: scattered(4, 4) }],
-					extra: { staggeraxis: "y", staggerindex: "odd" },
-				});
-				expect(mode).toBe("perTile");
-				expect(said).toMatch(/no gpu renderer supported yet for "staggered"/);
 			});
 
 			it("any layer, with gpuTilemap off", (ctx) => {

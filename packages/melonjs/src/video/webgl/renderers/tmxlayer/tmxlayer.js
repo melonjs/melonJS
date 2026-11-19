@@ -8,6 +8,7 @@ import { BufferTextureResource } from "../../../texture/resource.js";
 import GLShader from "../../glshader.js";
 import isometricFragment from "../../shaders/isometric-tmxlayer.frag";
 import orthogonalFragment from "../../shaders/orthogonal-tmxlayer.frag";
+import staggeredFragment from "../../shaders/staggered-tmxlayer.frag";
 import tmxLayerVertex from "../../shaders/tmxlayer.vert";
 import tmxLayerCommonFragment from "../../shaders/tmxlayer-common.frag";
 
@@ -21,6 +22,9 @@ import tmxLayerCommonFragment from "../../shaders/tmxlayer-common.frag";
 const FRAGMENTS = {
 	orthogonal: orthogonalFragment,
 	isometric: isometricFragment,
+	// one geometry: a hexagonal map's cells are longer, no more
+	staggered: staggeredFragment,
+	hexagonal: staggeredFragment,
 };
 
 // Default `uTint` when the layer has no tint set. Module-scoped so the
@@ -435,6 +439,10 @@ export default class TMXLayerGPURenderer {
 			this._setV2("uVisibleStart", region.startX, region.startY);
 			this._setV2("uVisibleSize", region.sizeX, region.sizeY);
 			this._setV2("uOverflow", region.overflowX, region.overflowY);
+			if (this.orientation.staggered === true) {
+				this._setV2("uStagger", region.staggerX, region.staggerY);
+				this.shader.setUniform("uStaggerMode", region.staggerMode);
+			}
 			this._setV2("uGidRange", tileset.firstgid, tileset.lastgid);
 			// the tileset samples its mipmaps when the batcher binds it a
 			// mip sampler: the "linear-mipmap" filter, on a linear texture

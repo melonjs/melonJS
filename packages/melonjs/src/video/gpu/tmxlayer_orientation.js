@@ -33,6 +33,11 @@ export function createRegion() {
 		sizeY: 0,
 		overflowX: 0,
 		overflowY: 0,
+		// a staggered or hexagonal map's: its column width and row height,
+		// and its stagger axis and index as the shader reads them
+		staggerX: 0,
+		staggerY: 0,
+		staggerMode: 0,
 	};
 }
 
@@ -164,6 +169,73 @@ export function isometricRegion(layer, rect, tileset, out) {
 }
 
 /**
+ * The part of a staggered or hexagonal layer a view shows, for the tiles of
+ * one tileset: the two are one geometry (see `staggered-tmxlayer.frag`),
+ * the second with cells longer by its `hexsidelength`.
+ *
+ * As on an isometric map, the quad is the view, cut to where the tileset's
+ * tiles can be, and the shader works in the layer's pixels with the
+ * `tileoffset` taken off.
+ * @param {TMXLayer} layer - the layer
+ * @param {object} rect - the visible viewport rect (world coords)
+ * @param {object} tileset - the tileset whose tiles are drawn
+ * @param {object} out - the region to fill
+ * @returns {boolean} false when the view shows nothing of the layer
+ * @ignore
+ * @internal
+ */
+export function staggeredRegion(layer, rect, tileset, out) {
+	const map = layer.getRenderer();
+	const columnWidth = map.columnwidth;
+	const rowHeight = map.rowheight;
+	const offsetX = tileset.tileoffset.x;
+	const offsetY = tileset.tileoffset.y;
+	const cols = layer.cols;
+	const rows = layer.rows;
+
+	// The cells' boxes: lines a row height apart, and in each, cells two
+	// column widths apart, every other line shifted by one. A row of the map
+	// is one line, or two when the stagger axis is x
+	const lines = map.staggerX ? rows * 2 : rows;
+	// the last box of a line, in column widths from the first (of a shifted
+	// line, when the axis is y)
+	const lastBox = map.staggerX ? cols - 1 : cols * 2 - 1;
+	// where the tiles can be: from the left of the first box to the right of
+	// the last one's image, from the top of the first line's images to the
+	// bottom of the last line's boxes
+	const left = offsetX;
+	const right = lastBox * columnWidth + tileset.tilewidth + offsetX;
+	const top = layer.tileheight - tileset.tileheight + offsetY;
+	const bottom = (lines - 1) * rowHeight + layer.tileheight + offsetY;
+
+	// the view, cut to it, on whole pixels
+	const x0 = Math.floor(Math.max(rect.pos.x, left));
+	const y0 = Math.floor(Math.max(rect.pos.y, top));
+	const x1 = Math.ceil(Math.min(rect.pos.x + rect.width, right));
+	const y1 = Math.ceil(Math.min(rect.pos.y + rect.height, bottom));
+	if (x1 <= x0 || y1 <= y0) {
+		return false;
+	}
+
+	out.x = x0;
+	out.y = y0;
+	out.width = x1 - x0;
+	out.height = y1 - y0;
+	out.startX = x0 - offsetX;
+	out.startY = y0 - offsetY;
+	out.sizeX = out.width;
+	out.sizeY = out.height;
+	// how many cells' images reach a pixel: as many in a line as the image
+	// is wide in cell spacings, as many lines as it is tall in row heights
+	out.overflowX = Math.ceil(tileset.tilewidth / (columnWidth * 2));
+	out.overflowY = Math.ceil(tileset.tileheight / rowHeight);
+	out.staggerX = columnWidth;
+	out.staggerY = rowHeight;
+	out.staggerMode = (map.staggerX ? 1 : 0) + (map.staggerEven ? 2 : 0);
+	return true;
+}
+
+/**
  * How many tiles a tileset's image has across: counted from the margin, a
  * tile plus the spacing apart, the last column going without its outer
  * margin, as Tiled and the tileset's own atlas count them.
@@ -200,6 +272,37 @@ export function atlasRows(tileset) {
 }
 
 /**
+ * What the orientations whose tiles overlap share: a layer is drawn with
+ * ONE tileset. A pass keeps the order of the tiles of one tileset, not
+ * across two (`layer._shaderTileset`, found by the layer when it is checked
+ * for this path).
+ */
+const ONE_TILESET = {
+	/**
+	 * @param {TMXLayer} layer - the layer
+	 * @param {object[]} scratch - an array to fill
+	 * @returns {object[]} that tileset, or none for an empty layer
+	 */
+	tilesetsOf(layer, scratch) {
+		scratch.length = 0;
+		if (layer._shaderTileset) {
+			scratch.push(layer._shaderTileset);
+		}
+		return scratch;
+	},
+	/**
+	 * not a layer with no tileset to draw with: one that was never
+	 * checked, or whose tiles come from several (`null`; an empty layer
+	 * has `undefined`, and draws nothing)
+	 * @param {TMXLayer} layer - the layer
+	 * @returns {boolean} whether the layer can be drawn
+	 */
+	draws(layer) {
+		return layer._shaderTileset !== null;
+	},
+};
+
+/**
  * The map orientations the GPU tile layer renderers draw.
  * @ignore
  * @internal
@@ -223,35 +326,24 @@ export const TMX_ORIENTATIONS = {
 	},
 	isometric: {
 		region: isometricRegion,
-		/**
-		 * The one tileset an isometric layer draws with: its tiles overlap,
-		 * and a pass keeps the order of the tiles of one tileset, not across
-		 * two (`layer._shaderTileset`, found by the layer when it is checked
-		 * for this path).
-		 * @param {TMXLayer} layer - the layer
-		 * @param {object[]} scratch - an array to fill
-		 * @returns {object[]} that tileset, or none for an empty layer
-		 */
-		tilesetsOf(layer, scratch) {
-			scratch.length = 0;
-			if (layer._shaderTileset) {
-				scratch.push(layer._shaderTileset);
-			}
-			return scratch;
-		},
-		/**
-		 * not a layer with no tileset to draw with: one that was never
-		 * checked, or whose tiles come from several (`null`; an empty layer
-		 * has `undefined`, and draws nothing)
-		 * @param {TMXLayer} layer - the layer
-		 * @returns {boolean} whether the layer can be drawn
-		 */
-		draws(layer) {
-			return layer._shaderTileset !== null;
-		},
+		...ONE_TILESET,
 		// the cells whose image can reach a pixel: rows of them, half a
 		// grid height apart, and in each, cells a grid width apart. So
 		// tiles up to MAX_ROWS / 2 grid heights tall, MAX_COLS wide
+		limits: { MAX_ROWS: 16, MAX_COLS: 4 },
+	},
+	// one geometry for both: lines of cells, a row height apart, and in
+	// each, cells two column widths apart
+	staggered: {
+		region: staggeredRegion,
+		...ONE_TILESET,
+		staggered: true,
+		limits: { MAX_ROWS: 16, MAX_COLS: 4 },
+	},
+	hexagonal: {
+		region: staggeredRegion,
+		...ONE_TILESET,
+		staggered: true,
 		limits: { MAX_ROWS: 16, MAX_COLS: 4 },
 	},
 };

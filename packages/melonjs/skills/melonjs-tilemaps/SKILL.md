@@ -462,17 +462,18 @@ per-pixel GID lookup in the fragment shader. It requires **all** of:
 
 - a renderer that reports GPU tile-layer support (WebGL 2 / WebGPU — not Canvas),
 - `world.gpuTilemap !== false` (the `gpuTilemap` application setting, default `true`),
-- an **orthogonal** or **isometric** layer — hexagonal, staggered and oblique
-  always fall back,
+- an **orthogonal**, **isometric**, **staggered** or **hexagonal** layer —
+  oblique always falls back,
 - no collection-of-image tileset, and a tileset tile render size of "Tile
   size" (`tilerendersize`, not "Map grid size"),
 - on an orthogonal map: no non-zero `tileoffset`, and tiles that reach at most
   4 cells past their own,
-- on an isometric map: every tile of the layer from **one tileset** (tiles
-  overlap, and their order is kept within a tileset, not across two: split
-  floor and walls into a layer each, which a map usually does already), tiles
-  at most 4 grid widths wide and 8 grid heights tall, a grid of even size
-  (64 × 32, not 65 × 33), and the normal blend mode. A `tileoffset` is fine,
+- on an isometric, staggered or hexagonal map: every tile of the layer from
+  **one tileset** (tiles overlap, and their order is kept within a tileset,
+  not across two: split floor and walls into a layer each, which a map
+  usually does already), tiles at most 4 cells wide and 8 tall, a grid of
+  even size (64 × 32, not 65 × 33; a hexagon side of even length), and the
+  normal blend mode. A `tileoffset` is fine,
 - no tile that is not square flipped diagonally (rotated, in Tiled).
 
 A tile set at run time with `setTile` that breaks one of these moves the layer
@@ -538,8 +539,9 @@ layer into the offscreen-bake path instead.
 | after updating to 20.17 a tile layer sits away from where it did | it has an offset in Tiled that was ignored until then, and now moves it as in the editor: clear the layer's Offset in Tiled if it was not meant |
 | the tops of tall tiles vanish when the map itself scrolls out of view | before 20.17 a layer was skipped once its grid left the view, though tiles larger than a cell (or moved by a `tileoffset`) still reached in: update |
 | tilemap slow on some machines | layer fell back off the shader path — check the console warning for the reason |
-| an isometric layer warns `tiles of more than one tileset in an isometric layer` and is slow | the shader path draws an isometric layer with one tileset: put the tiles of each tileset on a layer of their own, or pack them into one tileset |
-| a half-transparent isometric layer of tall tiles looks flatter than before 20.17 | on the shader path a layer fades as one picture, and a tile no longer shows through the one in front: set that layer's `renderMode` to `"perTile"` (a `renderMode` custom property in Tiled) for the old look |
+| a staggered or hexagonal map sits higher than before 20.17, by how much its tiles are taller than a cell (or by its tileset's `tileoffset`) | it is drawn as Tiled draws it: until then a tile hung from the top of its cell and the offset was ignored, away from the map's objects |
+| an isometric (staggered, hexagonal) layer warns `tiles of more than one tileset in an isometric layer` and is slow | the shader path draws such a layer with one tileset: put the tiles of each tileset on a layer of their own, or pack them into one tileset |
+| a half-transparent isometric (staggered, hexagonal) layer of tall tiles looks flatter than before 20.17 | on the shader path a layer fades as one picture, and a tile no longer shows through the one in front: set that layer's `renderMode` to `"perTile"` (a `renderMode` custom property in Tiled) for the old look |
 | the soft edges of tiles larger than the grid showed a thin dark outline on the shader path | before 20.17 the edge of such a tile was not blended over the tile behind it: update |
 
 ## Related skills

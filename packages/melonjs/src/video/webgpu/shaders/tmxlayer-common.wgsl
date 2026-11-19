@@ -41,6 +41,10 @@ struct TMXUniforms {
 	uAnimSize : f32,        // entries in the anim lookup, 0 when disabled
 	uTint : vec4f,
 	uMipmaps : f32,         // 1 under the "linear-mipmap" filter, else 0
+	// a staggered or hexagonal map's (see tmxlayer-staggered.wgsl); they
+	// fill what was the block's padding
+	uStaggerMode : f32,     // 1 when the stagger axis is x, + 2 when the index is even
+	uStagger : vec2f,       // (columnwidth, rowheight)
 };
 
 @group(0) @binding(0) var<uniform> uFrame : FrameUniforms;

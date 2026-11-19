@@ -27,16 +27,18 @@ const FLIP_H_BIT = 1 << 0;
 const FLIP_V_BIT = 1 << 1;
 const FLIP_AD_BIT = 1 << 2;
 
-// The largest tiles the shader path draws: the bounds of the loops of the
-// fragment shaders, which are declared from the same numbers. An orthogonal
-// tile can reach so many cells past its own; an isometric one be so many
-// grid cells wide and tall.
+// The largest tiles the shader path draws are the bounds of the loops of the
+// fragment shaders, which are declared from the same numbers (see
+// `TMX_ORIENTATIONS`). An orthogonal tile can reach so many cells past its
+// own.
 const ORTHOGONAL_MAX_OVERFLOW = TMX_ORIENTATIONS.orthogonal.limits.MAX_OVERFLOW;
-const ISOMETRIC_MAX_TILE_WIDTHS = TMX_ORIENTATIONS.isometric.limits.MAX_COLS;
-const ISOMETRIC_MAX_TILE_HEIGHTS =
-	TMX_ORIENTATIONS.isometric.limits.MAX_ROWS / 2;
-const ISOMETRIC_ONE_TILESET =
-	"tiles of more than one tileset in an isometric layer";
+// "an isometric", "a staggered", "a hexagonal": a layer's kind, in a reason
+const kindOf = (orientation) => {
+	return `${orientation === "isometric" ? "an" : "a"} ${orientation}`;
+};
+const oneTilesetReason = (orientation) => {
+	return `tiles of more than one tileset in ${kindOf(orientation)} layer`;
+};
 // A diagonal flip turns a tile a quarter: one that is not square then covers
 // other pixels than its own image's rectangle, which is all the shader looks
 // at.
@@ -270,12 +272,12 @@ export default class TMXLayer extends Renderable {
 				tileset.tileheight,
 			);
 		}
-		// A tile larger than its cell reaches past it: up and to the right
-		// on an orthogonal or an isometric map, where a tile stands on the
-		// bottom left of its cell (any way on the others)
+		// A tile larger than its cell reaches past it: up and to the right,
+		// as a tile stands on the bottom left of its cell (any way on an
+		// oblique map)
 		const overX = Math.max(this.maxTileSize.width - this.tilewidth, 0);
 		const overY = Math.max(this.maxTileSize.height - this.tileheight, 0);
-		const upRight = orientation === "orthogonal" || orientation === "isometric";
+		const upRight = orientation !== "oblique";
 		/**
 		 * How far past the layer's grid its tiles can be drawn, on each
 		 * side: by tiles larger than a cell, and by a tileset's
@@ -426,7 +428,7 @@ export default class TMXLayer extends Renderable {
 
 		/**
 		 * How this layer is rendered. Resolved by `onActivateEvent` to one of:
-		 *   - `"shader"`   — GPU procedural shader path, on WebGL 2 and WebGPU, for orthogonal and isometric maps (single quad per tileset, fragment GID lookup)
+		 *   - `"shader"`   — GPU procedural shader path, on WebGL 2 and WebGPU, for orthogonal, isometric, staggered and hexagonal maps (single quad per tileset, fragment GID lookup)
 		 *   - `"prerender"`— offscreen-canvas bake at activation, blitted as one drawImage per frame
 		 *   - `"perTile"`  — per-frame loop, one drawImage per visible tile
 		 *
@@ -579,7 +581,7 @@ export default class TMXLayer extends Renderable {
 		const renderer = this.getRenderer();
 		const bounds = renderer.getBounds(this);
 		// an oversized tile reaches past its cell (which way depends on the
-		// orientation: up on an orthogonal map, down on a hexagonal one), and
+		// orientation: up and to the right, any way on an oblique map), and
 		// a tileset's offset moves all of its tiles
 		const overX = Math.max(this.maxTileSize.width - this.tilewidth, 0);
 		const overY = Math.max(this.maxTileSize.height - this.tileheight, 0);
@@ -777,7 +779,7 @@ export default class TMXLayer extends Renderable {
 		if (!renderer || renderer.supportsShaderTileLayers !== true) {
 			return { ok: false, reason: "no-gpu-renderer" };
 		}
-		if (this.orientation !== "orthogonal" && this.orientation !== "isometric") {
+		if (TMX_ORIENTATIONS[this.orientation] === undefined) {
 			return {
 				ok: false,
 				reason: `no gpu renderer supported yet for "${this.orientation}" orientation`,
@@ -786,8 +788,8 @@ export default class TMXLayer extends Renderable {
 		if (!this.tilesets || this.tilesets.tilesets.length === 0) {
 			return { ok: false, reason: "no tilesets" };
 		}
-		if (this.orientation === "isometric") {
-			return this._checkIsometricShaderEligibility();
+		if (this.orientation !== "orthogonal") {
+			return this._checkOverlappingShaderEligibility();
 		}
 		// the shader iterates a fixed-size loop over candidate cells to
 		// support oversized tiles (tile dim > cell dim) drawn bottom-aligned.
@@ -852,12 +854,12 @@ export default class TMXLayer extends Renderable {
 	}
 
 	/**
-	 * Check whether this isometric layer can take the shader path, and note
-	 * the tileset it would draw with.
+	 * Check whether this layer of an isometric, staggered or hexagonal map
+	 * can take the shader path, and note the tileset it would draw with.
 	 *
-	 * Isometric tiles overlap (each is drawn as its whole image, over the
-	 * rows behind it), and the shader path draws one tileset at a time: it
-	 * can keep the tile drawn last among those of one tileset, not across
+	 * On these maps tiles overlap (each is drawn as its whole image, over
+	 * the ones behind it), and the shader path draws one tileset at a time:
+	 * it can keep the tile drawn last among those of one tileset, not across
 	 * two. So the layer's tiles must all come from the same tileset. Which
 	 * one is found by looking at the tiles, not at the map's list: a map
 	 * commonly has a tileset per layer.
@@ -865,13 +867,21 @@ export default class TMXLayer extends Renderable {
 	 * @ignore
 	 * @internal
 	 */
-	_checkIsometricShaderEligibility() {
+	_checkOverlappingShaderEligibility() {
 		this._shaderTileset = null;
-		// Half the tiles of a grid of odd size stand half a pixel off. Tile
-		// by tile, each is moved to a whole pixel; the shader has one quad
-		// for all of them, and would draw those a pixel away.
-		if (this.tilewidth % 2 !== 0 || this.tileheight % 2 !== 0) {
-			return { ok: false, reason: "an isometric grid of odd size" };
+		const kind = kindOf(this.orientation);
+		// Half the cells of a grid of odd size stand half a pixel off (on a
+		// hexagonal map, of a side of odd length). Tile by tile, each tile
+		// is moved to a whole pixel; the shader has one quad for all of
+		// them, and would draw those a pixel away.
+		const map = this.getRenderer();
+		if (
+			this.tilewidth % 2 !== 0 ||
+			this.tileheight % 2 !== 0 ||
+			(this.orientation !== "isometric" &&
+				!(Number.isInteger(map.columnwidth) && Number.isInteger(map.rowheight)))
+		) {
+			return { ok: false, reason: `${kind} grid of odd size` };
 		}
 		// Tiles overlap, and the shader draws the layer flat, then blends it
 		// as one picture: where tile by tile each tile is blended over the
@@ -879,7 +889,7 @@ export default class TMXLayer extends Renderable {
 		if (this.blendMode !== "normal") {
 			return {
 				ok: false,
-				reason: `blend mode "${this.blendMode}" on an isometric layer`,
+				reason: `blend mode "${this.blendMode}" on ${kind} layer`,
 			};
 		}
 		const data = this.layerData;
@@ -888,13 +898,13 @@ export default class TMXLayer extends Renderable {
 			const gid = data[i];
 			if (gid !== 0 && (tileset === null || !tileset.contains(gid))) {
 				if (tileset !== null) {
-					return { ok: false, reason: ISOMETRIC_ONE_TILESET };
+					return { ok: false, reason: oneTilesetReason(this.orientation) };
 				}
 				tileset = this.tilesets.getTilesetByGid(gid);
 			}
 		}
 		if (tileset !== null) {
-			const reason = this._isometricTilesetReason(tileset);
+			const reason = this._overlappingTilesetReason(tileset);
 			if (reason !== undefined) {
 				return { ok: false, reason };
 			}
@@ -908,27 +918,34 @@ export default class TMXLayer extends Renderable {
 	}
 
 	/**
-	 * Why the isometric shader path cannot draw the tiles of a tileset, if
-	 * it cannot.
+	 * Why the shader path of an isometric, staggered or hexagonal map cannot
+	 * draw the tiles of a tileset, if it cannot.
 	 * @param {TMXTileset} tileset - the tileset
 	 * @returns {string|undefined} the reason, or undefined when it can
 	 * @ignore
 	 * @internal
 	 */
-	_isometricTilesetReason(tileset) {
+	_overlappingTilesetReason(tileset) {
 		if (tileset.isCollection) {
 			return "collection-of-image tileset";
 		}
 		if (tileset.tilerendersize !== "tile") {
 			return `tilerendersize "${tileset.tilerendersize}" not supported`;
 		}
-		// the shader looks, for each pixel, at every cell whose tile image
-		// could cover it: a bounded number
-		if (
-			tileset.tilewidth > this.tilewidth * ISOMETRIC_MAX_TILE_WIDTHS ||
-			tileset.tileheight > this.tileheight * ISOMETRIC_MAX_TILE_HEIGHTS
-		) {
-			return `tiles larger than the shader's limit (${ISOMETRIC_MAX_TILE_WIDTHS} grid widths by ${ISOMETRIC_MAX_TILE_HEIGHTS} grid heights)`;
+		// The shader looks, for each pixel, at every cell whose tile image
+		// could cover it: a bounded number, of lines of cells and of cells
+		// in a line. On an isometric map the lines are half a grid height
+		// apart and their cells a grid width; on the others, a row height
+		// and two column widths
+		const { MAX_ROWS, MAX_COLS } = TMX_ORIENTATIONS[this.orientation].limits;
+		const map = this.getRenderer();
+		const isometric = this.orientation === "isometric";
+		const maxWidth =
+			MAX_COLS * (isometric ? this.tilewidth : map.columnwidth * 2);
+		const maxHeight =
+			MAX_ROWS * (isometric ? this.tileheight / 2 : map.rowheight);
+		if (tileset.tilewidth > maxWidth || tileset.tileheight > maxHeight) {
+			return `tiles larger than the shader's limit (${maxWidth} by ${maxHeight} pixels on this grid)`;
 		}
 		return undefined;
 	}
@@ -937,9 +954,9 @@ export default class TMXLayer extends Renderable {
 	 * A tile set at run time on a layer on the shader path: one that path
 	 * cannot draw moves the layer back to the legacy renderer.
 	 *
-	 * That is a tile flipped diagonally and not square, and on an isometric
-	 * layer, which draws with one tileset, a tile of another one, or of one
-	 * the path cannot draw.
+	 * That is a tile flipped diagonally and not square, and on a layer of an
+	 * isometric, staggered or hexagonal map, which draws with one tileset, a
+	 * tile of another one, or of one the path cannot draw.
 	 * @param {number} gid - the gid of the tile just set
 	 * @param {number} flipMask - its flips
 	 * @ignore
@@ -948,15 +965,15 @@ export default class TMXLayer extends Renderable {
 	_keepShaderEligible(gid, flipMask) {
 		let reason;
 		if (
-			this.orientation === "isometric" &&
+			this.orientation !== "orthogonal" &&
 			this._shaderTileset?.contains(gid) !== true
 		) {
 			if (this._shaderTileset) {
-				reason = ISOMETRIC_ONE_TILESET;
+				reason = oneTilesetReason(this.orientation);
 			} else {
 				// an empty layer takes its tileset from its first tile
 				const tileset = this.tilesets.getTilesetByGid(gid);
-				reason = this._isometricTilesetReason(tileset);
+				reason = this._overlappingTilesetReason(tileset);
 				if (reason === undefined) {
 					this._shaderTileset = tileset;
 				}

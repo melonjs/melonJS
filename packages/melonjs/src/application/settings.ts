@@ -476,16 +476,16 @@ export type ApplicationSettings = {
 	physic: PhysicsType;
 
 	/**
-	 * Enable the GPU procedural shader path for orthogonal and isometric
-	 * tile layers (backends advertising
+	 * Enable the GPU procedural shader path for orthogonal, isometric,
+	 * staggered and hexagonal tile layers (backends advertising
 	 * `renderer.supportsShaderTileLayers` — WebGL 2 and WebGPU). When
 	 * `true` (default), eligible layers render via a single quad per
 	 * tileset + a fragment shader doing per-fragment GID lookup, bypassing
 	 * the per-tile draw loop entirely. Layers that don't qualify (Canvas
-	 * renderer, a staggered, hexagonal or oblique map, collection-of-image
-	 * tilesets, tilerendersize "grid", tiles larger than the shader walks;
-	 * on an orthogonal map a non-zero tileoffset, on an isometric one
-	 * tiles of several tilesets in one layer) fall back to the legacy path
+	 * renderer, an oblique map, collection-of-image tilesets,
+	 * tilerendersize "grid", tiles larger than the shader walks; on an
+	 * orthogonal map a non-zero tileoffset, on the others tiles of
+	 * several tilesets in one layer) fall back to the legacy path
 	 * automatically, saying why in the console.
 	 * Set to `false` to disable globally.
 	 * @default true

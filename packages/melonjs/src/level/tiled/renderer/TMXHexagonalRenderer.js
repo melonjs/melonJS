@@ -379,12 +379,32 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 	 * @internal
 	 */
 	drawTileLayer(renderer, layer, rect) {
+		// The cells whose tile can reach the view. A tile stands on the
+		// bottom left of its cell, as on every map: one larger than the cell
+		// reaches up and to the right of it, so the cells that matter past
+		// the view are those to its left and below it, and a tileset's
+		// `tileoffset` moves its tiles either way.
+		const overX = Math.max(
+			(layer.maxTileSize?.width ?? this.tilewidth) - this.tilewidth,
+			0,
+		);
+		const overY = Math.max(
+			(layer.maxTileSize?.height ?? this.tileheight) - this.tileheight,
+			0,
+		);
+		const offsetX = layer.maxTileOffset?.x ?? 0;
+		const offsetY = layer.maxTileOffset?.y ?? 0;
+		const left = rect.pos.x - overX - offsetX;
+		const top = rect.pos.y - offsetY;
+		const right = rect.right + offsetX;
+		const bottom = rect.bottom + overY + offsetY;
+
 		// the tile at the top-left corner of the area, rounded down to its
 		// column and row (a staggered map's renderer gives a point's place
 		// within its tile too)
 		const startTile = this.pixelToTileCoords(
-			rect.pos.x,
-			rect.pos.y,
+			left,
+			top,
 			vector2dPool.get(),
 		).floorSelf();
 
@@ -403,8 +423,8 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 		 * up due to those tiles being visible as well. How we go up one row
 		 * depends on whether we're in the left or right half of the tile.
 		 */
-		const inUpperHalf = rect.pos.y - startPos.y < this.sideoffsety;
-		const inLeftHalf = rect.pos.x - startPos.x < this.sideoffsetx;
+		const inUpperHalf = top - startPos.y < this.sideoffsety;
+		const inLeftHalf = left - startPos.x < this.sideoffsetx;
 
 		if (inUpperHalf) {
 			startTile.y--;
@@ -452,11 +472,11 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 			let staggeredRow = this.doStaggerX(startTile.x);
 
 			// main drawing loop
-			for (; startPos.y < rect.bottom && startTile.y < endY; ) {
+			for (; startPos.y < bottom && startTile.y < endY; ) {
 				rowTile.setV(startTile);
 				rowPos.setV(startPos);
 
-				for (; rowPos.x < rect.right && rowTile.x < endX; rowTile.x += 2) {
+				for (; rowPos.x < right && rowTile.x < endX; rowTile.x += 2) {
 					if (rowTile.x >= 0 && rowTile.y >= 0 && rowTile.y < layer.rows) {
 						const idx = (rowTile.y * layerCols + rowTile.x) * 2;
 						const gid = data[idx];
@@ -465,10 +485,14 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 							if (!tilesetCache.contains(gid)) {
 								tilesetCache = tilesets.getTilesetByGid(gid);
 							}
+							// standing on its cell, and moved by its
+							// tileset's offset: where `drawTile` draws it
 							tilesetCache.drawTileRaw(
 								renderer,
-								rowPos.x,
-								rowPos.y,
+								tilesetCache.tileoffset.x + rowPos.x,
+								tilesetCache.tileoffset.y +
+									rowPos.y +
+									(this.tileheight - tilesetCache.tileheight),
 								gid,
 								flipMask,
 							);
@@ -505,7 +529,7 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 			}
 
 			// main drawing loop
-			for (; startPos.y < rect.bottom && startTile.y < endY; startTile.y++) {
+			for (; startPos.y < bottom && startTile.y < endY; startTile.y++) {
 				rowTile.setV(startTile);
 				rowPos.setV(startPos);
 
@@ -513,7 +537,7 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 					rowPos.x += this.columnwidth;
 				}
 
-				for (; rowPos.x < rect.right && rowTile.x < endX; rowTile.x++) {
+				for (; rowPos.x < right && rowTile.x < endX; rowTile.x++) {
 					if (rowTile.x >= 0 && rowTile.y >= 0 && rowTile.y < layer.rows) {
 						const idx = (rowTile.y * layerCols + rowTile.x) * 2;
 						const gid = data[idx];
@@ -522,10 +546,14 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 							if (!tilesetCache.contains(gid)) {
 								tilesetCache = tilesets.getTilesetByGid(gid);
 							}
+							// standing on its cell, and moved by its
+							// tileset's offset: where `drawTile` draws it
 							tilesetCache.drawTileRaw(
 								renderer,
-								rowPos.x,
-								rowPos.y,
+								tilesetCache.tileoffset.x + rowPos.x,
+								tilesetCache.tileoffset.y +
+									rowPos.y +
+									(this.tileheight - tilesetCache.tileheight),
 								gid,
 								flipMask,
 							);

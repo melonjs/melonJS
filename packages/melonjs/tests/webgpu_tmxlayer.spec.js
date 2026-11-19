@@ -279,3 +279,110 @@ describe("WebGPU isometric TMX layer renderer (mock)", () => {
 		expect(renderer.calls.drawIndexed).toEqual([]);
 	});
 });
+
+/**
+ * Staggered and hexagonal maps on the same renderer: one shader module for
+ * both, with the map's column width, row height, stagger axis and index in
+ * what was the uniform block's padding.
+ */
+describe("WebGPU staggered and hexagonal TMX layer renderer (mock)", () => {
+	let renderer;
+
+	const tileset = {
+		isCollection: false,
+		image: { width: 256, height: 256 },
+		tilewidth: 28,
+		tileheight: 48,
+		margin: 0,
+		spacing: 0,
+		tileoffset: { x: 0, y: 0 },
+		firstgid: 1,
+		lastgid: 16,
+		isAnimated: false,
+		animations: new Map(),
+		texture: { name: "hex-atlas" },
+	};
+
+	const layerOf = (orientation, map) => {
+		return {
+			orientation,
+			cols: 8,
+			rows: 8,
+			tilewidth: 28,
+			tileheight: 24,
+			dataVersion: 1,
+			layerData: new Uint16Array(8 * 8 * 2),
+			getOpacity() {
+				return 1;
+			},
+			getRenderer() {
+				return map;
+			},
+			tint: null,
+			tilesets: { tilesets: [tileset] },
+			_shaderTileset: tileset,
+		};
+	};
+
+	const RECT = { pos: { x: 10, y: 20 }, width: 320, height: 240 };
+
+	beforeEach(() => {
+		renderer = createMockWebGPURenderer();
+		renderer.setBatcher = () => {
+			renderer.currentBatcher ??= new WebGPUQuadBatcher(renderer);
+			return renderer.currentBatcher;
+		};
+	});
+
+	it("one shader module for both, apart from the other orientations'", () => {
+		const staggered = new TMXLayerGPURenderer(renderer, "staggered");
+		const hexagonal = new TMXLayerGPURenderer(renderer, "hexagonal");
+		const isometric = new TMXLayerGPURenderer(renderer, "isometric");
+		expect(hexagonal.key).toBe(staggered.key);
+		expect(staggered.key).not.toBe(isometric.key);
+	});
+
+	it("hands the shader the map's lines: their spacing, axis and index", () => {
+		const tmx = new TMXLayerGPURenderer(renderer, "hexagonal");
+		// a hexagon side of 12 along x: columns 20 apart, rows of 12
+		tmx.draw(
+			layerOf("hexagonal", {
+				columnwidth: 20,
+				rowheight: 12,
+				staggerX: true,
+				staggerEven: true,
+			}),
+			RECT,
+		);
+		expect(renderer.calls.drawIndexed).toEqual([6]);
+		const uniforms = tmx.uniformScratch;
+		// axis x (1) and an even index (2)
+		expect(uniforms[29]).toBe(3);
+		expect([uniforms[30], uniforms[31]]).toEqual([20, 12]);
+		// 28 pixels wide in spacings of 40, 48 tall in rows of 12
+		expect([uniforms[6], uniforms[7]]).toEqual([1, 4]);
+
+		const other = new TMXLayerGPURenderer(renderer, "staggered");
+		other.draw(
+			layerOf("staggered", {
+				columnwidth: 14,
+				rowheight: 12,
+				staggerX: false,
+				staggerEven: false,
+			}),
+			RECT,
+		);
+		expect(other.uniformScratch[29]).toBe(0);
+		expect([other.uniformScratch[30], other.uniformScratch[31]]).toEqual([
+			14, 12,
+		]);
+	});
+
+	it("leaves them at 0 for the other orientations", () => {
+		const tmx = new TMXLayerGPURenderer(renderer, "isometric");
+		const layer = layerOf("isometric", { originX: 8 * 14 });
+		tmx.draw(layer, RECT);
+		expect(renderer.calls.drawIndexed).toEqual([6]);
+		expect([...tmx.uniformScratch.slice(29, 32)]).toEqual([0, 0, 0]);
+	});
+});
