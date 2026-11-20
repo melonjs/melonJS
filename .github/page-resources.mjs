@@ -5,7 +5,13 @@ import { readdirSync, readFileSync, statfsSync } from "node:fs";
 
 const started = Date.now();
 const seconds = () => {
-	return `${String(Math.round((Date.now() - started) / 1000)).padStart(4)}s`;
+	return `${new Date().toISOString()} ${String(Math.round((Date.now() - started) / 1000)).padStart(4)}s`;
+};
+const memory = () => {
+	const kb = /MemAvailable:\s+(\d+)/.exec(
+		readFileSync("/proc/meminfo", "utf8"),
+	);
+	return kb === null ? -1 : Math.round(Number(kb[1]) / 1024);
 };
 const free = () => {
 	const s = statfsSync(process.env.TMPDIR ?? "/tmp");
@@ -16,12 +22,15 @@ const peak = {
 	buffersMB: 0,
 	lowestFreeMB: free(),
 	firstFreeMB: free(),
+	lowestMemoryMB: memory(),
+	firstMemoryMB: memory(),
 };
 const seen = new Map();
 let limits = "";
 
 function sample() {
 	peak.lowestFreeMB = Math.min(peak.lowestFreeMB, free());
+	peak.lowestMemoryMB = Math.min(peak.lowestMemoryMB, memory());
 	const alive = new Set();
 	for (const pid of readdirSync("/proc")) {
 		if (!/^\d+$/.test(pid)) {
@@ -69,7 +78,7 @@ function sample() {
 		if (!alive.has(pid)) {
 			seen.delete(pid);
 			console.log(
-				`${seconds()} ${last.type} ${pid} is gone: it held ${last.handles} handles and ${last.buffersMB} MB of buffers a second before, temp free ${free()} MB`,
+				`${seconds()} ${last.type} ${pid} is gone: it held ${last.handles} handles and ${last.buffersMB} MB of buffers just before, temp free ${free()} MB, memory available ${memory()} MB`,
 			);
 		}
 	}
@@ -78,7 +87,7 @@ function sample() {
 let ticks = 0;
 const timer = setInterval(() => {
 	sample();
-	if (++ticks % 15 === 0) {
+	if (++ticks % 60 === 0) {
 		const pages = [...seen.values()].filter((p) => {
 			return p.type === "renderer";
 		});
@@ -87,15 +96,17 @@ const timer = setInterval(() => {
 				.map((p) => {
 					return `${p.handles} handles / ${p.buffersMB} MB`;
 				})
-				.join(", ")} | temp free ${free()} MB`,
+				.join(
+					", ",
+				)} | temp free ${free()} MB | memory available ${memory()} MB`,
 		);
 	}
-}, 1000);
+}, 250);
 
 process.on("SIGTERM", () => {
 	clearInterval(timer);
 	console.log(
-		`SUMMARY most handles held by one page: ${peak.handles} | most buffers held by one page: ${peak.buffersMB} MB | temp free: ${peak.firstFreeMB} MB at the start, ${peak.lowestFreeMB} MB at the lowest`,
+		`SUMMARY most handles held by one page: ${peak.handles} | most buffers held by one page: ${peak.buffersMB} MB | temp free: ${peak.firstFreeMB} MB at the start, ${peak.lowestFreeMB} MB at the lowest | memory available: ${peak.firstMemoryMB} MB at the start, ${peak.lowestMemoryMB} MB at the lowest`,
 	);
 	process.exit(0);
 });
