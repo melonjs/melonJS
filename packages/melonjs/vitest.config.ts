@@ -74,6 +74,11 @@ function keepModulesForTheRun(): Plugin {
 	return {
 		name: "melonjs:keep-modules-for-the-run",
 		configureVitest({ vitest, project }) {
+			// TEMPORARY, for one pull request: the CI job that compares a run
+			// re-validating its modules with one that keeps them
+			if (process.env.MELONJS_TESTS_REVALIDATE) {
+				return;
+			}
 			// not `=== false`: without a terminal Vitest leaves it unset
 			if (!vitest.config.watch) {
 				process.env[ONE_SHOT] = "1";

@@ -58,6 +58,14 @@ jobs:
   test:
     needs: lint
     runs-on: ubuntu-latest
+    # TEMPORARY, for this pull request only: the job runs twice, once as it is
+    # meant to and once with the test server making the browser re-validate
+    # every module, as it did before, to compare what the pages hold.
+    strategy:
+      fail-fast: false
+      matrix:
+        modules: [kept, revalidated]
+    continue-on-error: ${{ matrix.modules == 'revalidated' }}
     container:
       # must match the workspace's playwright version (root devDependencies)
       image: mcr.microsoft.com/playwright:v1.62.1-noble
@@ -111,8 +119,16 @@ jobs:
         # dash, which has no `pipefail` — and without it the exit status of
         # `pnpm test` is masked by `tee`
         shell: bash
+        env:
+          MELONJS_TESTS_REVALIDATE: ${{ matrix.modules == 'revalidated' && '1' || '' }}
         run: |
           set -o pipefail
+          # TEMPORARY: see the comment on the job
+          echo "handle limit of this shell (soft/hard): $(ulimit -Sn)/$(ulimit -Hn)"
+          df -h /tmp
+          node .github/page-resources.mjs > page-resources.log 2>&1 &
+          sampler=$!
+          trap 'kill -TERM "$sampler" 2>/dev/null; sleep 2; echo "--- page resources ---"; cat page-resources.log' EXIT
           for attempt in 1 2; do
             if pnpm test 2>&1 | tee "test-$attempt.log"; then
               exit 0
