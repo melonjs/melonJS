@@ -22,6 +22,13 @@ if (!version) {
 	throw new Error("Version missing from package.json");
 }
 
+declare module "vitest" {
+	interface ProvidedContext {
+		/** true in watch mode: see `keepModulesForTheRun` below */
+		collectGarbage: boolean;
+	}
+}
+
 // Set by the plugin below once Vitest says the run is a one-shot one. An
 // environment variable, because Vitest evaluates this file once per server it
 // starts, and the server that feeds the browser is not the one it configures.
@@ -56,17 +63,23 @@ const KEPT_FOR_THE_RUN = "max-age=86400";
  * A spec file that mocks a module still gets its mock, and the next one the
  * real module (checked both ways round).
  *
- * Watch mode is left alone: a module edited between two runs has to be asked
- * for again.
+ * Watch mode cannot do that: a module edited between two runs has to be asked
+ * for again. There the buffers are released instead, by a garbage collection
+ * at the end of every spec file (`tests/helpers/collect-garbage.js`). It costs
+ * a sixth more time, and is no use in a one-shot run: a collection also
+ * empties the browser's own store of modules, which undoes the gain above.
  * @returns the plugin
  */
 function keepModulesForTheRun(): Plugin {
 	return {
 		name: "melonjs:keep-modules-for-the-run",
-		configureVitest({ vitest }) {
+		configureVitest({ vitest, project }) {
 			// not `=== false`: without a terminal Vitest leaves it unset
 			if (!vitest.config.watch) {
 				process.env[ONE_SHOT] = "1";
+			} else {
+				// read by tests/helpers/collect-garbage.js
+				project.provide("collectGarbage", true);
 			}
 		},
 		configureServer(server) {
@@ -115,6 +128,8 @@ export default defineConfig(() =>
 			include: ["tests/**/*.{test,spec}.[jt]s?(x)"],
 			// servers on other origins, for the loader's cross-origin tests
 			globalSetup: ["tests/helpers/cors-servers.js"],
+			// in watch mode, a garbage collection at the end of every spec file
+			setupFiles: ["tests/helpers/collect-garbage.js"],
 			// Several specs create a WebGL context in `beforeAll`. On a CI
 			// container with no GPU that runs through a software rasterizer and
 			// can genuinely take tens of seconds under load, so the default hook
