@@ -58,16 +58,6 @@ jobs:
   test:
     needs: lint
     runs-on: ubuntu-latest
-    # TEMPORARY, for this pull request only: the job runs twelve times, six as
-    # it is meant to and six with the test server making the browser
-    # re-validate every module, as it did before. Each prints what its pages
-    # held, and what a page that was lost was doing when it went.
-    strategy:
-      fail-fast: false
-      matrix:
-        modules: [kept, revalidated]
-        copy: [1, 2, 3, 4, 5, 6]
-    continue-on-error: ${{ matrix.modules == 'revalidated' }}
     container:
       # must match the workspace's playwright version (root devDependencies)
       image: mcr.microsoft.com/playwright:v1.62.1-noble
@@ -98,8 +88,6 @@ jobs:
           key: ${{ runner.os }}-turbo-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.sha }}
           restore-keys: ${{ runner.os }}-turbo-${{ hashFiles('pnpm-lock.yaml') }}-
       - run: pnpm i
-      # TEMPORARY: see the comment on the job
-      - run: node .github/instrument-test-runner.mjs
       # Vitest 4.1.11 runs each worker as one long-lived orchestrator page and
       # dispatches every spec file over a single websocket. Its ws close handler
       # destroys the session and rejects the pending `createTesters`, so if that
@@ -123,17 +111,8 @@ jobs:
         # dash, which has no `pipefail` — and without it the exit status of
         # `pnpm test` is masked by `tee`
         shell: bash
-        env:
-          MELONJS_TESTS_REVALIDATE: ${{ matrix.modules == 'revalidated' && '1' || '' }}
-          WSLOG: ${{ github.workspace }}/page-events.log
         run: |
           set -o pipefail
-          # TEMPORARY: see the comment on the job
-          echo "handle limit of this shell (soft/hard): $(ulimit -Sn)/$(ulimit -Hn)"
-          df -h /tmp
-          node .github/page-resources.mjs > page-resources.log 2>&1 &
-          sampler=$!
-          trap 'kill -TERM "$sampler" 2>/dev/null; sleep 2; echo "--- attempts made: $attempt ---"; echo "--- page events ---"; grep -v ": starts " "$WSLOG"; echo "--- last spec files started ---"; grep ": starts " "$WSLOG" | tail -6; echo "--- page resources ---"; cat page-resources.log' EXIT
           for attempt in 1 2; do
             if pnpm test 2>&1 | tee "test-$attempt.log"; then
               exit 0

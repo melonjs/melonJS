@@ -52,10 +52,16 @@ const KEPT_FOR_THE_RUN = "max-age=86400";
  * way, until its garbage collector next runs. A page that loads 400 modules in
  * an iframe twice shows it, with no engine and no Vitest involved. Vitest runs
  * every spec file in an iframe of one long-lived page, and nothing makes the
- * collector run: measured on this suite, a page reached 11,000 handles and
- * 22 GB of temporary files. A page that runs out of handles stops loading
- * modules, and the run hangs on whichever spec file is next; a full temporary
- * folder fails the module loads instead.
+ * collector run, so the buffers pile up, by the thousand.
+ *
+ * That is what "Browser connection was closed while running tests" was, on
+ * whichever spec file came next and with no test failing. CI ran the suite six
+ * times each way (#1907): re-validating, five runs peaked between 9,700 and
+ * 16,300 handles in one page and passed, and the sixth lost every websocket of
+ * a page at once, with no process crashing, as that page reached 16,448 handles
+ * and 32 GB of buffers. Kept, no page held more than 330 handles and none was
+ * lost. Other ways it ends: a page limited to 8,192 handles stops loading
+ * modules and the run hangs, and a full temporary folder fails the loads.
  *
  * Nothing changes on disk during a one-shot run, so there the answer can be
  * `max-age`, and the browser does not ask: a page then stays at a few hundred
@@ -74,11 +80,6 @@ function keepModulesForTheRun(): Plugin {
 	return {
 		name: "melonjs:keep-modules-for-the-run",
 		configureVitest({ vitest, project }) {
-			// TEMPORARY, for one pull request: the CI job that compares a run
-			// re-validating its modules with one that keeps them
-			if (process.env.MELONJS_TESTS_REVALIDATE) {
-				return;
-			}
 			// not `=== false`: without a terminal Vitest leaves it unset
 			if (!vitest.config.watch) {
 				process.env[ONE_SHOT] = "1";
