@@ -37,6 +37,19 @@ jobs:
           path: ${{ env.STORE_PATH }}
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: ${{ runner.os }}-pnpm-store-
+      # Turborepo's cache: what each package's build, lint and type check gave,
+      # by a fingerprint of its files and of what it depends on. Restored from
+      # the latest run, a task whose fingerprint is unchanged is skipped, so a
+      # change that leaves a package alone does not build or lint it again, and
+      # the test job reuses what the lint job built. An entry that no longer
+      # matches is simply not used: a stale cache cannot give a wrong result.
+      # The lockfile is in the key so the cache starts afresh when dependencies
+      # change, which is when most of it stops matching anyway.
+      - uses: actions/cache@v5
+        with:
+          path: .turbo
+          key: ${{ runner.os }}-turbo-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.sha }}
+          restore-keys: ${{ runner.os }}-turbo-${{ hashFiles('pnpm-lock.yaml') }}-
       - run: pnpm i
       - run: pnpm lint
       - run: pnpm biome check
@@ -62,6 +75,12 @@ jobs:
           path: ${{ env.STORE_PATH }}
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: ${{ runner.os }}-pnpm-store-
+      # Turborepo's cache (see the lint job)
+      - uses: actions/cache@v5
+        with:
+          path: .turbo
+          key: ${{ runner.os }}-turbo-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.sha }}
+          restore-keys: ${{ runner.os }}-turbo-${{ hashFiles('pnpm-lock.yaml') }}-
       - run: pnpm i
       # Vitest 4.1.11 runs each worker as one long-lived orchestrator page and
       # dispatches every spec file over a single websocket. Its ws close handler
@@ -129,6 +148,12 @@ jobs:
           path: ${{ env.STORE_PATH }}
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: ${{ runner.os }}-pnpm-store-
+      # Turborepo's cache (see the lint job)
+      - uses: actions/cache@v5
+        with:
+          path: .turbo
+          key: ${{ runner.os }}-turbo-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.sha }}
+          restore-keys: ${{ runner.os }}-turbo-${{ hashFiles('pnpm-lock.yaml') }}-
       - run: pnpm i
       - run: pnpm lint
       - run: pnpm build
