@@ -61,8 +61,10 @@ Tests run in Chromium through Playwright: a renderer, a pointer and a canvas are
 real, so test through them rather than mocking them.
 
 `pnpm lint` runs ESLint one package at a time through Turborepo, which caches
-each result: a package that has not changed, and whose dependencies have not,
-is skipped. A change to the engine re-lints the packages built on it.
+each result: a package that has not changed is skipped. A package is linted
+against the published types of the others (`build/**/*.d.ts`), so a change
+inside the engine re-lints the plugins and adapters only when it changes those
+types.
 
 ## Conventions
 
