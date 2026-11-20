@@ -51,7 +51,7 @@
 		"tsconfig": "workspace:*",
 		"tsx": "^4.23.1",
 		"typescript": "^6.0.2",
-		"vitest": "^4.1.11"
+		"vitest": "^4.1.12"
 	},
 	"scripts": {
 		"build": "tsx scripts/build.ts && pnpm types",
@@ -60,6 +60,6 @@
 		"types": "tsc --project tsconfig.build.json",
 		"test": "vitest run",
 		"test:types": "tsc",
-		"lint": "eslint src tests"
+		"lint": "eslint ."
 	}
 }

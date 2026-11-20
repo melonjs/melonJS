@@ -403,10 +403,9 @@ export interface ParticleEmitterSettings {
 	 * frame, from a transform that had not been rebuilt yet. Particles now
 	 * invalidate on write and recompute once on read, so the bounds a reader
 	 * gets are always current.
-	 * @default false
 	 * @deprecated since 20.2.0 — bounds are always up to date; remove it
 	 */
-	accurateBounds: boolean;
+	accurateBounds?: boolean;
 
 	/**
 	 * When `true`, the emitter automatically removes itself from its parent
@@ -473,7 +472,6 @@ const defaultParticleEmitterSettings: ParticleEmitterSettings = {
 	frequency: 100,
 	duration: Infinity,
 	framesToSkip: 0,
-	accurateBounds: false,
 	autoDestroyOnComplete: false,
 	onComplete: undefined,
 };

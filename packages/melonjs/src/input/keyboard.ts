@@ -23,22 +23,32 @@ const _keyBindings: Record<number, string> = {};
 // run: one of them that uses the key can stop its default action
 let _unboundKeyDown: KeyboardEvent | undefined;
 
-type KeyEventHandler = (
-	options:
-		| { keyCode: number; mouseButton?: number | undefined }
-		| KeyboardEvent,
-) => void;
+/**
+ * The code of the key of a browser event. The engine's key codes (`input.KEY`,
+ * the bindings) are the ones browsers have always given in `keyCode`: this is
+ * the one place that field is read.
+ * @param event - a keyboard event from the browser
+ * @returns the code of its key
+ */
+function keyCodeOf(event: KeyboardEvent): number {
+	// eslint-disable-next-line @typescript-eslint/no-deprecated -- the codes the engine's API is in
+	return event.keyCode;
+}
 
-const keyDownEvent: KeyEventHandler = (options) => {
-	// eslint-disable-next-line @typescript-eslint/no-deprecated
-	const { keyCode } = options;
+/**
+ * A key goes down: pressed on the keyboard (with the browser's event), or
+ * triggered by the engine for a pointer button or from `triggerKeyEvent`.
+ * @param keyCode - the key
+ * @param [mouseButton] - the pointer button standing in for the key
+ * @param [event] - the browser's event, when a keyboard sent it
+ */
+function keyDown(keyCode: number, mouseButton?: number, event?: KeyboardEvent) {
 	const action = _keyBindings[keyCode];
 
 	// a bound key follows its binding's preventDefault; an unbound one is left
 	// to the listener that uses it, through preventKeyDefault()
 	const outer = _unboundKeyDown;
-	_unboundKeyDown =
-		!action && "preventDefault" in options ? options : undefined;
+	_unboundKeyDown = action ? undefined : event;
 	try {
 		emit(KEYDOWN, action, keyCode, action ? !_keyLocked[action] : true);
 	} finally {
@@ -47,29 +57,31 @@ const keyDownEvent: KeyEventHandler = (options) => {
 
 	if (action) {
 		if (!_keyLocked[action]) {
-			const trigger =
-				("mouseButton" in options ? options.mouseButton : undefined) ?? keyCode;
+			const trigger = mouseButton ?? keyCode;
 			if (!_keyRefs[action][trigger]) {
 				_keyStatus[action]++;
 				_keyRefs[action][trigger] = true;
 			}
 		}
-		if ("preventDefault" in options && _preventDefaultForKeys[keyCode]) {
-			options.preventDefault();
+		if (_preventDefaultForKeys[keyCode]) {
+			event?.preventDefault();
 		}
 	}
-};
+}
 
-const keyUpEvent: KeyEventHandler = (options) => {
-	// eslint-disable-next-line @typescript-eslint/no-deprecated
-	const { keyCode } = options;
+/**
+ * A key goes up: see {@link keyDown}.
+ * @param keyCode - the key
+ * @param [mouseButton] - the pointer button standing in for the key
+ * @param [event] - the browser's event, when a keyboard sent it
+ */
+function keyUp(keyCode: number, mouseButton?: number, event?: KeyboardEvent) {
 	const action = _keyBindings[keyCode];
 
 	emit(KEYUP, action, keyCode);
 
 	if (action) {
-		const trigger =
-			("mouseButton" in options ? options.mouseButton : undefined) ?? keyCode;
+		const trigger = mouseButton ?? keyCode;
 		delete _keyRefs[action][trigger];
 
 		if (_keyStatus[action] > 0) {
@@ -78,11 +90,11 @@ const keyUpEvent: KeyEventHandler = (options) => {
 
 		_keyLocked[action] = false;
 
-		if ("preventDefault" in options && _preventDefaultForKeys[keyCode]) {
-			options.preventDefault();
+		if (_preventDefaultForKeys[keyCode]) {
+			event?.preventDefault();
 		}
 	}
-};
+}
 
 // gamepads press keys with a source of 256 and up (keys and mouse buttons
 // use their own codes, below that)
@@ -125,12 +137,18 @@ export function initKeyboardEvent() {
 	if (typeof globalThis.addEventListener === "function") {
 		globalThis.addEventListener(
 			"keydown",
-			(e) => {
-				keyDownEvent(e);
+			(event) => {
+				keyDown(keyCodeOf(event), undefined, event);
 			},
 			false,
 		);
-		globalThis.addEventListener("keyup", keyUpEvent, false);
+		globalThis.addEventListener(
+			"keyup",
+			(event) => {
+				keyUp(keyCodeOf(event), undefined, event);
+			},
+			false,
+		);
 	}
 	// emitted on the window's blur and when the page is hidden
 	on(BLUR, releaseHeldKeys);
@@ -198,8 +216,11 @@ export function triggerKeyEvent(
 	status: boolean,
 	mouseButton?: number,
 ) {
-	const handler = status ? keyDownEvent : keyUpEvent;
-	handler({ keyCode, mouseButton });
+	if (status) {
+		keyDown(keyCode, mouseButton);
+	} else {
+		keyUp(keyCode, mouseButton);
+	}
 }
 
 /**

@@ -9,6 +9,15 @@
 			"persistent": true,
 			"cache": false
 		},
+		"lint": {
+			"inputs": [
+				"$TURBO_DEFAULT$",
+				"$TURBO_ROOT$/eslint.config.mjs",
+				"$TURBO_ROOT$/packages/tsconfig/**",
+				"$TURBO_ROOT$/packages/*/build/**/*.d.ts"
+			],
+			"outputs": []
+		},
 		"test:types": {}
 	}
 }

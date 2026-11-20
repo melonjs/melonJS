@@ -21,6 +21,11 @@
 - `NineSliceSprite` blinks with `flicker()`, as a `Sprite` does; it ignored it
 - Text: a stroked multi-line label with `textBaseline: "hanging"` keeps the top of its outline on macOS, where Helvetica's hanging metrics made the ink padding exactly as tall as the ink, shearing its first row off the canvas ([#1870](https://github.com/melonjs/melonJS/issues/1870))
 - glTF: a model compressed with Draco or meshopt, which the loader cannot decode, says so in the console, naming the extension, instead of failing on an accessor error that did not mention it
+- Physics: a method of the built-in adapter (`setVelocity`, `applyForce`, `setStatic` and the like) called on a renderable with no body says so, `this renderable has no built-in body`, where it failed on a property of `undefined`; and a raycast passes over an object whose body is not one of the adapter's, where it threw
+
+### Chore
+- Dependencies: the 46 known vulnerabilities the security audit reported in the development tools are cleared (vite 8.3.8, vitest 4.1.12, serve 14.2.8, and overrides for what they depend on). None was in a dependency of a published package
+- Lint: each package is linted on its own and Turborepo caches the result, so `pnpm lint` skips the packages that have not changed; and the engine is no longer linted a second time by its own build
 
 ## [20.16.0] (melonJS 2) - _2026-11-17_
 

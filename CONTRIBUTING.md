@@ -109,7 +109,7 @@ The output is written to `packages/melonjs/docs/` and can be viewed by opening `
 
 ## Code style
 
-melonJS uses [ESLint](https://eslint.org) and [Biome](https://biomejs.dev) to enforce consistent code style. Running `pnpm lint` will check your code against the project's rules. Key conventions:
+melonJS uses [ESLint](https://eslint.org) and [Biome](https://biomejs.dev) to enforce consistent code style. Running `pnpm lint` will check your code against the project's rules. ESLint runs one package at a time and its results are cached, so a second run only looks at the packages that changed; `pnpm -F <package> lint` checks one package alone. Key conventions:
 
 - Use tabs for indentation
 - Use strict equality (`===`)

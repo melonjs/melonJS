@@ -52,12 +52,19 @@ pnpm dev                               # engine in watch mode + the examples sit
 pnpm test                              # the engine's browser tests (Vitest + Playwright)
 pnpm -F @melonjs/gamepad-plugin test   # one package's tests (those that have them)
 pnpm lint                              # build, ESLint, Biome and the type checks
+pnpm -F melonjs lint                   # ESLint on one package alone
 pnpm -F melonjs test:types             # the engine's type check alone
 pnpm doc                               # the API docs, into packages/melonjs/docs/
 ```
 
 Tests run in Chromium through Playwright: a renderer, a pointer and a canvas are
 real, so test through them rather than mocking them.
+
+`pnpm lint` runs ESLint one package at a time through Turborepo, which caches
+each result: a package that has not changed is skipped. A package is linted
+against the published types of the others (`build/**/*.d.ts`), so a change
+inside the engine re-lints the plugins and adapters only when it changes those
+types.
 
 ## Conventions
 

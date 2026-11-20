@@ -8,7 +8,7 @@ import { Vector2d } from "../../math/vector2d.ts";
 import type Renderable from "../../renderable/renderable.js";
 import type { RaycastHit } from "../adapter.ts";
 import type World from "../world.js";
-import type Body from "./body.js";
+import Body from "./body.js";
 import { anchorOffsetX, anchorOffsetY } from "./sat.js";
 
 /**
@@ -400,19 +400,17 @@ export function raycastQuery(
 
 	for (let i = candidates.length - 1; i >= 0; i--) {
 		const objB = candidates[i];
-		if (!objB.body) {
+		// This raycast walks the BuiltinAdapter's broadphase, whose bodies
+		// are the built-in `Body`: the portable `PhysicsBody` a renderable
+		// is typed with does not have the `shapes` read below. Anything
+		// else found there (no body, or one of another kind) is not hit.
+		const bodyB = objB.body;
+		if (!(bodyB instanceof Body)) {
 			continue;
 		}
 		if (!line.getBounds().overlaps(objB.getBounds())) {
 			continue;
 		}
-
-		// This raycast walks the BuiltinAdapter's broadphase, so every
-		// `objB.body` here is a concrete builtin `Body` — narrow from
-		// the portable `PhysicsBody` interface (which doesn't expose
-		// `shapes` / `getShape` since those are adapter-specific) to
-		// the concrete type.
-		const bodyB = objB.body as Body;
 		const shapeCount = bodyB.shapes.length;
 		if (shapeCount === 0) {
 			continue;
