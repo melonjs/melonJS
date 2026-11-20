@@ -29,6 +29,10 @@ import {
  * The canvas is a quarter of the view's size each way, and the camera
  * zoomed out to match: as many tiles are in view, and walked, as in the
  * view named, with a sixteenth of the pixels for the software rasterizer.
+ *
+ * It runs only when asked for: `BENCH=1 pnpm vitest run --config
+ * packages/melonjs/vitest.config.ts tests/tmxlayer_bench.spec.js`, from the
+ * repository's root.
  */
 
 const SCALE = 4;
@@ -111,6 +115,13 @@ describe("tile layer benchmark: tile by tile against the GPU path", () => {
 			// a bare return reports as a PASS, so a benchmark that never
 			// ran would look identical to one that did
 			ctx.skip("WebGL not available: nothing to measure");
+			return;
+		}
+		// Skipped unless asked for, and visibly so: it measures and tests
+		// nothing the tile layer specs do not, and it is twenty seconds of
+		// every run otherwise.
+		if (import.meta.env.VITE_BENCH === "") {
+			ctx.skip("benchmark: run it with BENCH=1");
 			return;
 		}
 		const gl = app.renderer.gl;

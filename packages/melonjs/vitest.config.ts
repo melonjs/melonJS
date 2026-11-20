@@ -1,11 +1,12 @@
 /// <reference types="vitest" />
 /// <reference types="vite/client" />
+import { ServerResponse } from "node:http";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { playwright } from "@vitest/browser-playwright";
 import { PackageJson } from "type-fest";
 import { default as glsl } from "vite-plugin-glsl";
-import { defineConfig } from "vitest/config";
+import { defineConfig, type Plugin } from "vitest/config";
 import { stripShaderComments } from "./scripts/strip-shader-comments.ts";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -19,6 +20,98 @@ const packageJson = (
 const version = packageJson.version;
 if (!version) {
 	throw new Error("Version missing from package.json");
+}
+
+declare module "vitest" {
+	interface ProvidedContext {
+		/** true in watch mode: see `keepModulesForTheRun` below */
+		collectGarbage: boolean;
+	}
+}
+
+// Set by the plugin below once Vitest says the run is a one-shot one. An
+// environment variable, because Vitest evaluates this file once per server it
+// starts, and the server that feeds the browser is not the one it configures.
+const ONE_SHOT = "MELONJS_TESTS_ONE_SHOT";
+
+// a day: longer than any run
+const KEPT_FOR_THE_RUN = "max-age=86400";
+
+/**
+ * In a one-shot run, lets the browser keep a module for the rest of the run.
+ *
+ * Vite serves every source module as `no-cache`, and Vitest does the same for
+ * its own. So the browser asks again for each of them in every spec file, some
+ * 450 requests a file, and all the server answers is "not modified". Two things
+ * follow.
+ *
+ * It is slow: asking was 40% of the suite's time.
+ *
+ * And Chromium keeps a 2 MiB shared-memory buffer, a file in the temporary
+ * folder, and an open handle on it for every module script re-validated that
+ * way, until its garbage collector next runs. A page that loads 400 modules in
+ * an iframe twice shows it, with no engine and no Vitest involved. Vitest runs
+ * every spec file in an iframe of one long-lived page, and nothing makes the
+ * collector run, so the buffers pile up, by the thousand.
+ *
+ * That is what "Browser connection was closed while running tests" was, on
+ * whichever spec file came next and with no test failing. CI ran the suite six
+ * times each way (#1907): re-validating, five runs peaked between 9,700 and
+ * 16,300 handles in one page and passed, and the sixth lost every websocket of
+ * a page at once, with no process crashing, as that page reached 16,448 handles
+ * and 32 GB of buffers. Kept, no page held more than 330 handles and none was
+ * lost. Other ways it ends: a page limited to 8,192 handles stops loading
+ * modules and the run hangs, and a full temporary folder fails the loads.
+ *
+ * Nothing changes on disk during a one-shot run, so there the answer can be
+ * `max-age`, and the browser does not ask: a page then stays at a few hundred
+ * handles.
+ * A spec file that mocks a module still gets its mock, and the next one the
+ * real module (checked both ways round).
+ *
+ * Watch mode cannot do that: a module edited between two runs has to be asked
+ * for again. There the buffers are released instead, by a garbage collection
+ * at the end of every spec file (`tests/helpers/collect-garbage.js`). It costs
+ * a sixth more time, and is no use in a one-shot run: a collection also
+ * empties the browser's own store of modules, which undoes the gain above.
+ * @returns the plugin
+ */
+function keepModulesForTheRun(): Plugin {
+	return {
+		name: "melonjs:keep-modules-for-the-run",
+		configureVitest({ vitest, project }) {
+			// not `=== false`: without a terminal Vitest leaves it unset
+			if (!vitest.config.watch) {
+				process.env[ONE_SHOT] = "1";
+			} else {
+				// read by tests/helpers/collect-garbage.js
+				project.provide("collectGarbage", true);
+			}
+		},
+		configureServer(server) {
+			server.middlewares.use((req, res, next) => {
+				if (
+					process.env[ONE_SHOT] !== undefined &&
+					req.headers["sec-fetch-dest"] === "script"
+				) {
+					// the prototype's, because Vitest replaces the response's own
+					// with one that ignores this header, for its own modules
+					const setHeader = ServerResponse.prototype.setHeader.bind(res);
+					// set by a middleware that ran before this one
+					if (res.getHeader("Cache-Control") === "no-cache") {
+						setHeader("Cache-Control", KEPT_FOR_THE_RUN);
+					}
+					// and by the ones that run after it
+					res.setHeader = (name, value) => {
+						const kept =
+							name.toLowerCase() === "cache-control" && value === "no-cache";
+						return setHeader(name, kept ? KEPT_FOR_THE_RUN : value);
+					};
+				}
+				next();
+			});
+		},
+	};
 }
 
 export default defineConfig(() =>
@@ -41,6 +134,8 @@ export default defineConfig(() =>
 			include: ["tests/**/*.{test,spec}.[jt]s?(x)"],
 			// servers on other origins, for the loader's cross-origin tests
 			globalSetup: ["tests/helpers/cors-servers.js"],
+			// in watch mode, a garbage collection at the end of every spec file
+			setupFiles: ["tests/helpers/collect-garbage.js"],
 			// Several specs create a WebGL context in `beforeAll`. On a CI
 			// container with no GPU that runs through a software rasterizer and
 			// can genuinely take tens of seconds under load, so the default hook
@@ -111,6 +206,7 @@ export default defineConfig(() =>
 		},
 		publicDir: resolve(__dirname, "tests/public"),
 		plugins: [
+			keepModulesForTheRun(),
 			// the shaders as the build ships them, without their comments
 			// (see `scripts/build.ts`): the tests compile the same text
 			glsl({
