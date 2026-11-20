@@ -51,8 +51,8 @@ jobs:
           key: ${{ runner.os }}-turbo-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.sha }}
           restore-keys: ${{ runner.os }}-turbo-${{ hashFiles('pnpm-lock.yaml') }}-
       - run: pnpm i
+      # ESLint for each package, Biome and the type checks, after a build
       - run: pnpm lint
-      - run: pnpm biome check
       - run: pnpm build
 
   test:
