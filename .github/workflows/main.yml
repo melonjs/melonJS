@@ -51,8 +51,8 @@ jobs:
           key: ${{ runner.os }}-turbo-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.sha }}
           restore-keys: ${{ runner.os }}-turbo-${{ hashFiles('pnpm-lock.yaml') }}-
       - run: pnpm i
+      # ESLint for each package, Biome and the type checks, after a build
       - run: pnpm lint
-      - run: pnpm biome check
       - run: pnpm build
 
   test:
@@ -67,6 +67,12 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: 24
+      # The cache steps below compress with zstd where it is installed and with
+      # gzip where it is not, and a cache saved one way is not found the other.
+      # This image has no zstd: with it, the job reads the caches the lint job
+      # saved, and so the build it has just made.
+      - name: Install zstd, to share caches with the lint job
+        run: apt-get update -qq && apt-get install -y -qq zstd
       - uses: pnpm/action-setup@v5
       - name: Get pnpm store directory
         run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
