@@ -73,7 +73,7 @@
 		"tsc:watch": "tsc --project tsconfig.build.json --watch --noUnusedParameters false --noUnusedLocals false --preserveWatchOutput",
 		"build:watch": "tsx scripts/build.js watch",
 		"lint": "eslint src tests",
-		"build": "pnpm lint && tsx scripts/build.js && pnpm types",
+		"build": "tsx scripts/build.js && pnpm types",
 		"dist": "pnpm clean && pnpm lint && pnpm vitest run && pnpm build && pnpm doc && cp ../../README.md .",
 		"dist:publish": "pnpm clean && pnpm lint && pnpm build && pnpm doc && cp ../../README.md .",
 		"doc": "tsx scripts/check-doc-readme.ts && pnpm doc:css && typedoc && tsx scripts/generate-llms-txt.ts",
