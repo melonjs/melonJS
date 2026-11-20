@@ -205,6 +205,26 @@ const _combinedMatrix = new Matrix3d();
 // object, or asset name) to a cached `TextureAtlas`. Throws if nothing
 // resolves — Mesh requires a texture binding for its GL pipeline.
 /**
+ * The same triangles, wound the other way round: a copy of an index array
+ * with the last two corners of each triangle swapped.
+ *
+ * The copy is made by the array itself, so it is of the same kind: a mesh of
+ * more than 65535 vertices keeps its 32-bit indices, which a `Uint16Array`
+ * would cut short.
+ * @param {Uint16Array|Uint32Array|number[]} indices - three indices a triangle
+ * @returns {Uint16Array|Uint32Array|number[]} the reversed copy
+ * @ignore
+ */
+function reversedWinding(indices) {
+	const reversed = indices.slice();
+	for (let i = 0; i + 2 < indices.length; i += 3) {
+		reversed[i + 1] = indices[i + 2];
+		reversed[i + 2] = indices[i + 1];
+	}
+	return reversed;
+}
+
+/**
  * Normalize a `vertexColors` setting to the packed form both batchers read.
  *
  * A length mismatch throws rather than being padded or truncated: a short
@@ -2123,22 +2143,11 @@ export default class Mesh extends Renderable {
 		// duplicate the whole index array for nothing (megabytes on a dense
 		// mesh).
 		if (needsReversedIndices === true && this.rightHanded !== true) {
-			const src = this._indicesOriginal;
-			// match the source index type (Uint16Array OR Uint32Array): a copy
-			// into a hard-coded Uint16Array would truncate indices for meshes
-			// with > 65535 vertices.
-			const Ctor = src.constructor;
-			const dst = new Ctor(src.length);
-			for (let i = 0; i < src.length; i += 3) {
-				dst[i] = src[i];
-				dst[i + 1] = src[i + 2];
-				dst[i + 2] = src[i + 1];
-			}
 			/**
 			 * @ignore
 			 * @internal
 			 */
-			this._indicesReversed = dst;
+			this._indicesReversed = reversedWinding(this._indicesOriginal);
 		}
 		/**
 		 * @ignore
@@ -3121,14 +3130,7 @@ export default class Mesh extends Renderable {
 				}
 				groups[i] = g;
 			}
-			// the same triangles, wound the other way round
-			const src = this._indicesOriginal;
-			const reversed = new src.constructor(src.length);
-			for (let i = 0; i + 2 < src.length; i += 3) {
-				reversed[i] = src[i];
-				reversed[i + 1] = src[i + 2];
-				reversed[i + 2] = src[i + 1];
-			}
+			const reversed = reversedWinding(this._indicesOriginal);
 			hull = new Mesh(0, 0, {
 				vertices: new Float32Array(count * 3),
 				uvs: new Float32Array(count * 2),

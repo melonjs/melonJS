@@ -17,11 +17,26 @@ import type {
 	RaycastHit3d,
 } from "../adapter.ts";
 import type { Bounds } from "../bounds.ts";
-import type Octree from "../broadphase/octree.ts";
+import Octree from "../broadphase/octree.ts";
 import type World from "../world.js";
 import Body from "./body.js";
 import Detector from "./detector.js";
 import { raycastQuery } from "./raycast.ts";
+
+/**
+ * The body of a renderable this adapter manages. `Renderable#body` is the
+ * portable `PhysicsBody`, as another adapter puts a body of its own there:
+ * here it is the built-in `Body`, and this is where that is checked.
+ * @param renderable - a renderable with a body of this adapter
+ * @returns its body
+ */
+function bodyOf(renderable: Renderable): Body {
+	const body = renderable.body;
+	if (body instanceof Body) {
+		return body;
+	}
+	throw new TypeError("BuiltinAdapter: this renderable has no built-in body");
+}
 
 // the axis the built-in bodies turn about, and a scratch for setRotation
 const _AXIS_Z = new Vector3d(0, 0, 1);
@@ -643,7 +658,7 @@ export default class BuiltinAdapter implements PhysicsAdapter {
 	setVelocity(renderable: Renderable, v: Vector2d | Vector3d): void {
 		// a Vector3d also sets the velocity along the depth axis; a Vector2d
 		// has no `z`, which leaves it as it was
-		(renderable.body as Body).setVelocity(v.x, v.y, (v as Vector3d).z);
+		bodyOf(renderable).setVelocity(v.x, v.y, (v as Vector3d).z);
 	}
 	getVelocity3d(renderable: Renderable, out?: Vector3d): Vector3d {
 		const body = renderable.body as Body | undefined;
@@ -665,7 +680,7 @@ export default class BuiltinAdapter implements PhysicsAdapter {
 		// arm (`τ = r × F`). The 2-arg call (no point) preserves the
 		// pre-angular behavior exactly: just accumulate into the linear
 		// force vector.
-		const body = renderable.body as Body;
+		const body = bodyOf(renderable);
 		if (point) {
 			body.applyForce(force.x, force.y, point.x, point.y);
 		} else {
@@ -682,7 +697,7 @@ export default class BuiltinAdapter implements PhysicsAdapter {
 	applyImpulse(renderable: Renderable, impulse: Vector2d | Vector3d): void {
 		// impulse = mass * dv  →  dv = impulse / mass. A Vector3d also kicks
 		// along the depth axis; a Vector2d has no `z`, which leaves it alone
-		(renderable.body as Body).applyImpulse(
+		bodyOf(renderable).applyImpulse(
 			impulse.x,
 			impulse.y,
 			(impulse as Vector3d).z,
@@ -714,11 +729,11 @@ export default class BuiltinAdapter implements PhysicsAdapter {
 		// collisions remain axis-aligned against the original shapes —
 		// but the renderable's `currentTransform` is updated so the
 		// sprite rotates correctly.
-		(renderable.body as Body).setAngle(angle);
+		bodyOf(renderable).setAngle(angle);
 	}
 
 	getAngle(renderable: Renderable): number {
-		return (renderable.body as Body).angle;
+		return bodyOf(renderable).angle;
 	}
 	/**
 	 * The body's orientation: its turn about Z, the only one the built-in
@@ -753,9 +768,7 @@ export default class BuiltinAdapter implements PhysicsAdapter {
 		if (!(planar >= 1e-12) || !Number.isFinite(planar)) {
 			return;
 		}
-		(renderable.body as Body).setAngle(
-			Math.atan2(_rotScratch.y, _rotScratch.x),
-		);
+		bodyOf(renderable).setAngle(Math.atan2(_rotScratch.y, _rotScratch.x));
 	}
 	/**
 	 * The body's angular velocity about each axis: about Z only, as the
@@ -780,32 +793,32 @@ export default class BuiltinAdapter implements PhysicsAdapter {
 			);
 		}
 		// a Vector3d's turn about Z, the only one the built-in bodies have
-		(renderable.body as Body).setAngularVelocity(
+		bodyOf(renderable).setAngularVelocity(
 			typeof omega === "number" ? omega : omega.z,
 		);
 	}
 
 	getAngularVelocity(renderable: Renderable): number {
-		return (renderable.body as Body).angularVelocity;
+		return bodyOf(renderable).angularVelocity;
 	}
 
 	applyTorque(renderable: Renderable, torque: number): void {
-		(renderable.body as Body).applyTorque(torque);
+		bodyOf(renderable).applyTorque(torque);
 	}
 
 	setStatic(renderable: Renderable, isStatic: boolean): void {
-		(renderable.body as Body).setStatic(isStatic);
+		bodyOf(renderable).setStatic(isStatic);
 	}
 
 	setGravityScale(renderable: Renderable, scale: number): void {
-		(renderable.body as Body).gravityScale = scale;
+		bodyOf(renderable).gravityScale = scale;
 	}
 
 	setFrictionAir(
 		renderable: Renderable,
 		friction: number | { x: number; y: number },
 	): void {
-		const body = renderable.body as Body;
+		const body = bodyOf(renderable);
 		if (typeof friction === "number") {
 			body.setFriction(friction, friction);
 		} else {
@@ -817,20 +830,20 @@ export default class BuiltinAdapter implements PhysicsAdapter {
 		renderable: Renderable,
 		limit: { x: number; y: number },
 	): void {
-		(renderable.body as Body).setMaxVelocity(limit.x, limit.y);
+		bodyOf(renderable).setMaxVelocity(limit.x, limit.y);
 	}
 
 	getMaxVelocity(renderable: Renderable): { x: number; y: number } {
-		const v = (renderable.body as Body).maxVel;
+		const v = bodyOf(renderable).maxVel;
 		return { x: v.x, y: v.y };
 	}
 
 	setCollisionType(renderable: Renderable, type: number): void {
-		(renderable.body as Body).collisionType = type;
+		bodyOf(renderable).collisionType = type;
 	}
 
 	setCollisionMask(renderable: Renderable, mask: number): void {
-		(renderable.body as Body).setCollisionMask(mask);
+		bodyOf(renderable).setCollisionMask(mask);
 	}
 
 	setSensor(renderable: Renderable, isSensor: boolean): void {
@@ -839,7 +852,7 @@ export default class BuiltinAdapter implements PhysicsAdapter {
 		// only the positional push-out (`respondToCollision`). Same
 		// semantics as Matter's `isSensor`, so adapter-agnostic trigger /
 		// one-way-platform code behaves identically on both adapters.
-		(renderable.body as Body).isSensor = isSensor;
+		bodyOf(renderable).isSensor = isSensor;
 	}
 
 	getBodyAABB(renderable: Renderable, out: Bounds): Bounds | undefined {
@@ -911,7 +924,7 @@ export default class BuiltinAdapter implements PhysicsAdapter {
 		// airborne), but alone they called a body grounded whenever it was
 		// not moving down: one never stepped, or held still in the air with
 		// no gravity.
-		const body = renderable.body as Body;
+		const body = bodyOf(renderable);
 		return body.onSurface && !body.falling && !body.jumping;
 	}
 
@@ -945,10 +958,10 @@ export default class BuiltinAdapter implements PhysicsAdapter {
 		// to walk, so we return null. User code can guard via
 		// `world.adapter.capabilities.raycasts3d` AND
 		// `world.sortOn === "depth"` to skip a no-op call.
-		if (this.world.sortOn !== "depth") {
+		const octree = this.world.broadphase;
+		if (this.world.sortOn !== "depth" || !(octree instanceof Octree)) {
 			return null;
 		}
-		const octree = this.world.broadphase as Octree;
 
 		const dx = to.x - from.x;
 		const dy = to.y - from.y;
@@ -1102,7 +1115,8 @@ export default class BuiltinAdapter implements PhysicsAdapter {
 		// so user code can call this unconditionally without a
 		// `sortOn === "depth"` guard sprinkled at every call site.
 		const result: Renderable[] = [];
-		if (this.world.sortOn !== "depth") {
+		const octree = this.world.broadphase;
+		if (this.world.sortOn !== "depth" || !(octree instanceof Octree)) {
 			return result;
 		}
 		// Unpack the two call shapes. We resolve to the loose (cx,
@@ -1114,7 +1128,6 @@ export default class BuiltinAdapter implements PhysicsAdapter {
 		const cy = isSphere ? centerOrSphere.pos.y : centerOrSphere.y;
 		const cz = isSphere ? centerOrSphere.pos.z : centerOrSphere.z;
 		const r = isSphere ? centerOrSphere.radius : radius!;
-		const octree = this.world.broadphase as Octree;
 		// Broadphase walk: octree returns candidates whose octant the
 		// sphere overlaps. Then narrow-phase by actual centre distance
 		// so callers don't have to repeat the test (matches how

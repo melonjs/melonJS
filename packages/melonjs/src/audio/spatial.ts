@@ -184,6 +184,19 @@ function stopTickingIfIdle() {
 }
 
 /**
+ * Whether a listener can say which way it faces, as a `Camera3d` does: the
+ * listener then turns with it. Asked of the object and not of its class, so
+ * that this module does not have to load the 3D camera to play a sound.
+ * @param target - the renderable the listener follows
+ * @returns true when it has a `getBasis`
+ */
+function facesSomewhere(
+	target: Renderable,
+): target is Renderable & Pick<Camera3d, "getBasis"> {
+	return "getBasis" in target && typeof target.getBasis === "function";
+}
+
+/**
  * Re-read the listener and every followed sound.
  *
  * Hung off `GAME_AFTER_UPDATE` rather than `GAME_UPDATE` deliberately: the
@@ -204,9 +217,8 @@ function tick() {
 		} else {
 			const p = listenerPositionOf(listenerTarget);
 			listener(p.x, p.y, p.z);
-			const camera = listenerTarget as Camera3d;
-			if (typeof camera.getBasis === "function") {
-				camera.getBasis(_right, _up, _forward);
+			if (facesSomewhere(listenerTarget)) {
+				listenerTarget.getBasis(_right, _up, _forward);
 				listenerOrientation(
 					_forward.x,
 					_forward.y,
