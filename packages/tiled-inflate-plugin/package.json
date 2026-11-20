@@ -60,6 +60,6 @@
 		"types": "tsc --project tsconfig.build.json",
 		"test": "vitest run",
 		"test:types": "tsc",
-		"lint": "eslint src tests"
+		"lint": "eslint ."
 	}
 }

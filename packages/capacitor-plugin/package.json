@@ -74,6 +74,7 @@
 	"scripts": {
 		"dev": "concurrently --raw \"pnpm build:watch\" \"pnpm tsc:watch\"",
 		"build": "tsx scripts/build.ts && pnpm types",
+		"lint": "eslint .",
 		"build:watch": "tsx scripts/build.ts watch",
 		"prepublishOnly": "pnpm clean && pnpm build",
 		"clean": "tsx scripts/clean.ts",

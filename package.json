@@ -8,7 +8,8 @@
 	"scripts": {
 		"build": "turbo build",
 		"dev": "turbo dev",
-		"lint": "turbo build && eslint && biome check && turbo test:types",
+		"lint": "turbo build && turbo lint && pnpm lint:root && biome check && turbo test:types",
+		"lint:root": "eslint eslint.config.mjs vitest.workspace.ts scripts packages/create-melonjs",
 		"test": "turbo build && vitest --config packages/melonjs/vitest.config.ts",
 		"doc": "pnpm -F melonjs doc",
 		"publish-melonjs": "gh workflow run publish.yml -f package=melonjs",

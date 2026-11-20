@@ -23,6 +23,10 @@
 - glTF: a model compressed with Draco or meshopt, which the loader cannot decode, says so in the console, naming the extension, instead of failing on an accessor error that did not mention it
 - Physics: a method of the built-in adapter (`setVelocity`, `applyForce`, `setStatic` and the like) called on a renderable with no body says so, `this renderable has no built-in body`, where it failed on a property of `undefined`; and a raycast passes over an object whose body is not one of the adapter's, where it threw
 
+### Chore
+- Dependencies: the 46 known vulnerabilities the security audit reported in the development tools are cleared (vite 8.3.8, vitest 4.1.12, serve 14.2.8, and overrides for what they depend on). None was in a dependency of a published package
+- Lint: each package is linted on its own and Turborepo caches the result, so `pnpm lint` skips the packages that have not changed; and the engine is no longer linted a second time by its own build
+
 ## [20.16.0] (melonJS 2) - _2026-11-17_
 
 **Highlights:** a faster `Camera3d`, its work per frame up to **72%** faster with no change to your game, and real 3D physics: with the new `@melonjs/rapier3d-adapter`, bodies tumble, stack and topple in 3D, with collision shapes built straight from your models. Also new: skinned glTF characters with crossfades, mesh picking, an orthographic `Camera3d` for isometric views, and toon shading with outlines. The new features are opt-in: a game that sets none of them renders as before.

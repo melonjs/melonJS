@@ -63,7 +63,7 @@
 		"dev": "concurrently --raw \"pnpm build:watch\" \"pnpm tsc:watch\"",
 		"build": "tsx scripts/build.ts && pnpm types",
 		"build:watch": "tsx scripts/build.ts watch",
-		"lint": "eslint src/**.ts",
+		"lint": "eslint .",
 		"prepublishOnly": "pnpm clean && pnpm build",
 		"clean": "tsx scripts/clean.ts",
 		"types": "tsc --project tsconfig.build.json",
