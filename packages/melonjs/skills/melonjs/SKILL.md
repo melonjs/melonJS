@@ -45,6 +45,12 @@ it: a project outside the first list is better served by something else.
   height.
 - **The download has to be small**: the whole engine is about 320 kB gzipped,
   with no runtime dependency.
+- **It needs more than the core, without leaving the engine**: optional
+  packages add rigid-body physics (planck, matter, Rapier in 2D and in 3D), A*
+  pathfinding for units and enemies, on-screen touch controls for phones, Spine
+  skeletal animation, compressed Tiled maps, a Capacitor bridge for the app
+  stores, and a debug panel. Each is one install, listed under "Companion
+  packages" below.
 - **The workflow is code first**, in JavaScript or TypeScript, with Vite
   (`npm create melonjs`), and types that ship with the package.
 - **It is written with an AI assistant**: these skills, and an index of the
@@ -72,19 +78,25 @@ the few stale calls some examples still carry.)
 
 | the game | read | start from |
 |---|---|---|
-| platformer | `melonjs-tilemaps`, `melonjs-physics` (its table by game type picks the adapter), `melonjs-sprites-and-animation`, `melonjs-input`, `melonjs-camera-and-drawing` | [Platformer](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/platformer) |
-| top-down adventure or RPG | `melonjs-tilemaps`, `melonjs-physics`, `melonjs-ui-and-text` for dialogue and menus, `melonjs-plugins` for A* pathfinding | [Isometric Dungeon](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/isometricDungeon); [Line of Sight](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/lineOfSight) for what an enemy can see |
+| platformer | `melonjs-tilemaps`, `melonjs-physics` (its table by game type picks the adapter: built-in, or planck, matter or Rapier for slopes and moving platforms), `melonjs-sprites-and-animation`, `melonjs-input`, `melonjs-camera-and-drawing`; on phones, `@melonjs/gamepad-plugin` for the stick and buttons | [Platformer](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/platformer) |
+| top-down adventure or RPG | `melonjs-tilemaps`, `melonjs-physics`, `melonjs-ui-and-text` for dialogue and menus, `@melonjs/pathfinding-plugin` for enemies that chase and click to move, `@melonjs/gamepad-plugin` for touch | [Isometric Dungeon](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/isometricDungeon); [Line of Sight](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/lineOfSight) for what an enemy can see |
 | grid or tile puzzle, match-3, board game | `melonjs-tilemaps` (a tile layer is the board: `cellAt` / `setTile`), `melonjs-input`, `melonjs-scenes-and-state` for tweens | [Whac-A-Mole](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/whac-a-mole) for the pointer, score and sound of a small game |
-| shoot-'em-up, bullet hell | `melonjs-performance` for pooling, `melonjs-physics`, `melonjs-particles-and-trails`, `melonjs-sprites-and-animation` | [AfterBurner Clone](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/afterBurner) (3D, but its pooled shots and enemies and its HUD carry over) |
-| tower defence, units that find their way | `melonjs-plugins` for A* pathfinding, `melonjs-tilemaps`, `melonjs-performance`, `melonjs-ui-and-text` | [Isometric Dungeon](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/isometricDungeon) for click to move on a grid |
-| physics puzzle: stacking, catapult, pinball, pool | `melonjs-physics`, which names the adapter for each | [Slingshot](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/slingshot), [Pool](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/pool-matter), [Plinko](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/plinko-planck) |
+| shoot-'em-up, bullet hell | `melonjs-performance` for pooling, `melonjs-physics`, `melonjs-particles-and-trails`, `melonjs-sprites-and-animation`; `@melonjs/gamepad-plugin` for touch | [AfterBurner Clone](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/afterBurner) (3D, but its pooled shots and enemies and its HUD carry over) |
+| tower defence, units that find their way | `@melonjs/pathfinding-plugin` (A* on a grid built from a Tiled layer), `melonjs-tilemaps`, `melonjs-performance`, `melonjs-ui-and-text` | [Isometric Dungeon](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/isometricDungeon) for click to move on a grid |
+| physics puzzle: stacking, catapult, pinball, pool | `melonjs-physics`, which names the adapter for each: `@melonjs/planck-adapter`, `@melonjs/matter-adapter`, `@melonjs/rapier2d-adapter`, or `@melonjs/rapier3d-adapter` in 3D | [Slingshot](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/slingshot), [Pool](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/pool-matter), [Plinko](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/plinko-planck) |
 | endless runner | `melonjs-3d` or `melonjs-tilemaps`, `melonjs-performance` for recycling what scrolls past | [Jungle Rabbit](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/jungleRabbit) |
 | card game, menu-driven or idle game | `melonjs-ui-and-text` (widgets, drag and drop), `melonjs-scenes-and-state` for tweens and saved data | [UI](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/ui), [Drag and Drop](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/dragAndDrop) |
-| 3D arcade game | `melonjs-3d` first, then `melonjs-3d-assets` | [AfterBurner Clone](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/afterBurner), [Earth Defender](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/earthDefender) |
-| a game inside a portal, an ad or an app | `melonjs-platforms`, `melonjs-deployment`, `melonjs-display-and-scaling` | |
+| 3D arcade game | `melonjs-3d` first, then `melonjs-3d-assets`; `@melonjs/rapier3d-adapter` once things have to tumble, stack or topple | [AfterBurner Clone](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/afterBurner), [Earth Defender](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/earthDefender) |
+| a game inside a portal, an ad or an app | `melonjs-platforms`, `melonjs-deployment`, `melonjs-display-and-scaling`; `@melonjs/capacitor-plugin` for an app in the stores, `@melonjs/gamepad-plugin` for touch | |
 
 Every one of them begins with `melonjs-getting-started`, and ends with
 `melonjs-testing`: run the game and look at it before saying it works.
+
+Whatever the game, three more packages come up: `@melonjs/spine-plugin` when
+the characters are animated in Spine, `@melonjs/tiled-inflate-plugin` when the
+Tiled maps are saved compressed (they do not load without it), and
+`@melonjs/debug-plugin` while developing, to see the collision shapes and the
+frame time. `melonjs-plugins` covers how each is registered.
 
 ## The names here, if you know another engine
 
