@@ -11,7 +11,7 @@
 > Gemini CLI and anything else following the `AGENTS.md` convention will read it
 > from your project root. Claude Code users should install the plugin instead —
 > `/plugin marketplace add melonjs/melonJS` — which registers the same guidance
-> as 26 routed skills.
+> as 27 routed skills.
 
 This project uses **melonJS 20.x**, an open-source HTML5 game engine covering
 2D, 2.5D and 3D, running on WebGPU, WebGL 2 or Canvas with automatic fallback.
@@ -52,6 +52,14 @@ Canvas fallback, a `Camera3d` without a GPU backend, a pooled object whose
 `onResetEvent` forgets a property — all render *something*. When output looks
 wrong rather than crashing, check the console for a one-shot warning and consult
 the relevant skill's symptom table before debugging the game logic.
+
+## Run it before saying it works
+
+Because the bugs are silent, code that compiles has told you little. Run the
+game in a headless browser, read every line the console printed (its header
+names the renderer the run got), drive the controls, and look at a screenshot.
+`node_modules/melonjs/skills/melonjs-testing/SKILL.md` is the recipe, with what
+a clean run looks like and which console lines are noise.
 
 ## Prefer built-in features
 
