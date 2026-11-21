@@ -72,7 +72,10 @@ function vec2Angle(u: [number, number], v: [number, number]) {
 	const [ux, uy] = u;
 	const [vx, vy] = v;
 	const sign = ux * vy - uy * vx >= 0 ? 1 : -1;
-	return sign * Math.acos(vec2Dot(u, v) / (vec2Mag(u) * vec2Mag(v)));
+	// rounding can push the cosine just past -1 or 1 (e.g. the opposite
+	// vectors of a half circle), where Math.acos returns NaN
+	const cos = vec2Dot(u, v) / (vec2Mag(u) * vec2Mag(v));
+	return sign * Math.acos(Math.min(1, Math.max(-1, cos)));
 }
 
 // From https://svgwg.org/svg2-draft/implnote.html#ArcConversionEndpointToCenter
