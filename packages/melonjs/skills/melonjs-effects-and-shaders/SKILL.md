@@ -1,6 +1,6 @@
 ---
 name: melonjs-effects-and-shaders
-description: "Use this skill for post-processing effects, custom shaders, blend modes and colour grading in melonJS. Covers the built-in ShaderEffect presets, addPostEffect on renderables and cameras, writing a custom dual-language GLSL/WGSL effect, the screen_texture builtins, and why effects silently do nothing on the Canvas fallback. Triggers on: Tween, easing, animate an effect, ShaderEffect, addPostEffect, removePostEffect, getPostEffect, postEffectNeedsCapture, VignetteEffect, GlowEffect, BlurEffect, PixelateEffect, ScanlineEffect, OutlineEffect, BloomEffect, ToneMappingEffect, SwayEffect, SquishEffect, hdr, tone mapping, shader, GLSL, WGSL, uniform, setUniform, setTexture, setTime, getShader, prewarm, blendMode, colorMatrix, screen_texture, screen_uv, noise_uv, toFrameTexture, pixelate transition, post effect, filter."
+description: "Use this skill for post-processing effects, custom shaders, blend modes and colour grading in melonJS. Covers the built-in ShaderEffect presets, addPostEffect on renderables and cameras, writing a custom dual-language GLSL/WGSL effect, the screen_texture builtins, and why effects silently do nothing on the Canvas fallback. Triggers on: Tween, easing, animate an effect, ShaderEffect, addPostEffect, removePostEffect, getPostEffect, postEffectNeedsCapture, VignetteEffect, GlowEffect, BlurEffect, PixelateEffect, ScanlineEffect, OutlineEffect, BloomEffect, ToneMappingEffect, SwayEffect, SquishEffect, GradientMapEffect, DitherEffect, palette swap, dither, hdr, tone mapping, shader, GLSL, WGSL, uniform, setUniform, setTexture, setTime, getShader, prewarm, blendMode, colorMatrix, screen_texture, screen_uv, noise_uv, toFrameTexture, pixelate transition, post effect, filter."
 license: MIT
 ---
 
@@ -111,7 +111,7 @@ reused across renderables.
 
 ## Built-in effects
 
-Twenty-three presets, every one constructed as `new XEffect(renderer, options)`
+Twenty-five presets, every one constructed as `new XEffect(renderer, options)`
 and every one shipping both a GLSL and a WGSL body, so they all run on either
 GPU backend: `VignetteEffect`, `ScanlineEffect` (optional CRT curvature),
 `BloomEffect`, `GlowEffect`, `BlurEffect`, `PixelateEffect`,
@@ -119,7 +119,7 @@ GPU backend: `VignetteEffect`, `ScanlineEffect` (optional CRT curvature),
 `OutlineEffect`, `ColorMatrixEffect`, `DesaturateEffect`, `DissolveEffect`,
 `TintPulseEffect`, `WaveEffect`, `SwayEffect`, `InvertEffect`, `SepiaEffect`,
 `HologramEffect`, `ShineEffect`, `RadialGradientEffect`, `SquishEffect`,
-`ToneMappingEffect`.
+`ToneMappingEffect`, `GradientMapEffect`, `DitherEffect`.
 
 **Colors take an alpha.** Every color option and `setColor` takes `[r, g, b]`
 or `[r, g, b, a]`, each 0.0 to 1.0, and the alpha is the color's own opacity: a
@@ -134,7 +134,7 @@ sprite.addPostEffect(new OutlineEffect(app.renderer, { color: [1, 1, 1, 0.5] }))
 **On a sprite cut from an atlas or a tileset, the effects that read around a
 pixel keep to the sprite's own frame.** `GlowEffect`, `OutlineEffect`,
 `BlurEffect`, `DropShadowEffect`, `ChromaticAberrationEffect`, `WaveEffect`,
-`SwayEffect`, `PixelateEffect` and `BloomEffect` read the neighbouring frames
+`SwayEffect`, `PixelateEffect`, `DitherEffect` and `BloomEffect` read the neighbouring frames
 as transparent, as if the sprite were drawn on its own, so they never show
 along its edges and the atlas needs no padding for them. Past the texture's own
 edge (a standalone image, or the outside of an atlas) nothing changes.
@@ -198,6 +198,69 @@ are all measured across the sprite, so a sprite cut from an atlas sways exactly
 like the same art with a texture of its own. `WaveEffect`'s `anchor` is a row of
 the sprite too, but its amplitude and frequency are measured across the texture,
 so on an atlas sprite they are fractions of the atlas.
+
+### Recoloring: `GradientMapEffect` and `DitherEffect`
+
+`GradientMapEffect` recolors a sprite from its **brightness**: the darkest
+pixels take the first color of a list of two to eight, the brightest the last,
+and the rest the colors in between. The sprite keeps its shading and loses its
+own hues: one enemy drawn in a palette per team, a duotone, a night scene.
+With `smooth: false` each color takes a band of brightness of its own, which is
+a palette swap for art drawn in a few flat shades.
+
+```js
+// the same sprite as a second team, in four flat reds
+enemy.addPostEffect(new GradientMapEffect(app.renderer, {
+    colors: [[0.2, 0, 0.05], [0.55, 0.05, 0.1], [0.9, 0.25, 0.2], [1, 0.8, 0.7]],
+    smooth: false,
+}));
+```
+
+It reads brightness and nothing else, so two colors as bright as each other
+come out the same: a red and a green of equal brightness cannot be told apart
+afterwards. To swap particular colors for particular others, the art has to
+separate them by brightness first. A sprite's black outline takes the first
+color, like any other dark pixel; give that color an alpha of 0 to drop it.
+`setIntensity()` fades between the sprite's own colors and the list.
+
+`DitherEffect` draws in a few colors with an ordered dither between them, the
+pattern that made a handful of colors read as many on early hardware. It is
+made for a **whole scene, on the camera**: the colors are `levels` of each
+channel, so everything keeps its own hue, in pixels `size` screen pixels wide.
+
+```js
+// a lit scene in six levels a channel, in pixels three screen pixels wide
+app.viewport.addPostEffect(new DitherEffect(app.renderer, { levels: 6, size: 3 }));
+```
+
+Only a color that falls **between two levels** is patterned: the turn of a lit
+surface from light to dark, the soft edge of a shadow, a gradient. A flat color
+that is itself a level is left alone. So a flat sky or ground that comes out
+speckled all over is a color between two levels: give it one made of levels (at
+6 levels, channels that are fifths of 255: 0, 51, 102, 153, 204, 255), and
+remember that a **lit** surface's color is its tint times the light, which is
+rarely a level; leave a flat ground unlit to keep it clean.
+
+A `palette` of two to sixteen colors of your own takes the place of the
+levels: each pixel takes one of the two nearest, the nearer more often, and a
+color that is in the palette stays flat. Everything then takes the palette's
+hues, the scene's own are gone:
+
+```js
+// the whole scene in four greens
+app.viewport.addPostEffect(new DitherEffect(app.renderer, {
+    palette: [[0.06, 0.22, 0.06], [0.19, 0.38, 0.19], [0.55, 0.67, 0.06], [0.61, 0.74, 0.06]],
+    size: 2,
+}));
+```
+
+`size` is the width of a drawn pixel **in pixels of the texture it draws**, as
+`PixelateEffect`'s is: the screen's for a camera's effect, the art's for a
+sprite's. On a sprite drawn smaller than its art, a `size` of 1 makes a pattern
+finer than the screen can show, which reads as noise: for art drawn at a
+quarter of its size, start at 8. `strength: 0` drops the pattern and leaves
+flat bands (a posterize). On the camera it covers the HUD too, like any
+camera effect (see above).
 
 `RadialGradientEffect` is a procedural soft spot: solid at the centre of the
 renderable it draws, fading linearly to transparent at the edge, and elliptical
@@ -803,6 +866,9 @@ same question after construction.
 | squash and stretch only bulges, the height never changes, under matter, planck or Rapier (or a rotating built-in body) | the adapter rewrites `currentTransform` every step; set the scale from the sprite's `update()` |
 | `SquishEffect` squishes the whole screen instead of the sprite | it is chained with another effect, or on the camera; give the sprite it alone |
 | syntax error in a file whose shader you just edited, pointing at a line of GLSL | a backtick in the shader body ended the template literal — most often one wrapped around an identifier in a comment |
+| a `GradientMapEffect` gives two different colors the same one | it maps brightness only: colors as bright as each other cannot come out different. Separate them by brightness in the art |
+| a `DitherEffect` speckles a flat sky, floor or background all over | that color lies between two levels, so it is mixed from the two: give the area a color made of levels (fifths of 255 at 6 levels), unlit if it is a mesh, or add its color to the `palette` |
+| a `DitherEffect` on a sprite looks like noise, or shows no pattern | its `size` is in texels of the sprite's texture, and the sprite is drawn smaller than its art: raise `size` until a drawn pixel covers two screen pixels or more |
 
 ## Related skills
 - `melonjs-scenes-and-state` — `Tween` and the easing families, for animating any of this

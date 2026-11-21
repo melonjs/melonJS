@@ -163,6 +163,11 @@ const ExampleGroundShadows = lazy(() =>
 		default: m.ExampleGroundShadows,
 	})),
 );
+const ExampleDithering = lazy(() =>
+	import("./examples/dithering/ExampleDithering").then((m) => ({
+		default: m.ExampleDithering,
+	})),
+);
 const ExampleToon = lazy(() =>
 	import("./examples/toon/ExampleToon").then((m) => ({
 		default: m.ExampleToon,
@@ -554,6 +559,14 @@ const examples: {
 		sourceDir: "gltf",
 		description:
 			"A rigged blocky character (Kenney, CC0) loaded from GLB, using node-TRS animation over a rigid hierarchy.",
+	},
+	{
+		component: <ExampleDithering />,
+		label: "Dithering",
+		path: "dithering",
+		sourceDir: "dithering",
+		description:
+			"A lit 3D scene drawn in a few color levels with an ordered dither, by one DitherEffect on the camera: the shading is patterned, the flat colors are not.",
 	},
 	{
 		component: <ExampleToon />,
