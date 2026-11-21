@@ -7,8 +7,6 @@
 - Tiled: isometric maps are rendered by the GPU on WebGL and WebGPU, as orthogonal ones are, and so are staggered and hexagonal maps. Nothing to enable: a tile layer whose tiles come from one tileset takes it by itself, and any other is drawn as before, the console saying why ([#1897](https://github.com/melonjs/melonJS/issues/1897))
 - Effects: `GradientMapEffect` recolors a sprite or a whole scene from its brightness, through a list of two to eight colors, the darkest pixels taking the first and the brightest the last: one sprite in a palette per team, a duotone, a night scene. With `smooth: false` each color takes a band of its own, a palette swap for art drawn in flat shades
 - Effects: `DitherEffect` draws a scene in a few colors with an ordered dither between them, as early consoles did: on the camera, so many `levels` of each channel, so everything keeps its own hue, or a `palette` of two to sixteen colors of your own, in pixels `size` pixels wide. Only what falls between two colors is patterned (shading, soft shadows, gradients); a flat color that is one of them stays flat
-- Skills: the entry skill now says what melonJS is the right engine for and what it is not, turns a kind of game (a platformer, a puzzle, a shooter) into the skills to read and the example to start from, and maps the usual engine vocabulary to the names used here. It also answers a request for a browser game that names no engine
-- Skills: a new `melonjs-testing` skill is how an agent checks its own work: the game run in a headless browser, every console line read (the header names the renderer the run got), the controls driven, the game's state read from outside, a frame looked at
 
 ### Performance
 - Tiled: thanks to the GPU renderer, drawing an isometric tile layer takes about **90%** less of the main thread's time with 1200 tiles in view (0.68 to 0.07 ms a frame) and about **98%** less with 4000 (2.0 to 0.04 ms), and no longer grows with the number of tiles shown. Staggered and hexagonal maps gain the same
@@ -23,20 +21,19 @@
 - Tiled: an isometric, staggered or hexagonal layer with an `opacity` below 1 fades as one picture on WebGL and WebGPU; each tile showed through the one in front of it
 - Tiled: a tile layer removed from its container and added again, and a tile missing from its tileset's image, no longer throw
 - `NineSliceSprite` blinks with `flicker()`, as a `Sprite` does; it ignored it
-- Text: a stroked multi-line label with `textBaseline: "hanging"` keeps the top of its outline on macOS, where Helvetica's hanging metrics made the ink padding exactly as tall as the ink, shearing its first row off the canvas ([#1870](https://github.com/melonjs/melonJS/issues/1870))
+- Text: a stroked multi-line label with `textBaseline: "hanging"` keeps the top of its outline on macOS, where Helvetica's hanging metrics made the ink padding exactly as tall as the ink, shearing its first row off the canvas ([#1870](https://github.com/melonjs/melonJS/issues/1870)) (thanks @Goldloli)
 - glTF: a model compressed with Draco or meshopt, which the loader cannot decode, says so in the console, naming the extension, instead of failing on an accessor error that did not mention it
 - Physics: a method of the built-in adapter (`setVelocity`, `applyForce`, `setStatic` and the like) called on a renderable with no body says so, `this renderable has no built-in body`, where it failed on a property of `undefined`; and a raycast passes over an object whose body is not one of the adapter's, where it threw
 - Sprites: an atlas frame the packer stored rotated is drawn where the sprite is. It was drawn off the screen unless the sprite stood at (0, 0), so an animation with such frames blinked, on every renderer. A `NineSliceSprite` made from a rotated frame is stretched along the right axes, with its corners the right way round
 - WebGL: with `antiAlias` on, a frame that captures the canvas and then draws over it (`renderer.toFrameTexture()`, a `screen_texture` effect, an advanced blend mode) is no longer shown black. Chromium loses such a frame, more often the longer it takes: the Aquarium example showed 114 black frames in 125 on its software renderer, none now
 - Transitions: a mask transition shaped like a sprite of the level says so in the console, once, when a later change finds that sprite gone with its level and closes a plain iris instead; nothing was said. A mask transition given no shape also says so once, not on every change
-- Package: the npm package includes `CHANGELOG.md` and the license, which were left out, and its `sideEffects` field names the published bundle too, so a bundler keeps a `melonjs` imported only for its polyfills
-- Skills and README: the engine's size was given as 250 KB; it is about 320 kB minified and gzipped (the README now says ~300 KB)
 - Path2D: an SVG `A` arc that is exactly a half circle, as when its radius is too small and is scaled up to fit, is drawn as an arc. Rounding could push the cosine of its sweep angle just past -1, `Math.acos` returned `NaN`, and the arc became a straight line between its endpoints (thanks @SwastikTripathi)
 
 ### Chore
 - Dependencies: update the development tools, clearing the 46 vulnerabilities reported by the security audit
 - Lint: lint each package on its own and cache the result, so `pnpm lint` skips what has not changed
 - CI: fix the test job losing its browser page at random, and run the test suite in about half the time
+- Package: the npm package includes `CHANGELOG.md` and the license, which were left out, and its `sideEffects` field names the published bundle too, so a bundler keeps a `melonjs` imported only for its polyfills
 
 ## [20.16.0] (melonJS 2) - _2026-11-17_
 
