@@ -56,10 +56,12 @@ export const createGame = async () => {
 	// renderable and resolution-independent. `strength=0.18` is subtle
 	// enough that the corner pockets stay readable; `size=22` keeps the
 	// dark falloff confined to the outer ~25% of the viewport.
-	_app.viewport.shader = new VignetteEffect(game.renderer, {
-		strength: 0.18,
-		size: 22.0,
-	});
+	_app.viewport.addPostEffect(
+		new VignetteEffect(game.renderer, {
+			strength: 0.18,
+			size: 22.0,
+		}),
+	);
 
 	// register the debug plugin — press 'S' in-game to toggle the panel
 	// (collision bodies, FPS, draw-call counts, etc.)

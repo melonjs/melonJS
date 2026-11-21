@@ -9,6 +9,7 @@ import MaskEffect, {
 	type MaskShape,
 } from "../camera/effects/mask_effect.ts";
 import PixelateTransitionEffect from "../camera/effects/pixelate_transition_effect.ts";
+import { warnOnce } from "../lang/console.js";
 import DefaultLoadingScreen from "./../loader/loadingscreen.js";
 import type Renderable from "./../renderable/renderable.js";
 import Stage from "./../state/stage.ts";
@@ -961,11 +962,19 @@ const state = {
 					}
 					case "mask": {
 						if (!_transitionConfig.shape && !_transitionConfig.released) {
-							console.warn(
+							warnOnce(
 								"melonJS: mask transition requires a shape, falling back to direct switch",
 							);
 							onComplete();
 							break;
+						}
+						if (!_transitionConfig.shape) {
+							// said here and not where the sprite is let go: a
+							// game that sets it again before each change is
+							// doing the right thing, and never gets this far
+							warnOnce(
+								"melonJS: the sprite shaping the mask transition went with its level, an iris is used instead: set state.transition() again, with a sprite of the new level, before each state.change()",
+							);
 						}
 						const maskEffect = new MaskEffect(_app.viewport, {
 							shape: _transitionConfig.shape,

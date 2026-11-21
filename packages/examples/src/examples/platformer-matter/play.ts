@@ -22,6 +22,9 @@ import { gameState } from "./gameState";
 // identity color matrix used to reset the viewport between state changes
 const IDENTITY_COLOR_MATRIX = new ColorMatrix();
 
+/** draw order for the screen-space overlays — above every level layer */
+const HUD_Z = 100;
+
 export class PlayScreen extends Stage {
 	private HUD?: UIContainer;
 	private vignette?: ShaderEffect;
@@ -45,7 +48,8 @@ export class PlayScreen extends Stage {
 		if (typeof this.HUD === "undefined") {
 			this.HUD = new UIContainer();
 		}
-		app.world.addChild(this.HUD);
+		// explicit z: the HUD draws over the level
+		app.world.addChild(this.HUD, HUD_Z);
 
 		// the touch controls, also shown on a desktop with the debug panel open
 		const gamepad = plugin.cache.gamepad as GamepadPlugin | undefined;

@@ -165,9 +165,6 @@ class UIContainer extends Container {
 		// Use screen coordinates
 		this.floating = true;
 
-		// draw the HUD on top of everything else (highest z renders last)
-		this.z = Number.POSITIVE_INFINITY;
-
 		// give a name
 		this.name = "HUD";
 

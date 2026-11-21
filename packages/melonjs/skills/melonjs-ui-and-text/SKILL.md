@@ -462,10 +462,9 @@ Three things matter here:
 - **Only the parent container needs `floating`.** `addChild` forces
   `child.floating = false` under a floating parent, and the container applies one
   projection swap for the whole subtree.
-- **Pass an explicit z.** `this.z = Number.POSITIVE_INFINITY` appears in several
-  shipped examples and does nothing — `renderable.z` is not a real property. The
-  real accessor is `depth` (an alias for `pos.z`); `addChild(child, z)` sets it
-  for you.
+- **Pass an explicit z.** `this.z = Number.POSITIVE_INFINITY` does nothing —
+  `renderable.z` is not a real property. The real accessor is `depth` (an
+  alias for `pos.z`); `addChild(child, z)` sets it for you.
 
 ### Bars and gauges: `ProgressBar`
 

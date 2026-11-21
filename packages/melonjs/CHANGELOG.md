@@ -26,7 +26,9 @@
 - Text: a stroked multi-line label with `textBaseline: "hanging"` keeps the top of its outline on macOS, where Helvetica's hanging metrics made the ink padding exactly as tall as the ink, shearing its first row off the canvas ([#1870](https://github.com/melonjs/melonJS/issues/1870))
 - glTF: a model compressed with Draco or meshopt, which the loader cannot decode, says so in the console, naming the extension, instead of failing on an accessor error that did not mention it
 - Physics: a method of the built-in adapter (`setVelocity`, `applyForce`, `setStatic` and the like) called on a renderable with no body says so, `this renderable has no built-in body`, where it failed on a property of `undefined`; and a raycast passes over an object whose body is not one of the adapter's, where it threw
-- Skills: the deployment skill gave the engine's size as 250 KB; it is about 320 kB minified and gzipped
+- Transitions: a mask transition shaped like a sprite of the level says so in the console, once, when a later change finds that sprite gone with its level and closes a plain iris instead; nothing was said. A mask transition given no shape also says so once, not on every change
+- Package: the npm package includes `CHANGELOG.md` and the license, which were left out, and its `sideEffects` field names the published bundle rather than a source folder that is not published
+- Skills and README: the engine's size was given as 250 KB; it is about 320 kB minified and gzipped
 
 ### Chore
 - Dependencies: update the development tools, clearing the 46 vulnerabilities reported by the security audit

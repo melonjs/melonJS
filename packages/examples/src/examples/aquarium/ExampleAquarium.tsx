@@ -202,7 +202,7 @@ class WaterSurface extends Sprite {
 			anchorPoint: { x: 0.5, y: 0.5 },
 		});
 		this.effect = effect;
-		this.shader = effect;
+		this.addPostEffect(effect);
 	}
 
 	draw(renderer: Parameters<Sprite["draw"]>[0], viewport?: object) {
