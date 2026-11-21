@@ -5,6 +5,8 @@
 ### Added
 - Transitions: a mask transition can be shaped like an image or a `Sprite`, close on the player with `center`, and fill the shape with `invert`, on `state.transition`, `MaskEffect` and `Trigger` ([#1399](https://github.com/melonjs/melonJS/issues/1399))
 - Tiled: isometric maps are rendered by the GPU on WebGL and WebGPU, as orthogonal ones are, and so are staggered and hexagonal maps. Nothing to enable: a tile layer whose tiles come from one tileset takes it by itself, and any other is drawn as before, the console saying why ([#1897](https://github.com/melonjs/melonJS/issues/1897))
+- Skills: the entry skill now says what melonJS is the right engine for and what it is not, turns a kind of game (a platformer, a puzzle, a shooter) into the skills to read and the example to start from, and maps the usual engine vocabulary to the names used here. It also answers a request for a browser game that names no engine
+- Skills: a new `melonjs-testing` skill is how an agent checks its own work: the game run in a headless browser, every console line read (the header names the renderer the run got), the controls driven, the game's state read from outside, a frame looked at
 
 ### Performance
 - Tiled: thanks to the GPU renderer, drawing an isometric tile layer takes about **90%** less of the main thread's time with 1200 tiles in view (0.68 to 0.07 ms a frame) and about **98%** less with 4000 (2.0 to 0.04 ms), and no longer grows with the number of tiles shown. Staggered and hexagonal maps gain the same
@@ -22,6 +24,7 @@
 - Text: a stroked multi-line label with `textBaseline: "hanging"` keeps the top of its outline on macOS, where Helvetica's hanging metrics made the ink padding exactly as tall as the ink, shearing its first row off the canvas ([#1870](https://github.com/melonjs/melonJS/issues/1870))
 - glTF: a model compressed with Draco or meshopt, which the loader cannot decode, says so in the console, naming the extension, instead of failing on an accessor error that did not mention it
 - Physics: a method of the built-in adapter (`setVelocity`, `applyForce`, `setStatic` and the like) called on a renderable with no body says so, `this renderable has no built-in body`, where it failed on a property of `undefined`; and a raycast passes over an object whose body is not one of the adapter's, where it threw
+- Skills: the deployment skill gave the engine's size as 250 KB; it is about 320 kB minified and gzipped
 
 ### Chore
 - Dependencies: the 46 known vulnerabilities the security audit reported in the development tools are cleared (vite 8.3.8, vitest 4.1.12, serve 14.2.8, and overrides for what they depend on). None was in a dependency of a published package

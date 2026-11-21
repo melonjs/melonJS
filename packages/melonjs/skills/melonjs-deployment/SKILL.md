@@ -79,7 +79,7 @@ handing pausing, saving and sound to the platform.
 
 ## Size
 
-The whole engine is roughly **250 KB minzipped**. Tree-shaking helps less than
+The whole engine is roughly **320 kB minified and gzipped** (about 1 MB minified). Tree-shaking helps less than
 you might expect — the engine's subsystems reach each other, so a game importing
 a handful of symbols still pulls most of it. Budget for the full figure.
 

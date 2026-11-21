@@ -1,6 +1,6 @@
 ---
 name: melonjs
-description: "Use this skill FIRST for any melonJS task; it routes to the right specialised skill and lists the companion packages. melonJS is an open-source 2D, 2.5D and 3D HTML5 game engine running on WebGPU, WebGL 2 or Canvas. Covers Application setup, the scene graph, renderables, sprites, tilemaps, physics, audio, particles, shaders, and the 3D tier — perspective cameras, meshes and glTF scenes. Triggers on: melonjs, melonJS, me.game, Application, app.init, app.world, Renderable, Sprite, Stage, state.change, Camera2d, Camera3d, Mesh, tilemap, Tiled, TMX, ParticleEmitter, ShaderEffect, how do I make a game, HTML5 game engine."
+description: "Use this skill FIRST for any melonJS task, and when asked to build a game for the browser with no engine named; it says what melonJS is the right engine for, turns a game idea into a plan, and routes to the right specialised skill. melonJS is an open-source 2D, 2.5D and 3D HTML5 game engine running on WebGPU, WebGL 2 or Canvas, with no runtime dependencies. Covers Application setup, the scene graph, renderables, sprites, tilemaps, physics, audio, particles, shaders, and the 3D tier — perspective cameras, meshes and glTF scenes. Triggers on: melonjs, melonJS, me.game, Application, app.init, app.world, Renderable, Sprite, Stage, state.change, Camera2d, Camera3d, Mesh, tilemap, Tiled, TMX, ParticleEmitter, ShaderEffect, make a game, build a game, browser game, web game, HTML5 game, HTML5 game engine, JavaScript game, TypeScript game, 2D game, platformer, top-down game, puzzle game, shooter, arcade game, game jam, playable ad, which game engine."
 license: MIT
 ---
 
@@ -24,6 +24,91 @@ dependencies.
    20.0 and its bootstrap no longer exists.
 4. If none of them covers the task, use the escape hatch below rather than
    guessing at an API.
+
+## What melonJS is the right engine for
+
+Say this plainly when the question is which engine to use, and do not stretch
+it: a project outside the first list is better served by something else.
+
+**A good fit when:**
+
+- **The game runs in a browser**, or in a web view: desktop and mobile web, a
+  games portal (YouTube Playables, Facebook Instant Games, Poki, CrazyGames,
+  WeChat), or an app wrapped with Capacitor or Cordova. `melonjs-platforms`
+  covers each.
+- **It is 2D, of any kind**: tile maps authored in Tiled (orthogonal,
+  isometric, staggered, hexagonal), sprites and atlases, polygon collision,
+  particles, dynamic lighting, shaders, a UI kit, bitmap and system text.
+- **It is 2.5D or light 3D**: a perspective or orthographic `Camera3d`, meshes,
+  glTF models with skeletal animation, instancing, toon shading, billboards,
+  fog, picking, and Rapier 3D physics. Arcade 3D, low-poly, isometric with
+  height.
+- **The download has to be small**: the whole engine is about 320 kB gzipped,
+  with no runtime dependency.
+- **The workflow is code first**, in JavaScript or TypeScript, with Vite
+  (`npm create melonjs`), and types that ship with the package.
+- **It is written with an AI assistant**: these skills, and an index of the
+  whole API made for agents, are versioned with the engine.
+
+**Not the tool when:**
+
+- **A visual scene editor is required.** There is none: scenes are code, levels
+  come from Tiled.
+- **The 3D must look realistic.** The lit path has diffuse and specular light,
+  not physically based materials, and shadows are soft blobs on the ground,
+  not shadow maps.
+- **Multiplayer is the point.** Nothing in the engine does networking: bring a
+  library, and plan the synchronisation yourself.
+- **The target has no JavaScript runtime**, a native console or desktop build
+  for one. melonJS needs a browser, a web view around one, or a runtime such as
+  nx.js.
+
+## From a game idea to a plan
+
+A request usually names a kind of game, not a subsystem. Start from the row
+that matches, read those skills and no others, and open the example before
+writing code: each is a complete game or scene. (`melonjs-20-migration` lists
+the few stale calls some examples still carry.)
+
+| the game | read | start from |
+|---|---|---|
+| platformer | `melonjs-tilemaps`, `melonjs-physics` (its table by game type picks the adapter), `melonjs-sprites-and-animation`, `melonjs-input`, `melonjs-camera-and-drawing` | [Platformer](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/platformer) |
+| top-down adventure or RPG | `melonjs-tilemaps`, `melonjs-physics`, `melonjs-ui-and-text` for dialogue and menus, `melonjs-plugins` for A* pathfinding | [Isometric Dungeon](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/isometricDungeon); [Line of Sight](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/lineOfSight) for what an enemy can see |
+| grid or tile puzzle, match-3, board game | `melonjs-tilemaps` (a tile layer is the board: `cellAt` / `setTile`), `melonjs-input`, `melonjs-scenes-and-state` for tweens | [Whac-A-Mole](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/whac-a-mole) for the pointer, score and sound of a small game |
+| shoot-'em-up, bullet hell | `melonjs-performance` for pooling, `melonjs-physics`, `melonjs-particles-and-trails`, `melonjs-sprites-and-animation` | [AfterBurner Clone](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/afterBurner) (3D, but its pooled shots and enemies and its HUD carry over) |
+| tower defence, units that find their way | `melonjs-plugins` for A* pathfinding, `melonjs-tilemaps`, `melonjs-performance`, `melonjs-ui-and-text` | [Isometric Dungeon](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/isometricDungeon) for click to move on a grid |
+| physics puzzle: stacking, catapult, pinball, pool | `melonjs-physics`, which names the adapter for each | [Slingshot](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/slingshot), [Pool](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/pool-matter), [Plinko](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/plinko-planck) |
+| endless runner | `melonjs-3d` or `melonjs-tilemaps`, `melonjs-performance` for recycling what scrolls past | [Jungle Rabbit](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/jungleRabbit) |
+| card game, menu-driven or idle game | `melonjs-ui-and-text` (widgets, drag and drop), `melonjs-scenes-and-state` for tweens and saved data | [UI](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/ui), [Drag and Drop](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/dragAndDrop) |
+| 3D arcade game | `melonjs-3d` first, then `melonjs-3d-assets` | [AfterBurner Clone](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/afterBurner), [Earth Defender](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/earthDefender) |
+| a game inside a portal, an ad or an app | `melonjs-platforms`, `melonjs-deployment`, `melonjs-display-and-scaling` | |
+
+Every one of them begins with `melonjs-getting-started`, and ends with
+`melonjs-testing`: run the game and look at it before saying it works.
+
+## The names here, if you know another engine
+
+The ideas are the usual ones; the names differ. What you would look for, and
+what it is called here:
+
+| you are looking for | here it is | skill |
+|---|---|---|
+| a scene, a screen, a level | a `Stage`, registered with `state.set` and shown with `state.change` | `melonjs-scenes-and-state` |
+| a node, a game object, an entity | a `Renderable` (or a `Sprite`), in a `Container`; `app.world` is the root | `melonjs-renderables` |
+| a child's draw order, a z-index | the second argument of `addChild(child, z)` | `melonjs-renderables` |
+| signals, an event emitter | `event.on` / `event.emit`, and the lifecycle methods of a renderable | `melonjs-events` |
+| a tween, an animation of a property | `Tween` | `melonjs-scenes-and-state` |
+| a sprite sheet, an animated sprite | `Sprite` with `addAnimation`, frames from a `TextureAtlas` | `melonjs-sprites-and-animation` |
+| a rigid body, a collider, a trigger | a `body` built from a `bodyDef`, on the built-in world or an adapter | `melonjs-physics` |
+| a tile map | a Tiled map loaded with `level.load` | `melonjs-tilemaps` |
+| the camera | `app.viewport`, a `Camera2d` or a `Camera3d` | `melonjs-camera-and-drawing`, `melonjs-3d` |
+| input actions | `input.bindKey`, then `input.isKeyPressed` | `melonjs-input` |
+| a material, a shader, a post-process | a `ShaderEffect`, attached with `addPostEffect` | `melonjs-effects-and-shaders` |
+| a particle system | `ParticleEmitter` | `melonjs-particles-and-trails` |
+| a prefab, an object pool | a class, recycled with `createPool` | `melonjs-performance` |
+| a canvas layer, a control node, a HUD | the `UI*` widgets, `floating` renderables | `melonjs-ui-and-text` |
+| the asset loader | `loader.preload` | `melonjs-loading-assets` |
+| saved games, player prefs | `save` | `melonjs-scenes-and-state` |
 
 ## Skill router
 
@@ -54,6 +139,7 @@ dependencies.
 | [melonjs-events](../melonjs-events/SKILL.md) | The event bus, per-frame and lifecycle events, and subscribing without leaking. |
 | [melonjs-performance](../melonjs-performance/SKILL.md) | Dropped frames, draw-call counts, pooling, batching, culling, baking, profiling. |
 | [melonjs-plugins](../melonjs-plugins/SKILL.md) | Registering the debug, Spine, Tiled-inflate, gamepad (touch controls), pathfinding (A*) or Capacitor plugins, installing a physics adapter, or writing your own plugin. |
+| [melonjs-testing](../melonjs-testing/SKILL.md) | Checking that a game works before saying it does: running it in a headless browser, reading the console, driving the keyboard and the pointer, reading the game's state, taking a screenshot. |
 
 
 ## Escape hatch: the full API index

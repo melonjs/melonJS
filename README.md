@@ -397,7 +397,14 @@ Install them into whatever assistant you use, with one command :
 npx skills add https://github.com/melonjs/melonJS/tree/master/packages/melonjs/skills
 ```
 
-It detects the assistants in your project and installs one copy of each skill
+In Claude Code, the same skills install as a plugin instead:
+
+```
+/plugin marketplace add melonjs/melonJS
+```
+
+The `npx` command detects the assistants in your project and installs one copy
+of each skill
 under `.agents/skills/<skill-name>`, then symlinks that copy into every
 assistant's own directory, so `.claude/skills/melonjs` points back at
 `.agents/skills/melonjs` and there is nothing to place by hand. It reports the
@@ -414,6 +421,13 @@ The command installs from `master`. To pin to the release you are running,
 point it at that tag instead of `master` in the URL above.
 
 The skills are plain markdown and can be read by any agent, or by a human.
+
+Beyond one guide per subsystem, the entry skill tells an agent what melonJS is
+the right engine for and what it is not, turns a kind of game (a platformer, a
+puzzle, a shooter) into the skills to read and the example to start from, and
+maps the usual engine vocabulary to the names used here. A last one,
+`melonjs-testing`, is how an agent checks its own work: run the game in a
+headless browser, read the console, drive the controls, look at a frame.
 
 For anything the skills do not cover, the complete API is indexed for agents at
 [llms.txt](https://melonjs.github.io/melonJS/llms.txt) — every exported class,
