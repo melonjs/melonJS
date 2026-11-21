@@ -29,9 +29,9 @@
 - Skills: the deployment skill gave the engine's size as 250 KB; it is about 320 kB minified and gzipped
 
 ### Chore
-- Dependencies: the 46 known vulnerabilities the security audit reported in the development tools are cleared (vite 8.3.8, vitest 4.1.12, serve 14.2.8, and overrides for what they depend on). None was in a dependency of a published package
-- Lint: each package is linted on its own and Turborepo caches the result, so `pnpm lint` skips the packages that have not changed; and the engine is no longer linted a second time by its own build
-- Tests: the engine's suite runs in about half the time (338 s to 177 s on a four-core machine), and its test pages no longer pile up temporary files and open file handles (up to 24 GB and 11,000 handles in one run before). In a one-shot run the browser keeps each module instead of asking the test server for it again in every spec file; watch mode releases what it gathers after each spec file; and the tile-layer benchmark runs only with `BENCH=1`
+- Dependencies: update the development tools, clearing the 46 vulnerabilities reported by the security audit
+- Lint: lint each package on its own and cache the result, so `pnpm lint` skips what has not changed
+- CI: fix the test job losing its browser page at random, and run the test suite in about half the time
 
 ## [20.16.0] (melonJS 2) - _2026-11-17_
 
