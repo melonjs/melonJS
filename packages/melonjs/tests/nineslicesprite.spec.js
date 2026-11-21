@@ -358,7 +358,10 @@ describe("NineSliceSprite", () => {
 
 	it("ADVERSARIAL: a TexturePacker-rotated frame swaps source dims and still tiles", () => {
 		// a 64×48 frame packed at 90° — draw() must rotate the ctx and treat the
-		// frame as 48×64 for slicing, while the dest still spans the expanded panel
+		// frame as 48×64 for slicing, while the dest still spans the expanded
+		// panel: in the turned space it draws in, the panel's height runs
+		// along x and its width along y (sprite-rotated-frame.spec.js checks
+		// the picture this gives against the same art stored plainly)
 		const nss = new NineSliceSprite(0, 0, {
 			image: makeImage(64, 48),
 			width: 200,
@@ -374,9 +377,9 @@ describe("NineSliceSprite", () => {
 		// source dims are swapped: width sourced as the frame's 48px height
 		expectTiles(axis(r.calls, "sx", "sw"), 48);
 		expectTiles(axis(r.calls, "sy", "sh"), 64);
-		// destination still tiles the full expanded panel
-		expectTiles(axis(r.calls, "dx", "dw"), 200);
-		expectTiles(axis(r.calls, "dy", "dh"), 120);
+		// destination still tiles the full expanded panel, turned
+		expectTiles(axis(r.calls, "dx", "dw"), 120);
+		expectTiles(axis(r.calls, "dy", "dh"), 200);
 	});
 
 	it("ADVERSARIAL: non-square frame into non-square target tiles each axis independently", () => {

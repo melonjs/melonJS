@@ -93,11 +93,11 @@ world.addChild(sprite, 10);   // ✓ the only reliable form
 1. **`renderable.z` does not exist.** There is no `z` accessor anywhere on
    `Renderable` (nor on `Rect`/`Polygon` above it) — only `depth`, which proxies
    `pos.z`, and the container's default `sortOn: "z"` comparator reads `pos.z`.
-   Writing `sprite.z = 100` creates an inert property that nothing reads.
-   Several shipped examples still contain `this.z = Number.POSITIVE_INFINITY`;
-   those HUDs draw on top only because they happen to be added last. (A `z` key
-   in a `Sprite`/`ImageLayer` *settings* object is a different thing and is real
-   — it assigns `pos.z` in the constructor — but trap 2 then overwrites it.)
+   Writing `sprite.z = 100` creates an inert property that nothing reads: a
+   HUD that sets `this.z = Number.POSITIVE_INFINITY` draws on top only if it
+   happens to be added last. (A `z` key in a `Sprite`/`ImageLayer` *settings*
+   object is a different thing and is real — it assigns `pos.z` in the
+   constructor — but trap 2 then overwrites it.)
 2. **Setting `depth` *before* `addChild` is overwritten.** With `autoDepth` on
    (the default), `addChild` without an explicit `z` assigns
    `child.pos.z = children.length` after the push, discarding whatever you set.

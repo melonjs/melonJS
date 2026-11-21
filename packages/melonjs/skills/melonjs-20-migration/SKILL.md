@@ -169,24 +169,28 @@ Code written against an early 20.x release can still trip on these:
   (20.11, `autoSort` on by default). Turn `autoSort` off to keep an order set
   by hand. A `"z"` sort is unchanged.
 
-## The shipped examples are not all current
+## What the shipped examples still show of the old API
 
 The examples in this repository are the best reference for how melonJS is
-assembled, but a few contain stale comments or legacy calls. Do not learn these
-from them:
+assembled. Two things in them are easy to misread:
 
-- `webgpu/` has a comment claiming *"`video.AUTO` never selects the WebGPU
-  backend"*. That is pre-20 leftover — AUTO tries WebGPU **first**. The code is
-  right; the comment is wrong.
-- Several examples assign `viewport.shader = …` / `sprite.shader = …`, which is
-  deprecated. `addPostEffect()` is current.
-- Three files (in `platformer-matter/` and `pool-matter/`) set
-  `this.z = Number.POSITIVE_INFINITY` on a HUD or a virtual joypad. That
-  property does not exist; they draw on top only because they are added last.
-- `platformer/entities/player.ts` and `enemies.ts` read `response.overlapV`,
-  the deprecated field. Use `response.depth` / `response.normal`.
+- `platformer/entities/player.ts` and `enemies.ts` read and change
+  `response.overlapV` in a legacy `onCollision`. On the built-in world that is
+  not the deprecated field: the legacy handler gets the solver's own response,
+  which has no `normal` or `depth`, and changing `overlapV` there is how a
+  one-way platform or a slope changes the push-out. In a new handler
+  (`onCollisionStart` / `onCollisionActive`), and on every adapter, read
+  `response.depth` / `response.normal`.
 - Particle speeds tuned before 20.2 look wrong now: the particle transform fix
-  changed how far a burst travels, and emitters were retuned upward to match.
+  changed how far a burst travels, and the examples' emitters were retuned
+  upward to match. An emitter copied from an older version of an example needs
+  the same.
+
+Older copies of the examples (before 20.17) also assigned `viewport.shader = …`
+/ `sprite.shader = …`, set `this.z = Number.POSITIVE_INFINITY` on a HUD,
+extended `Entity` and called `device.requestFullscreen()`. None is current: use
+`addPostEffect()`, `addChild(hud, z)`, a `Sprite` (with a `bodyDef` when it
+needs a body) and `app.requestFullscreen()`.
 
 ## Checklist when code "should work" but doesn't
 

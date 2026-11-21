@@ -26,12 +26,16 @@
 - Text: a stroked multi-line label with `textBaseline: "hanging"` keeps the top of its outline on macOS, where Helvetica's hanging metrics made the ink padding exactly as tall as the ink, shearing its first row off the canvas ([#1870](https://github.com/melonjs/melonJS/issues/1870))
 - glTF: a model compressed with Draco or meshopt, which the loader cannot decode, says so in the console, naming the extension, instead of failing on an accessor error that did not mention it
 - Physics: a method of the built-in adapter (`setVelocity`, `applyForce`, `setStatic` and the like) called on a renderable with no body says so, `this renderable has no built-in body`, where it failed on a property of `undefined`; and a raycast passes over an object whose body is not one of the adapter's, where it threw
-- Skills: the deployment skill gave the engine's size as 250 KB; it is about 320 kB minified and gzipped
+- Sprites: an atlas frame the packer stored rotated is drawn where the sprite is. It was drawn off the screen unless the sprite stood at (0, 0), so an animation with such frames blinked, on every renderer. A `NineSliceSprite` made from a rotated frame is stretched along the right axes, with its corners the right way round
+- WebGL: with `antiAlias` on, a frame that captures the canvas and then draws over it (`renderer.toFrameTexture()`, a `screen_texture` effect, an advanced blend mode) is no longer shown black. Chromium loses such a frame, more often the longer it takes: the Aquarium example showed 114 black frames in 125 on its software renderer, none now
+- Transitions: a mask transition shaped like a sprite of the level says so in the console, once, when a later change finds that sprite gone with its level and closes a plain iris instead; nothing was said. A mask transition given no shape also says so once, not on every change
+- Package: the npm package includes `CHANGELOG.md` and the license, which were left out, and its `sideEffects` field names the published bundle too, so a bundler keeps a `melonjs` imported only for its polyfills
+- Skills and README: the engine's size was given as 250 KB; it is about 320 kB minified and gzipped (the README now says ~300 KB)
 
 ### Chore
-- Dependencies: the 46 known vulnerabilities the security audit reported in the development tools are cleared (vite 8.3.8, vitest 4.1.12, serve 14.2.8, and overrides for what they depend on). None was in a dependency of a published package
-- Lint: each package is linted on its own and Turborepo caches the result, so `pnpm lint` skips the packages that have not changed; and the engine is no longer linted a second time by its own build
-- Tests: the engine's suite runs in about half the time (338 s to 177 s on a four-core machine), and its test pages no longer pile up temporary files and open file handles (up to 24 GB and 11,000 handles in one run before). In a one-shot run the browser keeps each module instead of asking the test server for it again in every spec file; watch mode releases what it gathers after each spec file; and the tile-layer benchmark runs only with `BENCH=1`
+- Dependencies: update the development tools, clearing the 46 vulnerabilities reported by the security audit
+- Lint: lint each package on its own and cache the result, so `pnpm lint` skips what has not changed
+- CI: fix the test job losing its browser page at random, and run the test suite in about half the time
 
 ## [20.16.0] (melonJS 2) - _2026-11-17_
 

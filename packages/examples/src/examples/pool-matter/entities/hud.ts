@@ -62,9 +62,6 @@ export class HUDContainer extends Container {
 		this.isPersistent = true;
 		this.floating = true;
 		this.name = "HUD";
-		// `Renderable.z` is the typed accessor for the underlying
-		// ObservableVector3d.z (declared as Vector2d in some signatures).
-		this.z = Number.POSITIVE_INFINITY;
 		// Y=16 keeps the text in the brown rail strip above the felt — the
 		// previous Y=50 placed it level with the corner pockets, where the
 		// numbers overlapped the pocket "holes" on the table sprite.

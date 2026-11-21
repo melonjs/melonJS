@@ -236,6 +236,7 @@ Two consequences:
 | `this` is wrong in a `flicker(ms, callback)` callback, or a flicker started from it stops at once | before 20.13.0 the callback ran on an internal object and the flicker was stopped after it; now `this` is the sprite and the flicker has already ended |
 | sprites do not batch | more distinct textures in one frame than `renderer.maxTextures` |
 | nine-slice corners stretch anyway | `insetX`/`insetY` instead of `insetx`/`insety` |
+| an atlas animation blinks: the sprite vanishes on some of its frames (before 20.17) | the frames the packer stored rotated were drawn off the screen unless the sprite was at (0, 0); a nine-slice sprite from a rotated frame was stretched along the wrong axis. Update; on an older version, turn rotation off in the packer |
 | a tint will not turn the sprite the colour asked for, only a darker one | a tint multiplies the art's own colours: recolour with a `GradientMapEffect`, flash with a `FlashEffect` |
 
 ## Related skills

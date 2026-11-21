@@ -20,7 +20,11 @@ import {
 	TextureAtlas,
 	video,
 } from "../src/index.js";
+import { resetWarnOnce } from "../src/lang/console.js";
 import { readPixel } from "./helpers/pixels.js";
+
+/** what the console says, once, when a change finds its sprite gone with a level */
+const LET_GO = /went with its level, an iris is used instead/;
 
 /**
  * `state.transition("mask", …, sprite, { center: sprite })` (#1399): the
@@ -235,7 +239,8 @@ describe("a mask transition shaped like, and closing on, a sprite", () => {
 
 		// The player it was given is gone: a later change does not read it
 		// again (destroyed, or recycled into something else), but closes an
-		// iris on the centre of the screen, with nothing to warn about
+		// iris on the centre of the screen, and says so
+		resetWarnOnce();
 		const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
 		state.setTransition(start, true);
 		state.change(start);
@@ -243,7 +248,8 @@ describe("a mask transition shaped like, and closing on, a sprite", () => {
 		expect(again._maskShape?.type).toBe("Ellipse");
 		expect(again.center).toBeUndefined();
 		expect(again.invert).toBe(true);
-		expect(warn).not.toHaveBeenCalled();
+		expect(warn).toHaveBeenCalledTimes(1);
+		expect(warn.mock.calls[0][0]).toMatch(LET_GO);
 		warn.mockRestore();
 		await runUntil(() => {
 			expect(state.isCurrent(start)).toBe(true);
@@ -368,12 +374,19 @@ describe("a mask transition shaped like, and closing on, a sprite", () => {
 			});
 		});
 		beforeEach(() => {
+			// each test hears what a page hears the first time
+			resetWarnOnce();
 			warn = vi.spyOn(console, "warn").mockImplementation(() => {});
 		});
 		afterEach(async () => {
 			warn.mockRestore();
 			await settle();
 		});
+		/** the one thing said: the sprite went with its level */
+		const expectLetGoWarning = () => {
+			expect(warn).toHaveBeenCalledTimes(1);
+			expect(warn.mock.calls[0][0]).toMatch(LET_GO);
+		};
 
 		it("a sprite the game keeps for itself, never in a level, shapes every change", async () => {
 			// what `atlas.createSpriteFromName()` gives, set once at startup
@@ -451,10 +464,12 @@ describe("a mask transition shaped like, and closing on, a sprite", () => {
 			// the change destroyed it
 			expect(inRoom.offset).toBeUndefined();
 
+			// nothing is said while it is let go, only once a change misses it
+			expect(warn).not.toHaveBeenCalled();
 			const second = change();
 			expect(isIris(second)).toBe(true);
 			expect(second.center).toBeUndefined();
-			expect(warn).not.toHaveBeenCalled();
+			expectLetGoWarning();
 		});
 
 		it("a persistent sprite inside a container of the level is let go with it", async () => {
@@ -475,10 +490,12 @@ describe("a mask transition shaped like, and closing on, a sprite", () => {
 			await settle();
 			expect(room.ancestor).toBeUndefined();
 
+			// nothing is said while it is let go, only once a change misses it
+			expect(warn).not.toHaveBeenCalled();
 			const second = change();
 			expect(isIris(second)).toBe(true);
 			expect(second.center).toBeUndefined();
-			expect(warn).not.toHaveBeenCalled();
+			expectLetGoWarning();
 		});
 
 		it("kept while it is the game's own, let go by the change that finds it in a level", async () => {
@@ -494,9 +511,10 @@ describe("a mask transition shaped like, and closing on, a sprite", () => {
 			expect(change()._silhouette).toBeDefined();
 			await settle();
 			expect(sprite.offset).toBeUndefined();
+			expect(warn).not.toHaveBeenCalled();
 
 			expect(isIris(change())).toBe(true);
-			expect(warn).not.toHaveBeenCalled();
+			expectLetGoWarning();
 		});
 
 		it("a sprite in a container that is in no world is kept", async () => {
@@ -522,6 +540,40 @@ describe("a mask transition shaped like, and closing on, a sprite", () => {
 			expect(isIris(hide)).toBe(true);
 			await settle();
 			expect(isIris(change())).toBe(true);
+		});
+
+		it("a level's sprite set again before each change is never warned about", async () => {
+			for (let i = 0; i < 3; i++) {
+				const player = new Sprite(100, 100, { image: leftHalf() });
+				app.world.addChild(player);
+				state.transition("mask", "#000", DURATION, player);
+				expect(change()._silhouette, `change ${i + 1}`).toBeDefined();
+				await settle();
+			}
+			expect(warn).not.toHaveBeenCalled();
+		});
+
+		it("the sprite gone with its level is said once, however many changes follow", async () => {
+			const player = new Sprite(100, 100, { image: leftHalf() });
+			app.world.addChild(player);
+			state.transition("mask", "#000", DURATION, player);
+			expect(change()._silhouette).toBeDefined();
+			await settle();
+			for (let i = 0; i < 3; i++) {
+				expect(isIris(change()), `change ${i + 2}`).toBe(true);
+				await settle();
+			}
+			expectLetGoWarning();
+		});
+
+		it("a mask transition given no shape says so once, and switches directly", async () => {
+			state.transition("mask", "#000", DURATION);
+			for (let i = 0; i < 3; i++) {
+				expect(change(), `change ${i + 1}`).toBeUndefined();
+				await settle();
+			}
+			expect(warn).toHaveBeenCalledTimes(1);
+			expect(warn.mock.calls[0][0]).toMatch(/requires a shape/);
 		});
 
 		it("setting another transition forgets a kept sprite", async () => {

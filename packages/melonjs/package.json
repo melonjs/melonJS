@@ -5,7 +5,8 @@
 	"homepage": "https://www.melonjs.org/",
 	"type": "module",
 	"sideEffects": [
-		"./src/polyfill/**"
+		"./src/polyfill/**",
+		"./build/index.js"
 	],
 	"keywords": [
 		"game-engine",
@@ -51,7 +52,8 @@
 		"build",
 		"skills",
 		"README.md",
-		"CHANGELOG",
+		"LICENSE.md",
+		"CHANGELOG.md",
 		"package.json"
 	],
 	"devDependencies": {
@@ -74,8 +76,8 @@
 		"build:watch": "tsx scripts/build.js watch",
 		"lint": "eslint .",
 		"build": "tsx scripts/build.js && pnpm types",
-		"dist": "pnpm clean && pnpm lint && pnpm vitest run && pnpm build && pnpm doc && cp ../../README.md .",
-		"dist:publish": "pnpm clean && pnpm lint && pnpm build && pnpm doc && cp ../../README.md .",
+		"dist": "pnpm clean && pnpm lint && pnpm vitest run && pnpm build && pnpm doc && cp ../../README.md ../../LICENSE.md .",
+		"dist:publish": "pnpm clean && pnpm lint && pnpm build && pnpm doc && cp ../../README.md ../../LICENSE.md .",
 		"doc": "tsx scripts/check-doc-readme.ts && pnpm doc:css && typedoc && tsx scripts/generate-llms-txt.ts",
 		"doc:watch": "typedoc --watch --skipErrorChecking --preserveWatchOutput --logLevel Error",
 		"serve": "serve docs",

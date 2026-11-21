@@ -6,11 +6,10 @@
 import { DebugPanelPlugin } from "@melonjs/debug-plugin";
 import {
 	Application,
-	Entity,
 	game,
 	loader,
 	plugin,
-	type Sprite,
+	Sprite,
 	Stage,
 	state,
 	TextureAtlas,
@@ -21,26 +20,33 @@ const base = `${import.meta.env.BASE_URL}assets/texturePacker/img/`;
 
 let texture: TextureAtlas;
 
-class CapGuyEntity extends Entity {
+/** the walking character: a sprite animated from eight frames of the atlas */
+class CapGuy extends Sprite {
 	constructor() {
-		super(0, 50, { width: 100, height: 300 });
-		this.body.setStatic();
-		this.renderable = texture.createAnimationFromName([
-			"capguy/walk/0001",
-			"capguy/walk/0002",
-			"capguy/walk/0003",
-			"capguy/walk/0004",
-			"capguy/walk/0005",
-			"capguy/walk/0006",
-			"capguy/walk/0007",
-			"capguy/walk/0008",
-		]);
+		super(
+			50,
+			200,
+			texture.getAnimationSettings([
+				"capguy/walk/0001",
+				"capguy/walk/0002",
+				"capguy/walk/0003",
+				"capguy/walk/0004",
+				"capguy/walk/0005",
+				"capguy/walk/0006",
+				"capguy/walk/0007",
+				"capguy/walk/0008",
+			]),
+		);
+		// it walks off one side and back in from the other: keep it
+		// updating while it is out of view, or it would stay there
+		this.alwaysUpdate = true;
 	}
 
 	override update(dt: number) {
 		this.pos.x += 0.3 * dt;
-		if (this.pos.x >= game.viewport.width) {
-			this.pos.x = 0;
+		// its position is its centre: gone once half its width past the edge
+		if (this.pos.x - this.width / 2 >= game.viewport.width) {
+			this.pos.x = -this.width / 2;
 		}
 		super.update(dt);
 		return true;
@@ -55,7 +61,7 @@ class PlayScreen extends Stage {
 		const background = texture.createSpriteFromName("background") as Sprite;
 		background.pos.set(w / 2, h / 2, 1);
 		game.world.addChild(background, 1);
-		game.world.addChild(new CapGuyEntity(), 2);
+		game.world.addChild(new CapGuy(), 2);
 	}
 }
 

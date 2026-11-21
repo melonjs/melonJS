@@ -168,7 +168,7 @@ export const ExampleWebGPU = createExampleComponent(async () => {
 		const app = new Application(1024, 576, {
 			parent: "screen",
 			scale: "auto",
-			// opt-in only — `video.AUTO` never selects the WebGPU backend
+			// AUTO tries WebGPU first, then WebGL 2, then Canvas
 			renderer: video.AUTO,
 			backgroundColor: "#10212f",
 		});

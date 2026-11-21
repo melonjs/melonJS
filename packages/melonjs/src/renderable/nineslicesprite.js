@@ -138,10 +138,16 @@ export default class NineSliceSprite extends Sprite {
 
 		// cache the current position and size
 		let dx = x;
-		const dy = y;
+		let dy = y;
 
 		let w = frame.width;
 		let h = frame.height;
+
+		// the size to cover and the corners to keep, along the same axes
+		let target_width = this.nss_width;
+		let target_height = this.nss_height;
+		let insetx = this.insetx;
+		let insety = this.insety;
 
 		// frame offset in the texture/atlas
 		const frame_offset = frame.offset;
@@ -149,19 +155,28 @@ export default class NineSliceSprite extends Sprite {
 
 		// remove image's TexturePacker/ShoeBox rotation
 		if (frame.angle !== 0) {
-			renderer.translate(-dx, -dy);
+			// The slices are laid out as the frame is stored, a quarter turn
+			// from how it looks, about the sprite's own corner: there the
+			// sprite's height runs along x and its width along y, and so do
+			// its corners
+			renderer.translate(dx, dy);
 			renderer.rotate(frame.angle);
-			dx -= h;
 			w = frame.height;
 			h = frame.width;
+			target_width = this.nss_height;
+			target_height = this.nss_width;
+			insetx = this.insety;
+			insety = this.insetx;
+			dx = -target_width;
+			dy = 0;
 		}
 
 		const sx = g_offset.x + frame_offset.x;
 		const sy = g_offset.y + frame_offset.y;
 
 		// should this be configurable ?
-		const corner_width = this.insetx || w / 4;
-		const corner_height = this.insety || h / 4;
+		const corner_width = insetx || w / 4;
+		const corner_height = insety || h / 4;
 
 		// `* 2`, not `<< 1`: corners default to w/4 which is fractional for
 		// widths not divisible by 4, and the bit-shift truncates to int32 —
@@ -170,8 +185,8 @@ export default class NineSliceSprite extends Sprite {
 		const image_center_width = w - corner_width * 2;
 		const image_center_height = h - corner_height * 2;
 
-		const target_center_width = this.nss_width - corner_width * 2;
-		const target_center_height = this.nss_height - corner_height * 2;
+		const target_center_width = target_width - corner_width * 2;
+		const target_center_height = target_height - corner_height * 2;
 
 		// The 9-slice grid is separable per axis: each column/row is an unscaled
 		// corner, a stretched center, then an unscaled corner. Fill the shared
@@ -181,13 +196,13 @@ export default class NineSliceSprite extends Sprite {
 		sColX[2] = sx + w - corner_width;
 		dColX[0] = dx;
 		dColX[1] = dx + corner_width;
-		dColX[2] = dx + this.nss_width - corner_width;
+		dColX[2] = dx + target_width - corner_width;
 		sRowY[0] = sy;
 		sRowY[1] = sy + corner_height;
 		sRowY[2] = sy + h - corner_height;
 		dRowY[0] = dy;
 		dRowY[1] = dy + corner_height;
-		dRowY[2] = dy + this.nss_height - corner_height;
+		dRowY[2] = dy + target_height - corner_height;
 
 		// blit the 9 slices: corners keep their size, the center column/row stretch.
 		for (let r = 0; r < 3; r++) {

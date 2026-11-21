@@ -64,10 +64,12 @@ export const createGame = async () => {
 	// "old arcade screen" vibe; subtle vignette to focus the eye
 	// on the play field. Kept light — anything higher than ~0.1
 	// noticeably dims the neon palette below it.
-	_app.viewport.shader = new ScanlineEffect(game.renderer, {
-		opacity: 0.09,
-		vignetteStrength: 0.18,
-	});
+	_app.viewport.addPostEffect(
+		new ScanlineEffect(game.renderer, {
+			opacity: 0.09,
+			vignetteStrength: 0.18,
+		}),
+	);
 
 	// register the debug plugin — press 'S' in-game to toggle the panel
 	// (collision bodies, FPS, draw-call counts, etc.). Useful when

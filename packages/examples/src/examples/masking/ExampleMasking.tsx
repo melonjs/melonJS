@@ -34,7 +34,7 @@ const createGame = async () => {
 
 	loader.load({ name: "background", type: "image", src: bgImage }, () => {
 		// apply subtle vignette post-process effect on the camera
-		game.viewport.shader = new VignetteEffect(game.renderer);
+		game.viewport.addPostEffect(new VignetteEffect(game.renderer));
 		const bg_sprite1 = new Sprite(
 			game.viewport.width / 2,
 			game.viewport.height / 2,

@@ -12,6 +12,9 @@ import { buildPockets } from "./entities/pocket";
 import { buildTable } from "./entities/table";
 import { gameState } from "./gameState";
 
+/** draw order of the HUD — above the table and every ball */
+const HUD_Z = 100;
+
 /**
  * Build the 15-ball triangle rack. Apex points toward the cue (left
  * side of the table); foot row is on the right. The 8-ball sits at
@@ -76,7 +79,7 @@ export class PlayScreen extends Stage {
 			app.world.addChild(b);
 		}
 		app.world.addChild(new CueBall(CUE_SPAWN_X, CUE_SPAWN_Y));
-		// HUD on top
-		app.world.addChild(new HUDContainer());
+		// HUD on top: an explicit z, above the table and every ball
+		app.world.addChild(new HUDContainer(), HUD_Z);
 	}
 }
