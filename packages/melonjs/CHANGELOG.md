@@ -13,6 +13,7 @@
 ### Performance
 - Tiled: on the GPU, drawing an isometric tile layer takes about **90%** less of the main thread's time with 1200 tiles in view (0.68 to 0.07 ms a frame) and about **98%** less with 4000 (2.0 to 0.04 ms). Staggered and hexagonal maps gain the same
 - Tiled: for reference, orthogonal tile layers, on the GPU since 19.4, measure about **85%** less with 1000 tiles in view (0.62 to 0.09 ms) and about **97%** less with 3600 (1.9 to 0.06 ms)
+- Effects: `FlashEffect` and `TintPulseEffect` are drawn by the `ColorMatrixEffect` shader, as `SepiaEffect`, `DesaturateEffect` and `InvertEffect` are: two fewer shaders to compile, and the pulse is computed once a frame rather than for every pixel. Nothing to change in a game
 
 ### Fixed
 - Tiled: a layer's offset in Tiled is applied: to a tile layer (where it is drawn and where `getTile()` looks), to the objects of an object layer, and to the tile layers inside a group. It was ignored
@@ -36,7 +37,6 @@
 - CI: fix the test job losing its browser page at random, and run the test suite in about half the time
 - Package: the npm package includes `CHANGELOG.md` and the license, which were left out, and its `sideEffects` field names the published bundle
 - Size: the engine is about 8% smaller to download (323 kB minified and gzipped, from 350 kB), as the comments in its shaders are no longer published
-- Effects: `FlashEffect` and `TintPulseEffect` are drawn by the `ColorMatrixEffect` shader, as `SepiaEffect`, `DesaturateEffect` and `InvertEffect` are, where each had one of its own; nothing to change in a game
 
 ## [20.16.0] (melonJS 2) - _2026-11-17_
 
