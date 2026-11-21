@@ -16,7 +16,7 @@ import { createExampleComponent } from "../utils";
 const createGame = async () => {
 	// Initialize the video.
 	try {
-		const app = new Application(1024, 840, {
+		const app = new Application(1024, 1005, {
 			parent: "screen",
 			renderer: video.AUTO,
 			blendMode: "normal",
@@ -394,6 +394,73 @@ const createGame = async () => {
 				"#B0BEC5",
 			);
 
+			// --- Row 6: half-circle arcs ---
+			//
+			// An arc is exactly half a circle when its two ends are a diameter
+			// apart, and also when its radius is too small to reach between
+			// them: it is then made large enough, which is half that distance.
+			// Each arc below is one, with its ends on a slant; drawn as the
+			// chord between its ends, it is a straight line.
+
+			// Half disc: one arc and its chord
+			this.drawSVGShape(
+				renderer,
+				"M 2 30 A 52 52 0 0 1 98 70 Z",
+				60,
+				868,
+				"#0277BD",
+				"#4FC3F7",
+			);
+
+			// Disc: two half circles, as the donut above, on a slanted diameter
+			this.drawSVGShape(
+				renderer,
+				"M 2 30 A 52 52 0 0 1 98 70 A 52 52 0 0 1 2 30 Z",
+				215,
+				868,
+				"#AD1457",
+				"#F06292",
+			);
+
+			// Capsule on a slant: two half-circle ends
+			this.drawSVGShape(
+				renderer,
+				"M 30 2 L 78 22 A 26 26 0 0 1 58 70 L 10 50 A 26 26 0 0 1 30 2 Z",
+				385,
+				883,
+				"#2E7D32",
+				"#81C784",
+			);
+
+			// Wave: four half circles end to end, left unfilled
+			this.drawSVGShape(
+				renderer,
+				"M 2 60 A 13 13 0 0 1 26 50 A 13 13 0 0 0 50 40 A 13 13 0 0 1 74 30 A 13 13 0 0 0 98 20",
+				525,
+				878,
+				"#FFB300",
+			);
+
+			// Awning: every arc asks for a radius of 1, too small to reach
+			this.drawSVGShape(
+				renderer,
+				"M 0 50 A 1 1 0 0 1 25 45 A 1 1 0 0 1 50 50 A 1 1 0 0 1 75 45 A 1 1 0 0 1 100 50 L 100 90 L 0 90 Z",
+				685,
+				858,
+				"#6A1B9A",
+				"#BA68C8",
+			);
+
+			// Half moon: a half circle outside, a shallower arc inside
+			this.drawSVGShape(
+				renderer,
+				"M 14 70 A 39 39 0 0 1 86 40 A 60 60 0 0 0 14 70 Z",
+				845,
+				863,
+				"#F9A825",
+				"#FFF176",
+			);
+
 			// --- Row dividers (evenly spaced between row centres) ---
 			renderer.setColor("#333355");
 			renderer.beginPath();
@@ -405,6 +472,8 @@ const createGame = async () => {
 			renderer.lineTo(1004, 502);
 			renderer.moveTo(20, 667);
 			renderer.lineTo(1004, 667);
+			renderer.moveTo(20, 832);
+			renderer.lineTo(1004, 832);
 			renderer.stroke();
 		}
 	}
