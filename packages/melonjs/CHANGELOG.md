@@ -31,6 +31,7 @@
 - Transitions: a mask transition shaped like a sprite of the level says so in the console, once, when a later change finds that sprite gone with its level and closes a plain iris instead; nothing was said. A mask transition given no shape also says so once, not on every change
 - Package: the npm package includes `CHANGELOG.md` and the license, which were left out, and its `sideEffects` field names the published bundle too, so a bundler keeps a `melonjs` imported only for its polyfills
 - Skills and README: the engine's size was given as 250 KB; it is about 320 kB minified and gzipped (the README now says ~300 KB)
+- Path2D: an SVG `A` arc that is exactly a half circle, as when its radius is too small and is scaled up to fit, is drawn as an arc. Rounding could push the cosine of its sweep angle just past -1, `Math.acos` returned `NaN`, and the arc became a straight line between its endpoints
 
 ### Chore
 - Dependencies: update the development tools, clearing the 46 vulnerabilities reported by the security audit

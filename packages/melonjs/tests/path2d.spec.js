@@ -125,6 +125,28 @@ describe("Path2D", () => {
 			}
 		});
 
+		it("should draw a semicircle whose endpoints are not axis-aligned", () => {
+			// (0, 0) and (24, 10) are 26 apart, so a radius of 13 is exactly a
+			// half circle around (12, 5). The two radius vectors are opposite,
+			// and their normalized dot product rounds just below -1.
+			path.parseSVGPath("M 0 0 A 13 13 0 0 1 24 10");
+			expect(path.points.length).toBeGreaterThan(10);
+			for (const point of path.points) {
+				expect(Math.hypot(point.x - 12, point.y - 5)).toBeCloseTo(13, 6);
+			}
+		});
+
+		it("should draw a semicircle when the radius is scaled up to fit", () => {
+			// radius 1 is too small for endpoints 12.04 apart, so it is scaled
+			// up to half that distance and the arc becomes a half circle
+			path.parseSVGPath("M 0 0 A 1 1 0 0 1 1 12");
+			expect(path.points.length).toBeGreaterThan(10);
+			const r = Math.hypot(1, 12) / 2;
+			for (const point of path.points) {
+				expect(Math.hypot(point.x - 0.5, point.y - 6)).toBeCloseTo(r, 6);
+			}
+		});
+
 		it("should handle the heart path from ticket #1198", () => {
 			path.parseSVGPath(
 				"M 10 30 A 20 20 0 0 1 50 30 A 20 20 0 0 1 90 30 Q 90 60 50 90 Q 10 60 10 30 Z",
