@@ -1063,9 +1063,12 @@ export default class Sprite extends Renderable {
 
 		// remove image's TexturePacker/ShoeBox rotation
 		if (frame.angle !== 0) {
-			target.translate(-xpos, -ypos);
+			// turned back about the frame's own corner, wherever that is: the
+			// rest is then laid out from (0, 0)
+			target.translate(xpos, ypos);
 			target.rotate(frame.angle);
-			xpos -= h;
+			xpos = -h;
+			ypos = 0;
 			w = frame.height;
 			h = frame.width;
 			// apply trim in rotated space: (tx, ty) → (-ty, tx) for -π/2

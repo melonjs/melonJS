@@ -856,6 +856,7 @@ same question after construction.
 | a white or solid box where the effect should be | carrier renderable drawn while the effect is disabled |
 | ONE effect does nothing but two of them work | the renderable draws with primitives — set `postEffectNeedsCapture` |
 | effect cannot be re-enabled | `removePostEffect()` destroyed it — use `enabled` |
+| on WebGL with `antiAlias` on, the screen flickers to black once something captures the frame: `toFrameTexture()`, a `screen_texture` effect, an advanced blend mode (before 20.17) | the browser lost a frame of an anti-aliased canvas that was read and then drawn over, more often on a slow frame: update |
 | ported shader renders upside down | a hand-bound `toFrameTexture()` capture — GL is bottom-up, WebGPU top-down |
 | shadow/smear offset flips on some draws | vertical UV offset not multiplied by `uUVYDir` |
 | frame rate collapses with many blended sprites | an *advanced* mode (overlay, darken, …) — each draw is a capture plus a composite |

@@ -4,13 +4,13 @@
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
 import * as me from "melonjs";
-import { Paladin } from "./entities";
+import { createPaladin } from "./entities";
 
-export let paladin: me.Entity;
+export let paladin: me.Sprite;
 
 export class PlayScreen extends me.Stage {
 	override onResetEvent() {
-		paladin = new Paladin();
+		paladin = createPaladin();
 		me.game.world.addChild(paladin, 2);
 	}
 }

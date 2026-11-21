@@ -187,8 +187,10 @@ assembled. Two things in them are easy to misread:
   the same.
 
 Older copies of the examples (before 20.17) also assigned `viewport.shader = …`
-/ `sprite.shader = …` and set `this.z = Number.POSITIVE_INFINITY` on a HUD.
-Neither is current: use `addPostEffect()`, and `addChild(hud, z)`.
+/ `sprite.shader = …`, set `this.z = Number.POSITIVE_INFINITY` on a HUD,
+extended `Entity` and called `device.requestFullscreen()`. None is current: use
+`addPostEffect()`, `addChild(hud, z)`, a `Sprite` (with a `bodyDef` when it
+needs a body) and `app.requestFullscreen()`.
 
 ## Checklist when code "should work" but doesn't
 

@@ -593,6 +593,13 @@ export default class Renderer {
 	}
 
 	/**
+	 * Close the frame, once everything in it is drawn and flushed. Called by
+	 * the application; a renderer with something to do then overrides it.
+	 * @ignore
+	 */
+	endFrame() {}
+
+	/**
 	 * Put per-frame renderer state back to a known-good baseline.
 	 *
 	 *

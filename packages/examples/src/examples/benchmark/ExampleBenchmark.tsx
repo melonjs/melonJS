@@ -6,7 +6,6 @@
 import { DebugPanelPlugin } from "@melonjs/debug-plugin";
 import {
 	Application,
-	device,
 	event,
 	game,
 	input,
@@ -71,10 +70,10 @@ const createGame = async () => {
 			event.on(event.KEYDOWN, (_, keyCode) => {
 				// toggle fullscreen on/off
 				if (keyCode === input.KEY.F) {
-					if (!device.isFullscreen()) {
-						device.requestFullscreen();
+					if (!game.isFullscreen()) {
+						game.requestFullscreen();
 					} else {
-						device.exitFullscreen();
+						game.exitFullscreen();
 					}
 				}
 

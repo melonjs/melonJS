@@ -5,6 +5,7 @@
 	"homepage": "https://www.melonjs.org/",
 	"type": "module",
 	"sideEffects": [
+		"./src/polyfill/**",
 		"./build/index.js"
 	],
 	"keywords": [

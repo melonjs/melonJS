@@ -71,6 +71,9 @@ import { GLSamplerCache } from "./utils/samplercache.js";
  * @import {Sphere} from "../../geometries/sphere.ts";
  */
 
+// the one pixel `endFrame` reads off the canvas
+const ONE_PIXEL = { x: 0, y: 0, width: 1, height: 1 };
+
 // reusable constants for 2D→3D matrix operations
 const _tempMatrix = new Matrix3d();
 
@@ -719,6 +722,16 @@ export default class WebGLRenderer extends Renderer {
 	 * @internal
 	 */
 	_deriveCapabilities() {
+		/**
+		 * Whether the canvas itself is multisampled: `antiAlias` was asked
+		 * for and the browser gave it. See {@link WebGLRenderer#endFrame}.
+		 * @type {boolean}
+		 * @ignore
+		 * @internal
+		 */
+		this._canvasMultisampled =
+			this.gl.getContextAttributes()?.antialias === true;
+
 		/**
 		 * Whether this backend CAN render into a half-float color buffer,
 		 * which is a property of the driver alone. What the chain is
@@ -1421,6 +1434,16 @@ export default class WebGLRenderer extends Renderer {
 			 */
 			this._frameTexture = undefined;
 		}
+		// and the one pixel `endFrame` reads, for the same reason
+		if (typeof this._canvasResolve !== "undefined") {
+			this._canvasResolve.destroy();
+			/**
+			 * @ignore
+			 * @internal
+			 */
+			this._canvasResolve = undefined;
+		}
+		this._canvasCaptured = false;
 
 		// Context-loss-only cleanup for the TMX GPU renderer: the cached
 		// `GLShader` and per-layer GL textures reference the OLD context
@@ -1663,6 +1686,43 @@ export default class WebGLRenderer extends Renderer {
 		this.currentBatcher.uploadTexture(texture);
 
 		return texture;
+	}
+
+	/**
+	 * Close a frame that captured the canvas while it was being drawn.
+	 *
+	 * A multisampled canvas (`antiAlias`) is resolved by the browser each
+	 * time it is read, so by `toFrameTexture`, and once more when the frame is
+	 * shown. Chromium loses a frame that was resolved in the middle and drawn
+	 * to afterwards: it shows black instead, more often the longer the frame
+	 * took. Measured on its software renderer, in plain WebGL as well as
+	 * here, where the Aquarium example showed 114 black frames in 125; with
+	 * anti-aliasing off, or with nothing drawn after the capture, none.
+	 *
+	 * Reading the canvas again once everything is drawn has the browser
+	 * resolve the finished frame itself, and the frame is then shown as
+	 * drawn: none black in 125. One pixel is enough, copied into a texture
+	 * (no read back to the CPU, which would stall the frame). Flushing or
+	 * finishing after the capture does not help.
+	 *
+	 * Called by the application once a frame is drawn; does nothing unless
+	 * the frame captured a multisampled canvas.
+	 * @ignore
+	 */
+	endFrame() {
+		if (this._canvasCaptured !== true) {
+			return;
+		}
+		/**
+		 * @ignore
+		 * @internal
+		 */
+		this._canvasResolve = this.toFrameTexture({
+			target: this._canvasResolve ?? null,
+			region: ONE_PIXEL,
+		});
+		// after the read: it is a capture of the canvas too
+		this._canvasCaptured = false;
 	}
 
 	/**
@@ -2089,6 +2149,16 @@ export default class WebGLRenderer extends Renderer {
 		if (msaaActive) {
 			// back to rasterizing into the multisampled half
 			msaaActive.bind();
+		}
+
+		// read straight off a multisampled canvas: the frame has to be closed
+		// by another read, see `endFrame`
+		if (activeTarget === null && this._canvasMultisampled === true) {
+			/**
+			 * @ignore
+			 * @internal
+			 */
+			this._canvasCaptured = true;
 		}
 
 		// the scratch bind clobbered GL `unit` OUTSIDE the shared texture-cache

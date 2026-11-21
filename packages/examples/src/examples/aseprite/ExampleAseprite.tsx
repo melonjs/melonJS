@@ -3,7 +3,6 @@
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
-import type * as me from "melonjs";
 import { createExampleComponent } from "../utils";
 import { createGame } from "./game";
 import { paladin } from "./play";
@@ -42,10 +41,7 @@ export const ExampleAseprite = () => {
 						borderRadius: 4,
 					}}
 					onChange={(event) => {
-						// eslint-disable-next-line @typescript-eslint/no-unsafe-call
-						(paladin.renderable as me.Sprite).setCurrentAnimation(
-							event.target.value,
-						);
+						paladin.setCurrentAnimation(event.target.value);
 					}}
 				>
 					<option value="step">step</option>

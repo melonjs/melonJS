@@ -1332,6 +1332,7 @@ export default class Application {
 
 			// flush/render our frame
 			this.renderer.flush();
+			this.renderer.endFrame();
 
 			// publish notification
 			emit(GAME_AFTER_DRAW, globalThis.performance.now());
