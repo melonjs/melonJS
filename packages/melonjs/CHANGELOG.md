@@ -27,6 +27,7 @@
 - glTF: a model compressed with Draco or meshopt, which the loader cannot decode, says so in the console, naming the extension, instead of failing on an accessor error that did not mention it
 - Physics: a method of the built-in adapter (`setVelocity`, `applyForce`, `setStatic` and the like) called on a renderable with no body says so, `this renderable has no built-in body`, where it failed on a property of `undefined`; and a raycast passes over an object whose body is not one of the adapter's, where it threw
 - Skills: the deployment skill gave the engine's size as 250 KB; it is about 320 kB minified and gzipped
+- Path2D: an SVG `A` arc that is exactly a half circle, as when its radius is too small and is scaled up to fit, is drawn as an arc. Rounding could push the cosine of its sweep angle just past -1, `Math.acos` returned `NaN`, and the arc became a straight line between its endpoints
 
 ### Chore
 - Dependencies: the 46 known vulnerabilities the security audit reported in the development tools are cleared (vite 8.3.8, vitest 4.1.12, serve 14.2.8, and overrides for what they depend on). None was in a dependency of a published package
