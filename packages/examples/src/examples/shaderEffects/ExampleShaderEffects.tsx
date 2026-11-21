@@ -11,10 +11,12 @@ import {
 	ColorMatrixEffect,
 	DesaturateEffect,
 	DissolveEffect,
+	DitherEffect,
 	DropShadowEffect,
 	event,
 	FlashEffect,
 	GlowEffect,
+	GradientMapEffect,
 	HologramEffect,
 	InvertEffect,
 	loader,
@@ -36,9 +38,9 @@ import {
 import { createExampleComponent } from "../utils";
 import monsterImg from "./assets/monster.png";
 
-// five rows of four
+// six rows of four
 const WIDTH = 1218;
-const HEIGHT = 702;
+const HEIGHT = 842;
 const SPRITE_SCALE = 0.25;
 
 const createGame = async () => {
@@ -50,7 +52,7 @@ const createGame = async () => {
 	await app.init();
 
 	// apply subtle vignette post-process effect on the camera
-	app.viewport.shader = new VignetteEffect(app.renderer as WebGLRenderer);
+	app.viewport.addPostEffect(new VignetteEffect(app.renderer as WebGLRenderer));
 
 	await loader.preload([{ name: "monster", type: "image", src: monsterImg }]);
 
@@ -85,6 +87,8 @@ const createGame = async () => {
 				"Squish",
 				"Color Matrix",
 				"Bloom",
+				"Gradient Map",
+				"Dither",
 			];
 
 			const cols = 4;
@@ -116,13 +120,15 @@ const createGame = async () => {
 				switch (i) {
 					case 1:
 						flashEffect = new FlashEffect(r, { intensity: 0 });
-						sprite.shader = flashEffect;
+						sprite.addPostEffect(flashEffect);
 						break;
 					case 2:
-						sprite.shader = new OutlineEffect(r, {
-							color: [1, 1, 0],
-							width: 2,
-						});
+						sprite.addPostEffect(
+							new OutlineEffect(r, {
+								color: [1, 1, 0],
+								width: 2,
+							}),
+						);
 						break;
 					case 3:
 						glowEffect = new GlowEffect(r, {
@@ -130,43 +136,53 @@ const createGame = async () => {
 							width: 10,
 							intensity: 2.5,
 						});
-						sprite.shader = glowEffect;
+						sprite.addPostEffect(glowEffect);
 						break;
 					case 4:
-						sprite.shader = new DesaturateEffect(r);
+						sprite.addPostEffect(new DesaturateEffect(r));
 						break;
 					case 5:
-						sprite.shader = new PixelateEffect(r, {
-							size: 6,
-						});
+						sprite.addPostEffect(
+							new PixelateEffect(r, {
+								size: 6,
+							}),
+						);
 						break;
 					case 6:
-						sprite.shader = new BlurEffect(r, {
-							strength: 5,
-						});
+						sprite.addPostEffect(
+							new BlurEffect(r, {
+								strength: 5,
+							}),
+						);
 						break;
 					case 7:
-						sprite.shader = new ChromaticAberrationEffect(r, {
-							offset: 5,
-						});
+						sprite.addPostEffect(
+							new ChromaticAberrationEffect(r, {
+								offset: 5,
+							}),
+						);
 						break;
 					case 8:
 						dissolveEffect = new DissolveEffect(r, { progress: 0 });
-						sprite.shader = dissolveEffect;
+						sprite.addPostEffect(dissolveEffect);
 						break;
 					case 9:
-						sprite.shader = new DropShadowEffect(r, {
-							offsetX: 6,
-							offsetY: 6,
-							opacity: 0.7,
-						});
+						sprite.addPostEffect(
+							new DropShadowEffect(r, {
+								offsetX: 6,
+								offsetY: 6,
+								opacity: 0.7,
+							}),
+						);
 						break;
 					case 10:
-						sprite.shader = new ScanlineEffect(r, {
-							opacity: 0.4,
-							curvature: 0.03,
-							vignetteStrength: 0.3,
-						});
+						sprite.addPostEffect(
+							new ScanlineEffect(r, {
+								opacity: 0.4,
+								curvature: 0.03,
+								vignetteStrength: 0.3,
+							}),
+						);
 						break;
 					case 11:
 						pulseEffect = new TintPulseEffect(r, {
@@ -174,7 +190,7 @@ const createGame = async () => {
 							speed: 2,
 							intensity: 0.4,
 						});
-						sprite.shader = pulseEffect;
+						sprite.addPostEffect(pulseEffect);
 						break;
 					case 12:
 						waveEffect = new WaveEffect(r, {
@@ -182,17 +198,17 @@ const createGame = async () => {
 							frequency: 15.0,
 							speed: 3.0,
 						});
-						sprite.shader = waveEffect;
+						sprite.addPostEffect(waveEffect);
 						break;
 					case 13:
-						sprite.shader = new InvertEffect(r);
+						sprite.addPostEffect(new InvertEffect(r));
 						break;
 					case 14:
-						sprite.shader = new SepiaEffect(r);
+						sprite.addPostEffect(new SepiaEffect(r));
 						break;
 					case 15:
 						hologramEffect = new HologramEffect(r);
-						sprite.shader = hologramEffect;
+						sprite.addPostEffect(hologramEffect);
 						break;
 					case 16:
 						shineEffect = new ShineEffect(r, {
@@ -200,23 +216,44 @@ const createGame = async () => {
 							width: 0.18,
 							intensity: 0.7,
 						});
-						sprite.shader = shineEffect;
+						sprite.addPostEffect(shineEffect);
 						break;
 					case 17:
 						squishEffect = new SquishEffect(r);
 						squishSprite = sprite;
-						sprite.shader = squishEffect;
+						sprite.addPostEffect(squishEffect);
 						break;
 					case 18:
 						matrixEffect = new ColorMatrixEffect(r);
-						sprite.shader = matrixEffect;
+						sprite.addPostEffect(matrixEffect);
 						break;
 					case 19:
-						sprite.shader = new BloomEffect(r, {
-							threshold: 0.3,
-							intensity: 2.2,
-							radius: 6,
-						});
+						sprite.addPostEffect(
+							new BloomEffect(r, {
+								threshold: 0.3,
+								intensity: 2.2,
+								radius: 6,
+							}),
+						);
+						break;
+					case 20:
+						// recolored from its brightness: dusk, from the darkest
+						// shade to the brightest
+						sprite.addPostEffect(
+							new GradientMapEffect(r, {
+								colors: [
+									[0.1, 0.05, 0.3],
+									[0.55, 0.1, 0.5],
+									[0.98, 0.5, 0.3],
+									[1.0, 0.93, 0.7],
+								],
+							}),
+						);
+						break;
+					case 21:
+						// its own colors in three levels of each channel, with a dither
+						// between two, in pixels twelve texels wide
+						sprite.addPostEffect(new DitherEffect(r, { levels: 3, size: 12 }));
 						break;
 				}
 

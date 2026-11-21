@@ -158,6 +158,19 @@ sprite.flicker(1000, function () {    // blink for a second, then…
 });
 ```
 
+**A tint multiplies, so it can only darken.** It cannot turn a red sprite blue,
+or flash it white. For one sprite drawn in several palettes (a team colour, an
+elite enemy, a frozen one) use a `GradientMapEffect`, which redraws it from its
+brightness in the colours you list; for a white hit flash, a `FlashEffect`. Both
+are in `melonjs-effects-and-shaders`.
+
+```js
+// the same art as a second team
+enemy.addPostEffect(new GradientMapEffect(app.renderer, {
+    colors: [[0.1, 0.05, 0.3], [0.3, 0.4, 0.9], [0.8, 0.9, 1]],
+}));
+```
+
 **`scale()` is multiplicative, not absolute.** Calling it every frame compounds.
 For absolute scaling reset first:
 
@@ -223,6 +236,7 @@ Two consequences:
 | `this` is wrong in a `flicker(ms, callback)` callback, or a flicker started from it stops at once | before 20.13.0 the callback ran on an internal object and the flicker was stopped after it; now `this` is the sprite and the flicker has already ended |
 | sprites do not batch | more distinct textures in one frame than `renderer.maxTextures` |
 | nine-slice corners stretch anyway | `insetX`/`insetY` instead of `insetx`/`insety` |
+| a tint will not turn the sprite the colour asked for, only a darker one | a tint multiplies the art's own colours: recolour with a `GradientMapEffect`, flash with a `FlashEffect` |
 
 ## Related skills
 

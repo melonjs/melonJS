@@ -75,9 +75,11 @@ import ChromaticAberrationEffect from "./video/effects/chromaticAberration.js";
 import ColorMatrixEffect from "./video/effects/colorMatrix.js";
 import DesaturateEffect from "./video/effects/desaturate.js";
 import DissolveEffect from "./video/effects/dissolve.js";
+import DitherEffect from "./video/effects/dither.js";
 import DropShadowEffect from "./video/effects/dropShadow.js";
 import FlashEffect from "./video/effects/flash.js";
 import GlowEffect from "./video/effects/glow.js";
+import GradientMapEffect from "./video/effects/gradientMap.js";
 import HologramEffect from "./video/effects/hologram.js";
 import InvertEffect from "./video/effects/invert.js";
 import OutlineEffect from "./video/effects/outline.js";
@@ -287,6 +289,7 @@ export {
 	Container,
 	DesaturateEffect,
 	DissolveEffect,
+	DitherEffect,
 	Draggable,
 	DropShadowEffect,
 	DropTarget,
@@ -299,6 +302,7 @@ export {
 	GLTFModel,
 	GlowEffect,
 	Gradient,
+	GradientMapEffect,
 	HologramEffect,
 	ImageLayer,
 	InstancedMesh,
