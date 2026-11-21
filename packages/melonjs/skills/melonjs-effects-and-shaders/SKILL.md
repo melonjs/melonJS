@@ -121,6 +121,11 @@ GPU backend: `VignetteEffect`, `ScanlineEffect` (optional CRT curvature),
 `HologramEffect`, `ShineEffect`, `RadialGradientEffect`, `SquishEffect`,
 `ToneMappingEffect`, `GradientMapEffect`, `DitherEffect`.
 
+Five of them are a `ColorMatrixEffect` with a matrix set for you, and share
+its one shader: `SepiaEffect`, `DesaturateEffect`, `InvertEffect`,
+`FlashEffect` and `TintPulseEffect` (the last two since 20.17). Drive them
+through their own setters (`setIntensity`, `setColor`, `setTime`).
+
 **Colors take an alpha.** Every color option and `setColor` takes `[r, g, b]`
 or `[r, g, b, a]`, each 0.0 to 1.0, and the alpha is the color's own opacity: a
 half-transparent outline, a glow at half strength, a flash that only half
