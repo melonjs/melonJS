@@ -1,6 +1,8 @@
 # Changelog
 
-## [20.17.0] (melonJS 2) - _unreleased_
+## [20.17.0] (melonJS 2) - _2026-11-22_
+
+**Highlights:** isometric, staggered and hexagonal Tiled maps are now drawn by the GPU, as orthogonal ones are: up to **98%** less of the main thread's time per tile layer, with nothing to enable. Also new: mask transitions shaped like an image or a sprite that close on the player, and two effects, `GradientMapEffect` (palette swaps, duotones) and `DitherEffect` (a retro limited-color look). A map with layer offsets now looks as it does in Tiled: the offsets were ignored before.
 
 ### Added
 - Transitions: a mask transition can take the shape of an image or a `Sprite`, close on the player (`center`) and fill the shape (`invert`), on `state.transition`, `MaskEffect` and `Trigger` ([#1399](https://github.com/melonjs/melonJS/issues/1399))
