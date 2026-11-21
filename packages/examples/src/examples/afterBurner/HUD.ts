@@ -345,7 +345,7 @@ export class HUD {
 		this.flashTween?.stop();
 		this.flashTween = undefined;
 		this.flashDriver.k = 0;
-		this.deathFlash.setUniform("uFlashIntensity", 0);
+		this.deathFlash.setIntensity(0);
 	}
 
 	/**
@@ -360,7 +360,7 @@ export class HUD {
 	flashDeath(): void {
 		this.flashTween?.stop();
 		this.flashDriver.k = 1;
-		this.deathFlash.setUniform("uFlashIntensity", DEATH_FLASH_ALPHA);
+		this.deathFlash.setIntensity(DEATH_FLASH_ALPHA);
 		const tween = new Tween(this.flashDriver);
 		// the wash has to finish even though the run is over
 		tween.updateWhenPaused = true;
@@ -368,10 +368,7 @@ export class HUD {
 			.to({ k: 0 }, { duration: DEATH_FLASH_FADE_MS })
 			.easing(Tween.Easing.Quadratic.Out)
 			.onUpdate(() => {
-				this.deathFlash.setUniform(
-					"uFlashIntensity",
-					this.flashDriver.k * DEATH_FLASH_ALPHA,
-				);
+				this.deathFlash.setIntensity(this.flashDriver.k * DEATH_FLASH_ALPHA);
 			})
 			.onComplete(() => {
 				this.flashTween = undefined;

@@ -32,12 +32,12 @@ import {
  */
 
 // [effect, its color uniform, the constructor option, the setter]
+// (a flash and a tint pulse take a color too, in a color matrix rather than a
+// uniform of their own: effect-color-blend.spec.js)
 const COLORED = [
 	[OutlineEffect, "uOutlineColor", "color", "setColor"],
 	[GlowEffect, "uGlowColor", "color", "setColor"],
 	[DropShadowEffect, "uShadowColor", "color", "setColor"],
-	[FlashEffect, "uFlashColor", "color", "setColor"],
-	[TintPulseEffect, "uPulseColor", "color", "setColor"],
 	[HologramEffect, "uHoloColor", "color", "setColor"],
 	[ShineEffect, "uShineColor", "color", "setColor"],
 	[DissolveEffect, "uEdgeColor", "edgeColor", "setEdgeColor"],

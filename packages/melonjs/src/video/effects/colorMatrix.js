@@ -72,6 +72,44 @@ export default class ColorMatrixEffect extends ShaderEffect {
 	}
 
 	/**
+	 * Set the matrix to a blend of every pixel toward one color: `amount` of
+	 * the way, scaled by the color's own alpha. What a flash or a tint is.
+	 *
+	 * Colors reach an effect premultiplied, so "this color, as opaque as the
+	 * pixel" is the color times the pixel's alpha: the matrix's alpha column.
+	 * @param {ArrayLike<number>} color - the color to blend toward, as [r, g, b, a] (0.0–1.0)
+	 * @param {number} amount - how far (0.0 = the pixel's own color, 1.0 = the color)
+	 * @ignore
+	 * @internal
+	 */
+	_blendToward(color, amount) {
+		const k = amount * color[3];
+		const keep = 1 - k;
+		// column-major: what red, green, blue and alpha each add to the result
+		this._matrix
+			.identity()
+			.transform(
+				keep,
+				0,
+				0,
+				0,
+				0,
+				keep,
+				0,
+				0,
+				0,
+				0,
+				keep,
+				0,
+				k * color[0],
+				k * color[1],
+				k * color[2],
+				1,
+			);
+		this._syncUniform();
+	}
+
+	/**
 	 * Reset the color matrix to identity (no color change).
 	 * @returns {this} this instance for chaining
 	 */
