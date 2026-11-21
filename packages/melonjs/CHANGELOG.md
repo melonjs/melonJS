@@ -36,6 +36,7 @@
 - CI: fix the test job losing its browser page at random, and run the test suite in about half the time
 - Package: the npm package includes `CHANGELOG.md` and the license, which were left out, and its `sideEffects` field names the published bundle
 - Size: the engine is about 8% smaller to download (323 kB minified and gzipped, from 350 kB), as the comments in its shaders are no longer published
+- Effects: `FlashEffect` and `TintPulseEffect` are drawn by the `ColorMatrixEffect` shader, as `SepiaEffect`, `DesaturateEffect` and `InvertEffect` are, where each had one of its own; nothing to change in a game
 
 ## [20.16.0] (melonJS 2) - _2026-11-17_
 
