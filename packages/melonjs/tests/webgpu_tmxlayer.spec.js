@@ -184,6 +184,40 @@ describe("WebGPU orthogonal TMX layer renderer (mock)", () => {
 		expect(tmx.resources.size).toBe(0);
 		expect(tmx.animLookups.size).toBe(0);
 	});
+
+	it("release retires one layer's index texture, and leaves the others'", () => {
+		const retired = [];
+		renderer.retireTexture = (texture) => {
+			retired.push(texture);
+		};
+		const leaving = makeLayer();
+		const staying = makeLayer();
+		tmx.draw(leaving, RECT);
+		tmx.draw(staying, RECT);
+		const texture = tmx.resources.get(leaving).texture;
+		const kept = tmx.resources.get(staying);
+		expect(tmx.bindGroups.has(leaving)).toBe(true);
+
+		// a layer that leaves the world while the game runs
+		tmx.release(leaving);
+		expect(retired).toEqual([texture]);
+		expect(tmx.resources.has(leaving)).toBe(false);
+		expect(tmx.bindGroups.has(leaving)).toBe(false);
+		expect(tmx.resources.get(staying)).toBe(kept);
+		expect(tmx.bindGroups.has(staying)).toBe(true);
+
+		// once is enough, and a layer never drawn has nothing to free
+		tmx.release(leaving);
+		tmx.release(makeLayer());
+		expect(retired).toEqual([texture]);
+
+		// drawn again, it gets a texture again, uploaded afresh
+		const uploads = renderer.calls.textureWrites.length;
+		tmx.draw(leaving, RECT);
+		expect(tmx.resources.get(leaving).texture).not.toBe(texture);
+		expect(renderer.calls.textureWrites.length).toBe(uploads + 1);
+		expect(tmx.bindGroups.has(leaving)).toBe(true);
+	});
 });
 
 /**

@@ -2,7 +2,6 @@ import { vi } from "vitest";
 import {
 	Application,
 	boot,
-	type CanvasRenderer,
 	type Container,
 	type LDtkLayerInstance,
 	type LDtkLevelJson,
@@ -15,8 +14,8 @@ import {
 	type Renderable,
 	state,
 	video,
-	type WebGLRenderer,
 } from "../../src/index.js";
+import { copyFrame, paintTile } from "./pixels.js";
 
 /** the twelve sample projects that come with LDtk, kept with the examples */
 export const SAMPLES = [
@@ -55,7 +54,7 @@ export const HEIGHT = 240;
  * @returns the application
  */
 export async function makeApp(
-	renderer: typeof video.CANVAS | typeof video.WEBGL,
+	renderer: typeof video.CANVAS | typeof video.WEBGL | typeof video.WEBGPU,
 ): Promise<Application> {
 	// no frame of the engine's own: a test draws each one
 	vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(() => {
@@ -124,25 +123,7 @@ export function frame(app: Application): Uint8ClampedArray {
 	app.viewport.update(16);
 	app.repaint();
 	app.draw();
-	const renderer = app.renderer as CanvasRenderer | WebGLRenderer;
-	if ("gl" in renderer) {
-		const gl = renderer.gl as WebGL2RenderingContext;
-		renderer.flush();
-		const raw = new Uint8Array(WIDTH * HEIGHT * 4);
-		gl.readPixels(0, 0, WIDTH, HEIGHT, gl.RGBA, gl.UNSIGNED_BYTE, raw);
-		// read from the bottom row up
-		const out = new Uint8ClampedArray(raw.length);
-		const row = WIDTH * 4;
-		for (let y = 0; y < HEIGHT; y++) {
-			out.set(
-				raw.subarray((HEIGHT - 1 - y) * row, (HEIGHT - y) * row),
-				y * row,
-			);
-		}
-		return out;
-	}
-	const context = renderer.getContext() as CanvasRenderingContext2D;
-	return context.getImageData(0, 0, WIDTH, HEIGHT).data;
+	return copyFrame(app.renderer).data;
 }
 
 type Picture = HTMLCanvasElement;
@@ -213,27 +194,17 @@ export function referenceLevel(
 		const image = loader.getImage(tileset.relPath) as CanvasImageSource;
 		const size = tileset.tileGridSize;
 		for (const tile of tilesOf(layer)) {
-			const flipX = (tile.f & 1) !== 0;
-			const flipY = (tile.f & 2) !== 0;
-			c.save();
-			c.globalAlpha = layer.__opacity * (tile.a ?? 1);
-			c.translate(
-				layer.__pxTotalOffsetX + tile.px[0] + (flipX ? size : 0),
-				layer.__pxTotalOffsetY + tile.px[1] + (flipY ? size : 0),
-			);
-			c.scale(flipX ? -1 : 1, flipY ? -1 : 1);
-			c.drawImage(
+			paintTile(
+				c,
 				image,
 				tile.src[0],
 				tile.src[1],
 				size,
-				size,
-				0,
-				0,
-				size,
-				size,
+				layer.__pxTotalOffsetX + tile.px[0],
+				layer.__pxTotalOffsetY + tile.px[1],
+				tile.f,
+				layer.__opacity * (tile.a ?? 1),
 			);
-			c.restore();
 		}
 	}
 	return canvas;

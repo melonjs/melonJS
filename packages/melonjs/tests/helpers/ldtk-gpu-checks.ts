@@ -1,13 +1,11 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import {
-	Application,
-	boot,
+	type Application,
 	type LDtkLevel,
 	type LDtkProject,
 	level,
 	PlacedTileLayer,
 	Renderer,
-	state,
 	TileLayer,
 	Tileset,
 	type video,
@@ -17,6 +15,7 @@ import {
 	enter,
 	HEIGHT,
 	loadSamples,
+	makeApp,
 	referenceLevel,
 	referenceView,
 	SAMPLES,
@@ -36,6 +35,12 @@ import { grabFrame } from "./pixels.js";
  * @param type - what its `type` starts with
  * @param tolerance - the largest difference of a channel that is not counted
  */
+/**
+ * the share of the frame that may differ where a level has a background
+ * image: it is scaled, which the GPU samples its own way (measured: 2.4%)
+ */
+const SCALED_IMAGE = 0.03;
+
 export function gpuChecks(
 	renderer: typeof video.WEBGL | typeof video.WEBGPU,
 	type: string,
@@ -46,23 +51,9 @@ export function gpuChecks(
 		let projects: Map<string, LDtkProject>;
 
 		beforeAll(async () => {
-			// no frame of the engine's own: a test draws each one
-			vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(() => {
-				return 1;
-			});
-			vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation(() => {
-				// nothing to cancel
-			});
-			boot();
+			// (a renderer this machine does not have: its tests are skipped)
 			try {
-				app = new Application(WIDTH, HEIGHT, {
-					parent: "screen",
-					renderer,
-					consoleHeader: false,
-					antiAlias: false,
-					failIfMajorPerformanceCaveat: false,
-				});
-				await app.init();
+				app = await makeApp(renderer);
 			} catch {
 				app = null;
 			}
@@ -71,7 +62,6 @@ export function gpuChecks(
 				app = null;
 			}
 			if (app !== null) {
-				state.change(state.DEFAULT, true);
 				projects = await loadSamples();
 			}
 		});
@@ -155,7 +145,7 @@ export function gpuChecks(
 					expect(
 						result.different,
 						`${info.identifier}: ${result.first} (worst ${String(result.worst)})`,
-					).toBeLessThanOrEqual(scaled ? WIDTH * HEIGHT * 0.04 : 0);
+					).toBeLessThanOrEqual(scaled ? WIDTH * HEIGHT * SCALED_IMAGE : 0);
 
 					grids += tileLayers.length;
 					for (const layer of info.json.layerInstances ?? []) {

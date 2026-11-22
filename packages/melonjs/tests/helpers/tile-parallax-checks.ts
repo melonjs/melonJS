@@ -32,6 +32,7 @@ import {
 	tile,
 	tilesetImage,
 } from "./ldtk-project-builder.ts";
+import { paintTile as paintSquare } from "./pixels.js";
 
 /** a tile of a layer under test: where it is in the layer, and which it is */
 interface Placed {
@@ -99,28 +100,9 @@ export function parallaxChecks(
 		flip: number,
 		alpha = 1,
 	) => {
-		c.save();
-		if ((flip & 1) !== 0) {
-			c.translate(TILE, 0);
-			c.scale(-1, 1);
-		}
-		if ((flip & 2) !== 0) {
-			c.translate(0, TILE);
-			c.scale(1, -1);
-		}
-		c.globalAlpha = alpha;
-		c.drawImage(
-			image,
-			(id % 4) * TILE,
-			Math.floor(id / 4) * TILE,
-			TILE,
-			TILE,
-			0,
-			0,
-			TILE,
-			TILE,
-		);
-		c.restore();
+		const sx = (id % 4) * TILE;
+		const sy = Math.floor(id / 4) * TILE;
+		paintSquare(c, image, sx, sy, TILE, 0, 0, flip, alpha);
 	};
 
 	// a canvas the size of the view, filled with a color
@@ -209,7 +191,7 @@ export function parallaxChecks(
 			});
 		};
 
-		const gridLayer = (parallax?: Partial<Parallax>) => {
+		const gridLayer = (parallax?: Partial<Parallax>, renderMode = "auto") => {
 			const made = new TileLayer({
 				name: "grid",
 				cols: 12,
@@ -220,6 +202,7 @@ export function parallaxChecks(
 				offsetx: AT.x,
 				offsety: AT.y,
 				parallax,
+				renderMode,
 			});
 			for (const placed of gridTiles) {
 				made.setCell(
@@ -256,6 +239,14 @@ export function parallaxChecks(
 			Placed[],
 		][] = [
 			["a grid layer", gridLayer, gridTiles],
+			// drawn once to a canvas of its own, which is what is then drawn
+			[
+				"a pre-rendered grid layer",
+				(parallax) => {
+					return gridLayer(parallax, "prerender");
+				},
+				gridTiles,
+			],
 			["a layer of placed tiles", looseLayer, looseTiles],
 		];
 
@@ -326,8 +317,18 @@ export function parallaxChecks(
 		];
 
 		describe.each(KINDS)("%s", (kind, make, tiles) => {
-			// tiles placed one by one are drawn one by one, on every renderer
-			const scaledEdge = kind === "a grid layer" ? edge : 0;
+			// Tiles placed one by one are drawn one by one, on every
+			// renderer: each to whole pixels, as the reference paints them.
+			// A layer drawn in one piece (by the tile shader, or from the
+			// canvas it was pre-rendered to) is sampled as one picture when
+			// scaled, and differs along the edges of its tiles: under 1% of
+			// the frame for a pre-rendered one.
+			let scaledEdge = 0;
+			if (kind === "a grid layer") {
+				scaledEdge = edge;
+			} else if (kind === "a pre-rendered grid layer") {
+				scaledEdge = Math.round(0.01 * WIDTH * HEIGHT);
+			}
 
 			it("with no parallax, is drawn where it was placed", () => {
 				show(make());

@@ -12,6 +12,7 @@ import {
 	registerObjectFactory,
 	registerTiledObjectClass,
 	registerTiledObjectFactory,
+	Sprite,
 	TileLayer,
 	Tileset,
 	TilesetGroup,
@@ -21,7 +22,7 @@ import {
 	timer,
 	video,
 } from "../src/index.js";
-import { grabFrame } from "./helpers/pixels.js";
+import { grabFrame, paintTile as paintSquare } from "./helpers/pixels.js";
 
 /**
  * The tile map classes that belong to no map editor: a tileset, a tile layer
@@ -264,12 +265,7 @@ describe.each([
 	/** a tile on the reference: mirrored and faded as asked */
 	const paintTile = (c, id, x, y, flip = 0, alpha = 1, source = image) => {
 		const [sx, sy] = tileSource(id);
-		c.save();
-		c.globalAlpha = alpha;
-		c.translate(x + (flip & 1 ? TILE : 0), y + (flip & 2 ? TILE : 0));
-		c.scale(flip & 1 ? -1 : 1, flip & 2 ? -1 : 1);
-		c.drawImage(source, sx, sy, TILE, TILE, 0, 0, TILE, TILE);
-		c.restore();
+		paintSquare(c, source, sx, sy, TILE, x, y, flip, alpha);
 	};
 
 	/** the pictures match, to within what blending rounds a channel by */
@@ -381,6 +377,70 @@ describe.each([
 		it("is what a Tiled tileset is built on", () => {
 			expect(Object.getPrototypeOf(TMXTileset)).toBe(Tileset);
 		});
+
+		/** an image of a size, with nothing drawn on it */
+		const blankImage = (width, height) => {
+			const canvas = document.createElement("canvas");
+			canvas.width = width;
+			canvas.height = height;
+			return canvas;
+		};
+
+		it("gives the id of the tile at a place of its image", () => {
+			const spaced = new Tileset({
+				image: blankImage(64, 44),
+				tilewidth: 16,
+				tileheight: 16,
+				margin: 2,
+				spacing: 4,
+			});
+			expect(spaced.tileIdAt(2, 2)).toBe(0);
+			expect(spaced.tileIdAt(22, 2)).toBe(1);
+			expect(spaced.tileIdAt(42, 2)).toBe(2);
+			expect(spaced.tileIdAt(2, 22)).toBe(3);
+			expect(spaced.tileIdAt(42, 22)).toBe(5);
+			// not where a tile starts, or past the image
+			expect(spaced.tileIdAt(0, 0)).toBe(-1);
+			expect(spaced.tileIdAt(3, 2)).toBe(-1);
+			expect(spaced.tileIdAt(62, 2)).toBe(-1);
+			// a partial column is not a tile
+			const odd = new Tileset({
+				image: blankImage(40, 32),
+				tilewidth: 16,
+				tileheight: 16,
+			});
+			expect(odd.tileIdAt(16, 16)).toBe(3);
+			expect(odd.tileIdAt(32, 0)).toBe(-1);
+		});
+
+		it("cuts its own tiles from an image already cut another way", () => {
+			const shared = blankImage(64, 32);
+			const small = new Tileset({
+				image: shared,
+				tilewidth: 16,
+				tileheight: 16,
+			});
+			const large = new Tileset({
+				image: shared,
+				tilewidth: 32,
+				tileheight: 32,
+			});
+			expect([small.atlas[1].offset.x, small.atlas[1].width]).toEqual([16, 16]);
+			expect([large.atlas[1].offset.x, large.atlas[1].width]).toEqual([32, 32]);
+			expect(large.atlas[2]).toBeUndefined();
+			expect(small.atlas[7].offset.y).toBe(16);
+			// and from an image a sprite was made of whole
+			const whole = blankImage(48, 16);
+			const sprite = new Sprite(0, 0, { image: whole });
+			expect(sprite.width).toBe(48);
+			const tiles = new Tileset({
+				image: whole,
+				tilewidth: 16,
+				tileheight: 16,
+			});
+			expect([tiles.atlas[2].offset.x, tiles.atlas[2].width]).toEqual([32, 16]);
+			expect(tiles.lastgid).toBe(3);
+		});
 	});
 
 	describe("TilesetGroup", () => {
@@ -448,6 +508,96 @@ describe.each([
 			layer.clearTile(2, 1);
 			expect(layer.cellAt(2, 1)).toBeNull();
 		});
+
+		it("ignores a cell outside the grid, and clears the flips with the tile", () => {
+			const layer = layerOf();
+			const version = layer.dataVersion;
+			for (const [col, row] of [
+				[-1, 0],
+				[6, 0],
+				[0, -1],
+				[0, 5],
+			]) {
+				layer.setCell(col, row, 3);
+				layer.clearTile(col, row);
+				expect(
+					layer.setTile(layer.getTileById(3, col, row), col, row),
+				).not.toBe(null);
+			}
+			expect(layer.dataVersion).toBe(version);
+			// the three flips, diagonal included, are the tile's
+			layer.setCell(1, 1, 5, 4);
+			expect(layer.cellAt(1, 1).flippedAD).toBe(true);
+			layer.setCell(1, 1, 6, 7);
+			const flipped = layer.cellAt(1, 1);
+			expect([flipped.flippedX, flipped.flippedY, flipped.flippedAD]).toEqual([
+				true,
+				true,
+				true,
+			]);
+			// an empty cell has none: the next tile there is not flipped by
+			// the one that was
+			layer.setCell(1, 1, 0, 3);
+			expect(layer.cellAt(1, 1)).toBeNull();
+			expect(Array.from(layer.layerData.slice(14, 16))).toEqual([0, 0]);
+		});
+
+		it("forgets the tile it handed out for a cell that changes", () => {
+			const layer = layerOf();
+			layer.setCell(2, 2, 5);
+			const before = layer.cellAt(2, 2);
+			expect(layer.cellAt(2, 2)).toBe(before);
+			layer.setCell(2, 2, 9, 1);
+			const after = layer.cellAt(2, 2);
+			expect(after).not.toBe(before);
+			expect([after.tileId, after.flippedX]).toEqual([9, true]);
+			// and `setTile` keeps the one it is given
+			const mine = layer.getTileById(4, 2, 2);
+			layer.setTile(mine, 2, 2);
+			expect(layer.cellAt(2, 2)).toBe(mine);
+			layer.clearTile(2, 2);
+			expect(layer.cellAt(2, 2)).toBeNull();
+		});
+
+		it.each(["perTile", "prerender", "shader"])(
+			"shows a cell changed after the layer was drawn, drawn as %s",
+			async (renderMode) => {
+				// (a mode the renderer does not have falls back by itself)
+				const layer = layerOf({ renderMode });
+				layer.setCell(0, 0, 1);
+				layer.setCell(3, 2, 4);
+				app.world.addChild(layer);
+				const draw = async () => {
+					app.world.update(16);
+					layer.inViewport = true;
+					app.isDirty = true;
+					app.draw();
+					return Array.from((await grabFrame(renderer)).data);
+				};
+				try {
+					expectSame(
+						await draw(),
+						reference((c) => {
+							paintTile(c, 0, 0, 0);
+							paintTile(c, 3, 3 * TILE, 2 * TILE);
+						}),
+					);
+					// by each of the three ways to write a cell
+					layer.setCell(1, 0, 2, 1);
+					layer.clearTile(0, 0);
+					layer.setTile(layer.getTileById(8, 3, 2), 3, 2);
+					expectSame(
+						await draw(),
+						reference((c) => {
+							paintTile(c, 1, TILE, 0, 1);
+							paintTile(c, 7, 3 * TILE, 2 * TILE);
+						}),
+					);
+				} finally {
+					app.world.removeChildNow(layer, true);
+				}
+			},
+		);
 
 		it("draws its cells where they are, mirrored where asked", async () => {
 			const layer = layerOf();

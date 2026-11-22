@@ -6,9 +6,7 @@ import {
 	type LDtkTile,
 	level,
 	loader,
-	Sprite,
 	TileLayer,
-	Tileset,
 	type video,
 } from "../../src/index.js";
 import {
@@ -343,81 +341,6 @@ export function tilesetChecks(
 
 		it("two tilesets of different tile sizes on one image", async () => {
 			await expectAsSaved("Shared");
-		});
-	});
-
-	describe(`a tileset built from a plain description, on ${name}`, () => {
-		let app: Application;
-
-		beforeAll(async () => {
-			app = await makeApp(renderer);
-		});
-
-		afterAll(() => {
-			app.destroy();
-		});
-
-		const image = (width: number, height: number) => {
-			const canvas = document.createElement("canvas");
-			canvas.width = width;
-			canvas.height = height;
-			return canvas;
-		};
-
-		it("gives the id of the tile at a place of its image", () => {
-			const spaced = new Tileset({
-				image: image(64, 44),
-				tilewidth: 16,
-				tileheight: 16,
-				margin: 2,
-				spacing: 4,
-			});
-			expect(spaced.tileIdAt(2, 2)).toBe(0);
-			expect(spaced.tileIdAt(22, 2)).toBe(1);
-			expect(spaced.tileIdAt(42, 2)).toBe(2);
-			expect(spaced.tileIdAt(2, 22)).toBe(3);
-			expect(spaced.tileIdAt(42, 22)).toBe(5);
-			// not where a tile starts, or past the image
-			expect(spaced.tileIdAt(0, 0)).toBe(-1);
-			expect(spaced.tileIdAt(3, 2)).toBe(-1);
-			expect(spaced.tileIdAt(62, 2)).toBe(-1);
-			// a partial column is not a tile
-			const odd = new Tileset({
-				image: image(40, 32),
-				tilewidth: 16,
-				tileheight: 16,
-			});
-			expect(odd.tileIdAt(16, 16)).toBe(3);
-			expect(odd.tileIdAt(32, 0)).toBe(-1);
-		});
-
-		it("cuts its own tiles from an image already cut another way", () => {
-			const shared = image(64, 32);
-			const small = new Tileset({
-				image: shared,
-				tilewidth: 16,
-				tileheight: 16,
-			});
-			const large = new Tileset({
-				image: shared,
-				tilewidth: 32,
-				tileheight: 32,
-			});
-			expect([small.atlas[1].offset.x, small.atlas[1].width]).toEqual([16, 16]);
-			expect([large.atlas[1].offset.x, large.atlas[1].width]).toEqual([32, 32]);
-			expect(large.atlas[2]).toBeUndefined();
-			expect(small.atlas[7].offset.y).toBe(16);
-			// and from an image a sprite was made of whole
-			const whole = image(48, 16);
-			const sprite = new Sprite(0, 0, { image: whole });
-			expect(sprite.width).toBe(48);
-			const tiles = new Tileset({
-				image: whole,
-				tilewidth: 16,
-				tileheight: 16,
-			});
-			expect([tiles.atlas[2].offset.x, tiles.atlas[2].width]).toEqual([32, 16]);
-			expect(tiles.lastgid).toBe(3);
 		});
 	});
 }

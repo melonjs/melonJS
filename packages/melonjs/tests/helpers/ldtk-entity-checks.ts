@@ -530,6 +530,59 @@ export function entityChecks(
 				tolerance,
 			);
 			expect(result.different, result.first).toBeLessThanOrEqual(edge);
+
+			// And the framed one, drawn alone. A nine-slice keeps its
+			// corners as they are in the tile and stretches what is between
+			// them: each corner of the box shows that corner of the tile,
+			// pixel for pixel, and the middle is filled.
+			framed.setOpacity(1);
+			for (const other of objectsIn(app.world)) {
+				if (other !== framed) {
+					other.setOpacity(0);
+				}
+			}
+			const drawn = frame(app);
+			const source = document.createElement("canvas");
+			source.width = image.width;
+			source.height = image.height;
+			const pixels = source.getContext("2d") as CanvasRenderingContext2D;
+			pixels.drawImage(image, 0, 0);
+			const [left, top] = [slice.insetx, slice.insety];
+			const box = { x: 8, y: 8, w: 96, h: 64 };
+			let compared = 0;
+			for (const [fromX, fromY, toX, toY] of [
+				[RECT.x, RECT.y, box.x, box.y],
+				[RECT.x + RECT.w - left, RECT.y, box.x + box.w - left, box.y],
+				[RECT.x, RECT.y + RECT.h - top, box.x, box.y + box.h - top],
+				[
+					RECT.x + RECT.w - left,
+					RECT.y + RECT.h - top,
+					box.x + box.w - left,
+					box.y + box.h - top,
+				],
+			]) {
+				const corner = pixels.getImageData(fromX, fromY, left, top).data;
+				for (let y = 0; y < top; y++) {
+					for (let x = 0; x < left; x++) {
+						const at = ((toY + y) * WIDTH + toX + x) * 4;
+						for (let channel = 0; channel < 3; channel++) {
+							expect(
+								Math.abs(
+									drawn[at + channel] - corner[(y * left + x) * 4 + channel],
+								),
+								`corner pixel ${String(toX + x)}, ${String(toY + y)}`,
+							).toBeLessThanOrEqual(tolerance);
+							compared++;
+						}
+					}
+				}
+			}
+			expect(compared).toBe(4 * left * top * 3);
+			// the middle of the box is the tile's, not the level's background
+			const middle = ((box.y + box.h / 2) * WIDTH + box.x + box.w / 2) * 4;
+			expect(Array.from(drawn.slice(middle, middle + 3))).not.toEqual([
+				0x10, 0x10, 0x10,
+			]);
 		});
 
 		it("places an entity by its pivot whatever its shape, with its layer's offset and opacity, a later one over an earlier one", async () => {

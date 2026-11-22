@@ -21,11 +21,13 @@ import {
  * @param renderer - the renderer to ask for
  * @param name - its name
  * @param tolerance - the largest difference of a channel that is not counted: what blending rounds by
+ * @param scaledImage - the share of the frame that may differ where a level has a background image, which is scaled: each renderer samples it its own way (measured: 0.2% on Canvas, 2.4% on WebGL)
  */
 export function levelChecks(
 	renderer: typeof video.CANVAS | typeof video.WEBGL,
 	name: string,
 	tolerance: number,
+	scaledImage: number,
 ) {
 	describe(`every level of the LDtk samples, on ${name}`, () => {
 		let app: Application;
@@ -78,7 +80,7 @@ export function levelChecks(
 						expect(
 							result.different,
 							`${info.identifier} from ${String(viewX)}, ${String(viewY)}: ${result.first} (worst ${String(result.worst)})`,
-						).toBeLessThanOrEqual(scaled ? WIDTH * HEIGHT * 0.04 : 0);
+						).toBeLessThanOrEqual(scaled ? WIDTH * HEIGHT * scaledImage : 0);
 					}
 					for (const layer of info.json.layerInstances ?? []) {
 						tiles += layer.gridTiles.length + layer.autoLayerTiles.length;

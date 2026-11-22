@@ -9,6 +9,13 @@ import {
 	state,
 	video,
 } from "../src/index.js";
+import {
+	layer,
+	levelJson,
+	projectJson,
+	tile,
+	tilesetImage,
+} from "./helpers/ldtk-project-builder.ts";
 
 /**
  * A level's layers are in their draw order as soon as the level is loaded.
@@ -74,94 +81,30 @@ const tiledMap = () => {
 };
 
 const ldtkLevel = (identifier, worldX) => {
-	const layer = (name, type) => {
-		// enough tiles for a grid, and a second one on each cell
-		const tiles = [];
-		for (let i = 0; i < 40; i++) {
-			const px = [(i % 8) * 16, Math.floor(i / 8) * 16];
-			tiles.push({ px, src: [0, 0], f: 0, t: 0, a: 1 });
-			tiles.push({ px, src: [16, 0], f: 0, t: 1, a: 1 });
-		}
-		return {
-			__identifier: name,
-			__type: type,
-			__cWid: 8,
-			__cHei: 5,
-			__gridSize: 16,
-			__opacity: 1,
-			__pxTotalOffsetX: 0,
-			__pxTotalOffsetY: 0,
-			__tilesetDefUid: 1,
-			__tilesetRelPath: "order-tiles.png",
+	// enough tiles for a grid, and a second one on each cell
+	const tiles = [];
+	for (let i = 0; i < 40; i++) {
+		const x = (i % 8) * 16;
+		const y = Math.floor(i / 8) * 16;
+		tiles.push(tile(x, y, 0), tile(x, y, 1));
+	}
+	const autoLayer = (name) => {
+		return layer(name, "AutoLayer", 16, 8, 5, tiles, {
 			iid: `${identifier}-${name}`,
-			levelId: 0,
-			layerDefUid: 10,
-			visible: true,
-			intGridCsv: [],
-			autoLayerTiles: tiles,
-			gridTiles: [],
-			entityInstances: [],
-		};
+		});
 	};
-	return {
-		identifier,
-		iid: `${identifier}-iid`,
-		uid: 0,
+	// top-most first, as LDtk saves them
+	return levelJson(identifier, [autoLayer("Roof"), autoLayer("Ground")], {
 		worldX,
-		worldY: 0,
-		worldDepth: 0,
 		pxWid: 128,
 		pxHei: 80,
-		__bgColor: "#203040",
-		fieldInstances: [],
-		// top-most first, as LDtk saves them
-		layerInstances: [layer("Roof", "AutoLayer"), layer("Ground", "AutoLayer")],
-		__neighbours: [],
-	};
+	});
 };
 
 const ldtkProject = () => {
-	return {
-		jsonVersion: "1.5.3",
+	return projectJson([ldtkLevel("First", 0), ldtkLevel("Second", 128)], {
 		iid: "order",
-		bgColor: "#101010",
-		defaultGridSize: 16,
-		worldLayout: "Free",
-		worldGridWidth: 128,
-		worldGridHeight: 128,
-		externalLevels: false,
-		defs: {
-			tilesets: [
-				{
-					uid: 1,
-					identifier: "Tiles",
-					relPath: "order-tiles.png",
-					pxWid: 32,
-					pxHei: 16,
-					tileGridSize: 16,
-					spacing: 0,
-					padding: 0,
-					__cWid: 2,
-					__cHei: 1,
-					customData: [],
-					enumTags: [],
-				},
-			],
-			layers: [
-				{
-					uid: 10,
-					identifier: "Auto",
-					__type: "AutoLayer",
-					gridSize: 16,
-					intGridValues: [],
-				},
-			],
-			entities: [],
-			enums: [],
-		},
-		levels: [ldtkLevel("First", 0), ldtkLevel("Second", 128)],
-		worlds: [],
-	};
+	});
 };
 
 describe("the draw order of a level's layers, right after it is loaded", () => {
@@ -176,13 +119,11 @@ describe("the draw order of a level's layers, right after it is loaded", () => {
 		});
 		await app.init();
 		state.change(state.DEFAULT, true);
-		const image = document.createElement("canvas");
-		image.width = 32;
-		image.height = 16;
+		// the image the builder's tileset names
 		await loader.load({
-			name: "order-tiles",
+			name: "ldtk-test-tiles",
 			type: "image",
-			src: image.toDataURL("image/png"),
+			src: tilesetImage(),
 		});
 		await loader.preload(
 			[
