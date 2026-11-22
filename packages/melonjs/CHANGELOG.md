@@ -4,7 +4,7 @@
 
 ### Added
 - LDtk: built-in support for the [LDtk](https://ldtk.io) level format: load a `.ldtk` file as an `"ldtk"` asset, then `level.load("<asset>:<level>")`, or `level.load("<asset>")` for the whole world
-- Tile maps: a tile layer has a `ratio`, as an `ImageLayer` does, and a `parallaxScale`
+- Tile maps: parallax is now supported on tile layers, through `ratio`, as on an `ImageLayer`
 - Tile maps: tile layers can be built in code with `TileLayer`, `Tileset`, `TilesetGroup` and `PlacedTileLayer`, plus `mergeGridRects` for collision bodies
 - Levels: `registerObjectClass` and `registerObjectFactory`, new names for `registerTiledObjectClass` and `registerTiledObjectFactory`
 - Levels: `level.load` takes `objects`, to choose which objects of a level are built
