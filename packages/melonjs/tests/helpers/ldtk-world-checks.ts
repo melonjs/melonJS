@@ -138,6 +138,13 @@ export function worldChecks(
 				const bounds = project.worlds[0].bounds;
 				expect(world.x).toBe(bounds.x);
 				expect(world.y).toBe(bounds.y);
+				const area = world.getBounds();
+				expect([area.left, area.top, area.width, area.height]).toEqual([
+					bounds.x,
+					bounds.y,
+					bounds.width,
+					bounds.height,
+				]);
 				expect(app.viewport.bounds.left).toBe(bounds.x);
 				expect(app.viewport.bounds.top).toBe(bounds.y);
 				expect(app.viewport.bounds.width).toBe(Math.max(bounds.width, WIDTH));

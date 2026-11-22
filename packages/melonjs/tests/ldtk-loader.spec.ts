@@ -94,6 +94,14 @@ describe("an LDtk project in the level director", () => {
 		expect(loaded.cols).toBe(32);
 		expect(loaded.rows).toBe(16);
 		expect(loaded.orientation).toBe("orthogonal");
+		// read as a Tiled map is: its area, its layers, its grid
+		const bounds = loaded.getBounds();
+		expect([bounds.left, bounds.top, bounds.width, bounds.height]).toEqual([
+			0, 0, 512, 256,
+		]);
+		expect(loaded.getLayers()).toBe(loaded.layers);
+		const cell = loaded.getRenderer().pixelToTileCoords(40, 20);
+		expect([cell.x, cell.y]).toEqual([2.5, 1.25]);
 		expect(loaded.info.neighbours).toEqual([
 			{ identifier: "World_Level_1", dir: "w" },
 			{ identifier: "World_Level_2", dir: "e" },

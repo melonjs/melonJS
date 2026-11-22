@@ -648,6 +648,10 @@ abstract class LDtkMap {
 	cols = 0;
 	/** its height in cells of the project's default grid */
 	rows = 0;
+	/** its left edge in the container it is added to, in pixels: 0 for a level, LDtk's world coordinate for a world */
+	x = 0;
+	/** its top edge in the container it is added to, in pixels */
+	y = 0;
 	/** its width, in pixels */
 	width = 0;
 	/** its height, in pixels */
@@ -665,6 +669,25 @@ abstract class LDtkMap {
 		this.name = name;
 		this.tilewidth = project.json.defaultGridSize;
 		this.tileheight = project.json.defaultGridSize;
+	}
+
+	/**
+	 * the area it covers, in the container it is added to: from 0 for a
+	 * level, in LDtk's world coordinates for a world
+	 * @returns the bounds
+	 */
+	getBounds(): Bounds {
+		const bounds = new Bounds();
+		bounds.setMinMax(this.x, this.y, this.x + this.width, this.y + this.height);
+		return bounds;
+	}
+
+	/**
+	 * its tile layers, as a Tiled map gives them: what `layers` holds
+	 * @returns the tile layers in the world now, bottom-most first
+	 */
+	getLayers(): Renderable[] {
+		return this.layers;
 	}
 
 	/**
@@ -686,23 +709,16 @@ abstract class LDtkMap {
 	 * @param container - the container
 	 * @param options - LDtk's load options
 	 * @param backgroundColor - the color behind it
-	 * @param x - its left edge
-	 * @param y - its top edge
 	 * @param add - adds its layers, bodies and entities
 	 */
 	protected populate(
 		container: Container,
 		options: LDtkLoadOptions,
 		backgroundColor: string,
-		x: number,
-		y: number,
 		add: () => void,
 	) {
-		let bounds: Bounds | undefined;
-		if (options.setViewportBounds !== false) {
-			bounds = new Bounds();
-			bounds.setMinMax(x, y, x + this.width, y + this.height);
-		}
+		const bounds =
+			options.setViewportBounds !== false ? this.getBounds() : undefined;
 		const follow = addLevelToContainer(container, {
 			backgroundColor,
 			add,
@@ -773,7 +789,7 @@ export class LDtkLevel extends LDtkMap {
 		const resolved = optionsOf(options);
 		this.container = container;
 		this.builder = new LevelBuilder(this.project, container, resolved, this);
-		this.populate(container, resolved, this.info.bgColor, 0, 0, () => {
+		this.populate(container, resolved, this.info.bgColor, () => {
 			this.built = this.builder?.build(this.info, 0, 0, 0, false);
 		});
 		this.layers = this.built?.layers ?? [];
@@ -818,10 +834,6 @@ export class LDtkLevel extends LDtkMap {
 export class LDtkWorld extends LDtkMap {
 	/** the world: its layout, its levels and the area they cover */
 	readonly info: LDtkWorldInfo;
-	/** the world's left edge, in pixels: LDtk's coordinates are kept */
-	readonly x: number;
-	/** the world's top edge, in pixels */
-	readonly y: number;
 	/** the project's background color, as `#rrggbb` */
 	readonly backgroundcolor: string;
 	private loaded = new Map<string, BuiltLevel>();
@@ -856,20 +868,13 @@ export class LDtkWorld extends LDtkMap {
 		this.container = container;
 		this.builder = new LevelBuilder(this.project, container, resolved, this);
 		const first = resolved.levels;
-		this.populate(
-			container,
-			resolved,
-			this.backgroundcolor,
-			this.x,
-			this.y,
-			() => {
-				for (const level of this.info.levels) {
-					if (first === undefined || first.includes(level.identifier)) {
-						this.build(level);
-					}
+		this.populate(container, resolved, this.backgroundcolor, () => {
+			for (const level of this.info.levels) {
+				if (first === undefined || first.includes(level.identifier)) {
+					this.build(level);
 				}
-			},
-		);
+			}
+		});
 	}
 
 	private build(level: LDtkLevelInfo) {
