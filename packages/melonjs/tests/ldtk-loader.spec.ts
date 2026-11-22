@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import {
 	type Application,
 	collision,
+	event,
 	IntGrid,
 	LDtkEntity,
 	type LDtkEntitySettings,
@@ -146,6 +147,34 @@ describe("an LDtk project in the level director", () => {
 		expect(current().layers.length).toBeGreaterThan(0);
 		await level.previous({ container: app.world, async: true });
 		expect(current().identifier).toBe("World_Level_0");
+	});
+
+	it("a level that is gone no longer follows the viewport", async () => {
+		await enter(app, "Typical_TopDown_example:World_Level_0");
+		expect(app.viewport.bounds.width).toBe(512);
+		// another level, which leaves the viewport to the game
+		await enter(app, "AutoLayers_1_basic:AutoLayer", {
+			setViewportBounds: false,
+		});
+		app.viewport.setBounds(0, 0, 4321, 1234);
+		event.emit(
+			event.VIEWPORT_ONRESIZE,
+			app.viewport.width,
+			app.viewport.height,
+		);
+		// the first level does not take the viewport back
+		expect(app.viewport.bounds.width).toBe(4321);
+		expect(app.viewport.bounds.height).toBe(1234);
+	});
+
+	it("knows the project's enums, the ones kept in a file of their own included", () => {
+		const project = projects.get(
+			"Test_file_for_API_showing_all_features",
+		) as LDtkProject;
+		expect([...project.enums.keys()].sort()).toEqual([
+			"AnExternEnum",
+			"SomeEnum",
+		]);
 	});
 
 	it("lets go of a level when another is loaded", async () => {
@@ -387,6 +416,15 @@ describe("the IntGrid layers of a level", () => {
 			solidValues: [1],
 		});
 		expect(bodies().length).toBeGreaterThan(0);
+	});
+
+	it("are not drawn over a layer that has tiles of its own, asked or not", async () => {
+		// an IntGrid layer whose rules draw tiles
+		await enter(app, "AutoLayers_1_basic:AutoLayer");
+		const without = current().layers.length;
+		expect(without).toBeGreaterThan(0);
+		await enter(app, "AutoLayers_1_basic:AutoLayer", { showIntGrid: true });
+		expect(current().layers).toHaveLength(without);
 	});
 
 	it("are drawn in LDtk's colors when asked, where a layer has no tiles", async () => {
@@ -637,6 +675,37 @@ describe("loading and unloading a project", () => {
 			),
 		).rejects.toThrow();
 		expect(loader.getLDtk("notldtk")).toBeNull();
+		// levels, but none of the definitions a project has: said as what
+		// it is, not as a fault further down
+		let message = "";
+		await loader
+			.preload(
+				[{ name: "nodefs", type: "ldtk", data: { levels: [] } }],
+				undefined,
+				false,
+			)
+			.catch((error: unknown) => {
+				message = String((error as { cause?: unknown }).cause);
+			});
+		expect(message).toContain("not an LDtk project file");
+		expect(loader.getLDtk("nodefs")).toBeNull();
+		quiet.mockRestore();
+	});
+
+	it("a project given as data cannot name a level kept in a file: it says so", async () => {
+		const quiet = vi.spyOn(console, "error").mockImplementation(() => {
+			// expected
+		});
+		const response = await fetch(sampleURL("SeparateLevelFiles.ldtk"));
+		const data = (await response.json()) as LDtkProjectJson;
+		let message = "";
+		await loader
+			.preload([{ name: "apart", type: "ldtk", data }], undefined, false)
+			.catch((error: unknown) => {
+				message = String((error as { cause?: unknown }).cause);
+			});
+		expect(message).toContain("needs the project loaded from a file");
+		expect(loader.getLDtk("apart")).toBeNull();
 		quiet.mockRestore();
 	});
 

@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
 	type Application,
 	IntGrid,
+	type LDtkEntity,
 	type LDtkLevelInfo,
 	type LDtkProject,
 	LDtkWorld,
@@ -134,6 +135,18 @@ export function worldChecks(
 						return info.identifier;
 					}),
 				);
+				// the area the levels cover, from LDtk's own numbers
+				const known: Record<string, number[]> = {
+					WorldMap_GridVania_layout: [-1024, -256, 4352, 2304],
+					WorldMap_Free_layout: [-480, -640, 1472, 992],
+					Typical_TopDown_example: [0, 0, 1024, 256],
+				};
+				expect([
+					project.worlds[0].bounds.x,
+					project.worlds[0].bounds.y,
+					project.worlds[0].bounds.width,
+					project.worlds[0].bounds.height,
+				]).toEqual(known[sample]);
 				// the viewport follows the whole world, LDtk's coordinates kept
 				const bounds = project.worlds[0].bounds;
 				expect(world.x).toBe(bounds.x);
@@ -264,6 +277,10 @@ export function worldChecks(
 			expect(grid.x).toBe(256);
 			expect(grid.y).toBe(0);
 			expect(grid.valueAtPixel(256 + 15 * 16 + 3, 16 + 9)).toBe(1);
+			// the second cell of that row is floor, the eighteenth wall: the
+			// level's own place in the world is taken off
+			expect(grid.valueAtPixel(256 + 16 + 3, 16 + 9)).toBe(0);
+			expect(grid.valueAtPixel(16 + 3, 16 + 9)).toBe(0);
 			expect(world.getIntGrid("World_Level_0", "nothing")).toBeUndefined();
 			expect(world.getIntGrid("nowhere", "Collisions")).toBeUndefined();
 
@@ -272,6 +289,11 @@ export function worldChecks(
 			expect(players).toHaveLength(1);
 			expect(players[0].pos.x).toBe(256 + 160);
 			expect(players[0].pos.y).toBe(160);
+			// its pivot, in the world
+			expect((players[0] as LDtkEntity).source.px).toEqual({
+				x: 256 + 168,
+				y: 168,
+			});
 			// every entity of the three levels
 			expect(world.getEntities()).toHaveLength(8 + 8 + 5);
 
@@ -288,9 +310,16 @@ export function worldChecks(
 				);
 			}
 
-			// taking a level out takes its walls and entities with it
+			// taking a level out takes its walls, entities and layers with it
 			const before = walls.length;
+			const layersBefore = world.layers.length;
+			const itsLayers = world.layers.filter((layer) => {
+				return layer.pos.x >= 256 && layer.pos.x < 768;
+			}).length;
+			expect(itsLayers).toBeGreaterThan(0);
 			world.unloadLevel("World_Level_0");
+			expect(world.layers).toHaveLength(layersBefore - itsLayers);
+			expect(world.getLayers()).toBe(world.layers);
 			await new Promise((resolve) => {
 				setTimeout(resolve, 0);
 			});
@@ -306,6 +335,41 @@ export function worldChecks(
 				}),
 			).toBe(true);
 			expect(app.world.getChildByName("Player")).toEqual([]);
+		});
+
+		it("puts walls and IntGrid values where a level is, down as well as across", async () => {
+			const sample = "WorldMap_GridVania_layout";
+			const project = projects.get(sample) as LDtkProject;
+			// a level that is not on the world's top row
+			const info = project.getLevel("Cross_roads") as LDtkLevelInfo;
+			expect([info.x, info.y]).toEqual([0, 256]);
+			await enter(app, sample, { levels: ["Cross_roads"] });
+			const world = current();
+			const grid = world.getIntGrid("Cross_roads", "Collisions") as IntGrid;
+			expect([grid.x, grid.y]).toEqual([0, 256]);
+			const rects = grid.rects();
+			expect(rects.length).toBeGreaterThan(0);
+			for (const rect of rects) {
+				expect(rect.y).toBeGreaterThanOrEqual(256);
+				expect(rect.y + rect.height).toBeLessThanOrEqual(256 + info.height);
+			}
+			// the walls are those rectangles
+			const walls = app.world.getChildren().filter((child) => {
+				return child.bodyDef !== undefined;
+			});
+			expect(
+				walls
+					.map((wall) => {
+						return [wall.pos.x, wall.pos.y, wall.width, wall.height].join();
+					})
+					.sort(),
+			).toEqual(
+				rects
+					.map((rect) => {
+						return [rect.x, rect.y, rect.width, rect.height].join();
+					})
+					.sort(),
+			);
 		});
 
 		it("finds the levels an area touches, and keeps the ones within reach", async () => {
@@ -326,6 +390,9 @@ export function worldChecks(
 				"World_Level_0",
 				"World_Level_1",
 			]);
+			// a point on the edge two levels share touches both
+			expect(at(256, 100).sort()).toEqual(["World_Level_0", "World_Level_1"]);
+			expect(at(255, 100)).toEqual(["World_Level_1"]);
 
 			// the player in the first room: that room alone
 			expect(world.streamAround(100, 100, 16, 16)).toEqual({
@@ -352,6 +419,21 @@ export function worldChecks(
 				unloaded: [],
 			});
 			expect(world.loadedLevels()).toEqual(["World_Level_0"]);
+			// the margin reaches back as well as forward: just right of the
+			// first room's edge, the first room is within 64 px on the left
+			expect(world.streamAround(300, 100, 16, 16, 64)).toEqual({
+				loaded: ["World_Level_1"],
+				unloaded: [],
+			});
+			// and a level is known by its iid as by its identifier
+			const iid = world.info.levels[2].iid;
+			expect(world.isLoaded(iid)).toBe(false);
+			expect(world.loadLevel(iid)).toBe(true);
+			expect(world.isLoaded(iid)).toBe(true);
+			expect(world.isLoaded(world.info.levels[2].identifier)).toBe(true);
+			expect(world.isLoaded("no such level")).toBe(false);
+			expect(world.unloadLevel(iid)).toBe(true);
+			expect(world.isLoaded(iid)).toBe(false);
 		});
 	});
 }

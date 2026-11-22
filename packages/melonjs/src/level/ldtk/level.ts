@@ -557,30 +557,24 @@ class LevelBuilder {
 				}
 				part = grid;
 			} else {
-				// a layer starts at its top left tile: one left of or above
-				// the layer's origin moves the layer there
-				let left = 0;
-				let top = 0;
-				for (const tile of chunk.tiles) {
-					left = Math.min(left, tile.px[0]);
-					top = Math.min(top, tile.px[1]);
-				}
 				part = new PlacedTileLayer({
 					name: layer.__identifier,
 					class: layer.__type,
 					tileset: entry.tileset,
 					z: partZ,
 					opacity,
-					offsetx: x + left,
-					offsety: y + top,
+					offsetx: x,
+					offsety: y,
 					tiles: chunk.tiles
 						.filter((tile) => {
 							return idOf(tile) >= 0;
 						})
 						.map((tile) => {
 							return {
-								x: tile.px[0] - left,
-								y: tile.px[1] - top,
+								// a tile left of or above the layer's origin
+								// is the layer's to keep in view
+								x: tile.px[0],
+								y: tile.px[1],
 								tileId: idOf(tile),
 								flip: tile.f & LDTK_FLIPS,
 								alpha: tile.a ?? 1,

@@ -139,6 +139,18 @@ export const defs = (): LDtkProjectJson["defs"] => {
 				gridSize: 16,
 				intGridValues: [],
 			},
+			{
+				// values with a name, with none, and with an empty one
+				uid: 12,
+				identifier: "Zones",
+				type: "IntGrid",
+				gridSize: 16,
+				intGridValues: [
+					{ value: 1, identifier: "water", color: "#2060c0" },
+					{ value: 2, identifier: null, color: "#c02020" },
+					{ value: 3, identifier: "", color: "#20c020" },
+				],
+			},
 		],
 		entities: [],
 		enums: [],

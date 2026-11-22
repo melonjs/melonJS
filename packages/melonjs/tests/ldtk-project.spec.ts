@@ -102,7 +102,29 @@ const fadedLevel = () => {
 			__tilesetDefUid: null,
 			intGridCsv: walls,
 		}),
+		// values of three kinds, half faded, with no tiles of its own
+		layer("Zones", "IntGrid", 16, 10, 6, [], {
+			__opacity: 0.5,
+			__tilesetDefUid: null,
+			layerDefUid: 12,
+			intGridCsv: new Array<number>(60).fill(0).map((_, i) => {
+				return i < 30 ? (i % 3) + 1 : 0;
+			}),
+		}),
 	]);
+};
+
+/** a level with a background image: a part of the tileset, enlarged and placed */
+const backdropLevel = () => {
+	return levelJson("Backdrop", [], {
+		bgRelPath: "art/ldtk-test-tiles.png",
+		__bgPos: {
+			// the second and third tiles of the first row, twice their size
+			cropRect: [16, 0, 32, 16],
+			scale: [2, 2],
+			topLeftPx: [24, 40],
+		},
+	});
 };
 
 describe("an LDtk project made for the test", () => {
@@ -133,6 +155,7 @@ describe("an LDtk project made for the test", () => {
 			levels: [
 				oddLevel(),
 				fadedLevel(),
+				backdropLevel(),
 				levelJson("Fields", [], {
 					fieldInstances: [
 						{ __identifier: "music", __type: "String", __value: "cave.ogg" },
@@ -255,6 +278,71 @@ describe("an LDtk project made for the test", () => {
 			walls[0].height,
 		]).toEqual([0, 80, 160, 16]);
 		expect(current().getIntGrid("Collisions")?.valueAt(3, 5)).toBe(1);
+	});
+
+	it("keeps the names LDtk gives the values of an IntGrid layer, and none for a value with no name", async () => {
+		await enter(app, "single:Faded");
+		const zones = current().getIntGrid("Zones");
+		expect(zones).toBeDefined();
+		expect([...(zones?.names ?? [])]).toEqual([[1, "water"]]);
+		expect(zones?.nameAt(0, 0)).toBe("water");
+		expect(zones?.nameAt(1, 0)).toBeUndefined();
+		expect(zones?.nameAt(2, 0)).toBeUndefined();
+		// each has its color all the same
+		expect([...(zones?.colors ?? [])]).toEqual([
+			[1, "#2060c0"],
+			[2, "#c02020"],
+			[3, "#20c020"],
+		]);
+	});
+
+	it("an IntGrid layer shown in its colors is faded as the layer is in LDtk", async () => {
+		await enter(app, "single:Faded", { showIntGrid: true });
+		const shown = current().layers.filter((part) => {
+			return part.name === "Zones";
+		});
+		expect(shown).toHaveLength(1);
+		expect(shown[0].getOpacity()).toBe(0.5);
+		// and the hidden one is there, not shown
+		const hidden = current().layers.filter((part) => {
+			return part.name === "Collisions";
+		});
+		expect(hidden).toHaveLength(1);
+		expect(hidden[0].getOpacity()).toBe(0);
+	});
+
+	it("draws a level's background image where LDtk places it: the part it shows, at its scale", async () => {
+		const project = loader.getLDtk("single") as LDtkProject;
+		const info = project.getLevel("Backdrop");
+		expect(info).toBeDefined();
+		if (info === undefined) {
+			return;
+		}
+		await enter(app, info.id);
+		app.viewport.moveTo(0, 0);
+		const result = diff(
+			frame(app),
+			referenceView(
+				info.bgColor,
+				[
+					{
+						picture: referenceLevel(project.json, info.json, false),
+						x: Math.trunc((WIDTH - info.width) / 2),
+						y: Math.trunc((HEIGHT - info.height) / 2),
+					},
+				],
+				0,
+				0,
+			),
+			1,
+		);
+		expect(
+			result.different,
+			`${result.first} (worst ${String(result.worst)})`,
+		).toBe(0);
+		// something of the image is on screen, where it was put
+		const background = app.world.getChildByName("background");
+		expect(background).toHaveLength(1);
 	});
 
 	it("gives the text and the enum tags LDtk keeps for a tile", () => {

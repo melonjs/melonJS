@@ -329,6 +329,20 @@ describe.each([
 			}
 		});
 
+		it("takes its tile count from the columns an editor counted, when given no count", () => {
+			// 4 x 3 tiles in the image; an editor that counted 3 columns
+			const counted = new Tileset({
+				image: tilesImage(),
+				tilewidth: TILE,
+				tileheight: TILE,
+				firstgid: 10,
+				columns: 3,
+			});
+			expect(counted.lastgid).toBe(10 + 3 * ROWS - 1);
+			// where a tile is in the image is the image's own business
+			expect(counted.atlas[3].offset.x).toBe(3 * TILE);
+		});
+
 		it("refuses an image that was not loaded, by its name", () => {
 			expect(() => {
 				return new Tileset({

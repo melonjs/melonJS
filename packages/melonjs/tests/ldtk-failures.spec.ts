@@ -343,6 +343,61 @@ describe("an LDtk project that fails to load", () => {
 		loader.unload({ name: "no-worlds", type: "ldtk" });
 	});
 
+	it("a project of several worlds, from a file: what a world's levels name is loaded too", async () => {
+		served.set("shared-art/world-only.png", await png(32));
+		served.set("shared-art/outer.ldtkl", {
+			...structuredClone(good.levels[0]),
+			identifier: "Outer",
+		});
+		const project = structuredClone(good);
+		const inWorld = {
+			...structuredClone(good.levels[0]),
+			identifier: "Inner",
+			iid: "inner-iid",
+			// only this level names the image
+			bgRelPath: "shared-art/world-only.png",
+			__bgPos: {
+				cropRect: [0, 0, 32, 32] as [number, number, number, number],
+				scale: [1, 1] as [number, number],
+				topLeftPx: [0, 0] as [number, number],
+			},
+		};
+		const apart = {
+			...structuredClone(good.levels[0]),
+			identifier: "Outer",
+			iid: "outer-iid",
+			layerInstances: null,
+			externalRelPath: "shared-art/outer.ldtkl",
+		};
+		project.levels = [];
+		project.worldLayout = null;
+		project.worlds = [
+			{
+				identifier: "Main",
+				iid: "main-iid",
+				worldLayout: "Free",
+				worldGridWidth: 256,
+				worldGridHeight: 256,
+				levels: [inWorld, apart],
+			},
+		];
+		served.set("worlds.ldtk", project);
+		await preload("worlds", "worlds.ldtk");
+		const loaded = loader.getLDtk("worlds");
+		expect(
+			loaded?.levels.map((info) => {
+				return info.id;
+			}),
+		).toEqual(["worlds:Inner", "worlds:Outer"]);
+		// the image only a world's level names, and the level kept in a file
+		expect(width("world-only")).toBe(32);
+		expect(
+			loaded?.getLevel("Outer")?.json.layerInstances?.length,
+		).toBeGreaterThan(0);
+		loader.unload({ name: "worlds", type: "ldtk" });
+		expect(loader.getImage("world-only")).toBeNull();
+	});
+
 	it("loader.unloadAll frees the projects, their levels and their images", async () => {
 		served.set("shared-art/swept.png", await png(8));
 		served.set("swept.ldtk", withImage("shared-art/swept.png"));

@@ -2,8 +2,10 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
 	Application,
 	boot,
+	Container,
 	level,
 	loader,
+	Renderable,
 	state,
 	video,
 } from "../src/index.js";
@@ -243,8 +245,26 @@ describe("the draw order of a level's layers, right after it is loaded", () => {
 		// the level's background under its layers
 		expectSorted(order());
 		expect(app.world.getChildren().at(-1).name).toBe("background");
+		// a container of the game's own, kept in an order of its own
+		const hud = new Container(0, 0, 10, 10);
+		hud.autoSort = false;
+		for (const z of [1, 5]) {
+			const item = new Renderable(0, 0, 4, 4);
+			item.name = `item${z}`;
+			hud.addChild(item, z);
+		}
+		app.world.addChild(hud, 100000);
+		const hudOrder = () => {
+			return hud.getChildren().map((item) => {
+				return item.name;
+			});
+		};
+		expect(hudOrder()).toEqual(["item1", "item5"]);
 		const world = level.getCurrentLevel();
 		world.loadLevel("Second");
+		// the level is in its draw order; the game's container is as it was
+		expect(hudOrder()).toEqual(["item1", "item5"]);
+		app.world.removeChildNow(hud);
 		const zs = order();
 		expect(zs).toHaveLength(10);
 		expectSorted(zs);
