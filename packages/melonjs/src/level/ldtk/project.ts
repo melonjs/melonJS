@@ -6,6 +6,7 @@ import type {
 	LDtkLevelJson,
 	LDtkProjectJson,
 	LDtkTilesetDef,
+	LDtkWorldJson,
 } from "./types.ts";
 
 /** the space LDtk leaves between the levels of a linear world, in pixels */
@@ -96,14 +97,26 @@ export class LDtkProject {
 	readonly entityDefs = new Map<number, LDtkEntityDef>();
 	/** the enums, by their identifier */
 	readonly enums = new Map<string, LDtkEnumDef>();
+	/**
+	 * the name each image the project names is kept under by the loader, by
+	 * its path in the project: the file's name, unless another file of that
+	 * name was loaded already
+	 */
+	readonly images: Map<string, string>;
 
 	/**
 	 * @param name - the name the project was loaded under
 	 * @param json - the project file's content, the levels saved apart put back in
+	 * @param images - the name each image is kept under, by its path in the project
 	 */
-	constructor(name: string, json: LDtkProjectJson) {
+	constructor(
+		name: string,
+		json: LDtkProjectJson,
+		images: Map<string, string> = new Map(),
+	) {
 		this.name = name;
 		this.json = json;
+		this.images = images;
 		for (const def of json.defs.tilesets) {
 			this.tilesets.set(def.uid, def);
 		}
@@ -122,9 +135,11 @@ export class LDtkProject {
 
 		// one world in most projects; several where the project was set up
 		// for them, each with a layout of its own
+		// a project saved before LDtk had several worlds has no list of them
+		const listed = (json as { worlds?: LDtkWorldJson[] }).worlds ?? [];
 		const worlds =
-			json.worlds.length > 0
-				? json.worlds.map((world) => {
+			listed.length > 0
+				? listed.map((world) => {
 						return {
 							identifier: world.identifier,
 							layout: world.worldLayout ?? "Free",

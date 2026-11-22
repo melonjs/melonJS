@@ -124,14 +124,19 @@ export interface BuiltLevel {
 
 /**
  * an image the loader holds, by the path LDtk names it with
+ * @param project - the project that names it
  * @param relPath - the path
- * @returns the image, or null if none is loaded under the file's name
+ * @returns the image, or null if none is loaded for it
  */
-const imageOf = (relPath: string | null | undefined): TileImage | null => {
+const imageOf = (
+	project: LDtkProject,
+	relPath: string | null | undefined,
+): TileImage | null => {
 	if (relPath === null || relPath === undefined) {
 		return null;
 	}
-	return getImage(relPath) as TileImage | null;
+	// under the name the loader kept it by, or the file's own
+	return getImage(project.images.get(relPath) ?? relPath) as TileImage | null;
 };
 
 /**
@@ -183,7 +188,7 @@ class LevelBuilder {
 			return made;
 		}
 		const def = this.project.tilesets.get(uid);
-		const image = imageOf(def?.relPath);
+		const image = imageOf(this.project, def?.relPath);
 		let entry = null;
 		if (def === undefined || image === null) {
 			if (def?.relPath !== null && def?.relPath !== undefined) {
@@ -293,7 +298,7 @@ class LevelBuilder {
 
 		// the background: the level's color, and its image as LDtk places it
 		let image: Renderable | undefined;
-		const bgImage = imageOf(json.bgRelPath);
+		const bgImage = imageOf(this.project, json.bgRelPath);
 		if (json.bgRelPath !== null && json.bgRelPath !== undefined) {
 			if (bgImage === null) {
 				warnOnce(
@@ -630,7 +635,7 @@ class LevelBuilder {
 			return undefined;
 		}
 		const def = this.project.tilesets.get(rect.tilesetUid);
-		const image = imageOf(def?.relPath);
+		const image = imageOf(this.project, def?.relPath);
 		if (image === null) {
 			return undefined;
 		}
@@ -1025,7 +1030,12 @@ export class LDtkWorld extends LDtkMap {
 	 * @returns true if it is
 	 */
 	isLoaded(identifier: string): boolean {
-		return this.loaded.has(identifier);
+		const level = this.info.levels.find((candidate) => {
+			return (
+				candidate.identifier === identifier || candidate.iid === identifier
+			);
+		});
+		return level !== undefined && this.loaded.has(level.identifier);
 	}
 
 	/**

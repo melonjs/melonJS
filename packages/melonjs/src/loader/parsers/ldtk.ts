@@ -6,9 +6,11 @@ import { level } from "../../level/level.js";
 import { fetchData } from "../../utils/fetchdata.js";
 import { getBasename, getExtension } from "../../utils/file.ts";
 import { getImage } from "../cache.js";
-import { unload } from "../loader.js";
-import { preloadAseprite } from "./aseprite.js";
-import { preloadImage } from "./image.js";
+import {
+	loadReference,
+	referenceSource,
+	releaseReferences,
+} from "../loader.js";
 
 /** an asset as the loader hands it to a parser */
 interface LDtkAsset {
@@ -19,81 +21,56 @@ interface LDtkAsset {
 	data?: unknown;
 }
 
-/** the images loaded for projects: who uses each, and its load */
-const images = new Map<
-	string,
-	{
-		asset: { name: string; type: string; src: string };
-		users: Set<string>;
-		loading: Promise<void>;
-	}
->();
+/** the projects on their way, by name: loaded once however many ask */
+const loading = new Map<string, Promise<void>>();
 
 /**
- * load an image a project names, unless one of its name is loaded already
- * @param project - the name of the project
+ * The image a project names, loaded for it unless one of its name is there
+ * already: the loader holds it for the project, and frees it with the last
+ * project that uses it.
+ * @param project - the project's asset
  * @param dir - the folder of the project file
  * @param relPath - the image, relative to it
  * @param settings - the loader's request settings
- * @returns when it is loaded
+ * @returns the name the image is kept under
  */
-const loadImage = (
-	project: string,
+const loadImage = async (
+	project: LDtkAsset,
 	dir: string,
 	relPath: string,
 	settings?: object,
-): Promise<void> => {
-	const name = getBasename(relPath);
-	const mine = images.get(name);
-	if (mine !== undefined) {
-		mine.users.add(project);
-		return mine.loading;
-	}
-	// the game's own, preloaded under the file's name
-	if (getImage(name) !== null) {
-		return Promise.resolve();
-	}
+): Promise<string> => {
+	const src = dir + relPath;
 	const extension = getExtension(relPath).toLowerCase();
-	const asset = {
-		name,
-		// LDtk takes an Aseprite file for a tileset, and so does the loader
-		type:
-			extension === "aseprite" || extension === "ase" ? "aseprite" : "image",
-		src: dir + relPath,
-	};
-	// through the parser itself, as a file's own references are: the path
-	// is already resolved against the project file, and the image type's
-	// base URL would be put in front of it a second time
-	const parser = asset.type === "aseprite" ? preloadAseprite : preloadImage;
-	const loading = new Promise<void>((resolve, reject) => {
-		if (parser(asset, resolve, reject, settings) === 0) {
-			resolve();
+	// LDtk takes an Aseprite file for a tileset, and so does the loader
+	const type =
+		extension === "aseprite" || extension === "ase" ? "aseprite" : "image";
+	// Kept under the file's name, as a Tiled map's images are. Another file
+	// of that name, in another folder, was loaded for a project already: this
+	// one takes the name with a number, so that each keeps its own image.
+	// (An image the game loaded itself under the name stands for the file.)
+	const base = getBasename(relPath);
+	let name = base;
+	for (let n = 2; ; n++) {
+		const from = referenceSource({ name, type });
+		if (from === undefined || from === src) {
+			break;
 		}
-	}).catch((error: unknown) => {
-		// not kept: the next project to name this image tries again, or
-		// finds the one the game loaded in the meantime
-		images.delete(name);
+		name = `${base}~${String(n)}`;
+	}
+	try {
+		await loadReference(
+			{ name: project.name, type: project.type },
+			{ name, type, src },
+			settings,
+		);
+	} catch (error) {
 		throw new Error(
-			`LDtk project "${project}": its image "${relPath}" could not be loaded (${asset.src})`,
+			`LDtk project "${project.name}": its image "${relPath}" could not be loaded (${src})`,
 			{ cause: error },
 		);
-	});
-	images.set(name, { asset, users: new Set([project]), loading });
-	return loading;
-};
-
-/**
- * a project no longer uses the images loaded for it: each is freed once no
- * other project does
- * @param project - the name of the project
- */
-const releaseImages = (project: string) => {
-	for (const [name, image] of images) {
-		if (image.users.delete(project) && image.users.size === 0) {
-			images.delete(name);
-			unload(image.asset);
-		}
 	}
+	return name;
 };
 
 /**
@@ -115,6 +92,8 @@ const readProject = async (
 	if (!Array.isArray(json.levels) || typeof json.defs !== "object") {
 		throw new Error(`${asset.name}: not an LDtk project file`);
 	}
+	// a project saved before LDtk had several worlds has no list of them
+	(json as { worlds?: unknown }).worlds ??= [];
 	// what the project names is relative to its own file
 	const dir =
 		src === undefined ? undefined : src.slice(0, src.lastIndexOf("/") + 1);
@@ -149,7 +128,8 @@ const readProject = async (
 		}),
 	);
 
-	// the images the project names, unless the game loaded them itself
+	// the images the project names, each under the name it is kept by
+	const images = new Map<string, string>();
 	if (dir !== undefined) {
 		const paths = new Set<string>();
 		for (const tileset of json.defs.tilesets) {
@@ -165,18 +145,29 @@ const readProject = async (
 		// every image is waited for, loaded or not: a project that fails
 		// then lets go of the ones that did load
 		const results = await Promise.allSettled(
-			[...paths].map((path) => {
-				return loadImage(asset.name, dir, path, settings);
+			[...paths].map(async (path) => {
+				// the game's own, preloaded under the file's name
+				if (
+					getImage(getBasename(path)) !== null &&
+					referenceSource({ name: getBasename(path), type: "image" }) ===
+						undefined &&
+					referenceSource({ name: getBasename(path), type: "aseprite" }) ===
+						undefined
+				) {
+					images.set(path, getBasename(path));
+					return;
+				}
+				images.set(path, await loadImage(asset, dir, path, settings));
 			}),
 		);
 		for (const result of results) {
 			if (result.status === "rejected") {
-				releaseImages(asset.name);
+				releaseReferences({ name: asset.name, type: asset.type });
 				throw result.reason;
 			}
 		}
 	}
-	return new LDtkProject(asset.name, json);
+	return new LDtkProject(asset.name, json, images);
 };
 
 /**
@@ -199,19 +190,30 @@ export function preloadLDtk(
 		// already loaded
 		return 0;
 	}
-	readProject(asset, settings).then(
-		(project) => {
-			ldtkProjects.set(asset.name, project);
-			// the levels in LDtk's order, then the worlds: `level.next()`
-			// steps through the levels first
-			for (const info of project.levels) {
-				ldtkMaps.set(info.id, new LDtkLevel(project, info));
-				level.add("ldtk", info.id);
-			}
-			for (const info of project.worlds) {
-				ldtkMaps.set(info.id, new LDtkWorld(project, info));
-				level.add("ldtk", info.id);
-			}
+	// asked for again while it is on its way: the same load, not another
+	let pending = loading.get(asset.name);
+	if (pending === undefined) {
+		pending = readProject(asset, settings)
+			.then((project) => {
+				ldtkProjects.set(asset.name, project);
+				// the levels in LDtk's order, then the worlds: `level.next()`
+				// steps through the levels first
+				for (const info of project.levels) {
+					ldtkMaps.set(info.id, new LDtkLevel(project, info));
+					level.add("ldtk", info.id);
+				}
+				for (const info of project.worlds) {
+					ldtkMaps.set(info.id, new LDtkWorld(project, info));
+					level.add("ldtk", info.id);
+				}
+			})
+			.finally(() => {
+				loading.delete(asset.name);
+			});
+		loading.set(asset.name, pending);
+	}
+	pending.then(
+		() => {
 			onload?.();
 		},
 		(error: unknown) => {
@@ -223,7 +225,8 @@ export function preloadLDtk(
 
 /**
  * free a project: its levels leave the level director, and the images loaded
- * for it are freed once no other project uses them
+ * for it are freed once no other project, no bundle and not the game holds
+ * them
  * @param asset - the asset
  * @returns false if no such project was loaded
  * @ignore
@@ -243,9 +246,12 @@ export function unloadLDtk(asset: LDtkAsset): boolean {
 			return info.id;
 		}),
 	]) {
+		// a level in the world stays there, as a Tiled map's does, but no
+		// longer follows the viewport: nothing would end that later
+		ldtkMaps.get(id)?.destroy();
 		level.remove(id);
 		ldtkMaps.delete(id);
 	}
-	releaseImages(asset.name);
+	releaseReferences({ name: asset.name, type: "ldtk" });
 	return true;
 }

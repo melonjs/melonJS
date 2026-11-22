@@ -489,9 +489,11 @@ level.load("world:Level_0");                       // "<asset name>:<level ident
 
 - **The images load with the project**: its tilesets (PNG or Aseprite), its
   levels' backgrounds, the level files it saves apart, from where the project
-  file says they are, relative to it. Keep the folder as LDtk has it. An image
-  the game loaded itself under the file's name (`atlas/tiles.png` as `tiles`)
-  is used instead.
+  file says they are, relative to it. Keep the folder as LDtk has it. Each
+  image is kept under its file's name (`atlas/tiles.png` as `tiles`), and
+  freed with the last project that uses it, unless a bundle lists it or the
+  game loaded it too. An image the game loaded itself under that name is used
+  instead of the file.
 - **Entities** are built by the class the game registered under their
   identifier: `new Player(x, y, settings)`, `x` and `y` being the top left
   corner of the entity's box whatever its pivot in LDtk (`settings.px` is the

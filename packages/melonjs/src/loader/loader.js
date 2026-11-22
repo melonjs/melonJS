@@ -377,7 +377,11 @@ const bundles = new Map();
  * `load` with a descriptor, which no bundle unload frees. An asset nobody
  * holds is freed by the bundle unload that released it last. An entry only
  * exists while somebody holds the asset.
- * @type {Map<string, {pinned: boolean, bundles: Set<string>}>}
+ *
+ * An asset can also be held by another ASSET that refers to it (`holders`):
+ * the tileset image an LDtk project names is the project's, loaded with it
+ * and freed with it, unless a bundle or the game holds it too.
+ * @type {Map<string, {pinned: boolean, bundles: Set<string>, holders: Set<string>}>}
  * @ignore
  * @internal
  */
@@ -446,7 +450,7 @@ function ownerRecord(asset) {
 	const key = assetKey(asset);
 	let record = owners.get(key);
 	if (record === undefined) {
-		record = { pinned: false, bundles: new Set() };
+		record = { pinned: false, bundles: new Set(), holders: new Set() };
 		owners.set(key, record);
 	}
 	return record;
@@ -500,6 +504,153 @@ function release(asset) {
 	}
 	if (asset.type === "tmx" || asset.type === "gltf" || asset.type === "glb") {
 		level.remove(asset.name);
+	}
+}
+
+/**
+ * Loads of referenced assets still in flight, keyed by {@link assetKey}, with
+ * every asset waiting for each.
+ * @type {Map<string, {promise: Promise<void>, holders: Set<string>, src: string}>}
+ * @ignore
+ * @internal
+ */
+const references = new Map();
+
+/**
+ * Where each asset loaded as a reference was loaded from, keyed by
+ * {@link assetKey}: two files of one name are told apart by it.
+ * @type {Map<string, string>}
+ * @ignore
+ * @internal
+ */
+const referenceSources = new Map();
+
+/**
+ * Where an asset loaded for another asset was loaded from.
+ * @param {Asset} asset - the asset descriptor (`name` and `type`)
+ * @returns {string|undefined} its source, or undefined when it was not loaded as a reference (the game's own, or not loaded)
+ * @ignore
+ * @internal
+ */
+export function referenceSource(asset) {
+	const key = assetKey(asset);
+	// loaded, or on its way
+	return referenceSources.get(key) ?? references.get(key)?.src;
+}
+
+/**
+ * Load an asset that another asset refers to, on its behalf: the tileset
+ * image a level file names, say. The referring asset (`holder`) holds it as a
+ * bundle holds its assets: it is fetched once however many ask for it, stays
+ * while any of them, a bundle or the game holds it, and is freed by
+ * {@link releaseReferences} when the last one lets go.
+ *
+ * `asset.src` is already resolved against the referring file, so the type's
+ * base URL is not applied (it would be applied twice).
+ *
+ * An asset of that name already in memory is used as it is: the game's own,
+ * loaded under the name the file uses, takes the place of the file's.
+ * @param {Asset} holder - the asset that refers to it (`name` and `type`)
+ * @param {Asset} asset - what to load: `name`, `type` and a resolved `src`
+ * @param {object} [settings] - the loader's request settings, as a parser is given them
+ * @returns {Promise<void>} settles when it is loaded
+ * @ignore
+ * @internal
+ */
+export function loadReference(holder, asset, settings) {
+	if (parserInitialized === false) {
+		initParsers();
+	}
+	const key = assetKey(asset);
+	const holderKey = assetKey(holder);
+	const pending = references.get(key);
+	if (pending !== undefined) {
+		pending.holders.add(holderKey);
+		return pending.promise;
+	}
+	const hold = () => {
+		// held by someone already (the game, a bundle, another asset): this
+		// one holds it too. Resident with no record, it is nobody's to free
+		const record = owners.get(key);
+		if (record !== undefined) {
+			record.holders.add(holderKey);
+		}
+	};
+	if (isResident(asset)) {
+		hold();
+		return Promise.resolve();
+	}
+	// on its way for a bundle: wait for that load rather than start another
+	const bundled = inflight.get(key);
+	if (bundled !== undefined) {
+		return bundled.promise.then(hold);
+	}
+	const parser = parsers.get(asset.type);
+	if (parser === undefined) {
+		return Promise.reject(
+			new Error("load : unknown or invalid resource type : " + asset.type),
+		);
+	}
+	const entry = {
+		holders: new Set([holderKey]),
+		promise: undefined,
+		src: asset.src,
+	};
+	entry.promise = new Promise((resolve, reject) => {
+		if (parser.parse(asset, resolve, reject, settings) === 0) {
+			resolve();
+		}
+	}).then(
+		() => {
+			references.delete(key);
+			referenceSources.set(key, asset.src);
+			const record = ownerRecord(asset);
+			for (const waiting of entry.holders) {
+				record.holders.add(waiting);
+			}
+			// every asset that asked for it gave up while it was loading
+			if (
+				record.holders.size === 0 &&
+				record.bundles.size === 0 &&
+				!record.pinned
+			) {
+				referenceSources.delete(key);
+				release(asset);
+			}
+		},
+		(error) => {
+			references.delete(key);
+			throw error;
+		},
+	);
+	references.set(key, entry);
+	return entry.promise;
+}
+
+/**
+ * An asset lets go of everything it held through {@link loadReference}:
+ * each is freed once no other asset, no bundle and not the game holds it.
+ * @param {Asset} holder - the asset that referred to them (`name` and `type`)
+ * @ignore
+ * @internal
+ */
+export function releaseReferences(holder) {
+	const holderKey = assetKey(holder);
+	// still loading: not this asset's when it arrives
+	for (const entry of references.values()) {
+		entry.holders.delete(holderKey);
+	}
+	for (const [key, record] of [...owners]) {
+		if (
+			record.holders.delete(holderKey) &&
+			record.holders.size === 0 &&
+			record.bundles.size === 0 &&
+			!record.pinned
+		) {
+			referenceSources.delete(key);
+			const split = key.indexOf(":");
+			release({ type: key.slice(0, split), name: key.slice(split + 1) });
+		}
 	}
 }
 
@@ -1664,6 +1815,7 @@ export function unload(asset) {
 	const unloaded = freeAsset(asset);
 	// whoever held it, it is gone now: the bundles listing it see it missing
 	owners.delete(assetKey(asset));
+	referenceSources.delete(assetKey(asset));
 	return unloaded;
 }
 
@@ -1690,7 +1842,11 @@ function unloadBundle(id) {
 		if (record === undefined || !record.bundles.delete(id)) {
 			continue;
 		}
-		if (record.bundles.size === 0 && !record.pinned) {
+		if (
+			record.bundles.size === 0 &&
+			!record.pinned &&
+			record.holders.size === 0
+		) {
 			release(asset);
 		}
 	}
@@ -1827,6 +1983,7 @@ export function unloadAll() {
 		unloadLDtk({ name, type: "ldtk" });
 	}
 
+	referenceSources.clear();
 	// nobody holds anything now; the bundles stay declared, ready to load
 	// again, and a load of one still in flight no longer hands it its assets
 	owners.clear();
