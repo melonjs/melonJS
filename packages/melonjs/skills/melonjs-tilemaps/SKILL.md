@@ -762,6 +762,7 @@ layer into the offscreen-bake path instead.
 | the player disappears when walking out of its first LDtk level | it is an entity of that level, taken out with it: `world.keep(player)` |
 | a second player, or the coins again, after coming back to an LDtk level | a level loaded again builds its entities again: `world.keep(player)`, and the `entities` option to leave out what was taken |
 | two LDtk levels are drawn over each other, with walls from both | they are on different world depths, at the same place: pass the player's depth to `streamAround` and `levelsAt` |
+| a `Sprite` class for an LDtk entity throws `'undefined' image/texture not found` | the entity's tile is one of LDtk's built-in icons (a tileset with `embedAtlas`): they are not in the project's files, and LDtk does not allow redistributing them, so `settings.image` is not set. Use art of your own, or a tile of one of the project's tilesets |
 | an LDtk entity is placed half its size off | `x`, `y` are its box's top left corner; its pivot is `settings.px` |
 | an LDtk field reads `undefined` on the settings | its name is one of the settings' own (`type`, `name`, `width`...): read `settings.fields.type` |
 | an LDtk entity named "Trigger" (or "Sprite", "Text"...) does nothing | an entity's name is not taken for the engine's class: register it, `registerObjectClass("Trigger", Trigger)`, and give the entity the fields the class reads |

@@ -300,3 +300,15 @@ whose own readme credits them as follows:
 
 Refer to each pack's page for its own terms. The icons LDtk shows entities
 with in the editor are not part of the samples' files and are not used here.
+
+### `ldtkPlatformer` example
+
+The world is LDtk's "GridVania" sample project and its "SunnyLand" tileset,
+from the `ldtkLoader` example above (same files, same terms). The HUD font is
+the `platformer` example's.
+
+`public/assets/ldtkPlatformer/sprites.png` (the player and the items) was
+drawn for this example and is released under the **MIT License** with it.
+LDtk shows this world's entities with its built-in icon set, which LDtk states
+is "only meant to be used inside LDtk and cannot be redistributed in any way":
+it is not used here.
