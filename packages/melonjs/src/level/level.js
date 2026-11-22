@@ -6,10 +6,12 @@ import { defer } from "../utils/function.ts";
 import { resetGUID } from "./../utils/utils.ts";
 import GLTFScene from "./gltf/GLTFScene.js";
 import TMXTileMap from "./tiled/TMXTileMap.js";
+import { bindViewportToLevel, releaseViewport } from "./tilemap/viewport.js";
 
 /**
  * additional import for TypeScript
  * @import Container from "../renderable/container.js";
+ * @import {Bounds} from "../physics/bounds.ts";
  * @import Mesh from "../renderable/mesh.js";
  * @import {Light3d} from "../lighting/light3d.ts";
  * @import {Vector3d} from "../math/vector3d.ts";
@@ -272,6 +274,35 @@ export const level = {
 		}
 		// true if level loaded
 		return true;
+	},
+
+	/**
+	 * Have the viewport follow a level's area, as it does a Tiled map's: its
+	 * bounds are the area's (or its own size where the area is smaller), and
+	 * an area smaller than the viewport is centred in it, now and each time
+	 * the viewport is resized. For the `addTo` of a format registered with
+	 * {@link level.registerFormat}.
+	 *
+	 * A viewport follows one level at a time: following another replaces the
+	 * first. Call the function returned from the level's `destroy`.
+	 * @param {Container} container - the container the level was added to
+	 * @param {Bounds} bounds - the level's area, in the container
+	 * @returns {Function} call it to stop following
+	 * @example
+	 * // in a level's addTo(container, options)
+	 * if (options.setViewportBounds !== false) {
+	 *     const area = new Bounds();
+	 *     area.setMinMax(0, 0, this.width, this.height);
+	 *     this.unfollow = level.followViewport(container, area);
+	 * }
+	 * // and in its destroy()
+	 * this.unfollow?.();
+	 */
+	followViewport(container, bounds) {
+		const follow = bindViewportToLevel(container, bounds);
+		return () => {
+			releaseViewport(follow);
+		};
 	},
 
 	/**

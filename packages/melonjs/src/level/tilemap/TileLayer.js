@@ -290,7 +290,7 @@ export default class TileLayer extends Renderable {
 		// a layer is placed by its top left corner
 		this.anchorPoint.set(0, 0);
 
-		this.name = def.name;
+		this.name = def.name ?? "";
 
 		/**
 		 * the column, in the map's tile coordinates, of the layer's first

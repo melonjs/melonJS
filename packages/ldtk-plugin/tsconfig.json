@@ -1,0 +1,9 @@
+{
+	"extends": "tsconfig/base.json",
+	"compilerOptions": {
+		"noEmit": true,
+		"skipLibCheck": true
+	},
+	"include": ["src", "tests", "vitest.config.ts", "scripts"],
+	"exclude": ["tests/fixtures"]
+}

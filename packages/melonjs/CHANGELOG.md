@@ -4,6 +4,7 @@
 
 ### Added
 - Levels: `level.registerFormat(format, { create, loadOptions })` lets a loader for another map editor's files register its levels with the director, which then loads, reloads and steps through them, and forwards their options from a `Trigger`, as it does for a Tiled map. `level.remove(levelId)` is documented
+- Levels: `level.followViewport(container, bounds)` has the viewport follow a level's area as it does a Tiled map's (its bounds, a small level centred), for a level format of your own
 - Tile maps: `TileLayer`, `Tileset` and `TilesetGroup` build a tile layer in code or from another editor's files, from a plain description (`cols`, `rows`, tile size, an image); `layer.setCell(col, row, gid, flip)` fills it. `TMXLayer`, `TMXTileset` and `TMXTilesetGroup` now extend them, unchanged
 - Tile maps: `PlacedTileLayer` draws a list of tiles placed freely, in order: stacked, off the grid, mirrored, each with its own opacity
 - Tile maps: `mergeGridRects(cols, rows, test)` covers the cells of a grid with few rectangles, for one static body per wall rather than per tile

@@ -1,0 +1,276 @@
+import type {
+	LDtkEntityDef,
+	LDtkEnumDef,
+	LDtkFieldInstance,
+	LDtkLayerDef,
+	LDtkLevelJson,
+	LDtkProjectJson,
+	LDtkTilesetDef,
+} from "./types.ts";
+
+/** the space LDtk leaves between the levels of a linear world, in pixels */
+const LINEAR_SPACING = 48;
+
+/** a level of a project, and where it stands in its world */
+export interface LDtkLevelInfo {
+	/** the level's identifier in LDtk */
+	identifier: string;
+	/** the level's unique id in LDtk */
+	iid: string;
+	/** the id the level is loaded by: `level.load(id)` */
+	id: string;
+	/** the identifier of the world the level belongs to; empty in a project of one world */
+	world: string;
+	/** where the level's top left corner is in its world, in pixels */
+	x: number;
+	/** where the level's top left corner is in its world, in pixels */
+	y: number;
+	/** the level's depth in its world: a higher one is drawn over a lower one */
+	depth: number;
+	/** the level's width, in pixels */
+	width: number;
+	/** the level's height, in pixels */
+	height: number;
+	/** the level's background color, as `#rrggbb` */
+	bgColor: string;
+	/** the level's custom fields, by name */
+	fields: Record<string, unknown>;
+	/** the levels next to it: their identifier, and the side they are on (`n`, `s`, `w`, `e`, a diagonal, `<` below, `>` above, `o` overlapping) */
+	neighbours: { identifier: string; dir: string }[];
+	/** the level as LDtk saves it */
+	json: LDtkLevelJson;
+}
+
+/** a world of a project: its levels, laid out */
+export interface LDtkWorldInfo {
+	/** the world's identifier; empty in a project of one world */
+	identifier: string;
+	/** the id the whole world is loaded by: `level.load(id)` */
+	id: string;
+	/** `Free`, `GridVania`, `LinearHorizontal` or `LinearVertical` */
+	layout: string;
+	/** the world's levels, in LDtk's order */
+	levels: LDtkLevelInfo[];
+	/** the area the levels cover, in pixels */
+	bounds: { x: number; y: number; width: number; height: number };
+}
+
+/**
+ * the values of custom fields, by name, as LDtk gives them: numbers, strings
+ * and booleans, a color as `#rrggbb`, an enum as the name of its value, a
+ * point as `{ cx, cy }` in cells, an entity reference as
+ * `{ entityIid, layerIid, levelIid, worldIid }`, a tile as a rectangle of its
+ * tileset, an array as an array, and null for a field left empty
+ * @param fields - the fields, as LDtk saves them
+ * @returns the values, by field name
+ */
+export function fieldValues(
+	fields: LDtkFieldInstance[],
+): Record<string, unknown> {
+	const values: Record<string, unknown> = {};
+	for (const field of fields) {
+		values[field.__identifier] = field.__value;
+	}
+	return values;
+}
+
+/**
+ * An LDtk project, as loaded from a `.ldtk` file: its levels and worlds, and
+ * the definitions they are read with.
+ */
+export class LDtkProject {
+	/** the name the project was loaded under */
+	readonly name: string;
+	/** the project file's content */
+	readonly json: LDtkProjectJson;
+	/** the project's worlds: one, unless the project was set up for several */
+	readonly worlds: LDtkWorldInfo[] = [];
+	/** every level of the project, in LDtk's order */
+	readonly levels: LDtkLevelInfo[] = [];
+	/** the tilesets, by their uid */
+	readonly tilesets = new Map<number, LDtkTilesetDef>();
+	/** the layer definitions, by their uid */
+	readonly layerDefs = new Map<number, LDtkLayerDef>();
+	/** the entity definitions, by their uid */
+	readonly entityDefs = new Map<number, LDtkEntityDef>();
+	/** the enums, by their identifier */
+	readonly enums = new Map<string, LDtkEnumDef>();
+
+	/**
+	 * @param name - the name the project was loaded under
+	 * @param json - the project file's content, the levels saved apart put back in
+	 */
+	constructor(name: string, json: LDtkProjectJson) {
+		this.name = name;
+		this.json = json;
+		for (const def of json.defs.tilesets) {
+			this.tilesets.set(def.uid, def);
+		}
+		for (const def of json.defs.layers) {
+			this.layerDefs.set(def.uid, def);
+		}
+		for (const def of json.defs.entities) {
+			this.entityDefs.set(def.uid, def);
+		}
+		for (const def of [
+			...json.defs.enums,
+			...(json.defs.externalEnums ?? []),
+		]) {
+			this.enums.set(def.identifier, def);
+		}
+
+		// one world in most projects; several where the project was set up
+		// for them, each with a layout of its own
+		const worlds =
+			json.worlds.length > 0
+				? json.worlds.map((world) => {
+						return {
+							identifier: world.identifier,
+							layout: world.worldLayout ?? "Free",
+							levels: world.levels,
+						};
+					})
+				: [
+						{
+							identifier: "",
+							layout: json.worldLayout ?? "Free",
+							levels: json.levels,
+						},
+					];
+		const byIid = new Map<string, LDtkLevelInfo>();
+		for (const [index, world] of worlds.entries()) {
+			const info: LDtkWorldInfo = {
+				identifier: world.identifier,
+				// the first world by the project's name alone
+				id: index === 0 ? name : `${name}@${world.identifier}`,
+				layout: world.layout,
+				levels: [],
+				bounds: { x: 0, y: 0, width: 0, height: 0 },
+			};
+			// a linear world has no positions of its own: LDtk lays its
+			// levels out in a row or a column, a fixed space apart
+			let next = 0;
+			let minX = Infinity;
+			let minY = Infinity;
+			let maxX = -Infinity;
+			let maxY = -Infinity;
+			for (const json of world.levels) {
+				let x = json.worldX;
+				let y = json.worldY;
+				if (world.layout === "LinearHorizontal") {
+					x = next;
+					y = 0;
+					next += json.pxWid + LINEAR_SPACING;
+				} else if (world.layout === "LinearVertical") {
+					x = 0;
+					y = next;
+					next += json.pxHei + LINEAR_SPACING;
+				}
+				const level: LDtkLevelInfo = {
+					identifier: json.identifier,
+					iid: json.iid,
+					id: `${name}:${json.identifier}`,
+					world: world.identifier,
+					x,
+					y,
+					depth: json.worldDepth,
+					width: json.pxWid,
+					height: json.pxHei,
+					bgColor: json.__bgColor,
+					fields: fieldValues(json.fieldInstances),
+					neighbours: [],
+					json,
+				};
+				info.levels.push(level);
+				this.levels.push(level);
+				byIid.set(level.iid, level);
+				minX = Math.min(minX, x);
+				minY = Math.min(minY, y);
+				maxX = Math.max(maxX, x + level.width);
+				maxY = Math.max(maxY, y + level.height);
+			}
+			if (info.levels.length > 0) {
+				info.bounds = {
+					x: minX,
+					y: minY,
+					width: maxX - minX,
+					height: maxY - minY,
+				};
+			}
+			this.worlds.push(info);
+		}
+		for (const level of this.levels) {
+			for (const neighbour of level.json.__neighbours) {
+				const other = byIid.get(neighbour.levelIid);
+				if (other !== undefined) {
+					level.neighbours.push({
+						identifier: other.identifier,
+						dir: neighbour.dir,
+					});
+				}
+			}
+		}
+	}
+
+	/**
+	 * a level of the project
+	 * @param identifier - the level's identifier in LDtk, or its iid
+	 * @returns the level, or undefined if the project has none of that name
+	 */
+	getLevel(identifier: string): LDtkLevelInfo | undefined {
+		return this.levels.find((level) => {
+			return level.identifier === identifier || level.iid === identifier;
+		});
+	}
+
+	/**
+	 * a world of the project
+	 * @param identifier - the world's identifier in LDtk; the first world by default
+	 * @returns the world, or undefined if the project has none of that name
+	 */
+	getWorld(identifier?: string): LDtkWorldInfo | undefined {
+		if (identifier === undefined) {
+			return this.worlds[0];
+		}
+		return this.worlds.find((world) => {
+			return world.identifier === identifier;
+		});
+	}
+
+	/**
+	 * the text typed for a tile in LDtk's tileset view ("custom data")
+	 * @param tileset - the tileset's identifier in LDtk
+	 * @param tileId - the tile's id in the tileset
+	 * @returns the text, or undefined for a tile with none
+	 */
+	getTileData(tileset: string, tileId: number): string | undefined {
+		for (const def of this.tilesets.values()) {
+			if (def.identifier === tileset) {
+				return def.customData.find((entry) => {
+					return entry.tileId === tileId;
+				})?.data;
+			}
+		}
+		return undefined;
+	}
+
+	/**
+	 * the values of a tileset's enum a tile is tagged with in LDtk
+	 * @param tileset - the tileset's identifier in LDtk
+	 * @param tileId - the tile's id in the tileset
+	 * @returns the names of the enum values the tile carries
+	 */
+	getTileTags(tileset: string, tileId: number): string[] {
+		const tags: string[] = [];
+		for (const def of this.tilesets.values()) {
+			if (def.identifier === tileset) {
+				for (const tag of def.enumTags) {
+					if (tag.tileIds.includes(tileId)) {
+						tags.push(tag.enumValueId);
+					}
+				}
+			}
+		}
+		return tags;
+	}
+}
