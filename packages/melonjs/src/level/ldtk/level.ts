@@ -60,10 +60,15 @@ export interface LDtkLoadOptions {
 	 */
 	showIntGrid?: boolean;
 	/**
-	 * add the entities of the Entities layers
+	 * Add the entities of the Entities layers: all of them, none, or the
+	 * ones a function says, asked for each entity as its level is built
+	 * (and built again, in a world whose levels come and go). The way to
+	 * leave out what the player took: `(entity) => !taken.has(entity.iid)`.
 	 * @default true
 	 */
-	entities?: boolean;
+	entities?:
+		| boolean
+		| ((entity: LDtkEntityInstance, level: LDtkLevelInfo) => boolean);
 	/**
 	 * have the viewport follow the level's area: its bounds, and a level
 	 * smaller than the viewport centred in it
@@ -119,6 +124,8 @@ export interface BuiltLevel {
 	entities: Renderable[];
 	/** the identifier in LDtk of each of them, whatever class built it */
 	identifiers: Map<Renderable, string>;
+	/** the unique id in LDtk of each of them */
+	iids: Map<Renderable, string>;
 	/** its IntGrid layers, by their identifier */
 	intGrids: Map<string, IntGrid>;
 }
@@ -149,7 +156,7 @@ class LevelBuilder {
 	container: Container;
 	options: LDtkLoadOptions;
 	/** the level object the entities' factories are handed */
-	map: object;
+	map: object & { isKept?: (iid: string) => boolean };
 	/** the tilesets made so far, by their uid; null for one with no image */
 	tilesets = new Map<
 		number,
@@ -167,7 +174,7 @@ class LevelBuilder {
 		project: LDtkProject,
 		container: Container,
 		options: LDtkLoadOptions,
-		map: object,
+		map: object & { isKept?: (iid: string) => boolean },
 	) {
 		this.project = project;
 		this.container = container;
@@ -333,6 +340,7 @@ class LevelBuilder {
 			layers: [],
 			entities: [],
 			identifiers: new Map(),
+			iids: new Map(),
 			intGrids: new Map(),
 		};
 		const json = info.json;
@@ -408,12 +416,21 @@ class LevelBuilder {
 			if (tiles.length > 0) {
 				this.buildTiles(built, layer, x, y, z, opacity, parallax);
 			}
-			if (layer.entityInstances.length > 0 && this.options.entities !== false) {
+			const wanted = this.options.entities;
+			if (layer.entityInstances.length > 0 && wanted !== false) {
 				// LDtk draws a later entity over an earlier one. Children of
 				// one draw order are drawn last added first, so the last
 				// entity is added first
 				for (let e = layer.entityInstances.length - 1; e >= 0; e--) {
 					const entity = layer.entityInstances[e];
+					// one the game kept when its level left is in the game
+					// already; one the game does not want is left out
+					if (
+						this.map.isKept?.(entity.iid) === true ||
+						(typeof wanted === "function" && !wanted(entity, info))
+					) {
+						continue;
+					}
 					const settings = this.entitySettings(info, layer, entity, x, y, z);
 					// a class the game registered under the entity's name.
 					// Not the engine's own classes: an entity's name is the
@@ -434,6 +451,7 @@ class LevelBuilder {
 					this.add(built, object, z);
 					built.entities.unshift(object);
 					built.identifiers.set(object, settings.name);
+					built.iids.set(object, entity.iid);
 				}
 			}
 		}
@@ -837,6 +855,19 @@ abstract class LDtkMap {
 	protected unfollow: (() => void) | undefined;
 	/** @ignore */
 	protected gridRenderer: TMXOrthogonalRenderer | undefined;
+	/** the entities the game kept, by their unique id in LDtk */
+	protected kept = new Set<string>();
+
+	/**
+	 * whether the game kept an entity (see {@link LDtkWorld#keep}): it is
+	 * not built again
+	 * @param iid - the entity's unique id in LDtk
+	 * @returns true if it was kept
+	 * @ignore
+	 */
+	isKept(iid: string): boolean {
+		return this.kept.has(iid);
+	}
 
 	constructor(project: LDtkProject, name: string) {
 		this.project = project;
@@ -988,6 +1019,21 @@ export class LDtkLevel extends LDtkMap {
 			: built.entities.filter((entity) => {
 					return built.identifiers.get(entity) === name;
 				});
+	}
+
+	/**
+	 * an entity of the level, by its unique id in LDtk: what an `EntityRef`
+	 * field points at
+	 * @param iid - the entity's `iid`
+	 * @returns the entity, as added to the container, or undefined
+	 */
+	getEntity(iid: string): Renderable | undefined {
+		for (const [entity, id] of this.built?.iids ?? []) {
+			if (id === iid) {
+				return entity;
+			}
+		}
+		return undefined;
 	}
 
 	override destroy(): void {
@@ -1156,11 +1202,20 @@ export class LDtkWorld extends LDtkMap {
 	 * @param y - the area's top edge, in pixels
 	 * @param width - the area's width (0 for a point)
 	 * @param height - the area's height (0 for a point)
+	 * @param depth - only the levels of this depth: in a world whose levels
+	 * are stacked (LDtk's "world depth"), the ones the player is among
 	 * @returns the levels
 	 */
-	levelsAt(x: number, y: number, width = 0, height = 0): LDtkLevelInfo[] {
+	levelsAt(
+		x: number,
+		y: number,
+		width = 0,
+		height = 0,
+		depth?: number,
+	): LDtkLevelInfo[] {
 		return this.info.levels.filter((level) => {
 			return (
+				(depth === undefined || level.depth === depth) &&
 				x + width >= level.x &&
 				x <= level.x + level.width &&
 				y + height >= level.y &&
@@ -1179,6 +1234,9 @@ export class LDtkWorld extends LDtkMap {
 	 * @param width - the area's width
 	 * @param height - the area's height
 	 * @param margin - how far past the area a level is kept, in pixels
+	 * @param depth - keep the levels of this depth only: the levels of the
+	 * other depths are taken out, which is how a world whose levels are
+	 * stacked shows the ones the player is among
 	 * @returns the identifiers of the levels added and of those taken out
 	 */
 	streamAround(
@@ -1187,6 +1245,7 @@ export class LDtkWorld extends LDtkMap {
 		width: number,
 		height: number,
 		margin = 0,
+		depth?: number,
 	): { loaded: string[]; unloaded: string[] } {
 		const wanted = new Set(
 			this.levelsAt(
@@ -1194,6 +1253,7 @@ export class LDtkWorld extends LDtkMap {
 				y - margin,
 				width + margin * 2,
 				height + margin * 2,
+				depth,
 			).map((level) => {
 				return level.identifier;
 			}),
@@ -1239,8 +1299,55 @@ export class LDtkWorld extends LDtkMap {
 		return entities;
 	}
 
+	/**
+	 * an entity of the levels in the game, by its unique id in LDtk: what
+	 * an `EntityRef` field points at, once its level is loaded
+	 * @param iid - the entity's `iid`
+	 * @returns the entity, as added to the container, or undefined
+	 */
+	getEntity(iid: string): Renderable | undefined {
+		for (const built of this.loaded.values()) {
+			for (const [entity, id] of built.iids) {
+				if (id === iid) {
+					return entity;
+				}
+			}
+		}
+		return undefined;
+	}
+
+	/**
+	 * Keep an entity in the game when its level is taken out, and for good:
+	 * it is the game's from now on, and is not built again when its level
+	 * comes back. For the player, who starts in a level and walks out of it.
+	 * @param entity - an entity of a level in the game
+	 * @returns false if it is not one, or was kept already
+	 * @example
+	 * const [player] = world.getEntities("Player");
+	 * world.keep(player);
+	 */
+	keep(entity: Renderable): boolean {
+		for (const built of this.loaded.values()) {
+			const iid = built.iids.get(entity);
+			if (iid !== undefined) {
+				this.kept.add(iid);
+				built.iids.delete(entity);
+				built.identifiers.delete(entity);
+				built.entities = built.entities.filter((other) => {
+					return other !== entity;
+				});
+				built.children = built.children.filter((other) => {
+					return other !== entity;
+				});
+				return true;
+			}
+		}
+		return false;
+	}
+
 	override destroy(): void {
 		super.destroy();
 		this.loaded.clear();
+		this.kept.clear();
 	}
 }

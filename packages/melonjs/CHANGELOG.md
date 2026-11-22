@@ -3,7 +3,7 @@
 ## [20.18.0] (melonJS 2) - _unreleased_
 
 ### Added
-- LDtk: levels made with the [LDtk](https://ldtk.io) editor load from the `.ldtk` file as saved: an asset of type `"ldtk"`, then `level.load("<asset>:<level>")`, or `level.load("<asset>")` for the whole world. Tiles, IntGrid walls, entities, parallax layers and worlds streamed level by level (`streamAround`)
+- LDtk: levels made with the [LDtk](https://ldtk.io) editor load from the `.ldtk` file as saved: an asset of type `"ldtk"`, then `level.load("<asset>:<level>")`, or `level.load("<asset>")` for the whole world. Tiles, IntGrid walls, entities, parallax layers and worlds streamed level by level (`streamAround`), one depth at a time
 - Tile maps: `parallax` on a tile layer makes it scroll slower or faster than the level, and scales it, on every renderer
 - Tile maps: tile layers can be built in code, without a Tiled map, with `TileLayer`, `Tileset`, `TilesetGroup` and `PlacedTileLayer`; `mergeGridRects` covers a grid's cells with few rectangles, for collision bodies
 - Levels: `registerObjectClass` and `registerObjectFactory`, the same as `registerTiledObjectClass` and `registerTiledObjectFactory` under names that fit any level format

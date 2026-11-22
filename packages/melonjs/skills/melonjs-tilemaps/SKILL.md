@@ -524,6 +524,22 @@ level.load("world:Level_0");                       // "<asset name>:<level ident
   reach of the player and removes the others (`loadLevel` / `unloadLevel` for
   one). Coordinates are LDtk's, and can be negative. Another world of a
   multi-world project is `"world@<world identifier>"`.
+- **A world the player walks through** (`world` is
+  `level.getCurrentLevel()`):
+  - the player is an entity of the level it starts in, and would leave with
+    it: `world.keep(player)` makes it the game's, kept when its level is
+    taken out and not built again when the level comes back;
+  - a level taken out and loaded again builds its entities again: leave out
+    what the player took with the `entities` option, a function asked for
+    each entity, `entities: (entity) => !taken.has(entity.iid)` (it works for
+    a level loaded alone too);
+  - levels stacked on LDtk's world depths cover the same place: give the
+    depth the player is on, `streamAround(x, y, w, h, margin, depth)` and
+    `levelsAt(x, y, w, h, depth)`, and the other depths are taken out;
+  - an `EntityRef` field (a teleport's destination) is resolved with
+    `project.findEntity(ref)`: its `level`, and its `x` / `y` in the world,
+    whether that level is loaded or not; once it is, `world.getEntity(iid)`
+    is the object.
 - `loader.getLDtk("world")` is the project: its levels (`id`, size, `fields`,
   `neighbours`), its worlds, `getTileData` / `getTileTags` for a tile's custom
   data and enum tags. `showIntGrid: true` draws IntGrid layers that have no
@@ -743,6 +759,9 @@ layer into the offscreen-bake path instead.
 | a tile layer set to scroll slower than the level in Tiled scrolls with it (before 20.18) | a Tiled tile layer's parallax factor was not read (an image layer's was): update |
 | a Tiled parallax layer is not where Tiled shows it at the start of the level | Tiled measures a factor from the centre of its own view to the map's parallax origin; the engine measures from the camera's position, for tile and image layers alike: move the layer with its offset, or set `layer.parallax` yourself |
 | `getTile` finds nothing under a tile of a parallax layer | a parallax moves where the layer is drawn, not its cells: they are where the layer was placed |
+| the player disappears when walking out of its first LDtk level | it is an entity of that level, taken out with it: `world.keep(player)` |
+| a second player, or the coins again, after coming back to an LDtk level | a level loaded again builds its entities again: `world.keep(player)`, and the `entities` option to leave out what was taken |
+| two LDtk levels are drawn over each other, with walls from both | they are on different world depths, at the same place: pass the player's depth to `streamAround` and `levelsAt` |
 | an LDtk entity is placed half its size off | `x`, `y` are its box's top left corner; its pivot is `settings.px` |
 | an LDtk field reads `undefined` on the settings | its name is one of the settings' own (`type`, `name`, `width`...): read `settings.fields.type` |
 | an LDtk entity named "Trigger" (or "Sprite", "Text"...) does nothing | an entity's name is not taken for the engine's class: register it, `registerObjectClass("Trigger", Trigger)`, and give the entity the fields the class reads |

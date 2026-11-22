@@ -173,6 +173,7 @@ export * from "./lang/deprecated.js";
 export type { IntGridRect } from "./level/ldtk/intgrid.ts";
 export type { BuiltLevel, LDtkLoadOptions } from "./level/ldtk/level.ts";
 export type {
+	LDtkFoundEntity,
 	LDtkLevelInfo,
 	LDtkListedEntity,
 	LDtkWorldInfo,

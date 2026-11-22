@@ -1,5 +1,6 @@
 import type {
 	LDtkEntityDef,
+	LDtkEntityInstance,
 	LDtkEntityReference,
 	LDtkEnumDef,
 	LDtkFieldInstance,
@@ -84,6 +85,28 @@ export interface LDtkListedEntity {
 	height: number | undefined;
 	/** the fields LDtk was told to list with it, by name */
 	fields: Record<string, unknown>;
+}
+
+/** an entity of the project, found without its level being loaded */
+export interface LDtkFoundEntity {
+	/** the level it is in */
+	level: LDtkLevelInfo;
+	/** the identifier of the layer it is in */
+	layer: string;
+	/** the entity as LDtk saves it: its identifier, its fields, its tile */
+	instance: LDtkEntityInstance;
+	/**
+	 * the left edge of its box in its world, in pixels: where the entity
+	 * built from it is, in a world loaded whole (in a level loaded alone,
+	 * less the level's own `x`)
+	 */
+	x: number;
+	/** the top edge of its box in its world */
+	y: number;
+	/** the width of its box */
+	width: number;
+	/** the height of its box */
+	height: number;
 }
 
 /**
@@ -281,6 +304,66 @@ export class LDtkProject {
 		return this.worlds.find((world) => {
 			return world.identifier === identifier;
 		});
+	}
+
+	/**
+	 * An entity of the project, by its unique id: what an `EntityRef` field
+	 * points at (a teleport's destination, the door a lever opens), found
+	 * whether its level is loaded or not.
+	 * @param reference - the entity's `iid`, or the value of an `EntityRef` field
+	 * @returns the entity, its level and where it is, or undefined
+	 * @example
+	 * const target = project.findEntity(teleport.fields.destination);
+	 * ldtkWorld.loadLevel(target.level.identifier);
+	 * player.pos.set(target.x, target.y);
+	 */
+	findEntity(
+		reference: string | LDtkEntityReference | null | undefined,
+	): LDtkFoundEntity | undefined {
+		if (reference === null || reference === undefined) {
+			return undefined;
+		}
+		const iid = typeof reference === "string" ? reference : reference.entityIid;
+		// the level a reference names is looked in first
+		const named =
+			typeof reference === "string"
+				? undefined
+				: this.getLevel(reference.levelIid);
+		const levels =
+			named === undefined
+				? this.levels
+				: [
+						named,
+						...this.levels.filter((level) => {
+							return level !== named;
+						}),
+					];
+		for (const level of levels) {
+			for (const layer of level.json.layerInstances ?? []) {
+				for (const instance of layer.entityInstances) {
+					if (instance.iid === iid) {
+						return {
+							level,
+							layer: layer.__identifier,
+							instance,
+							x:
+								level.x +
+								layer.__pxTotalOffsetX +
+								instance.px[0] -
+								instance.__pivot[0] * instance.width,
+							y:
+								level.y +
+								layer.__pxTotalOffsetY +
+								instance.px[1] -
+								instance.__pivot[1] * instance.height,
+							width: instance.width,
+							height: instance.height,
+						};
+					}
+				}
+			}
+		}
+		return undefined;
 	}
 
 	/**
