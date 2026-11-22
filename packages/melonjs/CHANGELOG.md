@@ -14,6 +14,8 @@
 
 ### Fixed
 - TypeScript: an asset's `data` accepts a parsed map object, as documented; only a string or a `{ glsl, wgsl }` pair type-checked
+- Tile maps: a floating tile layer is drawn on the screen wherever the camera is; it was culled against the camera's place in the world, and gone once the camera moved
+- Tile maps: two tilesets of different tile sizes cut from one image each draw their own tiles; the second drew the first one's
 - Tile maps: a tile layer removed from the world while the game runs frees the texture the GPU kept for it; it was held, with the layer, until the next level change
 - Tiled: a level's layers and objects are in their draw order as soon as it is loaded; they were sorted on a timer, and a frame drawn before it fired showed the map's layers back to front
 - Tiled: a `renderMode` custom property on a tile layer chooses how the layer is drawn, as documented; it was overwritten by the default

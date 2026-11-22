@@ -48,6 +48,9 @@ const DIAGONAL_NOT_SQUARE = "a tile that is not square, flipped diagonally";
 
 // where the view starts in a layer's coordinates, while it is drawn
 const VIEW_START = { x: 0, y: 0 };
+// the area an offset camera shows, handed to the tile renderers in its place
+// (made on first use)
+let viewRect;
 // the area to draw, in the grid of a layer that does not start at the map's
 // origin (made on first use)
 let cellRect;
@@ -1395,11 +1398,16 @@ export default class TileLayer extends Renderable {
 		// its first cell, moved to where that cell's tile is in the world
 		const movedX = this.pos.x - this._mapPos.x;
 		const movedY = this.pos.y - this._mapPos.y;
+		// the camera's offset (a look ahead, a shake) shifts what it shows
+		// without moving it: the tiles to draw are the ones in that view
+		const offsetX = rect.offset?.x ?? 0;
+		const offsetY = rect.offset?.y ?? 0;
 		if (
 			movedX !== 0 ||
 			movedY !== 0 ||
-			start.x !== rect.pos.x ||
-			start.y !== rect.pos.y ||
+			// where its ancestors, or the screen for a floating layer, put it
+			start.x !== rect.pos.x + offsetX ||
+			start.y !== rect.pos.y + offsetY ||
 			this.startx !== 0 ||
 			this.starty !== 0
 		) {
@@ -1413,6 +1421,13 @@ export default class TileLayer extends Renderable {
 			renderer.translate(-origin.x, -origin.y);
 			vector2dPool.release(origin);
 			return;
+		}
+		// a layer in its own place: the renderer is handed the view itself,
+		// or the shifted one for a camera with an offset
+		if (offsetX !== 0 || offsetY !== 0) {
+			viewRect ??= new Rect(0, 0, 0, 0);
+			viewRect.pos.set(start.x, start.y);
+			rect = viewRect.setSize(rect.width, rect.height);
 		}
 		// dispatch to the active renderer — picks shader / preRender / perTile
 		// based on `this.renderMode` and the renderer's capabilities

@@ -529,8 +529,9 @@ level.load("world:Level_0");                       // "<asset name>:<level ident
   data and enum tags. `showIntGrid: true` draws IntGrid layers that have no
   tiles, in LDtk's colors; `entities: false` leaves the entities out.
 - Not supported: the editor's built-in entity icons (they are not in the
-  project's files). A nine-slice entity tile keeps LDtk's left and top borders
-  on both sides (a `NineSliceSprite` has one border per axis).
+  project's files), and a layer's parallax (every layer scrolls with the
+  camera). A nine-slice entity tile keeps LDtk's left and top borders on both
+  sides (a `NineSliceSprite` has one border per axis).
 
 ## Tile layers without Tiled
 
