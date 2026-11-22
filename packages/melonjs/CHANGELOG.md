@@ -2,6 +2,10 @@
 
 ## [20.18.0] (melonJS 2) - _unreleased_
 
+### Added
+- Levels: `level.registerFormat(format, { create, loadOptions })` lets a loader for another map editor's files register its levels with the director, which then loads, reloads and steps through them, and forwards their options from a `Trigger`, as it does for a Tiled map. `level.remove(levelId)` is documented
+- Loader: `loader.setParser(type, parser, { unload })` lets an asset type of your own free what it kept when its bundle is unloaded or `loader.unload` is given its descriptor
+
 ### Fixed
 - Tiled: a `renderMode` custom property on a tile layer chooses how the layer is drawn, as documented; it was overwritten by the default
 - Tiled: loading a level no longer leaves the previous level's viewport-resize handler registered; one was added on every load and never removed, keeping each old level alive

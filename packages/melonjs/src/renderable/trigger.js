@@ -46,8 +46,12 @@ import Renderable from "./renderable.js";
  * @ignore
  */
 let forwardedSettings;
+// how many options the director knew when the list was built: a format
+// registered since (a plugin's) adds its own
+let forwardedFrom = -1;
 const getForwardedSettings = () => {
-	if (forwardedSettings === undefined) {
+	if (forwardedFrom !== LEVEL_LOAD_OPTIONS.length) {
+		forwardedFrom = LEVEL_LOAD_OPTIONS.length;
 		forwardedSettings = Object.freeze([
 			...LEVEL_LOAD_OPTIONS.filter((option) => {
 				return option !== "async";

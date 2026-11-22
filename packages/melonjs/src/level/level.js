@@ -15,6 +15,9 @@ import TMXTileMap from "./tiled/TMXTileMap.js";
  * @import {Vector3d} from "../math/vector3d.ts";
  * @import {Color} from "../math/color.ts";
  */
+// the formats a level can be registered in: how its level object is made,
+// and the options its loading reads
+const formats = new Map();
 // our levels
 const levels = {};
 // level index table
@@ -54,6 +57,11 @@ function safeLoadLevel(levelId, options, restart) {
 			options.setViewportBounds,
 		);
 	} else {
+		// a level that numbers its objects says where the ids it does not
+		// use start, as a Tiled map does: the ones made at run time follow
+		if (typeof targetLevel.nextobjectid === "number") {
+			resetGUID(levelId, targetLevel.nextobjectid);
+		}
 		options.container.anchorPoint.set(0, 0);
 		targetLevel.addTo(options.container, options);
 	}
@@ -164,19 +172,20 @@ function levelIdAt(offset) {
  * Internal: this exists so the forwarders and the formats cannot disagree, not
  * as a surface for games to read. `level.load` remains the documented API and
  * its options are unchanged.
+ * It grows when a format is registered ({@link level.registerFormat}), so
+ * read it when it is needed rather than once.
  * @type {ReadonlyArray<string>}
  * @see level.load
  * @ignore
  * @internal
  */
-export const LEVEL_LOAD_OPTIONS = Object.freeze([
+export const LEVEL_LOAD_OPTIONS = [
 	// handled by the director itself, whatever the format
 	"container",
 	"onLoaded",
 	"async",
-	...TMXTileMap.loadOptions,
-	...GLTFScene.loadOptions,
-]);
+	// each format's own are added as it is registered: see `registerFormat`
+];
 
 /**
  * a level manager. once resources loaded, the level manager contains all references of defined levels.
@@ -185,34 +194,73 @@ export const LEVEL_LOAD_OPTIONS = Object.freeze([
 
 export const level = {
 	/**
+	 * Register a level format: what {@link level.add} makes a level of that
+	 * format from, so that {@link level.load}, {@link level.next},
+	 * {@link level.reload} and a `Trigger` work with it as they do with a
+	 * Tiled map. A loader for another map editor's files registers one, then
+	 * calls `level.add(format, levelId)` for each level it has read.
+	 *
+	 * `create(levelId)` returns the level object, which the director keeps
+	 * and asks for two things:
+	 * - `addTo(container, options)`: add everything the level holds to the
+	 *   container. `options` are the ones given to `level.load`; the
+	 *   container has been emptied first.
+	 * - `destroy()`: let go of what `addTo` built, when another level is
+	 *   loaded. The level is loaded again later with another `addTo`.
+	 *
+	 * It is made when the level is added, which is usually while assets are
+	 * still loading: keep `create` cheap, and read images and build layers in
+	 * `addTo`. A `nextobjectid` number on it, if any, is where the ids of the
+	 * objects made at run time start.
+	 * @param {string} format - the name of the format, as given to {@link level.add}
+	 * @param {object} definition - how levels of this format are made
+	 * @param {Function} definition.create - `create(levelId)`, returning the level object
+	 * @param {string[]} [definition.loadOptions] - the names of the options `addTo` reads beyond `container`, `onLoaded` and `async`, so that a `Trigger` forwards them from its settings
+	 * @throws {Error} when the format is already registered, or `create` is not a function
+	 * @example
+	 * // levels kept by a parser of your own, registered with `loader.setParser`
+	 * level.registerFormat("rooms", {
+	 *     create: (levelId) => new Room(rooms.get(levelId)),
+	 * });
+	 * // then, for each room the parser has read:
+	 * level.add("rooms", "cellar");
+	 * // and in the game:
+	 * level.load("cellar");
+	 */
+	registerFormat(format, definition) {
+		if (typeof definition?.create !== "function") {
+			throw new Error(
+				`level format "${format}" needs a create(levelId) function`,
+			);
+		}
+		if (formats.has(format)) {
+			throw new Error(`level format "${format}" is already registered`);
+		}
+		formats.set(format, definition);
+		for (const option of definition.loadOptions ?? []) {
+			if (!LEVEL_LOAD_OPTIONS.includes(option)) {
+				LEVEL_LOAD_OPTIONS.push(option);
+			}
+		}
+	},
+
+	/**
 	 * add a level into the game manager (usually called by the preloader)
 	 * @public
-	 * @param {string} format - level format ("tmx" for Tiled maps, "gltf" / "glb" for 3D scenes)
+	 * @param {string} format - level format ("tmx" for Tiled maps, "gltf" / "glb" for 3D scenes, or one registered with {@link level.registerFormat})
 	 * @param {string} levelId - the level id (or name)
 	 * @param {Function} [callback] - a function to be called once the level is loaded
 	 * @returns {boolean} true if the level was loaded
 	 */
 	add(format, levelId, callback) {
-		let levelObject;
-		switch (format) {
-			case "tmx":
-				levelObject = () => {
-					return new TMXTileMap(levelId, getTMX(levelId));
-				};
-				break;
-			case "gltf":
-			case "glb":
-				levelObject = () => {
-					return new GLTFScene(levelId);
-				};
-				break;
-			default:
-				throw new Error("no level loader defined for format " + format);
+		const definition = formats.get(format);
+		if (definition === undefined) {
+			throw new Error("no level loader defined for format " + format);
 		}
 
 		// register the level once (idempotent)
 		if (levels[levelId] == null) {
-			levels[levelId] = levelObject();
+			levels[levelId] = definition.create(levelId);
 			levelIdx.push(levelId);
 		} else {
 			return false;
@@ -236,10 +284,11 @@ export const level = {
 	 * built from the level stays there and keeps running — but there is then no
 	 * current level: {@link level.getCurrentLevelId} returns `undefined`, so
 	 * {@link level.reload} has nothing to reload, until a level is loaded again.
+	 *
+	 * A format registered with {@link level.registerFormat} calls it itself,
+	 * for each of its levels, when the file they were read from is unloaded.
 	 * @param {string} levelId - the level id (or name)
 	 * @returns {boolean} true if the level was registered
-	 * @ignore
-	 * @internal
 	 */
 	remove(levelId) {
 		const index = levelIdx.indexOf(levelId);
@@ -524,3 +573,19 @@ export const level = {
 		return levelIdx.length;
 	},
 };
+
+// the formats the engine reads itself
+level.registerFormat("tmx", {
+	create: (levelId) => {
+		return new TMXTileMap(levelId, getTMX(levelId));
+	},
+	loadOptions: TMXTileMap.loadOptions,
+});
+for (const format of ["gltf", "glb"]) {
+	level.registerFormat(format, {
+		create: (levelId) => {
+			return new GLTFScene(levelId);
+		},
+		loadOptions: GLTFScene.loadOptions,
+	});
+}

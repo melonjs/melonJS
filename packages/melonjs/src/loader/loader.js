@@ -485,10 +485,12 @@ function adopt(asset, requesters) {
  */
 function release(asset) {
 	owners.delete(assetKey(asset));
-	// a custom type has nothing in the loader to free
+	// a custom type has nothing in the loader to free: its parser frees what
+	// it kept, when it said how
 	if (
 		CACHED_TYPES.includes(asset.type) ||
-		UNCACHED_TYPES.includes(asset.type)
+		UNCACHED_TYPES.includes(asset.type) ||
+		parsers.get(asset.type)?.unload !== undefined
 	) {
 		freeAsset(asset);
 	}
@@ -887,8 +889,17 @@ const alwaysRelative = () => {
  * warning, so do it once rather than in code that runs on every scene.
  * A `src` is prefixed by {@link loader.setBaseURL} only when one is set for
  * this type by name: the `"*"` wildcard does not cover custom types.
+ *
+ * The loader does not know what a custom type keeps, so it cannot free it:
+ * give `options.unload` for that. It is called with the asset's descriptor
+ * when a bundle holding the asset is unloaded and nothing else holds it, and
+ * when {@link loader.unload} is given that descriptor. Without it, unloading
+ * a bundle leaves the asset to the game, and `loader.unload` of its
+ * descriptor throws.
  * @param {string} type - asset type
  * @param {Function} parserFn - parser function, as described above
+ * @param {object} [options] - what else the loader should know of the type
+ * @param {Function} [options.unload] - `unload(asset)`: free what the parser kept for this asset; return `false` when there was nothing to free
  * @throws {Error} when `parserFn` is not a function
  * @see {@link Asset.type}
  * @example
@@ -928,7 +939,7 @@ const alwaysRelative = () => {
  * await loader.preload([{ name: "level1", type: "csv", src: "level1.csv" }]);
  * @category Assets
  */
-export function setParser(type, parserFn) {
+export function setParser(type, parserFn, options) {
 	if (typeof parserFn !== "function") {
 		throw new Error("invalid parser function for " + type);
 	}
@@ -941,6 +952,8 @@ export function setParser(type, parserFn) {
 		parse: parserFn,
 		normalizeSrc: parserFn.normalizeSrc ?? keepSrc,
 		needsBaseURL: parserFn.needsBaseURL ?? alwaysRelative,
+		// how a type the loader keeps nothing for frees what it kept
+		unload: typeof options?.unload === "function" ? options.unload : undefined,
 	});
 }
 
@@ -1625,7 +1638,8 @@ const UNCACHED_TYPES = ["js", "audio", "fontface", "shader", "aseprite"];
  * loaded; with a descriptor, `false` when the asset was not in memory
  * @throws {Error} synchronously, on an unknown bundle id, or a descriptor
  * whose type the loader keeps nothing for (a type registered with
- * {@link loader.setParser}: the game keeps those assets itself)
+ * {@link loader.setParser} without an `unload`: the game keeps those assets
+ * itself)
  * @example
  * // level 1 is behind the player for good: free what only it uses
  * await level.load("level2", { async: true });
@@ -1735,6 +1749,11 @@ function freeAsset(asset) {
 			// throws, as it always has: `load` throws for one too, and a typo
 			// that is loud going in should not be silent coming out
 			if (!CACHED_TYPES.includes(asset.type)) {
+				// a type of the game's own, whose parser said how to free it
+				const custom = parsers.get(asset.type);
+				if (custom?.unload !== undefined) {
+					return custom.unload(asset) !== false;
+				}
 				throw new Error(
 					"unload : unknown or invalid resource type : " + asset.type,
 				);
