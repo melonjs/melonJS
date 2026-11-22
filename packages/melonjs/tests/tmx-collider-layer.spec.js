@@ -375,7 +375,8 @@ describe("a Tiled tile layer with the collider property", () => {
  * A map as the Sprite Fusion editor exports it to TMX: an XML Tiled map with
  * one embedded tileset over `spritesheet.png`, a `collider` property on each
  * layer, and the attributes given to a tile as that tile's properties in the
- * tileset. (The fixture is written for this test, in the export's form.)
+ * tileset. (The fixture is written for this test, in the form of an export
+ * made with the editor: the same elements, attributes and property types.)
  */
 describe("a map in the form of a Sprite Fusion TMX export", () => {
 	let app;

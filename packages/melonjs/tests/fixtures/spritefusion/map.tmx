@@ -4,16 +4,16 @@
     <image source="spritesheet.png" width="32" height="32"/>
     <tile id="1">
       <properties>
-        <property name="type" value="lava"/>
         <property name="damage" type="int" value="25"/>
-        <property name="slow" type="float" value="0.5"/>
         <property name="isDangerous" type="bool" value="true"/>
         <property name="isSolid" type="bool" value="false"/>
+        <property name="slow" type="float" value="0.5"/>
+        <property name="type" type="string" value="lava"/>
       </properties>
     </tile>
     <tile id="3">
       <properties>
-        <property name="spawn" value="enemy"/>
+        <property name="spawn" type="string" value="enemy"/>
       </properties>
     </tile>
   </tileset>

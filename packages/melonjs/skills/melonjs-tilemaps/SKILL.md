@@ -445,8 +445,8 @@ level.load("map");
   `tile.tileset.getTileProperties(tile.tileId)` gives
   `{ type: "lava", damage: 25, isSolid: false }`, each value of its type.
 - Per-tile *instance* attributes (one placed tile's own) are only in the
-  editor's JSON export, a format of its own that is not read: export TMX,
-  and keep attributes per tile.
+  editor's JSON export, a format of its own that is not read. The editor
+  refuses a TMX export while that mode is on: keep attributes per tile.
 - A layer hidden in the editor is left out of the export.
 
 ## Map orientations
