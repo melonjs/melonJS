@@ -125,13 +125,16 @@ const onScroll = (ev: Pointer) => {
 	game.repaint();
 };
 
-// dragging moves the view
+// Dragging moves the view. The press is the viewport's, a region that covers
+// the whole screen; the move and the release are heard anywhere, so that a
+// drag goes on over the selectors and ends outside the canvas.
 let dragFrom: { x: number; y: number } | undefined;
 const onDragStart = (ev: Pointer) => {
 	dragFrom = { x: ev.gameScreenX, y: ev.gameScreenY };
 };
 const onDrag = (ev: Pointer) => {
 	if (dragFrom !== undefined) {
+		// screen coordinates: the world's move with the view being dragged
 		game.viewport.move(
 			dragFrom.x - ev.gameScreenX,
 			dragFrom.y - ev.gameScreenY,
@@ -156,13 +159,15 @@ const createGame = async () => {
 	// an LDtk project is an asset of type "ldtk", and each of its levels a
 	// level of the level director: nothing to register
 	loader.preload(resources, () => {
+		// the game's state first: it brings its own viewport, and a handler
+		// registered on the loading screen's would be left behind with it
+		state.change(state.DEFAULT, true);
 		event.on(event.KEYDOWN, onKeyPressed);
 		input.registerPointerEvent("wheel", game.viewport, onScroll);
 		input.registerPointerEvent("pointerdown", game.viewport, onDragStart);
-		input.registerPointerEvent("pointermove", game.viewport, onDrag);
-		input.registerPointerEvent("pointerup", game.viewport, onDragEnd);
-		input.registerPointerEvent("pointercancel", game.viewport, onDragEnd);
-		state.change(state.DEFAULT, true);
+		event.on(event.POINTERMOVE, onDrag);
+		event.on(event.POINTERUP, onDragEnd);
+		event.on(event.POINTERCANCEL, onDragEnd);
 		loadLevel(`${samples[0].name}:${levelsOf(samples[0].name)[0]}`);
 	});
 };

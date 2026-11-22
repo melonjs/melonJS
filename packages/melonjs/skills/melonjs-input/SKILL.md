@@ -143,6 +143,12 @@ the dispatcher appends it to the candidate list and walks that list from the
 end. So a viewport handler must not return `false` unless it really means to
 swallow every pointer event in the game.
 
+A state has its own viewport: the loading screen's is not the one the game's
+state brings. Register on `app.viewport` once the state is in place (in the
+stage's `onResetEvent`, or after `state.change(state.PLAY, true)`), not in the
+`loader.preload` callback before it: that handler stays on the loading
+screen's viewport and never fires.
+
 The accepted event names are exactly `"pointerdown"`, `"pointerup"`,
 `"pointermove"`, `"pointercancel"`, `"pointerenter"`, `"pointerover"`,
 `"pointerleave"` and `"wheel"`. Anything else — `"click"`, `"mousedown"`,
@@ -489,6 +495,7 @@ input.triggerKeyEvent(input.KEY.LEFT, false);   // release
 | a widget stays highlighted after the pointer moves onto a panel over it | the panel consumes no `pointermove`, so nothing takes the pointer off the widget |
 | a child's big `z` does not put it in front of another container | `pos.z` is container-local — use `ancestor.moveToTop()` on the container |
 | every click in the game stops working | a handler on `app.viewport` returning `false`, which is asked first |
+| a handler on `app.viewport` never fires | registered before `state.change`: it is on the loading screen's viewport, which the game's state replaced. Register it after the state is in place |
 | touch controls do nothing | nothing bound to their slot — `bindGamepad` on the plugin's `index` (0 by default), or give the buttons a `key` |
 | touch controls never show on a desktop | the gamepad plugin's `enabled` defaults to `device.touch` — pass `enabled: true` to try them there |
 
