@@ -128,7 +128,7 @@ export function gpuChecks(
 					// only the tiles that fit no grid are drawn one by one
 					let placedTiles = 0;
 					for (const layer of placed) {
-						placedTiles += (layer as PlacedTileLayer).length;
+						placedTiles += layer.length;
 					}
 					expect(singles).toBeLessThanOrEqual(placedTiles);
 
@@ -198,7 +198,7 @@ export function gpuChecks(
 			expect(cpu).not.toHaveBeenCalled();
 			expect(
 				asked.mock.calls.map((call) => {
-					return call[0] as unknown;
+					return call[0];
 				}),
 			).toEqual(tileLayers);
 			asked.mockRestore();

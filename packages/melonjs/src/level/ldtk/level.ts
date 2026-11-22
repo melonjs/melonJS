@@ -10,10 +10,11 @@ import {
 	hasObjectFactory,
 } from "../tiled/TMXObjectFactory.js";
 import PlacedTileLayer from "../tilemap/PlacedTileLayer.js";
+import { addLevelToContainer, populateContainer } from "../tilemap/populate.js";
 import TileLayer from "../tilemap/TileLayer.js";
 import Tileset from "../tilemap/Tileset.js";
 import TilesetGroup from "../tilemap/TilesetGroup.js";
-import { bindViewportToLevel, releaseViewport } from "../tilemap/viewport.js";
+import { releaseViewport } from "../tilemap/viewport.js";
 import { IntGrid } from "./intgrid.ts";
 import type { LDtkLevelInfo, LDtkProject, LDtkWorldInfo } from "./project.ts";
 import { fieldValues } from "./project.ts";
@@ -619,23 +620,6 @@ const optionsOf = (given: LDtkLoadOptions | undefined): LDtkLoadOptions => {
 	return options;
 };
 
-/**
- * add many children at once: sorted once, at the end
- * @param container - the container
- * @param add - adds them
- */
-const addAll = (container: Container, add: () => void) => {
-	const sort = container.autoSort;
-	const depth = container.autoDepth;
-	container.autoSort = false;
-	container.autoDepth = false;
-	add();
-	// now, not on a timer: the next frame can be drawn before a timer fires
-	container.sortNow(true);
-	container.autoSort = sort;
-	container.autoDepth = depth;
-};
-
 /** what a level and a world have in common for the level director */
 abstract class LDtkMap {
 	/** the format's name, as registered with the level director */
@@ -687,23 +671,41 @@ abstract class LDtkMap {
 		return this.gridRenderer;
 	}
 
-	protected follow(
+	/**
+	 * add the level or the world to the container, as a Tiled map is
+	 * @param container - the container
+	 * @param options - LDtk's load options
+	 * @param backgroundColor - the color behind it
+	 * @param x - its left edge
+	 * @param y - its top edge
+	 * @param add - adds its layers, bodies and entities
+	 */
+	protected populate(
 		container: Container,
 		options: LDtkLoadOptions,
+		backgroundColor: string,
 		x: number,
 		y: number,
-		width: number,
-		height: number,
+		add: () => void,
 	) {
-		container.resize(width, height);
+		let bounds: Bounds | undefined;
 		if (options.setViewportBounds !== false) {
-			const area = new Bounds();
-			area.setMinMax(x, y, x + width, y + height);
-			const follow = bindViewportToLevel(container, area);
-			this.unfollow = () => {
-				releaseViewport(follow);
-			};
+			bounds = new Bounds();
+			bounds.setMinMax(x, y, x + this.width, y + this.height);
 		}
+		const follow = addLevelToContainer(container, {
+			backgroundColor,
+			add,
+			width: this.width,
+			height: this.height,
+			bounds,
+		}) as (() => void) | undefined;
+		this.unfollow =
+			follow === undefined
+				? undefined
+				: () => {
+						releaseViewport(follow);
+					};
 	}
 
 	/**
@@ -761,12 +763,10 @@ export class LDtkLevel extends LDtkMap {
 		const resolved = optionsOf(options);
 		this.container = container;
 		this.builder = new LevelBuilder(this.project, container, resolved, this);
-		container.backgroundColor.parseCSS(this.info.bgColor);
-		addAll(container, () => {
+		this.populate(container, resolved, this.info.bgColor, 0, 0, () => {
 			this.built = this.builder?.build(this.info, 0, 0, 0, false);
 		});
 		this.layers = this.built?.layers ?? [];
-		this.follow(container, resolved, 0, 0, this.width, this.height);
 	}
 
 	/**
@@ -845,16 +845,21 @@ export class LDtkWorld extends LDtkMap {
 		const resolved = optionsOf(options);
 		this.container = container;
 		this.builder = new LevelBuilder(this.project, container, resolved, this);
-		container.backgroundColor.parseCSS(this.backgroundcolor);
 		const first = resolved.levels;
-		addAll(container, () => {
-			for (const level of this.info.levels) {
-				if (first === undefined || first.includes(level.identifier)) {
-					this.build(level);
+		this.populate(
+			container,
+			resolved,
+			this.backgroundcolor,
+			this.x,
+			this.y,
+			() => {
+				for (const level of this.info.levels) {
+					if (first === undefined || first.includes(level.identifier)) {
+						this.build(level);
+					}
 				}
-			}
-		});
-		this.follow(container, resolved, this.x, this.y, this.width, this.height);
+			},
+		);
 	}
 
 	private build(level: LDtkLevelInfo) {
@@ -921,7 +926,7 @@ export class LDtkWorld extends LDtkMap {
 		}
 		// in their draw order at once: a frame can be drawn before a timer
 		// sorts them, and would show the level's background over its tiles
-		addAll(container, () => {
+		populateContainer(container, () => {
 			this.build(level);
 		});
 		return true;

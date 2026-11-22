@@ -6,7 +6,8 @@ import { collision } from "../../physics/collision.js";
 import Container from "../../renderable/container.js";
 import ImageLayer from "../../renderable/imagelayer.js";
 import { checkVersion } from "../../utils/utils.ts";
-import { bindViewportToLevel, releaseViewport } from "../tilemap/viewport.js";
+import { addLevelToContainer } from "../tilemap/populate.js";
+import { releaseViewport } from "../tilemap/viewport.js";
 import { COLLISION_GROUP, TILED_SUPPORTED_VERSION } from "./constants.js";
 import { getNewTMXRenderer } from "./renderer/autodetect.js";
 import TMXGroup from "./TMXGroup.js";
@@ -556,48 +557,34 @@ export default class TMXTileMap {
 	 * level.addTo(app.world, true, true);
 	 */
 	addTo(container, flatten, setViewportBounds) {
-		const _sort = container.autoSort;
-		const _depth = container.autoDepth;
-
 		const levelBounds = this.getBounds();
-
-		// disable auto-sort and auto-depth
-		container.autoSort = false;
-		container.autoDepth = false;
-
-		if (this.backgroundcolor) {
-			container.backgroundColor.parseCSS(this.backgroundcolor);
-		}
-
-		// add all layers instances
-		this.getLayers().forEach((layer) => {
-			container.addChild(layer);
-		});
-
-		// add all Object instances
-		this.getObjects(flatten).forEach((object) => {
-			container.addChild(object);
-		});
-
-		// resize the container accordingly
-		container.resize(this.bounds.width, this.bounds.height);
-
-		// sort everything (recursively)
-		container.sort(true);
-
-		// the viewport takes the level's bounds, now and when it is resized
 		if (setViewportBounds === true) {
 			releaseViewport(this._followViewport);
+		}
+		const follow = addLevelToContainer(container, {
+			backgroundColor: this.backgroundcolor,
+			add: () => {
+				// add all layers instances
+				this.getLayers().forEach((layer) => {
+					container.addChild(layer);
+				});
+				// add all Object instances
+				this.getObjects(flatten).forEach((object) => {
+					container.addChild(object);
+				});
+			},
+			width: this.bounds.width,
+			height: this.bounds.height,
+			// the viewport takes the level's bounds, now and when it is resized
+			bounds: setViewportBounds === true ? levelBounds : undefined,
+		});
+		if (follow !== undefined) {
 			/**
 			 * what has the viewport follow this map, while it does
 			 * @ignore
 			 */
-			this._followViewport = bindViewportToLevel(container, levelBounds);
+			this._followViewport = follow;
 		}
-
-		//  set back auto-sort and auto-depth
-		container.autoSort = _sort;
-		container.autoDepth = _depth;
 	}
 
 	/**
