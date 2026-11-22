@@ -1,14 +1,17 @@
-import { Color } from "../../math/color.ts";
+import { Color, colorPool } from "../../math/color.ts";
 import Renderable from "../../renderable/renderable.js";
 import type Renderer from "../../video/renderer.js";
+import type { TextureAtlas } from "../../video/texture/atlas.js";
 
 /** an image a renderer can draw */
 export type TileImage = HTMLImageElement | HTMLCanvasElement | OffscreenCanvas;
 
-/** the rectangle of an image an entity is drawn with */
+/** the rectangle of a tileset an entity is drawn with in LDtk */
 export interface EntityTile {
-	/** the tileset's image */
-	image: TileImage;
+	/** a texture atlas over the tileset's image, holding the rectangle as a region */
+	atlas: TextureAtlas;
+	/** the name of the rectangle's region in the atlas */
+	region: string;
 	/** the rectangle's left edge in the image, in pixels */
 	x: number;
 	/** the rectangle's top edge in the image, in pixels */
@@ -19,6 +22,8 @@ export interface EntityTile {
 	height: number;
 	/** how the tile fills the entity's box, as set in LDtk: `Cover`, `FitInside`, `Repeat`, `Stretch`, `FullSizeCropped`, `FullSizeUncropped` or `NineSlice` */
 	mode: string;
+	/** in `NineSlice` mode, the borders that are not stretched: up, right, down, left */
+	borders?: number[];
 }
 
 /** what an entity's class is given: the entity as placed in LDtk */
@@ -52,7 +57,16 @@ export interface LDtkEntitySettings {
 	/** the entity's custom fields, by name (also copied onto the settings, where the name is free) */
 	fields: Record<string, unknown>;
 	/** the tile LDtk draws the entity with, if its tileset has an image */
-	tile?: EntityTile;
+	tileRect?: EntityTile;
+	/**
+	 * With a tile: a texture atlas over its tileset's image, which with
+	 * `region` is what a `Sprite` is made from, so a class extending `Sprite`
+	 * can hand the settings to its constructor. Without one, a field named
+	 * `image` is found here, as any field is.
+	 */
+	image?: unknown;
+	/** with a tile: the name of its region in `image` */
+	region?: unknown;
 	/** the color LDtk shows the entity in, as `#rrggbb` */
 	color?: string;
 	/** the identifier of the layer the entity is in */
@@ -65,127 +79,204 @@ export interface LDtkEntitySettings {
 }
 
 /**
- * draw a tile into a box the way LDtk does, by the entity's tile render mode
- * @param renderer - the renderer
- * @param tile - the tile
- * @param x - the box's left edge
- * @param y - the box's top edge
- * @param width - the box's width
- * @param height - the box's height
- * @param pivotX - where the tile is held in the box, from 0 (left) to 1
- * @param pivotY - where the tile is held in the box, from 0 (top) to 1
+ * a rectangle of an atlas's image as a region of the atlas, added on first use
+ * @param atlas - the atlas
+ * @param x - the rectangle's left edge in the image
+ * @param y - the rectangle's top edge in the image
+ * @param width - the rectangle's width
+ * @param height - the rectangle's height
+ * @returns the region's name
  */
-export function drawEntityTile(
-	renderer: Renderer,
-	tile: EntityTile,
+export function regionOf(
+	atlas: TextureAtlas,
 	x: number,
 	y: number,
 	width: number,
 	height: number,
+): string {
+	const name = `${String(x)},${String(y)},${String(width)},${String(height)}`;
+	if ((atlas.getAtlas() as Record<string, unknown>)[name] === undefined) {
+		atlas.addRegion(name, x, y, width, height);
+	}
+	return name;
+}
+
+/**
+ * a sprite on a region of an atlas, placed by its top left corner
+ * @param atlas - the atlas
+ * @param region - the region's name
+ * @param x - where its top left corner goes
+ * @param y - where its top left corner goes
+ * @param scaleX - how much it is stretched across
+ * @param scaleY - how much it is stretched down
+ * @returns the sprite
+ */
+export function regionSprite(
+	atlas: TextureAtlas,
+	region: string,
+	x: number,
+	y: number,
+	scaleX = 1,
+	scaleY = 1,
+): Renderable {
+	const made = atlas.createSpriteFromName(region);
+	made.anchorPoint.set(0, 0);
+	made.pos.set(x, y);
+	if (scaleX !== 1 || scaleY !== 1) {
+		made.scale(scaleX, scaleY);
+	}
+	return made as unknown as Renderable;
+}
+
+/**
+ * A tile repeated to fill a box, the last column and row cut to it: LDtk's
+ * `Repeat` mode, which no renderable of the engine draws from a region of an
+ * image (a pattern repeats a whole image).
+ */
+class RepeatedTile extends Renderable {
+	tile: EntityTile;
+
+	constructor(tile: EntityTile, width: number, height: number) {
+		super(0, 0, width, height);
+		this.anchorPoint.set(0, 0);
+		this.tile = tile;
+	}
+
+	override draw(renderer: Renderer): void {
+		const { x, y, width: tw, height: th } = this.tile;
+		const image = this.tile.atlas.getTexture() as TileImage;
+		for (let dy = 0; dy < this.height; dy += th) {
+			const sh = Math.min(th, this.height - dy);
+			for (let dx = 0; dx < this.width; dx += tw) {
+				const sw = Math.min(tw, this.width - dx);
+				renderer.drawImage(
+					image,
+					x,
+					y,
+					sw,
+					sh,
+					this.pos.x + dx,
+					this.pos.y + dy,
+					sw,
+					sh,
+				);
+			}
+		}
+	}
+}
+
+/**
+ * The renderable that shows a tile in a box the way LDtk does, by the
+ * entity's tile render mode: a `Sprite` on the tile's region of the tileset,
+ * scaled, placed or cut as the mode asks, a `NineSliceSprite` for the
+ * nine-slice mode, and a repeated tile for `Repeat`.
+ * @param tile - the tile
+ * @param width - the box's width
+ * @param height - the box's height
+ * @param pivotX - where the tile is held in the box, from 0 (left) to 1
+ * @param pivotY - where the tile is held in the box, from 0 (top) to 1
+ * @returns the renderable, placed from the box's top left corner; undefined for a box or a tile of no size
+ */
+export function createEntityTile(
+	tile: EntityTile,
+	width: number,
+	height: number,
 	pivotX: number,
 	pivotY: number,
-): void {
-	const { image, width: tw, height: th } = tile;
+): Renderable | undefined {
+	const { atlas, width: tw, height: th } = tile;
 	if (tw <= 0 || th <= 0 || width <= 0 || height <= 0) {
-		return;
+		return undefined;
 	}
+	const sprite = (
+		region: string,
+		x: number,
+		y: number,
+		scaleX: number,
+		scaleY: number,
+	) => {
+		return regionSprite(atlas, region, x, y, scaleX, scaleY);
+	};
+	/**
+	 * the part of the tile that shows when it is cut to the box
+	 * @param sw - the part's width, in the tile's pixels
+	 * @param sh - the part's height, in the tile's pixels
+	 * @returns the name of its region
+	 */
+	const cut = (sw: number, sh: number) => {
+		return regionOf(
+			atlas,
+			tile.x + (tw - sw) * pivotX,
+			tile.y + (th - sh) * pivotY,
+			sw,
+			sh,
+		);
+	};
 	switch (tile.mode) {
 		case "FitInside": {
 			// whole, as large as the box takes
 			const scale = Math.min(width / tw, height / th);
-			const dw = tw * scale;
-			const dh = th * scale;
-			renderer.drawImage(
-				image,
-				tile.x,
-				tile.y,
-				tw,
-				th,
-				x + (width - dw) * pivotX,
-				y + (height - dh) * pivotY,
-				dw,
-				dh,
+			return sprite(
+				tile.region,
+				(width - tw * scale) * pivotX,
+				(height - th * scale) * pivotY,
+				scale,
+				scale,
 			);
-			break;
 		}
 		case "Cover": {
 			// filling the box, what does not fit cut off
 			const scale = Math.max(width / tw, height / th);
-			const sw = width / scale;
-			const sh = height / scale;
-			renderer.drawImage(
-				image,
-				tile.x + (tw - sw) * pivotX,
-				tile.y + (th - sh) * pivotY,
-				sw,
-				sh,
-				x,
-				y,
-				width,
-				height,
-			);
-			break;
+			return sprite(cut(width / scale, height / scale), 0, 0, scale, scale);
 		}
 		case "FullSizeCropped": {
 			// at its own size, cut to the box
 			const sw = Math.min(tw, width);
 			const sh = Math.min(th, height);
-			renderer.drawImage(
-				image,
-				tile.x + (tw - sw) * pivotX,
-				tile.y + (th - sh) * pivotY,
-				sw,
-				sh,
-				x + (width - sw) * pivotX,
-				y + (height - sh) * pivotY,
-				sw,
-				sh,
+			return sprite(
+				cut(sw, sh),
+				(width - sw) * pivotX,
+				(height - sh) * pivotY,
+				1,
+				1,
 			);
-			break;
 		}
 		case "FullSizeUncropped":
 			// at its own size, held by the pivot
-			renderer.drawImage(
-				image,
-				tile.x,
-				tile.y,
-				tw,
-				th,
-				x + (width - tw) * pivotX,
-				y + (height - th) * pivotY,
-				tw,
-				th,
+			return sprite(
+				tile.region,
+				(width - tw) * pivotX,
+				(height - th) * pivotY,
+				1,
+				1,
 			);
-			break;
 		case "Repeat":
-			// side by side, the last ones cut to the box
-			for (let dy = 0; dy < height; dy += th) {
-				const sh = Math.min(th, height - dy);
-				for (let dx = 0; dx < width; dx += tw) {
-					const sw = Math.min(tw, width - dx);
-					renderer.drawImage(
-						image,
-						tile.x,
-						tile.y,
-						sw,
-						sh,
-						x + dx,
-						y + dy,
-						sw,
-						sh,
-					);
-				}
+			return new RepeatedTile(tile, width, height);
+		case "NineSlice": {
+			// its borders kept, the rest stretched. A nine-slice sprite has
+			// one border across and one down: LDtk's left and top ones
+			const borders = tile.borders;
+			if (borders !== undefined && borders.length === 4) {
+				const made = atlas.createSpriteFromName(
+					tile.region,
+					{ width, height, insetx: borders[3], insety: borders[0] },
+					true,
+				);
+				made.anchorPoint.set(0, 0);
+				made.pos.set(0, 0);
+				return made as unknown as Renderable;
 			}
-			break;
+			return sprite(tile.region, 0, 0, width / tw, height / th);
+		}
 		default:
-			// "Stretch", and "NineSlice", whose borders are not read
-			renderer.drawImage(image, tile.x, tile.y, tw, th, x, y, width, height);
+			// "Stretch"
+			return sprite(tile.region, 0, 0, width / tw, height / th);
 	}
 }
 
 /**
  * An entity of a level that the game registered no class for: a box of the
- * entity's size at its place, with its fields, drawn with the tile LDtk shows
+ * entity's size at its place, with its fields, showing the tile LDtk shows
  * it with when it has one. It has no body, and does nothing: it is there to
  * be found (`world.getChildByName("PlayerStart")`) and read.
  * @category Tilemap
@@ -199,8 +290,10 @@ export class LDtkEntity extends Renderable {
 	tags: string[];
 	/** where the entity's pivot is in its box, each from 0 to 1 */
 	pivot: { x: number; y: number };
-	/** the tile the entity is drawn with, if any */
+	/** the tile LDtk draws the entity with, if any */
 	tile: EntityTile | undefined;
+	/** what shows that tile: a sprite, placed from the box's top left corner */
+	tileSprite: Renderable | undefined;
 	/** the entity as placed in LDtk: what a class registered for it would be given */
 	source: LDtkEntitySettings;
 
@@ -215,52 +308,57 @@ export class LDtkEntity extends Renderable {
 		this.fields = settings.fields;
 		this.tags = settings.tags;
 		this.pivot = settings.pivot;
-		this.tile = settings.tile;
+		this.tile = settings.tileRect;
+		this.tileSprite =
+			this.tile === undefined
+				? undefined
+				: createEntityTile(
+						this.tile,
+						this.width,
+						this.height,
+						this.pivot.x,
+						this.pivot.y,
+					);
 		this.source = settings;
 	}
 
 	/**
 	 * draw the entity's tile, if it has one
 	 * @param renderer - the renderer
+	 * @param viewport - the view being drawn
 	 */
-	override draw(renderer: Renderer): void {
-		if (this.tile !== undefined) {
-			drawEntityTile(
-				renderer,
-				this.tile,
-				this.pos.x,
-				this.pos.y,
-				this.width,
-				this.height,
-				this.pivot.x,
-				this.pivot.y,
-			);
+	override draw(renderer: Renderer, viewport?: unknown): void {
+		const sprite = this.tileSprite;
+		if (sprite !== undefined) {
+			// the sprite is placed in the box, the box in the world
+			renderer.translate(this.pos.x, this.pos.y);
+			sprite.preDraw(renderer);
+			sprite.draw(renderer, viewport as never);
+			sprite.postDraw(renderer);
+			renderer.translate(-this.pos.x, -this.pos.y);
 		}
 	}
-}
 
-/** the part of an image a level's background shows, and where */
-export interface BackgroundImage {
-	image: TileImage;
-	/** the part of the image that shows: x, y, width, height */
-	crop: [number, number, number, number];
-	/** where its top left corner is, in pixels from the level's */
-	x: number;
-	y: number;
-	/** how much it is scaled, across and down */
-	scaleX: number;
-	scaleY: number;
+	/** let go of the sprite with the entity */
+	override destroy(): void {
+		this.tileSprite?.destroy();
+		this.tileSprite = undefined;
+		super.destroy();
+	}
 }
 
 /**
  * The background of a level: its color over the level's area, and its
- * background image where it has one, placed as in LDtk.
+ * background image where it has one, placed as in LDtk. The image is a
+ * sprite on the part of it that shows; the color is filled here, as no
+ * renderable of the engine fills an area of a size (a `ColorLayer` clears the
+ * whole view).
  */
 export class LDtkBackground extends Renderable {
 	/** the color the level's area is filled with; undefined to fill nothing */
 	color: Color | undefined;
-	/** the level's background image, if any */
-	image: BackgroundImage | undefined;
+	/** the level's background image, if any: a sprite, placed from the level's top left corner */
+	image: Renderable | undefined;
 
 	/**
 	 * @param x - the level's left edge
@@ -276,37 +374,44 @@ export class LDtkBackground extends Renderable {
 		width: number,
 		height: number,
 		color?: string,
-		image?: BackgroundImage,
+		image?: Renderable,
 	) {
 		super(x, y, width, height);
 		this.anchorPoint.set(0, 0);
 		this.name = "background";
-		this.color = color === undefined ? undefined : new Color().parseCSS(color);
+		this.color =
+			color === undefined ? undefined : colorPool.get().parseCSS(color);
 		this.image = image;
 	}
 
 	/**
 	 * draw the background
 	 * @param renderer - the renderer
+	 * @param viewport - the view being drawn
 	 */
-	override draw(renderer: Renderer): void {
+	override draw(renderer: Renderer, viewport?: unknown): void {
 		if (this.color !== undefined) {
 			renderer.setColor(this.color);
 			renderer.fillRect(this.pos.x, this.pos.y, this.width, this.height);
 		}
-		const bg = this.image;
-		if (bg !== undefined) {
-			renderer.drawImage(
-				bg.image,
-				bg.crop[0],
-				bg.crop[1],
-				bg.crop[2],
-				bg.crop[3],
-				this.pos.x + bg.x,
-				this.pos.y + bg.y,
-				bg.crop[2] * bg.scaleX,
-				bg.crop[3] * bg.scaleY,
-			);
+		const image = this.image;
+		if (image !== undefined) {
+			renderer.translate(this.pos.x, this.pos.y);
+			image.preDraw(renderer);
+			image.draw(renderer, viewport as never);
+			image.postDraw(renderer);
+			renderer.translate(-this.pos.x, -this.pos.y);
 		}
+	}
+
+	/** let go of the color and the image with the background */
+	override destroy(): void {
+		if (this.color !== undefined) {
+			colorPool.release(this.color);
+			this.color = undefined;
+		}
+		this.image?.destroy();
+		this.image = undefined;
+		super.destroy();
 	}
 }

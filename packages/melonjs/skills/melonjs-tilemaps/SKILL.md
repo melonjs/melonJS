@@ -492,13 +492,19 @@ level.load("world:Level_0");                       // "<asset name>:<level ident
   file says they are, relative to it. Keep the folder as LDtk has it. An image
   the game loaded itself under the file's name (`atlas/tiles.png` as `tiles`)
   is used instead.
-- **Entities** are built by the class registered under their identifier:
-  `new Player(x, y, settings)`, `x` and `y` being the top left corner of the
-  entity's box whatever its pivot in LDtk (`settings.px` is the pivot).
-  `settings.fields` holds its fields, also copied onto the settings where the
-  name is free (`settings.life`; not `type` or `width`). With no class, an
-  entity is an `LDtkEntity`: a box with no body, found with
-  `world.getChildByName("PlayerStart")`, drawn with its tile if it has one.
+- **Entities** are built by the class the game registered under their
+  identifier: `new Player(x, y, settings)`, `x` and `y` being the top left
+  corner of the entity's box whatever its pivot in LDtk (`settings.px` is the
+  pivot). `settings.fields` holds its fields, also copied onto the settings
+  where the name is free (`settings.life`; not `type` or `width`). An entity
+  LDtk draws with a tile carries it as `settings.image` (a texture atlas) and
+  `settings.region`, so a class extending `Sprite` passes the settings straight
+  to `super(x, y, settings)`. With no class, an entity is an `LDtkEntity`: a
+  box with no body, found with `world.getChildByName("PlayerStart")`, showing
+  its tile (a `Sprite`, in LDtk's fill mode) if it has one. Only classes the
+  game registered count: an entity named "Trigger" or "Text" is not built by
+  the engine's class of that name unless the game registers it
+  (`registerObjectClass("Trigger", Trigger)`).
 - **Walls** come from IntGrid layers whose identifier contains "collision",
   the convention of a Tiled collision layer: one static `WORLD_SHAPE` body per
   run of cells, built by the same "shape" factory, carrying `intGridValue` and
@@ -521,7 +527,8 @@ level.load("world:Level_0");                       // "<asset name>:<level ident
   data and enum tags. `showIntGrid: true` draws IntGrid layers that have no
   tiles, in LDtk's colors; `entities: false` leaves the entities out.
 - Not supported: the editor's built-in entity icons (they are not in the
-  project's files), nine-slice entity tiles (drawn stretched).
+  project's files). A nine-slice entity tile keeps LDtk's left and top borders
+  on both sides (a `NineSliceSprite` has one border per axis).
 
 ## Tile layers without Tiled
 
@@ -686,6 +693,7 @@ layer into the offscreen-bake path instead.
 | the player falls through an LDtk level | no IntGrid layer is named like "collision": pass `collisionLayers` to `level.load` |
 | an LDtk entity is placed half its size off | `x`, `y` are its box's top left corner; its pivot is `settings.px` |
 | an LDtk field reads `undefined` on the settings | its name is one of the settings' own (`type`, `name`, `width`...): read `settings.fields.type` |
+| an LDtk entity named "Trigger" (or "Sprite", "Text"...) does nothing | an entity's name is not taken for the engine's class: register it, `registerObjectClass("Trigger", Trigger)`, and give the entity the fields the class reads |
 
 ## Related skills
 

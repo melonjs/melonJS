@@ -162,6 +162,8 @@ export interface LDtkEntityDef {
 	tags: string[];
 	/** how the entity's tile fills its box: `Cover`, `FitInside`, `Repeat`, `Stretch`, `FullSizeCropped`, `FullSizeUncropped` or `NineSlice` */
 	tileRenderMode: string;
+	/** in `NineSlice` mode, the borders that are not stretched: up, right, down, left, in pixels */
+	nineSliceBorders?: number[];
 	pivotX: number;
 	pivotY: number;
 }

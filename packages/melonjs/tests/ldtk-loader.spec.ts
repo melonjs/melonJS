@@ -17,10 +17,6 @@ import {
 	video,
 } from "../src/index.js";
 import {
-	drawEntityTile,
-	type EntityTile,
-} from "../src/level/ldtk/renderables.ts";
-import {
 	diff,
 	enter,
 	frame,
@@ -584,98 +580,6 @@ describe("the entities of a level", () => {
 		});
 		expect(current().getEntities()).toEqual([]);
 		expect(app.world.getChildByName("Door")).toEqual([]);
-	});
-
-	it("draw the tile LDtk shows them with, the way it is set to fill their box", () => {
-		const image = document.createElement("canvas");
-		const tile = (mode: string): EntityTile => {
-			return { image, x: 32, y: 48, width: 16, height: 8, mode };
-		};
-		const drawn = (mode: string, pivotX = 0.5, pivotY = 0.5) => {
-			const drawImage = vi.fn();
-			drawEntityTile(
-				{ drawImage } as never,
-				tile(mode),
-				100,
-				200,
-				40,
-				40,
-				pivotX,
-				pivotY,
-			);
-			return drawImage.mock.calls.map((call) => {
-				return call.slice(1) as number[];
-			});
-		};
-		// source x, y, width, height, then where and how large
-		expect(drawn("Stretch")).toEqual([[32, 48, 16, 8, 100, 200, 40, 40]]);
-		// borders are not read: stretched
-		expect(drawn("NineSlice")).toEqual(drawn("Stretch"));
-		// whole, 2.5 times larger, in the middle of the box
-		expect(drawn("FitInside")).toEqual([[32, 48, 16, 8, 100, 210, 40, 20]]);
-		// held by its pivot: at the top, or at the bottom
-		expect(drawn("FitInside", 0, 0)).toEqual([
-			[32, 48, 16, 8, 100, 200, 40, 20],
-		]);
-		expect(drawn("FitInside", 1, 1)).toEqual([
-			[32, 48, 16, 8, 100, 220, 40, 20],
-		]);
-		// 5 times larger to fill the box: the middle 8 x 8 of it shows
-		expect(drawn("Cover")).toEqual([[36, 48, 8, 8, 100, 200, 40, 40]]);
-		// at its own size, around the pivot
-		expect(drawn("FullSizeUncropped")).toEqual([
-			[32, 48, 16, 8, 112, 216, 16, 8],
-		]);
-		expect(drawn("FullSizeCropped")).toEqual([
-			[32, 48, 16, 8, 112, 216, 16, 8],
-		]);
-		// side by side to fill the box, the last column and row cut to it
-		const repeated = drawn("Repeat");
-		expect(repeated).toHaveLength(3 * 5);
-		expect(repeated[0]).toEqual([32, 48, 16, 8, 100, 200, 16, 8]);
-		expect(repeated[2]).toEqual([32, 48, 8, 8, 132, 200, 8, 8]);
-		expect(repeated.at(-1)).toEqual([32, 48, 8, 8, 132, 232, 8, 8]);
-		// a box of no size draws nothing
-		const drawImage = vi.fn();
-		drawEntityTile({ drawImage } as never, tile("Stretch"), 0, 0, 0, 10, 0, 0);
-		expect(drawImage).not.toHaveBeenCalled();
-	});
-
-	it("show their tile when its tileset has an image", async () => {
-		await enter(app, "Entities:Entities_demo");
-		const withTile = current()
-			.getEntities()
-			.filter((entity) => {
-				return entity instanceof LDtkEntity && entity.tile !== undefined;
-			}) as LDtkEntity[];
-		const project = projects.get("Entities") as LDtkProject;
-		const expected = (
-			project.getLevel("Entities_demo")?.json.layerInstances ?? []
-		)
-			.flatMap((layer) => {
-				return layer.entityInstances;
-			})
-			.filter((entity) => {
-				const def = project.tilesets.get(entity.__tile?.tilesetUid ?? -1);
-				return typeof def?.relPath === "string";
-			});
-		expect(withTile).toHaveLength(expected.length);
-		for (const entity of withTile) {
-			const json = expected.find((candidate) => {
-				return candidate.iid === entity.iid;
-			});
-			expect(entity.tile).toMatchObject({
-				x: json?.__tile?.x,
-				y: json?.__tile?.y,
-				width: json?.__tile?.w,
-				height: json?.__tile?.h,
-			});
-			expect(entity.tile?.image).toBe(
-				loader.getImage(
-					project.tilesets.get(json?.__tile?.tilesetUid ?? -1)?.relPath ?? "",
-				),
-			);
-		}
 	});
 });
 

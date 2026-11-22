@@ -4,6 +4,7 @@ import { Bounds } from "../../physics/bounds.ts";
 import type Container from "../../renderable/container.js";
 import Renderable from "../../renderable/renderable.js";
 import { createCanvas } from "../../video/canvas_factory.js";
+import { TextureAtlas } from "../../video/texture/atlas.js";
 import { getNewTMXRenderer } from "../tiled/renderer/autodetect.js";
 import type TMXOrthogonalRenderer from "../tiled/renderer/TMXOrthogonalRenderer.js";
 import {
@@ -22,11 +23,12 @@ import { IntGrid } from "./intgrid.ts";
 import type { LDtkLevelInfo, LDtkProject, LDtkWorldInfo } from "./project.ts";
 import { fieldValues } from "./project.ts";
 import {
-	type BackgroundImage,
 	type EntityTile,
 	LDtkBackground,
 	LDtkEntity,
 	type LDtkEntitySettings,
+	regionOf,
+	regionSprite,
 	type TileImage,
 } from "./renderables.ts";
 import { splitTiles } from "./split.ts";
@@ -91,6 +93,13 @@ export const LOAD_OPTIONS = [
  */
 const LDTK_FLIPS = FLIP_H_BIT | FLIP_V_BIT;
 
+/**
+ * the settings that are the engine's to give, whether an entity has them or
+ * not: a field of one of these names is read under `fields` alone, and is
+ * never taken for what the engine would have put there
+ */
+const RESERVED_SETTINGS = new Set(["tileRect", "color"]);
+
 /** the draw orders kept for each layer of LDtk: a layer can become several */
 const Z_PER_LAYER = 32;
 /** the draw orders kept for each depth of a world */
@@ -106,6 +115,8 @@ export interface BuiltLevel {
 	layers: Renderable[];
 	/** its entities */
 	entities: Renderable[];
+	/** the identifier in LDtk of each of them, whatever class built it */
+	identifiers: Map<Renderable, string>;
 	/** its IntGrid layers, by their identifier */
 	intGrids: Map<string, IntGrid>;
 }
@@ -137,6 +148,8 @@ class LevelBuilder {
 		number,
 		{ tileset: Tileset; group: TilesetGroup } | null
 	>();
+	/** a texture atlas over each image sprites are made from */
+	atlases = new Map<TileImage, TextureAtlas>();
 	/** the tilesets drawing the IntGrid layers, by layer definition */
 	intGridTilesets = new Map<
 		number,
@@ -275,12 +288,13 @@ class LevelBuilder {
 			children: [],
 			layers: [],
 			entities: [],
+			identifiers: new Map(),
 			intGrids: new Map(),
 		};
 		const json = info.json;
 
 		// the background: the level's color, and its image as LDtk places it
-		let image: BackgroundImage | undefined;
+		let image: Renderable | undefined;
 		const bgImage = imageOf(json.bgRelPath);
 		if (json.bgRelPath !== null && json.bgRelPath !== undefined) {
 			if (bgImage === null) {
@@ -288,14 +302,18 @@ class LevelBuilder {
 					`melonJS LDtk: the background image of level "${info.identifier}" (${json.bgRelPath}) is not loaded`,
 				);
 			} else if (json.__bgPos !== null && json.__bgPos !== undefined) {
-				image = {
-					image: bgImage,
-					crop: json.__bgPos.cropRect,
-					x: json.__bgPos.topLeftPx[0],
-					y: json.__bgPos.topLeftPx[1],
-					scaleX: json.__bgPos.scale[0],
-					scaleY: json.__bgPos.scale[1],
-				};
+				// a sprite on the part of the image LDtk shows, scaled and
+				// placed as LDtk does
+				const [cx, cy, cw, ch] = json.__bgPos.cropRect;
+				const atlas = this.atlasOf(bgImage);
+				image = regionSprite(
+					atlas,
+					regionOf(atlas, cx, cy, cw, ch),
+					json.__bgPos.topLeftPx[0],
+					json.__bgPos.topLeftPx[1],
+					json.__bgPos.scale[0],
+					json.__bgPos.scale[1],
+				);
 			}
 		}
 		if (fill || image !== undefined) {
@@ -334,18 +352,31 @@ class LevelBuilder {
 				this.buildTiles(built, layer, x, y, z, opacity);
 			}
 			if (layer.entityInstances.length > 0 && this.options.entities !== false) {
-				for (const entity of layer.entityInstances) {
+				// LDtk draws a later entity over an earlier one. Children of
+				// one draw order are drawn last added first, so the last
+				// entity is added first
+				for (let e = layer.entityInstances.length - 1; e >= 0; e--) {
+					const entity = layer.entityInstances[e];
 					const settings = this.entitySettings(info, layer, entity, x, y, z);
-					const object = hasObjectFactory(settings.class)
+					// a class the game registered under the entity's name.
+					// Not the engine's own classes: an entity's name is the
+					// designer's word ("Trigger", "Text", "Entity"), not a
+					// request for the engine class of that name
+					const object = hasObjectFactory(settings.class, true)
 						? createLevelObject(settings, this.map)
 						: new LDtkEntity(settings);
+					// found by its name in LDtk, whatever built it
+					if (!object.name) {
+						object.name = settings.name;
+					}
 					// an entity is faded as its layer is, like the objects
 					// of a Tiled object layer
 					if (opacity !== 1 && object.isRenderable) {
 						applyObjectOpacity(object, opacity);
 					}
 					this.add(built, object, z);
-					built.entities.push(object);
+					built.entities.unshift(object);
+					built.identifiers.set(object, settings.name);
 				}
 			}
 		}
@@ -536,14 +567,42 @@ class LevelBuilder {
 	}
 
 	/**
-	 * the tile an entity or a field shows, cut from its tileset's image
+	 * a texture atlas over an image, private to the level: regions of it are
+	 * what sprites are made from (an entity's tile, a background). Not the
+	 * renderer's cached atlas of the image, which is the tileset's grid.
+	 * @param image - the image
+	 * @returns the atlas, made on first use
+	 */
+	atlasOf(image: TileImage): TextureAtlas {
+		let atlas = this.atlases.get(image);
+		if (atlas === undefined) {
+			atlas = new TextureAtlas(
+				{
+					meta: {
+						app: "melonJS",
+						size: { w: image.width, h: image.height },
+					},
+					frames: [],
+				},
+				image,
+				false,
+			);
+			this.atlases.set(image, atlas);
+		}
+		return atlas;
+	}
+
+	/**
+	 * the tile an entity shows, as a region of its tileset's image
 	 * @param rect - the rectangle of the tileset
 	 * @param mode - how it fills the entity's box
+	 * @param borders - in nine-slice mode, the borders that are not stretched
 	 * @returns the tile, or undefined when the tileset has no image
 	 */
 	entityTile(
 		rect: LDtkTileRect | null | undefined,
 		mode: string,
+		borders: number[] | undefined,
 	): EntityTile | undefined {
 		if (rect === null || rect === undefined) {
 			return undefined;
@@ -553,14 +612,21 @@ class LevelBuilder {
 		if (image === null) {
 			return undefined;
 		}
-		return {
-			image,
+		const atlas = this.atlasOf(image);
+		const region = regionOf(atlas, rect.x, rect.y, rect.w, rect.h);
+		const tile: EntityTile = {
+			atlas,
+			region,
 			x: rect.x,
 			y: rect.y,
 			width: rect.w,
 			height: rect.h,
 			mode,
 		};
+		if (borders !== undefined) {
+			tile.borders = borders;
+		}
+		return tile;
 	}
 
 	/**
@@ -606,9 +672,14 @@ class LevelBuilder {
 		const tile = this.entityTile(
 			entity.__tile,
 			def?.tileRenderMode ?? "FitInside",
+			def?.nineSliceBorders,
 		);
 		if (tile !== undefined) {
-			settings.tile = tile;
+			settings.tileRect = tile;
+			// what a `Sprite` is made from: a class extending it can hand
+			// the settings to its constructor
+			settings.image = tile.atlas;
+			settings.region = tile.region;
 		}
 		if (entity.__smartColor !== undefined) {
 			settings.color = entity.__smartColor;
@@ -616,7 +687,7 @@ class LevelBuilder {
 		// a field is also read straight off the settings, as a Tiled
 		// property is, unless the name is one of the settings' own
 		for (const [name, value] of Object.entries(fields)) {
-			if (!(name in settings)) {
+			if (!(name in settings) && !RESERVED_SETTINGS.has(name)) {
 				settings[name] = value;
 			}
 		}
@@ -826,11 +897,14 @@ export class LDtkLevel extends LDtkMap {
 	 * @returns the entities
 	 */
 	getEntities(name?: string): Renderable[] {
-		const entities = this.built?.entities ?? [];
+		const built = this.built;
+		if (built === undefined) {
+			return [];
+		}
 		return name === undefined
-			? entities.slice()
-			: entities.filter((entity) => {
-					return entity.name === name;
+			? built.entities.slice()
+			: built.entities.filter((entity) => {
+					return built.identifiers.get(entity) === name;
 				});
 	}
 
@@ -1068,7 +1142,7 @@ export class LDtkWorld extends LDtkMap {
 		const entities: Renderable[] = [];
 		for (const built of this.loaded.values()) {
 			for (const entity of built.entities) {
-				if (name === undefined || entity.name === name) {
+				if (name === undefined || built.identifiers.get(entity) === name) {
 					entities.push(entity);
 				}
 			}

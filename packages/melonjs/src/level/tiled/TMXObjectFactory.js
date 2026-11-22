@@ -213,7 +213,10 @@ export function registerTiledObjectClass(name, Constructor) {
 	let displacesBuiltin = false;
 	if (typeof existing !== "undefined") {
 		if (existing === Constructor) {
-			// same class already registered — no-op
+			// same class already registered — nothing to change, but a name
+			// the game registers itself is the game's from then on, even
+			// when the class is the engine's own default for it
+			builtinNames.delete(name);
 			return;
 		}
 		if (!builtinNames.has(name)) {
@@ -405,13 +408,23 @@ export const registerObjectFactory = registerTiledObjectFactory;
  * the engine (its own classes, such as `Trigger` or `Light2d`, are): what a
  * level reader asks before {@link createLevelObject}, to tell an object the
  * game has a class for from one it has to make something of by itself.
+ *
+ * With `gameOnly`, only what the game registered itself counts: not the
+ * engine's own classes, nor the fallbacks for an object with no class
+ * ("text", "tile", "shape"). For a format whose objects are named freely,
+ * where a name like "Trigger", "Text" or "Entity" is the designer's own word
+ * and not a request for the engine's class.
  * @category Tilemap
  * @param {string} name - a class or an object name
+ * @param {boolean} [gameOnly=false] - count only what the game registered
  * @returns {boolean} true if a class or a factory is registered for it
  */
-export function hasObjectFactory(name) {
+export function hasObjectFactory(name, gameOnly = false) {
 	if (!factoriesInitialized) {
 		initFactories();
+	}
+	if (gameOnly && (builtinNames.has(name) || STRUCTURAL_TYPES.has(name))) {
+		return false;
 	}
 	return factories.has(name);
 }
