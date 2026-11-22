@@ -580,3 +580,49 @@ export function applyTMXProperties(obj, data) {
 		}
 	}
 }
+
+/**
+ * How a Tiled layer follows the camera by its parallax factor, as a tile
+ * layer takes it (see `TileLayer#parallax`).
+ *
+ * Tiled's factor is the share of the camera's movement the layer makes on
+ * the screen: 1 scrolls with the map, 0 stays with the camera. The layer is
+ * where an image layer of the same factor is (see `readImageLayer`): in its
+ * place when the camera is at the map's origin, and moved from there by the
+ * map's parallax origin times the factor.
+ * @param {object} map - the map the layer belongs to
+ * @param {number} factorX - the layer's parallax factor across, its groups' included
+ * @param {number} factorY - the layer's parallax factor down, its groups' included
+ * @returns {object|undefined} the parallax, or undefined for a layer that scrolls with the map
+ * @ignore
+ */
+export function tiledParallax(map, factorX, factorY) {
+	if (factorX === 1 && factorY === 1) {
+		return undefined;
+	}
+	const originX = +(map.data?.parallaxoriginx ?? 0);
+	const originY = +(map.data?.parallaxoriginy ?? 0);
+	return {
+		x: 1 - factorX,
+		y: 1 - factorY,
+		// where the camera is when the layer is in its place
+		originX:
+			factorX === 1 || originX === 0 ? 0 : (-factorX * originX) / (1 - factorX),
+		originY:
+			factorY === 1 || originY === 0 ? 0 : (-factorY * originY) / (1 - factorY),
+		// measured to the camera's position, the view's top left corner
+		anchorX: 0,
+		anchorY: 0,
+	};
+}
+
+/**
+ * a Tiled layer's parallax factor on one axis
+ * @param {number|string} [value] - `parallaxx` or `parallaxy`, as read
+ * @returns {number} the factor, 1 for a layer with none
+ * @ignore
+ */
+export function tiledParallaxFactor(value) {
+	const factor = +(value ?? 1);
+	return Number.isFinite(factor) ? factor : 1;
+}

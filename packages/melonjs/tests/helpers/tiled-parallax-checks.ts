@@ -6,7 +6,7 @@ import {
 	TMXTileMap,
 	video,
 } from "../../src/index.js";
-import { diff, frame, makeApp } from "./ldtk-harness.ts";
+import { diff, frame, HEIGHT, makeApp, WIDTH } from "./ldtk-harness.ts";
 import { tilesetImage } from "./ldtk-project-builder.ts";
 
 const BACKGROUND = "#101830";
@@ -106,6 +106,9 @@ export function tiledParallaxChecks(
 				image: "ldtk-test-tiles",
 				visible: true,
 				opacity: 1,
+				// once, as a tile layer shows it: an image layer is repeated
+				// over the view unless told not to
+				properties: { repeat: "no-repeat" },
 				...extra,
 			};
 		};
@@ -124,11 +127,13 @@ export function tiledParallaxChecks(
 			return frame(app);
 		};
 
+		// (whole pixels for every factor under test: at half a pixel an image
+		// layer and a tile layer round their own way)
 		const VIEWS: [number, number][] = [
 			[0, 0],
 			[40, 20],
-			[-30, 10],
-			[37, 13],
+			[-32, 12],
+			[36, 16],
 			[-120, -64],
 		];
 
@@ -150,23 +155,77 @@ export function tiledParallaxChecks(
 			return found;
 		};
 
-		// a tile layer and an image layer with the same settings are drawn
-		// alike at every view
-		const expectAlike = (
-			tiles: TMXTileMap,
-			picture: TMXTileMap,
-			what: string,
+		/** what places a layer in Tiled: its offset and its parallax factor */
+		interface Placing {
+			offsetx?: number;
+			offsety?: number;
+			parallaxx?: number;
+			parallaxy?: number;
+		}
+
+		// The picture where the engine's image layers put it: on the screen
+		// at its offset, plus the map's parallax origin times the factor,
+		// minus the camera's position times the factor.
+		const painted = (
+			placing: Placing,
+			origin: { parallaxoriginx?: number; parallaxoriginy?: number },
+			viewX: number,
+			viewY: number,
 		) => {
-			const a = frames(tiles);
-			const b = frames(picture);
+			const canvas = document.createElement("canvas");
+			canvas.width = WIDTH;
+			canvas.height = HEIGHT;
+			const c = canvas.getContext("2d") as CanvasRenderingContext2D;
+			c.fillStyle = BACKGROUND;
+			c.fillRect(0, 0, WIDTH, HEIGHT);
+			const factorX = placing.parallaxx ?? 1;
+			const factorY = placing.parallaxy ?? 1;
+			c.drawImage(
+				loader.getImage("ldtk-test-tiles") as HTMLImageElement,
+				Math.round(
+					(placing.offsetx ?? 0) +
+						factorX * (origin.parallaxoriginx ?? 0) -
+						factorX * viewX,
+				),
+				Math.round(
+					(placing.offsety ?? 0) +
+						factorY * (origin.parallaxoriginy ?? 0) -
+						factorY * viewY,
+				),
+			);
+			return c.getImageData(0, 0, WIDTH, HEIGHT).data;
+		};
+
+		// A tile layer is where an image layer of the same picture, offset
+		// and factor is, at every view: by the image layers' rule, painted
+		// here, and against an image layer itself where one draws its
+		// picture once (on WebGL it spreads the picture's edges over the
+		// view, which is not this test's to tell).
+		const expectAsAnImageLayer = (
+			tiles: TMXTileMap,
+			placing: Placing,
+			what: string,
+			origin: { parallaxoriginx?: number; parallaxoriginy?: number } = {},
+		) => {
+			const got = frames(tiles);
 			for (const [i, [x, y]] of VIEWS.entries()) {
-				const result = diff(a[i], b[i], tolerance);
+				const result = diff(got[i], painted(placing, origin, x, y), tolerance);
 				expect(
 					result.different,
 					`${what}, from ${String(x)}, ${String(y)}: ${result.first}`,
 				).toBe(0);
 			}
-			return a;
+			if (renderer === video.CANVAS) {
+				const picture = frames(tiledMap([imageLayer({ ...placing })], origin));
+				for (const [i, [x, y]] of VIEWS.entries()) {
+					const result = diff(got[i], picture[i], tolerance);
+					expect(
+						result.different,
+						`${what}, against an image layer, from ${String(x)}, ${String(y)}: ${result.first}`,
+					).toBe(0);
+				}
+			}
+			return got;
 		};
 
 		it("a layer with no factor, or a factor of 1, scrolls with the map", () => {
@@ -175,23 +234,24 @@ export function tiledParallaxChecks(
 				parallaxOf(tiledMap([tileLayer({ parallaxx: 1, parallaxy: 1 })]))
 					.parallax,
 			).toBeUndefined();
-			expectAlike(
-				tiledMap([tileLayer({ offsetx: 24, offsety: 16 })]),
-				tiledMap([imageLayer({ offsetx: 24, offsety: 16 })]),
+			const placing = { offsetx: 24, offsety: 16 };
+			expectAsAnImageLayer(
+				tiledMap([tileLayer(placing)]),
+				placing,
 				"no factor",
 			);
 		});
 
 		it("a factor moves the layer as it moves an image layer", () => {
-			const settings = {
+			const placing = {
 				offsetx: 24,
 				offsety: 16,
 				parallaxx: 0.5,
 				parallaxy: 0.25,
 			};
-			const moving = expectAlike(
-				tiledMap([tileLayer(settings)]),
-				tiledMap([imageLayer(settings)]),
+			const moving = expectAsAnImageLayer(
+				tiledMap([tileLayer(placing)]),
+				placing,
 				"a factor on both axes",
 			);
 			// and not as a layer with no factor does, once the camera moves
@@ -202,7 +262,7 @@ export function tiledParallaxChecks(
 			);
 			// read from the map: the share of the camera's movement the layer
 			// follows is what Tiled's factor leaves, from the camera's corner
-			expect(parallaxOf(tiledMap([tileLayer(settings)])).parallax).toEqual({
+			expect(parallaxOf(tiledMap([tileLayer(placing)])).parallax).toEqual({
 				x: 0.5,
 				y: 0.75,
 				originX: 0,
@@ -214,65 +274,63 @@ export function tiledParallaxChecks(
 		});
 
 		it("a factor on one axis leaves the other alone", () => {
-			expectAlike(
+			expectAsAnImageLayer(
 				tiledMap([tileLayer({ parallaxx: 0.25 })]),
-				tiledMap([imageLayer({ parallaxx: 0.25 })]),
+				{ parallaxx: 0.25 },
 				"a factor across",
 			);
-			expectAlike(
+			expectAsAnImageLayer(
 				tiledMap([tileLayer({ parallaxy: 0 })]),
-				tiledMap([imageLayer({ parallaxy: 0 })]),
+				{ parallaxy: 0 },
 				"fixed to the camera, down",
 			);
 		});
 
 		it("a factor above 1 moves the layer faster than the map", () => {
-			expectAlike(
-				tiledMap([tileLayer({ parallaxx: 1.5, parallaxy: 2 })]),
-				tiledMap([imageLayer({ parallaxx: 1.5, parallaxy: 2 })]),
+			const placing = { parallaxx: 1.5, parallaxy: 2 };
+			expectAsAnImageLayer(
+				tiledMap([tileLayer(placing)]),
+				placing,
 				"a foreground",
 			);
 		});
 
 		it("the map's parallax origin moves the layer as it moves an image layer", () => {
-			const settings = { offsetx: 8, parallaxx: 0.5, parallaxy: 0.25 };
+			const placing = { offsetx: 8, parallaxx: 0.5, parallaxy: 0.25 };
 			const origin = { parallaxoriginx: 100, parallaxoriginy: 60 };
-			const withOrigin = expectAlike(
-				tiledMap([tileLayer(settings)], origin),
-				tiledMap([imageLayer(settings)], origin),
+			const withOrigin = expectAsAnImageLayer(
+				tiledMap([tileLayer(placing)], origin),
+				placing,
 				"a parallax origin",
+				origin,
 			);
 			// and it does move it
-			const without = frames(tiledMap([tileLayer(settings)]));
+			const without = frames(tiledMap([tileLayer(placing)]));
 			expect(
 				diff(withOrigin[0], without[0], tolerance).different,
 			).toBeGreaterThan(500);
 		});
 
 		it("a layer in a group follows by the group's factor times its own", () => {
-			const grouped = tiledMap([
-				{
-					type: "group",
-					name: "far",
-					visible: true,
-					opacity: 1,
-					offsetx: 24,
-					parallaxx: 0.5,
-					parallaxy: 0.5,
-					layers: [tileLayer({ offsety: 16, parallaxx: 0.5 })],
-				},
-			]);
-			expect(parallaxOf(grouped).parallax).toMatchObject({ x: 0.75, y: 0.5 });
-			expectAlike(
-				grouped,
-				tiledMap([
-					imageLayer({
+			// (a map is shown once: its layers go with the world they were in)
+			const grouped = () => {
+				return tiledMap([
+					{
+						type: "group",
+						name: "far",
+						visible: true,
+						opacity: 1,
 						offsetx: 24,
-						offsety: 16,
-						parallaxx: 0.25,
+						parallaxx: 0.5,
 						parallaxy: 0.5,
-					}),
-				]),
+						layers: [tileLayer({ offsety: 16, parallaxx: 0.5 })],
+					},
+				]);
+			};
+			expect(parallaxOf(grouped()).parallax).toMatchObject({ x: 0.75, y: 0.5 });
+			expectAsAnImageLayer(
+				grouped(),
+				{ offsetx: 24, offsety: 16, parallaxx: 0.25, parallaxy: 0.5 },
 				"a group's factor",
 			);
 		});

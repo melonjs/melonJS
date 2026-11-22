@@ -158,6 +158,13 @@ export default class TMXLayer extends TileLayer {
 			blendMode: TMXUtils.tiledBlendMode(data.mode),
 			offsetx: +data.offsetx || 0,
 			offsety: +data.offsety || 0,
+			// the layer's parallax factor (Tiled 1.5+): a group gives its
+			// layers its own on top (see TMXGroup)
+			parallax: TMXUtils.tiledParallax(
+				map,
+				TMXUtils.tiledParallaxFactor(data.parallaxx),
+				TMXUtils.tiledParallaxFactor(data.parallaxy),
+			),
 			_configure: (layer) => {
 				// layer tint
 				if (typeof data.tintcolor === "string") {

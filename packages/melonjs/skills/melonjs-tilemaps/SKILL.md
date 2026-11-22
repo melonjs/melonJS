@@ -604,10 +604,17 @@ to 1: 0 scrolls with the world, 1 stays where it is on the screen, a negative
 value scrolls faster than the world. `originX` / `originY` is where the
 camera's centre is when the layer is where it was placed (in the layer's
 container's coordinates, 0, 0 by default), and `scale` draws it smaller or
-larger from that point. It is worked out for each camera as it draws, and
-changes nothing else: `getTile`, `cellAt` and the layer's bounds are the
-layer's where it was placed. A Tiled tile layer's own parallax factor is not
-read: set `parallax` on the layer after the level loads.
+larger from that point. `anchorX` / `anchorY` choose another point of the view
+than its centre (0.5): 0 measures to the camera's position, its top left
+corner. It is worked out for each camera as it draws, and changes nothing
+else: `getTile`, `cellAt` and the layer's bounds are the layer's where it was
+placed.
+
+A Tiled tile layer's parallax factor (and its group's, multiplied) gives it
+one (20.18): `layer.parallax.x` is 1 minus Tiled's factor, measured to the
+camera's position, so that it moves exactly as an image layer of the same
+factor does and the two stay together. An object layer's factor is not
+applied: its objects are things of the map.
 
 `mergeGridRects(cols, rows, (col, row) => boolean)` covers the cells that pass
 a test with few rectangles, in cells: one static body per wall instead of one
@@ -733,7 +740,8 @@ layer into the offscreen-bake path instead.
 | an LDtk level loads with no tiles, and a warning that a tileset's image is not loaded | the image is not where the project file says, relative to it (the folder was reorganised) |
 | LDtk entities are invisible in the game | no class is registered for them (`registerObjectClass(identifier, Class)`), and their icon is LDtk's own, which is not in the files: give them a tile from a tileset of the project, or a class |
 | the player falls through an LDtk level | no IntGrid layer is named like "collision": pass `collisionLayers` to `level.load` |
-| a tile layer set to scroll slower than the level in Tiled scrolls with it | a Tiled tile layer's parallax factor is not read (an image layer's is): set `layer.parallax = { x, y }` once the level is loaded, where `x` is 1 minus Tiled's factor |
+| a tile layer set to scroll slower than the level in Tiled scrolls with it (before 20.18) | a Tiled tile layer's parallax factor was not read (an image layer's was): update |
+| a Tiled parallax layer is not where Tiled shows it at the start of the level | Tiled measures a factor from the centre of its own view to the map's parallax origin; the engine measures from the camera's position, for tile and image layers alike: move the layer with its offset, or set `layer.parallax` yourself |
 | `getTile` finds nothing under a tile of a parallax layer | a parallax moves where the layer is drawn, not its cells: they are where the layer was placed |
 | an LDtk entity is placed half its size off | `x`, `y` are its box's top left corner; its pivot is `settings.px` |
 | an LDtk field reads `undefined` on the settings | its name is one of the settings' own (`type`, `name`, `width`...): read `settings.fields.type` |

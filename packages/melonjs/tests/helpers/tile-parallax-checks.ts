@@ -40,6 +40,8 @@ interface Parallax {
 	y: number;
 	originX: number;
 	originY: number;
+	anchorX: number;
+	anchorY: number;
 	scale: number;
 }
 
@@ -284,9 +286,11 @@ export function parallaxChecks(
 			const scale = parallax?.scale ?? 1;
 			const originX = parallax?.originX ?? 0;
 			const originY = parallax?.originY ?? 0;
-			// the view's centre, in the container's coordinates
-			const centreX = viewX + WIDTH / 2 - containerX;
-			const centreY = viewY + HEIGHT / 2 - containerY;
+			// the point of the view the layer is measured to (its centre,
+			// unless the parallax says another), in the container's
+			// coordinates
+			const centreX = viewX + WIDTH * (parallax?.anchorX ?? 0.5) - containerX;
+			const centreY = viewY + HEIGHT * (parallax?.anchorY ?? 0.5) - containerY;
 			// the origin, moved to a whole pixel; the layer scaled from it
 			const frameX = Math.round(
 				originX + (centreX - originX) * (parallax?.x ?? 0),
@@ -354,6 +358,42 @@ export function parallaxChecks(
 					diff(look(100, 40), expected(tiles, undefined, 100, 40), tolerance)
 						.different,
 				).toBeGreaterThan(2000);
+			});
+
+			it("is measured to the point of the view its anchor says: a corner, an edge", () => {
+				// to the camera's position, the view's top left corner: in
+				// its place when the camera is at the origin
+				const corner = { x: 0.5, y: 0.25, anchorX: 0, anchorY: 0 };
+				show(make(corner));
+				for (const [x, y] of VIEWS) {
+					const result = diff(
+						look(x, y),
+						expected(tiles, corner, x, y),
+						tolerance,
+					);
+					expect(result.different, result.first).toBe(0);
+				}
+				expect(
+					diff(look(0, 0), expected(tiles, undefined, 0, 0), tolerance)
+						.different,
+				).toBe(0);
+				// and not where the view's centre would put it
+				expect(
+					diff(
+						look(100, 40),
+						expected(tiles, { ...corner, anchorX: 0.5, anchorY: 0.5 }, 100, 40),
+						tolerance,
+					).different,
+				).toBeGreaterThan(2000);
+				// to its right and bottom edges
+				const edges = { x: 0.5, y: 0.5, anchorX: 1, anchorY: 1 };
+				show(make(edges));
+				const result = diff(
+					look(-200, -160),
+					expected(tiles, edges, -200, -160),
+					tolerance,
+				);
+				expect(result.different, result.first).toBe(0);
 			});
 
 			it("a negative factor moves it faster than the world", () => {
@@ -475,6 +515,8 @@ export function parallaxChecks(
 					y: 0.5,
 					originX: 0,
 					originY: 0,
+					anchorX: 0.5,
+					anchorY: 0.5,
 					scale: 1,
 				});
 				made.parallax = undefined;
@@ -747,6 +789,8 @@ export function parallaxChecks(
 					y: 0.25,
 					originX: LEVEL_WIDTH / 2,
 					originY: LEVEL_HEIGHT / 2,
+					anchorX: 0.5,
+					anchorY: 0.5,
 					scale: 1,
 				});
 			}
@@ -786,6 +830,8 @@ export function parallaxChecks(
 				y: 0.5,
 				originX: 0,
 				originY: 0,
+				anchorX: 0.5,
+				anchorY: 0.5,
 				scale: 0.8,
 			});
 		});

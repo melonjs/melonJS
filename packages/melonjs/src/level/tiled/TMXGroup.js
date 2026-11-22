@@ -1,7 +1,12 @@
 import { clamp } from "../../math/math.ts";
 import TMXLayer from "./TMXLayer.js";
 import TMXObject from "./TMXObject.js";
-import { applyTMXProperties, tiledBlendMode } from "./TMXUtils.js";
+import {
+	applyTMXProperties,
+	tiledBlendMode,
+	tiledParallax,
+	tiledParallaxFactor,
+} from "./TMXUtils.js";
 
 /**
  * object group definition as defined in Tiled.
@@ -109,6 +114,14 @@ export default class TMXGroup {
 				// the group's offset, on top of the layer's own
 				layer.pos.x += this.offsetx;
 				layer.pos.y += this.offsety;
+				// and its parallax factor, times the layer's own
+				layer.parallax = tiledParallax(
+					map,
+					tiledParallaxFactor(data.parallaxx) *
+						tiledParallaxFactor(layers[i].parallaxx),
+					tiledParallaxFactor(data.parallaxy) *
+						tiledParallaxFactor(layers[i].parallaxy),
+				);
 				// set a renderer
 				layer.setRenderer(map.getRenderer());
 				// resize container accordingly

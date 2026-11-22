@@ -118,6 +118,11 @@ export function viewStart(layer, view, out) {
  * @property {number} [originX=0] - where the camera's centre is, across, when
  * the layer is where it was placed, in the coordinates the layer's `pos` is in
  * @property {number} [originY=0] - the same, down
+ * @property {number} [anchorX=0.5] - the point of the view that is on the
+ * origin when the layer is where it was placed, across: 0.5 for the view's
+ * centre, 0 for its left edge (the camera's position), 1 for its right edge
+ * @property {number} [anchorY=0.5] - the same, down: 0 for the view's top
+ * edge
  * @property {number} [scale=1] - the layer's size, scaled from that origin:
  * 0.5 for a layer drawn at half its size, as one further away
  */
@@ -138,6 +143,8 @@ export function readParallax(parallax) {
 		y: parallax.y ?? 0,
 		originX: parallax.originX ?? 0,
 		originY: parallax.originY ?? 0,
+		anchorX: parallax.anchorX ?? 0.5,
+		anchorY: parallax.anchorY ?? 0.5,
 		scale: parallax.scale ?? 1,
 	};
 	if (!(read.scale > 0)) {
@@ -153,8 +160,9 @@ export function readParallax(parallax) {
  * coordinates the layer's `pos` is in is drawn at
  * `out + out.scale * (p - origin)`.
  *
- * The layer's origin is moved by the part of the way to the view's centre
- * its factors say, to a whole pixel, and the layer is scaled from it: every
+ * The layer's origin is moved by the part of the way to the view's anchor
+ * (its centre, by default) its factors say, to a whole pixel, and the layer
+ * is scaled from it: every
  * part of a layer cut in several (a level's layer can be) is then drawn on
  * the same pixels, on every renderer.
  * @param {LayerParallax} parallax - the layer's parallax
@@ -176,8 +184,12 @@ export function parallaxPlacement(
 ) {
 	const { originX, originY } = parallax;
 	out.scale = parallax.scale;
-	out.x = Math.round(originX + (viewX + viewWidth / 2 - originX) * parallax.x);
-	out.y = Math.round(originY + (viewY + viewHeight / 2 - originY) * parallax.y);
+	out.x = Math.round(
+		originX + (viewX + viewWidth * parallax.anchorX - originX) * parallax.x,
+	);
+	out.y = Math.round(
+		originY + (viewY + viewHeight * parallax.anchorY - originY) * parallax.y,
+	);
 	return out;
 }
 

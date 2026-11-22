@@ -4,7 +4,7 @@
 
 ### Added
 - LDtk: levels made with the [LDtk](https://ldtk.io) editor load as the editor saves them, with nothing to export: a `.ldtk` file is an asset of type `"ldtk"` (its tileset images and separate level files load with it), a level is loaded with `level.load("<asset>:<level>")` and the whole world with `level.load("<asset>")`. Auto-layers, stacked and mirrored tiles, IntGrid layers as walls and as `IntGrid` values to read, entities built by the classes registered with `registerObjectClass`, worlds whose levels come and go while the game runs (`LDtkWorld#streamAround`), the project's table of content (`LDtkProject#getTableOfContent`), and layers that follow the camera by LDtk's parallax factors. The `LDtk*Json` types cover every field of LDtk's JSON schema for games
-- Tile maps: a tile layer follows the camera with `parallax` (`{ x, y, originX, originY, scale }`), on `TileLayer` and `PlacedTileLayer`: a backdrop that scrolls slower than the level, a foreground that scrolls faster, drawn smaller or larger as one further away or nearer. On every renderer, the GPU tile path included
+- Tile maps: a tile layer follows the camera with `parallax` (`{ x, y, originX, originY, scale }`), on `TileLayer` and `PlacedTileLayer`: a backdrop that scrolls slower than the level, a foreground that scrolls faster, drawn smaller or larger as one further away or nearer (`anchorX` / `anchorY` choose the point of the view it is measured to). On every renderer, the GPU tile path included
 - Levels: `level.registerFormat(format, { create, loadOptions })` lets a loader for another map editor's files register its levels with the director, which then loads, reloads and steps through them, and forwards their options from a `Trigger`, as it does for a Tiled map. `level.remove(levelId)` is documented
 - Levels: `level.followViewport(container, bounds)` has the viewport follow a level's area as it does a Tiled map's (its bounds, a small level centred), for a level format of your own
 - Tile maps: `TileLayer`, `Tileset` and `TilesetGroup` build a tile layer in code or from another editor's files, from a plain description (`cols`, `rows`, tile size, an image); `layer.setCell(col, row, gid, flip)` fills it, and `tileset.tileIdAt(x, y)` gives the id of the tile at a place of the image. `TMXLayer`, `TMXTileset` and `TMXTilesetGroup` now extend them, unchanged
@@ -19,6 +19,7 @@
 - Tile maps: two tilesets of different tile sizes cut from one image each draw their own tiles; the second drew the first one's
 - Tile maps: a tile layer removed from the world while the game runs frees the texture the GPU kept for it; it was held, with the layer, until the next level change
 - Tiled: a level's layers and objects are in their draw order as soon as it is loaded; they were sorted on a timer, and a frame drawn before it fired showed the map's layers back to front
+- Tiled: a tile layer's parallax factor, and its group's, move it with the camera as they move an image layer; they were ignored, and a tile layer scrolled with the map whatever its factor
 - Tiled: a `renderMode` custom property on a tile layer chooses how the layer is drawn, as documented; it was overwritten by the default
 - Tiled: loading a level no longer leaves the previous level's viewport-resize handler registered; one was added on every load and never removed, keeping each old level alive
 
