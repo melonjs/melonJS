@@ -18,3 +18,15 @@ export const gameState = {
 	/** the rooms the player has been in */
 	visited: new Set<string>(),
 };
+
+/**
+ * forget everything: a new game
+ * @param depth - the world depth the game starts on
+ */
+export function newGame(depth: number) {
+	gameState.taken.clear();
+	gameState.bag.clear();
+	gameState.visited.clear();
+	gameState.depth = depth;
+	gameState.room = undefined;
+}

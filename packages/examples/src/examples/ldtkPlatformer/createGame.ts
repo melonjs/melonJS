@@ -11,12 +11,24 @@ import {
 	registerObjectClass,
 	state,
 } from "melonjs";
+import { bindControls } from "./controls";
 import { Item } from "./entities/item";
+import { Ladder } from "./entities/ladder";
 import { Player } from "./entities/player";
-import { Ladder, Teleport } from "./entities/zones";
+import { Teleport } from "./entities/teleport";
 import { PlayScreen } from "./play";
 import { resources } from "./resources";
 
+/**
+ * A platformer in a world made with LDtk (its "GridVania" sample): 21 rooms
+ * on two depths, loaded a few at a time around the player.
+ *
+ * Where to look:
+ * - `world/` is the LDtk part: loading the world, following the player from
+ *   room to room, reading the water from an IntGrid layer;
+ * - `entities/` are the classes the world's entities are built with;
+ * - `effects/` and `ui/` are the particles, the sounds and the HUD.
+ */
 export const createGame = async () => {
 	// pixel art: a small view, the size of the smallest room across, scaled
 	// up to the page with its pixels sharp
@@ -29,10 +41,11 @@ export const createGame = async () => {
 
 	// a stick and a button on a touch screen, read as a gamepad
 	plugin.register(GamepadPlugin, "gamepad", { buttons: [{ label: "A" }] });
+	bindControls();
 
-	// The entities of the LDtk world are built by the classes registered
-	// under their identifier. The others ("Exit", "SecretArea", "GameSaver")
-	// are shown as LDtk shows them, with their tile, and do nothing.
+	// An entity of the LDtk world is built by the class registered under
+	// its identifier. The others ("Exit", "SecretArea", "GameSaver") are
+	// shown as LDtk shows them, with their tile, and do nothing.
 	registerObjectClass("Player", Player);
 	registerObjectClass("Item", Item);
 	registerObjectClass("Ladder", Ladder);

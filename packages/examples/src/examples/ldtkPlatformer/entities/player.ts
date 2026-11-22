@@ -4,65 +4,90 @@
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
 import {
-	type Application,
+	Color,
 	collision,
-	input,
 	type LDtkFoundObject,
 	type LDtkObjectSettings,
 	Rect,
 	type Renderable,
 	Sprite,
+	SquishEffect,
+	Tween,
 	Vector2d,
 } from "melonjs";
+import { SPRITES, TILE } from "../config";
+import { type Controls, readControls } from "../controls";
+import { particles } from "../effects/particles";
+import { sounds } from "../effects/sounds";
 import { gameState } from "../gameState";
-import { ldtkWorld, trackRoom } from "../rooms";
+import { isWater, trackRoom } from "../world/rooms";
 import { Item } from "./item";
-import { Ladder, Teleport } from "./zones";
+import { Ladder } from "./ladder";
+import { Teleport } from "./teleport";
 
-// in pixels per frame
+// speeds, in pixels per frame
 const WALK = 2;
-// what a held key adds to the speed each frame, and what the ground takes
-// off it: the player gets up to speed, and comes to a stop, over a few frames
-const PUSH = 0.45;
-const DRAG = 0.25;
 const JUMP = 7.4;
 const CLIMB = 1;
 const SINK = 0.8;
 // the push of a stroke under water
 const STROKE = 3.3;
+// what a held key adds to the speed each frame, and what the ground takes
+// off it: the player gets up to speed, and comes to a stop, over a few frames
+const PUSH = 0.45;
+const DRAG = 0.25;
 // a lighter gravity than the world's: a jump of nearly four tiles, long
 // enough to clear a gap of three
 const GRAVITY = 0.45;
 const WATER_GRAVITY = 0.2;
+
 // frames out of every room before the player is put back where it stood
 const LOST_AFTER = 45;
+// a fall from higher than this shakes the screen on landing, in pixels
+const HARD_LANDING = 4.5 * TILE;
 
-const SIZE = 16;
+const DRY = new Color(255, 255, 255);
+const WET = new Color(150, 200, 255);
+
+/** where the player is in the water: out of it, head out, or under */
+type Water = "none" | "surface" | "under";
 
 /**
  * The "Player" entity of the LDtk world: LDtk places one in the first room,
  * and the class registered under its name is what it becomes.
  */
 export class Player extends Sprite {
-	/** what the player touched during the last step */
+	/** what the player touched during the last step: set by `onCollision`, read by `update` */
 	ladder: Ladder | undefined;
 	teleport: Teleport | undefined;
+
 	climbing = false;
 	swimming = false;
-	/** between two teleports: the screen is fading */
+	/** between two teleports: the screen is closed */
 	travelling = false;
 	/** the up key, last frame: a teleport is taken on a press, not a hold */
 	wasUp = false;
+
 	/** the last place the player stood on the ground, in a room */
 	safe = new Vector2d();
+	/** the frames spent out of every room */
 	lost = 0;
+
+	/** in the air, and how high the player was at the top of it */
+	airborne = false;
+	highest = 0;
+
+	/** squash and stretch: the player's height, as a share of its own */
+	stretch = { scaleY: 1 };
+	stretching: Tween | undefined;
+	squish: SquishEffect | undefined;
 
 	constructor(x: number, y: number, settings: LDtkObjectSettings) {
 		// standing on the bottom of the entity's box, in its middle
-		super(x + (settings.width - SIZE) / 2, y + settings.height - SIZE, {
-			image: "ldtk-platformer-sprites",
-			framewidth: SIZE,
-			frameheight: SIZE,
+		super(x + (settings.width - TILE) / 2, y + settings.height - TILE, {
+			image: SPRITES,
+			framewidth: TILE,
+			frameheight: TILE,
 			anchorPoint: { x: 0, y: 0 },
 		});
 		this.addAnimation("idle", [0]);
@@ -71,10 +96,11 @@ export class Player extends Sprite {
 		this.addAnimation("climb", [4, 5], 160);
 		this.addAnimation("hang", [4]);
 		this.setCurrentAnimation("idle");
+
 		this.bodyDef = {
 			type: "dynamic",
 			// a little narrower than the tile, to pass a gap one tile wide
-			shapes: [new Rect(4, 2, SIZE - 8, SIZE - 2)],
+			shapes: [new Rect(4, 2, TILE - 8, TILE - 2)],
 			collisionType: collision.types.PLAYER_OBJECT,
 			collisionMask:
 				collision.types.WORLD_SHAPE |
@@ -84,53 +110,25 @@ export class Player extends Sprite {
 			frictionAir: { x: DRAG, y: 0 },
 			gravityScale: GRAVITY,
 		};
-		// The player is an entity of the room it starts in, and walks out of
+
+		// The player is an object of the room it starts in, and walks out of
 		// it: persistent, it stays when that room is taken out of the game,
 		// and is not built again when the room comes back.
 		this.isPersistent = true;
 		// the player leaves the view while the screen closes between rooms
 		this.alwaysUpdate = true;
 		this.safe.set(this.pos.x, this.pos.y);
-
-		input.bindKey(input.KEY.LEFT, "left");
-		input.bindKey(input.KEY.RIGHT, "right");
-		input.bindKey(input.KEY.UP, "up");
-		input.bindKey(input.KEY.DOWN, "down");
-		input.bindKey(input.KEY.A, "left");
-		input.bindKey(input.KEY.D, "right");
-		input.bindKey(input.KEY.W, "up");
-		input.bindKey(input.KEY.S, "down");
-		input.bindKey(input.KEY.SPACE, "jump", true);
-		input.bindKey(input.KEY.X, "jump", true);
-		// a gamepad, and the on-screen stick and button on a touch screen
-		const pad = (
-			code: number,
-			key: number,
-			type = "buttons",
-			threshold = 0,
-		) => {
-			input.bindGamepad(
-				0,
-				type === "axes"
-					? { type: "axes", code, threshold }
-					: { type: "buttons", code },
-				key,
-			);
-		};
-		pad(input.GAMEPAD.BUTTONS.FACE_1, input.KEY.SPACE);
-		pad(input.GAMEPAD.BUTTONS.LEFT, input.KEY.LEFT);
-		pad(input.GAMEPAD.BUTTONS.RIGHT, input.KEY.RIGHT);
-		pad(input.GAMEPAD.BUTTONS.UP, input.KEY.UP);
-		pad(input.GAMEPAD.BUTTONS.DOWN, input.KEY.DOWN);
-		pad(input.GAMEPAD.AXES.LX, input.KEY.LEFT, "axes", -0.5);
-		pad(input.GAMEPAD.AXES.LX, input.KEY.RIGHT, "axes", 0.5);
-		pad(input.GAMEPAD.AXES.LY, input.KEY.UP, "axes", -0.5);
-		pad(input.GAMEPAD.AXES.LY, input.KEY.DOWN, "axes", 0.5);
 	}
 
 	override onActivateEvent() {
 		const app = this.parentApp;
 		app.viewport.follow(this, app.viewport.AXIS.BOTH, 0.2);
+		// the bulge that keeps a squashed or stretched player's volume is a
+		// shader effect: on the Canvas renderer it does nothing
+		if (this.squish === undefined) {
+			this.squish = new SquishEffect(app.renderer);
+			this.addPostEffect(this.squish);
+		}
 	}
 
 	/** the middle of the player, in the world */
@@ -138,79 +136,122 @@ export class Player extends Sprite {
 		return { x: this.pos.x + this.width / 2, y: this.pos.y + this.height / 2 };
 	}
 
-	override update(dt: number) {
-		const app = this.parentApp;
-		const body = this.body;
-		const { x, y } = this.centre;
+	/** the player's feet, in the world */
+	get feet() {
+		return { x: this.pos.x + this.width / 2, y: this.pos.y + this.height };
+	}
 
+	override update(dt: number) {
 		// what was touched during the last step, for this frame only
 		const ladder = this.ladder;
 		const teleport = this.teleport;
 		this.ladder = undefined;
 		this.teleport = undefined;
 
+		// behind the closed screen of a teleport, nothing moves
 		if (this.travelling) {
 			return super.update(dt);
 		}
 
-		// the room the player is in: the camera is held to it, and the world
-		// keeps it and its neighbours
+		const keys = readControls();
+		this.stayInTheWorld();
+		const water = this.enterOrLeaveWater();
+		this.walk(keys);
+		const onLadderTop = this.climb(ladder, keys);
+		const grounded =
+			onLadderTop || this.parentApp.world.adapter.isGrounded(this);
+		this.fall(water, onLadderTop);
+		if (keys.jump && (grounded || this.climbing || this.swimming)) {
+			this.jump(water, grounded);
+		}
+		// a teleport is taken by pressing up in front of it
+		if (teleport !== undefined && keys.up && !this.wasUp && !this.climbing) {
+			teleport.triggerEvent(this);
+		}
+		this.wasUp = keys.up;
+
+		this.land(grounded);
+		this.showPose(grounded, keys);
+		this.applyStretch();
+		super.update(dt);
+		return true;
+	}
+
+	/**
+	 * Keep the camera and the world on the room the player is in. Out of
+	 * every room for a while (fallen out of the world), the player is put
+	 * back where it last stood.
+	 */
+	stayInTheWorld() {
+		const app = this.parentApp;
+		const { x, y } = this.centre;
 		if (trackRoom(app, x, y)) {
 			this.lost = 0;
 		} else if (++this.lost > LOST_AFTER) {
-			// out of the world: back to where the player last stood
-			this.moveTo(app, this.safe.x, this.safe.y);
+			this.moveTo(this.safe.x, this.safe.y);
 			this.lost = 0;
 		}
+	}
 
-		// water is a value of the room's IntGrid layer, read where the player is
-		const room = gameState.room;
-		const grid =
-			room === undefined
-				? undefined
-				: ldtkWorld().getIntGrid(room.identifier, "Collisions");
-		const wet = (py: number) => {
-			return grid?.names.get(grid.valueAtPixel(x, py)) === "water";
-		};
+	/**
+	 * Read the water where the player is, and splash going in or out of it.
+	 * @returns where the player is in the water
+	 */
+	enterOrLeaveWater(): Water {
+		const { x } = this.centre;
 		// under water, or with the head out of it: at the surface
-		const under = wet(this.pos.y + 3);
-		const surface = !under && wet(this.pos.y + this.height - 2);
-		this.swimming = under || surface;
-		this.tint.setColor(
-			...((this.swimming ? [150, 200, 255] : [255, 255, 255]) as [
-				number,
-				number,
-				number,
-			]),
-		);
+		const under = isWater(x, this.pos.y + 3);
+		const surface = !under && isWater(x, this.pos.y + this.height - 2);
+		const swimming = under || surface;
+		if (swimming !== this.swimming) {
+			particles.burst("splash", x, this.feet.y - 2);
+			sounds.splash();
+		}
+		this.swimming = swimming;
+		this.tint.copy(swimming ? WET : DRY);
+		return under ? "under" : surface ? "surface" : "none";
+	}
 
-		const up = input.isKeyPressed("up");
-		const down = input.isKeyPressed("down");
-		if (input.isKeyPressed("left")) {
-			body.force.x = -PUSH;
+	/**
+	 * left and right: a push, which the body's friction slows down again
+	 * @param keys - what is asked for
+	 */
+	walk(keys: Controls) {
+		if (keys.left) {
+			this.body.force.x = -PUSH;
 			this.flipX(true);
-		} else if (input.isKeyPressed("right")) {
-			body.force.x = PUSH;
+		} else if (keys.right) {
+			this.body.force.x = PUSH;
 			this.flipX(false);
 		}
+	}
 
-		// on a ladder, up and down climb; off it, or up at its top, the
-		// player is on its feet again
-		if (
-			ladder === undefined ||
-			(up && this.pos.y + this.height <= ladder.pos.y)
-		) {
+	/**
+	 * On a ladder, up and down climb; off it, or up at its top, the player
+	 * is on its feet again. The top of a ladder is stood on, unless the
+	 * player goes down it.
+	 * @param ladder - the ladder the player is in, if any
+	 * @param keys - what is asked for
+	 * @returns true when the player stands on the ladder's top
+	 */
+	climb(ladder: Ladder | undefined, keys: Controls): boolean {
+		const body = this.body;
+		const bottom = this.pos.y + this.height;
+		const top = ladder?.pos.y ?? 0;
+
+		if (ladder === undefined || (keys.up && bottom <= top)) {
 			this.climbing = false;
-		} else if (down || (up && this.pos.y + this.height > ladder.pos.y + 1)) {
+		} else if (keys.down || (keys.up && bottom > top + 1)) {
 			this.climbing = true;
 		}
-		// the top of a ladder is stood on, unless the player goes down it
-		const top = ladder?.pos.y ?? 0;
-		const bottom = this.pos.y + this.height;
+		if (this.climbing) {
+			body.vel.y = keys.up ? -CLIMB : keys.down ? CLIMB : 0;
+			return false;
+		}
+
 		const onTop =
 			ladder !== undefined &&
-			!down &&
-			!this.climbing &&
+			!keys.down &&
 			body.vel.y >= 0 &&
 			bottom >= top - 1 &&
 			bottom <= top + 4;
@@ -218,68 +259,142 @@ export class Player extends Sprite {
 			this.pos.y = top - this.height;
 			body.vel.y = 0;
 		}
-		const grounded = onTop || app.world.adapter.isGrounded(this);
-		if (this.climbing) {
+		return onTop;
+	}
+
+	/**
+	 * How the player falls: not at all on a ladder, slowly in water, and
+	 * under the game's gravity anywhere else.
+	 * @param water - where the player is in the water
+	 * @param onLadderTop - the player stands on a ladder's top
+	 */
+	fall(water: Water, onLadderTop: boolean) {
+		const body = this.body;
+		// leaving the water upwards after a stroke at the surface is a jump
+		const jumpingOut = water === "surface" && body.vel.y <= -STROKE - 0.2;
+		if (this.climbing || onLadderTop) {
 			body.gravityScale = 0;
-			body.vel.y = up ? -CLIMB : down ? CLIMB : 0;
-		} else if (onTop) {
-			body.gravityScale = 0;
-		} else if (under || (surface && body.vel.y > -STROKE - 0.2)) {
-			// in the water the player sinks slowly; jumping out of it, it is
-			// under the world's gravity again
+		} else if (water !== "none" && !jumpingOut) {
 			body.gravityScale = WATER_GRAVITY;
 			body.vel.y = Math.min(body.vel.y, SINK);
 		} else {
 			body.gravityScale = GRAVITY;
 		}
+	}
 
-		// a jump from the ground or off a ladder; a stroke in the water
-		if (
-			input.isKeyPressed("jump") &&
-			(grounded || this.climbing || this.swimming)
-		) {
-			this.climbing = false;
-			// under water a stroke is a small push; from the surface, as from
-			// the ground, it is a jump, out of the water
-			body.gravityScale = under ? WATER_GRAVITY : GRAVITY;
-			body.vel.y = 0;
-			body.force.y = under ? -STROKE : -body.maxVel.y;
-			body.jumping = true;
+	/**
+	 * A jump from the ground or off a ladder; a stroke in the water. Under
+	 * water a stroke is a small push; from the surface, as from the ground,
+	 * it is a jump, out of the water.
+	 * @param water - where the player is in the water
+	 * @param grounded - the player is on the ground
+	 */
+	jump(water: Water, grounded: boolean) {
+		const body = this.body;
+		const under = water === "under";
+		this.climbing = false;
+		body.gravityScale = under ? WATER_GRAVITY : GRAVITY;
+		body.vel.y = 0;
+		body.force.y = under ? -STROKE : -body.maxVel.y;
+		body.jumping = true;
+
+		if (under) {
+			particles.burst("bubbles", this.centre.x, this.pos.y);
+			sounds.stroke();
+			return;
 		}
-
-		// a teleport is taken by pressing up in front of it
-		if (teleport !== undefined && up && !this.wasUp && !this.climbing) {
-			teleport.triggerEvent(this);
+		this.stretchTo(1.25);
+		sounds.jump();
+		if (grounded) {
+			particles.burst("dust", this.feet.x, this.feet.y);
 		}
-		this.wasUp = up;
+	}
 
-		if (grounded && room !== undefined) {
+	/**
+	 * Tell a landing from the frames before it: a squash, dust, and a shake
+	 * of the screen after a long fall. The ground is also where the player
+	 * is put back if it falls out of the world.
+	 * @param grounded - the player is on the ground
+	 */
+	land(grounded: boolean) {
+		const inTheAir = !grounded && !this.climbing && !this.swimming;
+		if (inTheAir) {
+			this.highest = this.airborne
+				? Math.min(this.highest, this.pos.y)
+				: this.pos.y;
+		} else if (grounded && this.airborne) {
+			this.stretchTo(0.75);
+			particles.burst("dust", this.feet.x, this.feet.y);
+			sounds.land();
+			if (this.pos.y - this.highest > HARD_LANDING) {
+				this.parentApp.viewport.shake(2, 150);
+			}
+		}
+		this.airborne = inTheAir;
+
+		if (grounded && gameState.room !== undefined) {
 			this.safe.set(this.pos.x, this.pos.y);
 		}
+	}
 
-		// what the player is doing, shown
-		const moving = Math.abs(body.vel.x) > 0.2;
-		const pose = this.climbing
-			? up || down
-				? "climb"
-				: "hang"
-			: !grounded
-				? "jump"
-				: moving
-					? "walk"
-					: "idle";
+	/**
+	 * the animation that shows what the player is doing
+	 * @param grounded - the player is on the ground
+	 * @param keys - what is asked for
+	 */
+	showPose(grounded: boolean, keys: Controls) {
+		let pose = "idle";
+		if (this.climbing) {
+			pose = keys.up || keys.down ? "climb" : "hang";
+		} else if (!grounded) {
+			pose = "jump";
+		} else if (Math.abs(this.body.vel.x) > 0.2) {
+			pose = "walk";
+		}
 		if (!this.isCurrentAnimation(pose)) {
 			this.setCurrentAnimation(pose);
 		}
-
-		super.update(dt);
-		return true;
 	}
 
-	/** put the player somewhere, still */
-	moveTo(app: Application, x: number, y: number) {
-		app.world.adapter.setPosition(this, new Vector2d(x, y));
+	/**
+	 * Stretch (above 1) or squash (below 1) the player to `scaleY` of its
+	 * height, then ease back to rest with one small overshoot.
+	 * @param scaleY - the share of its height the player starts from
+	 */
+	stretchTo(scaleY: number) {
+		this.stretching?.stop();
+		this.stretch.scaleY = scaleY;
+		this.stretching = new Tween(this.stretch)
+			.to({ scaleY: 1 }, { duration: 300, easing: Tween.Easing.Back.Out })
+			.start();
+	}
+
+	/**
+	 * Scale the player's height about its feet, and bulge it the other way
+	 * so it keeps its volume: pinched in when stretched, bulging out when
+	 * squashed. From `update()`, after the physics step.
+	 */
+	applyStretch() {
+		const { scaleY } = this.stretch;
+		const feet = this.height * (1 - this.anchorPoint.y);
+		this.currentTransform
+			.identity()
+			.translate(0, feet)
+			.scale(1, scaleY)
+			.translate(0, -feet);
+		this.updateBounds();
+		this.squish?.setBulge(1 - scaleY);
+	}
+
+	/**
+	 * put the player somewhere, still
+	 * @param x - the left of the player, in the world
+	 * @param y - the top of the player, in the world
+	 */
+	moveTo(x: number, y: number) {
+		this.parentApp.world.adapter.setPosition(this, new Vector2d(x, y));
 		this.body.setVelocity(0, 0);
+		this.airborne = false;
 	}
 
 	/**
@@ -288,17 +403,15 @@ export class Player extends Sprite {
 	 * @param target - the entity, its room and its place, as the project found them
 	 */
 	arrive(target: LDtkFoundObject) {
-		const app = this.parentApp;
 		// the rooms of the depth left go, the ones of the depth reached come
 		gameState.depth = target.level.depth;
 		gameState.room = undefined;
 		this.moveTo(
-			app,
 			target.x + (target.width - this.width) / 2,
 			target.y + target.height - this.height,
 		);
 		const { x, y } = this.centre;
-		trackRoom(app, x, y);
+		trackRoom(this.parentApp, x, y);
 		this.safe.set(this.pos.x, this.pos.y);
 	}
 

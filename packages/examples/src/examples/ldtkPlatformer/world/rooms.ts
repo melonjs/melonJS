@@ -3,13 +3,13 @@
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
-import { type Application, type LDtkWorld, level } from "melonjs";
-import { gameState } from "./gameState";
+import type { Application } from "melonjs";
+import { sounds } from "../effects/sounds";
+import { gameState } from "../gameState";
+import { ldtkWorld } from "./world";
 
-/** the world, as the level director holds it once it is loaded */
-export const ldtkWorld = () => {
-	return level.getCurrentLevel() as unknown as LDtkWorld;
-};
+/** how far around the player's room the world keeps its neighbours, in pixels */
+const REACH = 1;
 
 /**
  * Follow the player from room to room. A room is a level of the LDtk world:
@@ -30,19 +30,41 @@ export function trackRoom(app: Application, x: number, y: number): boolean {
 	if (gameState.room !== undefined && rooms.includes(gameState.room)) {
 		return true;
 	}
+
 	const room = rooms[0];
 	gameState.room = room;
-	gameState.visited.add(room.identifier);
+	if (!gameState.visited.has(room.identifier)) {
+		gameState.visited.add(room.identifier);
+		sounds.discover();
+	}
 	app.viewport.setBounds(room.x, room.y, room.width, room.height);
-	// the room and the ones it touches: the others leave, with their walls
-	// and their entities, and so do the rooms of another depth
+	// The room and the ones it touches stay in the game. The others leave,
+	// with their walls and their objects, and so do the rooms of another
+	// depth, which cover the same place.
 	world.streamAround(
 		room.x,
 		room.y,
 		room.width,
 		room.height,
-		1,
+		REACH,
 		gameState.depth,
 	);
 	return true;
+}
+
+/**
+ * Whether a point of the player's room is in water. Water is a value of the
+ * room's "Collisions" IntGrid layer, named "water" in LDtk: it builds no
+ * wall, and is read here.
+ * @param x - the point, in the world
+ * @param y - the point, in the world
+ * @returns true in water
+ */
+export function isWater(x: number, y: number): boolean {
+	const room = gameState.room;
+	if (room === undefined) {
+		return false;
+	}
+	const grid = ldtkWorld().getIntGrid(room.identifier, "Collisions");
+	return grid?.names.get(grid.valueAtPixel(x, y)) === "water";
 }

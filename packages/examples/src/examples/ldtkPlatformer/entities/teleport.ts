@@ -4,89 +4,23 @@
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
 import {
-	type Camera2d,
-	collision,
+	type Container,
 	type LDtkEntityReference,
 	type LDtkFoundObject,
 	type LDtkObjectSettings,
-	type LDtkProject,
-	loader,
 	MaskEffect,
-	type PlacedTile,
-	PlacedTileLayer,
+	type ParticleEmitter,
 	Rect,
 	type Renderable,
-	type Renderer,
-	Tileset,
+	Sprite,
 	Trigger,
+	Tween,
 } from "melonjs";
-
-const TILE = 16;
-// where the tiles used here are in the project's tileset image, in pixels
-const LADDER = { x: 96, y: 144 };
-const FLAME = { x: 256, y: 304 };
-
-let tiles: Tileset | undefined;
-/**
- * The world's own tileset, to draw the areas below with: the image LDtk
- * names is loaded with the project, under a name the project gives.
- * @returns a tileset over that image
- */
-const tileset = () => {
-	if (tiles === undefined) {
-		const project = loader.getLDtk("gridvania") as LDtkProject;
-		tiles = new Tileset({
-			name: "SunnyLand",
-			image: project.images.get("atlas/SunnyLand_by_Ansimuz-extended.png"),
-			tilewidth: TILE,
-			tileheight: TILE,
-		});
-	}
-	return tiles;
-};
-
-/**
- * An entity of the LDtk world that is an area the player can be in: a few
- * tiles of the world's tileset placed over its box (a `PlacedTileLayer`,
- * built in code), with a body that is touched and not bumped into.
- */
-class Zone extends PlacedTileLayer {
-	/** the entity's fields, as set in LDtk */
-	fields: Record<string, unknown>;
-
-	constructor(settings: LDtkObjectSettings, placed: PlacedTile[]) {
-		super({
-			name: settings.name,
-			tileset: tileset(),
-			offsetx: settings.x,
-			offsety: settings.y,
-			width: settings.width,
-			height: settings.height,
-			tiles: placed,
-		});
-		this.fields = settings.fields;
-		this.bodyDef = {
-			type: "static",
-			shapes: [new Rect(0, 0, settings.width, settings.height)],
-			isSensor: true,
-			collisionType: collision.types.ACTION_OBJECT,
-			collisionMask: collision.types.PLAYER_OBJECT,
-		};
-	}
-}
-
-/** a ladder: the player climbs while in it */
-export class Ladder extends Zone {
-	constructor(_x: number, _y: number, settings: LDtkObjectSettings) {
-		const rung = tileset().tileIdAt(LADDER.x, LADDER.y);
-		const placed: PlacedTile[] = [];
-		// the ladder tile, down the height of the entity's box
-		for (let y = 0; y < settings.height; y += TILE) {
-			placed.push({ x: (settings.width - TILE) / 2, y, tileId: rung });
-		}
-		super(settings, placed);
-	}
-}
+import { TILE, Z } from "../config";
+import { createEmbers, particles } from "../effects/particles";
+import { sounds } from "../effects/sounds";
+import { TILES, worldTileset, worldTilesetImage } from "../world/tiles";
+import { ldtkProject } from "../world/world";
 
 /** what a teleport hands the object that took it */
 export interface Traveller extends Renderable {
@@ -97,7 +31,8 @@ export interface Traveller extends Renderable {
 }
 
 /**
- * A teleport: it leads to another, named by its `destination` field.
+ * A "Teleport" entity of the LDtk world: it leads to another teleport, the
+ * one its `destination` field refers to.
  *
  * It is the engine's `Trigger`: an area the player touches, with a
  * transition of the screen. A trigger loads a level; this one moves the
@@ -109,8 +44,10 @@ export interface Traveller extends Renderable {
 export class Teleport extends Trigger {
 	/** the entity LDtk's `EntityRef` field points at */
 	destination: LDtkEntityReference | null | undefined;
-	/** the flame the teleport is shown as, a tile of the world's tileset */
-	flame: PlacedTileLayer;
+	/** what shows where the teleport is: a flame of the world's tileset, and its embers */
+	flame: Sprite;
+	embers: ParticleEmitter;
+	flicker: Tween;
 
 	constructor(x: number, y: number, settings: LDtkObjectSettings) {
 		super(x, y, {
@@ -131,19 +68,46 @@ export class Teleport extends Trigger {
 			| LDtkEntityReference
 			| null
 			| undefined;
-		this.flame = new PlacedTileLayer({
-			name: "flame",
-			tileset: tileset(),
-			offsetx: x + (settings.width - TILE) / 2,
-			offsety: y + settings.height - TILE,
-			tiles: [{ x: 0, y: 0, tileId: tileset().tileIdAt(FLAME.x, FLAME.y) }],
+
+		// standing on the bottom of the entity's box, in its middle
+		const middle = x + settings.width / 2;
+		const bottom = y + settings.height;
+		this.flame = new Sprite(middle - TILE / 2, bottom - TILE, {
+			image: worldTilesetImage(),
+			framewidth: TILE,
+			frameheight: TILE,
+			anchorPoint: { x: 0, y: 0 },
 		});
+		// a frame of the image cut in tiles is the tile's id in the tileset
+		const flame = worldTileset().tileIdAt(TILES.flame.x, TILES.flame.y);
+		this.flame.addAnimation("flame", [flame]);
+		this.flame.setCurrentAnimation("flame");
+		this.embers = createEmbers(middle, bottom - TILE / 2);
+		this.flicker = new Tween(this.flame).to(
+			{ alpha: 0.8 },
+			{ duration: 220, yoyo: true, repeat: Infinity },
+		);
 	}
 
-	override draw(renderer: Renderer, viewport?: Camera2d) {
-		this.flame.preDraw(renderer);
-		this.flame.draw(renderer, viewport);
-		this.flame.postDraw(renderer);
+	/**
+	 * In the world: the flame and its embers are shown with the trigger,
+	 * over the layers of its room so that the grass does not hide them.
+	 */
+	override onActivateEvent() {
+		const container = this.ancestor as Container;
+		container.addChild(this.flame, Z.particles);
+		container.addChild(this.embers, Z.particles);
+		this.embers.streamParticles();
+		this.flicker.start();
+	}
+
+	/** out of the world, with its room: so are they */
+	override onDeactivateEvent() {
+		this.flicker.stop();
+		(this.flame.ancestor as Container | undefined)?.removeChildNow(this.flame);
+		(this.embers.ancestor as Container | undefined)?.removeChildNow(
+			this.embers,
+		);
 	}
 
 	/**
@@ -155,13 +119,14 @@ export class Teleport extends Trigger {
 	 */
 	override triggerEvent(other?: Renderable) {
 		const traveller = other as Traveller | undefined;
-		const project = loader.getLDtk("gridvania") as LDtkProject;
-		const target = project.findObject(this.destination);
+		const target = ldtkProject().findObject(this.destination);
 		if (traveller === undefined || target === undefined || this.fading) {
 			return;
 		}
 		this.fading = true;
 		traveller.travelling = true;
+		sounds.teleport();
+
 		const viewport = this.parentApp.viewport;
 		// the trigger's own transition: closed, then opened the same way
 		const hide = new MaskEffect(viewport, {
@@ -176,6 +141,12 @@ export class Teleport extends Trigger {
 					traveller.travelling = false;
 				});
 				traveller.arrive(target);
+				sounds.arrive();
+				particles.burst(
+					"sparkle",
+					target.x + target.width / 2,
+					target.y + target.height / 2,
+				);
 				// where the traveller is now is where the screen opens
 				viewport.addCameraEffect(
 					new MaskEffect(viewport, { ...reveal, center: traveller }),
