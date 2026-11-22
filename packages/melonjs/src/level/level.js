@@ -5,7 +5,7 @@ import { emit, LEVEL_LOADED } from "../system/event.ts";
 import { defer } from "../utils/function.ts";
 import { resetGUID } from "./../utils/utils.ts";
 import GLTFScene from "./gltf/GLTFScene.js";
-import { LOAD_OPTIONS as LDTK_LOAD_OPTIONS } from "./ldtk/level.ts";
+import { LDtkLevel } from "./ldtk/level.ts";
 import { ldtkMaps } from "./ldtk/registry.ts";
 import TMXTileMap from "./tiled/TMXTileMap.js";
 import { bindViewportToLevel, releaseViewport } from "./tilemap/viewport.js";
@@ -13,6 +13,7 @@ import { bindViewportToLevel, releaseViewport } from "./tilemap/viewport.js";
 /**
  * additional import for TypeScript
  * @import Container from "../renderable/container.js";
+ * @import {LDtkWorld} from "./ldtk/level.ts";
  * @import {Bounds} from "../physics/bounds.ts";
  * @import Mesh from "../renderable/mesh.js";
  * @import {Light3d} from "../lighting/light3d.ts";
@@ -483,7 +484,7 @@ export const level = {
 	 * for a reference to the live instantiated level,
 	 * rather use the container in which it was loaded (e.g. app.world)
 	 * @public
-	 * @returns {TMXTileMap|GLTFScene} the current level object (a TMXTileMap for Tiled maps, a GLTFScene for glTF/GLB scenes)
+	 * @returns {TMXTileMap|GLTFScene|LDtkLevel|LDtkWorld} the current level object (a TMXTileMap for Tiled maps, a GLTFScene for glTF/GLB scenes, an LDtkLevel or an LDtkWorld for LDtk)
 	 */
 	getCurrentLevel() {
 		return levels[this.getCurrentLevelId()];
@@ -624,7 +625,7 @@ level.registerFormat("ldtk", {
 	create: (levelId) => {
 		return ldtkMaps.get(levelId);
 	},
-	loadOptions: LDTK_LOAD_OPTIONS,
+	loadOptions: LDtkLevel.loadOptions,
 });
 for (const format of ["gltf", "glb"]) {
 	level.registerFormat(format, {

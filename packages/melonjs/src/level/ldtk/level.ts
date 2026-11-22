@@ -1,8 +1,11 @@
+import { warnOnce } from "../../lang/console.js";
 import { getImage } from "../../loader/cache.js";
 import { Bounds } from "../../physics/bounds.ts";
 import type Container from "../../renderable/container.js";
 import Renderable from "../../renderable/renderable.js";
-import TMXOrthogonalRenderer from "../tiled/renderer/TMXOrthogonalRenderer.js";
+import { createCanvas } from "../../video/canvas_factory.js";
+import { getNewTMXRenderer } from "../tiled/renderer/autodetect.js";
+import type TMXOrthogonalRenderer from "../tiled/renderer/TMXOrthogonalRenderer.js";
 import {
 	createLevelObject,
 	hasObjectFactory,
@@ -10,7 +13,7 @@ import {
 import { isCollisionLayerName, markWorldShape } from "../tilemap/collision.js";
 import PlacedTileLayer from "../tilemap/PlacedTileLayer.js";
 import { addLevelToContainer, populateContainer } from "../tilemap/populate.js";
-import TileLayer from "../tilemap/TileLayer.js";
+import TileLayer, { FLIP_H_BIT, FLIP_V_BIT } from "../tilemap/TileLayer.js";
 import Tileset from "../tilemap/Tileset.js";
 import TilesetGroup from "../tilemap/TilesetGroup.js";
 import { releaseViewport } from "../tilemap/viewport.js";
@@ -81,18 +84,16 @@ export const LOAD_OPTIONS = [
 	"levels",
 ];
 
+/**
+ * the flips LDtk saves on a tile (bit 0 across, bit 1 down): the tile
+ * layer's own bits for them
+ */
+const LDTK_FLIPS = FLIP_H_BIT | FLIP_V_BIT;
+
 /** the draw orders kept for each layer of LDtk: a layer can become several */
 const Z_PER_LAYER = 32;
 /** the draw orders kept for each depth of a world */
 const Z_PER_DEPTH = 4096;
-
-const warned = new Set<string>();
-const warnOnce = (message: string) => {
-	if (!warned.has(message)) {
-		warned.add(message);
-		console.warn(`melonJS LDtk: ${message}`);
-	}
-};
 
 /** what a level became in the game */
 export interface BuiltLevel {
@@ -172,7 +173,7 @@ class LevelBuilder {
 		if (def === undefined || image === null) {
 			if (def?.relPath !== null && def?.relPath !== undefined) {
 				warnOnce(
-					`the image of tileset "${def.identifier}" (${def.relPath}) is not loaded: its tiles are left out`,
+					`melonJS LDtk: the image of tileset "${def.identifier}" (${def.relPath}) is not loaded: its tiles are left out`,
 				);
 			}
 		} else {
@@ -206,9 +207,7 @@ class LevelBuilder {
 		const values =
 			this.project.layerDefs.get(layer.layerDefUid)?.intGridValues ?? [];
 		const size = layer.__gridSize;
-		const canvas = document.createElement("canvas");
-		canvas.width = Math.max(values.length, 1) * size;
-		canvas.height = size;
+		const canvas = createCanvas(Math.max(values.length, 1) * size, size);
 		const context = canvas.getContext("2d");
 		const index = new Map<number, number>();
 		for (const [i, value] of values.entries()) {
@@ -284,7 +283,7 @@ class LevelBuilder {
 		if (json.bgRelPath !== null && json.bgRelPath !== undefined) {
 			if (bgImage === null) {
 				warnOnce(
-					`the background image of level "${info.identifier}" (${json.bgRelPath}) is not loaded`,
+					`melonJS LDtk: the background image of level "${info.identifier}" (${json.bgRelPath}) is not loaded`,
 				);
 			} else if (json.__bgPos !== null && json.__bgPos !== undefined) {
 				image = {
@@ -487,7 +486,7 @@ class LevelBuilder {
 						tile.px[0] / size,
 						tile.px[1] / size,
 						tile.t + 1,
-						tile.f & 3,
+						tile.f & LDTK_FLIPS,
 					);
 				}
 				part = grid;
@@ -513,7 +512,7 @@ class LevelBuilder {
 							x: tile.px[0] - left,
 							y: tile.px[1] - top,
 							tileId: tile.t,
-							flip: tile.f & 3,
+							flip: tile.f & LDTK_FLIPS,
 							alpha: tile.a ?? 1,
 						};
 					}),
@@ -632,6 +631,13 @@ const optionsOf = (given: LDtkLoadOptions | undefined): LDtkLoadOptions => {
 
 /** what a level and a world have in common for the level director */
 abstract class LDtkMap {
+	/**
+	 * The `level.load()` options this format reads, which a `Trigger`
+	 * forwards from its settings.
+	 * @ignore
+	 */
+	static loadOptions: readonly string[] = Object.freeze([...LOAD_OPTIONS]);
+
 	/** the format's name, as registered with the level director */
 	readonly format = "ldtk";
 	/** the project the level or the world belongs to */
@@ -698,12 +704,7 @@ abstract class LDtkMap {
 	 * @returns an orthogonal renderer
 	 */
 	getRenderer(): TMXOrthogonalRenderer {
-		this.gridRenderer ??= new TMXOrthogonalRenderer({
-			cols: this.cols,
-			rows: this.rows,
-			tilewidth: this.tilewidth,
-			tileheight: this.tileheight,
-		} as never);
+		this.gridRenderer ??= getNewTMXRenderer(this);
 		return this.gridRenderer;
 	}
 
