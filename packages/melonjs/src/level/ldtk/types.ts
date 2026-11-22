@@ -203,9 +203,9 @@ export interface LDtkLayerDef {
 	pxOffsetX?: number;
 	pxOffsetY?: number;
 	/**
-	 * how much slower (or faster) than the level the layer scrolls, from -1
-	 * to 1, 0 for a layer that scrolls with it. Not applied by the engine: a
-	 * layer is drawn where it is in the level
+	 * how much of the camera's movement the layer's tiles follow, from -1
+	 * to 1, 0 for a layer that scrolls with its level: the layers built from
+	 * it carry it as their `parallax`
 	 */
 	parallaxFactorX?: number;
 	parallaxFactorY?: number;

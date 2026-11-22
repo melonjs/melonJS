@@ -1,13 +1,24 @@
+import { boundsPool } from "../../physics/bounds.ts";
 import Renderable from "../../renderable/renderable.js";
-import { applyLayerDefinition, viewStart } from "./layer.js";
+import {
+	applyLayerDefinition,
+	parallaxBounds,
+	parallaxPlacement,
+	readParallax,
+	viewStart,
+} from "./layer.js";
 
 /**
  * additional import for TypeScript
  * @import Tileset from "./Tileset.js";
+ * @import {LayerParallax} from "./layer.js";
+ * @import {Bounds} from "../../physics/bounds.ts";
+ * @import Camera2d from "../../camera/camera2d.ts";
  */
 
 // where the view starts in a layer's coordinates, while it is drawn
 const VIEW_START = { x: 0, y: 0 };
+const PLACE = { x: 0, y: 0, scale: 1 };
 
 // what a list grows by, in tiles
 const GROW = 64;
@@ -55,6 +66,7 @@ export default class PlacedTileLayer extends Renderable {
 	 * @param {number} [def.opacity=1] - its opacity (0 hides it)
 	 * @param {number} [def.offsetx=0] - where its origin is across, in pixels
 	 * @param {number} [def.offsety=0] - where its origin is down, in pixels
+	 * @param {LayerParallax} [def.parallax] - how it follows the camera, see {@link PlacedTileLayer#parallax}
 	 * @param {string} [def.blendMode] - its blend mode
 	 * @param {Color|string} [def.tint] - a tint for its tiles, as a color or a CSS color string
 	 * @param {string} [def.class] - a class name of the game's own
@@ -106,6 +118,7 @@ export default class PlacedTileLayer extends Renderable {
 		// its name, draw order, opacity, blend mode and tint, as a tile
 		// layer takes them
 		applyLayerDefinition(this, def);
+		this.parallax = def.parallax;
 
 		if (def.tiles !== undefined) {
 			for (const tile of def.tiles) {
@@ -285,10 +298,33 @@ export default class PlacedTileLayer extends Renderable {
 		}
 		// where the view starts, in the coordinates the tiles are in
 		const start = viewStart(this, rect, VIEW_START);
-		const viewX = start.x - this.pos.x;
-		const viewY = start.y - this.pos.y;
-		const viewRight = viewX + rect.width;
-		const viewBottom = viewY + rect.height;
+		// the frame the layer is drawn in: the world's, or the one its
+		// parallax gives for this view, scaled from the parallax's origin
+		let frameX = 0;
+		let frameY = 0;
+		let scale = 1;
+		let originX = this.pos.x;
+		let originY = this.pos.y;
+		const parallax = this._parallax;
+		if (parallax !== undefined) {
+			const place = parallaxPlacement(
+				parallax,
+				start.x,
+				start.y,
+				rect.width,
+				rect.height,
+				PLACE,
+			);
+			frameX = place.x;
+			frameY = place.y;
+			scale = place.scale;
+			originX -= parallax.originX;
+			originY -= parallax.originY;
+		}
+		const viewX = (start.x - frameX) / scale - originX;
+		const viewY = (start.y - frameY) / scale - originY;
+		const viewRight = viewX + rect.width / scale;
+		const viewBottom = viewY + rect.height / scale;
 
 		const tileset = this.tileset;
 		const firstgid = tileset.firstgid;
@@ -303,7 +339,11 @@ export default class PlacedTileLayer extends Renderable {
 		const baseAlpha = renderer.globalAlpha();
 		let alpha = 1;
 
-		renderer.translate(this.pos.x, this.pos.y);
+		if (parallax !== undefined) {
+			renderer.translate(frameX, frameY);
+			renderer.scale(scale, scale);
+		}
+		renderer.translate(originX, originY);
 		for (let i = 0; i < count; i++) {
 			const x = pos[i * 2] + offsetX;
 			const y = pos[i * 2 + 1] + offsetY;
@@ -325,6 +365,69 @@ export default class PlacedTileLayer extends Renderable {
 		if (alpha !== 1) {
 			renderer.setGlobalAlpha(baseAlpha);
 		}
-		renderer.translate(-this.pos.x, -this.pos.y);
+		renderer.translate(-originX, -originY);
+		if (parallax !== undefined) {
+			renderer.scale(1 / scale, 1 / scale);
+			renderer.translate(-frameX, -frameY);
+		}
+	}
+
+	/**
+	 * How the layer follows the camera, for a backdrop that scrolls slower
+	 * than the level or a foreground that scrolls faster:
+	 * `{ x, y, originX, originY, scale }`, as {@link TileLayer#parallax}.
+	 * Undefined for a layer that only scrolls with the world.
+	 * @type {LayerParallax|undefined}
+	 */
+	get parallax() {
+		return this._parallax;
+	}
+	set parallax(value) {
+		/** @ignore */
+		this._parallax = readParallax(value);
+		this.isDirty = true;
+	}
+
+	/**
+	 * The area the layer draws in: its bounds, or where its parallax puts
+	 * them for a camera. A camera has the layer in view by this area (see
+	 * `Camera2d#isVisible`).
+	 * @param {Camera2d} [camera] - the camera asking
+	 * @returns {Bounds} that area, in the same coordinates as `getBounds()`
+	 * @ignore
+	 */
+	getDrawBounds(camera) {
+		const bounds = this.getBounds();
+		if (this._parallax === undefined || camera === undefined) {
+			return bounds;
+		}
+		/** @ignore */
+		this._drawBounds ??= boundsPool.get();
+		return parallaxBounds(this, bounds, camera, this._drawBounds);
+	}
+
+	/**
+	 * a container with a size of its own is in view by its bounds, before
+	 * its children are asked: each one the layer is in is told that the
+	 * layer can draw outside them, as a parallax makes it
+	 * @ignore
+	 */
+	onActivateEvent() {
+		/** @ignore */
+		this._toldAncestors = [];
+		for (let node = this.ancestor; node; node = node.ancestor) {
+			(node._drawPast ??= new Set()).add(this);
+			this._toldAncestors.push(node);
+		}
+	}
+
+	/**
+	 * @ignore
+	 */
+	onDeactivateEvent() {
+		for (const node of this._toldAncestors ?? []) {
+			node._drawPast?.delete(this);
+		}
+		this._toldAncestors = undefined;
 	}
 }

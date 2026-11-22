@@ -543,13 +543,16 @@ level.load("world:Level_0");                       // "<asset name>:<level ident
   the `LDtk*Json` types name every field of it, so `project.json` and an
   entity's `source` are typed down to the file. Find things by `iid` rather
   than `uid` where both exist: LDtk plans to drop the integer ids.
+- **Parallax**: a layer's parallax factors (and "parallax scaling") move and
+  scale its tiles with the camera as the editor does, on every renderer. The
+  layer's entities and walls are things of the level and stay in it. The
+  layers built carry it as `layer.parallax` (see below), to read or change.
 - Not supported: the editor's built-in entity icons (they are not in the
-  project's files), and a layer's parallax (every layer scrolls with its
-  level; a warning says so once). A tile layer whose tiles are not the size
-  of its cells is drawn from each cell's top left corner, as the file gives
-  it: the layer's tile pivot is the editor's own. A nine-slice entity tile
-  keeps LDtk's left and top borders on both sides (a `NineSliceSprite` has
-  one border per axis).
+  project's files). A tile layer whose tiles are not the size of its cells
+  is drawn from each cell's top left corner, as the file gives it: the
+  layer's tile pivot is the editor's own. A nine-slice entity tile keeps
+  LDtk's left and top borders on both sides (a `NineSliceSprite` has one
+  border per axis).
 
 ## Tile layers without Tiled
 
@@ -587,6 +590,24 @@ const decals = new PlacedTileLayer({
 });
 decals.addTile(100, 60, 3);          // tileId is the tile's id IN the tileset, from 0
 ```
+
+Either kind follows the camera with `parallax`, for a backdrop that scrolls
+slower than the level or a foreground that scrolls faster:
+
+```js
+hills.parallax = { x: 0.5, y: 0.5 };                          // half the level's pace
+far.parallax = { x: 0.5, y: 0.5, originX: 320, originY: 240, scale: 0.5 };
+```
+
+`x` and `y` are the share of the camera's movement the layer follows, from -1
+to 1: 0 scrolls with the world, 1 stays where it is on the screen, a negative
+value scrolls faster than the world. `originX` / `originY` is where the
+camera's centre is when the layer is where it was placed (in the layer's
+container's coordinates, 0, 0 by default), and `scale` draws it smaller or
+larger from that point. It is worked out for each camera as it draws, and
+changes nothing else: `getTile`, `cellAt` and the layer's bounds are the
+layer's where it was placed. A Tiled tile layer's own parallax factor is not
+read: set `parallax` on the layer after the level loads.
 
 `mergeGridRects(cols, rows, (col, row) => boolean)` covers the cells that pass
 a test with few rectangles, in cells: one static body per wall instead of one
@@ -712,7 +733,8 @@ layer into the offscreen-bake path instead.
 | an LDtk level loads with no tiles, and a warning that a tileset's image is not loaded | the image is not where the project file says, relative to it (the folder was reorganised) |
 | LDtk entities are invisible in the game | no class is registered for them (`registerObjectClass(identifier, Class)`), and their icon is LDtk's own, which is not in the files: give them a tile from a tileset of the project, or a class |
 | the player falls through an LDtk level | no IntGrid layer is named like "collision": pass `collisionLayers` to `level.load` |
-| an LDtk layer that scrolls at its own pace in the editor scrolls with the level in the game | its parallax factor is not applied (a warning says so once): move the layers yourself, `level.getCurrentLevel().layers`, or use an `ImageLayer` for a backdrop |
+| a tile layer set to scroll slower than the level in Tiled scrolls with it | a Tiled tile layer's parallax factor is not read (an image layer's is): set `layer.parallax = { x, y }` once the level is loaded, where `x` is 1 minus Tiled's factor |
+| `getTile` finds nothing under a tile of a parallax layer | a parallax moves where the layer is drawn, not its cells: they are where the layer was placed |
 | an LDtk entity is placed half its size off | `x`, `y` are its box's top left corner; its pivot is `settings.px` |
 | an LDtk field reads `undefined` on the settings | its name is one of the settings' own (`type`, `name`, `width`...): read `settings.fields.type` |
 | an LDtk entity named "Trigger" (or "Sprite", "Text"...) does nothing | an entity's name is not taken for the engine's class: register it, `registerObjectClass("Trigger", Trigger)`, and give the entity the fields the class reads |

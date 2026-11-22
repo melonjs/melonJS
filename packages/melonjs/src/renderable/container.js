@@ -1139,11 +1139,13 @@ export default class Container extends Renderable {
 	 * the map's origin. A container with a size of its own (one a level was
 	 * loaded into) is in view by this area, as the layer would be (see
 	 * `Camera2d#isVisible`).
+	 * @param {Camera2d} [camera] - the camera asking: a layer with a
+	 * parallax is drawn in another place for each one
 	 * @returns {Bounds|undefined} that area, or undefined when it is the
 	 * container's bounds (or the container has no size of its own)
 	 * @ignore
 	 */
-	getDrawBounds() {
+	getDrawBounds(camera) {
 		const layers = this._drawPast;
 		if (layers === undefined || layers.size === 0) {
 			return undefined;
@@ -1161,7 +1163,7 @@ export default class Container extends Renderable {
 			bounds.bottom,
 		);
 		for (const layer of layers) {
-			this._drawBounds.addBounds(layer.getDrawBounds());
+			this._drawBounds.addBounds(layer.getDrawBounds(camera));
 		}
 		return this._drawBounds;
 	}

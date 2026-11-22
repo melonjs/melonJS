@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
 	type Application,
 	type LDtkLevel,
@@ -198,10 +198,8 @@ describe("an LDtk project made for the test", () => {
 				},
 			],
 		};
-		// a layer with a parallax factor, and a table of content: one kind
-		// of entity as LDtk 1.5 lists them, one as it did before
-		const extrasDefs = defs();
-		extrasDefs.layers[0].parallaxFactorX = 0.5;
+		// a table of content: one kind of entity as LDtk 1.5 lists them,
+		// one as it did before
 		const reference = (entityIid: string, levelIid: string) => {
 			return { entityIid, layerIid: "layer-iid", levelIid, worldIid: "w" };
 		};
@@ -212,7 +210,6 @@ describe("an LDtk project made for the test", () => {
 			],
 			{
 				iid: "extras",
-				defs: extrasDefs,
 				toc: [
 					{
 						identifier: "Start",
@@ -485,46 +482,5 @@ describe("an LDtk project made for the test", () => {
 		expect(
 			(loader.getLDtk("single") as LDtkProject).getTableOfContent(),
 		).toEqual([]);
-	});
-
-	it("says once that a layer's parallax is not applied, and draws the layer in its place", async () => {
-		const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-		await enter(app, "extras:Far");
-		await enter(app, "extras:Far");
-		const said = warn.mock.calls.filter((call) => {
-			return String(call[0]).includes("parallax");
-		});
-		warn.mockRestore();
-		expect(said).toHaveLength(1);
-		expect(String(said[0][0])).toContain('layer "Far"');
-		// where its tile is in the level, whatever the factor
-		const project = loader.getLDtk("extras") as LDtkProject;
-		const info = project.getLevel("Far");
-		expect(info).toBeDefined();
-		if (info !== undefined) {
-			const x = Math.trunc((WIDTH - info.width) / 2);
-			const y = Math.trunc((HEIGHT - info.height) / 2);
-			app.viewport.moveTo(0, 0);
-			const result = diff(
-				frame(app),
-				referenceView(
-					info.bgColor,
-					[{ picture: referenceLevel(project.json, info.json, false), x, y }],
-					0,
-					0,
-				),
-				1,
-			);
-			expect(result.different).toBe(0);
-		}
-		// a layer with no factor says nothing
-		const quiet = vi.spyOn(console, "warn").mockImplementation(() => {});
-		await enter(app, "single:Fields");
-		expect(
-			quiet.mock.calls.filter((call) => {
-				return String(call[0]).includes("parallax");
-			}),
-		).toHaveLength(0);
-		quiet.mockRestore();
 	});
 });

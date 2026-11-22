@@ -2,6 +2,8 @@
  * additional import for TypeScript
  * @import Renderable from "../../renderable/renderable.js";
  * @import {Color} from "../../math/color.ts";
+ * @import {Bounds} from "../../physics/bounds.ts";
+ * @import Camera2d from "../../camera/camera2d.ts";
  */
 
 /**
@@ -101,5 +103,121 @@ export function viewStart(layer, view, out) {
 	}
 	out.x = x;
 	out.y = y;
+	return out;
+}
+
+/**
+ * How a layer of a tile map follows the camera, for a backdrop that scrolls
+ * slower than the level, or a foreground that scrolls faster.
+ * @typedef {object} LayerParallax
+ * @property {number} [x=0] - how much of the camera's movement across the
+ * layer follows, from -1 to 1: 0 for a layer that scrolls with the world, 1
+ * for one that stays where it is on the screen, 0.5 for one that scrolls at
+ * half the pace, a negative value for one that scrolls faster than the world
+ * @property {number} [y=0] - the same, down
+ * @property {number} [originX=0] - where the camera's centre is, across, when
+ * the layer is where it was placed, in the coordinates the layer's `pos` is in
+ * @property {number} [originY=0] - the same, down
+ * @property {number} [scale=1] - the layer's size, scaled from that origin:
+ * 0.5 for a layer drawn at half its size, as one further away
+ */
+
+/**
+ * a layer's parallax as the layer keeps it: every value set, or undefined
+ * for a parallax that changes nothing
+ * @param {LayerParallax} [parallax] - the parallax asked for
+ * @returns {LayerParallax|undefined} the parallax
+ * @ignore
+ */
+export function readParallax(parallax) {
+	if (parallax === undefined || parallax === null) {
+		return undefined;
+	}
+	const read = {
+		x: parallax.x ?? 0,
+		y: parallax.y ?? 0,
+		originX: parallax.originX ?? 0,
+		originY: parallax.originY ?? 0,
+		scale: parallax.scale ?? 1,
+	};
+	if (!(read.scale > 0)) {
+		throw new Error(
+			`a layer's parallax scale must be more than 0: ${String(parallax.scale)}`,
+		);
+	}
+	return read.x === 0 && read.y === 0 && read.scale === 1 ? undefined : read;
+}
+
+/**
+ * Where a parallax puts what the layer draws, for a view: a point `p` of the
+ * coordinates the layer's `pos` is in is drawn at
+ * `out + out.scale * (p - origin)`.
+ *
+ * The layer's origin is moved by the part of the way to the view's centre
+ * its factors say, to a whole pixel, and the layer is scaled from it: every
+ * part of a layer cut in several (a level's layer can be) is then drawn on
+ * the same pixels, on every renderer.
+ * @param {LayerParallax} parallax - the layer's parallax
+ * @param {number} viewX - where the view starts, across
+ * @param {number} viewY - where the view starts, down
+ * @param {number} viewWidth - the view's width
+ * @param {number} viewHeight - the view's height
+ * @param {{x: number, y: number, scale: number}} out - takes the result
+ * @returns {{x: number, y: number, scale: number}} `out`
+ * @ignore
+ */
+export function parallaxPlacement(
+	parallax,
+	viewX,
+	viewY,
+	viewWidth,
+	viewHeight,
+	out,
+) {
+	const { originX, originY } = parallax;
+	out.scale = parallax.scale;
+	out.x = Math.round(originX + (viewX + viewWidth / 2 - originX) * parallax.x);
+	out.y = Math.round(originY + (viewY + viewHeight / 2 - originY) * parallax.y);
+	return out;
+}
+
+const PLACE = { x: 0, y: 0, scale: 1 };
+const START = { x: 0, y: 0 };
+
+/**
+ * The area a layer with a parallax is drawn in, for a camera: its own area,
+ * moved and scaled as the parallax does for where that camera looks.
+ * @param {Renderable} layer - the layer
+ * @param {Bounds} area - the area it draws in with no parallax, in the world
+ * @param {Camera2d} camera - the camera
+ * @param {Bounds} out - takes the result
+ * @returns {Bounds} `out`
+ * @ignore
+ */
+export function parallaxBounds(layer, area, camera, out) {
+	const view = camera.worldView;
+	const start = viewStart(layer, camera, START);
+	const place = parallaxPlacement(
+		layer.parallax,
+		start.x,
+		start.y,
+		view.width,
+		view.height,
+		PLACE,
+	);
+	// the area is the world's; the parallax is in the coordinates the layer
+	// is placed in, its container's
+	const parent = layer.ancestor;
+	const at = parent ? parent.getAbsolutePosition() : undefined;
+	const atX = at?.x ?? 0;
+	const atY = at?.y ?? 0;
+	const scale = place.scale;
+	const { originX, originY } = layer.parallax;
+	out.setMinMax(
+		atX + place.x + scale * (area.left - atX - originX),
+		atY + place.y + scale * (area.top - atY - originY),
+		atX + place.x + scale * (area.right - atX - originX),
+		atY + place.y + scale * (area.bottom - atY - originY),
+	);
 	return out;
 }

@@ -13,6 +13,7 @@ import {
 } from "../tiled/TMXObjectFactory.js";
 import { applyObjectOpacity } from "../tiled/TMXUtils.js";
 import { isCollisionLayerName, markWorldShape } from "../tilemap/collision.js";
+import type { LayerParallax } from "../tilemap/layer.js";
 import PlacedTileLayer from "../tilemap/PlacedTileLayer.js";
 import { addLevelToContainer, populateContainer } from "../tilemap/populate.js";
 import TileLayer, { FLIP_H_BIT, FLIP_V_BIT } from "../tilemap/TileLayer.js";
@@ -247,6 +248,46 @@ class LevelBuilder {
 	}
 
 	/**
+	 * How a layer follows the camera, as LDtk shows it: moved by its
+	 * parallax factors' share of how far the camera's centre is into the
+	 * level, and, with "parallax scaling", drawn smaller by the factor across
+	 * from the level's corner, as a layer further away. Without the scaling,
+	 * the layer is in its place when the camera is on its centre.
+	 * @param layer - the layer
+	 * @param levelX - where the level's left edge is
+	 * @param levelY - where the level's top edge is
+	 * @returns the layer's parallax, or undefined for a layer that scrolls with its level
+	 */
+	parallaxOf(
+		layer: LDtkLayerInstance,
+		levelX: number,
+		levelY: number,
+	): LayerParallax | undefined {
+		const def = this.project.layerDefs.get(layer.layerDefUid);
+		const x = def?.parallaxFactorX ?? 0;
+		const y = def?.parallaxFactorY ?? 0;
+		if (x === 0 && y === 0) {
+			return undefined;
+		}
+		if (def?.parallaxScaling ?? true) {
+			return {
+				x,
+				y,
+				originX: levelX,
+				originY: levelY,
+				scale: x === 0 ? 1 : Math.max(0.01, 1 - x),
+			};
+		}
+		return {
+			x,
+			y,
+			originX: levelX + (layer.__cWid * layer.__gridSize) / 2,
+			originY: levelY + (layer.__cHei * layer.__gridSize) / 2,
+			scale: 1,
+		};
+	}
+
+	/**
 	 * whether an IntGrid layer's cells are solid
 	 * @param identifier - the layer's identifier
 	 * @returns true if they are
@@ -342,17 +383,10 @@ class LevelBuilder {
 			// hidden layer of a Tiled map is: its walls still stand, and
 			// the game can show it
 			const opacity = layer.visible ? layer.__opacity : 0;
-			// a parallax layer scrolls at a pace of its own in LDtk: it is
-			// drawn here where it is in the level, and said so once
-			const def = this.project.layerDefs.get(layer.layerDefUid);
-			if (
-				(def?.parallaxFactorX ?? 0) !== 0 ||
-				(def?.parallaxFactorY ?? 0) !== 0
-			) {
-				warnOnce(
-					`melonJS LDtk: layer "${layer.__identifier}" has a parallax factor, which is not applied: it scrolls with its level`,
-				);
-			}
+			// a layer LDtk scrolls at a pace of its own: its tiles follow
+			// the camera as they do in the editor (its entities and its
+			// walls are things of the level, and stay in it)
+			const parallax = this.parallaxOf(layer, originX, originY);
 			const z = zBase + 1 + (layers.length - 1 - i) * Z_PER_LAYER;
 			const x = originX + layer.__pxTotalOffsetX;
 			const y = originY + layer.__pxTotalOffsetY;
@@ -360,10 +394,19 @@ class LevelBuilder {
 				layer.__type === "Tiles" ? layer.gridTiles : layer.autoLayerTiles;
 
 			if (layer.intGridCsv.length > 0) {
-				this.buildIntGrid(built, layer, x, y, z, opacity, tiles.length === 0);
+				this.buildIntGrid(
+					built,
+					layer,
+					x,
+					y,
+					z,
+					opacity,
+					tiles.length === 0,
+					parallax,
+				);
 			}
 			if (tiles.length > 0) {
-				this.buildTiles(built, layer, x, y, z, opacity);
+				this.buildTiles(built, layer, x, y, z, opacity, parallax);
 			}
 			if (layer.entityInstances.length > 0 && this.options.entities !== false) {
 				// LDtk draws a later entity over an earlier one. Children of
@@ -407,6 +450,7 @@ class LevelBuilder {
 	 * @param z - the layer's draw order
 	 * @param opacity - the layer's opacity: 0 for a hidden one
 	 * @param bare - the layer has no tiles of its own
+	 * @param parallax - how the layer follows the camera, if it does
 	 */
 	buildIntGrid(
 		built: BuiltLevel,
@@ -416,6 +460,7 @@ class LevelBuilder {
 		z: number,
 		opacity: number,
 		bare: boolean,
+		parallax?: LayerParallax,
 	) {
 		const grid = new IntGrid(
 			layer,
@@ -473,6 +518,7 @@ class LevelBuilder {
 				opacity,
 				offsetx: x,
 				offsety: y,
+				parallax,
 			});
 			for (let row = 0; row < grid.rows; row++) {
 				for (let col = 0; col < grid.cols; col++) {
@@ -495,6 +541,7 @@ class LevelBuilder {
 	 * @param y - where the layer's top left corner is
 	 * @param z - the layer's draw order
 	 * @param opacity - the layer's opacity: 0 for a hidden one
+	 * @param parallax - how the layer follows the camera, if it does
 	 */
 	buildTiles(
 		built: BuiltLevel,
@@ -503,6 +550,7 @@ class LevelBuilder {
 		y: number,
 		z: number,
 		opacity: number,
+		parallax?: LayerParallax,
 	) {
 		const entry = this.tilesetFor(layer.__tilesetDefUid);
 		if (entry === null) {
@@ -554,6 +602,7 @@ class LevelBuilder {
 					opacity,
 					offsetx: x,
 					offsety: y,
+					parallax,
 				});
 				for (const tile of chunk.tiles) {
 					const id = idOf(tile);
@@ -576,6 +625,7 @@ class LevelBuilder {
 					opacity,
 					offsetx: x,
 					offsety: y,
+					parallax,
 					tiles: chunk.tiles
 						.filter((tile) => {
 							return idOf(tile) >= 0;
