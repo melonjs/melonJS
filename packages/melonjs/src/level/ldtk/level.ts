@@ -10,6 +10,7 @@ import {
 	createLevelObject,
 	hasObjectFactory,
 } from "../tiled/TMXObjectFactory.js";
+import { applyObjectOpacity } from "../tiled/TMXUtils.js";
 import { isCollisionLayerName, markWorldShape } from "../tilemap/collision.js";
 import PlacedTileLayer from "../tilemap/PlacedTileLayer.js";
 import { addLevelToContainer, populateContainer } from "../tilemap/populate.js";
@@ -316,9 +317,10 @@ class LevelBuilder {
 		const layers = json.layerInstances ?? [];
 		for (let i = layers.length - 1; i >= 0; i--) {
 			const layer = layers[i];
-			if (!layer.visible) {
-				continue;
-			}
+			// a layer hidden in LDtk is in the game and not shown, as a
+			// hidden layer of a Tiled map is: its walls still stand, and
+			// the game can show it
+			const opacity = layer.visible ? layer.__opacity : 0;
 			const z = zBase + 1 + (layers.length - 1 - i) * Z_PER_LAYER;
 			const x = originX + layer.__pxTotalOffsetX;
 			const y = originY + layer.__pxTotalOffsetY;
@@ -326,10 +328,10 @@ class LevelBuilder {
 				layer.__type === "Tiles" ? layer.gridTiles : layer.autoLayerTiles;
 
 			if (layer.intGridCsv.length > 0) {
-				this.buildIntGrid(built, layer, x, y, z, tiles.length === 0);
+				this.buildIntGrid(built, layer, x, y, z, opacity, tiles.length === 0);
 			}
 			if (tiles.length > 0) {
-				this.buildTiles(built, layer, x, y, z);
+				this.buildTiles(built, layer, x, y, z, opacity);
 			}
 			if (layer.entityInstances.length > 0 && this.options.entities !== false) {
 				for (const entity of layer.entityInstances) {
@@ -337,6 +339,11 @@ class LevelBuilder {
 					const object = hasObjectFactory(settings.class)
 						? createLevelObject(settings, this.map)
 						: new LDtkEntity(settings);
+					// an entity is faded as its layer is, like the objects
+					// of a Tiled object layer
+					if (opacity !== 1 && object.isRenderable) {
+						applyObjectOpacity(object, opacity);
+					}
 					this.add(built, object, z);
 					built.entities.push(object);
 				}
@@ -353,6 +360,7 @@ class LevelBuilder {
 	 * @param x - where the layer's top left corner is
 	 * @param y - where the layer's top left corner is
 	 * @param z - the layer's draw order
+	 * @param opacity - the layer's opacity: 0 for a hidden one
 	 * @param bare - the layer has no tiles of its own
 	 */
 	buildIntGrid(
@@ -361,6 +369,7 @@ class LevelBuilder {
 		x: number,
 		y: number,
 		z: number,
+		opacity: number,
 		bare: boolean,
 	) {
 		const grid = new IntGrid(
@@ -416,7 +425,7 @@ class LevelBuilder {
 				tileheight: grid.cellSize,
 				tilesets: group,
 				z,
-				opacity: layer.__opacity,
+				opacity,
 				offsetx: x,
 				offsety: y,
 			});
@@ -440,6 +449,7 @@ class LevelBuilder {
 	 * @param x - where the layer's top left corner is
 	 * @param y - where the layer's top left corner is
 	 * @param z - the layer's draw order
+	 * @param opacity - the layer's opacity: 0 for a hidden one
 	 */
 	buildTiles(
 		built: BuiltLevel,
@@ -447,6 +457,7 @@ class LevelBuilder {
 		x: number,
 		y: number,
 		z: number,
+		opacity: number,
 	) {
 		const entry = this.tilesetFor(layer.__tilesetDefUid);
 		if (entry === null) {
@@ -478,7 +489,7 @@ class LevelBuilder {
 					tileheight: size,
 					tilesets: entry.group,
 					z: partZ,
-					opacity: layer.__opacity,
+					opacity,
 					offsetx: x,
 					offsety: y,
 				});
@@ -505,7 +516,7 @@ class LevelBuilder {
 					class: layer.__type,
 					tileset: entry.tileset,
 					z: partZ,
-					opacity: layer.__opacity,
+					opacity,
 					offsetx: x + left,
 					offsety: y + top,
 					tiles: chunk.tiles.map((tile) => {

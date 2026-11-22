@@ -10,6 +10,7 @@ import {
 	LDtkWorld,
 	level,
 	loader,
+	type Renderable,
 	video,
 } from "../src/index.js";
 import {
@@ -201,6 +202,54 @@ const oddLevel = () => {
 	]);
 };
 
+/**
+ * an entity, as LDtk saves it
+ * @param identifier - its identifier
+ * @param x - where its pivot is
+ * @param y - where its pivot is
+ * @returns the entity
+ */
+const entity = (identifier: string, x: number, y: number) => {
+	return {
+		__identifier: identifier,
+		iid: `${identifier}-iid`,
+		defUid: 1,
+		px: [x, y] as [number, number],
+		__pivot: [0, 0] as [number, number],
+		__grid: [0, 0] as [number, number],
+		width: 16,
+		height: 16,
+		__tags: [],
+		fieldInstances: [],
+	};
+};
+
+/** a level whose layers are faded, or hidden in LDtk */
+const fadedLevel = () => {
+	const walls = new Array<number>(60).fill(0);
+	for (let col = 0; col < 10; col++) {
+		walls[5 * 10 + col] = 1;
+	}
+	return levelJson("Faded", [
+		layer("Faded_things", "Entities", 16, 10, 6, [], {
+			__opacity: 0.5,
+			__tilesetDefUid: null,
+			entityInstances: [entity("Lamp", 16, 16)],
+		}),
+		layer("Hidden_things", "Entities", 16, 10, 6, [], {
+			visible: false,
+			__tilesetDefUid: null,
+			entityInstances: [entity("Ghost", 48, 16)],
+		}),
+		// hidden in the editor, to see the art: still the level's floor
+		layer("Collisions", "IntGrid", 16, 10, 6, [], {
+			visible: false,
+			__tilesetDefUid: null,
+			intGridCsv: walls,
+		}),
+	]);
+};
+
 describe("an LDtk project made for the test", () => {
 	let app: Application;
 
@@ -228,6 +277,7 @@ describe("an LDtk project made for the test", () => {
 			defs: defs(),
 			levels: [
 				oddLevel(),
+				fadedLevel(),
 				levelJson("Fields", [], {
 					fieldInstances: [
 						{ __identifier: "music", __type: "String", __value: "cave.ogg" },
@@ -301,9 +351,16 @@ describe("an LDtk project made for the test", () => {
 			"Auto:TileLayer",
 			"Auto:PlacedTileLayer",
 			"Small:PlacedTileLayer",
+			// hidden in LDtk, and the top-most layer
+			"Hidden:TileLayer",
 		]);
-		// nothing of the hidden layer is in the world
-		expect(app.world.getChildByName("Hidden")).toEqual([]);
+		// the layer hidden in LDtk is in the world, as a hidden layer of a
+		// Tiled map is: there, and not shown
+		const hidden = app.world.getChildByName("Hidden");
+		expect(hidden.length).toBeGreaterThan(0);
+		for (const part of hidden) {
+			expect(part.getOpacity()).toBe(0);
+		}
 		const x = Math.trunc((WIDTH - info.width) / 2);
 		const y = Math.trunc((HEIGHT - info.height) / 2);
 		app.viewport.moveTo(0, 0);
@@ -321,6 +378,28 @@ describe("an LDtk project made for the test", () => {
 			result.different,
 			`${result.first} (worst ${String(result.worst)})`,
 		).toBe(0);
+	});
+
+	it("an entity takes its layer's opacity, and a hidden layer still holds its entities and its walls", async () => {
+		await enter(app, "single:Faded");
+		const lamp = current().getEntities("Lamp")[0];
+		expect(lamp.getOpacity()).toBe(0.5);
+		// hidden in LDtk: in the game, not shown
+		const ghost = current().getEntities("Ghost")[0];
+		expect(ghost).toBeDefined();
+		expect(ghost.getOpacity()).toBe(0);
+		// a collision layer hidden in the editor is still the floor
+		const walls = app.world.getChildren().filter((child) => {
+			return child.bodyDef !== undefined;
+		});
+		expect(walls).toHaveLength(1);
+		expect([
+			walls[0].pos.x,
+			walls[0].pos.y,
+			walls[0].width,
+			walls[0].height,
+		]).toEqual([0, 80, 160, 16]);
+		expect(current().getIntGrid("Collisions")?.valueAt(3, 5)).toBe(1);
 	});
 
 	it("gives the text and the enum tags LDtk keeps for a tile", () => {
