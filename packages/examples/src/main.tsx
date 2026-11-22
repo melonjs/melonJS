@@ -491,7 +491,7 @@ const examples: {
 		path: "ldtk-platformer",
 		sourceDir: "ldtkPlatformer",
 		description:
-			"A platformer on LDtk's GridVania sample world: rooms loaded and freed as the player walks through them, a camera held to the room, walls and water from an IntGrid layer, ladders, items, and teleports between the world's two depths.",
+			"A platformer on LDtk's GridVania sample world: rooms loaded and freed around the player, walls and water from an IntGrid layer, ladders, items and teleports between two depths, with squash and stretch, particles and procedural sound.",
 	},
 	{
 		component: <ExampleLights />,
