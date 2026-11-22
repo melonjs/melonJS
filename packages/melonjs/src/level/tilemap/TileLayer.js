@@ -17,9 +17,9 @@ import Tile from "../tiled/TMXTile.js";
 
 /**
  * additional import for TypeScript
- * @import TMXRenderer from "./renderer/TMXRenderer.js";
- * @import TMXTileset from "./TMXTileset.js";
- * @import TMXTilesetGroup from "./TMXTilesetGroup.js";
+ * @import TMXRenderer from "../tiled/renderer/TMXRenderer.js";
+ * @import Tileset from "./Tileset.js";
+ * @import TilesetGroup from "./TilesetGroup.js";
  * @import {Vector2d} from "../../math/vector2d.ts";
  */
 // flip-mask bit layout for layerData's G channel
@@ -177,7 +177,7 @@ export default class TileLayer extends Renderable {
 
 		/**
 		 * The Layer corresponding Tilesets
-		 * @type {TMXTilesetGroup}
+		 * @type {TilesetGroup}
 		 */
 		this.tilesets = def.tilesets;
 
@@ -260,7 +260,7 @@ export default class TileLayer extends Renderable {
 
 		/**
 		 * All animated tilesets in this layer
-		 * @type {TMXTileset[]}
+		 * @type {Tileset[]}
 		 */
 		this.animatedTilesets = [];
 
@@ -828,7 +828,7 @@ export default class TileLayer extends Renderable {
 	/**
 	 * Why the shader path cannot draw the tiles of a tileset, on any map, if
 	 * it cannot.
-	 * @param {TMXTileset} tileset - the tileset
+	 * @param {Tileset} tileset - the tileset
 	 * @param {object} [renderer] - the renderer, for its largest texture
 	 * @returns {string|undefined} the reason, or undefined when it can
 	 * @ignore
@@ -855,7 +855,7 @@ export default class TileLayer extends Renderable {
 	/**
 	 * Whether a tileset's tiles are larger than a cell: they overlap the
 	 * cells around theirs.
-	 * @param {TMXTileset} tileset - the tileset
+	 * @param {Tileset} tileset - the tileset
 	 * @returns {boolean}
 	 * @ignore
 	 * @internal
@@ -999,7 +999,7 @@ export default class TileLayer extends Renderable {
 	/**
 	 * Why the shader path of an isometric, staggered or hexagonal map cannot
 	 * draw the tiles of a tileset, if it cannot.
-	 * @param {TMXTileset} tileset - the tileset
+	 * @param {Tileset} tileset - the tileset
 	 * @returns {string|undefined} the reason, or undefined when it can
 	 * @ignore
 	 * @internal

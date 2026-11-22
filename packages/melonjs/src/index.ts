@@ -23,6 +23,9 @@ import TMXTileMap from "./level/tiled/TMXTileMap.js";
 import TMXTileset from "./level/tiled/TMXTileset.js";
 import TMXTilesetGroup from "./level/tiled/TMXTilesetGroup.js";
 import * as TMXUtils from "./level/tiled/TMXUtils.js";
+import TileLayer from "./level/tilemap/TileLayer.js";
+import Tileset from "./level/tilemap/Tileset.js";
+import TilesetGroup from "./level/tilemap/TilesetGroup.js";
 import Light2d from "./lighting/light2d.ts";
 import { ColorMatrix } from "./math/color_matrix.ts";
 import ParticleEmitter from "./particles/emitter.ts";
@@ -166,9 +169,15 @@ export type { LevelLoadOptions } from "./level/level.js";
 export { level } from "./level/level.js";
 export type { default as TMXObject } from "./level/tiled/TMXObject.js";
 export {
+	createLevelObject,
+	hasObjectFactory,
+	registerObjectClass,
+	registerObjectFactory,
 	registerTiledObjectClass,
 	registerTiledObjectFactory,
 } from "./level/tiled/TMXObjectFactory.js";
+export { mergeGridRects } from "./level/tilemap/grid.js";
+export type { TilesetDefinition } from "./level/tilemap/Tileset.js";
 export { Light3d } from "./lighting/light3d.ts";
 
 export * as loader from "./loader/loader.js";
@@ -350,6 +359,9 @@ export {
 	Texture2d,
 	TextureAtlas,
 	Tile,
+	TileLayer,
+	Tileset,
+	TilesetGroup,
 	TintPulseEffect,
 	TMXHexagonalRenderer,
 	TMXIsometricRenderer,

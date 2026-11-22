@@ -371,6 +371,69 @@ export function createTMXObject(settings, map) {
 	return factory(settings, map);
 }
 
+/**
+ * Register a class for the objects of a level: the same registry whatever the
+ * map editor. An object of a Tiled map, an entity of a level in another format
+ * read by a plugin: one whose class (or name) is `name` is built with
+ * `new Constructor(x, y, settings)`.
+ * <br><br>
+ * {@link registerTiledObjectClass} is this function under its older name.
+ * @category Tilemap
+ * @function
+ * @template [S=TMXObject]
+ * @param {string} name - the class or name the level gives the object
+ * @param {new (x: number, y: number, settings: S) => Renderable} Constructor - class constructor, given the object's position and its description
+ * @example
+ * registerObjectClass("Enemy", Enemy);
+ */
+export const registerObjectClass = registerTiledObjectClass;
+
+/**
+ * Register a function building the objects of a level, for a class or a name:
+ * the same registry whatever the map editor. {@link registerTiledObjectFactory}
+ * is this function under its older name.
+ * @category Tilemap
+ * @function
+ * @template [S=TMXObject]
+ * @param {string} type - the class or name the level gives the object
+ * @param {(settings: S, map: object) => Renderable} factory - given the object's description and the map it is read from
+ */
+export const registerObjectFactory = registerTiledObjectFactory;
+
+/**
+ * Whether a class or a factory is registered under a name, by the game or by
+ * the engine (its own classes, such as `Trigger` or `Light2d`, are): what a
+ * level reader asks before {@link createLevelObject}, to tell an object the
+ * game has a class for from one it has to make something of by itself.
+ * @category Tilemap
+ * @param {string} name - a class or an object name
+ * @returns {boolean} true if a class or a factory is registered for it
+ */
+export function hasObjectFactory(name) {
+	if (!factoriesInitialized) {
+		initFactories();
+	}
+	return factories.has(name);
+}
+
+/**
+ * Build the object a level describes, with the class or factory registered for
+ * it ({@link registerObjectClass}, {@link registerObjectFactory}): by the
+ * description's `class`, then its `name`. This is what the Tiled loader calls
+ * for each object of a map; a reader for another level format calls it for its
+ * own. With nothing registered under either, the description is taken as a
+ * Tiled object's: a text, a tile, or a shape with a static body of the
+ * description's `width` and `height`. Use {@link hasObjectFactory} first to do
+ * otherwise.
+ * @category Tilemap
+ * @param {object} settings - the object's description: `x`, `y`, `z`, `width`, `height`, `name`, `class`, and whatever else its class reads
+ * @param {object} [map] - the map the object is read from, handed to a factory
+ * @returns {Renderable} the object
+ */
+export function createLevelObject(settings, map) {
+	return createTMXObject(settings, map);
+}
+
 // Wire `pool.register()` to register a Tiled object factory too, so the older
 // one-call idiom keeps working.
 //
