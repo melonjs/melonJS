@@ -32,6 +32,10 @@ const CLIMB = 1;
 const SINK = 0.8;
 // the push of a stroke under water
 const STROKE = 3.3;
+// the jumps the player has in the air after leaving the ground, and how
+// strong one is next to a jump from the ground
+const AIR_JUMPS = 1;
+const AIR_JUMP = 0.85;
 // what a held key adds to the speed each frame, and what the ground takes
 // off it: the player gets up to speed, and comes to a stop, over a few frames
 const PUSH = 0.45;
@@ -92,6 +96,8 @@ export class Player extends Sprite {
 	/** in the air, and how high the player was at the top of it */
 	airborne = false;
 	highest = 0;
+	/** the jumps left to make in the air: a double jump */
+	airJumps = AIR_JUMPS;
 
 	/** squash and stretch: the player's height, as a share of its own */
 	stretch = { scaleY: 1 };
@@ -178,10 +184,20 @@ export class Player extends Sprite {
 		const grounded =
 			onLadderTop || this.parentApp.world.adapter.isGrounded(this);
 		this.fall(water, onLadderTop);
-		const canJump = grounded || this.climbing || this.swimming;
-		// (not from inside the floor a ladder goes through)
-		if (keys.jump && canJump && !this.inFloor()) {
-			this.jump(water, grounded);
+		// With something to push off (the ground, a ladder, the water), a
+		// jump, and the air jumps are had again; in the air, one of those.
+		// (No jump from inside the floor a ladder goes through.)
+		const supported = grounded || this.climbing || this.swimming;
+		if (supported) {
+			this.airJumps = AIR_JUMPS;
+		}
+		if (keys.jump && !this.inFloor()) {
+			if (supported) {
+				this.jump(water, grounded);
+			} else if (this.airJumps > 0) {
+				this.airJumps--;
+				this.airJump();
+			}
 		}
 		// a teleport is taken by pressing up in front of it
 		if (teleport !== undefined && keys.up && !this.wasUp && !this.climbing) {
@@ -349,6 +365,21 @@ export class Player extends Sprite {
 		if (grounded) {
 			particles.burst("dust", this.feet.x, this.feet.y);
 		}
+	}
+
+	/**
+	 * A second jump, in the air: a little weaker than one from the ground,
+	 * and it starts from wherever the first one had got to.
+	 */
+	airJump() {
+		const body = this.body;
+		body.vel.y = 0;
+		body.force.y = -body.maxVel.y * AIR_JUMP;
+		body.jumping = true;
+		this.stretchTo(1.2);
+		sounds.airJump();
+		// a puff where the feet pushed off the air
+		particles.burst("dust", this.feet.x, this.feet.y);
 	}
 
 	/**

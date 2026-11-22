@@ -21,6 +21,17 @@ export const sounds = {
 		});
 	},
 
+	/** the second jump, in the air: the same blip, higher */
+	airJump() {
+		audio.tone({
+			freq: 420,
+			duration: 0.12,
+			wave: "square",
+			pitchSlide: 1.9,
+			gain: 0.04,
+		});
+	},
+
 	land() {
 		audio.noise({
 			duration: 0.08,

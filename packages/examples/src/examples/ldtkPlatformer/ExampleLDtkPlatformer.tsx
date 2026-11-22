@@ -26,8 +26,8 @@ export const ExampleLDtkPlatformer = () => {
 					textShadow: "0 1px 2px #000",
 				}}
 			>
-				Arrows or WASD to move and climb · Space or X to jump and swim · Up in
-				front of a teleport to take it
+				Arrows or WASD to move and climb · Space or X to jump (again in the air)
+				and swim · Up in front of a teleport to take it
 			</div>
 		</>
 	);
