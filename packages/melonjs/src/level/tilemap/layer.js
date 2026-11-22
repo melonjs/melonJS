@@ -58,6 +58,25 @@ export function applyLayerDefinition(layer, def) {
  * @ignore
  */
 export function viewStart(layer, view, out) {
+	// A floating layer is drawn in the screen's coordinates, wherever the
+	// camera is: the view is the screen. The layer's own `pos` is then a
+	// place on the screen; inside a floating container it is placed from
+	// that container, as any child is.
+	if (layer.isFloating === true) {
+		out.x = 0;
+		out.y = 0;
+		const container = layer.ancestor;
+		if (
+			layer.floating !== true &&
+			container !== undefined &&
+			container !== null
+		) {
+			const at = container.getAbsolutePosition();
+			out.x -= at.x;
+			out.y -= at.y;
+		}
+		return out;
+	}
 	let x = view.pos.x;
 	let y = view.pos.y;
 	const offset = view.offset;

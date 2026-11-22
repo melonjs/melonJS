@@ -15,18 +15,23 @@ import { bindViewportToLevel } from "./viewport.js";
  * children are in the order they were added, bottom-most first, which a
  * container draws back to front. A frame drawn in between shows the level
  * upside down, its background over everything.
+ *
+ * Only this container is sorted, unless `recursive`: the containers it
+ * already holds are the game's (a HUD kept in an order of its own), and a
+ * level added while the game runs has no business with them.
  * @param {Container} container - the container
  * @param {Function} add - adds the children
+ * @param {boolean} [recursive=false] - sort the containers it holds as well: for a container the level alone fills
  * @ignore
  */
-export function populateContainer(container, add) {
+export function populateContainer(container, add, recursive = false) {
 	const sort = container.autoSort;
 	const depth = container.autoDepth;
 	container.autoSort = false;
 	container.autoDepth = false;
 	try {
 		add();
-		container.sortNow(true);
+		container.sortNow(recursive);
 	} finally {
 		container.autoSort = sort;
 		container.autoDepth = depth;
@@ -52,11 +57,17 @@ export function addLevelToContainer(container, level) {
 	if (level.backgroundColor) {
 		container.backgroundColor.parseCSS(level.backgroundColor);
 	}
-	populateContainer(container, () => {
-		level.add();
-		// resize the container accordingly
-		container.resize(level.width, level.height);
-	});
+	// the container was emptied for the level: what it holds is the level's,
+	// the groups a map keeps in containers of their own included
+	populateContainer(
+		container,
+		() => {
+			level.add();
+			// resize the container accordingly
+			container.resize(level.width, level.height);
+		},
+		true,
+	);
 	// the viewport takes the level's bounds, now and when it is resized
 	if (level.bounds !== undefined) {
 		follow = bindViewportToLevel(container, level.bounds);

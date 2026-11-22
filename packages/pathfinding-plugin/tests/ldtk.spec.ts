@@ -98,6 +98,26 @@ const project = {
 	worlds: [],
 };
 
+// the same room twice, side by side: the world starts left of 0
+const worldProject = structuredClone(project);
+worldProject.iid = "pf-ldtk-world";
+worldProject.levels = [
+	{
+		...structuredClone(project.levels[0]),
+		identifier: "West",
+		iid: "west-iid",
+		worldX: -COLS * T,
+		worldY: 32,
+	},
+	{
+		...structuredClone(project.levels[0]),
+		identifier: "East",
+		iid: "east-iid",
+		worldX: 0,
+		worldY: 32,
+	},
+];
+
 describe("a grid from a level made with LDtk", () => {
 	let app: Application;
 
@@ -110,7 +130,10 @@ describe("a grid from a level made with LDtk", () => {
 		});
 		await app.init();
 		await loader.preload(
-			[{ name: "pf-ldtk", type: "ldtk", data: project }],
+			[
+				{ name: "pf-ldtk", type: "ldtk", data: project },
+				{ name: "pf-world", type: "ldtk", data: worldProject },
+			],
 			undefined,
 			false,
 		);
@@ -171,5 +194,40 @@ describe("a grid from a level made with LDtk", () => {
 		}
 		grid.setSolid(4, 3, true);
 		expect(grid.findPath(from, to).found).toBe(false);
+	});
+
+	it("covers a whole world where the world is: one that starts left of and below 0", async () => {
+		await level.load("pf-world", {
+			container: app.world,
+			setViewportBounds: false,
+			async: true,
+		});
+		const plugin = new PathfindingPlugin({}, app);
+		const grid = plugin.grid;
+		expect(grid).not.toBeNull();
+		if (grid === null) {
+			return;
+		}
+		// two rooms of 10 x 6 cells, from x = -160, y = 32
+		expect([grid.cols, grid.rows]).toEqual([COLS * 2, ROWS]);
+		expect([grid.x, grid.y]).toEqual([-COLS * T, 32]);
+		// each cell of each room is solid where the room's wall is
+		for (let row = 0; row < ROWS; row++) {
+			for (let col = 0; col < COLS * 2; col++) {
+				expect(grid.isSolid(col, row), `cell ${col}, ${row}`).toBe(
+					walls[row][col % COLS] === "#",
+				);
+			}
+		}
+		// a way from the west room's upper half to its lower half, in the
+		// world's own coordinates
+		const from = new Vector2d(-COLS * T + 1.5 * T, 32 + 1.5 * T);
+		const to = new Vector2d(-COLS * T + 8.5 * T, 32 + 4.5 * T);
+		const { found, path } = grid.findPath(from, to);
+		expect(found).toBe(true);
+		for (const point of path) {
+			expect(point.x).toBeLessThan(0);
+			expect(point.y).toBeGreaterThan(32);
+		}
 	});
 });

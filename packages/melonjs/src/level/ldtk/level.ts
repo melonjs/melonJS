@@ -1063,6 +1063,8 @@ export class LDtkWorld extends LDtkMap {
 		}
 		// in their draw order at once: a frame can be drawn before a timer
 		// sorts them, and would show the level's background over its tiles
+		// this container alone: the containers the game keeps in it are
+		// in an order of their own
 		populateContainer(container, () => {
 			this.build(level);
 		});

@@ -94,6 +94,14 @@ export default class PlacedTileLayer extends Renderable {
 		this._alphas = new Float32Array(GROW);
 		/** @ignore */
 		this._count = 0;
+		/**
+		 * how far left of and above the layer's origin its tiles reach (0
+		 * or less): the layer is in view as far as they do
+		 * @ignore
+		 */
+		this._minX = 0;
+		/** @ignore */
+		this._minY = 0;
 
 		// its name, draw order, opacity, blend mode and tint, as a tile
 		// layer takes them
@@ -152,8 +160,13 @@ export default class PlacedTileLayer extends Renderable {
 			this._minHeight,
 			y + tileset.tileheight,
 		);
+		const reaches = x < this._minX || y < this._minY;
+		this._minX = Math.min(this._minX, x);
+		this._minY = Math.min(this._minY, y);
 		if (right !== this.width || bottom !== this.height) {
 			this.resize(right, bottom);
+		} else if (reaches) {
+			this.updateBounds();
 		}
 		this.isDirty = true;
 		return index;
@@ -225,8 +238,29 @@ export default class PlacedTileLayer extends Renderable {
 	 */
 	clear() {
 		this._count = 0;
+		this._minX = 0;
+		this._minY = 0;
 		this.resize(this._minWidth, this._minHeight);
+		this.updateBounds();
 		this.isDirty = true;
+	}
+
+	/**
+	 * the layer's bounds reach as far as its tiles do, left of and above its
+	 * origin included: it is in view while any of them is
+	 * @ignore
+	 */
+	updateBounds(absolute = true) {
+		const bounds = super.updateBounds(absolute);
+		if (this._minX < 0 || this._minY < 0) {
+			bounds.setMinMax(
+				bounds.min.x + this._minX,
+				bounds.min.y + this._minY,
+				bounds.max.x,
+				bounds.max.y,
+			);
+		}
+		return bounds;
 	}
 
 	/**

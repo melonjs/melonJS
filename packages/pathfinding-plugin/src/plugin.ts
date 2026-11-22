@@ -20,6 +20,12 @@ interface LevelMap {
 	tileheight: number;
 	orientation: string;
 	layers: Renderable[];
+	/**
+	 * where the level's grid starts in its container, when not at 0: a world
+	 * made with LDtk keeps the editor's coordinates, which can be negative
+	 */
+	x?: number;
+	y?: number;
 	getRenderer(): {
 		tileToPixelCoords(x: number, y: number, v: Vector2d): Vector2d;
 	};
@@ -243,8 +249,10 @@ export class PathfindingPlugin extends plugin.BasePlugin {
 			tileWidth: map.tilewidth / subdivide,
 			tileHeight: map.tileheight / subdivide,
 			cellShape: isometric ? "isometric" : "square",
-			x: at.x + corner.x,
-			y: at.y + corner.y,
+			// from where the level itself starts, when not at its
+			// container's origin
+			x: at.x + corner.x + (map.x ?? 0),
+			y: at.y + corner.y + (map.y ?? 0),
 		});
 		return this.grid;
 	}

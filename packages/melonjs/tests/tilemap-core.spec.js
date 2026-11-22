@@ -18,6 +18,7 @@ import {
 	TMXLayer,
 	TMXTileset,
 	TMXTilesetGroup,
+	timer,
 	video,
 } from "../src/index.js";
 import { grabFrame } from "./helpers/pixels.js";
@@ -762,6 +763,173 @@ describe.each([
 				await picture(next),
 				reference((c) => {
 					paintTile(c, 11, 6, 6);
+				}),
+			);
+		});
+		/** one frame, the layer found in view (or not) by the world itself */
+		const seen = async (...renderables) => {
+			for (const renderable of renderables) {
+				app.world.addChild(renderable);
+			}
+			app.world.update(16);
+			app.isDirty = true;
+			app.draw();
+			const frame = grabFrame(renderer);
+			for (const renderable of renderables) {
+				app.world.removeChildNow(renderable, true);
+			}
+			return Array.from((await frame).data);
+		};
+
+		it("is in view as far as its tiles reach, left of and above its origin too", async () => {
+			// the layer's origin is far out of the 96 px view: only the tile
+			// placed 390 px left of it is in it
+			const layer = placed([{ x: -390, y: -290, tileId: 5 }], {
+				offsetx: 400,
+				offsety: 300,
+			});
+			const bounds = layer.getBounds();
+			expect([bounds.left, bounds.top]).toEqual([10, 10]);
+			// from the tile's corner to the layer's origin
+			expect([bounds.right, bounds.bottom]).toEqual([400, 300]);
+			expectSame(
+				await seen(layer),
+				reference((c) => {
+					paintTile(c, 5, 10, 10);
+				}),
+			);
+			// and no further once emptied
+			layer.clear();
+			expect(layer.getBounds().left).toBe(400);
+		});
+
+		it("shrinks back to its own size when emptied", () => {
+			const layer = placed([{ x: 200, y: 150, tileId: 1 }], {
+				width: 20,
+				height: 10,
+			});
+			expect([layer.width, layer.height]).toEqual([200 + TILE, 150 + TILE]);
+			layer.clear();
+			expect([layer.width, layer.height]).toEqual([20, 10]);
+		});
+
+		it("floating, is drawn on the screen wherever the camera is", async () => {
+			const viewport = app.viewport;
+			const bounds = viewport.bounds.clone();
+			viewport.setBounds(0, 0, 4000, 4000);
+			viewport.moveTo(1000, 700);
+			const layer = placed([{ x: 4, y: 6, tileId: 3 }], {
+				offsetx: 10,
+				offsety: 10,
+			});
+			layer.floating = true;
+			const actual = await picture(layer);
+			viewport.moveTo(0, 0);
+			viewport.setBounds(bounds.x, bounds.y, bounds.width, bounds.height);
+			expectSame(
+				actual,
+				reference((c) => {
+					paintTile(c, 3, 14, 16);
+				}),
+			);
+		});
+
+		it("draws the tiles the camera's offset brings into view", async () => {
+			// a tile right of the view, and one in it that the offset takes
+			// out: only what the offset view holds is asked of the tileset
+			const layer = placed([
+				{ x: 150, y: 10, tileId: 2 },
+				{ x: 10, y: 10, tileId: 4 },
+			]);
+			const drawn = vi.spyOn(tileset, "drawTileRaw");
+			app.viewport.offset.set(100, 0);
+			await picture(layer);
+			app.viewport.offset.set(0, 0);
+			expect(
+				drawn.mock.calls.map((call) => {
+					return call[3];
+				}),
+			).toEqual([3]);
+			drawn.mockRestore();
+		});
+
+		it("moves its tiles by the tileset's tile offset", async () => {
+			const moved = new Tileset({
+				image: tilesImage(),
+				tilewidth: TILE,
+				tileheight: TILE,
+				tileoffset: { x: 5, y: -3 },
+			});
+			const layer = new PlacedTileLayer({
+				tileset: moved,
+				tiles: [{ x: 20, y: 20, tileId: 6 }],
+			});
+			expectSame(
+				await picture(layer),
+				reference((c) => {
+					paintTile(c, 6, 25, 17);
+				}),
+			);
+		});
+
+		it("moves on with the tileset's animation as time passes", async () => {
+			const animated = new Tileset({
+				image: tilesImage(),
+				tilewidth: TILE,
+				tileheight: TILE,
+			});
+			animated.setTileAnimation(2, [
+				{ tileid: 2, duration: 100 },
+				{ tileid: 11, duration: 100 },
+			]);
+			const layer = new PlacedTileLayer({
+				tileset: animated,
+				tiles: [{ x: 6, y: 6, tileId: 2 }],
+			});
+			// a new tick of the clock, 150 ms on: past the first frame
+			timer.update(timer.getTime() + 1000);
+			expect(layer.update(150)).toBe(true);
+			expect(animated.getViewTileId(3)).toBe(11);
+			expectSame(
+				await picture(layer),
+				reference((c) => {
+					paintTile(c, 11, 6, 6);
+				}),
+			);
+			// a layer of a tileset with no animation has nothing to redraw for
+			const still = placed([{ x: 0, y: 0, tileId: 0 }]);
+			still.isDirty = false;
+			timer.update(timer.getTime() + 1000);
+			expect(still.update(150)).toBe(false);
+		});
+	});
+
+	describe("a floating TileLayer", () => {
+		it("is drawn on the screen wherever the camera is", async () => {
+			const viewport = app.viewport;
+			const bounds = viewport.bounds.clone();
+			viewport.setBounds(0, 0, 4000, 4000);
+			viewport.moveTo(1000, 700);
+			const layer = new TileLayer({
+				name: "hud",
+				cols: 4,
+				rows: 3,
+				tilewidth: TILE,
+				tileheight: TILE,
+				tilesets: new TilesetGroup([tileset]),
+				renderMode: "perTile",
+				offsetx: 10,
+				offsety: 10,
+			});
+			layer.setCell(1, 1, 8);
+			layer.floating = true;
+			const actual = await picture(layer);
+			viewport.moveTo(0, 0);
+			viewport.setBounds(bounds.x, bounds.y, bounds.width, bounds.height);
+			expectSame(
+				actual,
+				reference((c) => {
+					paintTile(c, 7, 10 + TILE, 10 + TILE);
 				}),
 			);
 		});

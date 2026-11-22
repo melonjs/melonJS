@@ -2,6 +2,9 @@
 
 ## [1.1.1] - _unreleased_
 
+### Added
+- `PathfindingPlugin`: a level or a world made with LDtk (melonJS 20.18) gets its grid as a Tiled map does, from the walls of its IntGrid layers, placed where the world is
+
 ### Fixed
 - `Grid.fromTileLayer`: the grid stands where the layer's tiles are drawn when the layer has an offset in Tiled or was moved by its `pos`, which melonJS 20.17 follows when it draws the layer; the grid stayed at the map's origin
 
