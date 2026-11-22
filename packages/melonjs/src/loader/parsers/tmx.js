@@ -1,11 +1,73 @@
 import { level } from "../../level/level.js";
+import {
+	isSpriteFusionMap,
+	SPRITESHEET,
+	spritesheetName,
+} from "../../level/tiled/spritefusion.ts";
 import * as TMXUtils from "../../level/tiled/TMXUtils.js";
 import { fetchData } from "../../utils/fetchdata.js";
-import { getExtension } from "../../utils/file.ts";
+import { getBasename, getExtension } from "../../utils/file.ts";
 import { tmxList } from "../cache.js";
+import { loadReference } from "../loader.js";
 
 /**
- * parse/preload a TMX file
+ * The asset types that are a tile map, which the level director loads: one
+ * parser and one cache under three names. `"tsx"`, a tileset on its own,
+ * shares both without being a level.
+ * @ignore
+ * @internal
+ */
+export const MAP_TYPES = Object.freeze(["tmx", "tilemap", "spritefusion"]);
+
+/**
+ * whether a map draws from the image Sprite Fusion saves with it: a map of
+ * its JSON export does, and one of its TMX export names it
+ * @ignore
+ * @internal
+ */
+function usesSpritesheet(map) {
+	if (isSpriteFusionMap(map)) {
+		return true;
+	}
+	const tilesets = Array.isArray(map?.tilesets) ? map.tilesets : [];
+	return tilesets.some((tileset) => {
+		return (
+			typeof tileset.image === "string" &&
+			getBasename(tileset.image) === SPRITESHEET
+		);
+	});
+}
+
+/**
+ * Load the `spritesheet.png` saved next to a `"spritefusion"` map, for the
+ * map: under a name of the map's own (every map of the editor's comes with a
+ * file of that name), held by the map and freed with it.
+ * @param {loader.Asset} asset - the map asset, its `src` resolved
+ * @param {object} [settings] - the loader's request settings
+ * @returns {Promise<void>} settles when it is loaded
+ * @ignore
+ * @internal
+ */
+async function loadSpritesheet(asset, settings) {
+	const src =
+		asset.src.slice(0, asset.src.lastIndexOf("/") + 1) + SPRITESHEET + ".png";
+	try {
+		await loadReference(
+			asset,
+			{ name: spritesheetName(asset.name), type: "image", src },
+			settings,
+		);
+	} catch (error) {
+		throw new Error(
+			`Sprite Fusion map "${asset.name}": its spritesheet could not be loaded (${src})`,
+			{ cause: error },
+		);
+	}
+}
+
+/**
+ * parse/preload a tile map or a tileset: a Tiled file (XML or JSON), or a
+ * Sprite Fusion `map.json`
  * @param {loader.Asset} data - asset data
  * @param {Function} [onload] - function to be called when the asset is loaded
  * @param {Function} [onerror] - function to be called in case of error
@@ -28,9 +90,9 @@ export function preloadTMX(tmxData, onload, onerror, settings) {
 		// set the TMX content
 		tmxList[tmxData.name] = data;
 
-		// add the tmx to the level manager
-		if (tmxData.type === "tmx") {
-			level.add(tmxData.type, tmxData.name);
+		// add the map to the level manager
+		if (MAP_TYPES.includes(tmxData.type)) {
+			level.add("tmx", tmxData.name);
 		}
 	}
 
@@ -44,7 +106,7 @@ export function preloadTMX(tmxData, onload, onerror, settings) {
 	}
 
 	fetchData(tmxData.src, "text", settings)
-		.then((response) => {
+		.then(async (response) => {
 			if (typeof response !== "string") {
 				throw new Error("Invalid response type");
 			}
@@ -87,6 +149,11 @@ export function preloadTMX(tmxData, onload, onerror, settings) {
 					throw new Error(
 						`TMX file format not supported: ${getExtension(tmxData.src)}`,
 					);
+			}
+
+			// a Sprite Fusion map comes with its spritesheet
+			if (tmxData.type === "spritefusion" && usesSpritesheet(result)) {
+				await loadSpritesheet(tmxData, settings);
 			}
 
 			addToTMXList(result);

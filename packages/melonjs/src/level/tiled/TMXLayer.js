@@ -1,3 +1,4 @@
+import { warnOnce } from "../../lang/console.js";
 import TileLayer, {
 	FLIP_AD_BIT,
 	FLIP_H_BIT,
@@ -86,6 +87,72 @@ function setLayerData(layer, data, x, y, width, height, chunk = false) {
 }
 
 /**
+ * whether one of the tilesets has a tile of this gid
+ * @ignore
+ * @internal
+ */
+function hasTile(tilesets, gid) {
+	try {
+		tilesets.getTilesetByGid(gid);
+		return true;
+	} catch {
+		return false;
+	}
+}
+
+/**
+ * Fill a layer from a list of the tiles placed in it: the other form a
+ * layer's cells come in, one entry for each tile rather than one number for
+ * each cell (Sprite Fusion writes a layer this way). An entry is
+ * `{ id, x, y }`: the tile's id in the map's first tileset, and the column
+ * and row of its cell. Its `properties` or `attributes`, if any, are what
+ * this one tile has of its own, which {@link TileLayer#getCellProperties}
+ * returns. A tile outside the layer's grid is left out.
+ * @ignore
+ * @internal
+ */
+function setPlacedTiles(layer, tiles) {
+	const firstgid = layer.tileset?.firstgid ?? 1;
+	const cols = layer.cols;
+	const rows = layer.rows;
+	const layerData = layer.layerData;
+	for (let i = 0, len = tiles.length; i < len; i++) {
+		const tile = tiles[i];
+		const id = +tile.id;
+		const col = +tile.x;
+		const row = +tile.y;
+		if (
+			!Number.isInteger(id) ||
+			id < 0 ||
+			!Number.isInteger(col) ||
+			!Number.isInteger(row) ||
+			col < 0 ||
+			col >= cols ||
+			row < 0 ||
+			row >= rows
+		) {
+			continue;
+		}
+		const gid = firstgid + id;
+		// a tile no tileset has (a spritesheet replaced by a smaller one)
+		// would throw each time the layer is drawn
+		if (!hasTile(layer.tilesets, gid)) {
+			warnOnce(
+				`melonJS: layer "${layer.name}" places tile ${id}, which the map's tilesets do not have: left out`,
+			);
+			continue;
+		}
+		layerData[(row * cols + col) * 2] = gid;
+		// what this one tile was given, on top of what its tileset says
+		if (tile.properties !== undefined || tile.attributes !== undefined) {
+			const own = {};
+			TMXUtils.applyTMXProperties(own, tile);
+			layer.setCellProperties(col, row, own);
+		}
+	}
+}
+
+/**
  * the cells an infinite map's layer covers, in the map's tile coordinates:
  * the map's own area and every chunk of the layer. Tiled gives a TMX layer
  * the map's size whatever its chunks hold, and a JSON one the chunks' bounds
@@ -151,9 +218,10 @@ export default class TMXLayer extends TileLayer {
 			z,
 			startx: extent?.x ?? 0,
 			starty: extent?.y ?? 0,
-			cols: extent?.cols ?? +data.width,
-			rows: extent?.rows ?? +data.height,
-			opacity: visible ? +data.opacity : 0,
+			// (a layer that does not give its size has the map's)
+			cols: extent?.cols ?? +(data.width ?? map.cols),
+			rows: extent?.rows ?? +(data.height ?? map.rows),
+			opacity: visible ? +(data.opacity ?? 1) : 0,
 			// layer blend mode (Tiled 1.12+)
 			blendMode: TMXUtils.tiledBlendMode(data.mode),
 			offsetx: +data.offsetx || 0,
@@ -173,9 +241,17 @@ export default class TMXLayer extends TileLayer {
 				}
 				// check if we have any user-defined properties
 				TMXUtils.applyTMXProperties(layer, data);
+				// the `collider` property, when the layer has it as a field
+				// of its own (Sprite Fusion's JSON)
+				if (typeof data.collider === "boolean") {
+					layer.collider = data.collider;
+				}
 			},
 			_fill: (layer) => {
-				if (map.infinite === 0) {
+				if (data.data === undefined && Array.isArray(data.tiles)) {
+					// the tiles one by one, rather than every cell
+					setPlacedTiles(layer, data.tiles);
+				} else if (map.infinite === 0) {
 					// initialize and set the layer data
 					setLayerData(
 						layer,

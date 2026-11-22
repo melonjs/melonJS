@@ -55,8 +55,8 @@ export const shaderList = {};
  *
  * The mapping belongs here rather than in a `switch` in `loader.js`, so that
  * adding a cache is one edit in one file. Several types share a cache, which
- * is the point of the indirection: `tmx` and `tsx` are the same store, as are
- * `gltf` and `glb`.
+ * is the point of the indirection: `tmx`, `tsx`, `tilemap` and `spritefusion`
+ * are the same store, as are `gltf` and `glb`.
  */
 const cacheByType = {
 	binary: binList,
@@ -64,6 +64,8 @@ const cacheByType = {
 	json: jsonList,
 	tmx: tmxList,
 	tsx: tmxList,
+	tilemap: tmxList,
+	spritefusion: tmxList,
 	video: videoList,
 	obj: objList,
 	gltf: gltfList,

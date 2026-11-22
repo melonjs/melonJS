@@ -529,15 +529,31 @@ export function parse(xml) {
 }
 
 /**
- * Apply TMX Properties to the given object
+ * Apply the custom values of a map element to the given object: its
+ * `properties`, as Tiled writes them, and its `attributes`, the same thing as
+ * a plain object of values (which Sprite Fusion writes, and is the shorter
+ * one to write by hand). An attribute is taken as it is; where both name a
+ * value, the attribute is the one kept.
  * @param {object} obj - object to apply the properties to
  * @param {object} data - TMX data object
  */
 export function applyTMXProperties(obj, data) {
-	const properties = data.properties;
-	if (properties === undefined) {
-		return;
+	if (data.properties !== undefined) {
+		applyProperties(obj, data);
 	}
+	const attributes = data.attributes;
+	if (obj && typeof attributes === "object" && attributes !== null) {
+		Object.assign(obj, attributes);
+	}
+}
+
+/**
+ * apply the `properties` of a map element, in any of the forms Tiled has
+ * written them
+ * @ignore
+ */
+function applyProperties(obj, data) {
+	const properties = data.properties;
 
 	// new Tiled JSON format: array of { name, type, value }
 	if (Array.isArray(properties)) {

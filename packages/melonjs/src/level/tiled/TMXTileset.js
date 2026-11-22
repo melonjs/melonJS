@@ -219,18 +219,26 @@ export default class TMXTileset extends Tileset {
 			}
 
 			// set tile properties, if any
+			let tileProperty;
 			if (tile.properties) {
 				if (Array.isArray(tile.properties)) {
 					// JSON (new format) — array of { name, value }
-					const tileProperty = {};
+					tileProperty = {};
 					for (const prop of tile.properties) {
 						tileProperty[prop.name] = prop.value;
 					}
-					this.setTileProperty(tileId + this.firstgid, tileProperty);
 				} else {
 					// XML format — flat object
-					this.setTileProperty(tileId + this.firstgid, tile.properties);
+					tileProperty = tile.properties;
 				}
+			}
+			// and its `attributes`: the same thing as a plain object of
+			// values, which a map written by another editor, or by hand, gives
+			if (typeof tile.attributes === "object" && tile.attributes !== null) {
+				tileProperty = { ...tileProperty, ...tile.attributes };
+			}
+			if (tileProperty !== undefined) {
+				this.setTileProperty(tileId + this.firstgid, tileProperty);
 			}
 
 			// resolve embedded JSON image data on individual tiles

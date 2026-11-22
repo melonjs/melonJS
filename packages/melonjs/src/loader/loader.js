@@ -137,7 +137,7 @@ import { preloadMTL } from "./parsers/mtl.js";
 import { preloadOBJ } from "./parsers/obj.js";
 import { preloadJavascript } from "./parsers/script.js";
 import { preloadShader } from "./parsers/shader.js";
-import { preloadTMX } from "./parsers/tmx.js";
+import { MAP_TYPES, preloadTMX } from "./parsers/tmx.js";
 import { preloadVideo } from "./parsers/video.js";
 
 // the cache read accessors live with the caches themselves; re-exported
@@ -298,8 +298,8 @@ export function setOptions(options) {
  * by one. Custom types registered with {@link setParser} are not covered by
  * `"*"` either.
  * @param {string} type - the asset type ("audio", "video", "binary", "image",
- * "json", "js", "tmx", "tsx", "ldtk", "fontface", "aseprite", "shader", "obj",
- * "mtl", "gltf", "glb", or a custom type), or `"*"`
+ * "json", "js", "tmx", "tsx", "tilemap", "spritefusion", "ldtk", "fontface",
+ * "aseprite", "shader", "obj", "mtl", "gltf", "glb", or a custom type), or `"*"`
  * @param {string} [url="./"] - the base URL, ending with a `/`
  * @example
  * // a relative path for the images
@@ -324,6 +324,8 @@ export function setBaseURL(type, url = "./") {
 		baseURL["js"] = url;
 		baseURL["tmx"] = url;
 		baseURL["tsx"] = url;
+		baseURL["tilemap"] = url;
+		baseURL["spritefusion"] = url;
 		baseURL["ldtk"] = url;
 		baseURL["fontface"] = url;
 		baseURL["aseprite"] = url;
@@ -403,7 +405,12 @@ const inflight = new Map();
  * @ignore
  * @internal
  */
-const KEY_ALIASES = { tsx: "tmx", glb: "gltf" };
+const KEY_ALIASES = {
+	tsx: "tmx",
+	tilemap: "tmx",
+	spritefusion: "tmx",
+	glb: "gltf",
+};
 
 /**
  * The identity of an asset for ownership: its type (aliases folded onto the
@@ -502,7 +509,11 @@ function release(asset) {
 	) {
 		freeAsset(asset);
 	}
-	if (asset.type === "tmx" || asset.type === "gltf" || asset.type === "glb") {
+	if (
+		MAP_TYPES.includes(asset.type) ||
+		asset.type === "gltf" ||
+		asset.type === "glb"
+	) {
 		level.remove(asset.name);
 	}
 }
@@ -810,7 +821,10 @@ function initParsers() {
 	setParser("image", preloadImage);
 	setParser("json", preloadJSON);
 	setParser("js", preloadJavascript);
+	// a tile map under its three names (see `MAP_TYPES`), and a tileset
 	setParser("tmx", preloadTMX);
+	setParser("tilemap", preloadTMX);
+	setParser("spritefusion", preloadTMX);
 	setParser("tsx", preloadTMX);
 	// an LDtk project keeps what it read with the level formats, and frees
 	// it through the same hook a custom type has
@@ -959,11 +973,31 @@ const alwaysRelative = () => {
  * (`loader.getImage(name)`, `new Sprite(x, y, { image: name })`,
  * `level.load(name)`, `audio.play(name)`)
  * @property {string} type - the type of the asset, which picks its parser:
- * "audio", "binary", "image", "json", "js", "tmx", "tsx", "ldtk", "fontface",
- * "video", "aseprite", "shader", "obj", "mtl", "gltf" or "glb". JSON-serialised Tiled
- * maps and tilesets (`.tmj` / `.tsj`) load under `"tmx"` / `"tsx"`: those are
- * file extensions, not asset types. Any other type is one registered with
+ * "audio", "binary", "image", "json", "js", "tmx", "tsx", "tilemap",
+ * "spritefusion", "ldtk", "fontface", "video", "aseprite", "shader", "obj",
+ * "mtl", "gltf" or "glb". Any other type is one registered with
  * {@link loader.setParser}.
+ *
+ * The types that come from an editor:
+ * - `"tmx"`: a [Tiled](https://www.mapeditor.org) map, and `"tsx"`: a Tiled
+ *   tileset kept in a file of its own. Their JSON forms (`.tmj` / `.tsj`,
+ *   `.json`) load under the same two types: those are file extensions, not
+ *   asset types.
+ * - `"tilemap"`: a tile map, whatever editor wrote it. The same as `"tmx"`
+ *   under a name that is not an editor's: a file in Tiled's format (XML or
+ *   JSON), which many tools write, or a Sprite Fusion `map.json` (drawn
+ *   from the image the game loaded as `spritesheet`).
+ * - `"spritefusion"`: a [Sprite Fusion](https://www.spritefusion.com) map,
+ *   either of its exports (`map.json` or `map.tmx`). The same again, and
+ *   the `spritesheet.png` the editor saves next to the map is loaded with
+ *   it.
+ * - `"ldtk"`: an [LDtk](https://ldtk.io) project, with the level files and
+ *   the images it names.
+ * - `"aseprite"`: an [Aseprite](https://www.aseprite.org) file, as an image
+ *   and its frames.
+ *
+ * Each of the three map types and each level of an LDtk project is a level
+ * for {@link level.load}.
  * @property {string|string[]} [src] - the URL of the file, relative to the
  * page or to the type's base URL ({@link setBaseURL}), or a data URI.
  * For `"audio"` it is the **directory** holding the clip: the loader appends
@@ -974,8 +1008,8 @@ const alwaysRelative = () => {
  * last.
  * For `"shader"` it may be an object of URLs instead (see the example).
  * @property {string|{glsl?: string, wgsl?: string}|object} [data] - inline content
- * in place of a `src`: the parsed Tiled JSON map or tileset (an object) for
- * `"tmx"` / `"tsx"`, the GLSL source of an effect body for `"shader"`, or a
+ * in place of a `src`: the parsed JSON map or tileset (an object) for
+ * `"tmx"` / `"tilemap"` / `"spritefusion"` / `"tsx"`, the GLSL source of an effect body for `"shader"`, or a
  * `{glsl, wgsl}` pair of them so that one asset serves both backends (either
  * half may be omitted). A type registered with {@link loader.setParser} reads
  * what its parser expects there
@@ -1001,6 +1035,12 @@ const alwaysRelative = () => {
  * { name: "map2",    type: "tmx", src: "data/map/map2.tmj" }
  * { name: "tileset", type: "tsx", src: "data/map/tileset.tsx" }
  * { name: "map3",    type: "tmx", data: { width: 20, height: 15, tilewidth: 32, tileheight: 32, layers: [], tilesets: [] } }
+ * // a tile map from any editor that writes Tiled's format
+ * { name: "map4",    type: "tilemap", src: "data/map/map4.json" }
+ * // Sprite Fusion: the map, its spritesheet.png comes with it
+ * { name: "map5",    type: "spritefusion", src: "data/map5/map.json" }
+ * // LDtk: a project, its level files and images come with it
+ * { name: "world",   type: "ldtk", src: "data/world/world.ldtk" }
  * // audio: src is the directory, the extension comes from audio.init()
  * { name: "cling",   type: "audio", src: "data/sfx/" }
  * { name: "bgmusic", type: "audio", src: "data/bgm/", stream: true }
@@ -1924,6 +1964,10 @@ function freeAsset(asset) {
 			}
 			if (asset.type === "image") {
 				releaseImageTexture(asset.name);
+			}
+			if (MAP_TYPES.includes(asset.type)) {
+				// the spritesheet a Sprite Fusion map was loaded with
+				releaseReferences(asset);
 			}
 			return deleteAsset(asset.type, asset.name);
 	}

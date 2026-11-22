@@ -4,6 +4,7 @@ import { vector2dPool } from "../../math/vector2d.ts";
 import { boundsPool } from "../../physics/bounds.ts";
 import Container from "../../renderable/container.js";
 import ImageLayer from "../../renderable/imagelayer.js";
+import { getBasename } from "../../utils/file.ts";
 import { checkVersion } from "../../utils/utils.ts";
 import {
 	isCollisionLayerName,
@@ -14,6 +15,11 @@ import { addLevelToContainer, isObjectWanted } from "../tilemap/populate.js";
 import { releaseViewport } from "../tilemap/viewport.js";
 import { TILED_SUPPORTED_VERSION } from "./constants.js";
 import { getNewTMXRenderer } from "./renderer/autodetect.js";
+import {
+	isSpriteFusionMap,
+	SPRITESHEET,
+	spritesheetName,
+} from "./spritefusion.ts";
 import TMXGroup from "./TMXGroup.js";
 import TMXLayer from "./TMXLayer.js";
 import { createTMXObject } from "./TMXObjectFactory.js";
@@ -292,25 +298,25 @@ export default class TMXTileMap {
 		 * width of the tilemap in tiles
 		 * @type {number}
 		 */
-		this.cols = +data.width;
+		this.cols = +(data.width ?? data.mapWidth);
 
 		/**
 		 * height of the tilemap in tiles
 		 * @type {number}
 		 */
-		this.rows = +data.height;
+		this.rows = +(data.height ?? data.mapHeight);
 
 		/**
 		 * Tile width
 		 * @type {number}
 		 */
-		this.tilewidth = +data.tilewidth;
+		this.tilewidth = +(data.tilewidth ?? data.tileSize);
 
 		/**
 		 * Tile height
 		 * @type {number}
 		 */
-		this.tileheight = +data.tileheight;
+		this.tileheight = +(data.tileheight ?? data.tileSize);
 
 		/**
 		 * is the map an infinite map
@@ -324,7 +330,7 @@ export default class TMXTileMap {
 		 * @type {string}
 		 * @default “orthogonal”
 		 */
-		this.orientation = data.orientation;
+		this.orientation = data.orientation ?? "orthogonal";
 
 		/**
 		 * horizontal skew in pixels per tile row (oblique maps, since Tiled 1.12)
@@ -487,14 +493,43 @@ export default class TMXTileMap {
 			this.tilesets = new TMXTilesetGroup();
 		}
 
+		// a Sprite Fusion map draws from the spritesheet saved with it: the
+		// one loaded with a "spritefusion" asset, else the game's own
+		const fusion = isSpriteFusionMap(data);
+		const ownSheet = spritesheetName(this.name);
+		const sheet = getImage(ownSheet) !== null ? ownSheet : SPRITESHEET;
+
 		// parse all tileset objects
 		if (typeof data.tilesets !== "undefined") {
 			const tilesets = data.tilesets;
 			for (let i = 0, len = tilesets.length; i < len; i++) {
+				let tileset = tilesets[i];
+				if (
+					sheet !== SPRITESHEET &&
+					typeof tileset.image === "string" &&
+					getBasename(tileset.image) === SPRITESHEET
+				) {
+					tileset = { ...tileset, image: sheet };
+				}
 				this.tilesets.add(
-					readTileset(tilesets[i], this.tilewidth, this.tileheight),
+					readTileset(tileset, this.tilewidth, this.tileheight),
 				);
 			}
+		} else if (fusion) {
+			// its JSON names no tileset: the spritesheet is the one
+			this.tilesets.add(
+				readTileset(
+					{
+						firstgid: 1,
+						name: "spritefusion",
+						image: sheet,
+						tilewidth: this.tilewidth,
+						tileheight: this.tileheight,
+					},
+					this.tilewidth,
+					this.tileheight,
+				),
+			);
 		}
 
 		// check if a background image is defined
@@ -509,10 +544,12 @@ export default class TMXTileMap {
 			);
 		}
 
-		const layers = data.layers;
+		// (Sprite Fusion's JSON lists the layer on top first)
+		const layers = fusion ? [...data.layers].reverse() : data.layers;
 		for (let i = 0, len = layers.length; i < len; i++) {
 			const layer = layers[i];
-			switch (layer.type) {
+			// a layer that only lists its tiles is a tile layer
+			switch (layer.type ?? (Array.isArray(layer.tiles) ? "tilelayer" : "")) {
 				case "imagelayer":
 					this.layers.push(readImageLayer(this, layer, zOrder++));
 					break;

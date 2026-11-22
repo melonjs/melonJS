@@ -1,6 +1,6 @@
 ---
 name: melonjs-tilemaps
-description: "Use this skill for Tiled maps and LDtk levels in melonJS (and tile layers built in code) — loading TMX/TSX and .ldtk levels, spawning entities from Tiled objects, collision shapes authored in Tiled, isometric and hexagonal maps, and image layers, and reading or changing tiles while the game runs. Covers registerTiledObjectClass and the pool.register name contract, camera bounds, compressed maps needing the inflate plugin, and the level director API. Triggers on: Tiled, TMX, TSX, LDtk, .ldtk, IntGrid, tilemap, setTile, clearTile, cellAt, getTile, getTileById, change a tile, game board, grid, getTileProperties, level.load, await level.load, tileset, ImageLayer, infinite map, render order, isometric, hexagonal, staggered, pool.register, Collectable, Trigger, object layer, collision layer, collider, Sprite Fusion, parallax, registerTiledObjectClass, registerObjectClass, TileLayer, Tileset, PlacedTileLayer, setCell, mergeGridRects, level.registerFormat, TMXObject, resolvedProperty, tile class, tile properties."
+description: "Use this skill for tile maps in melonJS: Tiled maps, LDtk levels, Sprite Fusion maps, and tile layers built in code. Loading TMX/TSX, .ldtk and Sprite Fusion exports, spawning entities from Tiled objects, collision shapes authored in Tiled, isometric and hexagonal maps, image layers, and reading or changing tiles while the game runs. Covers registerObjectClass and the pool.register name contract, camera bounds, compressed maps needing the inflate plugin, and the level director API. Triggers on: Tiled, TMX, TSX, LDtk, .ldtk, IntGrid, Sprite Fusion, spritefusion, tilemap, setTile, clearTile, cellAt, getTile, getTileById, change a tile, game board, grid, getTileProperties, getCellProperties, tile attributes, level.load, tileset, ImageLayer, infinite map, render order, isometric, hexagonal, staggered, pool.register, Trigger, object layer, collision layer, collider, parallax, registerTiledObjectClass, TileLayer, Tileset, PlacedTileLayer, setCell, mergeGridRects, level.registerFormat, TMXObject, tile class."
 license: MIT
 ---
 
@@ -15,8 +15,9 @@ license: MIT
 > this skill says of tile layers, the level director and the object registry
 > holds for them too.
 >
-> A map made with [Sprite Fusion](https://www.spritefusion.com) is a Tiled
-> map: use its TMX export, see "Solid tile layers" below.
+> A map made with [Sprite Fusion](https://www.spritefusion.com) loads as it is
+> exported, `map.json` or `map.tmx`, under the asset type `"spritefusion"`:
+> see "Sprite Fusion maps" below.
 
 ## Loading a level
 
@@ -306,8 +307,20 @@ app.viewport.setBounds(b.left, b.top, b.width, b.height);
 A `Tile` carries `tileId` (its **global** id), `col`, `row` and `tileset`.
 Tiled shows a tile's *local* id in the tileset editor; the global id is
 `tileset.firstgid + localId`, and only the global one works with `setTile`.
-The tile's custom properties and class, set in Tiled's tileset editor, come
-from its tileset by global id:
+The properties of the tile in a cell come from the layer (20.18), whatever
+the map was made with: a Tiled tile's custom properties, an LDtk tile's custom
+data and tags, a Sprite Fusion tile's attributes.
+
+```js
+const props = board.getCellProperties(col, row);   // { kind: "floor" }, or undefined
+```
+
+They are those of the tile in its tileset, with those the one cell has of its
+own over them: `board.setCellProperties(col, row, { locked: true })` gives a
+cell some, which last until the cell is written (`setTile`, `setCell`,
+`clearTile`). Read the object, do not write to it: it may be the tileset's.
+
+The tileset's alone, and the tile's class, come from the tileset by global id:
 
 ```js
 const tile = board.cellAt(col, row);
@@ -425,29 +438,52 @@ level.load("map1");   // the layer's tiles hold the player up
 - Orthogonal maps only; on another orientation the property is ignored, with
   a warning.
 
-**Sprite Fusion.** Its TMX export is a Tiled map, with one embedded tileset
-over `spritesheet.png` and this same `collider` property on each layer, set
-from the editor's "collider" checkbox: load the `.tmx` as any Tiled map (asset
-type `"tmx"`, the spritesheet as an image named `spritesheet`) and the layers
-checked as colliders are solid.
+### Sprite Fusion maps
+
+A map made with [Sprite Fusion](https://www.spritefusion.com) loads as the
+editor exports it, under the asset type `"spritefusion"` (20.18). Either
+export does: `map.json` ("JSON") or `map.tmx` ("TMX"). Unzip the export, keep
+`spritesheet.png` next to the map, and give the loader the map alone:
 
 ```js
 await loader.preload([
-    { name: "spritesheet", type: "image", src: "map/spritesheet.png" },
-    { name: "map", type: "tmx", src: "map/map.tmx" },
+    { name: "level1", type: "spritefusion", src: "maps/level1/map.json" },
+    { name: "level2", type: "spritefusion", src: "maps/level2/map.json" },
 ]);
-level.load("map");
+level.load("level1");
 ```
 
-- **Tile attributes** (the editor's per-tile attributes) are exported as
-  Tiled tile properties, so they are read as any tile's:
-  `const tile = layer.cellAt(col, row);` then
-  `tile.tileset.getTileProperties(tile.tileId)` gives
-  `{ type: "lava", damage: 25, isSolid: false }`, each value of its type.
-- Per-tile *instance* attributes (one placed tile's own) are only in the
-  editor's JSON export, a format of its own that is not read. The editor
-  refuses a TMX export while that mode is on: keep attributes per tile.
-- A layer hidden in the editor is left out of the export.
+- **The spritesheet comes with the map**: it is loaded from the map's folder,
+  kept for that map (two maps each have their own `spritesheet.png`), and
+  freed with it. Nothing to preload.
+- **Collider layers are solid**: a layer with the editor's "collider" box
+  checked gets walls, as above.
+- **Tile attributes** are read by the cell, each value of its type:
+  `layer.getCellProperties(col, row)` gives
+  `{ type: "lava", damage: 25, isSolid: false }`. That one call reads both
+  exports. (The TMX export puts them on the tile in the tileset, the JSON on
+  each placed tile: `tileset.getTileProperties` only finds the first.)
+- **Per-tile instance attributes** (the project setting that gives one placed
+  tile its own) are in the JSON export only: the editor refuses a TMX export
+  while it is on. Use `map.json` for those.
+- The layers are in the editor's order, the bottom one first, and a layer
+  hidden in the editor is left out of the export.
+- Under `"tilemap"` or `"tmx"` the same files load too, but nothing is loaded
+  with them: preload the image yourself, under the name `spritesheet`.
+
+### A map written by another tool, or by hand
+
+`"tilemap"` is the type for a tile map that is nobody's in particular: the
+same loader as `"tmx"`, for the many tools that write Tiled's format. The
+reader also takes the shorter words Sprite Fusion uses, which are handy in a
+map written by hand or by a generator:
+
+- `attributes`, a plain object of values, wherever `properties` is read (the
+  map, a layer, an object, a tile of a tileset). An attribute is kept as
+  written: no text is converted. Where both name a value, the attribute wins.
+- a tile layer's `tiles`, a list of `{ id, x, y, attributes }` (the tile's id
+  in the map's first tileset, and its cell), in place of `data`, the gid of
+  every cell.
 
 ## Map orientations
 
@@ -721,7 +757,7 @@ function trackRoom(app, x, y) {
   listed with it;
 - `getTileData` / `getTileTags` for a tile's custom data and enum tags, by
   LDtk's own tile ids. From a tile of a level they are its properties, as
-  for a Tiled tile: `tile.tileset.getTileProperties(tile.tileId)` gives
+  for a Tiled tile: `layer.getCellProperties(col, row)` gives
   `{ customData, tags }`;
 - `project.json`, the file itself. It is read as LDtk's JSON schema for
   games defines it (1.x): the `LDtk*Json` types name every field of it, so
@@ -880,6 +916,10 @@ layer into the offscreen-bake path instead.
 | `Tiled layer "…" has N tiles of data for its W x H cells` | the layer's data does not fill it, as Tiled would refuse too: written by another tool or edited by hand. Save the map again from Tiled |
 | the player falls through a tile layer drawn as the floor | tiles are not solid by themselves: give the layer a `collider` (bool) property set to true, or draw shapes on a collision object layer |
 | a Sprite Fusion map loads and nothing is solid (before 20.18) | the `collider` property of its layers was not read: update |
+| `'spritesheet' file for tileset 'spritefusion' not found` | a Sprite Fusion `map.json` loaded as `"tilemap"` / `"tmx"`, or given inline: use the type `"spritefusion"` with the file, or preload the image as `spritesheet` |
+| `Sprite Fusion map "…": its spritesheet could not be loaded` | `spritesheet.png` is not in the folder of the map file: keep the two together, as exported |
+| a Sprite Fusion tile's attributes are `undefined` | read with `tileset.getTileProperties`, which only has those of the TMX export: use `layer.getCellProperties(col, row)` |
+| `layer "…" places tile N, which the map's tilesets do not have` | the spritesheet is smaller than the one the map was made with: export the map and its spritesheet again, together |
 | collision shapes are not solid | the object layer's name does not contain `"collision"`, or the objects are named |
 | isometric objects overlap wrongly | `world.sortOn` not set to `"y"` |
 | a character is always in front of (or behind) every wall | the walls are on a tile layer, or on another object layer than the character: each layer has its own `z`, compared before `y` |
