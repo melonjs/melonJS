@@ -5,8 +5,8 @@ import { boundsPool } from "../../physics/bounds.ts";
 import { collision } from "../../physics/collision.js";
 import Container from "../../renderable/container.js";
 import ImageLayer from "../../renderable/imagelayer.js";
-import { off, on, VIEWPORT_ONRESIZE } from "../../system/event.ts";
 import { checkVersion } from "../../utils/utils.ts";
+import { bindViewportToLevel, releaseViewport } from "../tilemap/viewport.js";
 import { COLLISION_GROUP, TILED_SUPPORTED_VERSION } from "./constants.js";
 import { getNewTMXRenderer } from "./renderer/autodetect.js";
 import TMXGroup from "./TMXGroup.js";
@@ -175,24 +175,6 @@ function readTileset(data, mapTilewidth, mapTileheight) {
  */
 function readObjectGroup(map, data, z) {
 	return new TMXGroup(map, data, z);
-}
-
-/**
- * Recursively recompute absolute bounds for a container and all its
- * descendants. Used when the container's pos changes (centering on a wider
- * viewport): children cache their absolute bounds at addChild time, and
- * those caches are stale until each child happens to call updateBounds on
- * its own (which only happens organically when its own pos changes).
- * @ignore
- * @internal
- */
-function refreshAbsoluteBounds(container) {
-	container.forEach((child) => {
-		child.updateBounds(true);
-		if (child instanceof Container) {
-			refreshAbsoluteBounds(child);
-		}
-	});
 }
 
 /**
@@ -603,45 +585,14 @@ export default class TMXTileMap {
 		// sort everything (recursively)
 		container.sort(true);
 
-		/**
-		 * callback funtion for the viewport resize event
-		 * @ignore
-		 * @internal
-		 */
+		// the viewport takes the level's bounds, now and when it is resized
 		if (setViewportBounds === true) {
-			const app = container.getRootAncestor().app;
-
-			function _setBounds(width, height) {
-				// adjust the viewport bounds if level is smaller
-				// (an infinite map's level can start left of or above 0)
-				app.viewport.setBounds(
-					levelBounds.left,
-					levelBounds.top,
-					Math.max(levelBounds.width, width),
-					Math.max(levelBounds.height, height),
-				);
-				// center the map if smaller than the current viewport
-				const newX = Math.max(0, ~~((width - levelBounds.width) / 2));
-				const newY = Math.max(0, ~~((height - levelBounds.height) / 2));
-				if (container.pos.x !== newX || container.pos.y !== newY) {
-					container.pos.set(newX, newY, container.pos.z);
-					// A child caches its absolute bounds (centered around
-					// ancestor.absPos at the time of the last `updateBounds`).
-					// When the parent's pos changes, descendants that don't
-					// move on their own (TMX layers, static collision
-					// objects, triggers) keep stale absolute bounds, so
-					// anything that reads them (debug overlay, viewport
-					// culling) sees the pre-centering position. Walk the
-					// tree once after a real move and refresh.
-					refreshAbsoluteBounds(container);
-				}
-			}
-
-			off(VIEWPORT_ONRESIZE, _setBounds);
-			// force viewport bounds update
-			_setBounds(app.viewport.width, app.viewport.height);
-			// Replace the resize handler
-			on(VIEWPORT_ONRESIZE, _setBounds);
+			releaseViewport(this._followViewport);
+			/**
+			 * what has the viewport follow this map, while it does
+			 * @ignore
+			 */
+			this._followViewport = bindViewportToLevel(container, levelBounds);
 		}
 
 		//  set back auto-sort and auto-depth
@@ -786,6 +737,9 @@ export default class TMXTileMap {
 	 * destroy function, clean all allocated objects
 	 */
 	destroy() {
+		// the viewport follows the map no longer
+		releaseViewport(this._followViewport);
+		this._followViewport = undefined;
 		this.tilesets = undefined;
 		this.layers.length = 0;
 		this.objectGroups.length = 0;

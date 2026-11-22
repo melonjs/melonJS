@@ -1,5 +1,11 @@
 # Changelog
 
+## [20.18.0] (melonJS 2) - _unreleased_
+
+### Fixed
+- Tiled: a `renderMode` custom property on a tile layer chooses how the layer is drawn, as documented; it was overwritten by the default
+- Tiled: loading a level no longer leaves the previous level's viewport-resize handler registered; one was added on every load and never removed, keeping each old level alive
+
 ## [20.17.0] (melonJS 2) - _2026-11-22_
 
 **Highlights:** isometric, staggered and hexagonal Tiled maps are now drawn by the GPU, as orthogonal ones are: up to **98%** less of the main thread's time per tile layer, with nothing to enable. Also new: mask transitions shaped like an image or a sprite that close on the player, and two effects, `GradientMapEffect` (palette swaps, duotones) and `DitherEffect` (a retro limited-color look). A map with layer offsets now looks as it does in Tiled: the offsets were ignored before.

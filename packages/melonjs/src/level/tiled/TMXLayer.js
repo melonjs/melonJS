@@ -389,6 +389,23 @@ export default class TMXLayer extends Renderable {
 			this.tint.parseHex(data.tintcolor, true);
 		}
 
+		/**
+		 * How this layer is rendered. Resolved by `onActivateEvent` to one of:
+		 *   - `"shader"`   — GPU procedural shader path, on WebGL 2 and WebGPU, for orthogonal, isometric, staggered and hexagonal maps (single quad per tileset, fragment GID lookup)
+		 *   - `"prerender"`— offscreen-canvas bake at activation, blitted as one drawImage per frame
+		 *   - `"perTile"`  — per-frame loop, one drawImage per visible tile
+		 *
+		 * User code may set this to one of the above values (or the special
+		 * `"auto"`) before the layer is activated to override the engine's
+		 * default choice; Tiled custom properties named `renderMode` are
+		 * applied automatically via `applyTMXProperties`. If a forced mode
+		 * is ineligible (e.g. `"shader"` on Canvas), a one-shot warning is
+		 * emitted at activation and the layer falls back to the legacy path.
+		 * @type {string}
+		 * @default "auto"
+		 */
+		this.renderMode = "auto";
+
 		// check if we have any user-defined properties
 		TMXUtils.applyTMXProperties(this, data);
 
@@ -431,23 +448,6 @@ export default class TMXLayer extends Renderable {
 		 * @type {number}
 		 */
 		this.dataVersion = 0;
-
-		/**
-		 * How this layer is rendered. Resolved by `onActivateEvent` to one of:
-		 *   - `"shader"`   — GPU procedural shader path, on WebGL 2 and WebGPU, for orthogonal, isometric, staggered and hexagonal maps (single quad per tileset, fragment GID lookup)
-		 *   - `"prerender"`— offscreen-canvas bake at activation, blitted as one drawImage per frame
-		 *   - `"perTile"`  — per-frame loop, one drawImage per visible tile
-		 *
-		 * User code may set this to one of the above values (or the special
-		 * `"auto"`) before the layer is activated to override the engine's
-		 * default choice; Tiled custom properties named `renderMode` are
-		 * applied automatically via `applyTMXProperties`. If a forced mode
-		 * is ineligible (e.g. `"shader"` on Canvas), a one-shot warning is
-		 * emitted at activation and the layer falls back to the legacy path.
-		 * @type {string}
-		 * @default "auto"
-		 */
-		this.renderMode = "auto";
 
 		if (map.infinite === 0) {
 			// initialize and set the layer data
