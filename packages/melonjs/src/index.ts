@@ -176,15 +176,24 @@ export type { LDtkLevelInfo, LDtkWorldInfo } from "./level/ldtk/project.ts";
 export type {
 	EntityTile,
 	LDtkEntitySettings,
+	TileImage,
 } from "./level/ldtk/renderables.ts";
 export type {
+	LDtkBackgroundPosition,
+	LDtkEntityDef,
 	LDtkEntityInstance,
+	LDtkEnumDef,
 	LDtkFieldInstance,
+	LDtkIntGridValueDef,
+	LDtkLayerDef,
 	LDtkLayerInstance,
 	LDtkLevelJson,
+	LDtkNeighbour,
 	LDtkProjectJson,
 	LDtkTile,
+	LDtkTileRect,
 	LDtkTilesetDef,
+	LDtkWorldJson,
 } from "./level/ldtk/types.ts";
 export type { LevelLoadOptions } from "./level/level.js";
 export { level } from "./level/level.js";

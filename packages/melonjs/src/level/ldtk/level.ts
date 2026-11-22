@@ -660,8 +660,11 @@ abstract class LDtkMap {
 	layers: Renderable[] = [];
 	/** the container it was added to, while it is loaded */
 	container: Container | undefined;
+	/** @ignore */
 	protected builder: LevelBuilder | undefined;
+	/** @ignore */
 	protected unfollow: (() => void) | undefined;
+	/** @ignore */
 	protected gridRenderer: TMXOrthogonalRenderer | undefined;
 
 	constructor(project: LDtkProject, name: string) {
