@@ -5,6 +5,8 @@ import { emit, LEVEL_LOADED } from "../system/event.ts";
 import { defer } from "../utils/function.ts";
 import { resetGUID } from "./../utils/utils.ts";
 import GLTFScene from "./gltf/GLTFScene.js";
+import { LOAD_OPTIONS as LDTK_LOAD_OPTIONS } from "./ldtk/level.ts";
+import { ldtkMaps } from "./ldtk/registry.ts";
 import TMXTileMap from "./tiled/TMXTileMap.js";
 import { bindViewportToLevel, releaseViewport } from "./tilemap/viewport.js";
 
@@ -135,7 +137,12 @@ function levelIdAt(offset) {
  * @property {Function} [onLoaded=game.onLevelLoaded] - callback for when the level is fully loaded, called in both forms
  * @property {boolean} [async=false] - return a promise that settles once the level is in the world, instead of a boolean
  * @property {boolean} [flatten=game.mergeGroup] - (TMX only) if true, flatten all objects into the given container
- * @property {boolean} [setViewportBounds=true] - (TMX only) if true, set the viewport bounds to the map size
+ * @property {boolean} [setViewportBounds=true] - (TMX and LDtk) if true, set the viewport bounds to the map size
+ * @property {string[]} [collisionLayers] - (LDtk only) the IntGrid layers whose cells are solid, by their identifier; by default the ones whose identifier contains "collision"
+ * @property {number[]} [solidValues] - (LDtk only) the values of those layers that are solid; by default every value but 0
+ * @property {boolean} [showIntGrid=false] - (LDtk only) draw the IntGrid layers that have no tiles of their own, each value in its LDtk color
+ * @property {boolean} [entities=true] - (LDtk only) add the entities of the Entities layers
+ * @property {string[]} [levels] - (LDtk only, loading a whole world) the levels to start with, by their identifier; by default every level
  * @property {number} [scale=1] - (glTF/GLB only) pixels per glTF unit applied to the whole scene
  * @property {boolean} [rightHanded=true] - (glTF/GLB only) convert the right-handed (Y-up) source to the engine's Y-down via a rotation rather than a mirror
  * @property {boolean} [lights=true] - (glTF/GLB only) add the scene's authored `KHR_lights_punctual` lights (plus a soft ambient fill) as {@link Light3d} world children
@@ -611,6 +618,13 @@ level.registerFormat("tmx", {
 		return new TMXTileMap(levelId, getTMX(levelId));
 	},
 	loadOptions: TMXTileMap.loadOptions,
+});
+level.registerFormat("ldtk", {
+	// made by the loader, with the project they belong to
+	create: (levelId) => {
+		return ldtkMaps.get(levelId);
+	},
+	loadOptions: LDTK_LOAD_OPTIONS,
 });
 for (const format of ["gltf", "glb"]) {
 	level.registerFormat(format, {

@@ -1,4 +1,4 @@
-import { mergeGridRects } from "melonjs";
+import { mergeGridRects } from "../tilemap/grid.js";
 import type { LDtkIntGridValueDef, LDtkLayerInstance } from "./types.ts";
 
 /** a rectangle of cells holding one value, in pixels */
@@ -15,6 +15,7 @@ export interface IntGridRect {
  * The values of an IntGrid layer of a level: a whole number per cell, 0 for an
  * empty one, as painted in LDtk. What a game reads its walls, ladders, water
  * and spawn areas from.
+ * @category Tilemap
  */
 export class IntGrid {
 	/** the layer's identifier in LDtk */

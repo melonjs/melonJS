@@ -4,21 +4,16 @@
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
 import {
-	getProject,
-	LDtkEntity,
-	type LDtkLevel,
-	LDtkPlugin,
-	type LDtkWorld,
-} from "@melonjs/ldtk-plugin";
-import {
 	Application,
 	event,
 	game,
 	input,
+	LDtkEntity,
+	type LDtkLevel,
+	type LDtkWorld,
 	level,
 	loader,
 	type Pointer,
-	plugin,
 	Renderable,
 	type Renderer,
 	state,
@@ -29,7 +24,7 @@ import { resources, samples } from "./resources";
 
 /**
  * The entities of what is loaded, outlined in the color LDtk shows each in.
- * No class is registered for them here, so the plugin makes each a plain box
+ * No class is registered for them here, so each is a plain box
  * (`LDtkEntity`) carrying its fields, drawn with its tile when it has one: a
  * game registers its own classes with `registerObjectClass("Player", Player)`.
  */
@@ -76,6 +71,9 @@ let report: (info: Info) => void = () => {};
 const loadLevel = (id: string) => {
 	level.load(id, {
 		container: game.world,
+		// IntGrid layers with no tiles of their own are drawn in LDtk's
+		// colors here, to show the samples that are nothing else
+		showIntGrid: true,
 		onLoaded: () => {
 			const loaded = level.getCurrentLevel() as unknown as
 				| LDtkLevel
@@ -155,11 +153,8 @@ const createGame = async () => {
 	});
 	await app.init();
 
-	// `.ldtk` files become an asset type, and their levels the level
-	// director's. IntGrid layers with no tiles of their own are drawn in
-	// LDtk's colors here, to show the samples that are nothing else.
-	plugin.register(LDtkPlugin, "ldtk", { showIntGrid: true });
-
+	// an LDtk project is an asset of type "ldtk", and each of its levels a
+	// level of the level director: nothing to register
 	loader.preload(resources, () => {
 		event.on(event.KEYDOWN, onKeyPressed);
 		input.registerPointerEvent("wheel", game.viewport, onScroll);
@@ -175,7 +170,7 @@ const createGame = async () => {
 /** the identifiers of a project's levels, once it is loaded */
 const levelsOf = (name: string) => {
 	return (
-		getProject(name)?.levels.map((info) => {
+		loader.getLDtk(name)?.levels.map((info) => {
 			return info.identifier;
 		}) ?? []
 	);

@@ -1,7 +1,6 @@
-import { type Application, level, loader, video } from "melonjs";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
-	getProject,
+	type Application,
 	type LDtkLayerInstance,
 	type LDtkLevel,
 	type LDtkLevelJson,
@@ -9,7 +8,10 @@ import {
 	type LDtkProjectJson,
 	type LDtkTile,
 	LDtkWorld,
-} from "../src/index.ts";
+	level,
+	loader,
+	video,
+} from "../src/index.js";
 import {
 	diff,
 	enter,
@@ -19,7 +21,7 @@ import {
 	referenceLevel,
 	referenceView,
 	WIDTH,
-} from "./helpers/harness.ts";
+} from "./helpers/ldtk-harness.ts";
 
 /**
  * What the samples that come with LDtk do not hold, in a project made for
@@ -282,7 +284,7 @@ describe("an LDtk project made for the test", () => {
 	});
 
 	it("draws layers a grid cannot hold as LDtk does: other tile sizes, offsets, opacity, tiles past the edges", async () => {
-		const project = getProject("single") as LDtkProject;
+		const project = loader.getLDtk("single") as LDtkProject;
 		const info = project.getLevel("Odd");
 		expect(info).toBeDefined();
 		if (info === undefined) {
@@ -322,7 +324,7 @@ describe("an LDtk project made for the test", () => {
 	});
 
 	it("gives the text and the enum tags LDtk keeps for a tile", () => {
-		const project = getProject("single") as LDtkProject;
+		const project = loader.getLDtk("single") as LDtkProject;
 		expect(project.getTileData("Tiles", 3)).toBe("slippery");
 		expect(project.getTileData("Tiles", 5)).toBe('{"damage": 2}');
 		expect(project.getTileData("Tiles", 4)).toBeUndefined();
@@ -347,15 +349,15 @@ describe("an LDtk project made for the test", () => {
 	});
 
 	it("finds a level by its identifier or its iid", () => {
-		const project = getProject("single") as LDtkProject;
+		const project = loader.getLDtk("single") as LDtkProject;
 		expect(project.getLevel("Odd")?.iid).toBe("Odd-iid");
 		expect(project.getLevel("Odd-iid")?.identifier).toBe("Odd");
 		expect(project.getLevel("Nowhere")).toBeUndefined();
-		expect(getProject("no such project")).toBeUndefined();
+		expect(loader.getLDtk("no such project")).toBeNull();
 	});
 
 	it("a project of several worlds: the first by the project's name, the others by theirs", async () => {
-		const project = getProject("multi") as LDtkProject;
+		const project = loader.getLDtk("multi") as LDtkProject;
 		expect(
 			project.worlds.map((world) => {
 				return [world.identifier, world.id, world.layout];

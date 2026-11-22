@@ -76,7 +76,8 @@ export function fieldValues(
 
 /**
  * An LDtk project, as loaded from a `.ldtk` file: its levels and worlds, and
- * the definitions they are read with.
+ * the definitions they are read with. `loader.getLDtk(name)` returns it.
+ * @category Tilemap
  */
 export class LDtkProject {
 	/** the name the project was loaded under */

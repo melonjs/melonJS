@@ -1,6 +1,5 @@
-import type { Application, video } from "melonjs";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import type { LDtkProject } from "../../src/index.ts";
+import type { Application, LDtkProject, video } from "../../src/index.js";
 import {
 	diff,
 	enter,
@@ -12,7 +11,7 @@ import {
 	referenceView,
 	SAMPLES,
 	WIDTH,
-} from "./harness.ts";
+} from "./ldtk-harness.ts";
 
 /**
  * Every level of every sample that comes with LDtk, loaded as a game loads

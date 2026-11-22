@@ -1,3 +1,4 @@
+import { ldtkProjects } from "../level/ldtk/registry.ts";
 import { getBasename } from "../utils/file.ts";
 
 /**
@@ -8,6 +9,7 @@ import { getBasename } from "../utils/file.ts";
  * the generated declarations, which `tsc` does not report.
  * @import {CompressedImage} from "./parsers/compressed_textures/compressed_image.js";
  * @import {GLTFData} from "./parsers/gltf.js";
+ * @import {LDtkProject} from "../level/ldtk/project.ts";
  * @import GLShader from "../video/webgl/glshader.js";
  * @import ShaderEffect from "../video/effects/shadereffect.js";
  */
@@ -153,6 +155,24 @@ export function assetNames(type) {
  * assets and call into the audio parser, which is a lifecycle operation
  * rather than a cache read, and importing it here would undo the above.
  */
+
+/**
+ * Get a loaded LDtk project (an `"ldtk"` asset): its levels with their ids,
+ * sizes, fields and neighbours, its worlds, and the definitions they are read
+ * with. Most code never needs it: `level.load("<name>:<level>")` builds a
+ * level from it.
+ * @param {string} name - the asset name
+ * @returns {LDtkProject|null} the project, or `null` if none is loaded under
+ * that name
+ * @example
+ * for (const info of loader.getLDtk("world").levels) {
+ *     console.log(info.id, info.width, info.height);
+ * }
+ * @category Assets
+ */
+export function getLDtk(name) {
+	return ldtkProjects.get("" + name) ?? null;
+}
 
 /**
  * Get a loaded Tiled map or tileset (a `"tmx"` or `"tsx"` asset) as parsed

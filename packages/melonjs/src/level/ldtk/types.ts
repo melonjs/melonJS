@@ -1,5 +1,5 @@
 /**
- * The parts of an LDtk project file (`.ldtk`, format 1.x) this plugin reads.
+ * The parts of an LDtk project file (`.ldtk`, format 1.x) the engine reads.
  * Field names are LDtk's own: see https://ldtk.io/json/.
  */
 

@@ -390,10 +390,17 @@ The contract:
   value, and `loader.getImage` and friends will not find your result. Keep it
   yourself, keyed by `asset.name`, and read it from there.
 - **`name` and `type` are a complete entry.** `src` is only for a type that
-  fetches something. `data` is typed for the built-in uses (a string, or a
-  `{glsl, wgsl}` pair), so for a generator's settings, keep a table in your own
-  module keyed by name and let the entry carry only the name. That also keeps
+  fetches something, and `data` carries inline content in its place: whatever
+  your parser reads there (an object type-checks since 20.18; before, only a
+  string or a `{glsl, wgsl}` pair did). For a generator's settings, a table in
+  your own module keyed by name, with the entry carrying only the name, keeps
   the preload and the stages from disagreeing on a seed.
+- **Free what you kept, with `unload`** (20.18): a third argument,
+  `loader.setParser(type, parser, { unload(asset) { ... } })`, is called when
+  the asset's bundle is unloaded or `loader.unload(asset)` is given its
+  descriptor. Delete your entry there and return `false` if there was none.
+  Without it, unloading a bundle leaves a custom type's assets to you, and
+  `loader.unload` of one throws.
 - **Base URLs:** a `src` is prefixed only by `setBaseURL(yourType, …)`. The `"*"`
   wildcard does not cover custom types.
 - **Do not hold the main thread for the whole bake.** A parser runs alongside

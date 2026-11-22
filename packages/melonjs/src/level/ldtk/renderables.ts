@@ -1,4 +1,6 @@
-import { Color, Renderable, type Renderer } from "melonjs";
+import { Color } from "../../math/color.ts";
+import Renderable from "../../renderable/renderable.js";
+import type Renderer from "../../video/renderer.js";
 
 /** an image a renderer can draw */
 export type TileImage = HTMLImageElement | HTMLCanvasElement | OffscreenCanvas;
@@ -186,6 +188,7 @@ export function drawEntityTile(
  * entity's size at its place, with its fields, drawn with the tile LDtk shows
  * it with when it has one. It has no body, and does nothing: it is there to
  * be found (`world.getChildByName("PlayerStart")`) and read.
+ * @category Tilemap
  */
 export class LDtkEntity extends Renderable {
 	/** the entity's unique id in LDtk */

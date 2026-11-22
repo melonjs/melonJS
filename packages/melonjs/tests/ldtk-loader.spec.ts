@@ -1,6 +1,13 @@
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import {
 	type Application,
 	collision,
+	IntGrid,
+	LDtkEntity,
+	type LDtkEntitySettings,
+	LDtkLevel,
+	type LDtkProject,
+	type LDtkProjectJson,
 	level,
 	loader,
 	PlacedTileLayer,
@@ -8,18 +15,11 @@ import {
 	registerObjectClass,
 	TileLayer,
 	video,
-} from "melonjs";
-import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+} from "../src/index.js";
 import {
-	getProject,
-	IntGrid,
-	LDtkEntity,
-	type LDtkEntitySettings,
-	LDtkLevel,
-	type LDtkProject,
-	type LDtkProjectJson,
-} from "../src/index.ts";
-import { drawEntityTile, type EntityTile } from "../src/renderables.ts";
+	drawEntityTile,
+	type EntityTile,
+} from "../src/level/ldtk/renderables.ts";
 import {
 	diff,
 	enter,
@@ -31,10 +31,10 @@ import {
 	SAMPLES,
 	sampleURL,
 	WIDTH,
-} from "./helpers/harness.ts";
+} from "./helpers/ldtk-harness.ts";
 
 /**
- * What a game sees of an LDtk project once the plugin is registered: its
+ * What a game sees of an LDtk project, with nothing to register: its
  * levels in the level director, their IntGrid layers, walls and entities,
  * and the project gone when it is unloaded.
  */
@@ -706,7 +706,7 @@ describe("loading and unloading a project", () => {
 			undefined,
 			false,
 		);
-		expect(getProject("inline")?.levels).toHaveLength(1);
+		expect(loader.getLDtk("inline")?.levels).toHaveLength(1);
 		await enter(app, "inline:AutoLayer", { entities: false });
 		expect(current().layers.length).toBeGreaterThan(0);
 		loader.unload({ name: "inline", type: "ldtk" });
@@ -723,7 +723,7 @@ describe("loading and unloading a project", () => {
 				false,
 			),
 		).rejects.toThrow();
-		expect(getProject("notldtk")).toBeUndefined();
+		expect(loader.getLDtk("notldtk")).toBeNull();
 		quiet.mockRestore();
 	});
 
@@ -734,7 +734,7 @@ describe("loading and unloading a project", () => {
 		expect(
 			loader.unload({ name: "Typical_TopDown_example", type: "ldtk" }),
 		).toBe(true);
-		expect(getProject("Typical_TopDown_example")).toBeUndefined();
+		expect(loader.getLDtk("Typical_TopDown_example")).toBeNull();
 		expect(level.levelCount()).toBe(before - 4);
 		expect(() => {
 			return level.load("Typical_TopDown_example:World_Level_0", {

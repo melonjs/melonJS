@@ -1,11 +1,13 @@
-import { type Application, level, type video } from "melonjs";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
+	type Application,
 	IntGrid,
 	type LDtkLevelInfo,
 	type LDtkProject,
 	LDtkWorld,
-} from "../../src/index.ts";
+	level,
+	type video,
+} from "../../src/index.js";
 import {
 	diff,
 	enter,
@@ -16,7 +18,7 @@ import {
 	referenceLevel,
 	referenceView,
 	WIDTH,
-} from "./harness.ts";
+} from "./ldtk-harness.ts";
 
 /**
  * A whole world of an LDtk project loaded at once: its levels where LDtk

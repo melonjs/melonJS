@@ -99,6 +99,7 @@
  */
 
 import { warnOnce } from "../lang/console.js";
+import { ldtkProjects } from "../level/ldtk/registry.ts";
 import { level } from "../level/level.js";
 import state from "./../state/state.ts";
 import { hasDOM } from "../system/dom.ts";
@@ -131,6 +132,7 @@ import { preloadFontFace } from "./parsers/fontface.js";
 import { preloadGLTF } from "./parsers/gltf.js";
 import { preloadImage } from "./parsers/image.js";
 import { preloadJSON } from "./parsers/json.js";
+import { preloadLDtk, unloadLDtk } from "./parsers/ldtk.ts";
 import { preloadMTL } from "./parsers/mtl.js";
 import { preloadOBJ } from "./parsers/obj.js";
 import { preloadJavascript } from "./parsers/script.js";
@@ -146,6 +148,7 @@ export {
 	getGLTF,
 	getImage,
 	getJSON,
+	getLDtk,
 	getMTL,
 	getOBJ,
 	getShader,
@@ -295,8 +298,8 @@ export function setOptions(options) {
  * by one. Custom types registered with {@link setParser} are not covered by
  * `"*"` either.
  * @param {string} type - the asset type ("audio", "video", "binary", "image",
- * "json", "js", "tmx", "tsx", "fontface", "aseprite", "shader", "obj", "mtl",
- * "gltf", "glb", or a custom type), or `"*"`
+ * "json", "js", "tmx", "tsx", "ldtk", "fontface", "aseprite", "shader", "obj",
+ * "mtl", "gltf", "glb", or a custom type), or `"*"`
  * @param {string} [url="./"] - the base URL, ending with a `/`
  * @example
  * // a relative path for the images
@@ -321,6 +324,7 @@ export function setBaseURL(type, url = "./") {
 		baseURL["js"] = url;
 		baseURL["tmx"] = url;
 		baseURL["tsx"] = url;
+		baseURL["ldtk"] = url;
 		baseURL["fontface"] = url;
 		baseURL["aseprite"] = url;
 		baseURL["shader"] = url;
@@ -657,6 +661,9 @@ function initParsers() {
 	setParser("js", preloadJavascript);
 	setParser("tmx", preloadTMX);
 	setParser("tsx", preloadTMX);
+	// an LDtk project keeps what it read with the level formats, and frees
+	// it through the same hook a custom type has
+	setParser("ldtk", preloadLDtk, { unload: unloadLDtk });
 	setParser("audio", preloadAudio);
 	setParser("fontface", preloadFontFace);
 	setParser("video", preloadVideo);
@@ -801,8 +808,8 @@ const alwaysRelative = () => {
  * (`loader.getImage(name)`, `new Sprite(x, y, { image: name })`,
  * `level.load(name)`, `audio.play(name)`)
  * @property {string} type - the type of the asset, which picks its parser:
- * "audio", "binary", "image", "json", "js", "tmx", "tsx", "fontface", "video",
- * "aseprite", "shader", "obj", "mtl", "gltf" or "glb". JSON-serialised Tiled
+ * "audio", "binary", "image", "json", "js", "tmx", "tsx", "ldtk", "fontface",
+ * "video", "aseprite", "shader", "obj", "mtl", "gltf" or "glb". JSON-serialised Tiled
  * maps and tilesets (`.tmj` / `.tsj`) load under `"tmx"` / `"tsx"`: those are
  * file extensions, not asset types. Any other type is one registered with
  * {@link loader.setParser}.
@@ -1814,6 +1821,11 @@ export function unloadAll() {
 
 	// and the audio, which keeps its own store
 	unloadAllAudio();
+
+	// and the LDtk projects, kept with their levels
+	for (const name of [...ldtkProjects.keys()]) {
+		unloadLDtk({ name, type: "ldtk" });
+	}
 
 	// nobody holds anything now; the bundles stay declared, ready to load
 	// again, and a load of one still in flight no longer hands it its assets

@@ -1,19 +1,19 @@
+import { Rect } from "../../geometries/rectangle.ts";
+import { getImage } from "../../loader/cache.js";
+import { Bounds } from "../../physics/bounds.ts";
+import { collision } from "../../physics/collision.js";
+import type Container from "../../renderable/container.js";
+import Renderable from "../../renderable/renderable.js";
+import TMXOrthogonalRenderer from "../tiled/renderer/TMXOrthogonalRenderer.js";
 import {
-	Bounds,
-	type Container,
-	collision,
 	createLevelObject,
-	level as director,
 	hasObjectFactory,
-	loader,
-	PlacedTileLayer,
-	Rect,
-	Renderable,
-	TileLayer,
-	Tileset,
-	TilesetGroup,
-	TMXOrthogonalRenderer,
-} from "melonjs";
+} from "../tiled/TMXObjectFactory.js";
+import PlacedTileLayer from "../tilemap/PlacedTileLayer.js";
+import TileLayer from "../tilemap/TileLayer.js";
+import Tileset from "../tilemap/Tileset.js";
+import TilesetGroup from "../tilemap/TilesetGroup.js";
+import { bindViewportToLevel, releaseViewport } from "../tilemap/viewport.js";
 import { IntGrid } from "./intgrid.ts";
 import type { LDtkLevelInfo, LDtkProject, LDtkWorldInfo } from "./project.ts";
 import { fieldValues } from "./project.ts";
@@ -81,9 +81,6 @@ export const LOAD_OPTIONS = [
 	"levels",
 ];
 
-/** what the plugin was registered with: the options of every load that does not say otherwise */
-export const defaults: LDtkLoadOptions = {};
-
 /** the draw orders kept for each layer of LDtk: a layer can become several */
 const Z_PER_LAYER = 32;
 /** the draw orders kept for each depth of a world */
@@ -120,7 +117,7 @@ const imageOf = (relPath: string | null | undefined): TileImage | null => {
 	if (relPath === null || relPath === undefined) {
 		return null;
 	}
-	return loader.getImage(relPath) as TileImage | null;
+	return getImage(relPath) as TileImage | null;
 };
 
 /**
@@ -606,12 +603,12 @@ class LevelBuilder {
 }
 
 /**
- * the options of a load: the ones given, over the plugin's
+ * the options of a load that are LDtk's own
  * @param given - the options given to `level.load`
  * @returns the options to load with
  */
 const optionsOf = (given: LDtkLoadOptions | undefined): LDtkLoadOptions => {
-	const options: LDtkLoadOptions = { ...defaults };
+	const options: LDtkLoadOptions = {};
 	if (given !== undefined) {
 		for (const name of LOAD_OPTIONS as (keyof LDtkLoadOptions)[]) {
 			if (given[name] !== undefined) {
@@ -702,7 +699,10 @@ abstract class LDtkMap {
 		if (options.setViewportBounds !== false) {
 			const area = new Bounds();
 			area.setMinMax(x, y, x + width, y + height);
-			this.unfollow = director.followViewport(container, area) as () => void;
+			const follow = bindViewportToLevel(container, area);
+			this.unfollow = () => {
+				releaseViewport(follow);
+			};
 		}
 	}
 
@@ -723,6 +723,7 @@ abstract class LDtkMap {
  * A level of an LDtk project, as the level director holds it:
  * `level.getCurrentLevel()` once it is loaded. It is loaded by its id, the
  * project's name and the level's identifier: `level.load("world:Level_0")`.
+ * @category Tilemap
  */
 export class LDtkLevel extends LDtkMap {
 	/** the level, and where it stands in its world */
@@ -802,6 +803,7 @@ export class LDtkLevel extends LDtkMap {
  * each where LDtk puts it. It is loaded by the project's name,
  * `level.load("world")`, with every level or with the ones asked for; the
  * others are added and removed while the game runs.
+ * @category Tilemap
  */
 export class LDtkWorld extends LDtkMap {
 	/** the world: its layout, its levels and the area they cover */

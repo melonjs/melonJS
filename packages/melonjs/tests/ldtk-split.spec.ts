@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import type { LDtkProjectJson, LDtkTile } from "../src/index.ts";
-import { splitTiles, type TileChunk } from "../src/split.ts";
-import { SAMPLES, sampleURL } from "./helpers/harness.ts";
+import type { LDtkProjectJson, LDtkTile } from "../src/index.js";
+import { splitTiles, type TileChunk } from "../src/level/ldtk/split.ts";
+import { SAMPLES, sampleURL } from "./helpers/ldtk-harness.ts";
 
 /**
  * A tile layer of LDtk split into grids and lists of placed tiles: whatever

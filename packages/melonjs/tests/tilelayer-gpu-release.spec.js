@@ -95,7 +95,11 @@ describe("the GPU texture of a tile layer that leaves the world", () => {
 		}
 		expect(kept()).toEqual([layer]);
 		// something was drawn
-		expect(first.some((v, i) => i % 4 !== 3 && v !== 0)).toBe(true);
+		expect(
+			first.some((v, i) => {
+				return i % 4 !== 3 && v !== 0;
+			}),
+		).toBe(true);
 
 		const deleted = vi.spyOn(renderer.gl, "deleteTexture");
 		app.world.removeChildNow(layer, true);

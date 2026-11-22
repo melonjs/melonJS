@@ -1,6 +1,6 @@
 ---
 name: melonjs-tilemaps
-description: "Use this skill for Tiled maps in melonJS — loading TMX/TSX levels, spawning entities from Tiled objects, collision shapes authored in Tiled, isometric and hexagonal maps, and image layers, and reading or changing tiles while the game runs. Covers registerTiledObjectClass and the pool.register name contract, camera bounds, compressed maps needing the inflate plugin, and the level director API. Triggers on: Tiled, TMX, TSX, tilemap, setTile, clearTile, cellAt, getTile, getTileById, change a tile, tile at run time, game board, grid, tile properties at run time, getTileProperties, map properties, level.load, level.load async, await level.load, tileset, ImageLayer, infinite map, render order, isometric, hexagonal, staggered, pool.register, Collectable, Trigger, object layer, collision layer, parallax, registerTiledObjectClass, registerTiledObjectFactory, TMXObject, resolvedProperty, resolvedProperties, tile class, tile properties."
+description: "Use this skill for Tiled maps in melonJS (and tile layers built in code) — loading TMX/TSX levels, spawning entities from Tiled objects, collision shapes authored in Tiled, isometric and hexagonal maps, and image layers, and reading or changing tiles while the game runs. Covers registerTiledObjectClass and the pool.register name contract, camera bounds, compressed maps needing the inflate plugin, and the level director API. Triggers on: Tiled, TMX, TSX, tilemap, setTile, clearTile, cellAt, getTile, getTileById, change a tile, tile at run time, game board, grid, getTileProperties, map properties, level.load, level.load async, await level.load, tileset, ImageLayer, infinite map, render order, isometric, hexagonal, staggered, pool.register, Collectable, Trigger, object layer, collision layer, parallax, registerTiledObjectClass, registerObjectClass, TileLayer, Tileset, PlacedTileLayer, setCell, mergeGridRects, level.registerFormat, TMXObject, resolvedProperty, resolvedProperties, tile class, tile properties."
 license: MIT
 ---
 
@@ -9,6 +9,11 @@ license: MIT
 > melonJS's flagship content pipeline. Maps are authored in
 > [Tiled](https://www.mapeditor.org/) and loaded through the `level` director —
 > you rarely touch the `TMX*` classes directly.
+>
+> Levels made with [LDtk](https://ldtk.io) load the same way, from the
+> `.ldtk` project file as the editor saves it: see "LDtk levels" below. What
+> this skill says of tile layers, the level director and the object registry
+> holds for them too.
 
 ## Loading a level
 
@@ -101,8 +106,12 @@ registerTiledObjectFactory("Spine", (settings, map) => { /* → Renderable */ })
 level.load("map1");
 ```
 
-These are the entry points to use. The registry is Tiled's own, held by the
-object factory, and has nothing to do with object pooling.
+These are the entry points to use. The registry is the level loader's, held by
+the object factory, and has nothing to do with object pooling. Since 20.18 the
+same two functions also go by `registerObjectClass` and
+`registerObjectFactory`: one registry whatever the editor, so an LDtk entity
+named "Enemy" is built by the class registered for a Tiled object of that
+class.
 
 `pool.register(className, classObj)` **also** works and registers a Tiled
 factory as a side effect, under the name and again under an `me.`-prefixed
@@ -462,6 +471,60 @@ plugin.register(TiledInflatePlugin);   // before preloading any compressed map
 Uncompressed base64 and CSV layer data need no plugin. If a map loads in Tiled
 but not in melonJS, check the layer compression setting first.
 
+## Tile layers without Tiled
+
+The classes a Tiled map is made of do not need Tiled (20.18). A layer built in
+code, for a generated dungeon or a board:
+
+```js
+import { TileLayer, Tileset, TilesetGroup } from "melonjs";
+
+const tileset = new Tileset({ name: "ground", image: "ground", tilewidth: 16, tileheight: 16 });
+const layer = new TileLayer({
+    name: "floor", cols: 40, rows: 30, tilewidth: 16, tileheight: 16,
+    tilesets: new TilesetGroup([tileset]),
+});
+layer.setCell(3, 2, tileset.firstgid + 5);       // the tileset's sixth tile
+layer.setCell(4, 2, tileset.firstgid + 5, 1);    // mirrored across (2: down, 4: diagonal)
+app.world.addChild(layer, 1);
+```
+
+It is the same class as a Tiled layer (`TMXLayer` extends it): drawn by the
+GPU where it can, read and changed with `cellAt`, `getTile`, `setTile`,
+`clearTile`. `image` is a loaded image's name or the image itself; a tileset's
+tiles are numbered from `firstgid` (1 by default) row by row, and `setCell`
+takes that global id, 0 to clear. `setTileProperty`, `setTileClass` and
+`setTileAnimation` on the tileset give a tile what Tiled's tileset editor would.
+
+A grid holds one tile a cell. For tiles stacked on one another, off the grid,
+or each with its own opacity, use a `PlacedTileLayer`: a list of tiles at pixel
+positions, drawn in order, only the ones in view:
+
+```js
+const decals = new PlacedTileLayer({
+    name: "decals", tileset,
+    tiles: [{ x: 40, y: 12, tileId: 7 }, { x: 44, y: 16, tileId: 9, flip: 1, alpha: 0.5 }],
+});
+decals.addTile(100, 60, 3);          // tileId is the tile's id IN the tileset, from 0
+```
+
+`mergeGridRects(cols, rows, (col, row) => boolean)` covers the cells that pass
+a test with few rectangles, in cells: one static body per wall instead of one
+per tile. Its example in the API reference builds the bodies.
+
+### A level format of your own
+
+To have `level.load`, `level.next`, `level.reload` and `Trigger` work with
+levels read from another format, register it: `level.registerFormat("rooms",
+{ create: (levelId) => levelObject, loadOptions: [...] })`, then
+`level.add("rooms", id)` for each level (from a parser registered with
+`loader.setParser`). The level object needs `addTo(container, options)` and
+`destroy()`. In `addTo`, `level.followViewport(container, bounds)` gives the
+viewport handling of a Tiled map (keep the function it returns and call it in
+`destroy`), and `createLevelObject(settings, map)` builds an object from the
+registry (`hasObjectFactory(name)` says whether the game registered one).
+The engine's own LDtk support is built exactly this way.
+
 ## Rendering
 
 Each tile layer resolves to one of three `renderMode`s — `"shader"`,
@@ -558,6 +621,11 @@ layer into the offscreen-bake path instead.
 | an isometric (staggered, hexagonal) layer warns `tiles of more than one tileset in an isometric layer` and is slow | the shader path draws such a layer with one tileset: put the tiles of each tileset on a layer of their own, or pack them into one tileset |
 | a half-transparent isometric (staggered, hexagonal) layer of tall tiles looks flatter than before 20.17 | on the shader path a layer fades as one picture, and a tile no longer shows through the one in front: set that layer's `renderMode` to `"perTile"` (a `renderMode` custom property in Tiled) for the old look |
 | the soft edges of tiles larger than the grid showed a thin dark outline on the shader path | before 20.17 the edge of such a tile was not blended over the tile behind it: update |
+
+| `new TileLayer({ orientation: "isometric" ... })` throws `needs the renderer of its map` | a layer built in code makes its own renderer for an orthogonal grid only: pass `renderer` (a `TMXIsometricRenderer` and the like) for the others |
+| a tile set with `setCell` shows the wrong tile, one off | `setCell` takes a global id: the tileset's `firstgid` (1 by default) plus the tile's id in the tileset; a `PlacedTileLayer`'s `tileId` is the id in the tileset, from 0 |
+| tiles stacked in one cell: only the last shows | a `TileLayer` holds one tile a cell: a second layer, or a `PlacedTileLayer` for the stacked ones |
+| `level format "x" is already registered` | `level.registerFormat` called twice (a hot reload): register once, at start-up |
 
 ## Related skills
 

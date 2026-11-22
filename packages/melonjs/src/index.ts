@@ -12,6 +12,10 @@ import ShakeEffect from "./camera/effects/shake_effect.ts";
 import Frustum from "./camera/frustum.ts";
 import Pointer from "./input/pointer.ts";
 import GLTFModel from "./level/gltf/GLTFModel.js";
+import { IntGrid } from "./level/ldtk/intgrid.ts";
+import { LDtkLevel, LDtkWorld } from "./level/ldtk/level.ts";
+import { LDtkProject } from "./level/ldtk/project.ts";
+import { LDtkEntity } from "./level/ldtk/renderables.ts";
 import TMXHexagonalRenderer from "./level/tiled/renderer/TMXHexagonalRenderer.js";
 import TMXIsometricRenderer from "./level/tiled/renderer/TMXIsometricRenderer.js";
 import TMXOrthogonalRenderer from "./level/tiled/renderer/TMXOrthogonalRenderer.js";
@@ -166,6 +170,22 @@ export {
 export * as input from "./input/input.ts";
 // Backward compatibility for deprecated method or properties
 export * from "./lang/deprecated.js";
+export type { IntGridRect } from "./level/ldtk/intgrid.ts";
+export type { BuiltLevel, LDtkLoadOptions } from "./level/ldtk/level.ts";
+export type { LDtkLevelInfo, LDtkWorldInfo } from "./level/ldtk/project.ts";
+export type {
+	EntityTile,
+	LDtkEntitySettings,
+} from "./level/ldtk/renderables.ts";
+export type {
+	LDtkEntityInstance,
+	LDtkFieldInstance,
+	LDtkLayerInstance,
+	LDtkLevelJson,
+	LDtkProjectJson,
+	LDtkTile,
+	LDtkTilesetDef,
+} from "./level/ldtk/types.ts";
 export type { LevelLoadOptions } from "./level/level.js";
 export { level } from "./level/level.js";
 export type { default as TMXObject } from "./level/tiled/TMXObject.js";
@@ -317,10 +337,15 @@ export {
 	HologramEffect,
 	ImageLayer,
 	InstancedMesh,
+	IntGrid,
 	InvertEffect,
 	isPortableTopology,
 	isTopology,
 	isVertexFormat,
+	LDtkEntity,
+	LDtkLevel,
+	LDtkProject,
+	LDtkWorld,
 	Light2d,
 	MaskEffect,
 	Mesh,

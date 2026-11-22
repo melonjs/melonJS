@@ -3,6 +3,7 @@
 ## [20.18.0] (melonJS 2) - _unreleased_
 
 ### Added
+- LDtk: levels made with the [LDtk](https://ldtk.io) editor load as the editor saves them, with nothing to export: a `.ldtk` file is an asset of type `"ldtk"` (its tileset images and separate level files load with it), a level is loaded with `level.load("<asset>:<level>")` and the whole world with `level.load("<asset>")`. Auto-layers, stacked and mirrored tiles, IntGrid layers as walls and as `IntGrid` values to read, entities built by the classes registered with `registerObjectClass`, and worlds whose levels come and go while the game runs (`LDtkWorld#streamAround`)
 - Levels: `level.registerFormat(format, { create, loadOptions })` lets a loader for another map editor's files register its levels with the director, which then loads, reloads and steps through them, and forwards their options from a `Trigger`, as it does for a Tiled map. `level.remove(levelId)` is documented
 - Levels: `level.followViewport(container, bounds)` has the viewport follow a level's area as it does a Tiled map's (its bounds, a small level centred), for a level format of your own
 - Tile maps: `TileLayer`, `Tileset` and `TilesetGroup` build a tile layer in code or from another editor's files, from a plain description (`cols`, `rows`, tile size, an image); `layer.setCell(col, row, gid, flip)` fills it. `TMXLayer`, `TMXTileset` and `TMXTilesetGroup` now extend them, unchanged

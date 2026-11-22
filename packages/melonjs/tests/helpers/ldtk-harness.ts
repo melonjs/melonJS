@@ -1,25 +1,20 @@
+import { vi } from "vitest";
 import {
 	Application,
 	boot,
 	type CanvasRenderer,
-	level,
-	loader,
-	plugin,
-	state,
-	video,
-	type WebGLRenderer,
-} from "melonjs";
-import { vi } from "vitest";
-import {
-	getProject,
 	type LDtkLayerInstance,
 	type LDtkLevelJson,
 	type LDtkLoadOptions,
-	LDtkPlugin,
 	type LDtkProject,
 	type LDtkProjectJson,
 	type LDtkTile,
-} from "../../src/index.ts";
+	level,
+	loader,
+	state,
+	video,
+	type WebGLRenderer,
+} from "../../src/index.js";
 
 /** the twelve sample projects that come with LDtk, kept with the examples */
 export const SAMPLES = [
@@ -52,10 +47,8 @@ export const sampleURL = (file: string) => {
 export const WIDTH = 320;
 export const HEIGHT = 240;
 
-let registered = false;
-
 /**
- * an application, with the plugin registered
+ * an application to load LDtk projects in
  * @param renderer - the renderer to ask for
  * @returns the application
  */
@@ -78,10 +71,6 @@ export async function makeApp(
 		failIfMajorPerformanceCaveat: false,
 	});
 	await app.init();
-	if (!registered) {
-		registered = true;
-		plugin.register(LDtkPlugin);
-	}
 	state.change(state.DEFAULT, true);
 	return app;
 }
@@ -100,8 +89,8 @@ export async function loadSamples(): Promise<Map<string, LDtkProject>> {
 	);
 	const projects = new Map<string, LDtkProject>();
 	for (const name of SAMPLES) {
-		const project = getProject(name);
-		if (project === undefined) {
+		const project = loader.getLDtk(name);
+		if (project === null) {
 			throw new Error(`${name} was not loaded`);
 		}
 		projects.set(name, project);
@@ -113,7 +102,7 @@ export async function loadSamples(): Promise<Map<string, LDtkProject>> {
  * load a level into the world, as a game does
  * @param app - the application
  * @param id - the level's id
- * @param options - the plugin's options
+ * @param options - LDtk's own load options
  */
 export async function enter(
 	app: Application,
@@ -174,7 +163,7 @@ export const tilesOf = (layer: LDtkLayerInstance): LDtkTile[] => {
 /**
  * A level drawn with the 2D canvas alone, straight from the project file:
  * its background, then each visible layer from the bottom one up, each tile
- * in LDtk's order, mirrored and faded as saved. What the plugin has to give.
+ * in LDtk's order, mirrored and faded as saved. What the engine has to give.
  * @param project - the project file
  * @param json - the level
  * @param fill - fill the level's area with its background color

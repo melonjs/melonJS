@@ -478,7 +478,7 @@ const examples: {
 		path: "ldtk-level-loader",
 		sourceDir: "ldtkLoader",
 		description:
-			"The twelve sample projects that come with LDtk, loaded as the editor saves them by @melonjs/ldtk-plugin: single levels and whole worlds, auto-layers, stacked tiles, IntGrid layers and entities.",
+			"The twelve sample projects that come with LDtk, loaded as the editor saves them: single levels and whole worlds, auto-layers, stacked tiles, IntGrid layers and entities.",
 	},
 	{
 		component: <ExampleLights />,
