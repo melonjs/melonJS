@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import {
 	type Application,
 	type LDtkLevel,
@@ -25,6 +25,7 @@ import {
 	entity,
 	layer,
 	levelJson,
+	projectJson,
 	tile,
 	tilesetImage,
 } from "./helpers/ldtk-project-builder.ts";
@@ -197,10 +198,47 @@ describe("an LDtk project made for the test", () => {
 				},
 			],
 		};
+		// a layer with a parallax factor, and a table of content: one kind
+		// of entity as LDtk 1.5 lists them, one as it did before
+		const extrasDefs = defs();
+		extrasDefs.layers[0].parallaxFactorX = 0.5;
+		const reference = (entityIid: string, levelIid: string) => {
+			return { entityIid, layerIid: "layer-iid", levelIid, worldIid: "w" };
+		};
+		const extras = projectJson(
+			[
+				levelJson("Far", [layer("Far", "Tiles", 16, 4, 4, [tile(16, 0, 1)])]),
+				levelJson("Near", [], { worldX: 160 }),
+			],
+			{
+				iid: "extras",
+				defs: extrasDefs,
+				toc: [
+					{
+						identifier: "Start",
+						instancesData: [
+							{
+								iids: reference("start-iid", "Near-iid"),
+								worldX: 168,
+								worldY: 8,
+								widPx: 16,
+								heiPx: 24,
+								fields: { facing: "left" },
+							},
+						],
+					},
+					{
+						identifier: "Door",
+						instances: [reference("door-iid", "Far-iid")],
+					},
+				],
+			},
+		);
 		await loader.preload(
 			[
 				{ name: "single", type: "ldtk", data: single },
 				{ name: "multi", type: "ldtk", data: multi },
+				{ name: "extras", type: "ldtk", data: extras },
 			],
 			undefined,
 			false,
@@ -414,5 +452,79 @@ describe("an LDtk project made for the test", () => {
 		).toEqual(["Field", "Forest"]);
 		await enter(app, "multi:Lair");
 		expect(current().identifier).toBe("Lair");
+	});
+
+	it("lists the entities of the table of content, where they are in the world", () => {
+		const project = loader.getLDtk("extras") as LDtkProject;
+		const [start] = project.getTableOfContent("Start");
+		expect(start).toMatchObject({
+			identifier: "Start",
+			iid: "start-iid",
+			x: 168,
+			y: 8,
+			width: 16,
+			height: 24,
+			fields: { facing: "left" },
+		});
+		expect(start.level?.identifier).toBe("Near");
+		expect(start.iids.layerIid).toBe("layer-iid");
+		// as a file saved before LDtk 1.5 lists them: no position
+		const [door] = project.getTableOfContent("Door");
+		expect(door.iid).toBe("door-iid");
+		expect(door.level?.identifier).toBe("Far");
+		expect(door.x).toBeUndefined();
+		expect(door.fields).toEqual({});
+		// all of them, in LDtk's order; none of a kind that is not listed
+		expect(
+			project.getTableOfContent().map((listed) => {
+				return listed.identifier;
+			}),
+		).toEqual(["Start", "Door"]);
+		expect(project.getTableOfContent("Chest")).toEqual([]);
+		// and none in a file with no table of content at all
+		expect(
+			(loader.getLDtk("single") as LDtkProject).getTableOfContent(),
+		).toEqual([]);
+	});
+
+	it("says once that a layer's parallax is not applied, and draws the layer in its place", async () => {
+		const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+		await enter(app, "extras:Far");
+		await enter(app, "extras:Far");
+		const said = warn.mock.calls.filter((call) => {
+			return String(call[0]).includes("parallax");
+		});
+		warn.mockRestore();
+		expect(said).toHaveLength(1);
+		expect(String(said[0][0])).toContain('layer "Far"');
+		// where its tile is in the level, whatever the factor
+		const project = loader.getLDtk("extras") as LDtkProject;
+		const info = project.getLevel("Far");
+		expect(info).toBeDefined();
+		if (info !== undefined) {
+			const x = Math.trunc((WIDTH - info.width) / 2);
+			const y = Math.trunc((HEIGHT - info.height) / 2);
+			app.viewport.moveTo(0, 0);
+			const result = diff(
+				frame(app),
+				referenceView(
+					info.bgColor,
+					[{ picture: referenceLevel(project.json, info.json, false), x, y }],
+					0,
+					0,
+				),
+				1,
+			);
+			expect(result.different).toBe(0);
+		}
+		// a layer with no factor says nothing
+		const quiet = vi.spyOn(console, "warn").mockImplementation(() => {});
+		await enter(app, "single:Fields");
+		expect(
+			quiet.mock.calls.filter((call) => {
+				return String(call[0]).includes("parallax");
+			}),
+		).toHaveLength(0);
+		quiet.mockRestore();
 	});
 });

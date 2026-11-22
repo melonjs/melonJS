@@ -1,5 +1,6 @@
 import type {
 	LDtkEntityDef,
+	LDtkEntityReference,
 	LDtkEnumDef,
 	LDtkFieldInstance,
 	LDtkLayerDef,
@@ -54,6 +55,35 @@ export interface LDtkWorldInfo {
 	levels: LDtkLevelInfo[];
 	/** the area the levels cover, in pixels */
 	bounds: { x: number; y: number; width: number; height: number };
+}
+
+/**
+ * An entity the project's table of content lists: LDtk writes there every
+ * entity whose definition has "Add to table of content" checked, so that a
+ * game finds them (a player's start, the doors of a world) without reading
+ * the levels.
+ */
+export interface LDtkListedEntity {
+	/** the entity's identifier in LDtk */
+	identifier: string;
+	/** the entity's unique id in LDtk */
+	iid: string;
+	/** the level it is in */
+	level: LDtkLevelInfo | undefined;
+	/** the entity, and the layer, level and world it is in, by their unique ids */
+	iids: LDtkEntityReference;
+	/**
+	 * where its pivot is in its world, in pixels: the coordinates a whole
+	 * world is loaded in. Undefined in a file saved before LDtk 1.5, which
+	 * lists the references alone
+	 */
+	x: number | undefined;
+	y: number | undefined;
+	/** its size, in pixels; undefined in a file saved before LDtk 1.5 */
+	width: number | undefined;
+	height: number | undefined;
+	/** the fields LDtk was told to list with it, by name */
+	fields: Record<string, unknown>;
 }
 
 /**
@@ -251,6 +281,57 @@ export class LDtkProject {
 		return this.worlds.find((world) => {
 			return world.identifier === identifier;
 		});
+	}
+
+	/**
+	 * The entities the project's table of content lists: those whose
+	 * definition has "Add to table of content" checked in LDtk. They are known
+	 * without a level being loaded, which is what tells a game where to
+	 * start in a world loaded a few levels at a time.
+	 * @param identifier - the entities' identifier in LDtk; every listed entity by default
+	 * @returns the entities, in LDtk's order
+	 * @example
+	 * const [start] = loader.getLDtk("world").getTableOfContent("PlayerStart");
+	 * level.load("world", { levels: [start.level.identifier] });
+	 */
+	getTableOfContent(identifier?: string): LDtkListedEntity[] {
+		const listed: LDtkListedEntity[] = [];
+		for (const entry of this.json.toc ?? []) {
+			if (identifier !== undefined && entry.identifier !== identifier) {
+				continue;
+			}
+			if (entry.instancesData !== undefined) {
+				for (const instance of entry.instancesData) {
+					listed.push({
+						identifier: entry.identifier,
+						iid: instance.iids.entityIid,
+						level: this.getLevel(instance.iids.levelIid),
+						iids: instance.iids,
+						x: instance.worldX,
+						y: instance.worldY,
+						width: instance.widPx,
+						height: instance.heiPx,
+						fields: instance.fields,
+					});
+				}
+			} else {
+				// a file saved before LDtk 1.5: the references alone
+				for (const iids of entry.instances ?? []) {
+					listed.push({
+						identifier: entry.identifier,
+						iid: iids.entityIid,
+						level: this.getLevel(iids.levelIid),
+						iids,
+						x: undefined,
+						y: undefined,
+						width: undefined,
+						height: undefined,
+						fields: {},
+					});
+				}
+			}
+		}
+		return listed;
 	}
 
 	/**

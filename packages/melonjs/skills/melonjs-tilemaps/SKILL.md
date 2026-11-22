@@ -528,10 +528,28 @@ level.load("world:Level_0");                       // "<asset name>:<level ident
   `neighbours`), its worlds, `getTileData` / `getTileTags` for a tile's custom
   data and enum tags. `showIntGrid: true` draws IntGrid layers that have no
   tiles, in LDtk's colors; `entities: false` leaves the entities out.
+- **Table of content**: `project.getTableOfContent("PlayerStart")` lists the
+  entities whose definition has "Add to table of content" checked in LDtk,
+  with no level loaded: each one's `level`, its `x` / `y` in the world, its
+  size and the fields listed with it. It is what tells where to start in a
+  world loaded a few levels at a time:
+  `level.load("world", { levels: [start.level.identifier] })`.
+- **Field values** are LDtk's `__value`: a number, a string or a boolean, a
+  color as `"#rrggbb"`, an enum as its value's name, a `Point` as
+  `{ cx, cy }` in cells, an `EntityRef` as
+  `{ entityIid, layerIid, levelIid, worldIid }`, a `Tile` as a rectangle of
+  its tileset, arrays of those, and `null` where nothing was set.
+- **The format** is read as LDtk's JSON schema for games defines it (1.x):
+  the `LDtk*Json` types name every field of it, so `project.json` and an
+  entity's `source` are typed down to the file. Find things by `iid` rather
+  than `uid` where both exist: LDtk plans to drop the integer ids.
 - Not supported: the editor's built-in entity icons (they are not in the
-  project's files), and a layer's parallax (every layer scrolls with the
-  camera). A nine-slice entity tile keeps LDtk's left and top borders on both
-  sides (a `NineSliceSprite` has one border per axis).
+  project's files), and a layer's parallax (every layer scrolls with its
+  level; a warning says so once). A tile layer whose tiles are not the size
+  of its cells is drawn from each cell's top left corner, as the file gives
+  it: the layer's tile pivot is the editor's own. A nine-slice entity tile
+  keeps LDtk's left and top borders on both sides (a `NineSliceSprite` has
+  one border per axis).
 
 ## Tile layers without Tiled
 
@@ -694,6 +712,7 @@ layer into the offscreen-bake path instead.
 | an LDtk level loads with no tiles, and a warning that a tileset's image is not loaded | the image is not where the project file says, relative to it (the folder was reorganised) |
 | LDtk entities are invisible in the game | no class is registered for them (`registerObjectClass(identifier, Class)`), and their icon is LDtk's own, which is not in the files: give them a tile from a tileset of the project, or a class |
 | the player falls through an LDtk level | no IntGrid layer is named like "collision": pass `collisionLayers` to `level.load` |
+| an LDtk layer that scrolls at its own pace in the editor scrolls with the level in the game | its parallax factor is not applied (a warning says so once): move the layers yourself, `level.getCurrentLevel().layers`, or use an `ImageLayer` for a backdrop |
 | an LDtk entity is placed half its size off | `x`, `y` are its box's top left corner; its pivot is `settings.px` |
 | an LDtk field reads `undefined` on the settings | its name is one of the settings' own (`type`, `name`, `width`...): read `settings.fields.type` |
 | an LDtk entity named "Trigger" (or "Sprite", "Text"...) does nothing | an entity's name is not taken for the engine's class: register it, `registerObjectClass("Trigger", Trigger)`, and give the entity the fields the class reads |

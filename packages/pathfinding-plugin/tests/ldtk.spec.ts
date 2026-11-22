@@ -46,7 +46,7 @@ const project = {
 			{
 				uid: 1,
 				identifier: "Collisions",
-				type: "IntGrid",
+				__type: "IntGrid",
 				gridSize: T,
 				intGridValues: [{ value: 1, identifier: "walls", color: "#000000" }],
 			},

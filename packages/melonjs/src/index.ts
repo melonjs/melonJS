@@ -172,7 +172,11 @@ export * as input from "./input/input.ts";
 export * from "./lang/deprecated.js";
 export type { IntGridRect } from "./level/ldtk/intgrid.ts";
 export type { BuiltLevel, LDtkLoadOptions } from "./level/ldtk/level.ts";
-export type { LDtkLevelInfo, LDtkWorldInfo } from "./level/ldtk/project.ts";
+export type {
+	LDtkLevelInfo,
+	LDtkListedEntity,
+	LDtkWorldInfo,
+} from "./level/ldtk/project.ts";
 export type {
 	EntityTile,
 	LDtkEntitySettings,
@@ -182,9 +186,12 @@ export type {
 	LDtkBackgroundPosition,
 	LDtkEntityDef,
 	LDtkEntityInstance,
+	LDtkEntityReference,
 	LDtkEnumDef,
 	LDtkFieldInstance,
+	LDtkGridPoint,
 	LDtkIntGridValueDef,
+	LDtkIntGridValueGroupDef,
 	LDtkLayerDef,
 	LDtkLayerInstance,
 	LDtkLevelJson,
@@ -193,6 +200,8 @@ export type {
 	LDtkTile,
 	LDtkTileRect,
 	LDtkTilesetDef,
+	LDtkTocEntry,
+	LDtkTocInstance,
 	LDtkWorldJson,
 } from "./level/ldtk/types.ts";
 export type { LevelLoadOptions } from "./level/level.js";

@@ -69,6 +69,8 @@ export const layer = (
 		iid: `${identifier}-iid`,
 		levelId: 0,
 		layerDefUid: type === "Tiles" ? 10 : 11,
+		pxOffsetX: 0,
+		pxOffsetY: 0,
 		visible: true,
 		intGridCsv: [],
 		autoLayerTiles: type === "Tiles" ? [] : tiles,
@@ -100,6 +102,45 @@ export const levelJson = (
 	};
 };
 
+/** what a layer definition holds whatever its kind, as LDtk saves it */
+const layerDef = {
+	displayOpacity: 1,
+	pxOffsetX: 0,
+	pxOffsetY: 0,
+	parallaxFactorX: 0,
+	parallaxFactorY: 0,
+	parallaxScaling: true,
+	intGridValues: [],
+	intGridValuesGroups: [],
+};
+
+/**
+ * a project file, as LDtk saves it
+ * @param levels - its levels
+ * @param extra - what to set or replace in it
+ * @returns the project
+ */
+export const projectJson = (
+	levels: LDtkLevelJson[],
+	extra: Partial<LDtkProjectJson> = {},
+): LDtkProjectJson => {
+	return {
+		jsonVersion: "1.5.3",
+		iid: "test-project",
+		bgColor: "#101010",
+		defaultGridSize: 16,
+		worldLayout: "Free",
+		worldGridWidth: 256,
+		worldGridHeight: 256,
+		externalLevels: false,
+		defs: defs(),
+		levels,
+		worlds: [],
+		toc: [],
+		...extra,
+	};
+};
+
 export const defs = (): LDtkProjectJson["defs"] => {
 	return {
 		tilesets: [
@@ -122,38 +163,42 @@ export const defs = (): LDtkProjectJson["defs"] => {
 					{ enumValueId: "Solid", tileIds: [0, 1, 5] },
 					{ enumValueId: "Hazard", tileIds: [5] },
 				],
+				tags: [],
 			},
 		],
 		layers: [
 			{
+				...layerDef,
 				uid: 10,
 				identifier: "Tiles",
-				type: "Tiles",
+				__type: "Tiles",
 				gridSize: 8,
-				intGridValues: [],
 			},
 			{
+				...layerDef,
 				uid: 11,
 				identifier: "Auto",
-				type: "AutoLayer",
+				__type: "AutoLayer",
 				gridSize: 16,
-				intGridValues: [],
 			},
 			{
 				// values with a name, with none, and with an empty one
+				...layerDef,
 				uid: 12,
 				identifier: "Zones",
-				type: "IntGrid",
+				__type: "IntGrid",
 				gridSize: 16,
 				intGridValues: [
-					{ value: 1, identifier: "water", color: "#2060c0" },
-					{ value: 2, identifier: null, color: "#c02020" },
-					{ value: 3, identifier: "", color: "#20c020" },
+					{ value: 1, identifier: "water", color: "#2060c0", groupUid: 0 },
+					{ value: 2, identifier: null, color: "#c02020", groupUid: 0 },
+					{ value: 3, identifier: "", color: "#20c020", groupUid: 0 },
 				],
 			},
 		],
 		entities: [],
 		enums: [],
+		externalEnums: [],
+		levelFields: [],
 	};
 };
 
@@ -175,6 +220,7 @@ export const entity = (identifier: string, x: number, y: number) => {
 		width: 16,
 		height: 16,
 		__tags: [],
+		__smartColor: "#94d9b3",
 		fieldInstances: [],
 	};
 };

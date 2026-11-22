@@ -342,6 +342,17 @@ class LevelBuilder {
 			// hidden layer of a Tiled map is: its walls still stand, and
 			// the game can show it
 			const opacity = layer.visible ? layer.__opacity : 0;
+			// a parallax layer scrolls at a pace of its own in LDtk: it is
+			// drawn here where it is in the level, and said so once
+			const def = this.project.layerDefs.get(layer.layerDefUid);
+			if (
+				(def?.parallaxFactorX ?? 0) !== 0 ||
+				(def?.parallaxFactorY ?? 0) !== 0
+			) {
+				warnOnce(
+					`melonJS LDtk: layer "${layer.__identifier}" has a parallax factor, which is not applied: it scrolls with its level`,
+				);
+			}
 			const z = zBase + 1 + (layers.length - 1 - i) * Z_PER_LAYER;
 			const x = originX + layer.__pxTotalOffsetX;
 			const y = originY + layer.__pxTotalOffsetY;

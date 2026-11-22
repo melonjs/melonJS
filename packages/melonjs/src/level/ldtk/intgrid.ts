@@ -59,7 +59,11 @@ export class IntGrid {
 		this.names = new Map();
 		this.colors = new Map();
 		for (const def of defs) {
-			if (def.identifier !== null && def.identifier !== "") {
+			if (
+				def.identifier !== null &&
+				def.identifier !== undefined &&
+				def.identifier !== ""
+			) {
 				this.names.set(def.value, def.identifier);
 			}
 			this.colors.set(def.value, def.color);

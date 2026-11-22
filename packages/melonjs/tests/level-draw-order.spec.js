@@ -151,7 +151,7 @@ const ldtkProject = () => {
 				{
 					uid: 10,
 					identifier: "Auto",
-					type: "AutoLayer",
+					__type: "AutoLayer",
 					gridSize: 16,
 					intGridValues: [],
 				},
