@@ -584,7 +584,9 @@ file itself, not the files of LDtk's "Super simple export".
 - **Parallax**: a layer's parallax factors (and "parallax scaling") move and
   scale its tiles with the camera as the editor does, on every renderer. The
   layer's entities and walls are things of the level and stay in it. The
-  layers built carry it as `layer.parallax` (see below), to read or change.
+  layers built carry it as their `ratio` (see below), to read or change:
+  LDtk's factor is the share of the camera's movement the layer follows, so
+  a factor of 0.25 is a `ratio` of 0.75.
 - Options of `level.load`, besides `collisionLayers` and `solidValues`:
   `showIntGrid: true` draws IntGrid layers that have no tiles, in LDtk's
   colors; `objects` chooses the entities that are built (`false` for none);
@@ -724,28 +726,33 @@ const decals = new PlacedTileLayer({
 decals.addTile(100, 60, 3);          // tileId is the tile's id IN the tileset, from 0
 ```
 
-Either kind follows the camera with `parallax`, for a backdrop that scrolls
-slower than the level or a foreground that scrolls faster:
+Either kind scrolls at a pace of its own with `ratio`, the same as an
+`ImageLayer`'s: a backdrop that scrolls slower than the level, a foreground
+that scrolls faster.
 
 ```js
-hills.parallax = { x: 0.5, y: 0.5 };                          // half the level's pace
-far.parallax = { x: 0.5, y: 0.5, originX: 320, originY: 240, scale: 0.5 };
+hills.ratio.set(0.5, 0.5);                 // half the level's pace
+new TileLayer({ /* ... */ ratio: 0.5 });   // or in its definition: a number, or { x, y }
 ```
 
-`x` and `y` are the share of the camera's movement the layer follows, from -1
-to 1: 0 scrolls with the world, 1 stays where it is on the screen, a negative
-value scrolls faster than the world. `originX` / `originY` is where the
-camera's centre is when the layer is where it was placed (in the layer's
-container's coordinates, 0, 0 by default), and `scale` draws it smaller or
-larger from that point. `anchorX` / `anchorY` choose another point of the view
-than its centre (0.5): 0 measures to the camera's position, its top left
-corner. It is worked out for each camera as it draws, and changes nothing
-else: `getTile`, `cellAt` and the layer's bounds are the layer's where it was
+`ratio` is a vector, (1, 1) by default: 1 scrolls with the world, 0 stays
+where it is on the screen, above 1 scrolls faster than the world. Three more
+settings go with it, each optional, on the layer and in its definition:
+
+- `parallaxOrigin` (a vector, (0, 0)): where the camera is when the layer is
+  where it was placed, in the layer's container's coordinates;
+- `parallaxAnchor` (a vector, (0, 0)): the point of the view that is measured.
+  (0, 0) is the camera's position, its top left corner, as for an image
+  layer; (0.5, 0.5) is its centre;
+- `parallaxScale` (a number, 1): the layer drawn smaller or larger from its
+  origin, as one further away or nearer.
+
+It is worked out for each camera as it draws, and changes nothing else:
+`getTile`, `cellAt` and the layer's bounds are the layer's where it was
 placed.
 
-A Tiled tile layer's parallax factor (and its group's, multiplied) gives it
-one (20.18): `layer.parallax.x` is 1 minus Tiled's factor, measured to the
-camera's position, so that it moves exactly as an image layer of the same
+A Tiled tile layer's parallax factor (and its group's, multiplied) is its
+`ratio` (20.18), so that it moves exactly as an image layer of the same
 factor does and the two stay together. An object layer's factor is not
 applied: its objects are things of the map.
 
@@ -874,8 +881,9 @@ layer into the offscreen-bake path instead.
 | LDtk entities are invisible in the game | no class is registered for them (`registerObjectClass(identifier, Class)`), and their icon is LDtk's own, which is not in the files: give them a tile from a tileset of the project, or a class |
 | the player falls through an LDtk level | no IntGrid layer is named like "collision": pass `collisionLayers` to `level.load` |
 | a tile layer set to scroll slower than the level in Tiled scrolls with it (before 20.18) | a Tiled tile layer's parallax factor was not read (an image layer's was): update |
-| a Tiled parallax layer is not where Tiled shows it at the start of the level | Tiled measures a factor from the centre of its own view to the map's parallax origin; the engine measures from the camera's position, for tile and image layers alike: move the layer with its offset, or set `layer.parallax` yourself |
-| `getTile` finds nothing under a tile of a parallax layer | a parallax moves where the layer is drawn, not its cells: they are where the layer was placed |
+| a Tiled parallax layer is not where Tiled shows it at the start of the level | Tiled measures a factor from the centre of its own view to the map's parallax origin; the engine measures from the camera's position, for tile and image layers alike: move the layer with its offset, or set `layer.parallaxOrigin` and `layer.parallaxAnchor` yourself |
+| `getTile` finds nothing under a tile of a layer with a `ratio` | the ratio moves where the layer is drawn, not its cells: they are where the layer was placed |
+| a tile layer with `ratio: 0.5` scrolls the wrong way round | 1 scrolls with the world and 0 stays on the screen, as for an `ImageLayer`; LDtk's own factor is the other way round, and is converted when a level is loaded |
 | the player disappears when walking out of its first LDtk level | it is an entity of that level, taken out with it: set `isPersistent = true` on it |
 | the coins again after coming back to an LDtk level | a level loaded again builds its objects again: the `objects` option leaves out what was taken |
 | two LDtk levels are drawn over each other, with walls from both | they are on different world depths, at the same place: pass the player's depth to `streamAround` and `levelsAt` |

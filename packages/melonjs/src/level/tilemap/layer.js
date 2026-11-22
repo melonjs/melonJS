@@ -45,6 +45,72 @@ export function applyLayerDefinition(layer, def) {
 }
 
 /**
+ * How a layer of a tile map scrolls with the camera, as the layer's
+ * definition gives it: see {@link TileLayer#ratio},
+ * {@link TileLayer#parallaxOrigin}, {@link TileLayer#parallaxAnchor} and
+ * {@link TileLayer#parallaxScale}.
+ * @typedef {object} LayerScrolling
+ * @property {number|{x: number, y: number}} [ratio=1] - the scrolling ratio, one number for both axes or one for each
+ * @property {{x: number, y: number}} [parallaxOrigin] - where the camera is when the layer is where it was placed
+ * @property {{x: number, y: number}} [parallaxAnchor] - the point of the view that is measured, from (0, 0), its top left corner, to (1, 1)
+ * @property {number} [parallaxScale=1] - the layer's size, scaled from the origin
+ */
+
+/**
+ * set how a layer scrolls with the camera: what the settings give, the rest
+ * left as it is
+ * @param {Renderable} layer - a tile layer
+ * @param {LayerScrolling} [settings] - the settings
+ * @ignore
+ */
+export function setLayerScrolling(layer, settings = {}) {
+	const { ratio, parallaxOrigin, parallaxAnchor, parallaxScale } = settings;
+	if (typeof ratio === "number") {
+		layer.ratio.set(ratio, ratio);
+	} else if (ratio !== undefined && ratio !== null) {
+		layer.ratio.set(ratio.x, ratio.y);
+	}
+	if (parallaxOrigin !== undefined && parallaxOrigin !== null) {
+		layer.parallaxOrigin.set(parallaxOrigin.x, parallaxOrigin.y);
+	}
+	if (parallaxAnchor !== undefined && parallaxAnchor !== null) {
+		layer.parallaxAnchor.set(parallaxAnchor.x, parallaxAnchor.y);
+	}
+	if (parallaxScale !== undefined && parallaxScale !== null) {
+		layer.parallaxScale = parallaxScale;
+	}
+	layer.isDirty = true;
+}
+
+/**
+ * a layer's scale, as it can be set: more than 0
+ * @param {number} scale - the scale asked for
+ * @returns {number} the scale
+ * @ignore
+ */
+export function checkParallaxScale(scale) {
+	if (!(scale > 0)) {
+		throw new Error(
+			`a layer's parallaxScale must be more than 0: ${String(scale)}`,
+		);
+	}
+	return scale;
+}
+
+/**
+ * whether a layer is drawn anywhere but where it was placed: it scrolls at
+ * a pace of its own, or is scaled
+ * @param {Renderable} layer - a tile layer
+ * @returns {boolean} true if it is
+ * @ignore
+ */
+export function hasParallax(layer) {
+	return (
+		layer.ratio.x !== 1 || layer.ratio.y !== 1 || layer.parallaxScale !== 1
+	);
+}
+
+/**
  * Where the view starts, read in the coordinates a layer's `pos` is in.
  *
  * The view is the camera's, in the world's coordinates, shifted by the
@@ -107,65 +173,15 @@ export function viewStart(layer, view, out) {
 }
 
 /**
- * How a layer of a tile map follows the camera, for a backdrop that scrolls
- * slower than the level, or a foreground that scrolls faster.
- * @typedef {object} LayerParallax
- * @property {number} [x=0] - how much of the camera's movement across the
- * layer follows, from -1 to 1: 0 for a layer that scrolls with the world, 1
- * for one that stays where it is on the screen, 0.5 for one that scrolls at
- * half the pace, a negative value for one that scrolls faster than the world
- * @property {number} [y=0] - the same, down
- * @property {number} [originX=0] - where the camera's centre is, across, when
- * the layer is where it was placed, in the coordinates the layer's `pos` is in
- * @property {number} [originY=0] - the same, down
- * @property {number} [anchorX=0.5] - the point of the view that is on the
- * origin when the layer is where it was placed, across: 0.5 for the view's
- * centre, 0 for its left edge (the camera's position), 1 for its right edge
- * @property {number} [anchorY=0.5] - the same, down: 0 for the view's top
- * edge
- * @property {number} [scale=1] - the layer's size, scaled from that origin:
- * 0.5 for a layer drawn at half its size, as one further away
- */
-
-/**
- * a layer's parallax as the layer keeps it: every value set, or undefined
- * for a parallax that changes nothing
- * @param {LayerParallax} [parallax] - the parallax asked for
- * @returns {LayerParallax|undefined} the parallax
- * @ignore
- */
-export function readParallax(parallax) {
-	if (parallax === undefined || parallax === null) {
-		return undefined;
-	}
-	const read = {
-		x: parallax.x ?? 0,
-		y: parallax.y ?? 0,
-		originX: parallax.originX ?? 0,
-		originY: parallax.originY ?? 0,
-		anchorX: parallax.anchorX ?? 0.5,
-		anchorY: parallax.anchorY ?? 0.5,
-		scale: parallax.scale ?? 1,
-	};
-	if (!(read.scale > 0)) {
-		throw new Error(
-			`a layer's parallax scale must be more than 0: ${String(parallax.scale)}`,
-		);
-	}
-	return read.x === 0 && read.y === 0 && read.scale === 1 ? undefined : read;
-}
-
-/**
  * Where a parallax puts what the layer draws, for a view: a point `p` of the
  * coordinates the layer's `pos` is in is drawn at
  * `out + out.scale * (p - origin)`.
  *
  * The layer's origin is moved by the part of the way to the view's anchor
- * (its centre, by default) its factors say, to a whole pixel, and the layer
- * is scaled from it: every
- * part of a layer cut in several (a level's layer can be) is then drawn on
- * the same pixels, on every renderer.
- * @param {LayerParallax} parallax - the layer's parallax
+ * (its top left corner, by default) that its ratio leaves, to a whole pixel,
+ * and the layer is scaled from it: every part of a layer cut in several (a
+ * level's layer can be) is then drawn on the same pixels, on every renderer.
+ * @param {Renderable} layer - the layer: its `ratio`, `parallaxOrigin`, `parallaxAnchor` and `parallaxScale`
  * @param {number} viewX - where the view starts, across
  * @param {number} viewY - where the view starts, down
  * @param {number} viewWidth - the view's width
@@ -175,20 +191,22 @@ export function readParallax(parallax) {
  * @ignore
  */
 export function parallaxPlacement(
-	parallax,
+	layer,
 	viewX,
 	viewY,
 	viewWidth,
 	viewHeight,
 	out,
 ) {
-	const { originX, originY } = parallax;
-	out.scale = parallax.scale;
+	const origin = layer.parallaxOrigin;
+	const anchor = layer.parallaxAnchor;
+	// a ratio of 1 scrolls with the world: the layer stays on its origin
+	out.scale = layer.parallaxScale;
 	out.x = Math.round(
-		originX + (viewX + viewWidth * parallax.anchorX - originX) * parallax.x,
+		origin.x + (viewX + viewWidth * anchor.x - origin.x) * (1 - layer.ratio.x),
 	);
 	out.y = Math.round(
-		originY + (viewY + viewHeight * parallax.anchorY - originY) * parallax.y,
+		origin.y + (viewY + viewHeight * anchor.y - origin.y) * (1 - layer.ratio.y),
 	);
 	return out;
 }
@@ -234,7 +252,7 @@ export function parallaxFrame() {
  * draws in its own coordinates, and the view is given in those coordinates,
  * to tell what of the layer is in it. {@link leaveParallax} undoes it.
  * @param {Renderer} renderer - the renderer
- * @param {LayerParallax} parallax - the layer's parallax
+ * @param {Renderable} layer - the layer
  * @param {number} viewX - where the view starts, across
  * @param {number} viewY - where the view starts, down
  * @param {number} viewWidth - the view's width
@@ -247,7 +265,7 @@ export function parallaxFrame() {
  */
 export function enterParallax(
 	renderer,
-	parallax,
+	layer,
 	viewX,
 	viewY,
 	viewWidth,
@@ -256,10 +274,10 @@ export function enterParallax(
 	y,
 	frame,
 ) {
-	parallaxPlacement(parallax, viewX, viewY, viewWidth, viewHeight, frame);
+	parallaxPlacement(layer, viewX, viewY, viewWidth, viewHeight, frame);
 	const scale = frame.scale;
-	frame.originX = x - parallax.originX;
-	frame.originY = y - parallax.originY;
+	frame.originX = x - layer.parallaxOrigin.x;
+	frame.originY = y - layer.parallaxOrigin.y;
 	frame.viewX = (viewX - frame.x) / scale - frame.originX;
 	frame.viewY = (viewY - frame.y) / scale - frame.originY;
 	frame.viewWidth = viewWidth / scale;
@@ -327,7 +345,7 @@ export function parallaxBounds(layer, area, camera, out) {
 	const view = camera.worldView;
 	const start = viewStart(layer, camera, START);
 	const place = parallaxPlacement(
-		layer.parallax,
+		layer,
 		start.x,
 		start.y,
 		view.width,
@@ -341,7 +359,8 @@ export function parallaxBounds(layer, area, camera, out) {
 	const atX = at?.x ?? 0;
 	const atY = at?.y ?? 0;
 	const scale = place.scale;
-	const { originX, originY } = layer.parallax;
+	const originX = layer.parallaxOrigin.x;
+	const originY = layer.parallaxOrigin.y;
 	out.setMinMax(
 		atX + place.x + scale * (area.left - atX - originX),
 		atY + place.y + scale * (area.top - atY - originY),

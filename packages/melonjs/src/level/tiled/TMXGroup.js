@@ -1,4 +1,5 @@
 import { clamp } from "../../math/math.ts";
+import { setLayerScrolling } from "../tilemap/layer.js";
 import TMXLayer from "./TMXLayer.js";
 import TMXObject from "./TMXObject.js";
 import {
@@ -115,12 +116,15 @@ export default class TMXGroup {
 				layer.pos.x += this.offsetx;
 				layer.pos.y += this.offsety;
 				// and its parallax factor, times the layer's own
-				layer.parallax = tiledParallax(
-					map,
-					tiledParallaxFactor(data.parallaxx) *
-						tiledParallaxFactor(layers[i].parallaxx),
-					tiledParallaxFactor(data.parallaxy) *
-						tiledParallaxFactor(layers[i].parallaxy),
+				setLayerScrolling(
+					layer,
+					tiledParallax(
+						map,
+						tiledParallaxFactor(data.parallaxx) *
+							tiledParallaxFactor(layers[i].parallaxx),
+						tiledParallaxFactor(data.parallaxy) *
+							tiledParallaxFactor(layers[i].parallaxy),
+					),
 				);
 				// set a renderer
 				layer.setRenderer(map.getRenderer());

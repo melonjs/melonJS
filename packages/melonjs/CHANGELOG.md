@@ -4,7 +4,7 @@
 
 ### Added
 - LDtk: levels made with the [LDtk](https://ldtk.io) editor load from the `.ldtk` file as saved: an asset of type `"ldtk"`, then `level.load("<asset>:<level>")`, or `level.load("<asset>")` for the whole world. Tiles, IntGrid walls, entities, parallax layers and worlds streamed level by level (`streamAround`), one depth at a time
-- Tile maps: `parallax` on a tile layer makes it scroll slower or faster than the level, and scales it, on every renderer
+- Tile maps: a tile layer has a `ratio`, as an `ImageLayer` does, to scroll slower or faster than the level, and a `parallaxScale`, on every renderer
 - Tile maps: tile layers can be built in code, without a Tiled map, with `TileLayer`, `Tileset`, `TilesetGroup` and `PlacedTileLayer`; `mergeGridRects` covers a grid's cells with few rectangles, for collision bodies
 - Levels: `registerObjectClass` and `registerObjectFactory`, the same as `registerTiledObjectClass` and `registerTiledObjectFactory` under names that fit any level format
 - Levels: `level.load` takes `objects`, to choose which objects of a Tiled map or an LDtk level are built: `false` for none, or a function, `(settings) => !taken.has(settings.id)`
@@ -16,7 +16,7 @@
 - Tile maps: two tilesets of different tile sizes cut from one image both drew the first one's tiles
 - Tile maps: a tile layer removed while the game runs kept its GPU texture until the next level change
 - Tiled: a frame drawn right after a level loaded could show its layers back to front
-- Tiled: a tile layer's parallax factor was ignored; it now moves the layer as it moves an image layer (set `layer.parallax = undefined` for a layer that should scroll with the map)
+- Tiled: a tile layer's parallax factor was ignored; it now moves the layer as it moves an image layer (`layer.ratio.set(1, 1)` for a layer that should scroll with the map)
 - Tiled: a `renderMode` custom property on a tile layer was overwritten by the default
 - Tiled: every level load left a viewport-resize handler registered, keeping the old level alive
 

@@ -11,6 +11,7 @@ import {
 	TileLayer,
 	Tileset,
 	TilesetGroup,
+	Vector2d,
 	video,
 } from "../../src/index.js";
 import {
@@ -43,22 +44,55 @@ interface Placed {
 	flip: number;
 }
 
-/** how a layer follows the camera, every value given */
-interface Parallax {
+/** a point, or a value for each axis */
+interface XY {
 	x: number;
 	y: number;
-	originX: number;
-	originY: number;
-	anchorX: number;
-	anchorY: number;
-	scale: number;
 }
+
+/** how a layer scrolls with the camera, as a tile layer's definition takes it */
+interface Scrolling {
+	/** 1 scrolls with the world, 0 stays on the screen */
+	ratio?: number | XY;
+	/** where the camera is when the layer is where it was placed */
+	parallaxOrigin?: XY;
+	/** the point of the view that is measured: its top left corner unless said */
+	parallaxAnchor?: XY;
+	parallaxScale?: number;
+}
+
+/** a tile layer, as far as its scrolling goes */
+type ScrollingLayer = Renderable & {
+	ratio: Vector2d;
+	parallaxOrigin: Vector2d;
+	parallaxAnchor: Vector2d;
+	parallaxScale: number;
+};
+
+/** the middle of the view, as an anchor */
+const CENTRE = { x: 0.5, y: 0.5 };
+
+/**
+ * how a layer scrolls, read from it
+ * @param layer - a tile layer
+ * @returns its ratio, its origin, its anchor and its scale
+ */
+const scrollingOf = (layer: Renderable | undefined) => {
+	const read = layer as ScrollingLayer;
+	return {
+		ratio: [read.ratio.x, read.ratio.y],
+		origin: [read.parallaxOrigin.x, read.parallaxOrigin.y],
+		anchor: [read.parallaxAnchor.x, read.parallaxAnchor.y],
+		scale: read.parallaxScale,
+	};
+};
 
 const BACKGROUND = "#101830";
 
 /**
- * Tile layers that follow the camera: a layer's `parallax` moves it by a
- * share of the camera's movement, and scales it. Each frame is compared with
+ * Tile layers that scroll at a pace of their own: a layer's `ratio` is the
+ * share of the camera's movement it makes in the world, as an image layer's,
+ * and its `parallaxScale` scales it. Each frame is compared with
  * the same tiles painted with the 2D canvas alone, where the rule puts them.
  * @param renderer - the renderer to ask for
  * @param name - its name
@@ -191,7 +225,7 @@ export function parallaxChecks(
 			});
 		};
 
-		const gridLayer = (parallax?: Partial<Parallax>, renderMode = "auto") => {
+		const gridLayer = (parallax?: Scrolling, renderMode = "auto") => {
 			const made = new TileLayer({
 				name: "grid",
 				cols: 12,
@@ -201,7 +235,7 @@ export function parallaxChecks(
 				tilesets: new TilesetGroup([tileset()]),
 				offsetx: AT.x,
 				offsety: AT.y,
-				parallax,
+				...parallax,
 				renderMode,
 			});
 			for (const placed of gridTiles) {
@@ -215,13 +249,13 @@ export function parallaxChecks(
 			return made;
 		};
 
-		const looseLayer = (parallax?: Partial<Parallax>) => {
+		const looseLayer = (parallax?: Scrolling) => {
 			return new PlacedTileLayer({
 				name: "loose",
 				tileset: tileset(),
 				offsetx: AT.x,
 				offsety: AT.y,
-				parallax,
+				...parallax,
 				tiles: looseTiles.map((placed) => {
 					return {
 						x: placed.x,
@@ -233,11 +267,7 @@ export function parallaxChecks(
 			});
 		};
 
-		const KINDS: [
-			string,
-			(parallax?: Partial<Parallax>) => Renderable,
-			Placed[],
-		][] = [
+		const KINDS: [string, (parallax?: Scrolling) => Renderable, Placed[]][] = [
 			["a grid layer", gridLayer, gridTiles],
 			// drawn once to a canvas of its own, which is what is then drawn
 			[
@@ -270,33 +300,32 @@ export function parallaxChecks(
 		};
 
 		// the frame the rule gives: a point of the layer's container is
-		// drawn at the origin, plus the share of the way from the origin to
-		// the view's centre in whole pixels, plus its own distance from the
-		// origin, scaled
+		// drawn at the origin, plus what the ratio leaves of the way from
+		// the origin to the view's anchor in whole pixels, plus its own
+		// distance from the origin, scaled
 		const expected = (
 			tiles: Placed[],
-			parallax: Partial<Parallax> | undefined,
+			parallax: Scrolling | undefined,
 			viewX: number,
 			viewY: number,
 			containerX = 0,
 			containerY = 0,
 		) => {
 			const c = blank(BACKGROUND);
-			const scale = parallax?.scale ?? 1;
-			const originX = parallax?.originX ?? 0;
-			const originY = parallax?.originY ?? 0;
-			// the point of the view the layer is measured to (its centre,
-			// unless the parallax says another), in the container's
+			const scale = parallax?.parallaxScale ?? 1;
+			const given = parallax?.ratio ?? 1;
+			const ratio = typeof given === "number" ? { x: given, y: given } : given;
+			const originX = parallax?.parallaxOrigin?.x ?? 0;
+			const originY = parallax?.parallaxOrigin?.y ?? 0;
+			// the point of the view the layer is measured to (its top left
+			// corner, unless the layer says another), in the container's
 			// coordinates
-			const centreX = viewX + WIDTH * (parallax?.anchorX ?? 0.5) - containerX;
-			const centreY = viewY + HEIGHT * (parallax?.anchorY ?? 0.5) - containerY;
+			const anchor = parallax?.parallaxAnchor ?? { x: 0, y: 0 };
+			const anchorX = viewX + WIDTH * anchor.x - containerX;
+			const anchorY = viewY + HEIGHT * anchor.y - containerY;
 			// the origin, moved to a whole pixel; the layer scaled from it
-			const frameX = Math.round(
-				originX + (centreX - originX) * (parallax?.x ?? 0),
-			);
-			const frameY = Math.round(
-				originY + (centreY - originY) * (parallax?.y ?? 0),
-			);
+			const frameX = Math.round(originX + (anchorX - originX) * (1 - ratio.x));
+			const frameY = Math.round(originY + (anchorY - originY) * (1 - ratio.y));
 			paintLayer(
 				c,
 				tiles,
@@ -342,8 +371,12 @@ export function parallaxChecks(
 				}
 			});
 
-			it("follows the camera by its factors, and is in its place when the camera is on its origin", () => {
-				const parallax = { x: 0.5, y: 0.25, originX: 160, originY: 120 };
+			it("scrolls by its ratio, and is in its place when the camera is on its origin", () => {
+				const parallax = {
+					ratio: { x: 0.5, y: 0.75 },
+					parallaxOrigin: { x: 160, y: 120 },
+					parallaxAnchor: CENTRE,
+				};
 				show(make(parallax));
 				for (const [x, y] of VIEWS) {
 					const picture = look(x, y);
@@ -369,10 +402,10 @@ export function parallaxChecks(
 				).toBeGreaterThan(2000);
 			});
 
-			it("is measured to the point of the view its anchor says: a corner, an edge", () => {
-				// to the camera's position, the view's top left corner: in
-				// its place when the camera is at the origin
-				const corner = { x: 0.5, y: 0.25, anchorX: 0, anchorY: 0 };
+			it("is measured to the camera's position unless its anchor says another point of the view", () => {
+				// with no anchor, to the view's top left corner, as an image
+				// layer is: in its place when the camera is at the origin
+				const corner = { ratio: { x: 0.5, y: 0.75 } };
 				show(make(corner));
 				for (const [x, y] of VIEWS) {
 					const result = diff(
@@ -390,12 +423,18 @@ export function parallaxChecks(
 				expect(
 					diff(
 						look(100, 40),
-						expected(tiles, { ...corner, anchorX: 0.5, anchorY: 0.5 }, 100, 40),
+						expected(tiles, { ...corner, parallaxAnchor: CENTRE }, 100, 40),
 						tolerance,
 					).different,
 				).toBeGreaterThan(2000);
+				// said outright, the same
+				show(make({ ...corner, parallaxAnchor: { x: 0, y: 0 } }));
+				expect(
+					diff(look(100, 40), expected(tiles, corner, 100, 40), tolerance)
+						.different,
+				).toBe(0);
 				// to its right and bottom edges
-				const edges = { x: 0.5, y: 0.5, anchorX: 1, anchorY: 1 };
+				const edges = { ratio: 0.5, parallaxAnchor: { x: 1, y: 1 } };
 				show(make(edges));
 				const result = diff(
 					look(-200, -160),
@@ -405,8 +444,12 @@ export function parallaxChecks(
 				expect(result.different, result.first).toBe(0);
 			});
 
-			it("a negative factor moves it faster than the world", () => {
-				const parallax = { x: -0.5, y: -1, originX: 160, originY: 120 };
+			it("a ratio above 1 moves it faster than the world", () => {
+				const parallax = {
+					ratio: { x: 1.5, y: 2 },
+					parallaxOrigin: { x: 160, y: 120 },
+					parallaxAnchor: CENTRE,
+				};
 				show(make(parallax));
 				for (const [x, y] of [
 					[20, 10],
@@ -421,8 +464,12 @@ export function parallaxChecks(
 				}
 			});
 
-			it("a factor of 1 keeps it where it is on the screen, however far the camera goes", () => {
-				const parallax = { x: 1, y: 1, originX: 160, originY: 120 };
+			it("a ratio of 0 keeps it where it is on the screen, however far the camera goes", () => {
+				const parallax = {
+					ratio: 0,
+					parallaxOrigin: { x: 160, y: 120 },
+					parallaxAnchor: CENTRE,
+				};
 				show(make(parallax));
 				const here = look(0, 0);
 				expect(
@@ -444,7 +491,11 @@ export function parallaxChecks(
 			it("is drawn smaller, from its origin, as a layer further away", () => {
 				// (a scale that puts no pixel's centre on the edge of two of the
 				// image's pixels, where each renderer would pick its own)
-				const parallax = { x: 0.5, y: 0.5, originX: 0, originY: 0, scale: 0.8 };
+				const parallax = {
+					ratio: 0.5,
+					parallaxAnchor: CENTRE,
+					parallaxScale: 0.8,
+				};
 				show(make(parallax));
 				for (const [x, y] of [
 					[0, 0],
@@ -465,7 +516,7 @@ export function parallaxChecks(
 					expect(
 						diff(
 							picture,
-							expected(tiles, { ...parallax, scale: 1 }, x, y),
+							expected(tiles, { ...parallax, parallaxScale: 1 }, x, y),
 							tolerance,
 						).different,
 					).toBeGreaterThan(2000);
@@ -473,7 +524,7 @@ export function parallaxChecks(
 			});
 
 			it("is drawn larger with a scale alone, and shows the part of it the view is on", () => {
-				const parallax = { originX: 0, originY: 0, scale: 2 };
+				const parallax = { parallaxScale: 2 };
 				show(make(parallax));
 				// twice its size: the view at (200, 150) is on the layer's
 				// lower right, which a view of that place would not show at
@@ -497,7 +548,11 @@ export function parallaxChecks(
 			});
 
 			it("in a container, follows from where the container is", () => {
-				const parallax = { x: 0.5, y: 0.5, originX: 100, originY: 80 };
+				const parallax = {
+					ratio: 0.5,
+					parallaxOrigin: { x: 100, y: 80 },
+					parallaxAnchor: CENTRE,
+				};
 				const container = new Container(30, 20, 400, 300);
 				container.anchorPoint.set(0, 0);
 				show(make(parallax), container);
@@ -514,38 +569,66 @@ export function parallaxChecks(
 				}
 			});
 
-			it("taking the parallax away puts it back, and an empty one is none", () => {
-				const made = make({ x: 0.5, y: 0.5 }) as Renderable & {
-					parallax: Partial<Parallax> | undefined;
-				};
+			it("is read from the layer and changed there; a ratio of 1 puts it back", () => {
+				const made = make({ ratio: 0.5 }) as ScrollingLayer;
 				show(made);
-				expect(made.parallax).toEqual({
-					x: 0.5,
-					y: 0.5,
-					originX: 0,
-					originY: 0,
-					anchorX: 0.5,
-					anchorY: 0.5,
-					scale: 1,
-				});
-				made.parallax = undefined;
+				// as an image layer keeps its ratio: a vector, to set
+				expect(made.ratio).toBeInstanceOf(Vector2d);
+				expect([made.ratio.x, made.ratio.y]).toEqual([0.5, 0.5]);
+				expect([made.parallaxOrigin.x, made.parallaxOrigin.y]).toEqual([0, 0]);
+				expect([made.parallaxAnchor.x, made.parallaxAnchor.y]).toEqual([0, 0]);
+				expect(made.parallaxScale).toBe(1);
+				expect(
+					diff(
+						look(100, 40),
+						expected(tiles, { ratio: 0.5 }, 100, 40),
+						tolerance,
+					).different,
+				).toBe(0);
+				// changed while the game runs, one axis and then the other
+				made.ratio.set(0.25, 1);
+				made.parallaxOrigin.set(40, 0);
+				expect(
+					diff(
+						look(100, 40),
+						expected(
+							tiles,
+							{ ratio: { x: 0.25, y: 1 }, parallaxOrigin: { x: 40, y: 0 } },
+							100,
+							40,
+						),
+						tolerance,
+					).different,
+				).toBe(0);
+				// at 1, it scrolls with the world again, whatever its origin
+				made.ratio.set(1, 1);
 				expect(
 					diff(look(100, 40), expected(tiles, undefined, 100, 40), tolerance)
 						.different,
 				).toBe(0);
-				made.parallax = {};
-				expect(made.parallax).toBeUndefined();
-				made.parallax = { x: 0, y: 0, scale: 1 };
-				expect(made.parallax).toBeUndefined();
+				// a layer made with nothing said scrolls with the world
+				const plain = make() as ScrollingLayer;
+				expect([plain.ratio.x, plain.ratio.y, plain.parallaxScale]).toEqual([
+					1, 1, 1,
+				]);
+				// a scale is more than 0
 				expect(() => {
-					made.parallax = { scale: 0 };
-				}).toThrow(/scale must be more than 0/);
+					made.parallaxScale = 0;
+				}).toThrow(/parallaxScale must be more than 0/);
+				expect(() => {
+					return make({ parallaxScale: -1 });
+				}).toThrow(/parallaxScale must be more than 0/);
+				expect(made.parallaxScale).toBe(1);
 			});
 		});
 
 		it("leaves the layer's cells and bounds where it was placed", () => {
 			const plain = gridLayer();
-			const moved = gridLayer({ x: 0.5, y: 0.5, scale: 0.5 });
+			const moved = gridLayer({
+				ratio: 0.5,
+				parallaxAnchor: CENTRE,
+				parallaxScale: 0.5,
+			});
 			show(moved);
 			look(100, 40);
 			expect(moved.getBounds().left).toBe(plain.getBounds().left);
@@ -558,9 +641,13 @@ export function parallaxChecks(
 		});
 
 		it.runIf(renderer === video.WEBGL)(
-			"a grid layer with a parallax is still drawn by the GPU",
+			"a grid layer with a ratio of its own is still drawn by the GPU",
 			() => {
-				const made = gridLayer({ x: 0.5, y: 0.5, scale: 0.5 });
+				const made = gridLayer({
+					ratio: 0.5,
+					parallaxAnchor: CENTRE,
+					parallaxScale: 0.5,
+				});
 				show(made);
 				look(60, 30);
 				expect(made.renderMode).toBe("shader");
@@ -787,25 +874,29 @@ export function parallaxChecks(
 			}
 			// the layers built carry what LDtk says
 			const loaded = level.getCurrentLevel() as unknown as LDtkLevel;
-			const parts = loaded.layers as (Renderable & { parallax?: Parallax })[];
+			const parts = loaded.layers;
 			const back = parts.filter((part) => {
 				return part.name === "Back";
 			});
 			expect(back.length).toBeGreaterThan(0);
 			for (const part of back) {
-				expect(part.parallax).toEqual({
-					x: 0.5,
-					y: 0.25,
-					originX: LEVEL_WIDTH / 2,
-					originY: LEVEL_HEIGHT / 2,
-					anchorX: 0.5,
-					anchorY: 0.5,
+				// LDtk's factors of 0.5 and 0.25 are the share of the
+				// camera's movement the layer follows: its ratio is the rest
+				expect(scrollingOf(part)).toEqual({
+					ratio: [0.5, 0.75],
+					origin: [LEVEL_WIDTH / 2, LEVEL_HEIGHT / 2],
+					anchor: [0.5, 0.5],
 					scale: 1,
 				});
 			}
 			for (const part of parts) {
 				if (part.name === "Auto") {
-					expect(part.parallax).toBeUndefined();
+					expect(scrollingOf(part)).toEqual({
+						ratio: [1, 1],
+						origin: [0, 0],
+						anchor: [0, 0],
+						scale: 1,
+					});
 				}
 			}
 			// an entity of that layer is a thing of the level: it stays
@@ -829,18 +920,13 @@ export function parallaxChecks(
 				).toBeLessThanOrEqual(edge);
 			}
 			const loaded = level.getCurrentLevel() as unknown as LDtkLevel;
-			const far = (
-				loaded.layers as (Renderable & { parallax?: Parallax })[]
-			).find((part) => {
+			const far = loaded.layers.find((part) => {
 				return part.name === "Far";
 			});
-			expect(far?.parallax).toEqual({
-				x: 0.2,
-				y: 0.5,
-				originX: 0,
-				originY: 0,
-				anchorX: 0.5,
-				anchorY: 0.5,
+			expect(scrollingOf(far)).toEqual({
+				ratio: [0.8, 0.5],
+				origin: [0, 0],
+				anchor: [0.5, 0.5],
 				scale: 0.8,
 			});
 		});
@@ -859,12 +945,10 @@ export function parallaxChecks(
 				).toBeLessThanOrEqual(edge);
 			}
 			const loaded = level.getCurrentLevel() as unknown as LDtkLevel;
-			const rain = (
-				loaded.layers as (Renderable & { parallax?: Parallax })[]
-			).find((part) => {
+			const rain = loaded.layers.find((part) => {
 				return part.name === "Rain";
 			});
-			expect(rain?.parallax?.scale).toBe(1);
+			expect(scrollingOf(rain).scale).toBe(1);
 		});
 
 		it("in a world, each level's layers follow from their own level", async () => {

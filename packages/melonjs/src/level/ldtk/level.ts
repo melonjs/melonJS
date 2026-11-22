@@ -13,7 +13,7 @@ import {
 } from "../tiled/TMXObjectFactory.js";
 import { applyObjectOpacity } from "../tiled/TMXUtils.js";
 import { isCollisionLayerName, markWorldShape } from "../tilemap/collision.js";
-import type { LayerParallax } from "../tilemap/layer.js";
+import type { LayerScrolling } from "../tilemap/layer.js";
 import PlacedTileLayer from "../tilemap/PlacedTileLayer.js";
 import {
 	addLevelToContainer,
@@ -311,42 +311,43 @@ class LevelBuilder {
 	}
 
 	/**
-	 * How a layer follows the camera, as LDtk shows it: moved by its
+	 * How a layer scrolls with the camera, as LDtk shows it: moved by its
 	 * parallax factors' share of how far the camera's centre is into the
 	 * level, and, with "parallax scaling", drawn smaller by the factor across
 	 * from the level's corner, as a layer further away. Without the scaling,
 	 * the layer is in its place when the camera is on its centre.
+	 *
+	 * LDtk's factor is the share of the camera's movement the layer follows
+	 * (0 for a layer that scrolls with its level): a tile layer's `ratio` is
+	 * what is left of it.
 	 * @param layer - the layer
 	 * @param levelX - where the level's left edge is
 	 * @param levelY - where the level's top edge is
-	 * @returns the layer's parallax, or undefined for a layer that scrolls with its level
+	 * @returns the settings of the tile layers built for it: none for a layer that scrolls with its level
 	 */
 	parallaxOf(
 		layer: LDtkLayerInstance,
 		levelX: number,
 		levelY: number,
-	): LayerParallax | undefined {
+	): LayerScrolling {
 		const def = this.project.layerDefs.get(layer.layerDefUid);
 		const x = def?.parallaxFactorX ?? 0;
 		const y = def?.parallaxFactorY ?? 0;
 		if (x === 0 && y === 0) {
-			return undefined;
+			return {};
 		}
-		if (def?.parallaxScaling ?? true) {
-			return {
-				x,
-				y,
-				originX: levelX,
-				originY: levelY,
-				scale: x === 0 ? 1 : Math.max(0.01, 1 - x),
-			};
-		}
+		const scaling = def?.parallaxScaling ?? true;
 		return {
-			x,
-			y,
-			originX: levelX + (layer.__cWid * layer.__gridSize) / 2,
-			originY: levelY + (layer.__cHei * layer.__gridSize) / 2,
-			scale: 1,
+			ratio: { x: 1 - x, y: 1 - y },
+			// LDtk measures to the centre of the view
+			parallaxAnchor: { x: 0.5, y: 0.5 },
+			parallaxOrigin: scaling
+				? { x: levelX, y: levelY }
+				: {
+						x: levelX + (layer.__cWid * layer.__gridSize) / 2,
+						y: levelY + (layer.__cHei * layer.__gridSize) / 2,
+					},
+			parallaxScale: scaling && x !== 0 ? Math.max(0.01, 1 - x) : 1,
 		};
 	}
 
@@ -536,7 +537,7 @@ class LevelBuilder {
 		z: number,
 		opacity: number,
 		bare: boolean,
-		parallax?: LayerParallax,
+		parallax: LayerScrolling,
 	) {
 		const grid = new IntGrid(
 			layer,
@@ -594,7 +595,7 @@ class LevelBuilder {
 				opacity,
 				offsetx: x,
 				offsety: y,
-				parallax,
+				...parallax,
 			});
 			for (let row = 0; row < grid.rows; row++) {
 				for (let col = 0; col < grid.cols; col++) {
@@ -626,7 +627,7 @@ class LevelBuilder {
 		y: number,
 		z: number,
 		opacity: number,
-		parallax?: LayerParallax,
+		parallax: LayerScrolling,
 	) {
 		const entry = this.tilesetFor(layer.__tilesetDefUid);
 		if (entry === null) {
@@ -677,7 +678,7 @@ class LevelBuilder {
 					opacity,
 					offsetx: x,
 					offsety: y,
-					parallax,
+					...parallax,
 				});
 				for (const tile of chunk.tiles) {
 					const id = idOf(tile);
@@ -700,7 +701,7 @@ class LevelBuilder {
 					opacity,
 					offsetx: x,
 					offsety: y,
-					parallax,
+					...parallax,
 					tiles: chunk.tiles
 						.filter((tile) => {
 							return idOf(tile) >= 0;

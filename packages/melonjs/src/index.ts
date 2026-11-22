@@ -217,7 +217,6 @@ export {
 	registerTiledObjectFactory,
 } from "./level/tiled/TMXObjectFactory.js";
 export { mergeGridRects } from "./level/tilemap/grid.js";
-export type { LayerParallax } from "./level/tilemap/layer.js";
 export type { PlacedTile } from "./level/tilemap/PlacedTileLayer.js";
 export type { TilesetDefinition } from "./level/tilemap/Tileset.js";
 export { Light3d } from "./lighting/light3d.ts";

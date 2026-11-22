@@ -1,6 +1,6 @@
 import { Rect } from "../../geometries/rectangle.ts";
 import { warnOnce } from "../../lang/console.js";
-import { vector2dPool } from "../../math/vector2d.ts";
+import { Vector2d, vector2dPool } from "../../math/vector2d.ts";
 import { boundsPool } from "../../physics/bounds.ts";
 import Renderable from "../../renderable/renderable.js";
 import CanvasRenderer from "../../video/canvas/canvas_renderer";
@@ -18,11 +18,13 @@ import {
 } from "./constants.js";
 import {
 	applyLayerDefinition,
+	checkParallaxScale,
 	enterParallax,
+	hasParallax,
 	leaveParallax,
 	parallaxBounds,
 	parallaxFrame,
-	readParallax,
+	setLayerScrolling,
 	tellAncestorsOfDrawArea,
 	untellAncestorsOfDrawArea,
 	viewStart,
@@ -34,8 +36,6 @@ import Tile from "./Tile.js";
  * @import TMXRenderer from "../tiled/renderer/TMXRenderer.js";
  * @import Tileset from "./Tileset.js";
  * @import TilesetGroup from "./TilesetGroup.js";
- * @import {Vector2d} from "../../math/vector2d.ts";
- * @import {LayerParallax} from "./layer.js";
  * @import Camera2d from "../../camera/camera2d.ts";
  */
 // flip-mask bit layout for layerData's G channel
@@ -157,7 +157,10 @@ export default class TileLayer extends Renderable {
 	 * @param {number} [def.opacity=1] - its opacity (0 hides it)
 	 * @param {number} [def.offsetx=0] - how far it is moved across, in pixels
 	 * @param {number} [def.offsety=0] - how far it is moved down, in pixels
-	 * @param {LayerParallax} [def.parallax] - how it follows the camera, see {@link TileLayer#parallax}
+	 * @param {number|{x: number, y: number}} [def.ratio=1] - its scrolling ratio, see {@link TileLayer#ratio}
+	 * @param {{x: number, y: number}} [def.parallaxOrigin] - see {@link TileLayer#parallaxOrigin}
+	 * @param {{x: number, y: number}} [def.parallaxAnchor] - see {@link TileLayer#parallaxAnchor}
+	 * @param {number} [def.parallaxScale=1] - see {@link TileLayer#parallaxScale}
 	 * @param {string} [def.blendMode] - its blend mode
 	 * @param {Color|string} [def.tint] - a tint for its tiles, as a color or a CSS color string
 	 * @param {string} [def.class] - a class name of the game's own
@@ -326,25 +329,49 @@ export default class TileLayer extends Renderable {
 		this.starty = def.starty ?? 0;
 
 		/**
-		 * How the layer follows the camera, for a backdrop that scrolls
-		 * slower than the level or a foreground that scrolls faster:
-		 * `{ x, y, originX, originY, scale }`. `x` and `y` are how much of
-		 * the camera's movement the layer follows, from -1 to 1 (0: it
-		 * scrolls with the world; 1: it stays where it is on the screen; 0.5:
-		 * it scrolls at half the pace). `originX` and `originY` are where
-		 * the camera's centre is when the layer is where it was placed, and
-		 * `scale` its size, scaled from that origin. Undefined for a layer
-		 * that only scrolls with the world.
+		 * The layer's scrolling ratio, as an {@link ImageLayer}'s: the
+		 * share of the camera's movement the layer makes in the world. At
+		 * (1, 1) it scrolls with the world, as any layer does; at (0, 0) it
+		 * stays where it is on the screen; at (0.5, 0.5) it scrolls at half
+		 * the pace, as a backdrop further away; above 1, faster, as a
+		 * foreground. A Tiled layer's parallax factor is read into it.
 		 *
 		 * It changes where the layer is drawn, for each camera, and nothing
 		 * else: `getTile`, `cellAt` and the layer's bounds are those of the
 		 * layer where it was placed.
-		 * @type {LayerParallax|undefined}
+		 * @type {Vector2d}
+		 * @default <1.0,1.0>
 		 * @example
 		 * // far hills, at half the level's pace
-		 * hills.parallax = { x: 0.5, y: 0.5 };
+		 * hills.ratio.set(0.5, 0.5);
 		 */
-		this.parallax = def.parallax;
+		this.ratio = new Vector2d(1, 1);
+
+		/**
+		 * Where the camera is when the layer is where it was placed, in the
+		 * coordinates the layer's `pos` is in: at the world's origin by
+		 * default, as for an {@link ImageLayer}. The point of the camera's
+		 * view that is measured is {@link TileLayer#parallaxAnchor}.
+		 * @type {Vector2d}
+		 * @default <0,0>
+		 */
+		this.parallaxOrigin = new Vector2d(0, 0);
+
+		/**
+		 * The point of the camera's view that is on
+		 * {@link TileLayer#parallaxOrigin} when the layer is where it was
+		 * placed: (0, 0) for the view's top left corner (the camera's
+		 * position), (0.5, 0.5) for its centre, (1, 1) for its bottom right
+		 * corner.
+		 * @type {Vector2d}
+		 * @default <0,0>
+		 */
+		this.parallaxAnchor = new Vector2d(0, 0);
+
+		/** @ignore */
+		this._parallaxScale = 1;
+
+		setLayerScrolling(this, def);
 
 		/**
 		 * the number of columns in the layer
@@ -455,7 +482,7 @@ export default class TileLayer extends Renderable {
 	 * `Camera2d#isVisible`). The layer's bounds, `width` and `height` stay
 	 * the grid's.
 	 * @param {Camera2d} [camera] - the camera asking: a layer with a
-	 * {@link TileLayer#parallax} is drawn in another place for each one
+	 * {@link TileLayer#ratio} of its own is drawn in another place for each one
 	 * @returns {Bounds} that area, in the same coordinates as `getBounds()`
 	 * @ignore
 	 */
@@ -470,21 +497,23 @@ export default class TileLayer extends Renderable {
 			bounds.right + reach.right,
 			bounds.bottom + reach.bottom,
 		);
-		if (this._parallax !== undefined && camera !== undefined) {
+		if (camera !== undefined && hasParallax(this)) {
 			parallaxBounds(this, this._drawBounds, camera, this._drawBounds);
 		}
 		return this._drawBounds;
 	}
 
 	/**
-	 * @ignore
+	 * The layer's size, scaled from {@link TileLayer#parallaxOrigin}: 0.5
+	 * for a layer drawn at half its size, as one further away. More than 0.
+	 * @type {number}
+	 * @default 1
 	 */
-	get parallax() {
-		return this._parallax;
+	get parallaxScale() {
+		return this._parallaxScale;
 	}
-	set parallax(value) {
-		/** @ignore */
-		this._parallax = readParallax(value);
+	set parallaxScale(value) {
+		this._parallaxScale = checkParallaxScale(value);
 		this.isDirty = true;
 	}
 
@@ -1425,13 +1454,12 @@ export default class TileLayer extends Renderable {
 		// a layer with a parallax is moved, and scaled, by where the view
 		// looks: its first cell is drawn from where that puts it, and the
 		// cells to draw are the ones the view shows of the layer so placed
-		const parallax = this._parallax;
-		if (parallax !== undefined) {
+		if (hasParallax(this)) {
 			// the layer's first cell is what its renderer draws from
 			const origin = this._cellOrigin(vector2dPool.get());
 			const frame = enterParallax(
 				renderer,
-				parallax,
+				this,
 				start.x,
 				start.y,
 				rect.width,

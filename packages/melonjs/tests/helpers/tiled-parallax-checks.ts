@@ -4,6 +4,7 @@ import {
 	loader,
 	type Renderable,
 	TMXTileMap,
+	type Vector2d,
 	video,
 } from "../../src/index.js";
 import { diff, frame, HEIGHT, makeApp, WIDTH } from "./ldtk-harness.ts";
@@ -149,7 +150,10 @@ export function tiledParallaxChecks(
 		const parallaxOf = (map: TMXTileMap) => {
 			show(map);
 			const [found] = app.world.getChildByName("tiles") as (Renderable & {
-				parallax?: Record<string, number>;
+				ratio: Vector2d;
+				parallaxOrigin: Vector2d;
+				parallaxAnchor: Vector2d;
+				parallaxScale: number;
 				renderMode?: string;
 			})[];
 			return found;
@@ -229,11 +233,12 @@ export function tiledParallaxChecks(
 		};
 
 		it("a layer with no factor, or a factor of 1, scrolls with the map", () => {
-			expect(parallaxOf(tiledMap([tileLayer()])).parallax).toBeUndefined();
-			expect(
-				parallaxOf(tiledMap([tileLayer({ parallaxx: 1, parallaxy: 1 })]))
-					.parallax,
-			).toBeUndefined();
+			const none = parallaxOf(tiledMap([tileLayer()])).ratio;
+			expect([none.x, none.y]).toEqual([1, 1]);
+			const one = parallaxOf(
+				tiledMap([tileLayer({ parallaxx: 1, parallaxy: 1 })]),
+			).ratio;
+			expect([one.x, one.y]).toEqual([1, 1]);
 			const placing = { offsetx: 24, offsety: 16 };
 			expectAsAnImageLayer(
 				tiledMap([tileLayer(placing)]),
@@ -260,17 +265,13 @@ export function tiledParallaxChecks(
 			expect(diff(moving[1], still[1], tolerance).different).toBeGreaterThan(
 				500,
 			);
-			// read from the map: the share of the camera's movement the layer
-			// follows is what Tiled's factor leaves, from the camera's corner
-			expect(parallaxOf(tiledMap([tileLayer(placing)])).parallax).toEqual({
-				x: 0.5,
-				y: 0.75,
-				originX: 0,
-				originY: 0,
-				anchorX: 0,
-				anchorY: 0,
-				scale: 1,
-			});
+			// read from the map: Tiled's factor is the layer's ratio, as it
+			// is an image layer's, measured from the camera's corner
+			const read = parallaxOf(tiledMap([tileLayer(placing)]));
+			expect([read.ratio.x, read.ratio.y]).toEqual([0.5, 0.25]);
+			expect([read.parallaxOrigin.x, read.parallaxOrigin.y]).toEqual([0, 0]);
+			expect([read.parallaxAnchor.x, read.parallaxAnchor.y]).toEqual([0, 0]);
+			expect(read.parallaxScale).toBe(1);
 		});
 
 		it("a factor on one axis leaves the other alone", () => {
@@ -327,7 +328,8 @@ export function tiledParallaxChecks(
 					},
 				]);
 			};
-			expect(parallaxOf(grouped()).parallax).toMatchObject({ x: 0.75, y: 0.5 });
+			const ratio = parallaxOf(grouped()).ratio;
+			expect([ratio.x, ratio.y]).toEqual([0.25, 0.5]);
 			expectAsAnImageLayer(
 				grouped(),
 				{ offsetx: 24, offsety: 16, parallaxx: 0.25, parallaxy: 0.5 },

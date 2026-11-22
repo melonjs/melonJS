@@ -160,7 +160,7 @@ export default class TMXLayer extends TileLayer {
 			offsety: +data.offsety || 0,
 			// the layer's parallax factor (Tiled 1.5+): a group gives its
 			// layers its own on top (see TMXGroup)
-			parallax: TMXUtils.tiledParallax(
+			...TMXUtils.tiledParallax(
 				map,
 				TMXUtils.tiledParallaxFactor(data.parallaxx),
 				TMXUtils.tiledParallaxFactor(data.parallaxy),

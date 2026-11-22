@@ -1,12 +1,15 @@
+import { Vector2d } from "../../math/vector2d.ts";
 import { boundsPool } from "../../physics/bounds.ts";
 import Renderable from "../../renderable/renderable.js";
 import {
 	applyLayerDefinition,
+	checkParallaxScale,
 	enterParallax,
+	hasParallax,
 	leaveParallax,
 	parallaxBounds,
 	parallaxFrame,
-	readParallax,
+	setLayerScrolling,
 	tellAncestorsOfDrawArea,
 	untellAncestorsOfDrawArea,
 	viewStart,
@@ -15,7 +18,6 @@ import {
 /**
  * additional import for TypeScript
  * @import Tileset from "./Tileset.js";
- * @import {LayerParallax} from "./layer.js";
  * @import {Bounds} from "../../physics/bounds.ts";
  * @import Camera2d from "../../camera/camera2d.ts";
  */
@@ -70,7 +72,10 @@ export default class PlacedTileLayer extends Renderable {
 	 * @param {number} [def.opacity=1] - its opacity (0 hides it)
 	 * @param {number} [def.offsetx=0] - where its origin is across, in pixels
 	 * @param {number} [def.offsety=0] - where its origin is down, in pixels
-	 * @param {LayerParallax} [def.parallax] - how it follows the camera, see {@link PlacedTileLayer#parallax}
+	 * @param {number|{x: number, y: number}} [def.ratio=1] - its scrolling ratio, see {@link PlacedTileLayer#ratio}
+	 * @param {{x: number, y: number}} [def.parallaxOrigin] - see {@link TileLayer#parallaxOrigin}
+	 * @param {{x: number, y: number}} [def.parallaxAnchor] - see {@link TileLayer#parallaxAnchor}
+	 * @param {number} [def.parallaxScale=1] - see {@link TileLayer#parallaxScale}
 	 * @param {string} [def.blendMode] - its blend mode
 	 * @param {Color|string} [def.tint] - a tint for its tiles, as a color or a CSS color string
 	 * @param {string} [def.class] - a class name of the game's own
@@ -122,7 +127,36 @@ export default class PlacedTileLayer extends Renderable {
 		// its name, draw order, opacity, blend mode and tint, as a tile
 		// layer takes them
 		applyLayerDefinition(this, def);
-		this.parallax = def.parallax;
+
+		/**
+		 * The layer's scrolling ratio, as {@link TileLayer#ratio} and an
+		 * {@link ImageLayer}'s: (1, 1) scrolls with the world, (0, 0) stays
+		 * where it is on the screen, (0.5, 0.5) scrolls at half the pace.
+		 * @type {Vector2d}
+		 * @default <1.0,1.0>
+		 */
+		this.ratio = new Vector2d(1, 1);
+
+		/**
+		 * where the camera is when the layer is where it was placed, as
+		 * {@link TileLayer#parallaxOrigin}
+		 * @type {Vector2d}
+		 * @default <0,0>
+		 */
+		this.parallaxOrigin = new Vector2d(0, 0);
+
+		/**
+		 * the point of the camera's view that is measured, as
+		 * {@link TileLayer#parallaxAnchor}
+		 * @type {Vector2d}
+		 * @default <0,0>
+		 */
+		this.parallaxAnchor = new Vector2d(0, 0);
+
+		/** @ignore */
+		this._parallaxScale = 1;
+
+		setLayerScrolling(this, def);
 
 		if (def.tiles !== undefined) {
 			for (const tile of def.tiles) {
@@ -305,15 +339,15 @@ export default class PlacedTileLayer extends Renderable {
 		// The tiles are drawn from the layer's place: in the world, or in
 		// the frame its parallax gives for this view. Either way the view is
 		// taken in the tiles' own coordinates, to draw the ones in it.
-		const parallax = this._parallax;
+		const parallax = hasParallax(this);
 		let viewX = start.x - this.pos.x;
 		let viewY = start.y - this.pos.y;
 		let viewRight = viewX + rect.width;
 		let viewBottom = viewY + rect.height;
-		if (parallax !== undefined) {
+		if (parallax) {
 			const frame = enterParallax(
 				renderer,
-				parallax,
+				this,
 				start.x,
 				start.y,
 				rect.width,
@@ -364,7 +398,7 @@ export default class PlacedTileLayer extends Renderable {
 		if (alpha !== 1) {
 			renderer.setGlobalAlpha(baseAlpha);
 		}
-		if (parallax !== undefined) {
+		if (parallax) {
 			leaveParallax(renderer, FRAME);
 		} else {
 			renderer.translate(-this.pos.x, -this.pos.y);
@@ -372,18 +406,16 @@ export default class PlacedTileLayer extends Renderable {
 	}
 
 	/**
-	 * How the layer follows the camera, for a backdrop that scrolls slower
-	 * than the level or a foreground that scrolls faster:
-	 * `{ x, y, originX, originY, scale }`, as {@link TileLayer#parallax}.
-	 * Undefined for a layer that only scrolls with the world.
-	 * @type {LayerParallax|undefined}
+	 * the layer's size, scaled from its `parallaxOrigin`, as
+	 * {@link TileLayer#parallaxScale}: more than 0
+	 * @type {number}
+	 * @default 1
 	 */
-	get parallax() {
-		return this._parallax;
+	get parallaxScale() {
+		return this._parallaxScale;
 	}
-	set parallax(value) {
-		/** @ignore */
-		this._parallax = readParallax(value);
+	set parallaxScale(value) {
+		this._parallaxScale = checkParallaxScale(value);
 		this.isDirty = true;
 	}
 
@@ -397,7 +429,7 @@ export default class PlacedTileLayer extends Renderable {
 	 */
 	getDrawBounds(camera) {
 		const bounds = this.getBounds();
-		if (this._parallax === undefined || camera === undefined) {
+		if (camera === undefined || !hasParallax(this)) {
 			return bounds;
 		}
 		/** @ignore */
