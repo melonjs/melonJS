@@ -110,6 +110,27 @@ export interface LDtkFoundObject {
 }
 
 /**
+ * The left edge of an entity's box. LDtk places an entity by its pivot; a
+ * box is placed by its corner.
+ * @param entity - the entity, as placed in LDtk
+ * @param layerX - where its layer starts, across
+ * @returns the box's left edge
+ */
+export function entityLeft(entity: LDtkEntityInstance, layerX: number): number {
+	return layerX + entity.px[0] - entity.__pivot[0] * entity.width;
+}
+
+/**
+ * the top edge of an entity's box, as {@link entityLeft}
+ * @param entity - the entity, as placed in LDtk
+ * @param layerY - where its layer starts, down
+ * @returns the box's top edge
+ */
+export function entityTop(entity: LDtkEntityInstance, layerY: number): number {
+	return layerY + entity.px[1] - entity.__pivot[1] * entity.height;
+}
+
+/**
  * the values of custom fields, by name, as LDtk gives them: numbers, strings
  * and booleans, a color as `#rrggbb`, an enum as the name of its value, a
  * point as `{ cx, cy }` in cells, an entity reference as
@@ -346,16 +367,8 @@ export class LDtkProject {
 							level,
 							layer: layer.__identifier,
 							instance,
-							x:
-								level.x +
-								layer.__pxTotalOffsetX +
-								instance.px[0] -
-								instance.__pivot[0] * instance.width,
-							y:
-								level.y +
-								layer.__pxTotalOffsetY +
-								instance.px[1] -
-								instance.__pivot[1] * instance.height,
+							x: entityLeft(instance, level.x + layer.__pxTotalOffsetX),
+							y: entityTop(instance, level.y + layer.__pxTotalOffsetY),
 							width: instance.width,
 							height: instance.height,
 						};

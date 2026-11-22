@@ -171,7 +171,7 @@ export * as input from "./input/input.ts";
 // Backward compatibility for deprecated method or properties
 export * from "./lang/deprecated.js";
 export type { IntGridRect } from "./level/ldtk/intgrid.ts";
-export type { BuiltLevel, LDtkLoadOptions } from "./level/ldtk/level.ts";
+export type { LDtkLoadOptions } from "./level/ldtk/level.ts";
 export type {
 	LDtkFoundObject,
 	LDtkLevelInfo,

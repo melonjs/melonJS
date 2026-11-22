@@ -333,6 +333,54 @@ describe("the objects of a Tiled level", () => {
 			}
 		});
 
+		it("chooses among objects only: a group layer's tile layers are added all the same", () => {
+			// a group layer lists the tile layers inside it with its objects
+			const grouped = () => {
+				return new TMXTileMap(
+					"grouped",
+					mapJSON([
+						{
+							type: "group",
+							name: "upstairs",
+							visible: true,
+							opacity: 1,
+							layers: [
+								{
+									type: "tilelayer",
+									name: "balcony",
+									visible: true,
+									opacity: 1,
+									x: 0,
+									y: 0,
+									width: 10,
+									height: 4,
+									data: new Array(40).fill(0),
+								},
+							],
+						},
+						objectLayer("things", [object(11, "gem", "LevelGem", 0)]),
+					]),
+				);
+			};
+			const namesOf = (built) => {
+				return built
+					.map((child) => {
+						return child.name;
+					})
+					.sort();
+			};
+			expect(namesOf(grouped().getObjects(true))).toEqual(["balcony", "gem"]);
+			expect(namesOf(grouped().getObjects(true, false))).toEqual(["balcony"]);
+			// and a function is asked about the objects, not about the layer
+			const asked = [];
+			const built = grouped().getObjects(true, (settings) => {
+				asked.push(settings.name);
+				return false;
+			});
+			expect(asked).toEqual(["gem"]);
+			expect(namesOf(built)).toEqual(["balcony"]);
+		});
+
 		it("is read by the map itself, built with no level director", () => {
 			const map = new TMXTileMap("direct", mapJSON(things()));
 			expect(map.getObjects(true, false)).toEqual([]);

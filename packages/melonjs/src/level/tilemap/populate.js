@@ -7,6 +7,22 @@ import { bindViewportToLevel } from "./viewport.js";
  */
 
 /**
+ * Whether a level builds an object, by the `objects` option of `level.load`:
+ * all of them by default, none when it is `false`, and the ones a function
+ * says, given the object's settings as its class would be.
+ * @param {boolean|Function} [wanted] - the option
+ * @param {object} settings - the object's settings
+ * @returns {boolean} true if the object is to be built
+ * @ignore
+ */
+export function isObjectWanted(wanted, settings) {
+	if (wanted === false) {
+		return false;
+	}
+	return typeof wanted !== "function" || Boolean(wanted(settings));
+}
+
+/**
  * Add many children to a container at once, in their draw order when it
  * returns: auto-sort and auto-depth are off while they are added (each
  * child's `z` is its own, and one sort is enough), and the sort is done now.

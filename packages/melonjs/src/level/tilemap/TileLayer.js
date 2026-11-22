@@ -18,9 +18,13 @@ import {
 } from "./constants.js";
 import {
 	applyLayerDefinition,
+	enterParallax,
+	leaveParallax,
 	parallaxBounds,
-	parallaxPlacement,
+	parallaxFrame,
 	readParallax,
+	tellAncestorsOfDrawArea,
+	untellAncestorsOfDrawArea,
 	viewStart,
 } from "./layer.js";
 import Tile from "./Tile.js";
@@ -56,7 +60,7 @@ const DIAGONAL_NOT_SQUARE = "a tile that is not square, flipped diagonally";
 
 // where the view starts in a layer's coordinates, while it is drawn
 const VIEW_START = { x: 0, y: 0 };
-const PLACE = { x: 0, y: 0, scale: 1 };
+const FRAME = parallaxFrame();
 // the area an offset camera shows, handed to the tile renderers in its place
 // (made on first use)
 let viewRect;
@@ -511,16 +515,7 @@ export default class TileLayer extends Renderable {
 		// afresh: a layer taken out of a container and put back is
 		// activated again
 		this.animatedTilesets = [];
-		// A container with a size of its own (one a level was loaded into)
-		// is in view by its bounds, before its children are asked: each one
-		// the layer is in is told that the layer can draw outside them (its
-		// tiles' reach, its offset, an infinite map's first chunks)
-		/** @ignore */
-		this._toldAncestors = [];
-		for (let node = this.ancestor; node; node = node.ancestor) {
-			(node._drawPast ??= new Set()).add(this);
-			this._toldAncestors.push(node);
-		}
+		tellAncestorsOfDrawArea(this);
 		if (this.tilesets) {
 			const tileset = this.tilesets.tilesets;
 			for (let i = 0; i < tileset.length; i++) {
@@ -1131,10 +1126,7 @@ export default class TileLayer extends Renderable {
 		this._activeRenderer?.releaseTileLayer?.(this);
 		this._activeRenderer = undefined;
 		this.animatedTilesets = [];
-		for (const node of this._toldAncestors ?? []) {
-			node._drawPast?.delete(this);
-		}
-		this._toldAncestors = undefined;
+		untellAncestorsOfDrawArea(this);
 		// keep canvasRenderer for reuse — dropping the reference would leak
 		// event listeners registered by CanvasRenderer's constructor
 	}
@@ -1208,40 +1200,69 @@ export default class TileLayer extends Renderable {
 	 * @returns {Tile} the tile object
 	 */
 	setTile(tile, x, y) {
+		const slot = this._writeCell(
+			x,
+			y,
+			tile.tileId & GID_MASK,
+			flipMaskFromTile(tile),
+			"setTile",
+		);
+		if (slot >= 0 && this.cachedTile !== null) {
+			this.cachedTile[slot] = tile;
+		}
+		return tile;
+	}
+
+	/**
+	 * Write a cell: the tile id and the flips, with everything that has to
+	 * follow a change of the layer's data. What `setTile`, `setCell` and
+	 * `clearTile` have in common.
+	 * @param {number} x - column, in the map's tile coordinates
+	 * @param {number} y - row, in the map's tile coordinates
+	 * @param {number} gid - global tile id, without flip bits; 0 for an empty cell
+	 * @param {number} flipMask - the tile's flips
+	 * @param {string} caller - the public method, for the warning
+	 * @returns {number} the cell's slot in the layer, or -1 outside the layer (nothing written)
+	 * @ignore
+	 * @internal
+	 */
+	_writeCell(x, y, gid, flipMask, caller) {
 		x = Math.floor(x);
 		y = Math.floor(y);
 		const cx = x - this.startx;
 		const cy = y - this.starty;
 		if (cx < 0 || cx >= this.cols || cy < 0 || cy >= this.rows) {
-			return tile;
+			return -1;
 		}
 		const slot = cy * this.cols + cx;
 		const idx = slot * 2;
-		const cleanGid = tile.tileId & GID_MASK;
 		// `layerData` is a Uint16Array; writes silently truncate above
-		// 0xFFFF. Warn once per layer so a runtime `setTile` with a
-		// GID >= 65536 doesn't corrupt the cell undetected.
-		if (cleanGid > 0xffff) {
+		// 0xFFFF. Warn once so a GID >= 65536 doesn't corrupt the cell
+		// undetected.
+		if (gid > 0xffff) {
 			warnOnce(
-				"melonJS: setTile received GID " +
-					cleanGid +
+				"melonJS: " +
+					caller +
+					" received GID " +
+					gid +
 					" which exceeds the 16-bit cell capacity (max 65535). Tile will be truncated and render incorrectly.",
 			);
 		}
-		this.layerData[idx] = cleanGid;
-		this.layerData[idx + 1] = flipMaskFromTile(tile);
+		this.layerData[idx] = gid;
+		this.layerData[idx + 1] = gid === 0 ? 0 : flipMask;
 		if (this.cachedTile !== null) {
-			this.cachedTile[slot] = tile;
+			// read again from the cell when it is next asked for
+			this.cachedTile[slot] = null;
 		}
 		this.dataVersion++;
 		this.isDirty = true;
 		this._preRenderCell(x, y);
 		// whichever way the layer is drawn now: it may be asked for the
 		// shader path again
-		if (this._shaderFit === true) {
-			this._keepShaderEligible(cleanGid, this.layerData[idx + 1]);
+		if (gid !== 0 && this._shaderFit === true) {
+			this._keepShaderEligible(gid, flipMask);
 		}
-		return tile;
+		return slot;
 	}
 
 	/**
@@ -1261,39 +1282,7 @@ export default class TileLayer extends Renderable {
 	 * }
 	 */
 	setCell(x, y, gid, flipMask = 0) {
-		x = Math.floor(x);
-		y = Math.floor(y);
-		const cx = x - this.startx;
-		const cy = y - this.starty;
-		if (cx < 0 || cx >= this.cols || cy < 0 || cy >= this.rows) {
-			return;
-		}
-		const slot = cy * this.cols + cx;
-		const idx = slot * 2;
-		// `layerData` is a Uint16Array; writes silently truncate above
-		// 0xFFFF. Warn once so a GID >= 65536 doesn't corrupt the cell
-		// undetected.
-		if (gid > 0xffff) {
-			warnOnce(
-				"melonJS: setCell received GID " +
-					gid +
-					" which exceeds the 16-bit cell capacity (max 65535). Tile will be truncated and render incorrectly.",
-			);
-		}
-		this.layerData[idx] = gid;
-		this.layerData[idx + 1] = gid === 0 ? 0 : flipMask & 7;
-		if (this.cachedTile !== null) {
-			// read again from the cell when it is next asked for
-			this.cachedTile[slot] = null;
-		}
-		this.dataVersion++;
-		this.isDirty = true;
-		this._preRenderCell(x, y);
-		// whichever way the layer is drawn now: it may be asked for the
-		// shader path again
-		if (gid !== 0 && this._shaderFit === true) {
-			this._keepShaderEligible(gid, this.layerData[idx + 1]);
-		}
+		this._writeCell(x, y, gid, flipMask & 7, "setCell");
 	}
 
 	/**
@@ -1384,24 +1373,7 @@ export default class TileLayer extends Renderable {
 	 * });
 	 */
 	clearTile(x, y) {
-		x = Math.floor(x);
-		y = Math.floor(y);
-		const cx = x - this.startx;
-		const cy = y - this.starty;
-		if (cx < 0 || cx >= this.cols || cy < 0 || cy >= this.rows) {
-			return;
-		}
-		// clearing tile
-		const slot = cy * this.cols + cx;
-		const idx = slot * 2;
-		this.layerData[idx] = 0;
-		this.layerData[idx + 1] = 0;
-		if (this.cachedTile !== null) {
-			this.cachedTile[slot] = null;
-		}
-		this.dataVersion++;
-		this.isDirty = true;
-		this._preRenderCell(x, y);
+		this._writeCell(x, y, 0, 0, "clearTile");
 	}
 
 	/**
@@ -1455,33 +1427,25 @@ export default class TileLayer extends Renderable {
 		// cells to draw are the ones the view shows of the layer so placed
 		const parallax = this._parallax;
 		if (parallax !== undefined) {
-			const place = parallaxPlacement(
+			// the layer's first cell is what its renderer draws from
+			const origin = this._cellOrigin(vector2dPool.get());
+			const frame = enterParallax(
+				renderer,
 				parallax,
 				start.x,
 				start.y,
 				rect.width,
 				rect.height,
-				PLACE,
+				origin.x + movedX,
+				origin.y + movedY,
+				FRAME,
 			);
-			const scale = place.scale;
-			// the layer's first cell, from the parallax's origin
-			const origin = this._cellOrigin(vector2dPool.get());
-			const x = origin.x + movedX - parallax.originX;
-			const y = origin.y + movedY - parallax.originY;
 			vector2dPool.release(origin);
 			cellRect ??= new Rect(0, 0, 0, 0);
-			cellRect.pos.set(
-				(start.x - place.x) / scale - x,
-				(start.y - place.y) / scale - y,
-			);
-			cellRect.setSize(rect.width / scale, rect.height / scale);
-			renderer.translate(place.x, place.y);
-			renderer.scale(scale, scale);
-			renderer.translate(x, y);
+			cellRect.pos.set(frame.viewX, frame.viewY);
+			cellRect.setSize(frame.viewWidth, frame.viewHeight);
 			renderer.drawTileLayer(this, cellRect);
-			renderer.translate(-x, -y);
-			renderer.scale(1 / scale, 1 / scale);
-			renderer.translate(-place.x, -place.y);
+			leaveParallax(renderer, frame);
 			return;
 		}
 		if (

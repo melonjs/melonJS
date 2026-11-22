@@ -275,6 +275,29 @@ export function createObjectTile(
 }
 
 /**
+ * draw a renderable a box holds, placed from the box's top left corner
+ * @param renderer - the renderer
+ * @param box - the box
+ * @param child - what it holds, if anything
+ * @param viewport - the view being drawn
+ */
+function drawInside(
+	renderer: Renderer,
+	box: Renderable,
+	child: Renderable | undefined,
+	viewport: unknown,
+) {
+	if (child === undefined) {
+		return;
+	}
+	renderer.translate(box.pos.x, box.pos.y);
+	child.preDraw(renderer);
+	child.draw(renderer, viewport as never);
+	child.postDraw(renderer);
+	renderer.translate(-box.pos.x, -box.pos.y);
+}
+
+/**
  * An entity of a level that the game registered no class for: a box of the
  * entity's size at its place, with its fields, showing the tile LDtk shows
  * it with when it has one. It has no body, and does nothing: it is there to
@@ -334,15 +357,8 @@ export class LDtkObject extends Renderable {
 	 * @param viewport - the view being drawn
 	 */
 	override draw(renderer: Renderer, viewport?: unknown): void {
-		const sprite = this.tileSprite;
-		if (sprite !== undefined) {
-			// the sprite is placed in the box, the box in the world
-			renderer.translate(this.pos.x, this.pos.y);
-			sprite.preDraw(renderer);
-			sprite.draw(renderer, viewport as never);
-			sprite.postDraw(renderer);
-			renderer.translate(-this.pos.x, -this.pos.y);
-		}
+		// the sprite is placed in the box, the box in the world
+		drawInside(renderer, this, this.tileSprite, viewport);
 	}
 
 	/** let go of the sprite with the entity */
@@ -400,14 +416,7 @@ export class LDtkBackground extends Renderable {
 			renderer.setColor(this.color);
 			renderer.fillRect(this.pos.x, this.pos.y, this.width, this.height);
 		}
-		const image = this.image;
-		if (image !== undefined) {
-			renderer.translate(this.pos.x, this.pos.y);
-			image.preDraw(renderer);
-			image.draw(renderer, viewport as never);
-			image.postDraw(renderer);
-			renderer.translate(-this.pos.x, -this.pos.y);
-		}
+		drawInside(renderer, this, this.image, viewport);
 	}
 
 	/** let go of the color and the image with the background */

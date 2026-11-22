@@ -157,7 +157,31 @@ export default class TMXLayerGPURenderer {
 			return;
 		}
 		this.resources.delete(layer);
+		this._drop(resource);
+	}
+
+	/**
+	 * free one of the textures kept here
+	 * @param {object} resource - the texture's resource
+	 * @ignore
+	 * @internal
+	 */
+	_drop(resource) {
+		// Uploads happen via the quad batcher (see `_drawLayer`), so pin
+		// the cleanup to that same batcher rather than whatever happens
+		// to be `currentBatcher` at the time. `currentBatcher` may
+		// legitimately be a `PrimitiveBatcher` (e.g. debug-plugin drew
+		// its quadtree overlay on the previous frame) which has no
+		// `deleteTexture2D` and would crash a reset. Issue #1471.
 		const batcher = this.renderer.batchers.get("quad");
+		// route through the batcher so its `boundTextures` bookkeeping
+		// stays in sync. When no batcher is available (context tear-
+		// down) or the registered "quad" batcher is a user-supplied
+		// custom class that doesn't extend `MaterialBatcher`, we
+		// don't have a clean GL deletion path — still need to free
+		// the unit assignment, since `cache.delete()` only touches
+		// the image→atlas map and would leave the unit slot held
+		// forever otherwise.
 		if (typeof batcher?.deleteTexture2D === "function") {
 			batcher.deleteTexture2D(resource);
 		} else {
@@ -174,35 +198,11 @@ export default class TMXLayerGPURenderer {
 	 * @internal
 	 */
 	reset() {
-		// Uploads happen via the quad batcher (see `_drawLayer`), so pin
-		// the cleanup to that same batcher rather than whatever happens
-		// to be `currentBatcher` at reset time. `currentBatcher` may
-		// legitimately be a `PrimitiveBatcher` (e.g. debug-plugin drew
-		// its quadtree overlay on the previous frame) which has no
-		// `deleteTexture2D` and would crash the reset. Issue #1471.
-		const batcher = this.renderer.batchers.get("quad");
-		const cache = this.renderer.cache;
-		const drop = (resource) => {
-			// route through the batcher so its `boundTextures` bookkeeping
-			// stays in sync. When no batcher is available (context tear-
-			// down) or the registered "quad" batcher is a user-supplied
-			// custom class that doesn't extend `MaterialBatcher`, we
-			// don't have a clean GL deletion path — still need to free
-			// the unit assignment, since `cache.delete()` only touches
-			// the image→atlas map and would leave the unit slot held
-			// forever otherwise.
-			if (typeof batcher?.deleteTexture2D === "function") {
-				batcher.deleteTexture2D(resource);
-			} else {
-				cache.freeTextureUnit(resource);
-				cache.delete(resource);
-			}
-		};
 		for (const resource of this.resources.values()) {
-			drop(resource);
+			this._drop(resource);
 		}
 		for (const entry of this.animLookups.values()) {
-			drop(entry.resource);
+			this._drop(entry.resource);
 		}
 		this.resources.clear();
 		this.animLookups.clear();

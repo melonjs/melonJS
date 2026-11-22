@@ -283,6 +283,9 @@ export function worldChecks(
 			// level's own place in the world is taken off
 			expect(grid.valueAtPixel(256 + 16 + 3, 16 + 9)).toBe(0);
 			expect(grid.valueAtPixel(16 + 3, 16 + 9)).toBe(0);
+			// by the level's iid as well, as the world's other methods take it
+			expect(world.getIntGrid(info.iid, "Collisions")).toBe(grid);
+			expect(world.isLoaded(info.iid)).toBe(true);
 			expect(world.getIntGrid("World_Level_0", "nothing")).toBeUndefined();
 			expect(world.getIntGrid("nowhere", "Collisions")).toBeUndefined();
 

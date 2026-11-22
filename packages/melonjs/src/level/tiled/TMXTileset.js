@@ -177,13 +177,7 @@ export default class TMXTileset extends Tileset {
 			if (this.animations.has(tag.from)) {
 				continue;
 			}
-			this.isAnimated = true;
-			this.animations.set(tag.from, {
-				dt: 0,
-				idx: 0,
-				frames: anim,
-				cur: anim[0],
-			});
+			this.setTileAnimation(tag.from, anim);
 		}
 	}
 
@@ -215,20 +209,13 @@ export default class TMXTileset extends Tileset {
 			// the tile's class: `class` in Tiled 1.9, `type` before and since 1.10
 			const tileClass = tile.class ?? tile.type;
 			if (typeof tileClass === "string" && tileClass !== "") {
-				this.tileClasses.set(tileId + this.firstgid, tileClass);
+				this.setTileClass(tileId + this.firstgid, tileClass);
 			}
 
 			// parse animation frames
 			if (tile.animation) {
-				this.isAnimated = true;
-				const anim = tile.animation;
 				// key by the tile's own local id, not the first frame's tileid
-				this.animations.set(tileId, {
-					dt: 0,
-					idx: 0,
-					frames: anim,
-					cur: anim[0],
-				});
+				this.setTileAnimation(tileId, tile.animation);
 			}
 
 			// set tile properties, if any

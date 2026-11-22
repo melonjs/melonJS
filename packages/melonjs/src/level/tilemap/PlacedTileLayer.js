@@ -2,9 +2,13 @@ import { boundsPool } from "../../physics/bounds.ts";
 import Renderable from "../../renderable/renderable.js";
 import {
 	applyLayerDefinition,
+	enterParallax,
+	leaveParallax,
 	parallaxBounds,
-	parallaxPlacement,
+	parallaxFrame,
 	readParallax,
+	tellAncestorsOfDrawArea,
+	untellAncestorsOfDrawArea,
 	viewStart,
 } from "./layer.js";
 
@@ -18,7 +22,7 @@ import {
 
 // where the view starts in a layer's coordinates, while it is drawn
 const VIEW_START = { x: 0, y: 0 };
-const PLACE = { x: 0, y: 0, scale: 1 };
+const FRAME = parallaxFrame();
 
 // what a list grows by, in tiles
 const GROW = 64;
@@ -298,33 +302,33 @@ export default class PlacedTileLayer extends Renderable {
 		}
 		// where the view starts, in the coordinates the tiles are in
 		const start = viewStart(this, rect, VIEW_START);
-		// the frame the layer is drawn in: the world's, or the one its
-		// parallax gives for this view, scaled from the parallax's origin
-		let frameX = 0;
-		let frameY = 0;
-		let scale = 1;
-		let originX = this.pos.x;
-		let originY = this.pos.y;
+		// The tiles are drawn from the layer's place: in the world, or in
+		// the frame its parallax gives for this view. Either way the view is
+		// taken in the tiles' own coordinates, to draw the ones in it.
 		const parallax = this._parallax;
+		let viewX = start.x - this.pos.x;
+		let viewY = start.y - this.pos.y;
+		let viewRight = viewX + rect.width;
+		let viewBottom = viewY + rect.height;
 		if (parallax !== undefined) {
-			const place = parallaxPlacement(
+			const frame = enterParallax(
+				renderer,
 				parallax,
 				start.x,
 				start.y,
 				rect.width,
 				rect.height,
-				PLACE,
+				this.pos.x,
+				this.pos.y,
+				FRAME,
 			);
-			frameX = place.x;
-			frameY = place.y;
-			scale = place.scale;
-			originX -= parallax.originX;
-			originY -= parallax.originY;
+			viewX = frame.viewX;
+			viewY = frame.viewY;
+			viewRight = viewX + frame.viewWidth;
+			viewBottom = viewY + frame.viewHeight;
+		} else {
+			renderer.translate(this.pos.x, this.pos.y);
 		}
-		const viewX = (start.x - frameX) / scale - originX;
-		const viewY = (start.y - frameY) / scale - originY;
-		const viewRight = viewX + rect.width / scale;
-		const viewBottom = viewY + rect.height / scale;
 
 		const tileset = this.tileset;
 		const firstgid = tileset.firstgid;
@@ -339,11 +343,6 @@ export default class PlacedTileLayer extends Renderable {
 		const baseAlpha = renderer.globalAlpha();
 		let alpha = 1;
 
-		if (parallax !== undefined) {
-			renderer.translate(frameX, frameY);
-			renderer.scale(scale, scale);
-		}
-		renderer.translate(originX, originY);
 		for (let i = 0; i < count; i++) {
 			const x = pos[i * 2] + offsetX;
 			const y = pos[i * 2 + 1] + offsetY;
@@ -365,10 +364,10 @@ export default class PlacedTileLayer extends Renderable {
 		if (alpha !== 1) {
 			renderer.setGlobalAlpha(baseAlpha);
 		}
-		renderer.translate(-originX, -originY);
 		if (parallax !== undefined) {
-			renderer.scale(1 / scale, 1 / scale);
-			renderer.translate(-frameX, -frameY);
+			leaveParallax(renderer, FRAME);
+		} else {
+			renderer.translate(-this.pos.x, -this.pos.y);
 		}
 	}
 
@@ -413,21 +412,13 @@ export default class PlacedTileLayer extends Renderable {
 	 * @ignore
 	 */
 	onActivateEvent() {
-		/** @ignore */
-		this._toldAncestors = [];
-		for (let node = this.ancestor; node; node = node.ancestor) {
-			(node._drawPast ??= new Set()).add(this);
-			this._toldAncestors.push(node);
-		}
+		tellAncestorsOfDrawArea(this);
 	}
 
 	/**
 	 * @ignore
 	 */
 	onDeactivateEvent() {
-		for (const node of this._toldAncestors ?? []) {
-			node._drawPast?.delete(this);
-		}
-		this._toldAncestors = undefined;
+		untellAncestorsOfDrawArea(this);
 	}
 }

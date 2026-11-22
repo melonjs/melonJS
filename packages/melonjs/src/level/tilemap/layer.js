@@ -193,6 +193,123 @@ export function parallaxPlacement(
 	return out;
 }
 
+/**
+ * the frame a layer with a parallax is drawn in for a view, kept between
+ * {@link enterParallax} and {@link leaveParallax}
+ * @typedef {object} ParallaxFrame
+ * @property {number} x - where the frame is, across
+ * @property {number} y - where the frame is, down
+ * @property {number} scale - its scale
+ * @property {number} originX - where the layer's own (0, 0) is in the frame
+ * @property {number} originY - where the layer's own (0, 0) is in the frame
+ * @property {number} viewX - the view in the layer's own coordinates: its left
+ * @property {number} viewY - its top
+ * @property {number} viewWidth - its width
+ * @property {number} viewHeight - its height
+ * @ignore
+ */
+
+/**
+ * a frame to hand {@link enterParallax}
+ * @returns {ParallaxFrame} the frame
+ * @ignore
+ */
+export function parallaxFrame() {
+	return {
+		x: 0,
+		y: 0,
+		scale: 1,
+		originX: 0,
+		originY: 0,
+		viewX: 0,
+		viewY: 0,
+		viewWidth: 0,
+		viewHeight: 0,
+	};
+}
+
+/**
+ * Start drawing a layer with a parallax: the renderer is moved and scaled
+ * to where the parallax puts the layer for this view, so that the layer
+ * draws in its own coordinates, and the view is given in those coordinates,
+ * to tell what of the layer is in it. {@link leaveParallax} undoes it.
+ * @param {Renderer} renderer - the renderer
+ * @param {LayerParallax} parallax - the layer's parallax
+ * @param {number} viewX - where the view starts, across
+ * @param {number} viewY - where the view starts, down
+ * @param {number} viewWidth - the view's width
+ * @param {number} viewHeight - the view's height
+ * @param {number} x - where the layer's own (0, 0) is with no parallax
+ * @param {number} y - where the layer's own (0, 0) is with no parallax
+ * @param {ParallaxFrame} frame - takes the frame
+ * @returns {ParallaxFrame} `frame`
+ * @ignore
+ */
+export function enterParallax(
+	renderer,
+	parallax,
+	viewX,
+	viewY,
+	viewWidth,
+	viewHeight,
+	x,
+	y,
+	frame,
+) {
+	parallaxPlacement(parallax, viewX, viewY, viewWidth, viewHeight, frame);
+	const scale = frame.scale;
+	frame.originX = x - parallax.originX;
+	frame.originY = y - parallax.originY;
+	frame.viewX = (viewX - frame.x) / scale - frame.originX;
+	frame.viewY = (viewY - frame.y) / scale - frame.originY;
+	frame.viewWidth = viewWidth / scale;
+	frame.viewHeight = viewHeight / scale;
+	renderer.translate(frame.x, frame.y);
+	renderer.scale(scale, scale);
+	renderer.translate(frame.originX, frame.originY);
+	return frame;
+}
+
+/**
+ * put the renderer back where {@link enterParallax} found it
+ * @param {Renderer} renderer - the renderer
+ * @param {ParallaxFrame} frame - the frame it gave
+ * @ignore
+ */
+export function leaveParallax(renderer, frame) {
+	renderer.translate(-frame.originX, -frame.originY);
+	renderer.scale(1 / frame.scale, 1 / frame.scale);
+	renderer.translate(-frame.x, -frame.y);
+}
+
+/**
+ * A container with a size of its own (one a level was loaded into) is in
+ * view by its bounds, before its children are asked. A layer that can draw
+ * outside them (its tiles' reach, its offset, an infinite map's first
+ * chunks, a parallax) tells each container it is in, when it is activated.
+ * @param {Renderable} layer - the layer
+ * @ignore
+ */
+export function tellAncestorsOfDrawArea(layer) {
+	layer._toldAncestors = [];
+	for (let node = layer.ancestor; node; node = node.ancestor) {
+		(node._drawPast ??= new Set()).add(layer);
+		layer._toldAncestors.push(node);
+	}
+}
+
+/**
+ * the layer is deactivated: the containers it told forget it
+ * @param {Renderable} layer - the layer
+ * @ignore
+ */
+export function untellAncestorsOfDrawArea(layer) {
+	for (const node of layer._toldAncestors ?? []) {
+		node._drawPast?.delete(layer);
+	}
+	layer._toldAncestors = undefined;
+}
+
 const PLACE = { x: 0, y: 0, scale: 1 };
 const START = { x: 0, y: 0 };
 

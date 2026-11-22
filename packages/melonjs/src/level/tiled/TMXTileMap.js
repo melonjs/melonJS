@@ -6,7 +6,7 @@ import Container from "../../renderable/container.js";
 import ImageLayer from "../../renderable/imagelayer.js";
 import { checkVersion } from "../../utils/utils.ts";
 import { isCollisionLayerName, markWorldShape } from "../tilemap/collision.js";
-import { addLevelToContainer } from "../tilemap/populate.js";
+import { addLevelToContainer, isObjectWanted } from "../tilemap/populate.js";
 import { releaseViewport } from "../tilemap/viewport.js";
 import { TILED_SUPPORTED_VERSION } from "./constants.js";
 import { getNewTMXRenderer } from "./renderer/autodetect.js";
@@ -30,6 +30,7 @@ import {
 	propagateBlendMode,
 	resolveEmbeddedImage,
 	tiledBlendMode,
+	tiledParallaxFactor,
 } from "./TMXUtils.js";
 
 /**
@@ -121,8 +122,8 @@ function readImageLayer(map, data, z) {
 	// Tiled 1.8+ parallax origin (map-level, baked into layer offset)
 	const pox = +(map.data.parallaxoriginx ?? 0);
 	const poy = +(map.data.parallaxoriginy ?? 0);
-	const ratioX = +(data.parallaxx ?? 1.0);
-	const ratioY = +(data.parallaxy ?? 1.0);
+	const ratioX = tiledParallaxFactor(data.parallaxx);
+	const ratioY = tiledParallaxFactor(data.parallaxy);
 	const ox = +(data.offsetx ?? data.x ?? 0) + pox * ratioX;
 	const oy = +(data.offsety ?? data.y ?? 0) + poy * ratioY;
 
@@ -639,10 +640,12 @@ export default class TMXTileMap {
 			for (let o = 0; o < group.objects.length; o++) {
 				const settings = group.objects[o];
 
-				// an object the game does not want is left out
+				// An object the game does not want is left out. A tile layer
+				// of a group layer is listed with the group's objects: it is
+				// a layer, and is added whatever the choice of objects
 				if (
-					wanted === false ||
-					(typeof wanted === "function" && !wanted(settings))
+					!(settings instanceof TMXLayer) &&
+					!isObjectWanted(wanted, settings)
 				) {
 					continue;
 				}

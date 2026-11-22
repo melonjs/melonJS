@@ -36,10 +36,9 @@ export interface Traveller extends Renderable {
  *
  * It is the engine's `Trigger`: an area the player touches, with a
  * transition of the screen. A trigger loads a level; this one moves the
- * player within the world instead, behind the same transition. What the
- * transition is comes from the entity as a trigger's does from its
- * settings: a field named `transition`, `duration`, `shape` or `center` set
- * on the entity in LDtk would change it.
+ * player within the world instead, behind a mask closing as the trigger's
+ * settings say. They come from the entity: a field named `duration`,
+ * `shape`, `center` or `invert` set on it in LDtk changes the mask.
  */
 export class Teleport extends Trigger {
 	/** the entity LDtk's `EntityRef` field points at */
@@ -128,10 +127,16 @@ export class Teleport extends Trigger {
 		sounds.teleport();
 
 		const viewport = this.parentApp.viewport;
-		// the trigger's own transition: closed, then opened the same way
+		// The trigger's own transition, as its settings give it ("touching"
+		// is whoever took the teleport): closed, then opened the same way.
 		const hide = new MaskEffect(viewport, {
-			shape: traveller,
-			center: traveller,
+			shape:
+				this.transitionShape === "touching" ? traveller : this.transitionShape,
+			center:
+				this.transitionCenter === "touching"
+					? traveller
+					: this.transitionCenter,
+			invert: this.transitionInvert,
 			color: this.color,
 			duration: this.duration,
 			direction: "hide",

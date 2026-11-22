@@ -670,7 +670,10 @@ function trackRoom(app, x, y) {
   entities whose definition has "Add to table of content" checked in LDtk,
   each with its `level`, its `x` / `y` in the world, its size and the fields
   listed with it;
-- `getTileData` / `getTileTags` for a tile's custom data and enum tags;
+- `getTileData` / `getTileTags` for a tile's custom data and enum tags, by
+  LDtk's own tile ids. From a tile of a level they are its properties, as
+  for a Tiled tile: `tile.tileset.getTileProperties(tile.tileId)` gives
+  `{ customData, tags }`;
 - `project.json`, the file itself. It is read as LDtk's JSON schema for
   games defines it (1.x): the `LDtk*Json` types name every field of it, so
   `project.json` and an entity's `source` are typed down to the file. Find

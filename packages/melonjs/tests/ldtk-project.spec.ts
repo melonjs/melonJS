@@ -8,6 +8,7 @@ import {
 	LDtkWorld,
 	level,
 	loader,
+	type PlacedTileLayer,
 	registerObjectClass,
 	Trigger,
 	video,
@@ -444,6 +445,37 @@ describe("an LDtk project made for the test", () => {
 		expect(project.getTileTags("Tiles", 0)).toEqual(["Solid"]);
 		expect(project.getTileTags("Tiles", 2)).toEqual([]);
 		expect(project.getTileTags("No such tileset", 0)).toEqual([]);
+	});
+
+	it("gives them from a tile of a level too, as a tileset gives a Tiled tile's properties", async () => {
+		await enter(app, "extras:Far");
+		// a layer leads to its tileset (a `TileLayer`'s tile does too:
+		// `layer.cellAt(col, row).tileset`)
+		const [far] = app.world.getChildByName("Far") as PlacedTileLayer[];
+		const tileset = far.tileset;
+		const properties = (gid: number) => {
+			return tileset.getTileProperties(gid) as
+				| { customData?: string; tags: string[] }
+				| undefined;
+		};
+		// (the test's tileset has neither padding nor spacing: a tile's id
+		// in it is LDtk's)
+		const first = tileset.firstgid;
+		expect(properties(first + 1)).toEqual({ tags: ["Solid"] });
+		expect(properties(first + 5)).toEqual({
+			customData: '{"damage": 2}',
+			tags: ["Solid", "Hazard"],
+		});
+		expect(properties(first + 3)).toEqual({ customData: "slippery", tags: [] });
+		expect(properties(first + 2)).toBeUndefined();
+		// what the project says of the same tiles
+		const project = loader.getLDtk("extras") as LDtkProject;
+		expect(properties(first + 5)?.customData).toBe(
+			project.getTileData("Tiles", 5),
+		);
+		expect(properties(first + 5)?.tags).toEqual(
+			project.getTileTags("Tiles", 5),
+		);
 	});
 
 	it("gives a level's fields, an empty one as null", async () => {

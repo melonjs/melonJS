@@ -15,14 +15,18 @@ import { applyObjectOpacity } from "../tiled/TMXUtils.js";
 import { isCollisionLayerName, markWorldShape } from "../tilemap/collision.js";
 import type { LayerParallax } from "../tilemap/layer.js";
 import PlacedTileLayer from "../tilemap/PlacedTileLayer.js";
-import { addLevelToContainer, populateContainer } from "../tilemap/populate.js";
+import {
+	addLevelToContainer,
+	isObjectWanted,
+	populateContainer,
+} from "../tilemap/populate.js";
 import TileLayer, { FLIP_H_BIT, FLIP_V_BIT } from "../tilemap/TileLayer.js";
 import Tileset from "../tilemap/Tileset.js";
 import TilesetGroup from "../tilemap/TilesetGroup.js";
 import { releaseViewport } from "../tilemap/viewport.js";
 import { IntGrid } from "./intgrid.ts";
 import type { LDtkLevelInfo, LDtkProject, LDtkWorldInfo } from "./project.ts";
-import { fieldValues } from "./project.ts";
+import { entityLeft, entityTop, fieldValues } from "./project.ts";
 import {
 	LDtkBackground,
 	LDtkObject,
@@ -38,6 +42,7 @@ import type {
 	LDtkLayerInstance,
 	LDtkTile,
 	LDtkTileRect,
+	LDtkTilesetDef,
 } from "./types.ts";
 
 /** how a level or a world of an LDtk project is added to the game */
@@ -109,6 +114,56 @@ const RESERVED_SETTINGS = new Set(["tileRect", "color"]);
 
 /** the draw orders kept for each layer of LDtk: a layer can become several */
 const Z_PER_LAYER = 32;
+/**
+ * the tiles of a layer: the ones placed by hand on a Tiles layer, the ones
+ * its rules placed on an AutoLayer or an IntGrid layer
+ * @param layer - the layer
+ * @returns its tiles
+ */
+const tilesOf = (layer: LDtkLayerInstance): LDtkTile[] => {
+	return layer.__type === "Tiles" ? layer.gridTiles : layer.autoLayerTiles;
+};
+
+/**
+ * What LDtk keeps for a tile, its custom data and its enum tags, as the
+ * tile's properties in the tileset: read from a tile of a layer as a Tiled
+ * tile's are, `tile.tileset.getTileProperties(tile.tileId)`, which gives
+ * `{ customData, tags }`.
+ * @param tileset - the tileset built for the definition
+ * @param def - LDtk's definition of it
+ */
+const describeTiles = (tileset: Tileset, def: LDtkTilesetDef) => {
+	const described = new Map<number, { customData?: string; tags: string[] }>();
+	const of = (tileId: number) => {
+		let properties = described.get(tileId);
+		if (properties === undefined) {
+			properties = { tags: [] };
+			described.set(tileId, properties);
+		}
+		return properties;
+	};
+	for (const entry of def.customData ?? []) {
+		of(entry.tileId).customData = entry.data;
+	}
+	for (const tag of def.enumTags ?? []) {
+		for (const tileId of tag.tileIds) {
+			of(tileId).tags.push(tag.enumValueId);
+		}
+	}
+	// LDtk numbers a tileset's tiles its own way: the tileset's id for one
+	// is found by where the tile is in the image
+	const step = def.tileGridSize + def.spacing;
+	for (const [tileId, properties] of described) {
+		const id = tileset.tileIdAt(
+			def.padding + (tileId % def.__cWid) * step,
+			def.padding + Math.floor(tileId / def.__cWid) * step,
+		);
+		if (id >= 0) {
+			tileset.setTileProperty(tileset.firstgid + id, properties);
+		}
+	}
+};
+
 /** the draw orders kept for each depth of a world */
 const Z_PER_DEPTH = 4096;
 
@@ -213,6 +268,7 @@ class LevelBuilder {
 				spacing: def.spacing,
 				margin: def.padding,
 			});
+			describeTiles(tileset, def);
 			entry = { tileset, group: new TilesetGroup([tileset]) };
 		}
 		this.tilesets.set(uid, entry);
@@ -396,8 +452,7 @@ class LevelBuilder {
 			const z = zBase + 1 + (layers.length - 1 - i) * Z_PER_LAYER;
 			const x = originX + layer.__pxTotalOffsetX;
 			const y = originY + layer.__pxTotalOffsetY;
-			const tiles =
-				layer.__type === "Tiles" ? layer.gridTiles : layer.autoLayerTiles;
+			const tiles = tilesOf(layer);
 
 			if (layer.intGridCsv.length > 0) {
 				this.buildIntGrid(
@@ -423,7 +478,7 @@ class LevelBuilder {
 					const entity = layer.entityInstances[e];
 					const settings = this.objectSettings(info, layer, entity, x, y, z);
 					// one the game does not want is left out
-					if (typeof wanted === "function" && !wanted(settings)) {
+					if (!isObjectWanted(wanted, settings)) {
 						continue;
 					}
 					// a persistent one that stayed when its level left is in
@@ -577,8 +632,7 @@ class LevelBuilder {
 		if (entry === null) {
 			return;
 		}
-		const tiles =
-			layer.__type === "Tiles" ? layer.gridTiles : layer.autoLayerTiles;
+		const tiles = tilesOf(layer);
 		const size = layer.__gridSize;
 		// LDtk names a tile by where it is in the image, and numbers the
 		// tiles its own way: the tileset's id for it is found by its place
@@ -759,8 +813,8 @@ class LevelBuilder {
 			id: entity.iid,
 			iid: entity.iid,
 			// LDtk places an entity by its pivot; a box is placed by its corner
-			x: x + entity.px[0] - entity.__pivot[0] * entity.width,
-			y: y + entity.px[1] - entity.__pivot[1] * entity.height,
+			x: entityLeft(entity, x),
+			y: entityTop(entity, y),
 			z,
 			width: entity.width,
 			height: entity.height,
@@ -855,7 +909,7 @@ abstract class LDtkMap {
 	/** @ignore */
 	protected builder: LevelBuilder | undefined;
 	/** @ignore */
-	protected unfollow: (() => void) | undefined;
+	protected follow: (() => void) | undefined;
 	/** @ignore */
 	protected gridRenderer: TMXOrthogonalRenderer | undefined;
 	/**
@@ -932,19 +986,13 @@ abstract class LDtkMap {
 	) {
 		const bounds =
 			options.setViewportBounds !== false ? this.getBounds() : undefined;
-		const follow = addLevelToContainer(container, {
+		this.follow = addLevelToContainer(container, {
 			backgroundColor,
 			add,
 			width: this.width,
 			height: this.height,
 			bounds,
 		}) as (() => void) | undefined;
-		this.unfollow =
-			follow === undefined
-				? undefined
-				: () => {
-						releaseViewport(follow);
-					};
 	}
 
 	/**
@@ -952,8 +1000,8 @@ abstract class LDtkMap {
 	 * level is loaded
 	 */
 	destroy(): void {
-		this.unfollow?.();
-		this.unfollow = undefined;
+		releaseViewport(this.follow);
+		this.follow = undefined;
 		this.builder = undefined;
 		this.container = undefined;
 		this.layers = [];
@@ -1094,12 +1142,21 @@ export class LDtkWorld extends LDtkMap {
 		}
 	}
 
-	private find(identifier: string): LDtkLevelInfo {
-		const level = this.info.levels.find((candidate) => {
+	/**
+	 * a level of this world, by its identifier in LDtk or its iid
+	 * @param identifier - the identifier, or the iid
+	 * @returns the level, or undefined if the world has none of that name
+	 */
+	private levelOf(identifier: string): LDtkLevelInfo | undefined {
+		return this.info.levels.find((candidate) => {
 			return (
 				candidate.identifier === identifier || candidate.iid === identifier
 			);
 		});
+	}
+
+	private find(identifier: string): LDtkLevelInfo {
+		const level = this.levelOf(identifier);
 		if (level === undefined) {
 			throw new Error(`melonJS LDtk: no level "${identifier}" in ${this.name}`);
 		}
@@ -1108,15 +1165,11 @@ export class LDtkWorld extends LDtkMap {
 
 	/**
 	 * whether a level of the world is in the game now
-	 * @param identifier - the level's identifier in LDtk
+	 * @param identifier - the level's identifier in LDtk, or its iid
 	 * @returns true if it is
 	 */
 	isLoaded(identifier: string): boolean {
-		const level = this.info.levels.find((candidate) => {
-			return (
-				candidate.identifier === identifier || candidate.iid === identifier
-			);
-		});
+		const level = this.levelOf(identifier);
 		return level !== undefined && this.loaded.has(level.identifier);
 	}
 
@@ -1130,7 +1183,7 @@ export class LDtkWorld extends LDtkMap {
 
 	/**
 	 * add a level of the world to the game, where LDtk puts it
-	 * @param identifier - the level's identifier in LDtk
+	 * @param identifier - the level's identifier in LDtk, or its iid
 	 * @returns false if it was there already, or the world is not loaded
 	 */
 	loadLevel(identifier: string): boolean {
@@ -1158,7 +1211,7 @@ export class LDtkWorld extends LDtkMap {
 	 * its entities. An entity that is persistent
 	 * ({@link Renderable#isPersistent}), as a player is, stays in the game,
 	 * and is not built again when its level comes back.
-	 * @param identifier - the level's identifier in LDtk
+	 * @param identifier - the level's identifier in LDtk, or its iid
 	 * @returns false if it was not there
 	 */
 	unloadLevel(identifier: string): boolean {
@@ -1265,12 +1318,13 @@ export class LDtkWorld extends LDtkMap {
 
 	/**
 	 * the values of an IntGrid layer of a level in the game
-	 * @param level - the level's identifier in LDtk
+	 * @param level - the level's identifier in LDtk, or its iid
 	 * @param name - the layer's identifier in LDtk
 	 * @returns the grid, or undefined if the level is not in the game or has no such layer
 	 */
 	getIntGrid(level: string, name: string): IntGrid | undefined {
-		return this.loaded.get(level)?.intGrids.get(name);
+		const identifier = this.levelOf(level)?.identifier ?? level;
+		return this.loaded.get(identifier)?.intGrids.get(name);
 	}
 
 	override destroy(): void {
