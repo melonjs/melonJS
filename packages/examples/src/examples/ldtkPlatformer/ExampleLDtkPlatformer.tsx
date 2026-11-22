@@ -27,7 +27,7 @@ export const ExampleLDtkPlatformer = () => {
 				}}
 			>
 				Arrows or WASD to move and climb · Space or X to jump (again in the air)
-				and swim · Up in front of a teleport to take it
+				and swim · Up in front of a teleport to take it · P for the debug panel
 			</div>
 		</>
 	);

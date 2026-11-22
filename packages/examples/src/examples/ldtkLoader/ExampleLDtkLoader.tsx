@@ -3,6 +3,7 @@
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
+import { DebugPanelPlugin } from "@melonjs/debug-plugin";
 import {
 	Application,
 	event,
@@ -14,6 +15,7 @@ import {
 	level,
 	loader,
 	type Pointer,
+	plugin,
 	Renderable,
 	type Renderer,
 	state,
@@ -157,6 +159,9 @@ const createGame = async () => {
 		antiAlias: false,
 	});
 	await app.init();
+
+	// the debug panel, on S: frame times, draw counts, collision shapes
+	plugin.register(DebugPanelPlugin, "debugPanel");
 
 	// an LDtk project is an asset of type "ldtk", and each of its levels a
 	// level of the level director: nothing to register

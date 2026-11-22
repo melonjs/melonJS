@@ -3,9 +3,11 @@
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
+import { DebugPanelPlugin } from "@melonjs/debug-plugin";
 import { GamepadPlugin } from "@melonjs/gamepad-plugin";
 import {
 	Application,
+	input,
 	loader,
 	plugin,
 	registerObjectClass,
@@ -38,6 +40,11 @@ export const createGame = async () => {
 		antiAlias: false,
 	});
 	await app.init();
+
+	// The debug panel: frame times and draw counts, and the collision
+	// shapes drawn over the game (the walls built from the IntGrid layer,
+	// the ladders, the items). On P: the panel's own key, S, climbs down.
+	plugin.register(DebugPanelPlugin, "debugPanel", input.KEY.P);
 
 	// a stick and a button on a touch screen, read as a gamepad
 	plugin.register(GamepadPlugin, "gamepad", { buttons: [{ label: "A" }] });
