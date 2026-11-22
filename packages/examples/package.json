@@ -13,6 +13,7 @@
 	"dependencies": {
 		"@melonjs/debug-plugin": "workspace:*",
 		"@melonjs/gamepad-plugin": "workspace:*",
+		"@melonjs/ldtk-plugin": "workspace:*",
 		"@melonjs/matter-adapter": "workspace:*",
 		"@melonjs/pathfinding-plugin": "workspace:*",
 		"@melonjs/planck-adapter": "workspace:*",

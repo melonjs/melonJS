@@ -145,6 +145,9 @@ importers:
       '@melonjs/gamepad-plugin':
         specifier: workspace:*
         version: link:../gamepad-plugin
+      '@melonjs/ldtk-plugin':
+        specifier: workspace:*
+        version: link:../ldtk-plugin
       '@melonjs/matter-adapter':
         specifier: workspace:*
         version: link:../matter-adapter

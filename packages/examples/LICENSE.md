@@ -268,3 +268,35 @@ glyph coverage thresholded to hard edges and the game's own ramp and outline
 baked in. CC BY-NC-SA 4.0 permits the adaptation and requires it to carry the
 same license, which it does: the same attribution, share-alike and
 non-commercial terms apply to them as to the face they come from.
+
+### `ldtkLoader` example
+
+The twelve project files in `public/assets/ldtk/` (`*.ldtk`, and the level
+files in `SeparateLevelFiles/`) are the sample projects that come with
+**LDtk**, the level editor by Sébastien Benard (Deepnight Games), saved with
+the editor's own "minify JSON" setting and otherwise unchanged:
+
+<https://github.com/deepnight/ldtk/tree/master/app/extraFiles/samples>
+
+LDtk and its samples are released under the **MIT License**, Copyright (c)
+2020 Sébastien Benard - Deepnight Games.
+
+The tileset images in `public/assets/ldtk/atlas/` come with those samples,
+whose own readme credits them as follows:
+
+- **"Cavernas"**, a free texture pack by Adam Saltsman
+  (<https://adamatomic.itch.io/cavernas>): `Cavernas_by_Adam_Saltsman.png`
+- **"SunnyLand"**, a texture pack by Ansimuz
+  (<https://ansimuz.itch.io/sunny-land-pixel-game-art>):
+  `SunnyLand_by_Ansimuz-extended.png`
+- **"Inca"** by Kronbits (<https://kronbits.itch.io/inca-game-assets>):
+  `Inca_front_by_Kronbits-extended.png`, `Inca_back2_by_Kronbits.png`
+- **"Nuclear Blaze"** by Sébastien Benard (<https://deepnight.net>), under
+  **Creative Commons Attribution-ShareAlike 4.0**
+  (<https://creativecommons.org/licenses/by-sa/4.0/>):
+  `NuclearBlaze_by_deepnight.aseprite`
+- `TopDown_by_deepnight.png` and `Beach by deepnight.png`, by Sébastien
+  Benard, distributed with the samples.
+
+Refer to each pack's page for its own terms. The icons LDtk shows entities
+with in the editor are not part of the samples' files and are not used here.

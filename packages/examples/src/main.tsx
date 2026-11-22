@@ -103,6 +103,11 @@ const ExampleIsometricDungeon = lazy(() =>
 		default: m.ExampleIsometricDungeon,
 	})),
 );
+const ExampleLDtkLoader = lazy(() =>
+	import("./examples/ldtkLoader/ExampleLDtkLoader").then((m) => ({
+		default: m.ExampleLDtkLoader,
+	})),
+);
 const ExampleLights = lazy(() =>
 	import("./examples/lights/ExampleLights").then((m) => ({
 		default: m.ExampleLights,
@@ -466,6 +471,14 @@ const examples: {
 		sourceDir: "isometricDungeon",
 		description:
 			"A big isometric Tiled dungeon: depth-sorted walls, flickering wall torches, chests, doors and a locked gate. Walk with the arrow keys or click to move, along paths found by @melonjs/pathfinding-plugin.",
+	},
+	{
+		component: <ExampleLDtkLoader />,
+		label: "LDtk Level Loader",
+		path: "ldtk-level-loader",
+		sourceDir: "ldtkLoader",
+		description:
+			"The twelve sample projects that come with LDtk, loaded as the editor saves them by @melonjs/ldtk-plugin: single levels and whole worlds, auto-layers, stacked tiles, IntGrid layers and entities.",
 	},
 	{
 		component: <ExampleLights />,

@@ -1,4 +1,4 @@
-import { type Application, level, type Renderable, type video } from "melonjs";
+import { type Application, level, type video } from "melonjs";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
 	IntGrid,
@@ -267,11 +267,9 @@ export function worldChecks(
 			expect(world.getEntities()).toHaveLength(8 + 8 + 5);
 
 			// walls within their level's area
-			const walls = (app.world.getChildren() as Renderable[]).filter(
-				(child) => {
-					return child.bodyDef !== undefined;
-				},
-			);
+			const walls = app.world.getChildren().filter((child) => {
+				return child.bodyDef !== undefined;
+			});
 			expect(walls.length).toBeGreaterThan(30);
 			const bounds = project.worlds[0].bounds;
 			for (const wall of walls) {
@@ -289,11 +287,9 @@ export function worldChecks(
 			});
 			expect(world.getEntities("Player")).toEqual([]);
 			expect(world.getEntities()).toHaveLength(8 + 5);
-			const after = (app.world.getChildren() as Renderable[]).filter(
-				(child) => {
-					return child.bodyDef !== undefined;
-				},
-			);
+			const after = app.world.getChildren().filter((child) => {
+				return child.bodyDef !== undefined;
+			});
 			expect(after.length).toBeLessThan(before);
 			expect(
 				after.every((wall) => {
