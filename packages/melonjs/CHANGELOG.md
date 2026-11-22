@@ -3,22 +3,22 @@
 ## [20.18.0] (melonJS 2) - _unreleased_
 
 ### Added
-- LDtk: levels made with the [LDtk](https://ldtk.io) editor load from the `.ldtk` file as saved: an asset of type `"ldtk"`, then `level.load("<asset>:<level>")`, or `level.load("<asset>")` for the whole world. Tiles, IntGrid walls, entities, parallax layers and worlds streamed level by level (`streamAround`), one depth at a time
-- Tile maps: a tile layer has a `ratio`, as an `ImageLayer` does (1 scrolls with the level, 0 stays on the screen), and a `parallaxScale`, on every renderer
-- Tile maps: tile layers can be built in code, without a Tiled map, with `TileLayer`, `Tileset`, `TilesetGroup` and `PlacedTileLayer`; `mergeGridRects` covers a grid's cells with few rectangles, for collision bodies
-- Levels: `registerObjectClass` and `registerObjectFactory`, the same as `registerTiledObjectClass` and `registerTiledObjectFactory` under names that fit any level format
-- Levels: `level.load` takes `objects`, to choose which objects of a Tiled map or an LDtk level are built: `false` for none, or a function, `(settings) => !taken.has(settings.id)`
-- Levels: an object built from a level has the level's `id` whatever its class, so `container.getChildByProp("id", id)` finds it
+- LDtk: built-in support for the [LDtk](https://ldtk.io) level format: load a `.ldtk` file as an `"ldtk"` asset, then `level.load("<asset>:<level>")`, or `level.load("<asset>")` for the whole world
+- Tile maps: a tile layer has a `ratio`, as an `ImageLayer` does, and a `parallaxScale`
+- Tile maps: tile layers can be built in code with `TileLayer`, `Tileset`, `TilesetGroup` and `PlacedTileLayer`, plus `mergeGridRects` for collision bodies
+- Levels: `registerObjectClass` and `registerObjectFactory`, new names for `registerTiledObjectClass` and `registerTiledObjectFactory`
+- Levels: `level.load` takes `objects`, to choose which objects of a level are built
+- Levels: an object built from a level carries the level's `id`, so `getChildByProp("id", id)` finds it
 
 ### Fixed
-- TypeScript: an asset's `data` accepts a parsed map object, as documented
+- TypeScript: an asset's `data` accepts a parsed map object
 - Tile maps: a floating tile layer disappeared once the camera moved
-- Tile maps: two tilesets of different tile sizes cut from one image both drew the first one's tiles
-- Tile maps: a tile layer removed while the game runs kept its GPU texture until the next level change
+- Tile maps: two tilesets cut from one image at different tile sizes drew the same tiles
+- Tile maps: a tile layer removed at run time kept its GPU texture until the next level
 - Tiled: a frame drawn right after a level loaded could show its layers back to front
-- Tiled: a tile layer's parallax factor was ignored; it now moves the layer as it moves an image layer (`layer.ratio.set(1, 1)` for a layer that should scroll with the map)
-- Tiled: a `renderMode` custom property on a tile layer was overwritten by the default
-- Tiled: every level load left a viewport-resize handler registered, keeping the old level alive
+- Tiled: a tile layer's parallax factor was ignored (`layer.ratio.set(1, 1)` turns it off)
+- Tiled: a `renderMode` property on a tile layer was ignored
+- Tiled: each level load leaked a viewport-resize handler
 
 ## [20.17.0] (melonJS 2) - _2026-11-22_
 

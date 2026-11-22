@@ -3,8 +3,8 @@
 ## [1.1.1] - _unreleased_
 
 ### Fixed
-- `PathfindingPlugin`: the grid of an LDtk world (melonJS 20.18) is placed where the world is; a world that does not start at the origin had its grid there
-- `Grid.fromTileLayer`: the grid stands where the layer's tiles are drawn when the layer has an offset in Tiled or was moved by its `pos`, which melonJS 20.17 follows when it draws the layer; the grid stayed at the map's origin
+- `PathfindingPlugin`: the grid of an LDtk world (melonJS 20.18) is placed where the world is
+- `Grid.fromTileLayer`: the grid follows a layer's offset in Tiled, and its `pos`
 
 ## [1.1.0] - _2026-11-15_
 
