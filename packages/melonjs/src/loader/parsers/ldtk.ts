@@ -69,9 +69,31 @@ const loadImage = (
 		if (parser(asset, resolve, reject, settings) === 0) {
 			resolve();
 		}
+	}).catch((error: unknown) => {
+		// not kept: the next project to name this image tries again, or
+		// finds the one the game loaded in the meantime
+		images.delete(name);
+		throw new Error(
+			`LDtk project "${project}": its image "${relPath}" could not be loaded (${asset.src})`,
+			{ cause: error },
+		);
 	});
 	images.set(name, { asset, users: new Set([project]), loading });
 	return loading;
+};
+
+/**
+ * a project no longer uses the images loaded for it: each is freed once no
+ * other project does
+ * @param project - the name of the project
+ */
+const releaseImages = (project: string) => {
+	for (const [name, image] of images) {
+		if (image.users.delete(project) && image.users.size === 0) {
+			images.delete(name);
+			unload(image.asset);
+		}
+	}
 };
 
 /**
@@ -113,10 +135,14 @@ const readProject = async (
 						`${asset.name}: level "${entry.identifier}" is in a file of its own (${entry.externalRelPath}), which needs the project loaded from a file`,
 					);
 				}
-				const external = (await fetchData(
-					dir + entry.externalRelPath,
-					"json",
-					settings,
+				const file = dir + entry.externalRelPath;
+				const external = (await fetchData(file, "json", settings).catch(
+					(error: unknown) => {
+						throw new Error(
+							`LDtk project "${asset.name}": the file of its level "${entry.identifier}" could not be loaded (${file})`,
+							{ cause: error },
+						);
+					},
 				)) as LDtkLevelJson;
 				entry.layerInstances = external.layerInstances;
 			}
@@ -136,11 +162,19 @@ const readProject = async (
 				paths.add(entry.bgRelPath);
 			}
 		}
-		await Promise.all(
+		// every image is waited for, loaded or not: a project that fails
+		// then lets go of the ones that did load
+		const results = await Promise.allSettled(
 			[...paths].map((path) => {
 				return loadImage(asset.name, dir, path, settings);
 			}),
 		);
+		for (const result of results) {
+			if (result.status === "rejected") {
+				releaseImages(asset.name);
+				throw result.reason;
+			}
+		}
 	}
 	return new LDtkProject(asset.name, json);
 };
@@ -212,12 +246,6 @@ export function unloadLDtk(asset: LDtkAsset): boolean {
 		level.remove(id);
 		ldtkMaps.delete(id);
 	}
-	for (const [name, image] of images) {
-		image.users.delete(asset.name);
-		if (image.users.size === 0) {
-			images.delete(name);
-			unload(image.asset);
-		}
-	}
+	releaseImages(asset.name);
 	return true;
 }
