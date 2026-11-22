@@ -4,6 +4,10 @@
 
 ### Added
 - Levels: `level.registerFormat(format, { create, loadOptions })` lets a loader for another map editor's files register its levels with the director, which then loads, reloads and steps through them, and forwards their options from a `Trigger`, as it does for a Tiled map. `level.remove(levelId)` is documented
+- Tile maps: `TileLayer`, `Tileset` and `TilesetGroup` build a tile layer in code or from another editor's files, from a plain description (`cols`, `rows`, tile size, an image); `layer.setCell(col, row, gid, flip)` fills it. `TMXLayer`, `TMXTileset` and `TMXTilesetGroup` now extend them, unchanged
+- Tile maps: `PlacedTileLayer` draws a list of tiles placed freely, in order: stacked, off the grid, mirrored, each with its own opacity
+- Tile maps: `mergeGridRects(cols, rows, test)` covers the cells of a grid with few rectangles, for one static body per wall rather than per tile
+- Levels: `registerObjectClass` and `registerObjectFactory` are neutral names for `registerTiledObjectClass` and `registerTiledObjectFactory`; with `hasObjectFactory(name)` and `createLevelObject(settings, map)`, a loader for another format builds its objects from the same registry
 - Loader: `loader.setParser(type, parser, { unload })` lets an asset type of your own free what it kept when its bundle is unloaded or `loader.unload` is given its descriptor
 
 ### Fixed

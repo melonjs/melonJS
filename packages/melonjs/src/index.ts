@@ -23,6 +23,7 @@ import TMXTileMap from "./level/tiled/TMXTileMap.js";
 import TMXTileset from "./level/tiled/TMXTileset.js";
 import TMXTilesetGroup from "./level/tiled/TMXTilesetGroup.js";
 import * as TMXUtils from "./level/tiled/TMXUtils.js";
+import PlacedTileLayer from "./level/tilemap/PlacedTileLayer.js";
 import TileLayer from "./level/tilemap/TileLayer.js";
 import Tileset from "./level/tilemap/Tileset.js";
 import TilesetGroup from "./level/tilemap/TilesetGroup.js";
@@ -177,6 +178,7 @@ export {
 	registerTiledObjectFactory,
 } from "./level/tiled/TMXObjectFactory.js";
 export { mergeGridRects } from "./level/tilemap/grid.js";
+export type { PlacedTile } from "./level/tilemap/PlacedTileLayer.js";
 export type { TilesetDefinition } from "./level/tilemap/Tileset.js";
 export { Light3d } from "./lighting/light3d.ts";
 
@@ -330,6 +332,7 @@ export {
 	ParticleEmitterSettings,
 	PixelateEffect,
 	PixelateTransitionEffect,
+	PlacedTileLayer,
 	PORTABLE_TOPOLOGIES,
 	Pointer,
 	PrimitiveBatcher,
