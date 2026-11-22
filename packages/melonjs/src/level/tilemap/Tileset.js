@@ -21,8 +21,8 @@ const SCRATCH_MATRIX = new Matrix2d();
  * @property {number} [spacing=0] - the space between two tiles, in pixels
  * @property {number} [margin=0] - the space around the tiles, in pixels
  * @property {number} [firstgid=1] - the global id of the tileset's first tile
- * @property {number} [columns] - the tiles per row, when not what the image's width gives
- * @property {number} [tilecount] - the number of tiles, when not what the image's size gives
+ * @property {number} [columns] - the tiles per row the editor counted, to derive the number of tiles from when `tilecount` is not given; it does not change where a tile is in the image
+ * @property {number} [tilecount] - the number of tiles the editor numbered, which sets the tileset's last global id; it does not change where a tile is in the image
  * @property {{x: number, y: number}} [tileoffset] - an offset every tile is drawn with, in pixels
  * @property {string} [class] - a class name, for the game's own use
  * @property {string} [tilerendersize="tile"] - "tile" to draw a tile at its own size, "grid" at the map's cell size
@@ -295,13 +295,28 @@ export default class Tileset {
 		}
 
 		// create a texture atlas for the given tileset
-		this.texture = game.renderer.cache.get(this.image, {
+		const grid = {
 			framewidth: this.tilewidth,
 			frameheight: this.tileheight,
 			margin: this.margin,
 			spacing: this.spacing,
-		});
+		};
+		this.texture = game.renderer.cache.get(this.image, grid);
 		this.atlas = this.texture.getAtlas();
+		// The cache keeps one atlas an image: the first asked for. An image
+		// already cut another way (a second tileset of another tile size on
+		// the same image, a sprite of the whole image made before) would
+		// give this tileset the other one's frames, and every tile the
+		// wrong part of the image. Such a tileset cuts the image itself.
+		if (!this._isOwnGrid(this.atlas)) {
+			this.texture = new TextureAtlas(grid, this.image, false);
+			this.atlas = this.texture.getAtlas();
+		}
+		/**
+		 * the id of each tile by where it is in the image, made on first use
+		 * @ignore
+		 */
+		this._idsByOffset = undefined;
 
 		// the tiles the image holds, counted as Tiled does: whole tiles only,
 		// from the margin, a tile plus the spacing apart (Tiled lets the
@@ -333,6 +348,67 @@ export default class Tileset {
 				`melonJS: tileset '${this.name}' image holds ${computed} tiles, fewer than its tilecount (${tilecount})`,
 			);
 		}
+	}
+
+	/**
+	 * whether an atlas is this tileset's grid: its first two frames are tiles
+	 * of the tileset's size, where its margin and spacing put them
+	 * @param {object} atlas - the atlas dictionary
+	 * @returns {boolean} true if it is
+	 * @ignore
+	 * @internal
+	 */
+	_isOwnGrid(atlas) {
+		const first = atlas[0];
+		if (first === undefined) {
+			// an image too small for one tile: no frame either way
+			return atlas[1] === undefined;
+		}
+		if (
+			first.width !== this.tilewidth ||
+			first.height !== this.tileheight ||
+			first.offset.x !== this.margin ||
+			first.offset.y !== this.margin
+		) {
+			return false;
+		}
+		const second = atlas[1];
+		if (second === undefined) {
+			return true;
+		}
+		// the next tile across, or the first of the next row in an image one
+		// tile wide
+		const step = this.tilewidth + this.spacing;
+		const stepY = this.tileheight + this.spacing;
+		return (
+			second.width === this.tilewidth &&
+			second.height === this.tileheight &&
+			((second.offset.x === this.margin + step &&
+				second.offset.y === this.margin) ||
+				(second.offset.x === this.margin &&
+					second.offset.y === this.margin + stepY))
+		);
+	}
+
+	/**
+	 * The id, within the tileset, of the tile whose top left corner is at a
+	 * point of the tileset's image: for a map format that names a tile by
+	 * where it is in the image, or numbers the tiles another way than row by
+	 * row over the whole tiles the image holds.
+	 * @param {number} x - the tile's left edge in the image, in pixels
+	 * @param {number} y - the tile's top edge in the image, in pixels
+	 * @returns {number} the tile's id (add `firstgid` for its global id), or -1 where no whole tile of the tileset starts
+	 */
+	tileIdAt(x, y) {
+		if (this._idsByOffset === undefined) {
+			this._idsByOffset = new Map();
+			const atlas = this.atlas ?? {};
+			for (let id = 0; atlas[id] !== undefined; id++) {
+				const offset = atlas[id].offset;
+				this._idsByOffset.set(`${offset.x},${offset.y}`, id);
+			}
+		}
+		return this._idsByOffset.get(`${x},${y}`) ?? -1;
 	}
 
 	/**

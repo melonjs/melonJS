@@ -35,6 +35,7 @@ import { splitTiles } from "./split.ts";
 import type {
 	LDtkEntityInstance,
 	LDtkLayerInstance,
+	LDtkTile,
 	LDtkTileRect,
 } from "./types.ts";
 
@@ -198,9 +199,6 @@ class LevelBuilder {
 				tileheight: def.tileGridSize,
 				spacing: def.spacing,
 				margin: def.padding,
-				// as LDtk counts them, so that a tile id names the same tile
-				columns: def.__cWid,
-				tilecount: def.__cWid * def.__cHei,
 			});
 			entry = { tileset, group: new TilesetGroup([tileset]) };
 		}
@@ -497,6 +495,23 @@ class LevelBuilder {
 		const tiles =
 			layer.__type === "Tiles" ? layer.gridTiles : layer.autoLayerTiles;
 		const size = layer.__gridSize;
+		// LDtk names a tile by where it is in the image, and numbers the
+		// tiles its own way: the tileset's id for it is found by its place
+		const tileset = entry.tileset;
+		const ids = new Map<number, number>();
+		const idOf = (tile: LDtkTile) => {
+			let id = ids.get(tile.t);
+			if (id === undefined) {
+				id = tileset.tileIdAt(tile.src[0], tile.src[1]);
+				ids.set(tile.t, id);
+				if (id < 0) {
+					warnOnce(
+						`melonJS LDtk: layer "${layer.__identifier}" has a tile at ${String(tile.src[0])}, ${String(tile.src[1])} of tileset "${tileset.name}" where the image holds no whole tile: it is left out`,
+					);
+				}
+			}
+			return id;
+		};
 		const chunks = splitTiles(
 			tiles,
 			size,
@@ -525,12 +540,15 @@ class LevelBuilder {
 					offsety: y,
 				});
 				for (const tile of chunk.tiles) {
-					grid.setCell(
-						tile.px[0] / size,
-						tile.px[1] / size,
-						tile.t + 1,
-						tile.f & LDTK_FLIPS,
-					);
+					const id = idOf(tile);
+					if (id >= 0) {
+						grid.setCell(
+							tile.px[0] / size,
+							tile.px[1] / size,
+							id + 1,
+							tile.f & LDTK_FLIPS,
+						);
+					}
 				}
 				part = grid;
 			} else {
@@ -550,15 +568,19 @@ class LevelBuilder {
 					opacity,
 					offsetx: x + left,
 					offsety: y + top,
-					tiles: chunk.tiles.map((tile) => {
-						return {
-							x: tile.px[0] - left,
-							y: tile.px[1] - top,
-							tileId: tile.t,
-							flip: tile.f & LDTK_FLIPS,
-							alpha: tile.a ?? 1,
-						};
-					}),
+					tiles: chunk.tiles
+						.filter((tile) => {
+							return idOf(tile) >= 0;
+						})
+						.map((tile) => {
+							return {
+								x: tile.px[0] - left,
+								y: tile.px[1] - top,
+								tileId: idOf(tile),
+								flip: tile.f & LDTK_FLIPS,
+								alpha: tile.a ?? 1,
+							};
+						}),
 				});
 			}
 			this.add(built, part, partZ);
