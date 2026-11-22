@@ -2533,6 +2533,16 @@ export default class WebGPURenderer extends Renderer {
 	}
 
 	/**
+	 * @ignore
+	 * @internal
+	 */
+	releaseTileLayer(layer) {
+		for (const tmx of this.tmxRenderers.values()) {
+			tmx.release(layer);
+		}
+	}
+
+	/**
 	 * A tile layer drawn tile by tile: the sprite shaders keep each tile's
 	 * samples half a texel inside it (see `gpu/frame.js`), so two tiles
 	 * never blend the next tile of their tileset in along their edge.

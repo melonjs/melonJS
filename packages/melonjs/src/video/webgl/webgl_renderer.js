@@ -1484,6 +1484,16 @@ export default class WebGLRenderer extends Renderer {
 	}
 
 	/**
+	 * @ignore
+	 * @internal
+	 */
+	releaseTileLayer(layer) {
+		for (const gpu of this._tmxGPURenderers?.values() ?? []) {
+			gpu?.release(layer);
+		}
+	}
+
+	/**
 	 * A tile layer drawn tile by tile: the sprite shaders keep each tile's
 	 * samples half a texel inside it (see `gpu/frame.js`), so two tiles
 	 * never blend the next tile of their tileset in along their edge.

@@ -8,6 +8,16 @@ import { SAMPLES, sampleURL } from "./helpers/harness.ts";
  * the tiles, every one of them has to come out once, a grid has to hold what
  * a grid can, and a tile LDtk draws over another has to be drawn after it.
  */
+
+/**
+ * a tile, as LDtk saves it
+ * @param x - its left edge
+ * @param y - its top edge
+ * @param t - its id in the tileset
+ * @param f - how it is mirrored
+ * @param a - its opacity
+ * @returns the tile
+ */
 const tile = (x: number, y: number, t = 1, f = 0, a = 1): LDtkTile => {
 	return { px: [x, y], src: [0, 0], f, t, a };
 };

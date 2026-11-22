@@ -659,6 +659,11 @@ export default class TileLayer extends Renderable {
 	_resolveRenderMode() {
 		const root = this.ancestor?.getRootAncestor?.();
 		const renderer = this.parentApp?.renderer;
+		/**
+		 * the renderer the layer is drawn by while it is in the world
+		 * @ignore
+		 */
+		this._activeRenderer = renderer;
 		const gpuAllowed = root?.gpuTilemap !== false;
 		const preRenderHint =
 			typeof this.preRender === "boolean" ? this.preRender : root?.preRender;
@@ -1086,9 +1091,13 @@ export default class TileLayer extends Renderable {
 
 	// called when the layer is removed from the game world or a container
 	onDeactivateEvent() {
-		// renderer-side caches keyed by this layer (e.g. the WebGL2 shader
-		// path's per-layer GID index texture) are cleared from the renderer's
-		// own `reset()` path — tile layers only come and go on game reset.
+		// what the renderer keeps for this layer (the shader path's GID
+		// index texture) goes with it: a renderer reset frees them all on a
+		// level change, but a layer can also leave while the game runs (a
+		// level of a world streamed out), and would be kept until then. The
+		// texture is made again if the layer is drawn again.
+		this._activeRenderer?.releaseTileLayer?.(this);
+		this._activeRenderer = undefined;
 		this.animatedTilesets = [];
 		for (const node of this._toldAncestors ?? []) {
 			node._drawPast?.delete(this);

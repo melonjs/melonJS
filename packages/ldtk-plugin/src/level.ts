@@ -909,10 +909,19 @@ export class LDtkWorld extends LDtkMap {
 	 */
 	loadLevel(identifier: string): boolean {
 		const level = this.find(identifier);
-		if (this.builder === undefined || this.loaded.has(level.identifier)) {
+		const container = this.container;
+		if (
+			this.builder === undefined ||
+			container === undefined ||
+			this.loaded.has(level.identifier)
+		) {
 			return false;
 		}
-		this.build(level);
+		// in their draw order at once: a frame can be drawn before a timer
+		// sorts them, and would show the level's background over its tiles
+		addAll(container, () => {
+			this.build(level);
+		});
 		return true;
 	}
 

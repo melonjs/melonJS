@@ -155,6 +155,23 @@ export default class TMXLayerGPURenderer {
 	}
 
 	/**
+	 * Retire the index texture kept for one layer: for a layer that leaves
+	 * the world while the game runs (a level streamed out). It is made again
+	 * if the layer is drawn again.
+	 * @param {object} layer - the layer
+	 * @ignore
+	 * @internal
+	 */
+	release(layer) {
+		const resource = this.resources.get(layer);
+		if (resource !== undefined) {
+			this.renderer.retireTexture(resource.texture);
+			this.resources.delete(layer);
+		}
+		this.bindGroups.delete(layer);
+	}
+
+	/**
 	 * Retire every lookup texture and empty the local maps — called from
 	 * `WebGPURenderer.reset()` (GAME_RESET) so each level starts clean.
 	 * @ignore

@@ -143,6 +143,30 @@ export default class TMXLayerGPURenderer {
 	}
 
 	/**
+	 * Free the index texture kept for one layer: for a layer that leaves the
+	 * world while the game runs (a level streamed out), where waiting for
+	 * the next `reset()` would keep the layer and its texture until then.
+	 * The texture is made again if the layer is drawn again.
+	 * @param {object} layer - the layer
+	 * @ignore
+	 * @internal
+	 */
+	release(layer) {
+		const resource = this.resources.get(layer);
+		if (resource === undefined) {
+			return;
+		}
+		this.resources.delete(layer);
+		const batcher = this.renderer.batchers.get("quad");
+		if (typeof batcher?.deleteTexture2D === "function") {
+			batcher.deleteTexture2D(resource);
+		} else {
+			this.renderer.cache.freeTextureUnit(resource);
+			this.renderer.cache.delete(resource);
+		}
+	}
+
+	/**
 	 * Free every cached per-layer index texture and empty the local
 	 * resource map. Called from `WebGLRenderer.reset()` (which
 	 * `GAME_RESET` triggers) so each level transition starts clean.

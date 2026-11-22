@@ -815,11 +815,12 @@ const alwaysRelative = () => {
  * a fallback chain, such as compressed texture formats by priority with a PNG
  * last.
  * For `"shader"` it may be an object of URLs instead (see the example).
- * @property {string|{glsl?: string, wgsl?: string}} [data] - inline content
+ * @property {string|{glsl?: string, wgsl?: string}|object} [data] - inline content
  * in place of a `src`: the parsed Tiled JSON map or tileset (an object) for
  * `"tmx"` / `"tsx"`, the GLSL source of an effect body for `"shader"`, or a
  * `{glsl, wgsl}` pair of them so that one asset serves both backends (either
- * half may be omitted)
+ * half may be omitted). A type registered with {@link loader.setParser} reads
+ * what its parser expects there
  * @property {boolean} [stream=false] - audio and video: start playing before
  * the whole file is downloaded, rather than waiting for it
  * @property {boolean} [autoplay=false] - audio and video: start playing once

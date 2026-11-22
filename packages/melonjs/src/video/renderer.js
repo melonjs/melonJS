@@ -1885,6 +1885,17 @@ export default class Renderer {
 	/* eslint-enable no-unused-vars, @typescript-eslint/no-unused-vars */
 
 	/**
+	 * Let go of what the renderer keeps for a tile layer (its index texture
+	 * on the GPU): called when the layer leaves the world. Nothing to do
+	 * here; the GPU renderers free their per-layer textures.
+	 * @param {object} layer - the tile layer
+	 * @ignore
+	 * @internal
+	 */
+	// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+	releaseTileLayer(layer) {}
+
+	/**
 	 * Draw a TMX tile layer. Default behavior:
 	 *   - if `layer.canvasRenderer` is set (preRender bake), blit the cached
 	 *     offscreen canvas in a single `drawImage` call;

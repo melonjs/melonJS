@@ -12,6 +12,8 @@
 - Loader: `loader.setParser(type, parser, { unload })` lets an asset type of your own free what it kept when its bundle is unloaded or `loader.unload` is given its descriptor
 
 ### Fixed
+- TypeScript: an asset's `data` accepts a parsed map object, as documented; only a string or a `{ glsl, wgsl }` pair type-checked
+- Tile maps: a tile layer removed from the world while the game runs frees the texture the GPU kept for it; it was held, with the layer, until the next level change
 - Tiled: a `renderMode` custom property on a tile layer chooses how the layer is drawn, as documented; it was overwritten by the default
 - Tiled: loading a level no longer leaves the previous level's viewport-resize handler registered; one was added on every load and never removed, keeping each old level alive
 
