@@ -8,6 +8,8 @@ import {
 	LDtkWorld,
 	level,
 	loader,
+	registerObjectClass,
+	Trigger,
 	video,
 } from "../src/index.js";
 import {
@@ -206,7 +208,58 @@ describe("an LDtk project made for the test", () => {
 		const extras = projectJson(
 			[
 				levelJson("Far", [layer("Far", "Tiles", 16, 4, 4, [tile(16, 0, 1)])]),
-				levelJson("Near", [], { worldX: 160 }),
+				levelJson(
+					"Near",
+					[
+						layer("Doors", "Entities", 16, 10, 6, [], {
+							entityInstances: [
+								// a way out, by the level's name alone
+								{
+									...entity("Door", 16, 16),
+									iid: "door-iid",
+									fieldInstances: [
+										{
+											__identifier: "to",
+											__type: "String",
+											__value: "extras:Far",
+										},
+									],
+								},
+								// and one with a transition, set in LDtk
+								{
+									...entity("Door", 64, 16),
+									iid: "portal-iid",
+									__smartColor: "#336699",
+									fieldInstances: [
+										{
+											__identifier: "to",
+											__type: "String",
+											__value: "extras:Far",
+										},
+										{ __identifier: "duration", __type: "Int", __value: 250 },
+										{
+											__identifier: "transition",
+											__type: "String",
+											__value: "mask",
+										},
+										{
+											__identifier: "shape",
+											__type: "String",
+											__value: "touching",
+										},
+										{
+											__identifier: "center",
+											__type: "String",
+											__value: "touching",
+										},
+										{ __identifier: "invert", __type: "Bool", __value: true },
+									],
+								},
+							],
+						}),
+					],
+					{ worldX: 160 },
+				),
 			],
 			{
 				iid: "extras",
@@ -482,5 +535,42 @@ describe("an LDtk project made for the test", () => {
 		expect(
 			(loader.getLDtk("single") as LDtkProject).getTableOfContent(),
 		).toEqual([]);
+	});
+
+	it("an entity built by the engine's Trigger takes its level and its transition from its fields", async () => {
+		registerObjectClass("Door", Trigger as never);
+		await enter(app, "extras:Near");
+		const doors = current().getEntities("Door") as unknown as Trigger[];
+		expect(doors).toHaveLength(2);
+		const portal = doors.find((door) => {
+			return door.duration === 250;
+		});
+		const plain = doors.find((door) => {
+			return door !== portal;
+		});
+		expect(portal).toBeInstanceOf(Trigger);
+		expect(plain).toBeInstanceOf(Trigger);
+		// read from the entity's fields as from a trigger's settings: the
+		// level to load, and the screen closing on what touched it
+		expect(portal).toMatchObject({
+			gotolevel: "extras:Far",
+			duration: 250,
+			transition: "mask",
+			transitionShape: "touching",
+			transitionCenter: "touching",
+			transitionInvert: true,
+			// the transition's color is the one LDtk shows the entity in
+			color: "#336699",
+		});
+		// with no duration there is no transition: the level is loaded at once
+		expect(plain?.gotolevel).toBe("extras:Far");
+		expect(level.getCurrentLevelId()).toBe("extras:Near");
+		// (the method a touch calls)
+		(plain as unknown as { triggerEvent(): void }).triggerEvent();
+		// a level is changed once the frame is over
+		await new Promise((resolve) => {
+			setTimeout(resolve, 0);
+		});
+		expect(level.getCurrentLevelId()).toBe("extras:Far");
 	});
 });

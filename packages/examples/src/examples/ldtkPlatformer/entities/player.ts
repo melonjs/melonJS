@@ -8,8 +8,7 @@ import {
 	collision,
 	input,
 	type LDtkEntitySettings,
-	type LDtkProject,
-	loader,
+	type LDtkFoundEntity,
 	Rect,
 	type Renderable,
 	Sprite,
@@ -78,7 +77,11 @@ export class Player extends Sprite {
 			frictionAir: { x: 0.5, y: 0 },
 			gravityScale: GRAVITY,
 		};
-		// the player leaves the view while the screen fades between rooms
+		// The player is an entity of the room it starts in, and walks out of
+		// it: persistent, it stays when that room is taken out of the game,
+		// and is not built again when the room comes back.
+		this.isPersistent = true;
+		// the player leaves the view while the screen closes between rooms
 		this.alwaysUpdate = true;
 		this.safe.set(this.pos.x, this.pos.y);
 
@@ -237,7 +240,7 @@ export class Player extends Sprite {
 
 		// a teleport is taken by pressing up in front of it
 		if (teleport !== undefined && up && !this.wasUp && !this.climbing) {
-			this.travel(app, teleport);
+			teleport.triggerEvent(this);
 		}
 		this.wasUp = up;
 
@@ -271,34 +274,23 @@ export class Player extends Sprite {
 	}
 
 	/**
-	 * Take a teleport. Its `destination` field is a reference to another
-	 * entity, in a room that may not be in the game: the project finds it,
-	 * with its room and its place, and the room is loaded on the way.
+	 * Arrive where a teleport leads: on the entity it refers to, in a room
+	 * that may be on the world's other depth.
+	 * @param target - the entity, its room and its place, as the project found them
 	 */
-	travel(app: Application, teleport: Teleport) {
-		const project = loader.getLDtk("gridvania") as LDtkProject;
-		const target = project.findEntity(teleport.destination);
-		if (target === undefined) {
-			return;
-		}
-		this.travelling = true;
-		this.body.setVelocity(0, 0);
-		app.viewport.fadeIn("#000000", 200, () => {
-			// the rooms of the depth left go, the ones of the depth reached come
-			gameState.depth = target.level.depth;
-			gameState.room = undefined;
-			this.moveTo(
-				app,
-				target.x + (target.width - this.width) / 2,
-				target.y + target.height - this.height,
-			);
-			const { x, y } = this.centre;
-			trackRoom(app, x, y);
-			this.safe.set(this.pos.x, this.pos.y);
-			app.viewport.fadeOut("#000000", 200, () => {
-				this.travelling = false;
-			});
-		});
+	arrive(target: LDtkFoundEntity) {
+		const app = this.parentApp;
+		// the rooms of the depth left go, the ones of the depth reached come
+		gameState.depth = target.level.depth;
+		gameState.room = undefined;
+		this.moveTo(
+			app,
+			target.x + (target.width - this.width) / 2,
+			target.y + target.height - this.height,
+		);
+		const { x, y } = this.centre;
+		trackRoom(app, x, y);
+		this.safe.set(this.pos.x, this.pos.y);
 	}
 
 	onCollision(_response: unknown, other: Renderable) {

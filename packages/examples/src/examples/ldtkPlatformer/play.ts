@@ -59,10 +59,8 @@ export class PlayScreen extends Stage {
 			},
 			onLoaded: () => {
 				const world = ldtkWorld();
-				// the player belongs to the room it starts in: kept, it is
-				// the game's, and stays when that room leaves
+				// the player, drawn over the layers of every room and depth
 				const [player] = world.getEntities("Player") as Player[];
-				world.keep(player);
 				player.depth = PLAYER_Z;
 				app.world.addChild(new HUD(project, app.viewport.width), HUD_Z);
 				app.world.sort();

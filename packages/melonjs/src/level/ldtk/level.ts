@@ -156,7 +156,9 @@ class LevelBuilder {
 	container: Container;
 	options: LDtkLoadOptions;
 	/** the level object the entities' factories are handed */
-	map: object & { isKept?: (iid: string) => boolean };
+	map: object & {
+		persistentEntity?: (iid: string) => Renderable | undefined;
+	};
 	/** the tilesets made so far, by their uid; null for one with no image */
 	tilesets = new Map<
 		number,
@@ -174,7 +176,9 @@ class LevelBuilder {
 		project: LDtkProject,
 		container: Container,
 		options: LDtkLoadOptions,
-		map: object & { isKept?: (iid: string) => boolean },
+		map: object & {
+			persistentEntity?: (iid: string) => Renderable | undefined;
+		},
 	) {
 		this.project = project;
 		this.container = container;
@@ -423,12 +427,19 @@ class LevelBuilder {
 				// entity is added first
 				for (let e = layer.entityInstances.length - 1; e >= 0; e--) {
 					const entity = layer.entityInstances[e];
-					// one the game kept when its level left is in the game
-					// already; one the game does not want is left out
-					if (
-						this.map.isKept?.(entity.iid) === true ||
-						(typeof wanted === "function" && !wanted(entity, info))
-					) {
+					// one the game does not want is left out
+					if (typeof wanted === "function" && !wanted(entity, info)) {
+						continue;
+					}
+					// a persistent one that stayed when its level left is in
+					// the game already: it is the level's again, not built
+					// a second time
+					const stayed = this.map.persistentEntity?.(entity.iid);
+					if (stayed !== undefined) {
+						built.children.push(stayed);
+						built.entities.unshift(stayed);
+						built.identifiers.set(stayed, entity.__identifier);
+						built.iids.set(stayed, entity.iid);
 						continue;
 					}
 					const settings = this.entitySettings(info, layer, entity, x, y, z);
@@ -855,18 +866,28 @@ abstract class LDtkMap {
 	protected unfollow: (() => void) | undefined;
 	/** @ignore */
 	protected gridRenderer: TMXOrthogonalRenderer | undefined;
-	/** the entities the game kept, by their unique id in LDtk */
-	protected kept = new Set<string>();
+	/**
+	 * the persistent entities that stayed when their level was taken out,
+	 * by their unique id in LDtk
+	 */
+	protected stayed = new Map<string, Renderable>();
 
 	/**
-	 * whether the game kept an entity (see {@link LDtkWorld#keep}): it is
-	 * not built again
+	 * a persistent entity that stayed in the game when its level was taken
+	 * out, if it is still there
 	 * @param iid - the entity's unique id in LDtk
-	 * @returns true if it was kept
+	 * @returns the entity, or undefined
 	 * @ignore
 	 */
-	isKept(iid: string): boolean {
-		return this.kept.has(iid);
+	persistentEntity(iid: string): Renderable | undefined {
+		const entity = this.stayed.get(iid);
+		if (entity === undefined) {
+			return undefined;
+		}
+		this.stayed.delete(iid);
+		// removed by the game since: gone, and built again with its level
+		const parent = entity.ancestor as Container | undefined | null;
+		return parent ? entity : undefined;
 	}
 
 	constructor(project: LDtkProject, name: string) {
@@ -1173,8 +1194,10 @@ export class LDtkWorld extends LDtkMap {
 	}
 
 	/**
-	 * take a level of the world out of the game: its layers, its bodies and
-	 * its entities
+	 * Take a level of the world out of the game: its layers, its bodies and
+	 * its entities. An entity that is persistent
+	 * ({@link Renderable#isPersistent}), as a player is, stays in the game,
+	 * and is not built again when its level comes back.
 	 * @param identifier - the level's identifier in LDtk
 	 * @returns false if it was not there
 	 */
@@ -1186,6 +1209,14 @@ export class LDtkWorld extends LDtkMap {
 		}
 		this.loaded.delete(level.identifier);
 		for (const child of built.children) {
+			// a persistent entity stays, as it does over a level change
+			if (child.isPersistent) {
+				const iid = built.iids.get(child);
+				if (iid !== undefined) {
+					this.stayed.set(iid, child);
+				}
+				continue;
+			}
 			// an entity may have left by itself since (a coin picked up)
 			const parent = child.ancestor as Container | undefined | null;
 			parent?.removeChild(child);
@@ -1316,38 +1347,9 @@ export class LDtkWorld extends LDtkMap {
 		return undefined;
 	}
 
-	/**
-	 * Keep an entity in the game when its level is taken out, and for good:
-	 * it is the game's from now on, and is not built again when its level
-	 * comes back. For the player, who starts in a level and walks out of it.
-	 * @param entity - an entity of a level in the game
-	 * @returns false if it is not one, or was kept already
-	 * @example
-	 * const [player] = world.getEntities("Player");
-	 * world.keep(player);
-	 */
-	keep(entity: Renderable): boolean {
-		for (const built of this.loaded.values()) {
-			const iid = built.iids.get(entity);
-			if (iid !== undefined) {
-				this.kept.add(iid);
-				built.iids.delete(entity);
-				built.identifiers.delete(entity);
-				built.entities = built.entities.filter((other) => {
-					return other !== entity;
-				});
-				built.children = built.children.filter((other) => {
-					return other !== entity;
-				});
-				return true;
-			}
-		}
-		return false;
-	}
-
 	override destroy(): void {
 		super.destroy();
 		this.loaded.clear();
-		this.kept.clear();
+		this.stayed.clear();
 	}
 }

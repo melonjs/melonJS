@@ -510,27 +510,51 @@ export function worldChecks(
 			expect(world.getEntity("no such entity")).toBeUndefined();
 		});
 
-		it("keeps an entity when its level goes, and does not build it again", async () => {
+		it("a persistent entity stays when its level goes, and is not built again", async () => {
 			await enter(app, GRIDVANIA, { levels: ["Entrance"] });
 			const world = current();
 			const [player] = world.getEntities("Player");
-			expect(world.keep(player)).toBe(true);
-			// the game's now: no longer one of the level's, and kept once
-			expect(world.keep(player)).toBe(false);
-			expect(world.getEntities("Player")).toEqual([]);
-			const items = world.getEntities("Item").length;
-			expect(items).toBe(3);
+			// as any renderable that outlives a level change
+			player.isPersistent = true;
+			expect(world.getEntities("Item")).toHaveLength(3);
 			world.unloadLevel("Entrance");
 			await nextFrame();
 			expect(player.ancestor).toBe(app.world);
 			expect(app.world.getChildByName("Player")).toEqual([player]);
 			expect(app.world.getChildByName("Item")).toEqual([]);
-			// the level again: its items, and not a second player
+			expect(world.getEntities("Player")).toEqual([]);
+			// the level again: its items, and the same player, the level's again
 			world.loadLevel("Entrance");
 			expect(app.world.getChildByName("Player")).toEqual([player]);
-			expect(world.getEntities("Item")).toHaveLength(items);
-			// only an entity of a level in the game can be kept
-			expect(world.keep(app.world)).toBe(false);
+			expect(world.getEntities("Player")).toEqual([player]);
+			expect(world.getEntities("Item")).toHaveLength(3);
+			// and again, as often as the level comes and goes
+			world.unloadLevel("Entrance");
+			world.loadLevel("Entrance");
+			await nextFrame();
+			expect(app.world.getChildByName("Player")).toEqual([player]);
+
+			// not persistent any more: it leaves with its level, and the
+			// level builds a new one
+			player.isPersistent = false;
+			world.unloadLevel("Entrance");
+			await nextFrame();
+			expect(app.world.getChildByName("Player")).toEqual([]);
+			world.loadLevel("Entrance");
+			const [second] = world.getEntities("Player");
+			expect(second).toBeDefined();
+			expect(second).not.toBe(player);
+
+			// persistent, and taken out by the game while its level is out:
+			// gone, so the level builds one
+			second.isPersistent = true;
+			world.unloadLevel("Entrance");
+			app.world.removeChildNow(second);
+			world.loadLevel("Entrance");
+			const [third] = world.getEntities("Player");
+			expect(third).toBeDefined();
+			expect(third).not.toBe(second);
+			expect(app.world.getChildByName("Player")).toEqual([third]);
 		});
 
 		it("finds the entity a reference points at, its level loaded or not", async () => {

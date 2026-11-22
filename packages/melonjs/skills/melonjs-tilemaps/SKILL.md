@@ -527,8 +527,9 @@ level.load("world:Level_0");                       // "<asset name>:<level ident
 - **A world the player walks through** (`world` is
   `level.getCurrentLevel()`):
   - the player is an entity of the level it starts in, and would leave with
-    it: `world.keep(player)` makes it the game's, kept when its level is
-    taken out and not built again when the level comes back;
+    it: make it persistent (`this.isPersistent = true`, as for a player that
+    outlives a level change) and it stays when its level is taken out, and
+    is not built again when the level comes back;
   - a level taken out and loaded again builds its entities again: leave out
     what the player took with the `entities` option, a function asked for
     each entity, `entities: (entity) => !taken.has(entity.iid)` (it works for
@@ -536,6 +537,12 @@ level.load("world:Level_0");                       // "<asset name>:<level ident
   - levels stacked on LDtk's world depths cover the same place: give the
     depth the player is on, `streamAround(x, y, w, h, margin, depth)` and
     `levelsAt(x, y, w, h, depth)`, and the other depths are taken out;
+  - a door to another level is the engine's `Trigger`, registered under the
+    entity's name (`registerObjectClass("Door", Trigger)`): it reads the
+    entity's fields as its settings, so `to` (`"world:Level_2"`), `duration`,
+    `transition` (`"mask"`), `shape` and `center` (`"touching"`) are set on
+    the entity in LDtk, and the transition's color is the entity's own in
+    LDtk;
   - an `EntityRef` field (a teleport's destination) is resolved with
     `project.findEntity(ref)`: its `level`, and its `x` / `y` in the world,
     whether that level is loaded or not; once it is, `world.getEntity(iid)`
@@ -759,8 +766,8 @@ layer into the offscreen-bake path instead.
 | a tile layer set to scroll slower than the level in Tiled scrolls with it (before 20.18) | a Tiled tile layer's parallax factor was not read (an image layer's was): update |
 | a Tiled parallax layer is not where Tiled shows it at the start of the level | Tiled measures a factor from the centre of its own view to the map's parallax origin; the engine measures from the camera's position, for tile and image layers alike: move the layer with its offset, or set `layer.parallax` yourself |
 | `getTile` finds nothing under a tile of a parallax layer | a parallax moves where the layer is drawn, not its cells: they are where the layer was placed |
-| the player disappears when walking out of its first LDtk level | it is an entity of that level, taken out with it: `world.keep(player)` |
-| a second player, or the coins again, after coming back to an LDtk level | a level loaded again builds its entities again: `world.keep(player)`, and the `entities` option to leave out what was taken |
+| the player disappears when walking out of its first LDtk level | it is an entity of that level, taken out with it: set `isPersistent = true` on it |
+| the coins again after coming back to an LDtk level | a level loaded again builds its entities again: the `entities` option leaves out what was taken |
 | two LDtk levels are drawn over each other, with walls from both | they are on different world depths, at the same place: pass the player's depth to `streamAround` and `levelsAt` |
 | a `Sprite` class for an LDtk entity throws `'undefined' image/texture not found` | the entity's tile is one of LDtk's built-in icons (a tileset with `embedAtlas`): they are not in the project's files, and LDtk does not allow redistributing them, so `settings.image` is not set. Use art of your own, or a tile of one of the project's tilesets |
 | an LDtk entity is placed half its size off | `x`, `y` are its box's top left corner; its pivot is `settings.px` |
