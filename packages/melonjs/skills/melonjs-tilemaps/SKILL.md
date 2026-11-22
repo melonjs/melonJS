@@ -1,6 +1,6 @@
 ---
 name: melonjs-tilemaps
-description: "Use this skill for Tiled maps in melonJS (and tile layers built in code) — loading TMX/TSX levels, spawning entities from Tiled objects, collision shapes authored in Tiled, isometric and hexagonal maps, and image layers, and reading or changing tiles while the game runs. Covers registerTiledObjectClass and the pool.register name contract, camera bounds, compressed maps needing the inflate plugin, and the level director API. Triggers on: Tiled, TMX, TSX, tilemap, setTile, clearTile, cellAt, getTile, getTileById, change a tile, tile at run time, game board, grid, getTileProperties, map properties, level.load, level.load async, await level.load, tileset, ImageLayer, infinite map, render order, isometric, hexagonal, staggered, pool.register, Collectable, Trigger, object layer, collision layer, parallax, registerTiledObjectClass, registerObjectClass, TileLayer, Tileset, PlacedTileLayer, setCell, mergeGridRects, level.registerFormat, TMXObject, resolvedProperty, resolvedProperties, tile class, tile properties."
+description: "Use this skill for Tiled maps and LDtk levels in melonJS (and tile layers built in code) — loading TMX/TSX and .ldtk levels, spawning entities from Tiled objects, collision shapes authored in Tiled, isometric and hexagonal maps, and image layers, and reading or changing tiles while the game runs. Covers registerTiledObjectClass and the pool.register name contract, camera bounds, compressed maps needing the inflate plugin, and the level director API. Triggers on: Tiled, TMX, TSX, LDtk, .ldtk, IntGrid, tilemap, setTile, clearTile, cellAt, getTile, getTileById, change a tile, game board, grid, getTileProperties, level.load, level.load async, await level.load, tileset, ImageLayer, infinite map, render order, isometric, hexagonal, staggered, pool.register, Collectable, Trigger, object layer, collision layer, parallax, registerTiledObjectClass, registerObjectClass, TileLayer, Tileset, PlacedTileLayer, setCell, mergeGridRects, level.registerFormat, TMXObject, resolvedProperty, tile class, tile properties."
 license: MIT
 ---
 
@@ -471,6 +471,58 @@ plugin.register(TiledInflatePlugin);   // before preloading any compressed map
 Uncompressed base64 and CSV layer data need no plugin. If a map loads in Tiled
 but not in melonJS, check the layer compression setting first.
 
+## LDtk levels
+
+Levels made with [LDtk](https://ldtk.io) load from the project file as the
+editor saves it (20.18): nothing to export, nothing to register. The `.ldtk`
+file is one asset, and its levels are the level director's.
+
+```js
+import { level, loader, registerObjectClass } from "melonjs";
+
+registerObjectClass("Player", Player);             // an entity's identifier → its class
+
+await loader.preload([{ name: "world", type: "ldtk", src: "data/world.ldtk" }]);
+level.load("world:Level_0");                       // "<asset name>:<level identifier>"
+// level.load("world");                            // the whole world, levels where LDtk puts them
+```
+
+- **The images load with the project**: its tilesets (PNG or Aseprite), its
+  levels' backgrounds, the level files it saves apart, from where the project
+  file says they are, relative to it. Keep the folder as LDtk has it. An image
+  the game loaded itself under the file's name (`atlas/tiles.png` as `tiles`)
+  is used instead.
+- **Entities** are built by the class registered under their identifier:
+  `new Player(x, y, settings)`, `x` and `y` being the top left corner of the
+  entity's box whatever its pivot in LDtk (`settings.px` is the pivot).
+  `settings.fields` holds its fields, also copied onto the settings where the
+  name is free (`settings.life`; not `type` or `width`). With no class, an
+  entity is an `LDtkEntity`: a box with no body, found with
+  `world.getChildByName("PlayerStart")`, drawn with its tile if it has one.
+- **Walls** come from IntGrid layers whose identifier contains "collision",
+  the convention of a Tiled collision layer: one static `WORLD_SHAPE` body per
+  run of cells, built by the same "shape" factory, carrying `intGridValue` and
+  `intGridName`. Other layers with `collisionLayers: ["Walls"]`, some values
+  only with `solidValues: [1]`, as options of `level.load`.
+- **IntGrid values** are read from the level:
+  `level.getCurrentLevel().getIntGrid("Collisions").valueAtPixel(x, y)`, also
+  `valueAt(col, row)`, `nameAt`, and `rects(test)` for areas as rectangles.
+- **Layers**: each LDtk layer becomes one or more renderables named after it,
+  in LDtk's order: a `TileLayer` where its tiles fit a grid (drawn by the GPU,
+  like a Tiled layer), a `PlacedTileLayer` for tiles stacked in a cell, off the
+  grid or faded. `level.getCurrentLevel().layers` lists them.
+- **Worlds**: `level.load("world", { levels: ["Entrance"] })` starts with some
+  levels; `world.streamAround(x, y, w, h, margin)` then keeps the levels within
+  reach of the player and removes the others (`loadLevel` / `unloadLevel` for
+  one). Coordinates are LDtk's, and can be negative. Another world of a
+  multi-world project is `"world@<world identifier>"`.
+- `loader.getLDtk("world")` is the project: its levels (`id`, size, `fields`,
+  `neighbours`), its worlds, `getTileData` / `getTileTags` for a tile's custom
+  data and enum tags. `showIntGrid: true` draws IntGrid layers that have no
+  tiles, in LDtk's colors; `entities: false` leaves the entities out.
+- Not supported: the editor's built-in entity icons (they are not in the
+  project's files), nine-slice entity tiles (drawn stretched).
+
 ## Tile layers without Tiled
 
 The classes a Tiled map is made of do not need Tiled (20.18). A layer built in
@@ -626,6 +678,14 @@ layer into the offscreen-bake path instead.
 | a tile set with `setCell` shows the wrong tile, one off | `setCell` takes a global id: the tileset's `firstgid` (1 by default) plus the tile's id in the tileset; a `PlacedTileLayer`'s `tileId` is the id in the tileset, from 0 |
 | tiles stacked in one cell: only the last shows | a `TileLayer` holds one tile a cell: a second layer, or a `PlacedTileLayer` for the stacked ones |
 | `level format "x" is already registered` | `level.registerFormat` called twice (a hot reload): register once, at start-up |
+
+| `level Level_0 not found` for an LDtk level | a level's id is `"<asset name>:<level identifier>"` (`"world:Level_0"`) |
+| `level.load("world")` shows every level of the LDtk project at once | the asset's name alone is the whole world; a single level is `"world:<level identifier>"` |
+| an LDtk level loads with no tiles, and a warning that a tileset's image is not loaded | the image is not where the project file says, relative to it (the folder was reorganised) |
+| LDtk entities are invisible in the game | no class is registered for them (`registerObjectClass(identifier, Class)`), and their icon is LDtk's own, which is not in the files: give them a tile from a tileset of the project, or a class |
+| the player falls through an LDtk level | no IntGrid layer is named like "collision": pass `collisionLayers` to `level.load` |
+| an LDtk entity is placed half its size off | `x`, `y` are its box's top left corner; its pivot is `settings.px` |
+| an LDtk field reads `undefined` on the settings | its name is one of the settings' own (`type`, `name`, `width`...): read `settings.fields.type` |
 
 ## Related skills
 

@@ -26,6 +26,7 @@ The type strings are melonJS-specific — this is not a generic loader:
 | `"image"` | textures, sprite sheets, normal maps; `src` may be an array tried in order, such as compressed formats (`.ktx`, `.ktx2`, `.dds`, `.pvr`, `.pkm`) by priority with a PNG last |
 | `"json"` | data, texture-atlas descriptors, collision shapes from a shape editor |
 | `"tmx"` / `"tsx"` | Tiled maps and external tilesets |
+| `"ldtk"` | an LDtk project (`.ldtk`): its levels, with the tileset images and level files it names (20.18; see `melonjs-tilemaps`) |
 | `"audio"` | sound — **`src` is a directory**, see below |
 | `"video"` | video textures |
 | `"binary"` | raw data, bitmap font `.fnt` descriptors |

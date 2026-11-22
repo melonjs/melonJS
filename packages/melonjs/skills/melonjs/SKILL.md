@@ -112,7 +112,7 @@ what it is called here:
 | a tween, an animation of a property | `Tween` | `melonjs-scenes-and-state` |
 | a sprite sheet, an animated sprite | `Sprite` with `addAnimation`, frames from a `TextureAtlas` | `melonjs-sprites-and-animation` |
 | a rigid body, a collider, a trigger | a `body` built from a `bodyDef`, on the built-in world or an adapter | `melonjs-physics` |
-| a tile map | a Tiled map loaded with `level.load` | `melonjs-tilemaps` |
+| a tile map | a Tiled map, or an LDtk project, loaded with `level.load` | `melonjs-tilemaps` |
 | the camera | `app.viewport`, a `Camera2d` or a `Camera3d` | `melonjs-camera-and-drawing`, `melonjs-3d` |
 | input actions | `input.bindKey`, then `input.isKeyPressed` | `melonjs-input` |
 | a material, a shader, a post-process | a `ShaderEffect`, attached with `addPostEffect` | `melonjs-effects-and-shaders` |
@@ -134,7 +134,7 @@ what it is called here:
 | [melonjs-input](../melonjs-input/SKILL.md) | Keyboard actions, pointer and touch handling, drag, gamepad, virtual controls (fixed or floating sticks and buttons, tap to act). |
 | [melonjs-physics](../melonjs-physics/SKILL.md) | Collision, bodies, movement, spatial queries, and the planck / matter / Rapier / Rapier 3D adapters. |
 | [melonjs-math](../melonjs-math/SKILL.md) | Vectors and matrices: what mutates, what allocates, and interpolating with lerp, slerp, damp or moveTowards. |
-| [melonjs-tilemaps](../melonjs-tilemaps/SKILL.md) | Tiled maps — TMX/TSX loading, spawning entities from objects, collision layers, isometric maps, reading and changing tiles at run time (a tile layer as the game board). |
+| [melonjs-tilemaps](../melonjs-tilemaps/SKILL.md) | Tiled maps and LDtk levels — TMX/TSX and `.ldtk` loading, spawning entities from objects, collision layers, isometric maps, reading and changing tiles at run time (a tile layer as the game board). |
 | [melonjs-audio](../melonjs-audio/SKILL.md) | Sound effects, music, audio sprites, spatial audio, procedural tone and noise. |
 | [melonjs-effects-and-shaders](../melonjs-effects-and-shaders/SKILL.md) | Post effects, custom GLSL/WGSL shaders, blend modes, colour grading, palette swaps, a dithered retro look, screen capture. |
 | [melonjs-3d](../melonjs-3d/SKILL.md) | Anything 3D or 2.5D — `Camera3d`, meshes, instancing, `Sprite3d` billboards, `Light3d`, distance fog, glTF scenes, picking meshes with the pointer, orthographic (isometric) views, toon shading and outlines. |
@@ -279,7 +279,9 @@ check for:
   level door (`shape: "touching"`, `center: "touching"`), `state.pause()` / `state.resume()` behind a pause menu,
   `save` for localStorage-backed persistence, `createPool` / `getPool` for
   recycling.
-- **Levels:** Tiled tile layers read and changed with `cellAt` / `setTile`,
+- **Levels:** Tiled maps and LDtk projects, both loaded with `level.load`
+  (LDtk's `.ldtk` file as the editor saves it, nothing to convert); tile
+  layers read and changed with `cellAt` / `setTile`,
   and asset bundles (`loader.preload({ common: [...], level1: [...] })`, then
   `loader.unload("level1")` / `loader.load("level1")`) to free and reload a
   level's assets.
