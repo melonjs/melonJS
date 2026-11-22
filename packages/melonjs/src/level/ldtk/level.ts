@@ -12,7 +12,7 @@ import {
 	hasObjectFactory,
 } from "../tiled/TMXObjectFactory.js";
 import { applyObjectOpacity } from "../tiled/TMXUtils.js";
-import { isCollisionLayerName, markWorldShape } from "../tilemap/collision.js";
+import { createWall, isCollisionLayerName } from "../tilemap/collision.js";
 import type { LayerScrolling } from "../tilemap/layer.js";
 import PlacedTileLayer from "../tilemap/PlacedTileLayer.js";
 import {
@@ -556,7 +556,7 @@ class LevelBuilder {
 				// a wall is what an unnamed shape of a Tiled collision layer
 				// is: built by the "shape" factory (the game's own, if it
 				// registered one) and made a wall of the world
-				const wall = createLevelObject(
+				const wall = createWall(
 					{
 						x: rect.x,
 						y: rect.y,
@@ -570,7 +570,6 @@ class LevelBuilder {
 					},
 					this.map,
 				);
-				markWorldShape(wall);
 				wall.name = grid.name;
 				// what the wall is made of, for a collision handler to read
 				Object.assign(wall, {

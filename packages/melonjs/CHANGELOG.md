@@ -6,6 +6,7 @@
 - LDtk: built-in support for the [LDtk](https://ldtk.io) level format: load a `.ldtk` file as an `"ldtk"` asset, then `level.load("<asset>:<level>")`, or `level.load("<asset>")` for the whole world
 - Tile maps: parallax is now supported on tile layers, through `ratio`, as on an `ImageLayer`; a Tiled tile layer's parallax factor sets it
 - Tile maps: tile layers can be built in code with `TileLayer`, `Tileset`, `TilesetGroup` and `PlacedTileLayer`, plus `mergeGridRects` for collision bodies
+- Tiled: a tile layer with a `collider` property set to true is solid, which also makes a [Sprite Fusion](https://www.spritefusion.com) TMX export playable as exported
 - Levels: `registerObjectClass` and `registerObjectFactory`, new names for `registerTiledObjectClass` and `registerTiledObjectFactory`
 - Levels: `level.load` takes `objects`, to choose which objects of a level are built
 - Levels: an object built from a level carries the level's `id`, so `getChildByProp("id", id)` finds it

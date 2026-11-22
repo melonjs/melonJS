@@ -1,11 +1,15 @@
-import { warning } from "../../lang/console.js";
+import { warning, warnOnce } from "../../lang/console.js";
 import { getImage } from "../../loader/loader.js";
 import { vector2dPool } from "../../math/vector2d.ts";
 import { boundsPool } from "../../physics/bounds.ts";
 import Container from "../../renderable/container.js";
 import ImageLayer from "../../renderable/imagelayer.js";
 import { checkVersion } from "../../utils/utils.ts";
-import { isCollisionLayerName, markWorldShape } from "../tilemap/collision.js";
+import {
+	isCollisionLayerName,
+	markWorldShape,
+	tileLayerWalls,
+} from "../tilemap/collision.js";
 import { addLevelToContainer, isObjectWanted } from "../tilemap/populate.js";
 import { releaseViewport } from "../tilemap/viewport.js";
 import { TILED_SUPPORTED_VERSION } from "./constants.js";
@@ -168,6 +172,31 @@ function readImageLayer(map, data, z) {
  */
 function readTileset(data, mapTilewidth, mapTileheight) {
 	return new TMXTileset(data, mapTilewidth, mapTileheight);
+}
+
+/**
+ * The walls of a tile layer the map says is solid: one with a custom
+ * property `collider` set to true. Every tile of the layer is then a wall of
+ * the world. (The Sprite Fusion editor writes that property for a layer
+ * with its "collider" box checked; in Tiled it is a boolean custom property
+ * of the layer.)
+ * @param {TMXTileMap} map - the map
+ * @param {object} layer - one of its layers
+ * @returns {Renderable[]} the walls: none for any other layer
+ * @ignore
+ * @internal
+ */
+function colliderWalls(map, layer) {
+	if (!(layer instanceof TMXLayer) || layer.collider !== true) {
+		return [];
+	}
+	if (map.orientation !== "orthogonal") {
+		warnOnce(
+			`melonJS: tile layer "${layer.name}" has the \`collider\` property, which builds walls on orthogonal maps only`,
+		);
+		return [];
+	}
+	return tileLayerWalls(layer, map);
 }
 
 /**
@@ -570,9 +599,13 @@ export default class TMXTileMap {
 		const follow = addLevelToContainer(container, {
 			backgroundColor: this.backgroundcolor,
 			add: () => {
-				// add all layers instances
+				// add all layers instances, and the walls of the ones that
+				// are solid (see `colliderWalls`)
 				this.getLayers().forEach((layer) => {
 					container.addChild(layer);
+					for (const wall of colliderWalls(this, layer)) {
+						container.addChild(wall);
+					}
 				});
 				// add all Object instances
 				this.getObjects(flatten, objects).forEach((object) => {
@@ -698,6 +731,15 @@ export default class TMXTileMap {
 					objects.push(obj);
 				} else {
 					targetContainer.addChild(obj);
+				}
+
+				// a solid tile layer of a group layer comes with its walls
+				for (const wall of colliderWalls(this, settings)) {
+					if (flatten !== false) {
+						objects.push(wall);
+					} else {
+						targetContainer.addChild(wall);
+					}
 				}
 			}
 

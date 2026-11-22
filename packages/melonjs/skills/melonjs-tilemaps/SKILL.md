@@ -1,6 +1,6 @@
 ---
 name: melonjs-tilemaps
-description: "Use this skill for Tiled maps and LDtk levels in melonJS (and tile layers built in code) — loading TMX/TSX and .ldtk levels, spawning entities from Tiled objects, collision shapes authored in Tiled, isometric and hexagonal maps, and image layers, and reading or changing tiles while the game runs. Covers registerTiledObjectClass and the pool.register name contract, camera bounds, compressed maps needing the inflate plugin, and the level director API. Triggers on: Tiled, TMX, TSX, LDtk, .ldtk, IntGrid, tilemap, setTile, clearTile, cellAt, getTile, getTileById, change a tile, game board, grid, getTileProperties, level.load, level.load async, await level.load, tileset, ImageLayer, infinite map, render order, isometric, hexagonal, staggered, pool.register, Collectable, Trigger, object layer, collision layer, parallax, registerTiledObjectClass, registerObjectClass, TileLayer, Tileset, PlacedTileLayer, setCell, mergeGridRects, level.registerFormat, TMXObject, resolvedProperty, tile class, tile properties."
+description: "Use this skill for Tiled maps and LDtk levels in melonJS (and tile layers built in code) — loading TMX/TSX and .ldtk levels, spawning entities from Tiled objects, collision shapes authored in Tiled, isometric and hexagonal maps, and image layers, and reading or changing tiles while the game runs. Covers registerTiledObjectClass and the pool.register name contract, camera bounds, compressed maps needing the inflate plugin, and the level director API. Triggers on: Tiled, TMX, TSX, LDtk, .ldtk, IntGrid, tilemap, setTile, clearTile, cellAt, getTile, getTileById, change a tile, game board, grid, getTileProperties, level.load, await level.load, tileset, ImageLayer, infinite map, render order, isometric, hexagonal, staggered, pool.register, Collectable, Trigger, object layer, collision layer, collider, Sprite Fusion, parallax, registerTiledObjectClass, registerObjectClass, TileLayer, Tileset, PlacedTileLayer, setCell, mergeGridRects, level.registerFormat, TMXObject, resolvedProperty, tile class, tile properties."
 license: MIT
 ---
 
@@ -14,6 +14,9 @@ license: MIT
 > `.ldtk` project file as the editor saves it: see "LDtk levels" below. What
 > this skill says of tile layers, the level director and the object registry
 > holds for them too.
+>
+> A map made with [Sprite Fusion](https://www.spritefusion.com) is a Tiled
+> map: use its TMX export, see "Solid tile layers" below.
 
 ## Loading a level
 
@@ -401,6 +404,33 @@ on the settings object passed to your entity's constructor. Properties set on
 the object's tile are read with `settings.resolvedProperty(name)`. One is also
 applied to the object the map creates: an `int` property named
 `visibilityLayer` sets which cameras draw it (see `melonjs-camera-and-drawing`).
+
+### Solid tile layers: the `collider` property
+
+A tile layer is solid when it has a boolean custom property named `collider`
+set to true (20.18): each run of its tiles becomes one static `WORLD_SHAPE`
+body, as an unnamed shape of a collision layer does. No object layer to draw.
+
+```js
+// in Tiled: select the tile layer, add a custom property `collider` (bool), check it
+level.load("map1");   // the layer's tiles hold the player up
+```
+
+- The walls are built when the level is loaded, from the tiles the layer has
+  then: `setTile` / `clearTile` afterwards does not change them.
+- Each wall carries the layer's name as `wall.layer`, to tell them apart in a
+  collision handler. The layer itself is still the only thing found by
+  `getChildByName`.
+- They are part of the layer, not objects: `objects: false` leaves them in.
+- Orthogonal maps only; on another orientation the property is ignored, with
+  a warning.
+
+**Sprite Fusion.** Its TMX export is a Tiled map, with one embedded tileset
+over `spritesheet.png` and this same `collider` property on each layer, set
+from the editor's "collider" checkbox: load the `.tmx` as any Tiled map (asset
+type `"tmx"`, the spritesheet as an image named `spritesheet`) and the layers
+checked as colliders are solid. Its JSON export holds the same data in a
+format of its own, which is not read: export TMX.
 
 ## Map orientations
 
@@ -831,6 +861,8 @@ layer into the offscreen-bake path instead.
 | `No inflate function set` at parse time | compressed layers without the tiled-inflate plugin |
 | `@melonjs/tiled-inflate-plugin: cannot read ... compressed layer data` | that layer's data is damaged (a checksum or its length does not match), cut short, or edited by hand: save the map again from Tiled |
 | `Tiled layer "…" has N tiles of data for its W x H cells` | the layer's data does not fill it, as Tiled would refuse too: written by another tool or edited by hand. Save the map again from Tiled |
+| the player falls through a tile layer drawn as the floor | tiles are not solid by themselves: give the layer a `collider` (bool) property set to true, or draw shapes on a collision object layer |
+| a Sprite Fusion map loads and nothing is solid (before 20.18) | the `collider` property of its layers was not read: update |
 | collision shapes are not solid | the object layer's name does not contain `"collision"`, or the objects are named |
 | isometric objects overlap wrongly | `world.sortOn` not set to `"y"` |
 | a character is always in front of (or behind) every wall | the walls are on a tile layer, or on another object layer than the character: each layer has its own `z`, compared before `y` |
