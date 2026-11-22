@@ -7,8 +7,8 @@ import {
 	type Camera2d,
 	collision,
 	type LDtkEntityReference,
-	type LDtkEntitySettings,
-	type LDtkFoundEntity,
+	type LDtkFoundObject,
+	type LDtkObjectSettings,
 	type LDtkProject,
 	loader,
 	MaskEffect,
@@ -54,7 +54,7 @@ class Zone extends PlacedTileLayer {
 	/** the entity's fields, as set in LDtk */
 	fields: Record<string, unknown>;
 
-	constructor(settings: LDtkEntitySettings, placed: PlacedTile[]) {
+	constructor(settings: LDtkObjectSettings, placed: PlacedTile[]) {
 		super({
 			name: settings.name,
 			tileset: tileset(),
@@ -77,7 +77,7 @@ class Zone extends PlacedTileLayer {
 
 /** a ladder: the player climbs while in it */
 export class Ladder extends Zone {
-	constructor(_x: number, _y: number, settings: LDtkEntitySettings) {
+	constructor(_x: number, _y: number, settings: LDtkObjectSettings) {
 		const rung = tileset().tileIdAt(LADDER.x, LADDER.y);
 		const placed: PlacedTile[] = [];
 		// the ladder tile, down the height of the entity's box
@@ -91,7 +91,7 @@ export class Ladder extends Zone {
 /** what a teleport hands the object that took it */
 export interface Traveller extends Renderable {
 	/** be put where a teleport leads, behind the closed screen */
-	arrive(target: LDtkFoundEntity): void;
+	arrive(target: LDtkFoundObject): void;
 	/** between two teleports: the screen is closed */
 	travelling: boolean;
 }
@@ -112,7 +112,7 @@ export class Teleport extends Trigger {
 	/** the flame the teleport is shown as, a tile of the world's tileset */
 	flame: PlacedTileLayer;
 
-	constructor(x: number, y: number, settings: LDtkEntitySettings) {
+	constructor(x: number, y: number, settings: LDtkObjectSettings) {
 		super(x, y, {
 			// the screen closes on the player in the player's own shape
 			transition: "mask",
@@ -156,7 +156,7 @@ export class Teleport extends Trigger {
 	override triggerEvent(other?: Renderable) {
 		const traveller = other as Traveller | undefined;
 		const project = loader.getLDtk("gridvania") as LDtkProject;
-		const target = project.findEntity(this.destination);
+		const target = project.findObject(this.destination);
 		if (traveller === undefined || target === undefined || this.fading) {
 			return;
 		}

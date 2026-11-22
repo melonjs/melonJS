@@ -348,10 +348,10 @@ describe("an LDtk project made for the test", () => {
 
 	it("an entity takes its layer's opacity, and a hidden layer still holds its entities and its walls", async () => {
 		await enter(app, "single:Faded");
-		const lamp = current().getEntities("Lamp")[0];
+		const lamp = current().getObjects("Lamp")[0];
 		expect(lamp.getOpacity()).toBe(0.5);
 		// hidden in LDtk: in the game, not shown
-		const ghost = current().getEntities("Ghost")[0];
+		const ghost = current().getObjects("Ghost")[0];
 		expect(ghost).toBeDefined();
 		expect(ghost.getOpacity()).toBe(0);
 		// a collision layer hidden in the editor is still the floor
@@ -540,7 +540,7 @@ describe("an LDtk project made for the test", () => {
 	it("an entity built by the engine's Trigger takes its level and its transition from its fields", async () => {
 		registerObjectClass("Door", Trigger as never);
 		await enter(app, "extras:Near");
-		const doors = current().getEntities("Door") as unknown as Trigger[];
+		const doors = current().getObjects("Door") as unknown as Trigger[];
 		expect(doors).toHaveLength(2);
 		const portal = doors.find((door) => {
 			return door.duration === 250;

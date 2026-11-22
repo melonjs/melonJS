@@ -114,7 +114,7 @@ describe("an LDtk project that fails to load", () => {
 		served.set("found-image.ldtk", withImage("atlas/ldtk-no-such-image.png"));
 		await preload("found-image", "found-image.ldtk");
 		expect(loader.getLDtk("found-image")?.levels).toHaveLength(1);
-		await enter(app, "found-image:AutoLayer", { entities: false });
+		await enter(app, "found-image:AutoLayer", { objects: false });
 		const loaded = level.getCurrentLevel() as unknown as {
 			layers: unknown[];
 		};
@@ -307,7 +307,7 @@ describe("an LDtk project that fails to load", () => {
 			}),
 		]);
 		expect(level.levelCount()).toBe(count + 2);
-		await enter(app, "at-once:AutoLayer", { entities: false });
+		await enter(app, "at-once:AutoLayer", { objects: false });
 		// the level in the world is of the project the loader holds
 		const loaded = level.getCurrentLevel() as unknown as { project: unknown };
 		expect(loaded.project).toBe(loader.getLDtk("at-once"));

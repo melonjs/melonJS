@@ -64,7 +64,7 @@ export interface LDtkWorldInfo {
  * game finds them (a player's start, the doors of a world) without reading
  * the levels.
  */
-export interface LDtkListedEntity {
+export interface LDtkListedObject {
 	/** the entity's identifier in LDtk */
 	identifier: string;
 	/** the entity's unique id in LDtk */
@@ -88,7 +88,7 @@ export interface LDtkListedEntity {
 }
 
 /** an entity of the project, found without its level being loaded */
-export interface LDtkFoundEntity {
+export interface LDtkFoundObject {
 	/** the level it is in */
 	level: LDtkLevelInfo;
 	/** the identifier of the layer it is in */
@@ -313,13 +313,13 @@ export class LDtkProject {
 	 * @param reference - the entity's `iid`, or the value of an `EntityRef` field
 	 * @returns the entity, its level and where it is, or undefined
 	 * @example
-	 * const target = project.findEntity(teleport.fields.destination);
+	 * const target = project.findObject(teleport.fields.destination);
 	 * ldtkWorld.loadLevel(target.level.identifier);
 	 * player.pos.set(target.x, target.y);
 	 */
-	findEntity(
+	findObject(
 		reference: string | LDtkEntityReference | null | undefined,
-	): LDtkFoundEntity | undefined {
+	): LDtkFoundObject | undefined {
 		if (reference === null || reference === undefined) {
 			return undefined;
 		}
@@ -377,8 +377,8 @@ export class LDtkProject {
 	 * const [start] = loader.getLDtk("world").getTableOfContent("PlayerStart");
 	 * level.load("world", { levels: [start.level.identifier] });
 	 */
-	getTableOfContent(identifier?: string): LDtkListedEntity[] {
-		const listed: LDtkListedEntity[] = [];
+	getTableOfContent(identifier?: string): LDtkListedObject[] {
+		const listed: LDtkListedObject[] = [];
 		for (const entry of this.json.toc ?? []) {
 			if (identifier !== undefined && entry.identifier !== identifier) {
 				continue;

@@ -24,10 +24,10 @@ import { IntGrid } from "./intgrid.ts";
 import type { LDtkLevelInfo, LDtkProject, LDtkWorldInfo } from "./project.ts";
 import { fieldValues } from "./project.ts";
 import {
-	type EntityTile,
 	LDtkBackground,
-	LDtkEntity,
-	type LDtkEntitySettings,
+	LDtkObject,
+	type LDtkObjectSettings,
+	type ObjectTile,
 	regionOf,
 	regionSprite,
 	type TileImage,
@@ -60,13 +60,14 @@ export interface LDtkLoadOptions {
 	 */
 	showIntGrid?: boolean;
 	/**
-	 * Add the entities of the Entities layers: all of them, none, or the
-	 * ones a function says, asked for each entity as its level is built
-	 * (and built again, in a world whose levels come and go). The way to
-	 * leave out what the player took: `(entity) => !taken.has(entity.iid)`.
+	 * Build the objects LDtk's Entities layers place (its "entities"): all
+	 * of them, none, or the ones a function says, asked for each one as its
+	 * level is built (and built again, in a world whose levels come and go).
+	 * The way to leave out what the player took:
+	 * `(entity) => !taken.has(entity.iid)`.
 	 * @default true
 	 */
-	entities?:
+	objects?:
 		| boolean
 		| ((entity: LDtkEntityInstance, level: LDtkLevelInfo) => boolean);
 	/**
@@ -89,7 +90,7 @@ export const LOAD_OPTIONS = [
 	"collisionLayers",
 	"solidValues",
 	"showIntGrid",
-	"entities",
+	"objects",
 	"setViewportBounds",
 	"levels",
 ];
@@ -120,8 +121,8 @@ export interface BuiltLevel {
 	children: Renderable[];
 	/** its tile layers, bottom-most first */
 	layers: Renderable[];
-	/** its entities */
-	entities: Renderable[];
+	/** the objects built from its entities */
+	objects: Renderable[];
 	/** the identifier in LDtk of each of them, whatever class built it */
 	identifiers: Map<Renderable, string>;
 	/** the unique id in LDtk of each of them */
@@ -342,7 +343,7 @@ class LevelBuilder {
 			info,
 			children: [],
 			layers: [],
-			entities: [],
+			objects: [],
 			identifiers: new Map(),
 			iids: new Map(),
 			intGrids: new Map(),
@@ -420,7 +421,7 @@ class LevelBuilder {
 			if (tiles.length > 0) {
 				this.buildTiles(built, layer, x, y, z, opacity, parallax);
 			}
-			const wanted = this.options.entities;
+			const wanted = this.options.objects;
 			if (layer.entityInstances.length > 0 && wanted !== false) {
 				// LDtk draws a later entity over an earlier one. Children of
 				// one draw order are drawn last added first, so the last
@@ -437,19 +438,19 @@ class LevelBuilder {
 					const stayed = this.map.persistentEntity?.(entity.iid);
 					if (stayed !== undefined) {
 						built.children.push(stayed);
-						built.entities.unshift(stayed);
+						built.objects.unshift(stayed);
 						built.identifiers.set(stayed, entity.__identifier);
 						built.iids.set(stayed, entity.iid);
 						continue;
 					}
-					const settings = this.entitySettings(info, layer, entity, x, y, z);
+					const settings = this.objectSettings(info, layer, entity, x, y, z);
 					// a class the game registered under the entity's name.
 					// Not the engine's own classes: an entity's name is the
 					// designer's word ("Trigger", "Text", "Entity"), not a
 					// request for the engine class of that name
 					const object = hasObjectFactory(settings.class, true)
 						? createLevelObject(settings, this.map)
-						: new LDtkEntity(settings);
+						: new LDtkObject(settings);
 					// found by its name in LDtk, whatever built it
 					if (!object.name) {
 						object.name = settings.name;
@@ -460,7 +461,7 @@ class LevelBuilder {
 						applyObjectOpacity(object, opacity);
 					}
 					this.add(built, object, z);
-					built.entities.unshift(object);
+					built.objects.unshift(object);
 					built.identifiers.set(object, settings.name);
 					built.iids.set(object, entity.iid);
 				}
@@ -710,11 +711,11 @@ class LevelBuilder {
 	 * @param borders - in nine-slice mode, the borders that are not stretched
 	 * @returns the tile, or undefined when the tileset has no image
 	 */
-	entityTile(
+	objectTile(
 		rect: LDtkTileRect | null | undefined,
 		mode: string,
 		borders: number[] | undefined,
-	): EntityTile | undefined {
+	): ObjectTile | undefined {
 		if (rect === null || rect === undefined) {
 			return undefined;
 		}
@@ -725,7 +726,7 @@ class LevelBuilder {
 		}
 		const atlas = this.atlasOf(image);
 		const region = regionOf(atlas, rect.x, rect.y, rect.w, rect.h);
-		const tile: EntityTile = {
+		const tile: ObjectTile = {
 			atlas,
 			region,
 			x: rect.x,
@@ -750,17 +751,17 @@ class LevelBuilder {
 	 * @param z - the layer's draw order
 	 * @returns the settings
 	 */
-	entitySettings(
+	objectSettings(
 		info: LDtkLevelInfo,
 		layer: LDtkLayerInstance,
 		entity: LDtkEntityInstance,
 		x: number,
 		y: number,
 		z: number,
-	): LDtkEntitySettings {
+	): LDtkObjectSettings {
 		const def = this.project.entityDefs.get(entity.defUid);
 		const fields = fieldValues(entity.fieldInstances);
-		const settings: LDtkEntitySettings = {
+		const settings: LDtkObjectSettings = {
 			name: entity.__identifier,
 			class: entity.__identifier,
 			type: entity.__identifier,
@@ -780,7 +781,7 @@ class LevelBuilder {
 			level: info.identifier,
 			anchorPoint: { x: 0, y: 0 },
 		};
-		const tile = this.entityTile(
+		const tile = this.objectTile(
 			entity.__tile,
 			def?.tileRenderMode ?? "FitInside",
 			def?.nineSliceBorders,
@@ -1030,14 +1031,14 @@ export class LDtkLevel extends LDtkMap {
 	 * @param name - an entity identifier, to get only those
 	 * @returns the entities
 	 */
-	getEntities(name?: string): Renderable[] {
+	getObjects(name?: string): Renderable[] {
 		const built = this.built;
 		if (built === undefined) {
 			return [];
 		}
 		return name === undefined
-			? built.entities.slice()
-			: built.entities.filter((entity) => {
+			? built.objects.slice()
+			: built.objects.filter((entity) => {
 					return built.identifiers.get(entity) === name;
 				});
 	}
@@ -1048,7 +1049,7 @@ export class LDtkLevel extends LDtkMap {
 	 * @param iid - the entity's `iid`
 	 * @returns the entity, as added to the container, or undefined
 	 */
-	getEntity(iid: string): Renderable | undefined {
+	getObject(iid: string): Renderable | undefined {
 		for (const [entity, id] of this.built?.iids ?? []) {
 			if (id === iid) {
 				return entity;
@@ -1318,16 +1319,16 @@ export class LDtkWorld extends LDtkMap {
 	 * @param name - an entity identifier, to get only those
 	 * @returns the entities
 	 */
-	getEntities(name?: string): Renderable[] {
-		const entities: Renderable[] = [];
+	getObjects(name?: string): Renderable[] {
+		const objects: Renderable[] = [];
 		for (const built of this.loaded.values()) {
-			for (const entity of built.entities) {
+			for (const entity of built.objects) {
 				if (name === undefined || built.identifiers.get(entity) === name) {
-					entities.push(entity);
+					objects.push(entity);
 				}
 			}
 		}
-		return entities;
+		return objects;
 	}
 
 	/**
@@ -1336,7 +1337,7 @@ export class LDtkWorld extends LDtkMap {
 	 * @param iid - the entity's `iid`
 	 * @returns the entity, as added to the container, or undefined
 	 */
-	getEntity(iid: string): Renderable | undefined {
+	getObject(iid: string): Renderable | undefined {
 		for (const built of this.loaded.values()) {
 			for (const [entity, id] of built.iids) {
 				if (id === iid) {

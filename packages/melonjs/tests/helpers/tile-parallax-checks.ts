@@ -801,7 +801,7 @@ export function parallaxChecks(
 			}
 			// an entity of that layer is a thing of the level: it stays
 			// where it is in it, moved by the layer's offset alone
-			const [lamp] = loaded.getEntities("Lamp");
+			const [lamp] = loaded.getObjects("Lamp");
 			expect([lamp.pos.x, lamp.pos.y]).toEqual([64 + 8, 48 - 8]);
 		});
 

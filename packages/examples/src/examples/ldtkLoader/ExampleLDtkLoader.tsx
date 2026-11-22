@@ -8,8 +8,8 @@ import {
 	event,
 	game,
 	input,
-	LDtkEntity,
 	type LDtkLevel,
+	LDtkObject,
 	type LDtkWorld,
 	level,
 	loader,
@@ -25,7 +25,7 @@ import { resources, samples } from "./resources";
 /**
  * The entities of what is loaded, outlined in the color LDtk shows each in.
  * No class is registered for them here, so each is a plain box
- * (`LDtkEntity`) carrying its fields, drawn with its tile when it has one: a
+ * (`LDtkObject`) carrying its fields, drawn with its tile when it has one: a
  * game registers its own classes with `registerObjectClass("Player", Player)`.
  */
 class EntityOutlines extends Renderable {
@@ -46,7 +46,7 @@ class EntityOutlines extends Renderable {
 	override draw(renderer: Renderer) {
 		renderer.lineWidth = 1;
 		for (const entity of this.entities) {
-			if (entity instanceof LDtkEntity) {
+			if (entity instanceof LDtkObject) {
 				renderer.setColor(entity.source.color ?? "#ffffff");
 				renderer.strokeRect(
 					entity.pos.x + 0.5,
@@ -78,7 +78,7 @@ const loadLevel = (id: string) => {
 			const loaded = level.getCurrentLevel() as unknown as
 				| LDtkLevel
 				| LDtkWorld;
-			const entities = loaded.getEntities();
+			const entities = loaded.getObjects();
 			// a world keeps LDtk's coordinates: it can start left of or above 0
 			const x = "x" in loaded ? loaded.x : 0;
 			const y = "y" in loaded ? loaded.y : 0;

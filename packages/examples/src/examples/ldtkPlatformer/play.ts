@@ -54,13 +54,13 @@ export class PlayScreen extends Stage {
 			// the camera is held to a room at a time, not to the world
 			setViewportBounds: false,
 			// a room that comes back does not bring back what was taken
-			entities: (entity) => {
+			objects: (entity) => {
 				return !gameState.taken.has(entity.iid);
 			},
 			onLoaded: () => {
 				const world = ldtkWorld();
 				// the player, drawn over the layers of every room and depth
-				const [player] = world.getEntities("Player") as Player[];
+				const [player] = world.getObjects("Player") as Player[];
 				player.depth = PLAYER_Z;
 				app.world.addChild(new HUD(project, app.viewport.width), HUD_Z);
 				app.world.sort();

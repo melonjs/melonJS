@@ -92,7 +92,7 @@ export function gpuChecks(
 				let placedTotal = 0;
 				let allTiles = 0;
 				for (const info of project.levels) {
-					await enter(game, info.id, { entities: false });
+					await enter(game, info.id, { objects: false });
 					game.viewport.moveTo(0, 0);
 					const layers = (level.getCurrentLevel() as unknown as LDtkLevel)
 						.layers;
@@ -178,7 +178,7 @@ export function gpuChecks(
 			}
 			const game = app;
 			await enter(game, "Typical_TopDown_example:World_Level_0", {
-				entities: false,
+				objects: false,
 			});
 			game.viewport.moveTo(0, 0);
 			const layers = (level.getCurrentLevel() as unknown as LDtkLevel).layers;
@@ -222,7 +222,7 @@ export function gpuChecks(
 				return { calls, data: (await grabFrame(game.renderer)).data };
 			};
 			await enter(game, "Typical_TopDown_example:World_Level_0", {
-				entities: false,
+				objects: false,
 			});
 			game.viewport.moveTo(0, 0);
 			const onGpu = await draw();

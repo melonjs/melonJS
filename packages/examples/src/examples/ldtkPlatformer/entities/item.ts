@@ -5,7 +5,7 @@
  */
 import {
 	collision,
-	type LDtkEntitySettings,
+	type LDtkObjectSettings,
 	Rect,
 	Sprite,
 	Tween,
@@ -34,7 +34,7 @@ export class Item extends Sprite {
 	count: number;
 	collected = false;
 
-	constructor(x: number, y: number, settings: LDtkEntitySettings) {
+	constructor(x: number, y: number, settings: LDtkObjectSettings) {
 		// standing on the bottom of the entity's box, in its middle
 		super(x + (settings.width - SIZE) / 2, y + settings.height - SIZE, {
 			image: "ldtk-platformer-sprites",

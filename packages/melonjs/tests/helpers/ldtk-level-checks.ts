@@ -46,7 +46,7 @@ export function levelChecks(
 				expect(project.levels.length).toBeGreaterThan(0);
 				let tiles = 0;
 				for (const info of project.levels) {
-					await enter(app, info.id, { entities: false });
+					await enter(app, info.id, { objects: false });
 					const picture = referenceLevel(project.json, info.json, false);
 					// a level smaller than the view is centred in it
 					const x = Math.max(0, Math.trunc((WIDTH - info.width) / 2));

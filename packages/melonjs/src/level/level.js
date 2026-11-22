@@ -142,7 +142,7 @@ function levelIdAt(offset) {
  * @property {string[]} [collisionLayers] - (LDtk only) the IntGrid layers whose cells are solid, by their identifier; by default the ones whose identifier contains "collision"
  * @property {number[]} [solidValues] - (LDtk only) the values of those layers that are solid; by default every value but 0
  * @property {boolean} [showIntGrid=false] - (LDtk only) draw the IntGrid layers that have no tiles of their own, each value in its LDtk color
- * @property {boolean|Function} [entities=true] - (LDtk only) add the entities of the Entities layers: all, none, or the ones a function `(entity, level) => boolean` says
+ * @property {boolean|Function} [objects=true] - (LDtk only) build the objects its Entities layers place: all, none, or the ones a function `(entity, level) => boolean` says
  * @property {string[]} [levels] - (LDtk only, loading a whole world) the levels to start with, by their identifier; by default every level
  * @property {number} [scale=1] - (glTF/GLB only) pixels per glTF unit applied to the whole scene
  * @property {boolean} [rightHanded=true] - (glTF/GLB only) convert the right-handed (Y-up) source to the engine's Y-down via a rotation rather than a mirror

@@ -4,9 +4,9 @@ import {
 	collision,
 	event,
 	IntGrid,
-	LDtkEntity,
-	type LDtkEntitySettings,
 	LDtkLevel,
+	LDtkObject,
+	type LDtkObjectSettings,
 	type LDtkProject,
 	type LDtkProjectJson,
 	level,
@@ -185,7 +185,7 @@ describe("an LDtk project in the level director", () => {
 		await enter(app, "AutoLayers_1_basic:AutoLayer");
 		expect(first.layers).toEqual([]);
 		expect(first.getIntGrid("Collisions")).toBeUndefined();
-		expect(first.getEntities()).toEqual([]);
+		expect(first.getObjects()).toEqual([]);
 		expect(first.container).toBeUndefined();
 		// nothing of the first level is left in the world
 		expect(
@@ -221,7 +221,7 @@ describe("an LDtk project in the level director", () => {
 		for (const sample of SAMPLES) {
 			const project = projects.get(sample) as LDtkProject;
 			const info = project.levels[0];
-			await enter(app, info.id, { entities: false });
+			await enter(app, info.id, { objects: false });
 			// each tileset the level's layers draw with, by its name
 			const tilesets = new Map<
 				string,
@@ -477,19 +477,19 @@ describe("the IntGrid layers of a level", () => {
 describe("the entities of a level", () => {
 	it("with no class registered, are boxes to find and read", async () => {
 		await enter(app, "Typical_TopDown_example:World_Level_0");
-		const entities = current().getEntities();
+		const entities = current().getObjects();
 		expect(entities).toHaveLength(8);
 		expect(
 			entities.every((entity) => {
-				return entity instanceof LDtkEntity && entity.ancestor === app.world;
+				return entity instanceof LDtkObject && entity.ancestor === app.world;
 			}),
 		).toBe(true);
 		// found by name in the world, as any renderable is
 		expect(app.world.getChildByName("Player")).toHaveLength(1);
-		expect(current().getEntities("Door")).toHaveLength(4);
+		expect(current().getObjects("Door")).toHaveLength(4);
 
 		// LDtk places the player by its centre: at 168, 168, 16 x 16
-		const player = current().getEntities("Player")[0] as LDtkEntity;
+		const player = current().getObjects("Player")[0] as LDtkObject;
 		expect(player.pos.x).toBe(160);
 		expect(player.pos.y).toBe(160);
 		expect(player.width).toBe(16);
@@ -506,10 +506,10 @@ describe("the entities of a level", () => {
 
 		// a door by its top left corner
 		const door = current()
-			.getEntities("Door")
+			.getObjects("Door")
 			.find((entity) => {
 				return entity.pos.x === 112;
-			}) as LDtkEntity;
+			}) as LDtkObject;
 		expect(door.pos.y).toBe(144);
 		expect(door.width).toBe(16);
 		expect(door.height).toBe(48);
@@ -526,7 +526,7 @@ describe("the entities of a level", () => {
 
 	it("give every kind of field its value", async () => {
 		await enter(app, "Test_file_for_API_showing_all_features:Everything");
-		const entity = current().getEntities("EntityFieldsTest")[0] as LDtkEntity;
+		const entity = current().getObjects("EntityFieldsTest")[0] as LDtkObject;
 		expect(entity.fields).toMatchObject({
 			Integer: 1,
 			Float: 1.5,
@@ -547,10 +547,10 @@ describe("the entities of a level", () => {
 	});
 
 	it("with a class registered, are built by it from their settings", async () => {
-		const made: { x: number; y: number; settings: LDtkEntitySettings }[] = [];
+		const made: { x: number; y: number; settings: LDtkObjectSettings }[] = [];
 		class Item extends Renderable {
 			kind: unknown;
-			constructor(x: number, y: number, settings: LDtkEntitySettings) {
+			constructor(x: number, y: number, settings: LDtkObjectSettings) {
 				super(x, y, settings.width, settings.height);
 				made.push({ x, y, settings });
 				this.name = settings.name;
@@ -559,7 +559,7 @@ describe("the entities of a level", () => {
 		}
 		registerObjectClass("Item", Item as never);
 		await enter(app, "Typical_TopDown_example:World_Level_0");
-		const items = current().getEntities("Item");
+		const items = current().getObjects("Item");
 		expect(items).toHaveLength(2);
 		expect(
 			items.every((item) => {
@@ -590,11 +590,11 @@ describe("the entities of a level", () => {
 		// a field named like a setting stays under `fields` alone
 		expect(key?.settings.type).toBe("Item");
 		// the others are still boxes
-		expect(current().getEntities("Player")[0]).toBeInstanceOf(LDtkEntity);
+		expect(current().getObjects("Player")[0]).toBeInstanceOf(LDtkObject);
 
 		// a field with a free name is also read straight off the settings
 		class Player extends Renderable {
-			constructor(x: number, y: number, settings: LDtkEntitySettings) {
+			constructor(x: number, y: number, settings: LDtkObjectSettings) {
 				super(x, y, settings.width, settings.height);
 				made.push({ x, y, settings });
 				this.name = settings.name;
@@ -614,9 +614,9 @@ describe("the entities of a level", () => {
 
 	it("are left out when asked", async () => {
 		await enter(app, "Typical_TopDown_example:World_Level_0", {
-			entities: false,
+			objects: false,
 		});
-		expect(current().getEntities()).toEqual([]);
+		expect(current().getObjects()).toEqual([]);
 		expect(app.world.getChildByName("Door")).toEqual([]);
 	});
 });
@@ -658,7 +658,7 @@ describe("loading and unloading a project", () => {
 			false,
 		);
 		expect(loader.getLDtk("inline")?.levels).toHaveLength(1);
-		await enter(app, "inline:AutoLayer", { entities: false });
+		await enter(app, "inline:AutoLayer", { objects: false });
 		expect(current().layers.length).toBeGreaterThan(0);
 		loader.unload({ name: "inline", type: "ldtk" });
 	});

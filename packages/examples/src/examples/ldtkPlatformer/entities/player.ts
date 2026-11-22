@@ -7,8 +7,8 @@ import {
 	type Application,
 	collision,
 	input,
-	type LDtkEntitySettings,
-	type LDtkFoundEntity,
+	type LDtkFoundObject,
+	type LDtkObjectSettings,
 	Rect,
 	type Renderable,
 	Sprite,
@@ -20,12 +20,19 @@ import { Item } from "./item";
 import { Ladder, Teleport } from "./zones";
 
 // in pixels per frame
-const WALK = 2.5;
-const JUMP = 8;
-const CLIMB = 1.5;
-const SINK = 1;
-// a lighter gravity than the world's, for a jump of three tiles and a half
-const GRAVITY = 0.6;
+const WALK = 2;
+// what a held key adds to the speed each frame, and what the ground takes
+// off it: the player gets up to speed, and comes to a stop, over a few frames
+const PUSH = 0.45;
+const DRAG = 0.25;
+const JUMP = 7.4;
+const CLIMB = 1;
+const SINK = 0.8;
+// the push of a stroke under water
+const STROKE = 3.3;
+// a lighter gravity than the world's: a jump of nearly four tiles, long
+// enough to clear a gap of three
+const GRAVITY = 0.45;
 const WATER_GRAVITY = 0.2;
 // frames out of every room before the player is put back where it stood
 const LOST_AFTER = 45;
@@ -50,7 +57,7 @@ export class Player extends Sprite {
 	safe = new Vector2d();
 	lost = 0;
 
-	constructor(x: number, y: number, settings: LDtkEntitySettings) {
+	constructor(x: number, y: number, settings: LDtkObjectSettings) {
 		// standing on the bottom of the entity's box, in its middle
 		super(x + (settings.width - SIZE) / 2, y + settings.height - SIZE, {
 			image: "ldtk-platformer-sprites",
@@ -74,7 +81,7 @@ export class Player extends Sprite {
 				collision.types.COLLECTABLE_OBJECT |
 				collision.types.ACTION_OBJECT,
 			maxVelocity: { x: WALK, y: JUMP },
-			frictionAir: { x: 0.5, y: 0 },
+			frictionAir: { x: DRAG, y: 0 },
 			gravityScale: GRAVITY,
 		};
 		// The player is an entity of the room it starts in, and walks out of
@@ -165,8 +172,8 @@ export class Player extends Sprite {
 		const wet = (py: number) => {
 			return grid?.names.get(grid.valueAtPixel(x, py)) === "water";
 		};
-		// in the water up to the waist, or only the feet: at the surface
-		const under = wet(y);
+		// under water, or with the head out of it: at the surface
+		const under = wet(this.pos.y + 3);
 		const surface = !under && wet(this.pos.y + this.height - 2);
 		this.swimming = under || surface;
 		this.tint.setColor(
@@ -180,10 +187,10 @@ export class Player extends Sprite {
 		const up = input.isKeyPressed("up");
 		const down = input.isKeyPressed("down");
 		if (input.isKeyPressed("left")) {
-			body.force.x = -body.maxVel.x;
+			body.force.x = -PUSH;
 			this.flipX(true);
 		} else if (input.isKeyPressed("right")) {
-			body.force.x = body.maxVel.x;
+			body.force.x = PUSH;
 			this.flipX(false);
 		}
 
@@ -217,7 +224,9 @@ export class Player extends Sprite {
 			body.vel.y = up ? -CLIMB : down ? CLIMB : 0;
 		} else if (onTop) {
 			body.gravityScale = 0;
-		} else if (under) {
+		} else if (under || (surface && body.vel.y > -STROKE - 0.2)) {
+			// in the water the player sinks slowly; jumping out of it, it is
+			// under the world's gravity again
 			body.gravityScale = WATER_GRAVITY;
 			body.vel.y = Math.min(body.vel.y, SINK);
 		} else {
@@ -234,7 +243,7 @@ export class Player extends Sprite {
 			// the ground, it is a jump, out of the water
 			body.gravityScale = under ? WATER_GRAVITY : GRAVITY;
 			body.vel.y = 0;
-			body.force.y = -body.maxVel.y * (under ? 0.45 : 1);
+			body.force.y = under ? -STROKE : -body.maxVel.y;
 			body.jumping = true;
 		}
 
@@ -278,7 +287,7 @@ export class Player extends Sprite {
 	 * that may be on the world's other depth.
 	 * @param target - the entity, its room and its place, as the project found them
 	 */
-	arrive(target: LDtkFoundEntity) {
+	arrive(target: LDtkFoundObject) {
 		const app = this.parentApp;
 		// the rooms of the depth left go, the ones of the depth reached come
 		gameState.depth = target.level.depth;

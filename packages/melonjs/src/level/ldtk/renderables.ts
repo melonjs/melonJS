@@ -7,7 +7,7 @@ import type { TextureAtlas } from "../../video/texture/atlas.js";
 export type TileImage = HTMLImageElement | HTMLCanvasElement | OffscreenCanvas;
 
 /** the rectangle of a tileset an entity is drawn with in LDtk */
-export interface EntityTile {
+export interface ObjectTile {
 	/** a texture atlas over the tileset's image, holding the rectangle as a region */
 	atlas: TextureAtlas;
 	/** the name of the rectangle's region in the atlas */
@@ -27,7 +27,7 @@ export interface EntityTile {
 }
 
 /** what an entity's class is given: the entity as placed in LDtk */
-export interface LDtkEntitySettings {
+export interface LDtkObjectSettings {
 	/** the entity's identifier in LDtk: what a class is registered under */
 	name: string;
 	/** the same identifier */
@@ -57,7 +57,7 @@ export interface LDtkEntitySettings {
 	/** the entity's custom fields, by name (also copied onto the settings, where the name is free) */
 	fields: Record<string, unknown>;
 	/** the tile LDtk draws the entity with, if its tileset has an image */
-	tileRect?: EntityTile;
+	tileRect?: ObjectTile;
 	/**
 	 * With a tile: a texture atlas over its tileset's image, which with
 	 * `region` is what a `Sprite` is made from, so a class extending `Sprite`
@@ -134,9 +134,9 @@ export function regionSprite(
  * image (a pattern repeats a whole image).
  */
 class RepeatedTile extends Renderable {
-	tile: EntityTile;
+	tile: ObjectTile;
 
-	constructor(tile: EntityTile, width: number, height: number) {
+	constructor(tile: ObjectTile, width: number, height: number) {
 		super(0, 0, width, height);
 		this.anchorPoint.set(0, 0);
 		this.tile = tile;
@@ -177,8 +177,8 @@ class RepeatedTile extends Renderable {
  * @param pivotY - where the tile is held in the box, from 0 (top) to 1
  * @returns the renderable, placed from the box's top left corner; undefined for a box or a tile of no size
  */
-export function createEntityTile(
-	tile: EntityTile,
+export function createObjectTile(
+	tile: ObjectTile,
 	width: number,
 	height: number,
 	pivotX: number,
@@ -281,7 +281,7 @@ export function createEntityTile(
  * be found (`world.getChildByName("PlayerStart")`) and read.
  * @category Tilemap
  */
-export class LDtkEntity extends Renderable {
+export class LDtkObject extends Renderable {
 	/** the entity's unique id in LDtk */
 	iid: string;
 	/** the entity's custom fields, by name */
@@ -291,16 +291,16 @@ export class LDtkEntity extends Renderable {
 	/** where the entity's pivot is in its box, each from 0 to 1 */
 	pivot: { x: number; y: number };
 	/** the tile LDtk draws the entity with, if any */
-	tile: EntityTile | undefined;
+	tile: ObjectTile | undefined;
 	/** what shows that tile: a sprite, placed from the box's top left corner */
 	tileSprite: Renderable | undefined;
 	/** the entity as placed in LDtk: what a class registered for it would be given */
-	source: LDtkEntitySettings;
+	source: LDtkObjectSettings;
 
 	/**
 	 * @param settings - the entity as placed in LDtk
 	 */
-	constructor(settings: LDtkEntitySettings) {
+	constructor(settings: LDtkObjectSettings) {
 		super(settings.x, settings.y, settings.width, settings.height);
 		this.anchorPoint.set(0, 0);
 		this.name = settings.name;
@@ -312,7 +312,7 @@ export class LDtkEntity extends Renderable {
 		this.tileSprite =
 			this.tile === undefined
 				? undefined
-				: createEntityTile(
+				: createObjectTile(
 						this.tile,
 						this.width,
 						this.height,

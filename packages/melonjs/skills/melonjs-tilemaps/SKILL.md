@@ -494,14 +494,14 @@ level.load("world:Level_0");                       // "<asset name>:<level ident
   freed with the last project that uses it, unless a bundle lists it or the
   game loaded it too. An image the game loaded itself under that name is used
   instead of the file.
-- **Entities** are built by the class the game registered under their
+- **Entities** (LDtk's word for what Tiled calls objects) are built by the class the game registered under their
   identifier: `new Player(x, y, settings)`, `x` and `y` being the top left
   corner of the entity's box whatever its pivot in LDtk (`settings.px` is the
   pivot). `settings.fields` holds its fields, also copied onto the settings
   where the name is free (`settings.life`; not `type` or `width`). An entity
   LDtk draws with a tile carries it as `settings.image` (a texture atlas) and
   `settings.region`, so a class extending `Sprite` passes the settings straight
-  to `super(x, y, settings)`. With no class, an entity is an `LDtkEntity`: a
+  to `super(x, y, settings)`. With no class, an entity is an `LDtkObject`: a
   box with no body, found with `world.getChildByName("PlayerStart")`, showing
   its tile (a `Sprite`, in LDtk's fill mode) if it has one. Only classes the
   game registered count: an entity named "Trigger" or "Text" is not built by
@@ -530,9 +530,9 @@ level.load("world:Level_0");                       // "<asset name>:<level ident
     it: make it persistent (`this.isPersistent = true`, as for a player that
     outlives a level change) and it stays when its level is taken out, and
     is not built again when the level comes back;
-  - a level taken out and loaded again builds its entities again: leave out
-    what the player took with the `entities` option, a function asked for
-    each entity, `entities: (entity) => !taken.has(entity.iid)` (it works for
+  - a level taken out and loaded again builds its objects again: leave out
+    what the player took with the `objects` option, a function asked for
+    each entity, `objects: (entity) => !taken.has(entity.iid)` (it works for
     a level loaded alone too);
   - levels stacked on LDtk's world depths cover the same place: give the
     depth the player is on, `streamAround(x, y, w, h, margin, depth)` and
@@ -544,13 +544,13 @@ level.load("world:Level_0");                       // "<asset name>:<level ident
     the entity in LDtk, and the transition's color is the entity's own in
     LDtk;
   - an `EntityRef` field (a teleport's destination) is resolved with
-    `project.findEntity(ref)`: its `level`, and its `x` / `y` in the world,
-    whether that level is loaded or not; once it is, `world.getEntity(iid)`
+    `project.findObject(ref)`: its `level`, and its `x` / `y` in the world,
+    whether that level is loaded or not; once it is, `world.getObject(iid)`
     is the object.
 - `loader.getLDtk("world")` is the project: its levels (`id`, size, `fields`,
   `neighbours`), its worlds, `getTileData` / `getTileTags` for a tile's custom
   data and enum tags. `showIntGrid: true` draws IntGrid layers that have no
-  tiles, in LDtk's colors; `entities: false` leaves the entities out.
+  tiles, in LDtk's colors; `objects: false` builds no object from the entities.
 - **Table of content**: `project.getTableOfContent("PlayerStart")` lists the
   entities whose definition has "Add to table of content" checked in LDtk,
   with no level loaded: each one's `level`, its `x` / `y` in the world, its
@@ -767,7 +767,7 @@ layer into the offscreen-bake path instead.
 | a Tiled parallax layer is not where Tiled shows it at the start of the level | Tiled measures a factor from the centre of its own view to the map's parallax origin; the engine measures from the camera's position, for tile and image layers alike: move the layer with its offset, or set `layer.parallax` yourself |
 | `getTile` finds nothing under a tile of a parallax layer | a parallax moves where the layer is drawn, not its cells: they are where the layer was placed |
 | the player disappears when walking out of its first LDtk level | it is an entity of that level, taken out with it: set `isPersistent = true` on it |
-| the coins again after coming back to an LDtk level | a level loaded again builds its entities again: the `entities` option leaves out what was taken |
+| the coins again after coming back to an LDtk level | a level loaded again builds its objects again: the `objects` option leaves out what was taken |
 | two LDtk levels are drawn over each other, with walls from both | they are on different world depths, at the same place: pass the player's depth to `streamAround` and `levelsAt` |
 | a `Sprite` class for an LDtk entity throws `'undefined' image/texture not found` | the entity's tile is one of LDtk's built-in icons (a tileset with `embedAtlas`): they are not in the project's files, and LDtk does not allow redistributing them, so `settings.image` is not set. Use art of your own, or a tile of one of the project's tilesets |
 | an LDtk entity is placed half its size off | `x`, `y` are its box's top left corner; its pivot is `settings.px` |

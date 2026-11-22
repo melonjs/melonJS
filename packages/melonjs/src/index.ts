@@ -15,7 +15,7 @@ import GLTFModel from "./level/gltf/GLTFModel.js";
 import { IntGrid } from "./level/ldtk/intgrid.ts";
 import { LDtkLevel, LDtkWorld } from "./level/ldtk/level.ts";
 import { LDtkProject } from "./level/ldtk/project.ts";
-import { LDtkEntity } from "./level/ldtk/renderables.ts";
+import { LDtkObject } from "./level/ldtk/renderables.ts";
 import TMXHexagonalRenderer from "./level/tiled/renderer/TMXHexagonalRenderer.js";
 import TMXIsometricRenderer from "./level/tiled/renderer/TMXIsometricRenderer.js";
 import TMXOrthogonalRenderer from "./level/tiled/renderer/TMXOrthogonalRenderer.js";
@@ -173,14 +173,14 @@ export * from "./lang/deprecated.js";
 export type { IntGridRect } from "./level/ldtk/intgrid.ts";
 export type { BuiltLevel, LDtkLoadOptions } from "./level/ldtk/level.ts";
 export type {
-	LDtkFoundEntity,
+	LDtkFoundObject,
 	LDtkLevelInfo,
-	LDtkListedEntity,
+	LDtkListedObject,
 	LDtkWorldInfo,
 } from "./level/ldtk/project.ts";
 export type {
-	EntityTile,
-	LDtkEntitySettings,
+	LDtkObjectSettings,
+	ObjectTile,
 	TileImage,
 } from "./level/ldtk/renderables.ts";
 export type {
@@ -362,8 +362,8 @@ export {
 	isPortableTopology,
 	isTopology,
 	isVertexFormat,
-	LDtkEntity,
 	LDtkLevel,
+	LDtkObject,
 	LDtkProject,
 	LDtkWorld,
 	Light2d,
