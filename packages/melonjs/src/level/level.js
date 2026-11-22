@@ -60,6 +60,7 @@ function safeLoadLevel(levelId, options, restart) {
 			options.container,
 			options.flatten,
 			options.setViewportBounds,
+			options.objects,
 		);
 	} else {
 		// a level that numbers its objects says where the ids it does not
@@ -90,10 +91,11 @@ function safeLoadLevel(levelId, options, restart) {
  * @param {Container} container - target container
  * @param {boolean} [flatten=true] - if true, flatten all objects into the given container
  * @param {boolean} [setViewportBounds=false] - if true, set the viewport bounds to the map size, this should be set to true especially if adding a level to the game world container.
+ * @param {boolean|Function} [objects=true] - the objects to build
  * @ignore
  * @internal
  */
-function loadTMXLevel(levelId, container, flatten, setViewportBounds) {
+function loadTMXLevel(levelId, container, flatten, setViewportBounds, objects) {
 	const level = levels[levelId];
 	// reset the GUID generator
 	// and pass the level id as parameter
@@ -103,7 +105,7 @@ function loadTMXLevel(levelId, container, flatten, setViewportBounds) {
 	container.anchorPoint.set(0, 0);
 
 	// add all level elements to the target container
-	level.addTo(container, flatten, setViewportBounds);
+	level.addTo(container, flatten, setViewportBounds, objects);
 }
 
 /**
@@ -142,7 +144,7 @@ function levelIdAt(offset) {
  * @property {string[]} [collisionLayers] - (LDtk only) the IntGrid layers whose cells are solid, by their identifier; by default the ones whose identifier contains "collision"
  * @property {number[]} [solidValues] - (LDtk only) the values of those layers that are solid; by default every value but 0
  * @property {boolean} [showIntGrid=false] - (LDtk only) draw the IntGrid layers that have no tiles of their own, each value in its LDtk color
- * @property {boolean|Function} [objects=true] - (LDtk only) build the objects its Entities layers place: all, none, or the ones a function `(entity, level) => boolean` says
+ * @property {boolean|Function} [objects=true] - (Tiled and LDtk) build the objects the level places: all of them, none, or the ones a function says, given each object's settings as its class would be (`(settings) => !taken.has(settings.id)` leaves out what the player took)
  * @property {string[]} [levels] - (LDtk only, loading a whole world) the levels to start with, by their identifier; by default every level
  * @property {number} [scale=1] - (glTF/GLB only) pixels per glTF unit applied to the whole scene
  * @property {boolean} [rightHanded=true] - (glTF/GLB only) convert the right-handed (Y-up) source to the engine's Y-down via a rotation rather than a mirror

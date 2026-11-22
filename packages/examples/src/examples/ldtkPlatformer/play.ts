@@ -13,7 +13,7 @@ import {
 import type { Player } from "./entities/player";
 import { gameState } from "./gameState";
 import { HUD } from "./hud";
-import { ldtkWorld, trackRoom } from "./rooms";
+import { trackRoom } from "./rooms";
 
 /** above every layer of every depth of the world */
 const PLAYER_Z = 100000;
@@ -54,13 +54,12 @@ export class PlayScreen extends Stage {
 			// the camera is held to a room at a time, not to the world
 			setViewportBounds: false,
 			// a room that comes back does not bring back what was taken
-			objects: (entity) => {
-				return !gameState.taken.has(entity.iid);
+			objects: (settings) => {
+				return !gameState.taken.has(settings.id);
 			},
 			onLoaded: () => {
-				const world = ldtkWorld();
 				// the player, drawn over the layers of every room and depth
-				const [player] = world.getObjects("Player") as Player[];
+				const [player] = app.world.getChildByName("Player") as Player[];
 				player.depth = PLAYER_Z;
 				app.world.addChild(new HUD(project, app.viewport.width), HUD_Z);
 				app.world.sort();

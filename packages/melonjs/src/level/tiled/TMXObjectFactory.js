@@ -371,7 +371,20 @@ export function createTMXObject(settings, map) {
 		throw new Error("no Tiled object factory registered for type: " + type);
 	}
 
-	return factory(settings, map);
+	const object = factory(settings, map);
+	// what a level places is found by the id the level gives it, whatever
+	// built it: `container.getChildByProp("id", id)`. The engine's own
+	// classes take it themselves; a class of the game's that does not is
+	// given it here
+	if (
+		typeof object === "object" &&
+		object !== null &&
+		typeof settings.id !== "undefined" &&
+		typeof object.id === "undefined"
+	) {
+		object.id = settings.id;
+	}
+	return object;
 }
 
 /**

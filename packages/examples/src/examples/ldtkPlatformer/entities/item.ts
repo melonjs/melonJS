@@ -29,7 +29,8 @@ const OTHER = 9;
  * in LDtk: `type` (a value of the project's `ItemType` enum) and `count`.
  */
 export class Item extends Sprite {
-	iid: string;
+	/** the item's id in the level: what tells it from the others once taken */
+	id: string;
 	kind: string;
 	count: number;
 	collected = false;
@@ -42,7 +43,7 @@ export class Item extends Sprite {
 			frameheight: SIZE,
 			anchorPoint: { x: 0, y: 0 },
 		});
-		this.iid = settings.iid;
+		this.id = settings.id;
 		this.kind = String(settings.fields.type);
 		this.count = Number(settings.fields.count ?? 1);
 		this.addAnimation("item", [FRAMES[this.kind] ?? OTHER]);
@@ -66,7 +67,7 @@ export class Item extends Sprite {
 			return;
 		}
 		this.collected = true;
-		gameState.taken.add(this.iid);
+		gameState.taken.add(this.id);
 		gameState.bag.set(
 			this.kind,
 			(gameState.bag.get(this.kind) ?? 0) + this.count,

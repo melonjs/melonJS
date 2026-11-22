@@ -2,11 +2,9 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
 	type Application,
 	type LDtkEntityInstance,
-	type LDtkLevel,
 	LDtkObject,
 	type LDtkObjectSettings,
 	type LDtkProjectJson,
-	level,
 	loader,
 	NineSliceSprite,
 	Renderable,
@@ -15,7 +13,15 @@ import {
 	Trigger,
 	type video,
 } from "../../src/index.js";
-import { diff, enter, frame, HEIGHT, makeApp, WIDTH } from "./ldtk-harness.ts";
+import {
+	diff,
+	enter,
+	frame,
+	HEIGHT,
+	makeApp,
+	objectsIn,
+	WIDTH,
+} from "./ldtk-harness.ts";
 import {
 	defs,
 	layer,
@@ -317,10 +323,6 @@ export function entityChecks(
 		let app: Application;
 		let image: HTMLImageElement;
 
-		const current = () => {
-			return level.getCurrentLevel() as unknown as LDtkLevel;
-		};
-
 		beforeAll(async () => {
 			app = await makeApp(renderer);
 			await loader.load({
@@ -489,7 +491,7 @@ export function entityChecks(
 				).toBeLessThanOrEqual(edge);
 				// each is a sprite of the engine on the tile's region, apart
 				// from the repeated one
-				for (const built of current().getObjects() as LDtkObject[]) {
+				for (const built of objectsIn(app.world) as LDtkObject[]) {
 					expect(built).toBeInstanceOf(LDtkObject);
 					expect(built.tileSprite).toBeDefined();
 					expect(built.tileSprite instanceof Sprite).toBe(mode !== "Repeat");
@@ -499,7 +501,7 @@ export function entityChecks(
 
 		it("a nine-slice tile is a nine-slice sprite with LDtk's borders; with none, or no definition, the tile is stretched or fitted", async () => {
 			await enter(app, "ents:Slices");
-			const [framed] = current().getObjects("Framed") as LDtkObject[];
+			const [framed] = objectsIn(app.world, "Framed") as LDtkObject[];
 			expect(framed.tileSprite).toBeInstanceOf(NineSliceSprite);
 			const slice = framed.tileSprite as unknown as {
 				width: number;
@@ -510,7 +512,7 @@ export function entityChecks(
 			expect([slice.width, slice.height]).toEqual([96, 64]);
 			// left and top, of up 3, right 7, down 4, left 5
 			expect([slice.insetx, slice.insety]).toEqual([5, 3]);
-			const [unframed] = current().getObjects("Unframed") as LDtkObject[];
+			const [unframed] = objectsIn(app.world, "Unframed") as LDtkObject[];
 			expect(unframed.tileSprite).toBeInstanceOf(Sprite);
 			expect(unframed.tileSprite).not.toBeInstanceOf(NineSliceSprite);
 			// the two that are plain sprites, drawn: stretched, and fitted
@@ -533,8 +535,11 @@ export function entityChecks(
 		it("places an entity by its pivot whatever its shape, with its layer's offset and opacity, a later one over an earlier one", async () => {
 			await enter(app, "ents:Placed");
 			const list = entitiesOf("Placed");
-			const built = current().getObjects();
-			expect(built).toHaveLength(3);
+			expect(objectsIn(app.world)).toHaveLength(3);
+			// each found by its id in LDtk, in the level's order
+			const built = list.map((placed) => {
+				return app.world.getChildByProp("id", placed.iid)[0];
+			});
 			// 20 x 40, held by the middle of its bottom edge at 100, 120,
 			// in a layer moved by 12, -6
 			expect([built[0].pos.x, built[0].pos.y]).toEqual([
@@ -592,7 +597,7 @@ export function entityChecks(
 				"Light2d",
 				"ImageLayer",
 			]) {
-				const found = current().getObjects(identifier);
+				const found = objectsIn(app.world, identifier);
 				expect(found, identifier).toHaveLength(1);
 				expect(found[0], identifier).toBeInstanceOf(LDtkObject);
 				expect(found[0].bodyDef, identifier).toBeUndefined();
@@ -602,7 +607,7 @@ export function entityChecks(
 
 		it("a field named like a setting of the engine stays a field, and breaks nothing", async () => {
 			await enter(app, "ents:Named");
-			const [odd] = current().getObjects("Odd") as LDtkObject[];
+			const [odd] = objectsIn(app.world, "Odd") as LDtkObject[];
 			expect(odd.fields).toEqual({
 				tile: { tilesetUid: 1, x: 0, y: 0, w: 16, h: 16 },
 				tileRect: "not a tile",
@@ -644,7 +649,7 @@ export function entityChecks(
 			}
 			registerObjectClass("Coin", Coin as never);
 			await enter(app, "ents:Named");
-			const coins = current().getObjects("Coin");
+			const coins = objectsIn(app.world, "Coin");
 			expect(coins).toHaveLength(2);
 			expect(
 				coins.every((coin) => {
@@ -652,12 +657,25 @@ export function entityChecks(
 				}),
 			).toBe(true);
 			expect(app.world.getChildByName("Coin")).toHaveLength(2);
+			// and by its id in LDtk, which the class did not take either
+			for (const placed of entitiesOf("Named")) {
+				const found = app.world.getChildByProp("id", placed.iid);
+				expect(found, placed.__identifier).toHaveLength(1);
+				expect(found[0].name, placed.__identifier).toBe(placed.__identifier);
+				expect(found[0] instanceof Coin, placed.__identifier).toBe(
+					placed.__identifier === "Coin",
+				);
+			}
 			expect(
-				coins.map((coin) => {
-					return coin.pos.x;
-				}),
+				coins
+					.map((coin) => {
+						return coin.pos.x;
+					})
+					.sort((a, b) => {
+						return a - b;
+					}),
 			).toEqual([64, 96]);
-			expect(current().getObjects()).toHaveLength(13);
+			expect(objectsIn(app.world)).toHaveLength(13);
 		});
 
 		it("a class of the engine the game registers itself is used, and a Sprite class is given the tile to draw", async () => {
@@ -671,12 +689,12 @@ export function entityChecks(
 			}
 			registerObjectClass("Hero", Hero as never);
 			await enter(app, "ents:Named");
-			expect(current().getObjects("Trigger")[0]).toBeInstanceOf(Trigger);
-			const [hero] = current().getObjects("Hero");
+			expect(objectsIn(app.world, "Trigger")[0]).toBeInstanceOf(Trigger);
+			const [hero] = objectsIn(app.world, "Hero");
 			expect(hero).toBeInstanceOf(Hero);
 			expect([hero.width, hero.height]).toEqual([32, 16]);
 			// drawn by the sprite itself, where LDtk has it
-			for (const other of current().getObjects()) {
+			for (const other of objectsIn(app.world)) {
 				if (other !== hero) {
 					other.setOpacity(0);
 				}

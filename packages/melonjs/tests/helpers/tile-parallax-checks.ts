@@ -13,7 +13,15 @@ import {
 	TilesetGroup,
 	video,
 } from "../../src/index.js";
-import { diff, enter, frame, HEIGHT, makeApp, WIDTH } from "./ldtk-harness.ts";
+import {
+	diff,
+	enter,
+	frame,
+	HEIGHT,
+	makeApp,
+	objectsIn,
+	WIDTH,
+} from "./ldtk-harness.ts";
 import {
 	defs,
 	entity,
@@ -801,7 +809,7 @@ export function parallaxChecks(
 			}
 			// an entity of that layer is a thing of the level: it stays
 			// where it is in it, moved by the layer's offset alone
-			const [lamp] = loaded.getObjects("Lamp");
+			const [lamp] = objectsIn(app.world, "Lamp");
 			expect([lamp.pos.x, lamp.pos.y]).toEqual([64 + 8, 48 - 8]);
 		});
 

@@ -56,7 +56,8 @@ project).
 
 `level.load(levelId, options)` accepts `container` (default `game.world`),
 `onLoaded` (default `game.onLevelLoaded`), `flatten` (default `game.mergeGroup`),
-`setViewportBounds` (default **`true`**) and `async` (default `false`). It throws
+`setViewportBounds` (default **`true`**), `objects` (default `true`, see
+below) and `async` (default `false`). It throws
 `level <id> not found` for an unknown id — synchronously, in both forms, because
 that is a typo rather than a load failure.
 
@@ -149,6 +150,30 @@ registerTiledObjectClass("Trigger", MyTrigger);   // whenever you like
 The throw is for a clash between two of *your* classes under one name. For
 that case `registerTiledObjectFactory` overwrites and only warns.
 
+### Finding an object, and choosing which are built
+
+An object in the world is found as any child is, by the name or the id its
+level gives it, whatever class built it and whatever the editor:
+
+```js
+const [player] = app.world.getChildByName("Player");
+const [door] = app.world.getChildByProp("id", 12);   // Tiled's object id; LDtk's iid, a string
+```
+
+The id is put on the object for you when its class does not take it (a class
+that sets its own `id` keeps it). The name is the class's business: a `Sprite`
+or an `Entity` takes the level's, a `Trigger` is always named "Trigger" (find
+one by its id, or with `getChildByType(Trigger)`).
+
+`objects` chooses which objects a load builds: `false` for none, or a function
+given each object's settings, the same its class would be given, before
+anything is built:
+
+```js
+// a level that comes back without what the player took
+level.load("map1", { objects: (settings) => !taken.has(settings.id) });
+```
+
 ### Classes and properties set on tiles
 
 In Tiled, a tile can carry a class and custom properties (tileset editor), and
@@ -204,7 +229,7 @@ authored against melonJS 1.x finds them where it looks.
 
 A `Trigger` forwards a **fixed list** of settings to `level.load()` — not
 whatever you pass it. Today that list is `container`, `onLoaded`, `flatten`,
-`setViewportBounds` and the glTF scene options: `scale`, `rightHanded`,
+`setViewportBounds`, `objects` and the glTF scene options: `scale`, `rightHanded`,
 `lights`, `lightIntensityScale` and the ground-shadow settings
 (`castGroundShadow`, `shadowGroundY`, `shadowOpacity`, `shadowScale`,
 `shadowOffset`, `shadowStretch`, `shadowDirectionX`, `shadowDirectionZ`,
@@ -531,9 +556,9 @@ level.load("world:Level_0");                       // "<asset name>:<level ident
     outlives a level change) and it stays when its level is taken out, and
     is not built again when the level comes back;
   - a level taken out and loaded again builds its objects again: leave out
-    what the player took with the `objects` option, a function asked for
-    each entity, `objects: (entity) => !taken.has(entity.iid)` (it works for
-    a level loaded alone too);
+    what the player took with the `objects` option of `level.load`, as for
+    a Tiled map: `objects: (settings) => !taken.has(settings.id)`
+    (`settings.id` is the entity's `iid`);
   - levels stacked on LDtk's world depths cover the same place: give the
     depth the player is on, `streamAround(x, y, w, h, margin, depth)` and
     `levelsAt(x, y, w, h, depth)`, and the other depths are taken out;
@@ -545,8 +570,8 @@ level.load("world:Level_0");                       // "<asset name>:<level ident
     LDtk;
   - an `EntityRef` field (a teleport's destination) is resolved with
     `project.findObject(ref)`: its `level`, and its `x` / `y` in the world,
-    whether that level is loaded or not; once it is, `world.getObject(iid)`
-    is the object.
+    whether that level is loaded or not; once it is,
+    `app.world.getChildByProp("id", ref.entityIid)[0]` is the object.
 - `loader.getLDtk("world")` is the project: its levels (`id`, size, `fields`,
   `neighbours`), its worlds, `getTileData` / `getTileTags` for a tile's custom
   data and enum tags. `showIntGrid: true` draws IntGrid layers that have no
@@ -772,6 +797,7 @@ layer into the offscreen-bake path instead.
 | a `Sprite` class for an LDtk entity throws `'undefined' image/texture not found` | the entity's tile is one of LDtk's built-in icons (a tileset with `embedAtlas`): they are not in the project's files, and LDtk does not allow redistributing them, so `settings.image` is not set. Use art of your own, or a tile of one of the project's tilesets |
 | an LDtk entity is placed half its size off | `x`, `y` are its box's top left corner; its pivot is `settings.px` |
 | an LDtk field reads `undefined` on the settings | its name is one of the settings' own (`type`, `name`, `width`...): read `settings.fields.type` |
+| `getChildByName("Door")` is empty for an object the level names "Door" | its class names itself (a `Trigger` is always "Trigger"): find it by its id, `getChildByProp("id", id)`, or with `getChildByType` |
 | an LDtk entity named "Trigger" (or "Sprite", "Text"...) does nothing | an entity's name is not taken for the engine's class: register it, `registerObjectClass("Trigger", Trigger)`, and give the entity the fields the class reads |
 
 ## Related skills

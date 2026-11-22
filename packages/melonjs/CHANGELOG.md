@@ -7,6 +7,8 @@
 - Tile maps: `parallax` on a tile layer makes it scroll slower or faster than the level, and scales it, on every renderer
 - Tile maps: tile layers can be built in code, without a Tiled map, with `TileLayer`, `Tileset`, `TilesetGroup` and `PlacedTileLayer`; `mergeGridRects` covers a grid's cells with few rectangles, for collision bodies
 - Levels: `registerObjectClass` and `registerObjectFactory`, the same as `registerTiledObjectClass` and `registerTiledObjectFactory` under names that fit any level format
+- Levels: `level.load` takes `objects`, to choose which objects of a Tiled map or an LDtk level are built: `false` for none, or a function, `(settings) => !taken.has(settings.id)`
+- Levels: an object built from a level has the level's `id` whatever its class, so `container.getChildByProp("id", id)` finds it
 
 ### Fixed
 - TypeScript: an asset's `data` accepts a parsed map object, as documented

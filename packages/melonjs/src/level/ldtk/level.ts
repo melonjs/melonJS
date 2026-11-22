@@ -61,15 +61,14 @@ export interface LDtkLoadOptions {
 	showIntGrid?: boolean;
 	/**
 	 * Build the objects LDtk's Entities layers place (its "entities"): all
-	 * of them, none, or the ones a function says, asked for each one as its
-	 * level is built (and built again, in a world whose levels come and go).
-	 * The way to leave out what the player took:
-	 * `(entity) => !taken.has(entity.iid)`.
+	 * of them, none, or the ones a function says, given each one's settings
+	 * as its class would be, as its level is built (and built again, in a
+	 * world whose levels come and go). The way to leave out what the player
+	 * took: `(settings) => !taken.has(settings.id)`. The same option as for
+	 * a Tiled map.
 	 * @default true
 	 */
-	objects?:
-		| boolean
-		| ((entity: LDtkEntityInstance, level: LDtkLevelInfo) => boolean);
+	objects?: boolean | ((settings: LDtkObjectSettings) => boolean);
 	/**
 	 * have the viewport follow the level's area: its bounds, and a level
 	 * smaller than the viewport centred in it
@@ -121,11 +120,7 @@ export interface BuiltLevel {
 	children: Renderable[];
 	/** its tile layers, bottom-most first */
 	layers: Renderable[];
-	/** the objects built from its entities */
-	objects: Renderable[];
-	/** the identifier in LDtk of each of them, whatever class built it */
-	identifiers: Map<Renderable, string>;
-	/** the unique id in LDtk of each of them */
+	/** the objects built from its entities, each with its unique id in LDtk */
 	iids: Map<Renderable, string>;
 	/** its IntGrid layers, by their identifier */
 	intGrids: Map<string, IntGrid>;
@@ -343,8 +338,6 @@ class LevelBuilder {
 			info,
 			children: [],
 			layers: [],
-			objects: [],
-			identifiers: new Map(),
 			iids: new Map(),
 			intGrids: new Map(),
 		};
@@ -428,8 +421,9 @@ class LevelBuilder {
 				// entity is added first
 				for (let e = layer.entityInstances.length - 1; e >= 0; e--) {
 					const entity = layer.entityInstances[e];
+					const settings = this.objectSettings(info, layer, entity, x, y, z);
 					// one the game does not want is left out
-					if (typeof wanted === "function" && !wanted(entity, info)) {
+					if (typeof wanted === "function" && !wanted(settings)) {
 						continue;
 					}
 					// a persistent one that stayed when its level left is in
@@ -438,12 +432,9 @@ class LevelBuilder {
 					const stayed = this.map.persistentEntity?.(entity.iid);
 					if (stayed !== undefined) {
 						built.children.push(stayed);
-						built.objects.unshift(stayed);
-						built.identifiers.set(stayed, entity.__identifier);
 						built.iids.set(stayed, entity.iid);
 						continue;
 					}
-					const settings = this.objectSettings(info, layer, entity, x, y, z);
 					// a class the game registered under the entity's name.
 					// Not the engine's own classes: an entity's name is the
 					// designer's word ("Trigger", "Text", "Entity"), not a
@@ -451,7 +442,9 @@ class LevelBuilder {
 					const object = hasObjectFactory(settings.class, true)
 						? createLevelObject(settings, this.map)
 						: new LDtkObject(settings);
-					// found by its name in LDtk, whatever built it
+					// found by its name in LDtk, whatever built it (and by
+					// its id, which the registry sees to: `getChildByName`,
+					// `getChildByProp("id", iid)`)
 					if (!object.name) {
 						object.name = settings.name;
 					}
@@ -461,8 +454,6 @@ class LevelBuilder {
 						applyObjectOpacity(object, opacity);
 					}
 					this.add(built, object, z);
-					built.objects.unshift(object);
-					built.identifiers.set(object, settings.name);
 					built.iids.set(object, entity.iid);
 				}
 			}
@@ -1026,38 +1017,6 @@ export class LDtkLevel extends LDtkMap {
 		return this.built?.intGrids.get(name);
 	}
 
-	/**
-	 * the level's entities, as added to the container
-	 * @param name - an entity identifier, to get only those
-	 * @returns the entities
-	 */
-	getObjects(name?: string): Renderable[] {
-		const built = this.built;
-		if (built === undefined) {
-			return [];
-		}
-		return name === undefined
-			? built.objects.slice()
-			: built.objects.filter((entity) => {
-					return built.identifiers.get(entity) === name;
-				});
-	}
-
-	/**
-	 * an entity of the level, by its unique id in LDtk: what an `EntityRef`
-	 * field points at
-	 * @param iid - the entity's `iid`
-	 * @returns the entity, as added to the container, or undefined
-	 */
-	getObject(iid: string): Renderable | undefined {
-		for (const [entity, id] of this.built?.iids ?? []) {
-			if (id === iid) {
-				return entity;
-			}
-		}
-		return undefined;
-	}
-
 	override destroy(): void {
 		super.destroy();
 		this.built = undefined;
@@ -1312,40 +1271,6 @@ export class LDtkWorld extends LDtkMap {
 	 */
 	getIntGrid(level: string, name: string): IntGrid | undefined {
 		return this.loaded.get(level)?.intGrids.get(name);
-	}
-
-	/**
-	 * the entities of the levels in the game, as added to the container
-	 * @param name - an entity identifier, to get only those
-	 * @returns the entities
-	 */
-	getObjects(name?: string): Renderable[] {
-		const objects: Renderable[] = [];
-		for (const built of this.loaded.values()) {
-			for (const entity of built.objects) {
-				if (name === undefined || built.identifiers.get(entity) === name) {
-					objects.push(entity);
-				}
-			}
-		}
-		return objects;
-	}
-
-	/**
-	 * an entity of the levels in the game, by its unique id in LDtk: what
-	 * an `EntityRef` field points at, once its level is loaded
-	 * @param iid - the entity's `iid`
-	 * @returns the entity, as added to the container, or undefined
-	 */
-	getObject(iid: string): Renderable | undefined {
-		for (const built of this.loaded.values()) {
-			for (const [entity, id] of built.iids) {
-				if (id === iid) {
-					return entity;
-				}
-			}
-		}
-		return undefined;
 	}
 
 	override destroy(): void {

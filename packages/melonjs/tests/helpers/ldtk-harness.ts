@@ -3,6 +3,7 @@ import {
 	Application,
 	boot,
 	type CanvasRenderer,
+	type Container,
 	type LDtkLayerInstance,
 	type LDtkLevelJson,
 	type LDtkLoadOptions,
@@ -11,6 +12,7 @@ import {
 	type LDtkTile,
 	level,
 	loader,
+	type Renderable,
 	state,
 	video,
 	type WebGLRenderer,
@@ -294,4 +296,21 @@ export function diff(
 		worst = Math.max(worst, d);
 	}
 	return { different, worst, first };
+}
+
+/**
+ * the objects a level's entities became, as a game finds them: in the
+ * container the level was added to, by the name the level gives them, or all
+ * of them by the id it gives them (a string, in LDtk; the walls of an
+ * IntGrid layer, which have one too, are not counted)
+ * @param container - the container the level was added to
+ * @param name - an entity identifier, to get only those
+ * @returns the objects, in the container's order
+ */
+export function objectsIn(container: Container, name?: string): Renderable[] {
+	return name === undefined
+		? container.getChildByProp("id", /./).filter((child) => {
+				return !("intGridValue" in child);
+			})
+		: container.getChildByName(name);
 }

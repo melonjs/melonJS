@@ -223,7 +223,11 @@ export default class TMXTileMap {
 	 * @ignore
 	 * @internal
 	 */
-	static loadOptions = Object.freeze(["flatten", "setViewportBounds"]);
+	static loadOptions = Object.freeze([
+		"flatten",
+		"setViewportBounds",
+		"objects",
+	]);
 
 	/**
 	 * @param {string} levelId - name of TMX map
@@ -550,13 +554,14 @@ export default class TMXTileMap {
 	 * @param {Container} container - target container
 	 * @param {boolean} [flatten=true] - if true, flatten all objects into the given container, else a `me.Container` object will be created for each corresponding groups
 	 * @param {boolean} [setViewportBounds=false] - if true, set the viewport bounds to the map size, this should be set to true especially if adding a level to the game world container.
+	 * @param {boolean|Function} [objects=true] - build the map's objects: all of them, none, or the ones a function `(settings) => boolean` says. See {@link level.load}
 	 * @example
 	 * // create a new level object based on the TMX JSON object
 	 * let level = new me.TMXTileMap(levelId, me.loader.getTMX(levelId));
 	 * // add the level to the game world container
 	 * level.addTo(app.world, true, true);
 	 */
-	addTo(container, flatten, setViewportBounds) {
+	addTo(container, flatten, setViewportBounds, objects) {
 		const levelBounds = this.getBounds();
 		if (setViewportBounds === true) {
 			releaseViewport(this._followViewport);
@@ -569,7 +574,7 @@ export default class TMXTileMap {
 					container.addChild(layer);
 				});
 				// add all Object instances
-				this.getObjects(flatten).forEach((object) => {
+				this.getObjects(flatten, objects).forEach((object) => {
 					container.addChild(object);
 				});
 			},
@@ -595,9 +600,10 @@ export default class TMXTileMap {
 	 * {@link registerTiledObjectClass}.
 	 * @param {boolean} [flatten=true] - if true, flatten all objects into the returned array.
 	 * when false, a `me.Container` object will be created for each corresponding groups
+	 * @param {boolean|Function} [wanted=true] - the objects to build: all of them, none (`false`), or the ones a function says, given each object's settings
 	 * @returns {Renderable[]} Array of Objects
 	 */
-	getObjects(flatten) {
+	getObjects(flatten, wanted) {
 		const objects = [];
 		let targetContainer;
 
@@ -632,6 +638,14 @@ export default class TMXTileMap {
 			// corresponding target Container
 			for (let o = 0; o < group.objects.length; o++) {
 				const settings = group.objects[o];
+
+				// an object the game does not want is left out
+				if (
+					wanted === false ||
+					(typeof wanted === "function" && !wanted(settings))
+				) {
+					continue;
+				}
 
 				// Tiled uses 0,0 by default
 				if (typeof settings.anchorPoint === "undefined") {

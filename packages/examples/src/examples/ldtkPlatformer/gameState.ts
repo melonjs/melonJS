@@ -7,7 +7,7 @@ import type { LDtkLevelInfo } from "melonjs";
 
 /** what the game remembers while the rooms of the world come and go */
 export const gameState = {
-	/** the items taken, by their unique id in LDtk: not built again */
+	/** the items taken, by the id the level gives them: not built again */
 	taken: new Set<string>(),
 	/** what was collected, by item type */
 	bag: new Map<string, number>(),

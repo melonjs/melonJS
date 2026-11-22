@@ -282,6 +282,11 @@ export function createObjectTile(
  * @category Tilemap
  */
 export class LDtkObject extends Renderable {
+	/**
+	 * the entity's unique id in LDtk, under the name every object of a level
+	 * has its id: `container.getChildByProp("id", iid)` finds it
+	 */
+	id: string;
 	/** the entity's unique id in LDtk */
 	iid: string;
 	/** the entity's custom fields, by name */
@@ -304,6 +309,7 @@ export class LDtkObject extends Renderable {
 		super(settings.x, settings.y, settings.width, settings.height);
 		this.anchorPoint.set(0, 0);
 		this.name = settings.name;
+		this.id = settings.id;
 		this.iid = settings.iid;
 		this.fields = settings.fields;
 		this.tags = settings.tags;

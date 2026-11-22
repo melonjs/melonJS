@@ -3,7 +3,6 @@ import {
 	type Application,
 	IntGrid,
 	type LDtkEntityReference,
-	type LDtkLevel,
 	type LDtkLevelInfo,
 	type LDtkObject,
 	type LDtkProject,
@@ -18,6 +17,7 @@ import {
 	HEIGHT,
 	loadSamples,
 	makeApp,
+	objectsIn,
 	referenceLevel,
 	referenceView,
 	WIDTH,
@@ -287,7 +287,7 @@ export function worldChecks(
 			expect(world.getIntGrid("nowhere", "Collisions")).toBeUndefined();
 
 			// the player of that level, placed by its centre at 168, 168
-			const players = world.getObjects("Player");
+			const players = objectsIn(app.world, "Player");
 			expect(players).toHaveLength(1);
 			expect(players[0].pos.x).toBe(256 + 160);
 			expect(players[0].pos.y).toBe(160);
@@ -297,7 +297,7 @@ export function worldChecks(
 				y: 168,
 			});
 			// every entity of the three levels
-			expect(world.getObjects()).toHaveLength(8 + 8 + 5);
+			expect(objectsIn(app.world)).toHaveLength(8 + 8 + 5);
 
 			// walls within their level's area
 			const walls = app.world.getChildren().filter((child) => {
@@ -325,8 +325,8 @@ export function worldChecks(
 			await new Promise((resolve) => {
 				setTimeout(resolve, 0);
 			});
-			expect(world.getObjects("Player")).toEqual([]);
-			expect(world.getObjects()).toHaveLength(8 + 5);
+			expect(objectsIn(app.world, "Player")).toEqual([]);
+			expect(objectsIn(app.world)).toHaveLength(8 + 5);
 			const after = app.world.getChildren().filter((child) => {
 				return child.bodyDef !== undefined;
 			});
@@ -481,9 +481,9 @@ export function worldChecks(
 			const taken = new Set<string>();
 			await enter(app, GRIDVANIA, {
 				levels: ["Entrance"],
-				objects: (entity, info) => {
-					asked.push(`${info.identifier}:${entity.__identifier}`);
-					return !taken.has(entity.iid) && entity.__identifier !== "Ladder";
+				objects: (settings) => {
+					asked.push(`${settings.level}:${settings.name}`);
+					return !taken.has(settings.id) && settings.name !== "Ladder";
 				},
 			});
 			const world = current();
@@ -495,39 +495,43 @@ export function worldChecks(
 				"Entrance:Ladder",
 				"Entrance:Player",
 			]);
-			expect(world.getObjects("Item")).toHaveLength(3);
-			expect(world.getObjects("Player")).toHaveLength(1);
-			expect(world.getObjects("Ladder")).toHaveLength(0);
+			expect(objectsIn(app.world, "Item")).toHaveLength(3);
+			expect(objectsIn(app.world, "Player")).toHaveLength(1);
+			expect(objectsIn(app.world, "Ladder")).toHaveLength(0);
 			// an item the player took: not there when the level comes back
-			const item = world.getObjects("Item")[0] as LDtkObject;
-			expect(world.getObject(item.iid)).toBe(item);
+			const item = objectsIn(app.world, "Item")[0] as LDtkObject;
+			expect(app.world.getChildByProp("id", item.iid)[0]).toBe(item);
 			taken.add(item.iid);
 			world.unloadLevel("Entrance");
 			world.loadLevel("Entrance");
 			expect(asked).toHaveLength(10);
-			expect(world.getObjects("Item")).toHaveLength(2);
-			expect(world.getObject(item.iid)).toBeUndefined();
-			expect(world.getObject("no such entity")).toBeUndefined();
+			// (what a level leaves behind is out of the container at the end
+			// of the frame, as any child taken out is)
+			await nextFrame();
+			expect(objectsIn(app.world, "Item")).toHaveLength(2);
+			expect(app.world.getChildByProp("id", item.iid)[0]).toBeUndefined();
+			expect(
+				app.world.getChildByProp("id", "no such entity")[0],
+			).toBeUndefined();
 		});
 
 		it("a persistent entity stays when its level goes, and is not built again", async () => {
 			await enter(app, GRIDVANIA, { levels: ["Entrance"] });
 			const world = current();
-			const [player] = world.getObjects("Player");
+			const [player] = objectsIn(app.world, "Player");
 			// as any renderable that outlives a level change
 			player.isPersistent = true;
-			expect(world.getObjects("Item")).toHaveLength(3);
+			expect(objectsIn(app.world, "Item")).toHaveLength(3);
 			world.unloadLevel("Entrance");
 			await nextFrame();
 			expect(player.ancestor).toBe(app.world);
 			expect(app.world.getChildByName("Player")).toEqual([player]);
 			expect(app.world.getChildByName("Item")).toEqual([]);
-			expect(world.getObjects("Player")).toEqual([]);
 			// the level again: its items, and the same player, the level's again
 			world.loadLevel("Entrance");
 			expect(app.world.getChildByName("Player")).toEqual([player]);
-			expect(world.getObjects("Player")).toEqual([player]);
-			expect(world.getObjects("Item")).toHaveLength(3);
+			expect(objectsIn(app.world, "Player")).toEqual([player]);
+			expect(objectsIn(app.world, "Item")).toHaveLength(3);
 			// and again, as often as the level comes and goes
 			world.unloadLevel("Entrance");
 			world.loadLevel("Entrance");
@@ -541,7 +545,7 @@ export function worldChecks(
 			await nextFrame();
 			expect(app.world.getChildByName("Player")).toEqual([]);
 			world.loadLevel("Entrance");
-			const [second] = world.getObjects("Player");
+			const [second] = objectsIn(app.world, "Player");
 			expect(second).toBeDefined();
 			expect(second).not.toBe(player);
 
@@ -551,7 +555,7 @@ export function worldChecks(
 			world.unloadLevel("Entrance");
 			app.world.removeChildNow(second);
 			world.loadLevel("Entrance");
-			const [third] = world.getObjects("Player");
+			const [third] = objectsIn(app.world, "Player");
 			expect(third).toBeDefined();
 			expect(third).not.toBe(second);
 			expect(app.world.getChildByName("Player")).toEqual([third]);
@@ -584,10 +588,13 @@ export function worldChecks(
 						expect(project.findObject(destination.entityIid)).toEqual(found);
 						// and where the entity is once its level is in the game
 						world.loadLevel(found.level.identifier);
-						const built = world.getObject(destination.entityIid);
+						const built = app.world.getChildByProp(
+							"id",
+							destination.entityIid,
+						)[0];
 						expect(built, placed.iid).toBeDefined();
-						expect([built?.pos.x, built?.pos.y]).toEqual([found.x, found.y]);
-						expect([built?.width, built?.height]).toEqual([
+						expect([built.pos.x, built.pos.y]).toEqual([found.x, found.y]);
+						expect([built.width, built.height]).toEqual([
 							found.width,
 							found.height,
 						]);
@@ -603,16 +610,17 @@ export function worldChecks(
 
 		it("a level loaded alone takes the same choice of entities, and gives one by its id", async () => {
 			await enter(app, `${GRIDVANIA}:Entrance`, {
-				objects: (entity) => {
-					return entity.__identifier === "Item";
+				objects: (settings) => {
+					return settings.name === "Item";
 				},
 			});
-			const loaded = level.getCurrentLevel() as unknown as LDtkLevel;
-			const items = loaded.getObjects() as LDtkObject[];
+			const items = objectsIn(app.world) as LDtkObject[];
 			expect(items).toHaveLength(3);
-			expect(loaded.getObjects("Player")).toEqual([]);
-			expect(loaded.getObject(items[1].iid)).toBe(items[1]);
-			expect(loaded.getObject("no such entity")).toBeUndefined();
+			expect(objectsIn(app.world, "Player")).toEqual([]);
+			expect(app.world.getChildByProp("id", items[1].iid)[0]).toBe(items[1]);
+			expect(
+				app.world.getChildByProp("id", "no such entity")[0],
+			).toBeUndefined();
 			// where the project says it is, less where the level is in its world
 			const project = projects.get(GRIDVANIA) as LDtkProject;
 			const found = project.findObject(items[1].iid);

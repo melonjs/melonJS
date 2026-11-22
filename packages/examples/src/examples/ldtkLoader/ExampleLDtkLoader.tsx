@@ -78,7 +78,9 @@ const loadLevel = (id: string) => {
 			const loaded = level.getCurrentLevel() as unknown as
 				| LDtkLevel
 				| LDtkWorld;
-			const entities = loaded.getObjects();
+			// no class is registered for any entity here: each is an
+			// `LDtkObject`, found in the world as any renderable is
+			const entities = game.world.getChildByType(LDtkObject);
 			// a world keeps LDtk's coordinates: it can start left of or above 0
 			const x = "x" in loaded ? loaded.x : 0;
 			const y = "y" in loaded ? loaded.y : 0;
