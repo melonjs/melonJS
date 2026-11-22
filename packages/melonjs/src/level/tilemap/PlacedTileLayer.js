@@ -1,9 +1,13 @@
 import Renderable from "../../renderable/renderable.js";
+import { applyLayerDefinition, viewStart } from "./layer.js";
 
 /**
  * additional import for TypeScript
  * @import Tileset from "./Tileset.js";
  */
+
+// where the view starts in a layer's coordinates, while it is drawn
+const VIEW_START = { x: 0, y: 0 };
 
 // what a list grows by, in tiles
 const GROW = 64;
@@ -58,20 +62,11 @@ export default class PlacedTileLayer extends Renderable {
 	constructor(def) {
 		super(def.offsetx ?? 0, def.offsety ?? 0, def.width ?? 0, def.height ?? 0);
 
-		// a layer is placed by its top left corner, as a tile layer is
-		this.anchorPoint.set(0, 0);
-
 		/**
 		 * the tileset the layer's tiles come from
 		 * @type {Tileset}
 		 */
 		this.tileset = def.tileset;
-
-		/**
-		 * the layer's name
-		 * @type {string}
-		 */
-		this.name = def.name ?? "";
 
 		/**
 		 * a class name of the game's own
@@ -100,16 +95,9 @@ export default class PlacedTileLayer extends Renderable {
 		/** @ignore */
 		this._count = 0;
 
-		this.pos.z = def.z ?? 0;
-		this.setOpacity(def.opacity ?? 1);
-		if (def.blendMode !== undefined) {
-			this.blendMode = def.blendMode;
-		}
-		if (typeof def.tint === "string") {
-			this.tint.parseCSS(def.tint);
-		} else if (def.tint !== undefined) {
-			this.tint.copy(def.tint);
-		}
+		// its name, draw order, opacity, blend mode and tint, as a tile
+		// layer takes them
+		applyLayerDefinition(this, def);
 
 		if (def.tiles !== undefined) {
 			for (const tile of def.tiles) {
@@ -261,33 +249,10 @@ export default class PlacedTileLayer extends Renderable {
 		if (count === 0) {
 			return;
 		}
-		// The view is the camera's, in the world's coordinates, shifted by
-		// the camera's offset (a look ahead, a shake); the layer is drawn
-		// where its ancestors put it (a world moved to centre a level smaller
-		// than the view, a container the game moved), a camera other than
-		// the default one drawing the world unmoved. Read in the layer's own
-		// coordinates, the view starts that much earlier.
-		let viewX = rect.pos.x - this.pos.x;
-		let viewY = rect.pos.y - this.pos.y;
-		const offset = rect.offset;
-		if (offset !== undefined) {
-			viewX += offset.x;
-			viewY += offset.y;
-		}
-		const parent = this.ancestor;
-		if (parent !== undefined && parent !== null) {
-			const at = parent.getAbsolutePosition();
-			viewX -= at.x;
-			viewY -= at.y;
-			if (rect.isDefault === false) {
-				let root = parent;
-				while (root.ancestor) {
-					root = root.ancestor;
-				}
-				viewX += root.pos.x;
-				viewY += root.pos.y;
-			}
-		}
+		// where the view starts, in the coordinates the tiles are in
+		const start = viewStart(this, rect, VIEW_START);
+		const viewX = start.x - this.pos.x;
+		const viewY = start.y - this.pos.y;
 		const viewRight = viewX + rect.width;
 		const viewBottom = viewY + rect.height;
 

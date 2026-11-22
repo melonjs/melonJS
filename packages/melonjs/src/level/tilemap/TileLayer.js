@@ -16,6 +16,7 @@ import {
 	GID_FLIP_V,
 	GID_MASK,
 } from "./constants.js";
+import { applyLayerDefinition, viewStart } from "./layer.js";
 import Tile from "./Tile.js";
 
 /**
@@ -45,9 +46,8 @@ const oneTilesetReason = (orientation) => {
 // at.
 const DIAGONAL_NOT_SQUARE = "a tile that is not square, flipped diagonally";
 
-// the area an offset camera shows, handed to the tile renderers in its place
-// (made on first use)
-let viewRect;
+// where the view starts in a layer's coordinates, while it is drawn
+const VIEW_START = { x: 0, y: 0 };
 // the area to draw, in the grid of a layer that does not start at the map's
 // origin (made on first use)
 let cellRect;
@@ -285,13 +285,8 @@ export default class TileLayer extends Renderable {
 		 */
 		this.class = def.class;
 
-		// for displaying order
-		this.pos.z = def.z ?? 0;
-
-		// a layer is placed by its top left corner
-		this.anchorPoint.set(0, 0);
-
-		this.name = def.name ?? "";
+		// its name, draw order, opacity, blend mode and tint
+		applyLayerDefinition(this, def);
 
 		/**
 		 * the column, in the map's tile coordinates, of the layer's first
@@ -324,21 +319,6 @@ export default class TileLayer extends Renderable {
 		 * @type {number}
 		 */
 		this.rows = def.rows;
-
-		// layer opacity
-		this.setOpacity(def.opacity ?? 1);
-
-		// layer blend mode
-		if (def.blendMode !== undefined) {
-			this.blendMode = def.blendMode;
-		}
-
-		// layer tint
-		if (typeof def.tint === "string") {
-			this.tint.parseCSS(def.tint);
-		} else if (def.tint !== undefined) {
-			this.tint.copy(def.tint);
-		}
 
 		/**
 		 * How this layer is rendered. Resolved by `onActivateEvent` to one of:
@@ -1406,39 +1386,9 @@ export default class TileLayer extends Renderable {
 			this.canvasRenderer.renderTarget.invalidate(renderer);
 			renderer.cache.tinted?.delete(this.canvasRenderer.getCanvas());
 		}
-		// whether the view is the default camera's, which draws the world
-		// where its `pos` puts it (any other draws it unmoved): asked of the
-		// camera, before a plain rectangle stands in for it below
-		const unmovedWorld = rect.isDefault === false;
-		// the camera's offset (a look ahead, a shake) shifts what it shows
-		// without moving it: the tiles to draw are the ones in that view
-		const offset = rect.offset;
-		if (offset !== undefined && (offset.x !== 0 || offset.y !== 0)) {
-			viewRect ??= new Rect(0, 0, 0, 0);
-			viewRect.pos.set(rect.pos.x + offset.x, rect.pos.y + offset.y);
-			rect = viewRect.setSize(rect.width, rect.height);
-		}
-		// The view is the camera's, in the world's coordinates, and the layer
-		// is drawn where its ancestors put it: a world moved to centre a map
-		// smaller than the view, a container the game moved. Read in the
-		// layer's own coordinates, the view starts that much earlier. (A
-		// camera other than the default one draws the world unmoved.)
-		let shiftX = 0;
-		let shiftY = 0;
-		const parent = this.ancestor;
-		if (parent !== undefined && parent !== null) {
-			const at = parent.getAbsolutePosition();
-			shiftX = at.x;
-			shiftY = at.y;
-			if (unmovedWorld) {
-				let root = parent;
-				while (root.ancestor) {
-					root = root.ancestor;
-				}
-				shiftX -= root.pos.x;
-				shiftY -= root.pos.y;
-			}
-		}
+		// where the view starts in the coordinates the layer is placed in:
+		// the camera's offset and the layer's ancestors taken into account
+		const start = viewStart(this, rect, VIEW_START);
 		// A layer moved from its place in the map, by its offset in Tiled or
 		// by its `pos`, and an infinite map's layer that starts left of or
 		// above the map's origin: the layer's renderer draws its grid from
@@ -1448,18 +1398,15 @@ export default class TileLayer extends Renderable {
 		if (
 			movedX !== 0 ||
 			movedY !== 0 ||
-			shiftX !== 0 ||
-			shiftY !== 0 ||
+			start.x !== rect.pos.x ||
+			start.y !== rect.pos.y ||
 			this.startx !== 0 ||
 			this.starty !== 0
 		) {
 			const origin = this._cellOrigin(vector2dPool.get());
 			origin.set(origin.x + movedX, origin.y + movedY);
 			cellRect ??= new Rect(0, 0, 0, 0);
-			cellRect.pos.set(
-				rect.pos.x - shiftX - origin.x,
-				rect.pos.y - shiftY - origin.y,
-			);
+			cellRect.pos.set(start.x - origin.x, start.y - origin.y);
 			cellRect.setSize(rect.width, rect.height);
 			renderer.translate(origin.x, origin.y);
 			renderer.drawTileLayer(this, cellRect);
