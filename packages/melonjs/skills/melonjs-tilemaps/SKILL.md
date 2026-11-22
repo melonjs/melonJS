@@ -512,18 +512,62 @@ level.load("world:Level_0");                       // "<asset name>:<level ident
 // level.load("world");                            // the whole world, levels where LDtk puts them
 ```
 
+A complete game on an LDtk world, with everything below in use, is the
+[LDtk Platformer](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/ldtkPlatformer)
+example: its `world/` folder is the loading and the streaming.
+
+### Building the world in LDtk
+
+What is set up in the editor, and what the game gets from it. Nothing here
+is required: a project with one level and one tile layer loads.
+
+| in LDtk | in the game |
+|---|---|
+| a **Tiles**, **AutoLayer** or **IntGrid** layer with rules | drawn, in LDtk's layer order, with its opacity, its offset and its parallax factors; a layer hidden in LDtk is not drawn |
+| an **IntGrid** layer named like "Collisions" (its identifier contains "collision") | walls: every cell with a value is solid. Name its values in LDtk ("walls", "water"...) to read them by name |
+| an **Entities** layer | one object per entity, built by the class registered under the entity's **identifier** |
+| an entity's **fields** | `settings.fields`, typed as in LDtk (see "Field values" below) |
+| an entity's **tile**, from a tileset of the project | what the entity is drawn with when no class is registered for it. LDtk's built-in icons are not in the project's files: an entity shown with one is invisible in the game |
+| an entity's size, when it is **resizable** | `settings.width` / `settings.height`: an area (a ladder, a zone, a door) |
+| "**Add to table of content**" on an entity definition | the entity is listed in the project with its level and its place, before any level is loaded: the player's start |
+| an **Entity ref** field | a link to another entity, in any level: a door's or a teleport's destination |
+| a level's **identifier** and its **custom fields** | the level's id (`"world:<identifier>"`), and `fields` on the level's description |
+| a level's background color or image | drawn behind its layers |
+| the **world layout** (Free, GridVania, Linear) | where each level is when the whole world is loaded |
+| the **world depth** of a level | levels on different depths can cover the same place: the game loads one depth at a time |
+
+Keep the project's folder as LDtk has it: the tileset images, the level
+backgrounds and the level files ("Save levels to separate files") are loaded
+from where the project file says they are, relative to it. Load the `.ldtk`
+file itself, not the files of LDtk's "Super simple export".
+
+### What a level becomes
+
 - **The images load with the project**: its tilesets (PNG or Aseprite), its
-  levels' backgrounds, the level files it saves apart, from where the project
-  file says they are, relative to it. Keep the folder as LDtk has it. Each
-  image is kept under its file's name (`atlas/tiles.png` as `tiles`), and
-  freed with the last project that uses it, unless a bundle lists it or the
-  game loaded it too. An image the game loaded itself under that name is used
-  instead of the file.
+  levels' backgrounds, the level files it saves apart. Each image is kept
+  under its file's name (`atlas/tiles.png` as `tiles`), and freed with the
+  last project that uses it, unless a bundle lists it or the game loaded it
+  too. An image the game loaded itself under that name is used instead of
+  the file.
+- **Layers**: each LDtk layer becomes one or more renderables named after it,
+  in LDtk's order: a `TileLayer` where its tiles fit a grid (drawn by the GPU,
+  like a Tiled layer), a `PlacedTileLayer` for tiles stacked in a cell, off the
+  grid or faded. `level.getCurrentLevel().layers` lists them.
+- **Walls** come from IntGrid layers whose identifier contains "collision",
+  the convention of a Tiled collision layer: one static `WORLD_SHAPE` body per
+  run of cells, built by the same "shape" factory, carrying `intGridValue` and
+  `intGridName`. Other layers with `collisionLayers: ["Walls"]`, some values
+  only with `solidValues: [1]`, as options of `level.load`.
+- **IntGrid values** are read from the level, for what is not a wall (water,
+  ice, a ladder): `level.getCurrentLevel().getIntGrid("Collisions")`, then
+  `valueAtPixel(x, y)`, `valueAt(col, row)`, `nameAt(col, row)`, `names` (the
+  name LDtk gives each value) and `rects(test)` for areas as rectangles.
 - **Entities** (LDtk's word for what Tiled calls objects) are built by the class the game registered under their
   identifier: `new Player(x, y, settings)`, `x` and `y` being the top left
   corner of the entity's box whatever its pivot in LDtk (`settings.px` is the
   pivot). `settings.fields` holds its fields, also copied onto the settings
-  where the name is free (`settings.life`; not `type` or `width`). An entity
+  where the name is free (`settings.life`; not `type` or `width`), and
+  `settings.id` is its unique id in LDtk (`iid`). An entity
   LDtk draws with a tile carries it as `settings.image` (a texture atlas) and
   `settings.region`, so a class extending `Sprite` passes the settings straight
   to `super(x, y, settings)`. With no class, an entity is an `LDtkObject`: a
@@ -532,75 +576,113 @@ level.load("world:Level_0");                       // "<asset name>:<level ident
   game registered count: an entity named "Trigger" or "Text" is not built by
   the engine's class of that name unless the game registers it
   (`registerObjectClass("Trigger", Trigger)`).
-- **Walls** come from IntGrid layers whose identifier contains "collision",
-  the convention of a Tiled collision layer: one static `WORLD_SHAPE` body per
-  run of cells, built by the same "shape" factory, carrying `intGridValue` and
-  `intGridName`. Other layers with `collisionLayers: ["Walls"]`, some values
-  only with `solidValues: [1]`, as options of `level.load`.
-- **IntGrid values** are read from the level:
-  `level.getCurrentLevel().getIntGrid("Collisions").valueAtPixel(x, y)`, also
-  `valueAt(col, row)`, `nameAt`, and `rects(test)` for areas as rectangles.
-- **Layers**: each LDtk layer becomes one or more renderables named after it,
-  in LDtk's order: a `TileLayer` where its tiles fit a grid (drawn by the GPU,
-  like a Tiled layer), a `PlacedTileLayer` for tiles stacked in a cell, off the
-  grid or faded. `level.getCurrentLevel().layers` lists them.
-- **Worlds**: `level.load("world", { levels: ["Entrance"] })` starts with some
-  levels; `world.streamAround(x, y, w, h, margin)` then keeps the levels within
-  reach of the player and removes the others (`loadLevel` / `unloadLevel` for
-  one). Coordinates are LDtk's, and can be negative. Another world of a
-  multi-world project is `"world@<world identifier>"`.
-- **A world the player walks through** (`world` is
-  `level.getCurrentLevel()`):
-  - the player is an entity of the level it starts in, and would leave with
-    it: make it persistent (`this.isPersistent = true`, as for a player that
-    outlives a level change) and it stays when its level is taken out, and
-    is not built again when the level comes back;
-  - a level taken out and loaded again builds its objects again: leave out
-    what the player took with the `objects` option of `level.load`, as for
-    a Tiled map: `objects: (settings) => !taken.has(settings.id)`
-    (`settings.id` is the entity's `iid`);
-  - levels stacked on LDtk's world depths cover the same place: give the
-    depth the player is on, `streamAround(x, y, w, h, margin, depth)` and
-    `levelsAt(x, y, w, h, depth)`, and the other depths are taken out;
-  - a door to another level is the engine's `Trigger`, registered under the
-    entity's name (`registerObjectClass("Door", Trigger)`): it reads the
-    entity's fields as its settings, so `to` (`"world:Level_2"`), `duration`,
-    `transition` (`"mask"`), `shape` and `center` (`"touching"`) are set on
-    the entity in LDtk, and the transition's color is the entity's own in
-    LDtk;
-  - an `EntityRef` field (a teleport's destination) is resolved with
-    `project.findObject(ref)`: its `level`, and its `x` / `y` in the world,
-    whether that level is loaded or not; once it is,
-    `app.world.getChildByProp("id", ref.entityIid)[0]` is the object.
-- `loader.getLDtk("world")` is the project: its levels (`id`, size, `fields`,
-  `neighbours`), its worlds, `getTileData` / `getTileTags` for a tile's custom
-  data and enum tags. `showIntGrid: true` draws IntGrid layers that have no
-  tiles, in LDtk's colors; `objects: false` builds no object from the entities.
-- **Table of content**: `project.getTableOfContent("PlayerStart")` lists the
-  entities whose definition has "Add to table of content" checked in LDtk,
-  with no level loaded: each one's `level`, its `x` / `y` in the world, its
-  size and the fields listed with it. It is what tells where to start in a
-  world loaded a few levels at a time:
-  `level.load("world", { levels: [start.level.identifier] })`.
 - **Field values** are LDtk's `__value`: a number, a string or a boolean, a
   color as `"#rrggbb"`, an enum as its value's name, a `Point` as
   `{ cx, cy }` in cells, an `EntityRef` as
   `{ entityIid, layerIid, levelIid, worldIid }`, a `Tile` as a rectangle of
   its tileset, arrays of those, and `null` where nothing was set.
-- **The format** is read as LDtk's JSON schema for games defines it (1.x):
-  the `LDtk*Json` types name every field of it, so `project.json` and an
-  entity's `source` are typed down to the file. Find things by `iid` rather
-  than `uid` where both exist: LDtk plans to drop the integer ids.
 - **Parallax**: a layer's parallax factors (and "parallax scaling") move and
   scale its tiles with the camera as the editor does, on every renderer. The
   layer's entities and walls are things of the level and stay in it. The
   layers built carry it as `layer.parallax` (see below), to read or change.
-- Not supported: the editor's built-in entity icons (they are not in the
-  project's files). A tile layer whose tiles are not the size of its cells
-  is drawn from each cell's top left corner, as the file gives it: the
-  layer's tile pivot is the editor's own. A nine-slice entity tile keeps
-  LDtk's left and top borders on both sides (a `NineSliceSprite` has one
-  border per axis).
+- Options of `level.load`, besides `collisionLayers` and `solidValues`:
+  `showIntGrid: true` draws IntGrid layers that have no tiles, in LDtk's
+  colors; `objects` chooses the entities that are built (`false` for none);
+  `levels` is for a world, below.
+
+### A world, loaded around the player
+
+`level.load("world")` adds every level of the world, where LDtk puts it:
+fine for a small one. A large world is loaded a few levels at a time: the
+ones around the player come in and the others leave, with their layers,
+their walls and their objects.
+
+```js
+import { level, loader } from "melonjs";
+
+const project = loader.getLDtk("world");
+// where the player starts, known before any level is loaded (the "Player"
+// entity has "Add to table of content" checked in LDtk)
+const [start] = project.getTableOfContent("Player");
+let depth = start.level.depth;
+let room;                                  // the level the player is in
+const taken = new Set();                   // the ids of what the player took
+
+level.load("world", {
+    levels: [start.level.identifier],      // the levels to start with
+    setViewportBounds: false,              // the camera is held to a level, below
+    // a level that comes back builds its objects again: not the ones taken
+    objects: (settings) => !taken.has(settings.id),
+});
+
+// each frame, from the player's update(): the level the player is in
+function trackRoom(app, x, y) {
+    const world = level.getCurrentLevel();
+    const here = world.levelsAt(x, y, 0, 0, depth);
+    // in no level, or still in the same one (two levels share an edge)
+    if (here.length === 0 || here.includes(room)) {
+        return;
+    }
+    room = here[0];
+    app.viewport.setBounds(room.x, room.y, room.width, room.height);
+    // keep this level and the ones within 1 px of it; unload the others
+    world.streamAround(room.x, room.y, room.width, room.height, 1, depth);
+}
+```
+
+- **The player** is an entity of the level it starts in, and would leave
+  with it: make it persistent (`this.isPersistent = true`, as for a player
+  that outlives a level change). It stays when its level is taken out, and
+  is not built again when the level comes back.
+- **`streamAround(x, y, w, h, margin, depth)`** loads the levels that touch
+  the area grown by `margin` and unloads the others, and returns what it
+  did (`{ loaded, unloaded }`, by identifier). `loadLevel(identifier)` and
+  `unloadLevel(identifier)` do one; `loadedLevels()` and `isLoaded()` tell.
+  Unloading takes a level's objects out at the end of the frame, as any
+  `removeChild` does.
+- **Depths**: levels stacked on LDtk's world depths cover the same place.
+  Give `streamAround` and `levelsAt` the depth the player is on and the
+  levels of the others are left out; without it, every depth is loaded on
+  top of the others.
+- **Coordinates** are LDtk's world coordinates, and can be negative. A level
+  loaded alone (`"world:Level_0"`) starts at 0, 0 instead.
+- **A door to another level** is the engine's `Trigger`, registered under the
+  entity's name (`registerObjectClass("Door", Trigger)`): it reads the
+  entity's fields as its settings, so `to` (`"world:Level_2"`), `duration`,
+  `transition` (`"mask"`), `shape` and `center` (`"touching"`) are set on
+  the entity in LDtk, and the transition's color is the entity's own in
+  LDtk.
+- **An `EntityRef` field** (a teleport's destination) is resolved with
+  `project.findObject(ref)`: its `level`, and its `x` / `y` in the world,
+  whether that level is loaded or not; once it is,
+  `app.world.getChildByProp("id", ref.entityIid)[0]` is the object.
+- **IntGrid values in a world** are read per level:
+  `world.getIntGrid(room.identifier, "Collisions")`.
+- Another world of a multi-world project is `"world@<world identifier>"`.
+
+### The project
+
+`loader.getLDtk("world")` is the project, with no level loaded:
+
+- its `levels` (each with its `identifier`, its place and size in the world,
+  its `depth`, its `fields` and its `neighbours`) and its `worlds`;
+- **the table of content**, `project.getTableOfContent("PlayerStart")`: the
+  entities whose definition has "Add to table of content" checked in LDtk,
+  each with its `level`, its `x` / `y` in the world, its size and the fields
+  listed with it;
+- `getTileData` / `getTileTags` for a tile's custom data and enum tags;
+- `project.json`, the file itself. It is read as LDtk's JSON schema for
+  games defines it (1.x): the `LDtk*Json` types name every field of it, so
+  `project.json` and an entity's `source` are typed down to the file. Find
+  things by `iid` rather than `uid` where both exist: LDtk plans to drop
+  the integer ids.
+
+Not supported: the editor's built-in entity icons (they are not in the
+project's files). A tile layer whose tiles are not the size of its cells
+is drawn from each cell's top left corner, as the file gives it: the
+layer's tile pivot is the editor's own. A nine-slice entity tile keeps
+LDtk's left and top borders on both sides (a `NineSliceSprite` has one
+border per axis).
 
 ## Tile layers without Tiled
 
