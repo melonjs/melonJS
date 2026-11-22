@@ -5,9 +5,8 @@
 ### Added
 - LDtk: levels made with the [LDtk](https://ldtk.io) editor load from the `.ldtk` file as saved: an asset of type `"ldtk"`, then `level.load("<asset>:<level>")`, or `level.load("<asset>")` for the whole world. Tiles, IntGrid walls, entities, parallax layers and worlds streamed level by level (`streamAround`)
 - Tile maps: `parallax` on a tile layer makes it scroll slower or faster than the level, and scales it, on every renderer
-- Tile maps: `TileLayer`, `Tileset`, `TilesetGroup` and `PlacedTileLayer` build tile layers in code, without a Tiled map; `mergeGridRects` covers a grid's cells with few rectangles, for collision bodies
-- Levels: `level.registerFormat` and `level.followViewport` let a loader for another map editor's files plug into `level.load`; `registerObjectClass` and `registerObjectFactory` are neutral names for the Tiled ones
-- Loader: `loader.setParser(type, parser, { unload })` frees what an asset type of your own kept when it is unloaded
+- Tile maps: tile layers can be built in code, without a Tiled map, with `TileLayer`, `Tileset`, `TilesetGroup` and `PlacedTileLayer`; `mergeGridRects` covers a grid's cells with few rectangles, for collision bodies
+- Levels: `registerObjectClass` and `registerObjectFactory`, the same as `registerTiledObjectClass` and `registerTiledObjectFactory` under names that fit any level format
 
 ### Fixed
 - TypeScript: an asset's `data` accepts a parsed map object, as documented
