@@ -53,18 +53,19 @@ export function trackRoom(app: Application, x: number, y: number): boolean {
 }
 
 /**
- * Whether a point of the player's room is in water. Water is a value of the
- * room's "Collisions" IntGrid layer, named "water" in LDtk: it builds no
- * wall, and is read here.
+ * What the player's room is made of at a point: the name LDtk gives the
+ * value of the room's "Collisions" IntGrid layer there, "walls" or "water".
+ * The walls are solid bodies already; the layer is read here for what a
+ * body does not tell (the water, and what a ladder goes through).
  * @param x - the point, in the world
  * @param y - the point, in the world
- * @returns true in water
+ * @returns the value's name, or undefined where the layer is empty
  */
-export function isWater(x: number, y: number): boolean {
+export function groundAt(x: number, y: number): string | undefined {
 	const room = gameState.room;
 	if (room === undefined) {
-		return false;
+		return undefined;
 	}
 	const grid = ldtkWorld().getIntGrid(room.identifier, "Collisions");
-	return grid?.names.get(grid.valueAtPixel(x, y)) === "water";
+	return grid?.names.get(grid.valueAtPixel(x, y));
 }

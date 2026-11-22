@@ -20,7 +20,7 @@ import { type Controls, readControls } from "../controls";
 import { particles } from "../effects/particles";
 import { sounds } from "../effects/sounds";
 import { gameState } from "../gameState";
-import { isWater, trackRoom } from "../world/rooms";
+import { groundAt, trackRoom } from "../world/rooms";
 import { Item } from "./item";
 import { Ladder } from "./ladder";
 import { Teleport } from "./teleport";
@@ -49,6 +49,20 @@ const HARD_LANDING = 4.5 * TILE;
 const DRY = new Color(255, 255, 255);
 const WET = new Color(150, 200, 255);
 
+/**
+ * whether a ladder goes through a wall: their boxes share more than an edge
+ * @param ladder - the ladder
+ * @param wall - the wall
+ * @returns true if it does
+ */
+function goesThrough(ladder: Renderable, wall: Renderable): boolean {
+	const a = ladder.getBounds();
+	const b = wall.getBounds();
+	return (
+		a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top
+	);
+}
+
 /** where the player is in the water: out of it, head out, or under */
 type Water = "none" | "surface" | "under";
 
@@ -62,6 +76,8 @@ export class Player extends Sprite {
 	teleport: Teleport | undefined;
 
 	climbing = false;
+	/** the ladder being climbed: it goes through the floor it is set in */
+	climbed: Ladder | undefined;
 	swimming = false;
 	/** between two teleports: the screen is closed */
 	travelling = false;
@@ -156,12 +172,15 @@ export class Player extends Sprite {
 		const keys = readControls();
 		this.stayInTheWorld();
 		const water = this.enterOrLeaveWater();
-		this.walk(keys);
+		this.walk(keys, ladder);
 		const onLadderTop = this.climb(ladder, keys);
+		this.climbed = this.climbing ? ladder : undefined;
 		const grounded =
 			onLadderTop || this.parentApp.world.adapter.isGrounded(this);
 		this.fall(water, onLadderTop);
-		if (keys.jump && (grounded || this.climbing || this.swimming)) {
+		const canJump = grounded || this.climbing || this.swimming;
+		// (not from inside the floor a ladder goes through)
+		if (keys.jump && canJump && !this.inFloor()) {
 			this.jump(water, grounded);
 		}
 		// a teleport is taken by pressing up in front of it
@@ -200,8 +219,9 @@ export class Player extends Sprite {
 	enterOrLeaveWater(): Water {
 		const { x } = this.centre;
 		// under water, or with the head out of it: at the surface
-		const under = isWater(x, this.pos.y + 3);
-		const surface = !under && isWater(x, this.pos.y + this.height - 2);
+		const under = groundAt(x, this.pos.y + 3) === "water";
+		const surface =
+			!under && groundAt(x, this.pos.y + this.height - 2) === "water";
 		const swimming = under || surface;
 		if (swimming !== this.swimming) {
 			particles.burst("splash", x, this.feet.y - 2);
@@ -213,10 +233,31 @@ export class Player extends Sprite {
 	}
 
 	/**
-	 * left and right: a push, which the body's friction slows down again
-	 * @param keys - what is asked for
+	 * Whether the player is in a wall: it is, climbing a ladder through
+	 * the floor the ladder is set in. Read from the room's IntGrid layer.
+	 * @returns true inside a wall
 	 */
-	walk(keys: Controls) {
+	inFloor(): boolean {
+		const { x } = this.centre;
+		return (
+			groundAt(x, this.pos.y + 2) === "walls" ||
+			groundAt(x, this.pos.y + this.height - 1) === "walls"
+		);
+	}
+
+	/**
+	 * Left and right: a push, which the body's friction slows down again.
+	 * In the floor a ladder goes through there is no room to the sides: the
+	 * player stays on the ladder.
+	 * @param keys - what is asked for
+	 * @param ladder - the ladder the player is in, if any
+	 */
+	walk(keys: Controls, ladder: Ladder | undefined) {
+		if (this.climbing && ladder !== undefined && this.inFloor()) {
+			this.pos.x = ladder.pos.x + (ladder.width - this.width) / 2;
+			this.body.vel.x = 0;
+			return;
+		}
 		if (keys.left) {
 			this.body.force.x = -PUSH;
 			this.flipX(true);
@@ -428,7 +469,12 @@ export class Player extends Sprite {
 			other.collect();
 			return false;
 		}
-		// the walls built from the IntGrid layer are solid
-		return other.body.collisionType === collision.types.WORLD_SHAPE;
+		// The walls built from the IntGrid layer are solid, but for the
+		// ones a ladder goes through, to a player climbing it: LDtk's
+		// floor runs over the top of a ladder set in it.
+		return (
+			other.body.collisionType === collision.types.WORLD_SHAPE &&
+			!(this.climbed !== undefined && goesThrough(this.climbed, other))
+		);
 	}
 }
