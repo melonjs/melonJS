@@ -326,13 +326,14 @@ describe("the IntGrid layers of a level", () => {
 			const def = wall.bodyDef as {
 				type: string;
 				collisionType: number;
-				shapes: { width: number; height: number }[];
+				shapes: { getBounds(): { width: number; height: number } }[];
 			};
 			expect(def.type).toBe("static");
 			expect(def.collisionType).toBe(collision.types.WORLD_SHAPE);
+			// one shape, the size of the run of cells
 			expect(def.shapes).toHaveLength(1);
-			expect(def.shapes[0].width).toBe(wall.width);
-			expect(def.shapes[0].height).toBe(wall.height);
+			expect(def.shapes[0].getBounds().width).toBe(wall.width);
+			expect(def.shapes[0].getBounds().height).toBe(wall.height);
 			// what it is made of, for a collision handler
 			const made = wall as unknown as {
 				intGridValue: number;

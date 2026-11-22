@@ -2,13 +2,13 @@ import { warning } from "../../lang/console.js";
 import { getImage } from "../../loader/loader.js";
 import { vector2dPool } from "../../math/vector2d.ts";
 import { boundsPool } from "../../physics/bounds.ts";
-import { collision } from "../../physics/collision.js";
 import Container from "../../renderable/container.js";
 import ImageLayer from "../../renderable/imagelayer.js";
 import { checkVersion } from "../../utils/utils.ts";
+import { isCollisionLayerName, markWorldShape } from "../tilemap/collision.js";
 import { addLevelToContainer } from "../tilemap/populate.js";
 import { releaseViewport } from "../tilemap/viewport.js";
-import { COLLISION_GROUP, TILED_SUPPORTED_VERSION } from "./constants.js";
+import { TILED_SUPPORTED_VERSION } from "./constants.js";
 import { getNewTMXRenderer } from "./renderer/autodetect.js";
 import TMXGroup from "./TMXGroup.js";
 import TMXLayer from "./TMXLayer.js";
@@ -608,9 +608,7 @@ export default class TMXTileMap {
 			const group = this.objectGroups[g];
 
 			// check if this is the collision shape group
-			const isCollisionGroup = group.name
-				.toLowerCase()
-				.includes(COLLISION_GROUP);
+			const isCollisionGroup = isCollisionLayerName(group.name);
 
 			if (flatten === false) {
 				// create a new container
@@ -647,20 +645,9 @@ export default class TMXTileMap {
 				// instantiate the object based on its type
 				const obj = createTMXObject(settings, this);
 
-				// configure collision on unnamed objects in collision groups.
-				// Factory output uses `bodyDef` (engine-portable, declarative).
-				// We rewrite the def fields so when the world auto-registers
-				// the body, it picks up WORLD_SHAPE / static. Legacy objects
-				// that still carry a pre-constructed `body` are patched
-				// in-place for backward compatibility.
+				// an unnamed object of a collision group is a wall of the world
 				if (isCollisionGroup && !settings.name) {
-					if (obj.bodyDef) {
-						obj.bodyDef.collisionType = collision.types.WORLD_SHAPE;
-						obj.bodyDef.type = "static";
-					} else if (obj.body) {
-						obj.body.collisionType = collision.types.WORLD_SHAPE;
-						obj.body.isStatic = true;
-					}
+					markWorldShape(obj);
 				}
 
 				// apply per-object opacity and visibility (skip TMXLayer)

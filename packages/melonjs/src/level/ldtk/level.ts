@@ -1,7 +1,5 @@
-import { Rect } from "../../geometries/rectangle.ts";
 import { getImage } from "../../loader/cache.js";
 import { Bounds } from "../../physics/bounds.ts";
-import { collision } from "../../physics/collision.js";
 import type Container from "../../renderable/container.js";
 import Renderable from "../../renderable/renderable.js";
 import TMXOrthogonalRenderer from "../tiled/renderer/TMXOrthogonalRenderer.js";
@@ -9,6 +7,7 @@ import {
 	createLevelObject,
 	hasObjectFactory,
 } from "../tiled/TMXObjectFactory.js";
+import { isCollisionLayerName, markWorldShape } from "../tilemap/collision.js";
 import PlacedTileLayer from "../tilemap/PlacedTileLayer.js";
 import { addLevelToContainer, populateContainer } from "../tilemap/populate.js";
 import TileLayer from "../tilemap/TileLayer.js";
@@ -240,7 +239,7 @@ class LevelBuilder {
 		if (layers !== undefined) {
 			return layers.includes(identifier);
 		}
-		return identifier.toLowerCase().includes("collision");
+		return isCollisionLayerName(identifier);
 	}
 
 	/**
@@ -378,19 +377,30 @@ class LevelBuilder {
 				return solid === undefined || solid.includes(value);
 			});
 			for (const rect of rects) {
-				const wall = new Renderable(rect.x, rect.y, rect.width, rect.height);
-				wall.anchorPoint.set(0, 0);
+				// a wall is what an unnamed shape of a Tiled collision layer
+				// is: built by the "shape" factory (the game's own, if it
+				// registered one) and made a wall of the world
+				const wall = createLevelObject(
+					{
+						x: rect.x,
+						y: rect.y,
+						z,
+						width: rect.width,
+						height: rect.height,
+						id: `${grid.name}:${String(rect.x)},${String(rect.y)}`,
+						layer: grid.name,
+						intGridValue: rect.value,
+						intGridName: grid.names.get(rect.value),
+					},
+					this.map,
+				);
+				markWorldShape(wall);
 				wall.name = grid.name;
 				// what the wall is made of, for a collision handler to read
 				Object.assign(wall, {
 					intGridValue: rect.value,
 					intGridName: grid.names.get(rect.value),
 				});
-				wall.bodyDef = {
-					type: "static",
-					shapes: [new Rect(0, 0, rect.width, rect.height)],
-					collisionType: collision.types.WORLD_SHAPE,
-				};
 				this.add(built, wall, z);
 			}
 		}
