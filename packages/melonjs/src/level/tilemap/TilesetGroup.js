@@ -1,4 +1,4 @@
-import { TMX_CLEAR_BIT_MASK } from "../tiled/constants.js";
+import { GID_MASK } from "./constants.js";
 
 /**
  * additional import for TypeScript
@@ -53,7 +53,7 @@ export default class TilesetGroup {
 	 */
 	getTilesetByGid(gid) {
 		// clear the gid of all flip/rotation flags
-		gid &= TMX_CLEAR_BIT_MASK;
+		gid &= GID_MASK;
 
 		// fast path: check cached tileset first (high hit rate for sequential tile data)
 		const last = this._lastTileset;

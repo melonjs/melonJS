@@ -1,5 +1,5 @@
 import { collision } from "../../physics/collision.js";
-import { COLLISION_GROUP } from "../tiled/constants.js";
+import { COLLISION_GROUP } from "./constants.js";
 
 /**
  * additional import for TypeScript

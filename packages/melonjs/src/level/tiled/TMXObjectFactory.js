@@ -1,10 +1,10 @@
 import { polygonPool } from "../../geometries/polygon.ts";
 import { vector2dPool } from "../../math/vector2d.ts";
 import { setPoolRegisterCallback } from "../../system/legacy_pool.js";
+import TileLayer from "../tilemap/TileLayer.js";
 import { createShapeObject } from "./factories/shape.js";
 import { createTextObject } from "./factories/text.js";
 import { createTileObject } from "./factories/tile.js";
-import TMXLayer from "./TMXLayer.js";
 
 /**
  * @import Renderable from "../../renderable/renderable.js";
@@ -80,7 +80,7 @@ export function getDefaultShape(settings) {
 /**
  * Detect the object type from its TMX settings.
  * The detection order is:
- * 1. TMXLayer instances → "layer" (passthrough)
+ * 1. tile layers (a Tiled layer, or any `TileLayer`) → "layer" (passthrough)
  * 2. Object class matching a registered factory → class name
  * 3. Object name matching a registered factory → name
  * 4. A tile object with no class, whose tile's class matches a factory or
@@ -94,7 +94,7 @@ export function getDefaultShape(settings) {
  * @internal
  */
 export function detectObjectType(settings) {
-	if (settings instanceof TMXLayer) {
+	if (settings instanceof TileLayer) {
 		return "layer";
 	}
 	// check if a factory is registered for this object's class
@@ -358,7 +358,7 @@ export function createTMXObject(settings, map) {
 
 	const type = detectObjectType(settings);
 
-	// TMXLayer instances are already instantiated — pass through
+	// tile layers are already instantiated — pass through
 	if (type === "layer") {
 		return settings;
 	}

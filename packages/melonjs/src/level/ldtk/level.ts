@@ -208,7 +208,8 @@ class LevelBuilder {
 			this.project.layerDefs.get(layer.layerDefUid)?.intGridValues ?? [];
 		const size = layer.__gridSize;
 		const canvas = createCanvas(Math.max(values.length, 1) * size, size);
-		const context = canvas.getContext("2d");
+		// a page's canvas or an offscreen one: both draw in 2D alike
+		const context = (canvas as HTMLCanvasElement).getContext("2d");
 		const index = new Map<number, number>();
 		for (const [i, value] of values.entries()) {
 			index.set(value.value, i);

@@ -22,12 +22,12 @@ import TMXOrthogonalRenderer from "./level/tiled/renderer/TMXOrthogonalRenderer.
 import TMXRenderer from "./level/tiled/renderer/TMXRenderer.js";
 import TMXStaggeredRenderer from "./level/tiled/renderer/TMXStaggeredRenderer.js";
 import TMXLayer from "./level/tiled/TMXLayer.js";
-import Tile from "./level/tiled/TMXTile.js";
 import TMXTileMap from "./level/tiled/TMXTileMap.js";
 import TMXTileset from "./level/tiled/TMXTileset.js";
 import TMXTilesetGroup from "./level/tiled/TMXTilesetGroup.js";
 import * as TMXUtils from "./level/tiled/TMXUtils.js";
 import PlacedTileLayer from "./level/tilemap/PlacedTileLayer.js";
+import Tile from "./level/tilemap/Tile.js";
 import TileLayer from "./level/tilemap/TileLayer.js";
 import Tileset from "./level/tilemap/Tileset.js";
 import TilesetGroup from "./level/tilemap/TilesetGroup.js";

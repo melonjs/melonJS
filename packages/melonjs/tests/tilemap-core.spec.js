@@ -168,6 +168,18 @@ describe("the object registry, under its neutral names", () => {
 		expect(chest.loot).toBe("key");
 	});
 
+	it("a tile layer handed to it is the object: any tile layer, not only a Tiled one", () => {
+		const layer = new TileLayer({
+			name: "plain",
+			cols: 2,
+			rows: 2,
+			tilewidth: 8,
+			tileheight: 8,
+			tilesets: new TilesetGroup(),
+		});
+		expect(createLevelObject(layer)).toBe(layer);
+	});
+
 	it("a factory is given the description and the map", () => {
 		const map = { name: "a map" };
 		const factory = vi.fn((settings) => {

@@ -5,7 +5,7 @@ import { Vector2d } from "../../math/vector2d.ts";
 import timer from "../../system/timer.ts";
 import { createCanvas } from "../../video/canvas_factory.js";
 import { TextureAtlas } from "../../video/texture/atlas.js";
-import { buildFlipTransform } from "../tiled/TMXTile.js";
+import { buildFlipTransform } from "./Tile.js";
 
 // shared scratch matrix for flip-transform construction in drawTileRaw — avoids
 // per-call allocation in the hot path. Single-threaded JS means it's safe to

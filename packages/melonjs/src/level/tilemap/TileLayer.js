@@ -6,14 +6,17 @@ import Renderable from "../../renderable/renderable.js";
 import CanvasRenderer from "../../video/canvas/canvas_renderer";
 import { createCanvas } from "../../video/canvas_factory.js";
 import { TMX_ORIENTATIONS } from "../../video/gpu/tmxlayer_orientation.js";
-import {
-	TMX_CLEAR_BIT_MASK,
-	TMX_FLIP_AD,
-	TMX_FLIP_H,
-	TMX_FLIP_V,
-} from "../tiled/constants.js";
 import TMXOrthogonalRenderer from "../tiled/renderer/TMXOrthogonalRenderer.js";
-import Tile from "../tiled/TMXTile.js";
+import {
+	FLIP_AD_BIT,
+	FLIP_H_BIT,
+	FLIP_V_BIT,
+	GID_FLIP_AD,
+	GID_FLIP_H,
+	GID_FLIP_V,
+	GID_MASK,
+} from "./constants.js";
+import Tile from "./Tile.js";
 
 /**
  * additional import for TypeScript
@@ -23,9 +26,7 @@ import Tile from "../tiled/TMXTile.js";
  * @import {Vector2d} from "../../math/vector2d.ts";
  */
 // flip-mask bit layout for layerData's G channel
-export const FLIP_H_BIT = 1 << 0;
-export const FLIP_V_BIT = 1 << 1;
-export const FLIP_AD_BIT = 1 << 2;
+export { FLIP_AD_BIT, FLIP_H_BIT, FLIP_V_BIT };
 
 // The largest tiles the shader path draws are the bounds of the loops of the
 // fragment shaders, which are declared from the same numbers (see
@@ -73,9 +74,9 @@ function flipMaskFromTile(tile) {
 function gidWithFlips(gid, flipMask) {
 	return (
 		gid |
-		(flipMask & FLIP_H_BIT ? TMX_FLIP_H : 0) |
-		(flipMask & FLIP_V_BIT ? TMX_FLIP_V : 0) |
-		(flipMask & FLIP_AD_BIT ? TMX_FLIP_AD : 0)
+		(flipMask & FLIP_H_BIT ? GID_FLIP_H : 0) |
+		(flipMask & FLIP_V_BIT ? GID_FLIP_V : 0) |
+		(flipMask & FLIP_AD_BIT ? GID_FLIP_AD : 0)
 	);
 }
 
@@ -1185,7 +1186,7 @@ export default class TileLayer extends Renderable {
 		}
 		const slot = cy * this.cols + cx;
 		const idx = slot * 2;
-		const cleanGid = tile.tileId & TMX_CLEAR_BIT_MASK;
+		const cleanGid = tile.tileId & GID_MASK;
 		// `layerData` is a Uint16Array; writes silently truncate above
 		// 0xFFFF. Warn once per layer so a runtime `setTile` with a
 		// GID >= 65536 doesn't corrupt the cell undetected.
