@@ -429,8 +429,25 @@ level.load("map1");   // the layer's tiles hold the player up
 over `spritesheet.png` and this same `collider` property on each layer, set
 from the editor's "collider" checkbox: load the `.tmx` as any Tiled map (asset
 type `"tmx"`, the spritesheet as an image named `spritesheet`) and the layers
-checked as colliders are solid. Its JSON export holds the same data in a
-format of its own, which is not read: export TMX.
+checked as colliders are solid.
+
+```js
+await loader.preload([
+    { name: "spritesheet", type: "image", src: "map/spritesheet.png" },
+    { name: "map", type: "tmx", src: "map/map.tmx" },
+]);
+level.load("map");
+```
+
+- **Tile attributes** (the editor's per-tile attributes) are exported as
+  Tiled tile properties, so they are read as any tile's:
+  `const tile = layer.cellAt(col, row);` then
+  `tile.tileset.getTileProperties(tile.tileId)` gives
+  `{ type: "lava", damage: 25, isSolid: false }`, each value of its type.
+- Per-tile *instance* attributes (one placed tile's own) are only in the
+  editor's JSON export, a format of its own that is not read: export TMX,
+  and keep attributes per tile.
+- A layer hidden in the editor is left out of the export.
 
 ## Map orientations
 

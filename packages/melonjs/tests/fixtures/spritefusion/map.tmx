@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.10" tiledversion="1.11.0" orientation="orthogonal" renderorder="right-down" width="6" height="4" tilewidth="16" tileheight="16" infinite="0" nextlayerid="4" nextobjectid="1">
+  <tileset firstgid="1" name="spritefusion" tilewidth="16" tileheight="16" tilecount="4" columns="2">
+    <image source="spritesheet.png" width="32" height="32"/>
+    <tile id="1">
+      <properties>
+        <property name="type" value="lava"/>
+        <property name="damage" type="int" value="25"/>
+        <property name="slow" type="float" value="0.5"/>
+        <property name="isDangerous" type="bool" value="true"/>
+        <property name="isSolid" type="bool" value="false"/>
+      </properties>
+    </tile>
+    <tile id="3">
+      <properties>
+        <property name="spawn" value="enemy"/>
+      </properties>
+    </tile>
+  </tileset>
+  <layer id="1" name="Background" width="6" height="4">
+    <properties>
+      <property name="collider" type="bool" value="false"/>
+    </properties>
+    <data encoding="csv">
+3,3,3,3,3,3,
+3,3,3,3,3,3,
+3,3,3,3,3,3,
+3,3,3,3,3,3
+    </data>
+  </layer>
+  <layer id="2" name="Ground" width="6" height="4">
+    <properties>
+      <property name="collider" type="bool" value="true"/>
+    </properties>
+    <data encoding="csv">
+0,0,0,0,0,0,
+0,0,0,0,0,0,
+0,0,0,0,1,0,
+1,1,2,2,1,1
+    </data>
+  </layer>
+  <layer id="3" name="Pickups" width="6" height="4">
+    <properties>
+      <property name="collider" type="bool" value="false"/>
+    </properties>
+    <data encoding="csv">
+0,0,0,0,0,0,
+0,4,0,0,0,0,
+0,0,0,0,0,0,
+0,0,0,0,0,0
+    </data>
+  </layer>
+</map>

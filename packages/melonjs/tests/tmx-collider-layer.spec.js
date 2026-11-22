@@ -370,3 +370,117 @@ describe("a Tiled tile layer with the collider property", () => {
 		expect(falling.pos.y).toBeGreaterThan(ROWS * TILE);
 	});
 });
+
+/**
+ * A map as the Sprite Fusion editor exports it to TMX: an XML Tiled map with
+ * one embedded tileset over `spritesheet.png`, a `collider` property on each
+ * layer, and the attributes given to a tile as that tile's properties in the
+ * tileset. (The fixture is written for this test, in the export's form.)
+ */
+describe("a map in the form of a Sprite Fusion TMX export", () => {
+	let app;
+
+	beforeAll(async () => {
+		boot();
+		app = new Application(320, 240, {
+			parent: "screen",
+			renderer: video.CANVAS,
+			consoleHeader: false,
+		});
+		await app.init();
+		const image = document.createElement("canvas");
+		image.width = 32;
+		image.height = 32;
+		await loader.preload(
+			[
+				// the image the tileset names, under its file's name
+				{
+					name: "spritesheet",
+					type: "image",
+					src: image.toDataURL("image/png"),
+				},
+				{
+					name: "spritefusion-map",
+					type: "tmx",
+					src: new URL("./fixtures/spritefusion/map.tmx", import.meta.url).href,
+				},
+			],
+			undefined,
+			false,
+		);
+	});
+
+	afterAll(() => {
+		app?.destroy();
+	});
+
+	beforeEach(async () => {
+		app.world.reset();
+		await level.load("spritefusion-map", {
+			container: app.world,
+			async: true,
+		});
+	});
+
+	it("loads as a Tiled map: its layers, bottom-most first", () => {
+		const layers = level.getCurrentLevel().getLayers();
+		expect(
+			layers.map((layer) => {
+				return [layer.name, layer.collider];
+			}),
+		).toEqual([
+			["Background", false],
+			["Ground", true],
+			["Pickups", false],
+		]);
+		for (const layer of layers) {
+			expect(layer).toBeInstanceOf(TMXLayer);
+		}
+	});
+
+	it("makes the layers checked as colliders solid", () => {
+		const walls = app.world
+			.getChildren()
+			.filter((child) => {
+				return child.bodyDef?.collisionType === collision.types.WORLD_SHAPE;
+			})
+			.map((wall) => {
+				return [wall.layer, wall.pos.x, wall.pos.y, wall.width, wall.height];
+			})
+			.sort((a, b) => {
+				return a[2] - b[2] || a[1] - b[1];
+			});
+		// the floor, and the one tile standing on it
+		expect(walls).toEqual([
+			["Ground", 4 * TILE, 2 * TILE, TILE, TILE],
+			["Ground", 0, 3 * TILE, 6 * TILE, TILE],
+		]);
+	});
+
+	it("gives a tile's attributes as its properties, each of its type", () => {
+		const [ground] = app.world.getChildByName("Ground");
+		// the lava tile, the tileset's second, in the floor
+		const lava = ground.cellAt(2, 3);
+		expect(lava.tileId).toBe(2);
+		const properties = lava.tileset.getTileProperties(lava.tileId);
+		expect(properties).toEqual({
+			type: "lava",
+			damage: 25,
+			slow: 0.5,
+			isDangerous: true,
+			isSolid: false,
+		});
+		// a number is a number, a boolean a boolean: not their text
+		expect(properties.damage).toBeTypeOf("number");
+		expect(properties.isSolid).toBe(false);
+		// the tile next to it has none
+		const plain = ground.cellAt(0, 3);
+		expect(plain.tileset.getTileProperties(plain.tileId)).toBeUndefined();
+		// a tile of another layer, by where it is in the world
+		const [pickups] = app.world.getChildByName("Pickups");
+		const marker = pickups.getTile(TILE + 3, TILE + 3);
+		expect(marker.tileset.getTileProperties(marker.tileId)).toEqual({
+			spawn: "enemy",
+		});
+	});
+});
