@@ -104,12 +104,17 @@ its own, its **tile's class**, then the structural fallbacks `"text"`,
 `"tile"` and `"shape"`.
 
 ```js
-import { registerTiledObjectClass, registerTiledObjectFactory } from "melonjs";
+import { registerObjectClass, registerObjectFactory } from "melonjs";
 
-registerTiledObjectClass("Enemy", Enemy);   // ← matches Tiled class OR name
-registerTiledObjectFactory("Spine", (settings, map) => { /* → Renderable */ });
+registerObjectClass("Enemy", Enemy);   // ← matches Tiled class OR name
+registerObjectFactory("Spine", (settings, map) => { /* → Renderable */ });
 level.load("map1");
 ```
+
+The registry is the same for every kind of level: a class registered here is
+also built for an LDtk entity of that name. (`registerTiledObjectClass` and
+`registerTiledObjectFactory` are the older names of these two functions,
+deprecated since 20.18 and still working.)
 
 These are the entry points to use. The registry is the level loader's, held by
 the object factory, and has nothing to do with object pooling. Since 20.18 the
@@ -131,16 +136,16 @@ class you spawn constantly, give it a `createPool` and register it for Tiled
 separately:
 
 ```js
-registerTiledObjectClass("mainPlayer", PlayerEntity);
+registerObjectClass("mainPlayer", PlayerEntity);
 ```
 
 Register **before** loading. With no match the object falls through to the
 structural factory and becomes a plain `Renderable` with a static body — it does
 not error, it just has none of your behaviour.
 
-`registerTiledObjectClass` **throws** if you register a *different* constructor
+`registerObjectClass` **throws** if you register a *different* constructor
 under a name already taken (re-registering the same one is a no-op).
-`registerTiledObjectFactory` overwrites and only `console.warn`s, so it is the
+`registerObjectFactory` overwrites and only `console.warn`s, so it is the
 one to use for replacing something already registered.
 
 **Overriding a built-in name always works.** The engine's own classes are
@@ -148,11 +153,11 @@ DEFAULTS: they fill a name nothing else has claimed, and yours takes it over
 whenever you register, before or after a map has loaded.
 
 ```js
-registerTiledObjectClass("Trigger", MyTrigger);   // whenever you like
+registerObjectClass("Trigger", MyTrigger);   // whenever you like
 ```
 
 The throw is for a clash between two of *your* classes under one name. For
-that case `registerTiledObjectFactory` overwrites and only warns.
+that case `registerObjectFactory` overwrites and only warns.
 
 ### Finding an object, and choosing which are built
 
@@ -196,7 +201,7 @@ every object placed from that tile shows them as its own. melonJS follows:
   plain tile sprite.
 
 ```ts
-import { registerTiledObjectClass, Sprite, type TMXObject } from "melonjs";
+import { registerObjectClass, Sprite, type TMXObject } from "melonjs";
 
 // the custom properties set on the object itself, by name
 interface DoorSettings extends TMXObject {
@@ -213,7 +218,7 @@ class Door extends Sprite {
         this.facing = settings.resolvedProperty("facing") ?? "N";
     }
 }
-registerTiledObjectClass("Door", Door);   // and give the door tile the class "Door"
+registerObjectClass("Door", Door);   // and give the door tile the class "Door"
 ```
 
 `TMXObject` is the type of the `settings` a registered class (or factory)

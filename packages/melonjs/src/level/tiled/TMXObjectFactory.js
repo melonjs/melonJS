@@ -20,7 +20,7 @@ import { createTileObject } from "./factories/tile.js";
 const factories = new Map();
 
 /**
- * tracks class constructors registered via registerTiledObjectClass
+ * tracks class constructors registered via registerObjectClass
  * (used to detect duplicate registrations with different constructors)
  * @ignore
  * @internal
@@ -129,8 +129,11 @@ export function detectObjectType(settings) {
 }
 
 /**
- * Register a factory function for a given Tiled object type.
- * When a Tiled map is loaded, objects are matched to factories using the following
+ * Register a function building the objects of a level, for a class or a name.
+ * The registry is the same whatever the level was made with: an object of a
+ * Tiled or a Sprite Fusion map, an entity of an LDtk level.
+ * <br><br>
+ * When a level is loaded, objects are matched to factories using the following
  * priority: object class → object name → structural type ("text", "tile", "shape").
  * <br><br>
  * Built-in structural types are: `"text"`, `"tile"`, `"shape"`.
@@ -138,15 +141,15 @@ export function detectObjectType(settings) {
  * A tile object with no class of its own is matched by its tile's class.
  * <br><br>
  * For simple cases where you just want to map a Tiled class to a constructor,
- * use {@link registerTiledObjectClass} instead.
+ * use {@link registerObjectClass} instead.
  * @category Tilemap
  * @template [S=TMXObject]
  * @param {string} type - the object type key (built-in type or Tiled class/name)
- * @param {(settings: S, map: TMXTileMap) => Renderable} factory - factory function, given the Tiled object (a {@link TMXObject}) and its map
+ * @param {(settings: S, map: TMXTileMap) => Renderable} factory - factory function, given the object as the level describes it (a {@link TMXObject} for a Tiled map) and the map it is read from
  * @example
  * // register a custom factory for "Spine" objects in Tiled
  * // (set the object class to "Spine" in Tiled, and add atlasFile/jsonFile custom properties)
- * registerTiledObjectFactory("Spine", (settings, map) => {
+ * registerObjectFactory("Spine", (settings, map) => {
  *     const obj = new Spine(settings.x, settings.y, settings);
  *     obj.pos.z = settings.z;
  *     return obj;
@@ -154,14 +157,14 @@ export function detectObjectType(settings) {
  *
  * @example
  * // override the built-in "shape" factory to add custom behavior
- * registerTiledObjectFactory("shape", (settings, map) => {
+ * registerObjectFactory("shape", (settings, map) => {
  *     const obj = new Renderable(settings.x, settings.y, settings.width, settings.height);
  *     obj.pos.z = settings.z;
  *     // add custom initialization...
  *     return obj;
  * });
  */
-export function registerTiledObjectFactory(type, factory) {
+export function registerObjectFactory(type, factory) {
 	if (typeof factory !== "function") {
 		throw new Error("invalid factory function for " + type);
 	}
@@ -176,10 +179,14 @@ export function registerTiledObjectFactory(type, factory) {
 }
 
 /**
- * Register a class constructor as a Tiled object factory.
- * When an object with a matching `class` or `name` is found in a Tiled map,
+ * Register a class for the objects of a level. The registry is the same
+ * whatever the level was made with: an object of a Tiled or a Sprite Fusion
+ * map, an entity of an LDtk level.
+ * <br><br>
+ * When an object with a matching `class` or `name` is found in a level,
  * an instance of the given constructor will be created with `new Constructor(x, y, settings)`,
- * `settings` being the {@link TMXObject} as read from the map.
+ * `settings` being the object as the level describes it (a {@link TMXObject}
+ * for a Tiled map, an `LDtkObjectSettings` for an LDtk level).
  * <br><br>
  * A tile object with no class of its own is matched by its tile's class, as in
  * Tiled: give a tile a class in Tiled's tileset editor, and every object placed
@@ -187,7 +194,7 @@ export function registerTiledObjectFactory(type, factory) {
  * own class or name, when registered, still comes first). The tile's custom
  * properties are read with {@link TMXObject#resolvedProperty}.
  * <br><br>
- * This is a convenience wrapper around {@link registerTiledObjectFactory}.
+ * This is a convenience wrapper around {@link registerObjectFactory}.
  * If the same class is registered twice with the same constructor, the call is silently ignored.
  * If a different constructor is registered for the same name, an error is thrown.
  * <br><br>
@@ -195,12 +202,13 @@ export function registerTiledObjectFactory(type, factory) {
  * as Tiled object factories (unless {@link pool.autoRegisterTiled} is set to `false`).
  * @category Tilemap
  * @template [S=TMXObject]
- * @param {string} name - the Tiled class or object name to match
- * @param {new (x: number, y: number, settings: S) => Renderable} Constructor - class constructor, given the object's position and the object (a {@link TMXObject})
+ * @param {string} name - the class or the name the level gives the object
+ * @param {new (x: number, y: number, settings: S) => Renderable} Constructor - class constructor, given the object's position and the object as the level describes it
  * @example
- * // register a custom enemy class for use in Tiled maps
+ * // register a custom enemy class for the objects of a level
  * // In Tiled: set the object class to "Enemy" and add custom properties
- * registerTiledObjectClass("Enemy", Enemy);
+ * // In LDtk: name the entity "Enemy" and give it fields
+ * registerObjectClass("Enemy", Enemy);
  *
  * @example
  * // the older spelling: `pool.register` registers a Tiled factory as a side
@@ -208,7 +216,7 @@ export function registerTiledObjectFactory(type, factory) {
  * // alone does not do
  * pool.register("CoinEntity", CoinEntity, true);
  */
-export function registerTiledObjectClass(name, Constructor) {
+export function registerObjectClass(name, Constructor) {
 	const existing = registeredClasses.get(name);
 	let displacesBuiltin = false;
 	if (typeof existing !== "undefined") {
@@ -238,7 +246,7 @@ export function registerTiledObjectClass(name, Constructor) {
 		// expected, so no "overriding Tiled object factory" warning
 		factories.set(name, factory);
 	} else {
-		registerTiledObjectFactory(name, factory);
+		registerObjectFactory(name, factory);
 	}
 }
 
@@ -254,7 +262,7 @@ const pendingClasses = [];
  *
  * They are DEFAULTS: a game that registers its own class for one of these
  * names must win, and before this was separated it lost. Built-ins are queued
- * at boot and flushed at the first map load, while `registerTiledObjectClass`
+ * at boot and flushed at the first map load, while `registerObjectClass`
  * writes immediately, so the built-in landed second and silently replaced the
  * game's class with no error at the call and none at load.
  * @ignore
@@ -295,7 +303,7 @@ function applyBuiltinTiledClass(name, Constructor) {
 	for (const key of [name, "me." + name]) {
 		// a default fills a gap, it never overwrites
 		if (!factories.has(key)) {
-			registerTiledObjectClass(key, Constructor);
+			registerObjectClass(key, Constructor);
 			builtinNames.add(key);
 		}
 	}
@@ -310,13 +318,13 @@ function applyBuiltinTiledClass(name, Constructor) {
 function initFactories() {
 	// only register built-in structural factories if not already overridden
 	if (!factories.has("text")) {
-		registerTiledObjectFactory("text", createTextObject);
+		registerObjectFactory("text", createTextObject);
 	}
 	if (!factories.has("tile")) {
-		registerTiledObjectFactory("tile", createTileObject);
+		registerObjectFactory("tile", createTileObject);
 	}
 	if (!factories.has("shape")) {
-		registerTiledObjectFactory("shape", createShapeObject);
+		registerObjectFactory("shape", createShapeObject);
 	}
 
 	// Built-ins first, and only where the game has not already claimed the
@@ -334,10 +342,10 @@ function initFactories() {
 		if (typeof factoryFn === "function") {
 			// pool-registered: use provided factory (preserves pool.pull recycling)
 			registeredClasses.set(name, Constructor);
-			registerTiledObjectFactory(name, factoryFn);
+			registerObjectFactory(name, factoryFn);
 		} else {
 			// direct registration: use new Constructor()
-			registerTiledObjectClass(name, Constructor);
+			registerObjectClass(name, Constructor);
 		}
 	}
 	pendingClasses.length = 0;
@@ -388,33 +396,29 @@ export function createTMXObject(settings, map) {
 }
 
 /**
- * Register a class for the objects of a level: the same registry whatever the
- * map editor. An object of a Tiled map, an entity of a level in another format
- * read by a plugin: one whose class (or name) is `name` is built with
- * `new Constructor(x, y, settings)`.
- * <br><br>
- * {@link registerTiledObjectClass} is this function under its older name.
+ * The older name of {@link registerObjectClass}, from when a Tiled map was
+ * the only kind of level: the same function, kept so that existing games and
+ * plugins go on working.
+ * @deprecated since 20.18.0, use {@link registerObjectClass}
  * @category Tilemap
  * @function
  * @template [S=TMXObject]
  * @param {string} name - the class or name the level gives the object
  * @param {new (x: number, y: number, settings: S) => Renderable} Constructor - class constructor, given the object's position and its description
- * @example
- * registerObjectClass("Enemy", Enemy);
  */
-export const registerObjectClass = registerTiledObjectClass;
+export const registerTiledObjectClass = registerObjectClass;
 
 /**
- * Register a function building the objects of a level, for a class or a name:
- * the same registry whatever the map editor. {@link registerTiledObjectFactory}
- * is this function under its older name.
+ * The older name of {@link registerObjectFactory}: the same function, kept
+ * so that existing games and plugins go on working.
+ * @deprecated since 20.18.0, use {@link registerObjectFactory}
  * @category Tilemap
  * @function
  * @template [S=TMXObject]
  * @param {string} type - the class or name the level gives the object
- * @param {(settings: S, map: object) => Renderable} factory - given the object's description and the map it is read from
+ * @param {(settings: S, map: TMXTileMap) => Renderable} factory - given the object's description and the map it is read from
  */
-export const registerObjectFactory = registerTiledObjectFactory;
+export const registerTiledObjectFactory = registerObjectFactory;
 
 /**
  * Whether a class or a factory is registered under a name, by the game or by
@@ -478,9 +482,9 @@ setPoolRegisterCallback((className, Constructor) => {
 
 	if (factoriesInitialized) {
 		registeredClasses.set(className, Constructor);
-		registerTiledObjectFactory(className, factoryFn);
+		registerObjectFactory(className, factoryFn);
 	} else {
-		// queue as a raw factory (not via registerTiledObjectClass which uses new Constructor)
+		// queue as a raw factory (not via registerObjectClass which uses new Constructor)
 		pendingClasses.push([className, Constructor, factoryFn]);
 	}
 });

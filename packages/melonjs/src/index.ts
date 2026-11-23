@@ -213,8 +213,8 @@ export {
 	hasObjectFactory,
 	registerObjectClass,
 	registerObjectFactory,
-	registerTiledObjectClass,
-	registerTiledObjectFactory,
+	registerTiledObjectClass, // eslint-disable-line @typescript-eslint/no-deprecated
+	registerTiledObjectFactory, // eslint-disable-line @typescript-eslint/no-deprecated
 } from "./level/tiled/TMXObjectFactory.js";
 export { mergeGridRects } from "./level/tilemap/grid.js";
 export type { PlacedTile } from "./level/tilemap/PlacedTileLayer.js";

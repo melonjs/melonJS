@@ -41,8 +41,8 @@ function detectShape(settings) {
 
 /**
  * An object of a Tiled map, as read from the map. It is the `settings` that
- * a class registered with {@link registerTiledObjectClass} receives (and
- * that a factory registered with {@link registerTiledObjectFactory} is
+ * a class registered with {@link registerObjectClass} receives (and
+ * that a factory registered with {@link registerObjectFactory} is
  * given), before the object is turned into a renderable.
  * <br><br>
  * The object's own custom properties are set on it by name.
@@ -54,7 +54,7 @@ function detectShape(settings) {
  * this type.
  * @category Tilemap
  * @example
- * import { registerTiledObjectClass, Sprite, type TMXObject } from "melonjs";
+ * import { registerObjectClass, Sprite, type TMXObject } from "melonjs";
  *
  * // the custom properties the class reads, as set on the object in Tiled
  * interface ChestSettings extends TMXObject {
@@ -73,7 +73,7 @@ function detectShape(settings) {
  * }
  * // in Tiled, give the chest tile the class "Chest": every chest placed
  * // in the map is then built by this class
- * registerTiledObjectClass("Chest", Chest);
+ * registerObjectClass("Chest", Chest);
  */
 export default class TMXObject {
 	/**

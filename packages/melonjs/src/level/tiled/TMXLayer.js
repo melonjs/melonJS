@@ -180,9 +180,15 @@ function chunksExtent(map, chunks) {
 }
 
 /**
- * a TMX Tile Layer Object: a {@link TileLayer} read from a Tiled map, with
- * the layer's data decoded and its Tiled properties applied
- * Tiled QT 0.7.x format
+ * a TMX Tile Layer Object: a {@link TileLayer} read from a tile map (a Tiled
+ * map, Tiled QT 0.7.x format, or a Sprite Fusion one), with the layer's
+ * tiles decoded and its custom properties applied.
+ *
+ * The layer's tiles come as `data`, the gid of every cell (encoded and
+ * compressed as Tiled writes it), or as `tiles`, a list of
+ * `{ id, x, y, attributes }` for the tiles placed in it. Its `properties`
+ * and its `attributes` become fields of the layer; a `collider` set to true
+ * makes its tiles solid.
  * @category Tilemap
  */
 export default class TMXLayer extends TileLayer {

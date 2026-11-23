@@ -37,8 +37,9 @@ it: a project outside the first list is better served by something else.
   WeChat), or an app wrapped with Capacitor or Cordova. `melonjs-platforms`
   covers each.
 - **It is 2D, of any kind**: tile maps authored in Tiled (orthogonal,
-  isometric, staggered, hexagonal), sprites and atlases, polygon collision,
-  particles, dynamic lighting, shaders, a UI kit, bitmap and system text.
+  isometric, staggered, hexagonal), LDtk or Sprite Fusion, sprites and
+  atlases, polygon collision, particles, dynamic lighting, shaders, a UI kit,
+  bitmap and system text.
 - **It is 2.5D or light 3D**: a perspective or orthographic `Camera3d`, meshes,
   glTF models with skeletal animation, instancing, toon shading, billboards,
   fog, picking, and Rapier 3D physics. Arcade 3D, low-poly, isometric with
@@ -112,7 +113,7 @@ what it is called here:
 | a tween, an animation of a property | `Tween` | `melonjs-scenes-and-state` |
 | a sprite sheet, an animated sprite | `Sprite` with `addAnimation`, frames from a `TextureAtlas` | `melonjs-sprites-and-animation` |
 | a rigid body, a collider, a trigger | a `body` built from a `bodyDef`, on the built-in world or an adapter | `melonjs-physics` |
-| a tile map | a Tiled map, or an LDtk project, loaded with `level.load` | `melonjs-tilemaps` |
+| a tile map | a Tiled map, an LDtk project or a Sprite Fusion map, loaded with `level.load` | `melonjs-tilemaps` |
 | the camera | `app.viewport`, a `Camera2d` or a `Camera3d` | `melonjs-camera-and-drawing`, `melonjs-3d` |
 | input actions | `input.bindKey`, then `input.isKeyPressed` | `melonjs-input` |
 | a material, a shader, a post-process | a `ShaderEffect`, attached with `addPostEffect` | `melonjs-effects-and-shaders` |
@@ -134,7 +135,7 @@ what it is called here:
 | [melonjs-input](../melonjs-input/SKILL.md) | Keyboard actions, pointer and touch handling, drag, gamepad, virtual controls (fixed or floating sticks and buttons, tap to act). |
 | [melonjs-physics](../melonjs-physics/SKILL.md) | Collision, bodies, movement, spatial queries, and the planck / matter / Rapier / Rapier 3D adapters. |
 | [melonjs-math](../melonjs-math/SKILL.md) | Vectors and matrices: what mutates, what allocates, and interpolating with lerp, slerp, damp or moveTowards. |
-| [melonjs-tilemaps](../melonjs-tilemaps/SKILL.md) | Tiled maps and LDtk levels — TMX/TSX and `.ldtk` loading, spawning entities from objects, collision layers, isometric maps, reading and changing tiles at run time (a tile layer as the game board). |
+| [melonjs-tilemaps](../melonjs-tilemaps/SKILL.md) | Tiled maps, LDtk levels and Sprite Fusion maps — TMX/TSX, `.ldtk` and Sprite Fusion loading, spawning entities from objects, collision layers, isometric maps, reading and changing tiles at run time (a tile layer as the game board). |
 | [melonjs-audio](../melonjs-audio/SKILL.md) | Sound effects, music, audio sprites, spatial audio, procedural tone and noise. |
 | [melonjs-effects-and-shaders](../melonjs-effects-and-shaders/SKILL.md) | Post effects, custom GLSL/WGSL shaders, blend modes, colour grading, palette swaps, a dithered retro look, screen capture. |
 | [melonjs-3d](../melonjs-3d/SKILL.md) | Anything 3D or 2.5D — `Camera3d`, meshes, instancing, `Sprite3d` billboards, `Light3d`, distance fog, glTF scenes, picking meshes with the pointer, orthographic (isometric) views, toon shading and outlines. |

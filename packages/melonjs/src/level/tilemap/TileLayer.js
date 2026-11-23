@@ -127,7 +127,9 @@ function gridRendererFor(layer) {
  * is in view as far as its tiles reach, and is read and changed a cell at a
  * time: {@link TileLayer#cellAt}, {@link TileLayer#getTile},
  * {@link TileLayer#setTile}, {@link TileLayer#setCell},
- * {@link TileLayer#clearTile}.
+ * {@link TileLayer#clearTile}, and for what a tile says of itself
+ * {@link TileLayer#getTileProperties} and
+ * {@link TileLayer#setTileProperties}.
  * @category Tilemap
  * @example
  * // a 20 x 15 layer of 16 px cells, drawn from one tileset

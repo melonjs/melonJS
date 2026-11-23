@@ -139,12 +139,12 @@ function levelIdAt(offset) {
  * @property {Container} [container=game.world] - container in which to load the specified level
  * @property {Function} [onLoaded=game.onLevelLoaded] - callback for when the level is fully loaded, called in both forms
  * @property {boolean} [async=false] - return a promise that settles once the level is in the world, instead of a boolean
- * @property {boolean} [flatten=game.mergeGroup] - (TMX only) if true, flatten all objects into the given container
- * @property {boolean} [setViewportBounds=true] - (TMX and LDtk) if true, set the viewport bounds to the map size
+ * @property {boolean} [flatten=game.mergeGroup] - (tile maps: `"tmx"`, `"tilemap"`, `"spritefusion"`) if true, flatten all objects into the given container
+ * @property {boolean} [setViewportBounds=true] - (tile maps and LDtk) if true, set the viewport bounds to the map size
  * @property {string[]} [collisionLayers] - (LDtk only) the IntGrid layers whose cells are solid, by their identifier; by default the ones whose identifier contains "collision"
  * @property {number[]} [solidValues] - (LDtk only) the values of those layers that are solid; by default every value but 0
  * @property {boolean} [showIntGrid=false] - (LDtk only) draw the IntGrid layers that have no tiles of their own, each value in its LDtk color
- * @property {boolean|Function} [objects=true] - (Tiled and LDtk) build the objects the level places: all of them, none, or the ones a function says, given each object's settings as its class would be (`(settings) => !taken.has(settings.id)` leaves out what the player took)
+ * @property {boolean|Function} [objects=true] - (tile maps and LDtk) build the objects the level places: all of them, none, or the ones a function says, given each object's settings as its class would be (`(settings) => !taken.has(settings.id)` leaves out what the player took)
  * @property {string[]} [levels] - (LDtk only, loading a whole world) the levels to start with, by their identifier; by default every level
  * @property {number} [scale=1] - (glTF/GLB only) pixels per glTF unit applied to the whole scene
  * @property {boolean} [rightHanded=true] - (glTF/GLB only) convert the right-handed (Y-up) source to the engine's Y-down via a rotation rather than a mirror
@@ -200,8 +200,37 @@ export const LEVEL_LOAD_OPTIONS = [
 ];
 
 /**
- * a level manager. once resources loaded, the level manager contains all references of defined levels.
+ * The level director: it knows every level the loader has read, and puts
+ * one into the world on request.
+ *
+ * A level is registered when its asset loads, under the asset's name, whatever
+ * it was made with:
+ *
+ * | asset type | made with | `level.load(...)` |
+ * | --- | --- | --- |
+ * | `"tmx"` | [Tiled](https://www.mapeditor.org) | the asset's name |
+ * | `"tilemap"` | any tool that writes a tile map | the asset's name |
+ * | `"spritefusion"` | [Sprite Fusion](https://www.spritefusion.com) | the asset's name |
+ * | `"ldtk"` | [LDtk](https://ldtk.io) | `"<asset>:<level>"` for one level of the project, `"<asset>"` for its whole world |
+ * | `"gltf"`, `"glb"` | a 3D tool that exports glTF | the asset's name |
+ *
+ * The objects a level places are built by the classes registered with
+ * {@link registerObjectClass}, and the level's tile layers are
+ * {@link TileLayer}s, whichever of them it is.
  * @namespace level
+ * @example
+ * await loader.preload([
+ *     { name: "cave",  type: "tmx",          src: "data/map/cave.tmx" },
+ *     { name: "tiles", type: "image",        src: "data/img/tiles.png" },
+ *     { name: "tower", type: "spritefusion", src: "data/tower/map.json" },
+ *     { name: "world", type: "ldtk",         src: "data/world/world.ldtk" },
+ * ]);
+ * registerObjectClass("Player", Player);
+ *
+ * await level.load("cave", { async: true });            // a Tiled map
+ * await level.load("tower", { async: true });           // a Sprite Fusion map
+ * await level.load("world:Entrance", { async: true });  // one level of an LDtk project
+ * await level.load("world", { async: true });           // or its whole world
  */
 
 export const level = {
@@ -356,13 +385,20 @@ export const level = {
 	 * `levelId` throws SYNCHRONOUSLY rather than rejecting — that is a typo, not
 	 * a load failure, and it should not need `await` to surface.
 	 * @overload
-	 * @param {string} levelId - level id
+	 * @param {string} levelId - level id: the name of the map's asset, or for an LDtk project `"<asset>:<level>"` (one level) or `"<asset>"` (its whole world)
 	 * @param {LevelLoadOptions & { async: true }} options - load options, with `async` set
 	 * @returns {Promise<boolean>} resolves `true` once the level is in the world
 	 * @example
 	 * await me.loader.preload(game.assets);
 	 * await me.level.load("a4_level1", { async: true });
 	 * // the world is populated here
+	 * @example
+	 * // a level of an LDtk project loaded as the asset "world", leaving out
+	 * // the objects the player already took
+	 * await me.level.load("world:Entrance", {
+	 *     async: true,
+	 *     objects: (settings) => !taken.has(settings.id),
+	 * });
 	 * @category Level
 	 */
 	/**
@@ -377,12 +413,18 @@ export const level = {
 	 * Note that `await me.level.load(id)` without `async: true` does not await
 	 * the load: the call returns a boolean, and `await true` resolves at once.
 	 * @overload
-	 * @param {string} levelId - level id
+	 * @param {string} levelId - level id: the name of the map's asset, or for an LDtk project `"<asset>:<level>"` (one level) or `"<asset>"` (its whole world)
 	 * @param {LevelLoadOptions & { async?: false }} [options] - additional optional parameters
 	 * @returns {boolean} `true`
 	 * @example
 	 * // load a level
 	 * me.level.load("a4_level1");
+	 *
+	 * // a Sprite Fusion map (preloaded with type "spritefusion")
+	 * me.level.load("tower");
+	 *
+	 * // one level of an LDtk project (preloaded with type "ldtk" as "world")
+	 * me.level.load("world:Entrance");
 	 *
 	 * // load into a specific container
 	 * me.level.load("a4_level2", { container: levelContainer });

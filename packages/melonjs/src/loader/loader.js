@@ -15,6 +15,22 @@
  *   game with several levels or screens. Each key becomes a bundle: a named
  *   list of the same descriptors, with a lifetime of its own (see below).
  *
+ * **Asset types.** The `type` of a descriptor picks its parser; {@link Asset}
+ * lists every one, with the files it takes and how the asset is read back.
+ * In short: `"image"`, `"aseprite"`, `"json"`, `"binary"`, `"js"`, `"audio"`,
+ * `"video"`, `"fontface"` and `"shader"` for what a game draws, plays and
+ * reads; `"tmx"`, `"tsx"`, `"tilemap"`, `"spritefusion"` and `"ldtk"` for
+ * levels made in a map editor; `"obj"`, `"mtl"`, `"gltf"` and `"glb"` for 3D.
+ *
+ * **Levels.** A map is an asset like any other, and loading one also
+ * registers it with the level director: {@link level.load} then takes its
+ * name. That goes for a Tiled map (`"tmx"`), a tile map from any other tool
+ * (`"tilemap"`), a Sprite Fusion map (`"spritefusion"`), each level and each
+ * world of an LDtk project (`"ldtk"`) and a glTF scene (`"gltf"` / `"glb"`).
+ * A Tiled map's images are assets of their own, to list beside it; a Sprite
+ * Fusion map and an LDtk project bring theirs with them, and free them when
+ * they are unloaded.
+ *
  * **preload or load.** {@link preload} is the boot call: it switches to the
  * loading screen, loads everything it is given, warms the shaders, then calls
  * its callback, emits `LOADER_COMPLETE` and resolves. {@link load} loads a
@@ -62,6 +78,20 @@
  *     { name: "jump",   type: "audio", src: "data/sfx/" },
  * ]);
  * state.change(state.PLAY);
+ * @example
+ * // levels from a map editor, each loaded as the editor saves it
+ * await loader.preload([
+ *     // Tiled: the map, and the image its tileset names, under the file's name
+ *     { name: "cave",  type: "tmx",   src: "data/map/cave.tmx" },
+ *     { name: "tiles", type: "image", src: "data/img/tiles.png" },
+ *     // Sprite Fusion: the map alone, spritesheet.png is next to it
+ *     { name: "tower", type: "spritefusion", src: "data/tower/map.json" },
+ *     // LDtk: the project alone, with every level it holds
+ *     { name: "world", type: "ldtk", src: "data/world/world.ldtk" },
+ * ]);
+ * level.load("cave");
+ * level.load("tower");
+ * level.load("world:Entrance");   // one level of the project, by its identifier
  * @example
  * // a game with several levels: an assets file exporting one bundle for
  * // what every level uses, and one per level
@@ -297,6 +327,10 @@ export function setOptions(options) {
  * buffer) relative to their file and would be prefixed twice: set those one
  * by one. Custom types registered with {@link setParser} are not covered by
  * `"*"` either.
+ *
+ * What a map brings with it (a Sprite Fusion map's spritesheet, an LDtk
+ * project's level files and images) is found next to the map's file,
+ * wherever the base URL put it: nothing to set for those.
  * @param {string} type - the asset type ("audio", "video", "binary", "image",
  * "json", "js", "tmx", "tsx", "tilemap", "spritefusion", "ldtk", "fontface",
  * "aseprite", "shader", "obj", "mtl", "gltf", "glb", or a custom type), or `"*"`
@@ -306,6 +340,15 @@ export function setOptions(options) {
  * loader.setBaseURL("image", "data/img/");
  * // so that a descriptor names the file alone: loads data/img/player.png
  * await loader.preload([{ name: "player", type: "image", src: "player.png" }]);
+ *
+ * // one folder for the maps of every editor
+ * for (const type of ["tmx", "tsx", "tilemap", "spritefusion", "ldtk"]) {
+ *     loader.setBaseURL(type, "data/map/");
+ * }
+ * await loader.preload([
+ *     { name: "cave",  type: "tmx",          src: "cave.tmx" },
+ *     { name: "tower", type: "spritefusion", src: "tower/map.json" }, // and data/map/tower/spritesheet.png
+ * ]);
  *
  * // or an absolute URL for every 2D asset type at once
  * loader.setBaseURL("*", "https://cdn.example.com/");
@@ -972,36 +1015,36 @@ const alwaysRelative = () => {
  * @property {string} name - the name the asset is kept and read back under
  * (`loader.getImage(name)`, `new Sprite(x, y, { image: name })`,
  * `level.load(name)`, `audio.play(name)`)
- * @property {string} type - the type of the asset, which picks its parser:
- * "audio", "binary", "image", "json", "js", "tmx", "tsx", "tilemap",
- * "spritefusion", "ldtk", "fontface", "video", "aseprite", "shader", "obj",
- * "mtl", "gltf" or "glb". Any other type is one registered with
- * {@link loader.setParser}.
+ * @property {string} type - the type of the asset, which picks its parser.
+ * The types, the files each takes, and how the asset is read back:
  *
- * The types that come from an editor, and the files each takes:
- * - `"tmx"`: a [Tiled](https://www.mapeditor.org) map, in XML (`.tmx`,
- *   `.xml`) or in JSON (`.tmj`, `.json`).
- * - `"tsx"`: a Tiled tileset kept in a file of its own, in XML (`.tsx`,
- *   `.xml`) or in JSON (`.tsj`, `.json`).
- * - `"tilemap"`: a tile map, whatever editor wrote it. The same as `"tmx"`
- *   under a name that is not an editor's, for the same files (`.tmx`,
- *   `.xml`, `.tmj`, `.json`): Tiled's format, which many tools write, or a
- *   Sprite Fusion `map.json` (drawn from the image the game loaded as
- *   `spritesheet`).
- * - `"spritefusion"`: a [Sprite Fusion](https://www.spritefusion.com) map,
- *   either of its exports (`map.json` or `map.tmx`). The same again, and
- *   the `spritesheet.png` the editor saves next to the map is loaded with
- *   it.
- * - `"ldtk"`: an [LDtk](https://ldtk.io) project (`.ldtk`), with the level
- *   files (`.ldtkl`) and the images it names.
- * - `"aseprite"`: an [Aseprite](https://www.aseprite.org) file
- *   (`.aseprite`), as an image and its frames.
+ * | type | loads | files | read back with |
+ * | --- | --- | --- | --- |
+ * | `"image"` | an image, or a compressed texture | `.png`, `.jpg`, `.webp`, `.gif`, `.svg`, a data URI; compressed: `.ktx`, `.ktx2`, `.dds`, `.pvr`, `.pkm` | `image: name` on a renderable, {@link getImage} |
+ * | `"aseprite"` | an [Aseprite](https://www.aseprite.org) file: its frames as one image, and their description | `.aseprite` | as an `"image"` and a `"json"` of that name |
+ * | `"json"` | JSON data: a texture atlas, collision shapes, your own | `.json` | {@link getJSON} |
+ * | `"binary"` | a file's content as it is: a bitmap font's `.fnt`, a tracker tune | any | {@link getBinary} |
+ * | `"js"` | a script, run once loaded | `.js` | nothing is kept |
+ * | `"audio"` | a sound or a music | a directory: the name and the extensions given to `audio.init()` are added | `audio.play(name)` |
+ * | `"video"` | a video | `.mp4`, `.webm`, what the browser plays | {@link getVideo} |
+ * | `"fontface"` | a web font | `.woff2`, `.woff`, `.ttf` | its name, as a CSS font family; {@link getFont} |
+ * | `"shader"` | a shader: an effect body, or a whole program | GLSL and WGSL sources, or inline `data` | {@link getShader} |
+ * | `"tmx"` | a [Tiled](https://www.mapeditor.org) map | `.tmx`, `.xml` (XML); `.tmj`, `.json` (JSON) | `level.load(name)`, {@link getTMX} |
+ * | `"tsx"` | a Tiled tileset kept in a file of its own | `.tsx`, `.xml` (XML); `.tsj`, `.json` (JSON) | by the maps that name it; {@link getTMX} |
+ * | `"tilemap"` | a tile map, whatever tool wrote it: `"tmx"` under a name that is not an editor's | the same as `"tmx"` | `level.load(name)`, {@link getTMX} |
+ * | `"spritefusion"` | a [Sprite Fusion](https://www.spritefusion.com) map, with the `spritesheet.png` saved next to it | `map.json`, `map.tmx` | `level.load(name)`, {@link getTMX} |
+ * | `"ldtk"` | an [LDtk](https://ldtk.io) project, with the level files and the images it names | `.ldtk` (and its `.ldtkl`) | `level.load("name:Level")`, `level.load("name")`, {@link getLDtk} |
+ * | `"obj"` | a Wavefront model | `.obj` | {@link getOBJ} |
+ * | `"mtl"` | a Wavefront material library | `.mtl` | {@link getMTL} |
+ * | `"gltf"`, `"glb"` | a glTF scene | `.gltf`, `.glb` | `level.load(name)`, {@link getGLTF} |
  *
- * The file's extension says whether a map is XML or JSON: `.tmj` and `.tsj`
- * are extensions, not asset types.
+ * Any other type is one registered with {@link loader.setParser}.
  *
- * Each of the three map types and each level of an LDtk project is a level
- * for {@link level.load}.
+ * The three tile map types share one parser: they differ only in name, and
+ * in `"spritefusion"` loading the map's spritesheet with it. The extension of
+ * the file says whether a map is XML or JSON (`.tmj` and `.tsj` are
+ * extensions, not asset types), and a Sprite Fusion `map.json` is read under
+ * any of the three.
  * @property {string|string[]} [src] - the URL of the file, relative to the
  * page or to the type's base URL ({@link setBaseURL}), or a data URI.
  * For `"audio"` it is the **directory** holding the clip: the loader appends
@@ -1013,7 +1056,9 @@ const alwaysRelative = () => {
  * For `"shader"` it may be an object of URLs instead (see the example).
  * @property {string|{glsl?: string, wgsl?: string}|object} [data] - inline content
  * in place of a `src`: the parsed JSON map or tileset (an object) for
- * `"tmx"` / `"tilemap"` / `"spritefusion"` / `"tsx"`, the GLSL source of an effect body for `"shader"`, or a
+ * `"tmx"` / `"tilemap"` / `"spritefusion"` / `"tsx"`, the parsed project for
+ * `"ldtk"` (one that keeps its levels in the project file), the GLSL source
+ * of an effect body for `"shader"`, or a
  * `{glsl, wgsl}` pair of them so that one asset serves both backends (either
  * half may be omitted). A type registered with {@link loader.setParser} reads
  * what its parser expects there
@@ -1039,12 +1084,15 @@ const alwaysRelative = () => {
  * { name: "map2",    type: "tmx", src: "data/map/map2.tmj" }
  * { name: "tileset", type: "tsx", src: "data/map/tileset.tsx" }
  * { name: "map3",    type: "tmx", data: { width: 20, height: 15, tilewidth: 32, tileheight: 32, layers: [], tilesets: [] } }
- * // a tile map from any editor that writes Tiled's format
+ * // a tile map from any tool that writes Tiled's format
  * { name: "map4",    type: "tilemap", src: "data/map/map4.json" }
- * // Sprite Fusion: the map, its spritesheet.png comes with it
+ * // Sprite Fusion: either export; the spritesheet.png next to it comes with it
  * { name: "map5",    type: "spritefusion", src: "data/map5/map.json" }
- * // LDtk: a project, its level files and images come with it
+ * { name: "map6",    type: "spritefusion", src: "data/map6/map.tmx" }
+ * // LDtk: a project; its level files and its images come with it
  * { name: "world",   type: "ldtk", src: "data/world/world.ldtk" }
+ * // Aseprite: the file as saved, read back as an image and a JSON of that name
+ * { name: "hero",    type: "aseprite", src: "data/img/hero.aseprite" }
  * // audio: src is the directory, the extension comes from audio.init()
  * { name: "cling",   type: "audio", src: "data/sfx/" }
  * { name: "bgmusic", type: "audio", src: "data/bgm/", stream: true }
@@ -1832,6 +1880,10 @@ const UNCACHED_TYPES = ["js", "audio", "fontface", "shader", "aseprite"];
  *
  * Either way, freeing an image also frees the texture the renderer uploaded
  * from it, a shader its GPU program, a font its place in `document.fonts`.
+ * A Sprite Fusion map (`"spritefusion"`) frees the spritesheet loaded with
+ * it, and an LDtk project the images loaded with it, unless something else
+ * still holds them. A tile map is freed under any of its type names
+ * (`"tmx"`, `"tilemap"`, `"spritefusion"`): they are one cache.
  * A shader handed out by {@link loader.getShader} is not tracked once handed
  * out, so an effect that outlives a level (a HUD's, a camera's) belongs in a
  * bundle that outlives it too, or it is freed under whatever still uses it.

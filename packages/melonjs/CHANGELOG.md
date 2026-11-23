@@ -10,9 +10,12 @@
 - Tiled: a tile layer with a `collider` property set to true is solid
 - Tile maps: `"tilemap"` asset type, a neutral name for `"tmx"`, for maps written by other tools
 - Tile maps: `layer.getTileProperties(col, row)` gives the properties of the tile at a position, and `setTileProperties` gives that one tile its own
-- Levels: `registerObjectClass` and `registerObjectFactory`, new names for `registerTiledObjectClass` and `registerTiledObjectFactory`
+- Levels: `registerObjectClass` and `registerObjectFactory` register the classes a level builds, whatever editor it comes from
 - Levels: `level.load` takes `objects`, to choose which objects of a level are built
 - Levels: an object built from a level carries the level's `id`, so `getChildByProp("id", id)` finds it
+
+### Deprecated
+- Levels: `registerTiledObjectClass` and `registerTiledObjectFactory`, for `registerObjectClass` and `registerObjectFactory` (the same functions; the old names keep working)
 
 ### Fixed
 - TypeScript: an asset's `data` accepts a parsed map object

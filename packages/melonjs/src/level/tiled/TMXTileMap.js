@@ -242,8 +242,27 @@ function highestObjectId(layers) {
 }
 
 /**
- * a TMX Tile Map Object
- * Tiled QT +0.7.x format
+ * A tile map as a level: its layers, its tilesets and the objects it places,
+ * read from a map description and added to the world by {@link level.load}.
+ *
+ * The description is what the loader keeps for a `"tmx"`, `"tilemap"` or
+ * `"spritefusion"` asset ({@link loader.getTMX}): a
+ * [Tiled](https://www.mapeditor.org) map (Tiled QT +0.7.x format), from XML
+ * or JSON, or a [Sprite Fusion](https://www.spritefusion.com) `map.json`. It
+ * is read in the words of either editor, and left as it is:
+ *
+ * | | Tiled | Sprite Fusion |
+ * | --- | --- | --- |
+ * | the map's size, in tiles | `width`, `height` | `mapWidth`, `mapHeight` |
+ * | the size of a tile | `tilewidth`, `tileheight` | `tileSize` |
+ * | a layer's tiles | `data`: the gid of every cell | `tiles`: a list of `{ id, x, y, attributes }` |
+ * | custom values | `properties` | `attributes`, a plain object, kept as written |
+ * | a solid tile layer | a `collider` property set to true | the layer's `collider` field |
+ * | the tilesets | `tilesets` | none named: the `spritesheet` image |
+ * | the order of the layers | the bottom one first | the top one first |
+ *
+ * `attributes` is read wherever `properties` is (the map, a layer, an object,
+ * a tile of a tileset, a tile of a `tiles` list), in a map of either form.
  * @category Tilemap
  */
 export default class TMXTileMap {
@@ -266,13 +285,29 @@ export default class TMXTileMap {
 	]);
 
 	/**
-	 * @param {string} levelId - name of TMX map
-	 * @param {object} data - TMX map in JSON format
+	 * @param {string} levelId - name of the map
+	 * @param {object} data - the map's description: a Tiled map in JSON format, or a Sprite Fusion `map.json`
 	 * @example
-	 * // create a new level object based on the TMX JSON object
+	 * // create a new level object based on the map's description
 	 * let level = new me.TMXTileMap(levelId, me.loader.getTMX(levelId));
 	 * // add the level to the game world container
 	 * level.addTo(app.world, true);
+	 * @example
+	 * // a map written by hand, in the shorter words: two tiles, one of them lava
+	 * const map = new TMXTileMap("tiny", {
+	 *     tileSize: 16,
+	 *     mapWidth: 4,
+	 *     mapHeight: 2,
+	 *     layers: [{
+	 *         name: "ground",
+	 *         collider: true,
+	 *         tiles: [
+	 *             { id: 0, x: 0, y: 1 },
+	 *             { id: 1, x: 1, y: 1, attributes: { type: "lava", damage: 25 } },
+	 *         ],
+	 *     }],
+	 * });   // drawn from the image loaded as "spritesheet"
+	 * map.addTo(app.world, true);
 	 */
 	constructor(levelId, data) {
 		/**
@@ -667,8 +702,8 @@ export default class TMXTileMap {
 	 * Return an Array of instantiated objects, based on the map object definition.
 	 * Objects are created using the Tiled object factory registry, which dispatches
 	 * to the appropriate factory based on the object's class, name, or structure.
-	 * Custom factories can be registered via {@link registerTiledObjectFactory} or
-	 * {@link registerTiledObjectClass}.
+	 * Custom factories can be registered via {@link registerObjectFactory} or
+	 * {@link registerObjectClass}.
 	 * @param {boolean} [flatten=true] - if true, flatten all objects into the returned array.
 	 * when false, a `me.Container` object will be created for each corresponding groups
 	 * @param {boolean|Function} [wanted=true] - the objects to build: all of them, none (`false`), or the ones a function says, given each object's settings

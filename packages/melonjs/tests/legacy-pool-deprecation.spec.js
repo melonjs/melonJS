@@ -45,7 +45,7 @@ describe("legacy pool deprecation notice", () => {
 		// both replacements, which is the point: one reader wants pooling,
 		// the other wants a Tiled class name
 		expect(text).toMatch(/createPool\(\)/);
-		expect(text).toMatch(/registerTiledObjectClass\(\)/);
+		expect(text).toMatch(/registerObjectClass\(\)/);
 	});
 
 	it("push warns too, and on its own", () => {

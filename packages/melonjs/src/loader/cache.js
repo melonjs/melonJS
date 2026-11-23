@@ -177,8 +177,10 @@ export function getLDtk(name) {
 }
 
 /**
- * Get a loaded Tiled map or tileset (a `"tmx"` or `"tsx"` asset) as parsed
- * data: the map's JSON structure, whether it was loaded from XML or JSON.
+ * Get a loaded tile map or tileset (a `"tmx"`, `"tilemap"`, `"spritefusion"`
+ * or `"tsx"` asset) as parsed data: the map's JSON structure, whether it was
+ * loaded from XML or JSON. A Sprite Fusion `map.json` is kept as the file has
+ * it (`tileSize`, `mapWidth`, `mapHeight`, `layers`).
  * Most code never needs it: `level.load(name)` builds the level from it.
  * @param {string} elt - the asset name
  * @returns {object} the parsed map or tileset, or `null` if none is loaded

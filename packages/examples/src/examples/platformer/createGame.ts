@@ -12,7 +12,7 @@ import {
 	input,
 	loader,
 	plugin,
-	registerTiledObjectClass,
+	registerObjectClass,
 	state,
 	TextureAtlas,
 	video,
@@ -57,12 +57,12 @@ export const createGame = async () => {
 		state.transition("fade", "#FFFFFF", 250);
 
 		// name the entity classes a Tiled map can place
-		registerTiledObjectClass("mainPlayer", PlayerEntity);
-		registerTiledObjectClass("SlimeEntity", SlimeEnemyEntity);
-		registerTiledObjectClass("FlyEntity", FlyEnemyEntity);
-		registerTiledObjectClass("CoinEntity", CoinEntity);
+		registerObjectClass("mainPlayer", PlayerEntity);
+		registerObjectClass("SlimeEntity", SlimeEnemyEntity);
+		registerObjectClass("FlyEntity", FlyEnemyEntity);
+		registerObjectClass("CoinEntity", CoinEntity);
 		// override the built-in trigger with star mask transition
-		registerTiledObjectClass("me.Trigger", LevelTrigger);
+		registerObjectClass("me.Trigger", LevelTrigger);
 
 		// sway the background hills in every level, from the first one on
 		addBackgroundSway(_app);
