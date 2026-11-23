@@ -9,7 +9,7 @@
 - Tile maps: tile layers can be built in code with `TileLayer`, `Tileset`, `TilesetGroup` and `PlacedTileLayer`, plus `mergeGridRects` for collision bodies
 - Tiled: a tile layer with a `collider` property set to true is solid
 - Tile maps: `"tilemap"` asset type, a neutral name for `"tmx"`, for maps written by other tools
-- Tile maps: `layer.getCellProperties(col, row)` gives the properties of the tile in a cell, and `setCellProperties` gives one cell its own
+- Tile maps: `layer.getProperties(col, row)` gives the properties of the tile in a cell, and `setProperties` gives one cell its own
 - Levels: `registerObjectClass` and `registerObjectFactory`, new names for `registerTiledObjectClass` and `registerTiledObjectFactory`
 - Levels: `level.load` takes `objects`, to choose which objects of a level are built
 - Levels: an object built from a level carries the level's `id`, so `getChildByProp("id", id)` finds it

@@ -106,7 +106,7 @@ function hasTile(tilesets, gid) {
  * each cell (Sprite Fusion writes a layer this way). An entry is
  * `{ id, x, y }`: the tile's id in the map's first tileset, and the column
  * and row of its cell. Its `properties` or `attributes`, if any, are what
- * this one tile has of its own, which {@link TileLayer#getCellProperties}
+ * this one tile has of its own, which {@link TileLayer#getProperties}
  * returns. A tile outside the layer's grid is left out.
  * @ignore
  * @internal
@@ -147,7 +147,7 @@ function setPlacedTiles(layer, tiles) {
 		if (tile.properties !== undefined || tile.attributes !== undefined) {
 			const own = {};
 			TMXUtils.applyTMXProperties(own, tile);
-			layer.setCellProperties(col, row, own);
+			layer.setProperties(col, row, own);
 		}
 	}
 }

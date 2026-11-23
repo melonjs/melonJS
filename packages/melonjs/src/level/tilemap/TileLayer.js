@@ -1404,23 +1404,24 @@ export default class TileLayer extends Renderable {
 	/**
 	 * The properties of the tile in a cell: those of its tile in the tileset
 	 * ({@link Tileset#getTileProperties}), with those the cell has of its own
-	 * over them ({@link TileLayer#setCellProperties}). One call whatever the
+	 * over them ({@link TileLayer#setProperties}). One call whatever the
 	 * map was made with: a Tiled tile's custom properties, an LDtk tile's
 	 * custom data and tags, a Sprite Fusion tile's attributes.
 	 *
 	 * Read it, do not write to it: the object may be the one the tileset keeps
-	 * for every tile of that id.
+	 * for every tile of that id. (The layer's own custom properties, set on
+	 * the layer in the editor, are fields of the layer itself.)
 	 * @param {number} x - column, in the map's tile coordinates
 	 * @param {number} y - row, in the map's tile coordinates
 	 * @returns {object|undefined} the properties, or undefined when the cell is empty, outside the layer, or its tile has none
 	 * @example
 	 * // what the player stands on
 	 * const tile = layer.getTile(player.centerX, player.getBounds().bottom + 1);
-	 * if (tile !== null && layer.getCellProperties(tile.col, tile.row)?.type === "lava") {
+	 * if (tile !== null && layer.getProperties(tile.col, tile.row)?.type === "lava") {
 	 *     player.hurt();
 	 * }
 	 */
-	getCellProperties(x, y) {
+	getProperties(x, y) {
 		const cx = Math.floor(x) - this.startx;
 		const cy = Math.floor(y) - this.starty;
 		if (!(cx >= 0 && cx < this.cols && cy >= 0 && cy < this.rows)) {
@@ -1441,7 +1442,7 @@ export default class TileLayer extends Renderable {
 
 	/**
 	 * Give the tile in a cell properties of its own, which
-	 * {@link TileLayer#getCellProperties} returns over those of its tile in the
+	 * {@link TileLayer#getProperties} returns over those of its tile in the
 	 * tileset. They belong to the tile placed there: writing the cell
 	 * ({@link TileLayer#setTile}, {@link TileLayer#setCell},
 	 * {@link TileLayer#clearTile}) drops them.
@@ -1450,9 +1451,9 @@ export default class TileLayer extends Renderable {
 	 * @param {object} [properties] - the properties; leave out to remove the cell's own
 	 * @example
 	 * // this one door is locked, the other doors of the tileset are not
-	 * layer.setCellProperties(12, 4, { locked: true });
+	 * layer.setProperties(12, 4, { locked: true });
 	 */
-	setCellProperties(x, y, properties) {
+	setProperties(x, y, properties) {
 		const cx = Math.floor(x) - this.startx;
 		const cy = Math.floor(y) - this.starty;
 		if (!(cx >= 0 && cx < this.cols && cy >= 0 && cy < this.rows)) {

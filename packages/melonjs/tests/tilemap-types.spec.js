@@ -158,7 +158,7 @@ const propertiesOf = (layer) => {
 	const found = {};
 	for (let row = 0; row < layer.rows; row++) {
 		for (let col = 0; col < layer.cols; col++) {
-			const properties = layer.getCellProperties(col, row);
+			const properties = layer.getProperties(col, row);
 			if (properties !== undefined) {
 				found[`${col},${row}`] = properties;
 			}
@@ -461,7 +461,7 @@ describe.each([
 			const layers = (await loadLevel(app, name)).getLayers();
 			expect(layers.map(propertiesOf), name).toEqual(expected);
 			// each of its type: a number, a boolean, not their text
-			const lava = layers[1].getCellProperties(2, 3);
+			const lava = layers[1].getProperties(2, 3);
 			expect(lava.damage).toBe(25);
 			expect(lava.slow).toBe(0.5);
 			expect(lava.isSolid).toBe(false);
@@ -546,7 +546,7 @@ describe("Sprite Fusion maps, each with a spritesheet of its own", () => {
 			"0,0": { locked: true, key: "red" },
 			"2,0": { locked: false },
 		});
-		expect(doors.getCellProperties(3, 1)).toBeUndefined();
+		expect(doors.getProperties(3, 1)).toBeUndefined();
 		expect(propertiesOf(floor)).toEqual({});
 		// nothing was given to the tile itself
 		expect(doors.tileset.getTileProperties(4)).toBeUndefined();
@@ -774,7 +774,7 @@ describe("a Sprite Fusion file that is odd, or wrong", () => {
 		);
 		const [layer] = map.getLayers();
 		expect(cellsOf(layer)[1]).toEqual([0, 4, 2, 0]);
-		expect(layer.getCellProperties(1, 1)).toEqual({ second: true });
+		expect(layer.getProperties(1, 1)).toEqual({ second: true });
 	});
 
 	it("reads a layer with no tiles, and skips one that lists none", async () => {
@@ -840,7 +840,7 @@ describe("a Sprite Fusion file that is odd, or wrong", () => {
 				},
 			]),
 		);
-		const read = map.getLayers()[0].getCellProperties(0, 0);
+		const read = map.getLayers()[0].getProperties(0, 0);
 		expect(read).toEqual(attributes);
 		expect(read.run).toBe("eval:globalThis.__fusionRan = true");
 		expect(read.flag).toBe("true");
@@ -867,7 +867,7 @@ describe("a Sprite Fusion file that is odd, or wrong", () => {
 		const [layer] = map.getLayers();
 		expect(cellsOf(layer)[0]).toEqual([1, 1, 1, 0]);
 		for (const col of [0, 1, 2]) {
-			expect(layer.getCellProperties(col, 0) ?? {}).toEqual({});
+			expect(layer.getProperties(col, 0) ?? {}).toEqual({});
 		}
 	});
 
@@ -893,7 +893,7 @@ describe("a Sprite Fusion file that is odd, or wrong", () => {
 			);
 			const [layer] = map.getLayers();
 			expect(cellsOf(layer)[0]).toEqual([4, 0, 0, 0]);
-			expect(layer.getCellProperties(1, 0)).toBeUndefined();
+			expect(layer.getProperties(1, 0)).toBeUndefined();
 			expect(wallsOf(app)).toEqual([["past", 0, 0, TILE, TILE]]);
 			// and the level draws, frame after frame
 			expect(() => {
@@ -1128,7 +1128,7 @@ describe("attributes beside properties, in a map of Tiled's form", () => {
 			[5, 0, 0, 0],
 			[0, 0, 0, 8],
 		]);
-		expect(layer.getCellProperties(3, 1)).toEqual({ open: true, key: "blue" });
+		expect(layer.getProperties(3, 1)).toEqual({ open: true, key: "blue" });
 		// in the order Tiled gives layers: this is not a Sprite Fusion file
 		expect(layer.getOpacity()).toBe(1);
 	});
@@ -1197,22 +1197,22 @@ describe("the properties of a cell", () => {
 	});
 
 	it("are those of its tile in the tileset, when it has none of its own", () => {
-		expect(layer.getCellProperties(1, 0)).toEqual(SHARED);
-		expect(layer.getCellProperties(2, 0)).toEqual(SHARED);
+		expect(layer.getProperties(1, 0)).toEqual(SHARED);
+		expect(layer.getProperties(2, 0)).toEqual(SHARED);
 		// a tile with none, and no tile
-		expect(layer.getCellProperties(0, 0)).toBeUndefined();
-		expect(layer.getCellProperties(3, 0)).toBeUndefined();
+		expect(layer.getProperties(0, 0)).toBeUndefined();
+		expect(layer.getProperties(3, 0)).toBeUndefined();
 	});
 
 	it("has its own over the tileset's, which stay what they were", () => {
-		layer.setCellProperties(1, 0, { damage: 99, cursed: true });
-		expect(layer.getCellProperties(1, 0)).toEqual({
+		layer.setProperties(1, 0, { damage: 99, cursed: true });
+		expect(layer.getProperties(1, 0)).toEqual({
 			type: "lava",
 			damage: 99,
 			cursed: true,
 		});
 		// the other cell of the same tile, and the tileset
-		expect(layer.getCellProperties(2, 0)).toEqual(SHARED);
+		expect(layer.getProperties(2, 0)).toEqual(SHARED);
 		expect(layer.tileset.getTileProperties(2)).toEqual({
 			type: "lava",
 			damage: 25,
@@ -1222,51 +1222,51 @@ describe("the properties of a cell", () => {
 
 	it("has its own alone, on a tile the tileset says nothing of", () => {
 		const own = { locked: true };
-		layer.setCellProperties(0, 0, own);
-		expect(layer.getCellProperties(0, 0)).toEqual(own);
-		expect(layer.getCellProperties(3, 1)).toBeUndefined();
+		layer.setProperties(0, 0, own);
+		expect(layer.getProperties(0, 0)).toEqual(own);
+		expect(layer.getProperties(3, 1)).toBeUndefined();
 	});
 
 	it("loses its own when they are taken back", () => {
-		layer.setCellProperties(1, 0, { cursed: true });
-		layer.setCellProperties(1, 0);
-		expect(layer.getCellProperties(1, 0)).toEqual(SHARED);
-		layer.setCellProperties(1, 0, { cursed: true });
-		layer.setCellProperties(1, 0, null);
-		expect(layer.getCellProperties(1, 0)).toEqual(SHARED);
+		layer.setProperties(1, 0, { cursed: true });
+		layer.setProperties(1, 0);
+		expect(layer.getProperties(1, 0)).toEqual(SHARED);
+		layer.setProperties(1, 0, { cursed: true });
+		layer.setProperties(1, 0, null);
+		expect(layer.getProperties(1, 0)).toEqual(SHARED);
 		// taking back what was never given is nothing
-		layer.setCellProperties(3, 1);
-		expect(layer.getCellProperties(3, 1)).toBeUndefined();
+		layer.setProperties(3, 1);
+		expect(layer.getProperties(3, 1)).toBeUndefined();
 	});
 
 	it("loses its own when another tile is put there, by any way", () => {
 		const own = { cursed: true };
 		// setCell
-		layer.setCellProperties(0, 0, own);
+		layer.setProperties(0, 0, own);
 		layer.setCell(0, 0, 1);
-		expect(layer.getCellProperties(0, 0)).toBeUndefined();
+		expect(layer.getProperties(0, 0)).toBeUndefined();
 		// setTile
-		layer.setCellProperties(0, 0, own);
+		layer.setProperties(0, 0, own);
 		layer.setTile(layer.getTileById(2, 0, 0), 0, 0);
-		expect(layer.getCellProperties(0, 0)).toEqual(SHARED);
+		expect(layer.getProperties(0, 0)).toEqual(SHARED);
 		// clearTile, and a tile put back after
-		layer.setCellProperties(0, 0, own);
+		layer.setProperties(0, 0, own);
 		layer.clearTile(0, 0);
-		expect(layer.getCellProperties(0, 0)).toBeUndefined();
+		expect(layer.getProperties(0, 0)).toBeUndefined();
 		layer.setCell(0, 0, 1);
-		expect(layer.getCellProperties(0, 0)).toBeUndefined();
+		expect(layer.getProperties(0, 0)).toBeUndefined();
 		// the cell next to it kept its own all along
-		layer.setCellProperties(1, 0, own);
+		layer.setProperties(1, 0, own);
 		layer.setCell(0, 0, 3);
-		expect(layer.getCellProperties(1, 0)).toEqual({ ...SHARED, cursed: true });
+		expect(layer.getProperties(1, 0)).toEqual({ ...SHARED, cursed: true });
 	});
 
 	it("has none while it holds no tile, whatever it was given", () => {
-		layer.setCellProperties(3, 0, { ghost: true });
-		expect(layer.getCellProperties(3, 0)).toBeUndefined();
+		layer.setProperties(3, 0, { ghost: true });
+		expect(layer.getProperties(3, 0)).toBeUndefined();
 		// and the tile put there later does not inherit them
 		layer.setCell(3, 0, 1);
-		expect(layer.getCellProperties(3, 0)).toBeUndefined();
+		expect(layer.getProperties(3, 0)).toBeUndefined();
 	});
 
 	it("is nothing outside the layer, and giving there does nothing", () => {
@@ -1281,9 +1281,9 @@ describe("the properties of a cell", () => {
 			[undefined, undefined],
 		]) {
 			expect(() => {
-				layer.setCellProperties(col, row, { stray: true });
+				layer.setProperties(col, row, { stray: true });
 			}).not.toThrow();
-			expect(layer.getCellProperties(col, row)).toBeUndefined();
+			expect(layer.getProperties(col, row)).toBeUndefined();
 		}
 		// none of them landed in a cell of the layer
 		expect(propertiesOf(layer)).toEqual({ "1,0": SHARED, "2,0": SHARED });
@@ -1291,10 +1291,10 @@ describe("the properties of a cell", () => {
 	});
 
 	it("takes the cell a position is in, as the other cell methods do", () => {
-		layer.setCellProperties(0.9, 0.9, { here: true });
-		expect(layer.getCellProperties(0, 0)).toEqual({ here: true });
-		expect(layer.getCellProperties(0.2, 0.7)).toEqual({ here: true });
-		expect(layer.getCellProperties(1.5, 0)).toEqual(SHARED);
+		layer.setProperties(0.9, 0.9, { here: true });
+		expect(layer.getProperties(0, 0)).toEqual({ here: true });
+		expect(layer.getProperties(0.2, 0.7)).toEqual({ here: true });
+		expect(layer.getProperties(1.5, 0)).toEqual(SHARED);
 	});
 
 	it("names a cell in the map's coordinates, on a map that starts left of 0", async () => {
@@ -1330,20 +1330,20 @@ describe("the properties of a cell", () => {
 		]);
 		const [wide] = (await loadLevel(app, "cells-infinite")).getLayers();
 		expect(wide.startx).toBe(-16);
-		expect(wide.getCellProperties(-16, 0)).toEqual(SHARED);
-		expect(wide.getCellProperties(-15, 0)).toBeUndefined();
-		wide.setCellProperties(-15, 0, { marked: true });
-		expect(wide.getCellProperties(-15, 0)).toEqual({ marked: true });
+		expect(wide.getProperties(-16, 0)).toEqual(SHARED);
+		expect(wide.getProperties(-15, 0)).toBeUndefined();
+		wide.setProperties(-15, 0, { marked: true });
+		expect(wide.getProperties(-15, 0)).toEqual({ marked: true });
 		// not the cell of the same number counted from the layer's corner
-		expect(wide.getCellProperties(1, 0)).toBeUndefined();
-		expect(wide.getCellProperties(-17, 0)).toBeUndefined();
+		expect(wide.getProperties(1, 0)).toBeUndefined();
+		expect(wide.getProperties(-17, 0)).toBeUndefined();
 		wide.setCell(-15, 0, 2);
-		expect(wide.getCellProperties(-15, 0)).toEqual(SHARED);
+		expect(wide.getProperties(-15, 0)).toEqual(SHARED);
 	});
 
 	it("starts again with the level: what a game gave is not kept", async () => {
-		layer.setCellProperties(0, 0, { cursed: true });
+		layer.setProperties(0, 0, { cursed: true });
 		[layer] = (await loadLevel(app, "cells")).getLayers();
-		expect(layer.getCellProperties(0, 0)).toBeUndefined();
+		expect(layer.getProperties(0, 0)).toBeUndefined();
 	});
 });
