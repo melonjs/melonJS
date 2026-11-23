@@ -5,6 +5,7 @@
 ### Fixed
 - `PathfindingPlugin`: the grid of an LDtk world (melonJS 20.18) is placed where the world is
 - `Grid.fromTileLayer`: the grid follows a layer's offset in Tiled, and its `pos`
+- `Grid.fromTileLayer`: a `weight` given to one placed tile (melonJS 20.18, a Sprite Fusion attribute for instance) is read, not only the tileset's
 
 ## [1.1.0] - _2026-11-15_
 

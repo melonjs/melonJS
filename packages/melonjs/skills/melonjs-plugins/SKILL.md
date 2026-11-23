@@ -135,7 +135,7 @@ is the part to get right; the search is one call:
 ```js
 import { Grid } from "@melonjs/pathfinding-plugin";
 
-// a layer of walls: a tile makes its cell solid (a tile's `weight` property sets its weight)
+// a layer of walls: a tile makes its cell solid (a tile's `weight` property, or attribute, sets its weight)
 const grid = Grid.fromTileLayer(app.world.getChildByName("walls")[0]);
 // a floor layer: decide from the tile instead
 Grid.fromTileLayer(floor, { solid: (tile) => tile === null || isWall(tile) });

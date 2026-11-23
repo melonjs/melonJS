@@ -978,23 +978,27 @@ const alwaysRelative = () => {
  * "mtl", "gltf" or "glb". Any other type is one registered with
  * {@link loader.setParser}.
  *
- * The types that come from an editor:
- * - `"tmx"`: a [Tiled](https://www.mapeditor.org) map, and `"tsx"`: a Tiled
- *   tileset kept in a file of its own. Their JSON forms (`.tmj` / `.tsj`,
- *   `.json`) load under the same two types: those are file extensions, not
- *   asset types.
+ * The types that come from an editor, and the files each takes:
+ * - `"tmx"`: a [Tiled](https://www.mapeditor.org) map, in XML (`.tmx`,
+ *   `.xml`) or in JSON (`.tmj`, `.json`).
+ * - `"tsx"`: a Tiled tileset kept in a file of its own, in XML (`.tsx`,
+ *   `.xml`) or in JSON (`.tsj`, `.json`).
  * - `"tilemap"`: a tile map, whatever editor wrote it. The same as `"tmx"`
- *   under a name that is not an editor's: a file in Tiled's format (XML or
- *   JSON), which many tools write, or a Sprite Fusion `map.json` (drawn
- *   from the image the game loaded as `spritesheet`).
+ *   under a name that is not an editor's, for the same files (`.tmx`,
+ *   `.xml`, `.tmj`, `.json`): Tiled's format, which many tools write, or a
+ *   Sprite Fusion `map.json` (drawn from the image the game loaded as
+ *   `spritesheet`).
  * - `"spritefusion"`: a [Sprite Fusion](https://www.spritefusion.com) map,
  *   either of its exports (`map.json` or `map.tmx`). The same again, and
  *   the `spritesheet.png` the editor saves next to the map is loaded with
  *   it.
- * - `"ldtk"`: an [LDtk](https://ldtk.io) project, with the level files and
- *   the images it names.
- * - `"aseprite"`: an [Aseprite](https://www.aseprite.org) file, as an image
- *   and its frames.
+ * - `"ldtk"`: an [LDtk](https://ldtk.io) project (`.ldtk`), with the level
+ *   files (`.ldtkl`) and the images it names.
+ * - `"aseprite"`: an [Aseprite](https://www.aseprite.org) file
+ *   (`.aseprite`), as an image and its frames.
+ *
+ * The file's extension says whether a map is XML or JSON: `.tmj` and `.tsj`
+ * are extensions, not asset types.
  *
  * Each of the three map types and each level of an LDtk project is a level
  * for {@link level.load}.

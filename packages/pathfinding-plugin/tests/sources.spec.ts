@@ -16,6 +16,7 @@ import {
 	type Renderer,
 	state,
 	type TMXLayer,
+	TMXTileMap,
 	video,
 } from "melonjs";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -155,6 +156,8 @@ describe("grids from a level", () => {
 		await loader.preload(
 			[
 				{ name: "pf-tiles", type: "image", src: image.toDataURL() },
+				// the image a Sprite Fusion map draws from
+				{ name: "spritesheet", type: "image", src: image.toDataURL() },
 				// an inline map, which the loader takes though `Asset.data` is
 				// typed for shader sources
 				{ name: "pf-map", type: "tmx", data: map as unknown as string },
@@ -207,6 +210,79 @@ describe("grids from a level", () => {
 			});
 			expect(grid.getWeight(4, 1)).toBe(3);
 			expect(grid.getWeight(0, 0)).toBe(1);
+		});
+
+		it("takes the weight one placed tile was given, over its tile's", () => {
+			const layer = wallsLayer();
+			const open = { solid: () => false };
+			try {
+				// the mud, heavier here; and a wall tile, which has none
+				layer.setTileProperties(4, 1, { weight: 7 });
+				layer.setTileProperties(2, 0, { weight: 5 });
+				// what is not a weight leaves the tile's own
+				layer.setTileProperties(2, 1, { slippery: true });
+				const grid = Grid.fromTileLayer(layer, open);
+				expect(grid.getWeight(4, 1)).toBe(7);
+				expect(grid.getWeight(2, 0)).toBe(5);
+				expect(grid.getWeight(2, 1)).toBe(1);
+				expect(grid.getWeight(2, 2)).toBe(1);
+				// taken back, and the grid read again
+				layer.setTileProperties(4, 1);
+				grid.refreshCell(4, 1);
+				expect(grid.getWeight(4, 1)).toBe(3);
+			} finally {
+				layer.setTileProperties(4, 1);
+				layer.setTileProperties(2, 0);
+				layer.setTileProperties(2, 1);
+			}
+		});
+
+		it("takes a weight given as an attribute of the placed tile, as Sprite Fusion writes it", () => {
+			// a map in the words of the editor's JSON export, read as it is
+			const fusion = new TMXTileMap("pf-fusion", {
+				tileSize: T,
+				mapWidth: 3,
+				mapHeight: 2,
+				layers: [
+					{
+						name: "ground",
+						tiles: [
+							{ id: "0", x: 0, y: 0, attributes: { weight: 4 } },
+							{ id: "0", x: 1, y: 0 },
+							{ id: "0", x: 2, y: 1, attributes: { weight: 9, type: "swamp" } },
+						],
+						collider: false,
+					},
+				],
+			});
+			const [ground] = fusion.getLayers();
+			const grid = Grid.fromTileLayer(ground, { solid: () => false });
+			expect([
+				grid.getWeight(0, 0),
+				grid.getWeight(1, 0),
+				grid.getWeight(2, 0),
+				grid.getWeight(2, 1),
+			]).toEqual([4, 1, 1, 9]);
+		});
+
+		it("takes the tile's weight from its tileset on an engine with no cell properties", () => {
+			const layer = wallsLayer();
+			const open = { solid: () => false };
+			try {
+				layer.setTileProperties(4, 1, { weight: 7 });
+				// as a layer of melonJS before 20.18
+				Object.defineProperty(layer, "getTileProperties", {
+					value: undefined,
+					configurable: true,
+				});
+				const grid = Grid.fromTileLayer(layer, open);
+				expect(grid.getWeight(4, 1)).toBe(3);
+				expect(grid.getWeight(2, 0)).toBe(1);
+			} finally {
+				delete (layer as { getTileProperties?: unknown }).getTileProperties;
+				layer.setTileProperties(4, 1);
+			}
+			expect(Grid.fromTileLayer(layer, open).getWeight(4, 1)).toBe(3);
 		});
 
 		it("finds a way round the wall", () => {

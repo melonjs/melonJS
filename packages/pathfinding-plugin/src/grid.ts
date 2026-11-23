@@ -616,12 +616,24 @@ export class Grid {
 			) as Tile | null;
 		};
 		const { solid, weight } = options;
-		const props = (tile: Tile | null) => {
-			return tile === null
-				? undefined
-				: (tile.tileset.getTileProperties(tile.tileId) as
-						| { weight?: unknown }
-						| undefined);
+		// The properties of the tile in a cell: those of the cell, which hold
+		// the tileset's and what the one placed tile was given on top (a
+		// Sprite Fusion attribute, say). An engine before 20.18 has the
+		// tileset's alone.
+		const cellProperties = (
+			layer as {
+				getTileProperties?: (col: number, row: number) => object | undefined;
+			}
+		).getTileProperties;
+		const props = (tile: Tile | null, col: number, row: number) => {
+			if (tile === null) {
+				return undefined;
+			}
+			return (
+				typeof cellProperties === "function"
+					? cellProperties.call(layer, col + layer.startx, row + layer.starty)
+					: tile.tileset.getTileProperties(tile.tileId)
+			) as { weight?: unknown } | undefined;
 		};
 		return new Grid({
 			cols: layer.cols,
@@ -640,7 +652,7 @@ export class Grid {
 				if (weight !== undefined) {
 					return weight(tile, col, row);
 				}
-				const value = props(tile)?.weight;
+				const value = props(tile, col, row)?.weight;
 				return typeof value === "number" ? value : 1;
 			},
 		});
