@@ -234,7 +234,8 @@ or an animated tile alike, with no region names to build by hand.
 melonJS pre-registers `Renderable`, `Sprite`, `NineSliceSprite`, `Text`,
 `BitmapText`, `ImageLayer`, `ColorLayer`, `Light2d`, `Collectable`, `Trigger`
 and `Entity` as Tiled classes, so `Collectable` and `Trigger` work out of the
-box. Each is registered under its `me.`-prefixed alias as well, so a map
+box. A rectangle object of class `ColorLayer` with a `color` property is
+filled with that color (20.18). Each is registered under its `me.`-prefixed alias as well, so a map
 authored against melonJS 1.x finds them where it looks.
 
 A `Trigger` forwards a **fixed list** of settings to `level.load()` — not

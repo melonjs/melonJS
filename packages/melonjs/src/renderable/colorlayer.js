@@ -12,8 +12,31 @@ import Renderable, { resetRenderableState } from "./renderable.js";
  */
 
 /**
- * a generic Color Layer Object.  Fills the entire Canvas with the color not just the container the object belongs to.
+ * A layer of one color.
+ *
+ * By default it fills the entire canvas with the color, whatever container it
+ * belongs to and wherever the camera is: a background.
+ *
+ * It is a renderable like any other, though: give it a size, and it fills
+ * that rectangle only, where it is (`pos`, by its `anchorPoint`). Not
+ * `floating`, the rectangle is one of the world, and scrolls with it: the
+ * floor of a room, the background of one level among several. Left
+ * `floating`, it is one of the screen: a panel.
+ *
+ * It is also a class a level can name: an object of class `ColorLayer` in a
+ * map, with a `color` property, fills the object's rectangle.
  * @category Game Objects
+ * @example
+ * // a background: the whole canvas, behind everything
+ * app.world.addChild(new ColorLayer("background", "#202020"), 0);
+ *
+ * // a colored rectangle of the world: 320 x 180 pixels at (640, 0)
+ * const cave = new ColorLayer("cave", "#1b1026", 1);
+ * cave.floating = false;
+ * cave.anchorPoint.set(0, 0);
+ * cave.pos.set(640, 0, 1);
+ * cave.resize(320, 180);
+ * app.world.addChild(cave);
  */
 export default class ColorLayer extends Renderable {
 	/**
@@ -29,7 +52,7 @@ export default class ColorLayer extends Renderable {
 		 * the layer color component
 		 * @type {Color}
 		 */
-		this.color = colorPool.get().parseCSS(color);
+		this.color = colorPool.get();
 
 		this.onResetEvent(name, color, z);
 	}
@@ -40,10 +63,29 @@ export default class ColorLayer extends Renderable {
 		if (typeof this.currentTransform !== "undefined") {
 			resetRenderableState(this);
 		}
+		// the whole canvas, wherever the camera is, until it is given a size
+		this.floating = true;
+		this.pos.x = 0;
+		this.pos.y = 0;
+		this.resize(Infinity, Infinity);
+		// built as an object of a level, `(x, y, settings)`: the object's
+		// rectangle in the world, in its `color`
+		if (typeof name === "number" && typeof z === "object" && z !== null) {
+			const settings = z;
+			if (settings.width > 0 && settings.height > 0) {
+				this.floating = false;
+				this.anchorPoint.set(0, 0);
+				this.pos.x = name;
+				this.pos.y = color;
+				this.resize(settings.width, settings.height);
+			}
+			name = settings.name;
+			color = settings.color ?? "#000000";
+			z = settings.z ?? 0;
+		}
 		// apply given parameters
 		this.name = name;
 		this.pos.z = z;
-		this.floating = true;
 		// string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
 		this.color.parseCSS(color);
 	}
@@ -54,6 +96,12 @@ export default class ColorLayer extends Renderable {
 	 * @param {Camera2d} [viewport] - the viewport to (re)draw
 	 */
 	draw(renderer, viewport) {
+		if (Number.isFinite(this.width) && Number.isFinite(this.height)) {
+			// a size of its own: a rectangle of the color, where the layer is
+			renderer.setColor(this.color);
+			renderer.fillRect(this.pos.x, this.pos.y, this.width, this.height);
+			return;
+		}
 		// a zoomed camera measures itself in the world it sees while the
 		// world is drawn, and the layer fills the screen: scale back by the
 		// zoom, as ImageLayer does, or zoomed in it fills part of the view

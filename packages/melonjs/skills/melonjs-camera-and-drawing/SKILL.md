@@ -440,6 +440,24 @@ checksum of `getTexture()` before concluding the animation is broken; it is the
 upload that is missing, not the bake. For a moving 3D surface, scroll the UVs
 or move the geometry instead.
 
+## A background color, or a colored rectangle
+
+`ColorLayer` fills the whole canvas with one color, wherever the camera is:
+`app.world.addChild(new ColorLayer("background", "#202020"), 0)`.
+
+It is a renderable like any other, so given a size it fills that rectangle
+only (20.18): one of the world when it does not float, one of the screen when
+it does.
+
+```js
+const cave = new ColorLayer("cave", "#1b1026", 1);
+cave.floating = false;            // a place in the world, not on the screen
+cave.anchorPoint.set(0, 0);       // placed by its top left corner
+cave.pos.set(640, 0, 1);
+cave.resize(320, 180);
+app.world.addChild(cave);
+```
+
 ## Clipping and masking
 
 ```js

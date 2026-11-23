@@ -1,4 +1,3 @@
-import { Color, colorPool } from "../../math/color.ts";
 import Renderable from "../../renderable/renderable.js";
 import type Renderer from "../../video/renderer.js";
 import type { TextureAtlas } from "../../video/texture/atlas.js";
@@ -365,68 +364,6 @@ export class LDtkObject extends Renderable {
 	override destroy(): void {
 		this.tileSprite?.destroy();
 		this.tileSprite = undefined;
-		super.destroy();
-	}
-}
-
-/**
- * The background of a level: its color over the level's area, and its
- * background image where it has one, placed as in LDtk. The image is a
- * sprite on the part of it that shows; the color is filled here, as no
- * renderable of the engine fills an area of a size (a `ColorLayer` clears the
- * whole view).
- */
-export class LDtkBackground extends Renderable {
-	/** the color the level's area is filled with; undefined to fill nothing */
-	color: Color | undefined;
-	/** the level's background image, if any: a sprite, placed from the level's top left corner */
-	image: Renderable | undefined;
-
-	/**
-	 * @param x - the level's left edge
-	 * @param y - the level's top edge
-	 * @param width - the level's width
-	 * @param height - the level's height
-	 * @param color - the color to fill the area with, as `#rrggbb`
-	 * @param image - the background image, if any
-	 */
-	constructor(
-		x: number,
-		y: number,
-		width: number,
-		height: number,
-		color?: string,
-		image?: Renderable,
-	) {
-		super(x, y, width, height);
-		this.anchorPoint.set(0, 0);
-		this.name = "background";
-		this.color =
-			color === undefined ? undefined : colorPool.get().parseCSS(color);
-		this.image = image;
-	}
-
-	/**
-	 * draw the background
-	 * @param renderer - the renderer
-	 * @param viewport - the view being drawn
-	 */
-	override draw(renderer: Renderer, viewport?: unknown): void {
-		if (this.color !== undefined) {
-			renderer.setColor(this.color);
-			renderer.fillRect(this.pos.x, this.pos.y, this.width, this.height);
-		}
-		drawInside(renderer, this, this.image, viewport);
-	}
-
-	/** let go of the color and the image with the background */
-	override destroy(): void {
-		if (this.color !== undefined) {
-			colorPool.release(this.color);
-			this.color = undefined;
-		}
-		this.image?.destroy();
-		this.image = undefined;
 		super.destroy();
 	}
 }

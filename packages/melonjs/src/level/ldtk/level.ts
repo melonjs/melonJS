@@ -1,6 +1,7 @@
 import { warnOnce } from "../../lang/console.js";
 import { getImage } from "../../loader/cache.js";
 import { Bounds } from "../../physics/bounds.ts";
+import ColorLayer from "../../renderable/colorlayer.js";
 import type Container from "../../renderable/container.js";
 import Renderable from "../../renderable/renderable.js";
 import { createCanvas } from "../../video/canvas_factory.js";
@@ -25,7 +26,6 @@ import { IntGrid } from "./intgrid.ts";
 import type { LDtkLevelInfo, LDtkProject, LDtkWorldInfo } from "./project.ts";
 import { entityLeft, entityTop, fieldValues } from "./project.ts";
 import {
-	LDtkBackground,
 	LDtkObject,
 	type LDtkObjectSettings,
 	type ObjectTile,
@@ -413,26 +413,28 @@ class LevelBuilder {
 				image = regionSprite(
 					atlas,
 					regionOf(atlas, cx, cy, cw, ch),
-					json.__bgPos.topLeftPx[0],
-					json.__bgPos.topLeftPx[1],
+					originX + json.__bgPos.topLeftPx[0],
+					originY + json.__bgPos.topLeftPx[1],
 					json.__bgPos.scale[0],
 					json.__bgPos.scale[1],
 				);
+				image.name = "background";
 			}
 		}
-		if (fill || image !== undefined) {
-			this.add(
-				built,
-				new LDtkBackground(
-					originX,
-					originY,
-					info.width,
-					info.height,
-					fill ? info.bgColor : undefined,
-					image,
-				),
-				zBase,
-			);
+		if (fill) {
+			// one level among several: its color over its own area (a level
+			// on its own has it as the container's background color)
+			const color = new ColorLayer("background", info.bgColor, zBase);
+			color.floating = false;
+			color.anchorPoint.set(0, 0);
+			color.pos.x = originX;
+			color.pos.y = originY;
+			color.resize(info.width, info.height);
+			this.add(built, color, zBase);
+		}
+		if (image !== undefined) {
+			// over the color, under the first layer
+			this.add(built, image, zBase + 0.5);
 		}
 
 		// LDtk lists a level's layers from the top one down
