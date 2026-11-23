@@ -27,7 +27,8 @@ import { resources, samples } from "./resources";
 /**
  * The entities of what is loaded, outlined in the color LDtk shows each in.
  * No class is registered for them here, so each is a plain box
- * (`LDtkObject`) carrying its fields, drawn with its tile when it has one: a
+ * (`LDtkObject`, a container) carrying its fields, with its tile's sprite as
+ * its child when it has one: a
  * game registers its own classes with `registerObjectClass("Player", Player)`.
  */
 class EntityOutlines extends Renderable {

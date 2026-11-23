@@ -1,6 +1,8 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
 	type Application,
+	ColorLayer,
+	Container,
 	type LDtkEntityInstance,
 	LDtkObject,
 	type LDtkObjectSettings,
@@ -495,9 +497,246 @@ export function entityChecks(
 					expect(built).toBeInstanceOf(LDtkObject);
 					expect(built.tileSprite).toBeDefined();
 					expect(built.tileSprite instanceof Sprite).toBe(mode !== "Repeat");
+					// the object is a container of the engine, and the sprite
+					// its only child: it draws it, moves it and frees it
+					expect(built).toBeInstanceOf(Container);
+					expect(built.getChildren()).toEqual([built.tileSprite]);
+					expect(built.tileSprite?.ancestor).toBe(built);
 				}
 			});
 		}
+
+		describe("the box of an entity with no class, a container", () => {
+			// where LDtk puts an entity's box: held at `px` by its pivot
+			const boxOf = (placed: LDtkEntityInstance) => {
+				return {
+					x: placed.px[0] - placed.__pivot[0] * placed.width,
+					y: placed.px[1] - placed.__pivot[1] * placed.height,
+					w: placed.width,
+					h: placed.height,
+				};
+			};
+
+			const objectOf = (placed: LDtkEntityInstance) => {
+				return app.world.getChildByProp("id", placed.iid)[0] as LDtkObject;
+			};
+
+			// the color of a pixel of a frame
+			const at = (data: Uint8ClampedArray, x: number, y: number) => {
+				const i = (y * WIDTH + x) * 4;
+				return [data[i], data[i + 1], data[i + 2]];
+			};
+
+			const close = (a: number[], b: number[]) => {
+				return a.every((value, i) => {
+					return Math.abs(value - b[i]) <= Math.max(tolerance, 2);
+				});
+			};
+
+			// let what was deferred happen: a container sorts its children then
+			const settle = () => {
+				return new Promise((resolve) => {
+					setTimeout(resolve, 0);
+				});
+			};
+
+			it("is where the entity is, of its size, whatever its pivot and its shape", async () => {
+				for (const mode of MODES) {
+					await enter(app, `ents:Mode_${mode}`);
+					const list = entitiesOf(`Mode_${mode}`);
+					expect(objectsIn(app.world)).toHaveLength(list.length);
+					for (const placed of list) {
+						const object = objectOf(placed);
+						const box = boxOf(placed);
+						const about = `${mode} at ${String(placed.px[0])},${String(placed.px[1])}`;
+						expect(object, about).toBeInstanceOf(LDtkObject);
+						expect(object, about).toBeInstanceOf(Container);
+						// in the world itself, not in a container of the level's
+						expect(object.ancestor, about).toBe(app.world);
+						expect(object.floating, about).toBe(false);
+						expect(
+							[object.pos.x, object.pos.y, object.width, object.height],
+							about,
+						).toEqual([box.x, box.y, box.w, box.h]);
+						// placed by its top left corner, and found where it is
+						expect([object.anchorPoint.x, object.anchorPoint.y], about).toEqual(
+							[0, 0],
+						);
+						const bounds = object.getBounds();
+						expect(
+							[bounds.left, bounds.top, bounds.width, bounds.height],
+							about,
+						).toEqual([box.x, box.y, box.w, box.h]);
+						const absolute = object.getAbsolutePosition();
+						expect([absolute.x, absolute.y], about).toEqual([box.x, box.y]);
+						// what it was held by in LDtk, to read
+						expect(object.pivot, about).toEqual({
+							x: placed.__pivot[0],
+							y: placed.__pivot[1],
+						});
+						expect(object.source.px, about).toEqual({
+							x: placed.px[0],
+							y: placed.px[1],
+						});
+					}
+				}
+			});
+
+			it("holds its tile's sprite as its only child, placed in the box as the fill mode asks", async () => {
+				// the tile is 32 x 16: where its top left corner goes in a box,
+				// held by a pivot, in the modes that neither cut nor repeat it
+				const TW = RECT.w;
+				const TH = RECT.h;
+				const places: Record<
+					string,
+					(w: number, h: number, px: number, py: number) => number[]
+				> = {
+					Stretch: () => {
+						return [0, 0];
+					},
+					FullSizeUncropped: (w, h, px, py) => {
+						return [(w - TW) * px, (h - TH) * py];
+					},
+					FitInside: (w, h, px, py) => {
+						const scale = Math.min(w / TW, h / TH);
+						return [(w - TW * scale) * px, (h - TH * scale) * py];
+					},
+				};
+				for (const [mode, place] of Object.entries(places)) {
+					await enter(app, `ents:Mode_${mode}`);
+					for (const placed of entitiesOf(`Mode_${mode}`)) {
+						const object = objectOf(placed);
+						const sprite = object.tileSprite as Renderable;
+						const about = `${mode} at ${String(placed.px[0])},${String(placed.px[1])}`;
+						expect(object.getChildren(), about).toEqual([sprite]);
+						expect(sprite.ancestor, about).toBe(object);
+						expect(sprite.floating, about).toBe(false);
+						const [x, y] = place(
+							placed.width,
+							placed.height,
+							placed.__pivot[0],
+							placed.__pivot[1],
+						);
+						// in the box's own coordinates
+						expect(sprite.pos.x, about).toBeCloseTo(x, 6);
+						expect(sprite.pos.y, about).toBeCloseTo(y, 6);
+						// and so in the world, from where the box is
+						const box = boxOf(placed);
+						const absolute = sprite.getAbsolutePosition();
+						expect(absolute.x, about).toBeCloseTo(box.x + x, 6);
+						expect(absolute.y, about).toBeCloseTo(box.y + y, 6);
+					}
+				}
+			});
+
+			it("has no child when LDtk shows the entity with no tile, and is where it is all the same", async () => {
+				await enter(app, "ents:Named");
+				const bare = entitiesOf("Named").filter((placed) => {
+					return placed.__tile === null && placed.__identifier !== "Coin";
+				});
+				expect(bare.length).toBeGreaterThan(3);
+				for (const placed of bare) {
+					const object = objectOf(placed);
+					const box = boxOf(placed);
+					expect(object, placed.__identifier).toBeInstanceOf(LDtkObject);
+					expect(object.tileSprite, placed.__identifier).toBeUndefined();
+					expect(object.getChildren(), placed.__identifier).toEqual([]);
+					expect(
+						[object.pos.x, object.pos.y, object.width, object.height],
+						placed.__identifier,
+					).toEqual([box.x, box.y, box.w, box.h]);
+				}
+			});
+
+			it("does not show among the objects of the level what it holds", async () => {
+				await enter(app, "ents:Mode_Stretch");
+				const list = entitiesOf("Mode_Stretch");
+				// by id, by name and by class: the boxes, not their sprites
+				expect(objectsIn(app.world)).toHaveLength(list.length);
+				expect(app.world.getChildByName("Stretch")).toHaveLength(list.length);
+				expect(app.world.getChildByType(LDtkObject)).toHaveLength(list.length);
+				for (const found of app.world.getChildByName("Stretch")) {
+					expect(found).toBeInstanceOf(LDtkObject);
+				}
+			});
+
+			it("draws its tile where it is moved to, fades it, holds what a game adds, and takes it all away with it", async () => {
+				await enter(app, "ents:Mode_Stretch");
+				app.viewport.moveTo(0, 0);
+				const [first] = entitiesOf("Mode_Stretch");
+				const object = objectOf(first);
+				// a box of 64 x 64 at 8, 8
+				expect([object.pos.x, object.pos.y]).toEqual([8, 8]);
+				const before = frame(app);
+				const empty = at(before, 310, 10);
+				const inside = [
+					[0, 0],
+					[20, 20],
+					[63, 63],
+					[5, 40],
+					[40, 5],
+				];
+				expect(
+					inside.some(([x, y]) => {
+						return !close(at(before, 8 + x, 8 + y), empty);
+					}),
+				).toBe(true);
+
+				// moved: the same picture, 200 across and 150 down, and nothing
+				// left where it was
+				object.pos.x += 200;
+				object.pos.y += 150;
+				const moved = frame(app);
+				for (const [x, y] of inside) {
+					expect(
+						close(at(moved, 208 + x, 158 + y), at(before, 8 + x, 8 + y)),
+						`moved ${String(x)},${String(y)}`,
+					).toBe(true);
+					expect(
+						close(at(moved, 8 + x, 8 + y), empty),
+						`left ${String(x)},${String(y)}`,
+					).toBe(true);
+				}
+				const bounds = object.getBounds();
+				expect([bounds.left, bounds.top]).toEqual([208, 158]);
+				const absolute = (
+					object.tileSprite as Renderable
+				).getAbsolutePosition();
+				expect([absolute.x, absolute.y]).toEqual([208, 158]);
+
+				// faded out, its tile is not seen
+				object.setOpacity(0);
+				const faded = frame(app);
+				for (const [x, y] of inside) {
+					expect(close(at(faded, 208 + x, 158 + y), empty)).toBe(true);
+				}
+				object.setOpacity(1);
+
+				// what a game adds to it is placed in the box, over the tile
+				const mark = new ColorLayer("mark", "#ff0000", 10);
+				mark.floating = false;
+				mark.anchorPoint.set(0, 0);
+				mark.pos.x = 4;
+				mark.pos.y = 6;
+				mark.resize(8, 8);
+				object.addChild(mark, 10);
+				await settle();
+				const marked = frame(app);
+				expect(at(marked, 208 + 4, 158 + 6)).toEqual([255, 0, 0]);
+				expect(at(marked, 208 + 11, 158 + 13)).toEqual([255, 0, 0]);
+				expect(at(marked, 208 + 12, 158 + 6)).not.toEqual([255, 0, 0]);
+				expect(at(marked, 208 + 4, 158 + 5)).not.toEqual([255, 0, 0]);
+
+				// taken out of the world, nothing of it is left on screen
+				app.world.removeChildNow(object);
+				const gone = frame(app);
+				for (const [x, y] of inside) {
+					expect(close(at(gone, 208 + x, 158 + y), empty)).toBe(true);
+				}
+				expect(app.world.getChildByProp("id", first.iid)).toEqual([]);
+				expect(app.world.getChildByName("mark")).toEqual([]);
+			});
+		});
 
 		it("a nine-slice tile is a nine-slice sprite with LDtk's borders; with none, or no definition, the tile is stretched or fitted", async () => {
 			await enter(app, "ents:Slices");

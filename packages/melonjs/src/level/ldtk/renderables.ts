@@ -1,3 +1,4 @@
+import Container from "../../renderable/container.js";
 import Renderable from "../../renderable/renderable.js";
 import type Renderer from "../../video/renderer.js";
 import type { TextureAtlas } from "../../video/texture/atlas.js";
@@ -274,36 +275,16 @@ export function createObjectTile(
 }
 
 /**
- * draw a renderable a box holds, placed from the box's top left corner
- * @param renderer - the renderer
- * @param box - the box
- * @param child - what it holds, if anything
- * @param viewport - the view being drawn
- */
-function drawInside(
-	renderer: Renderer,
-	box: Renderable,
-	child: Renderable | undefined,
-	viewport: unknown,
-) {
-	if (child === undefined) {
-		return;
-	}
-	renderer.translate(box.pos.x, box.pos.y);
-	child.preDraw(renderer);
-	child.draw(renderer, viewport as never);
-	child.postDraw(renderer);
-	renderer.translate(-box.pos.x, -box.pos.y);
-}
-
-/**
  * An entity of a level that the game registered no class for: a box of the
  * entity's size at its place, with its fields, showing the tile LDtk shows
  * it with when it has one. It has no body, and does nothing: it is there to
  * be found (`world.getChildByName("PlayerStart")`) and read.
+ *
+ * It is a container: the sprite of its tile is its child, placed in the box,
+ * and whatever a game adds to it goes where it goes.
  * @category Tilemap
  */
-export class LDtkObject extends Renderable {
+export class LDtkObject extends Container {
 	/**
 	 * the entity's unique id in LDtk, under the name every object of a level
 	 * has its id: `container.getChildByProp("id", iid)` finds it
@@ -319,7 +300,7 @@ export class LDtkObject extends Renderable {
 	pivot: { x: number; y: number };
 	/** the tile LDtk draws the entity with, if any */
 	tile: ObjectTile | undefined;
-	/** what shows that tile: a sprite, placed from the box's top left corner */
+	/** what shows that tile: a sprite, the box's child, placed from its top left corner */
 	tileSprite: Renderable | undefined;
 	/** the entity as placed in LDtk: what a class registered for it would be given */
 	source: LDtkObjectSettings;
@@ -347,23 +328,9 @@ export class LDtkObject extends Renderable {
 						this.pivot.x,
 						this.pivot.y,
 					);
+		if (this.tileSprite !== undefined) {
+			this.addChild(this.tileSprite);
+		}
 		this.source = settings;
-	}
-
-	/**
-	 * draw the entity's tile, if it has one
-	 * @param renderer - the renderer
-	 * @param viewport - the view being drawn
-	 */
-	override draw(renderer: Renderer, viewport?: unknown): void {
-		// the sprite is placed in the box, the box in the world
-		drawInside(renderer, this, this.tileSprite, viewport);
-	}
-
-	/** let go of the sprite with the entity */
-	override destroy(): void {
-		this.tileSprite?.destroy();
-		this.tileSprite = undefined;
-		super.destroy();
 	}
 }

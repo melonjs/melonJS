@@ -666,7 +666,8 @@ file itself, not the files of LDtk's "Super simple export".
   `settings.region`, so a class extending `Sprite` passes the settings straight
   to `super(x, y, settings)`. With no class, an entity is an `LDtkObject`: a
   box with no body, found with `world.getChildByName("PlayerStart")`, showing
-  its tile (a `Sprite`, in LDtk's fill mode) if it has one. Only classes the
+  its tile (a `Sprite`, in LDtk's fill mode) if it has one. It is a
+  `Container`, with that sprite as its child. Only classes the
   game registered count: an entity named "Trigger" or "Text" is not built by
   the engine's class of that name unless the game registers it
   (`registerObjectClass("Trigger", Trigger)`).
