@@ -424,13 +424,16 @@ class LevelBuilder {
 		if (fill) {
 			// one level among several: its color over its own area (a level
 			// on its own has it as the container's background color)
-			const color = new ColorLayer("background", info.bgColor, zBase);
-			color.floating = false;
-			color.anchorPoint.set(0, 0);
-			color.pos.x = originX;
-			color.pos.y = originY;
-			color.resize(info.width, info.height);
-			this.add(built, color, zBase);
+			this.add(
+				built,
+				new ColorLayer(originX, originY, {
+					name: "background",
+					color: info.bgColor,
+					width: info.width,
+					height: info.height,
+				}),
+				zBase,
+			);
 		}
 		if (image !== undefined) {
 			// over the color, under the first layer

@@ -24,25 +24,42 @@ import Renderable, { resetRenderableState } from "./renderable.js";
  * `floating`, it is one of the screen: a panel.
  *
  * It is also a class a level can name: an object of class `ColorLayer` in a
- * map, with a `color` property, fills the object's rectangle.
+ * map, with a `color` property, fills the object's rectangle (and the
+ * canvas, when the object is a point: it has no size).
  * @category Game Objects
  * @example
  * // a background: the whole canvas, behind everything
  * app.world.addChild(new ColorLayer("background", "#202020"), 0);
  *
  * // a colored rectangle of the world: 320 x 180 pixels at (640, 0)
- * const cave = new ColorLayer("cave", "#1b1026", 1);
+ * const cave = new ColorLayer("cave", "#1b1026");
  * cave.floating = false;
  * cave.anchorPoint.set(0, 0);
- * cave.pos.set(640, 0, 1);
+ * cave.pos.x = 640;
  * cave.resize(320, 180);
- * app.world.addChild(cave);
+ * app.world.addChild(cave, 1);
  */
 export default class ColorLayer extends Renderable {
 	/**
+	 * @overload
 	 * @param {string} name - Layer name
 	 * @param {Color|string} color - CSS color
 	 * @param {number} [z = 0] - z-index position
+	 */
+	/**
+	 * As an object of a level, the way a class registered with
+	 * {@link registerObjectClass} is built: the object's rectangle, in its
+	 * `color`, at its place in the world.
+	 * @overload
+	 * @param {number} x - the object's left edge
+	 * @param {number} y - the object's top edge
+	 * @param {{name?: string, color?: Color|string, width?: number, height?: number, z?: number}} settings - the object: its `color` (black without one), its size (the canvas is filled when it has none), its `name` and its `z`
+	 */
+	/**
+	 * @param {string|number} name - the layer's name, or the object's left edge
+	 * @param {Color|string|number} color - the color, or the object's top edge
+	 * @param {number|object} [z] - the z-index, or the object
+	 * @ignore
 	 */
 	constructor(name, color, z) {
 		// parent constructor
@@ -72,12 +89,20 @@ export default class ColorLayer extends Renderable {
 		// rectangle in the world, in its `color`
 		if (typeof name === "number" && typeof z === "object" && z !== null) {
 			const settings = z;
-			if (settings.width > 0 && settings.height > 0) {
+			// (a size read from a file can be text)
+			const width = Number(settings.width);
+			const height = Number(settings.height);
+			if (
+				Number.isFinite(width) &&
+				Number.isFinite(height) &&
+				width > 0 &&
+				height > 0
+			) {
 				this.floating = false;
 				this.anchorPoint.set(0, 0);
 				this.pos.x = name;
 				this.pos.y = color;
-				this.resize(settings.width, settings.height);
+				this.resize(width, height);
 			}
 			name = settings.name;
 			color = settings.color ?? "#000000";
@@ -107,6 +132,12 @@ export default class ColorLayer extends Renderable {
 		// zoom, as ImageLayer does, or zoomed in it fills part of the view
 		const zoom = viewport.zoom;
 		renderer.save();
+		// (with one side of a size and the other endless, it is no rectangle:
+		// the offset its anchor gave the side that has a size is taken back)
+		renderer.translate(
+			Number.isFinite(this.width) ? this.width * this.anchorPoint.x : 0,
+			Number.isFinite(this.height) ? this.height * this.anchorPoint.y : 0,
+		);
 		renderer.clipRect(0, 0, viewport.width * zoom, viewport.height * zoom);
 		renderer.clearColor(this.color);
 		renderer.restore();

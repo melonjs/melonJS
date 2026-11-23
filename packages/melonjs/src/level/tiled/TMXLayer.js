@@ -1,5 +1,5 @@
 import { warnOnce } from "../../lang/console.js";
-import { SCROLLING_VECTORS, setLayerScrolling } from "../tilemap/layer.js";
+import { SCROLLING_SETTINGS, setLayerScrolling } from "../tilemap/layer.js";
 import TileLayer, {
 	FLIP_AD_BIT,
 	FLIP_H_BIT,
@@ -89,33 +89,47 @@ function setLayerData(layer, data, x, y, width, height, chunk = false) {
 
 /**
  * Apply a layer's custom properties (and attributes) to the layer, as its
- * fields. One named as a scrolling field of the layer (`ratio`, the property
- * an image layer takes) sets that field, rather than taking its place: the
- * layer is drawn by it. A value that is not a number is left out, with a
- * warning.
+ * fields. One named as a scrolling setting of the layer (`ratio`, the
+ * property an image layer takes, `parallaxOrigin`, `parallaxAnchor`,
+ * `parallaxScale`) sets it, rather than taking the field's place: the layer
+ * is drawn by them. A value that cannot be one is left out, with a warning.
+ *
+ * A `ratio` given this way goes over the layer's Tiled factor, and the
+ * origin Tiled gives a layer follows it, unless the layer gives its own.
  * @ignore
  * @internal
  */
-function applyLayerProperties(layer, data) {
-	const kept = {};
-	for (const name of SCROLLING_VECTORS) {
-		kept[name] = layer[name];
-	}
-	TMXUtils.applyTMXProperties(layer, data);
-	for (const name of SCROLLING_VECTORS) {
-		const given = layer[name];
-		if (given === kept[name]) {
+function applyLayerProperties(layer, map, data) {
+	const given = {};
+	TMXUtils.applyTMXProperties(given, data);
+	for (const name of SCROLLING_SETTINGS) {
+		if (!(name in given)) {
 			continue;
 		}
-		layer[name] = kept[name];
+		const value = given[name];
+		delete given[name];
 		try {
-			setLayerScrolling(layer, { [name]: given });
+			setLayerScrolling(layer, { [name]: value });
 		} catch {
 			warnOnce(
-				`melonJS: layer "${layer.name}": its \`${name}\` property is not a number, nor an {x, y} of numbers: left out`,
+				`melonJS: layer "${layer.name}": its \`${name}\` property cannot be used (${JSON.stringify(value)}): left out`,
 			);
+			continue;
+		}
+		if (name === "parallaxOrigin") {
+			// the layer's own: a group layer leaves it (see TMXGroup)
+			layer._parallaxOriginGiven = true;
+		} else if (name === "ratio" && layer._parallaxOriginGiven !== true) {
+			setLayerScrolling(layer, {
+				parallaxOrigin: TMXUtils.tiledParallax(
+					map,
+					layer.ratio.x,
+					layer.ratio.y,
+				).parallaxOrigin,
+			});
 		}
 	}
+	Object.assign(layer, given);
 }
 
 /**
@@ -266,7 +280,7 @@ export default class TMXLayer extends TileLayer {
 					layer.tint.parseHex(data.tintcolor, true);
 				}
 				// check if we have any user-defined properties
-				applyLayerProperties(layer, data);
+				applyLayerProperties(layer, map, data);
 				// the `collider` property, when the layer has it as a field
 				// of its own (Sprite Fusion's JSON)
 				if (typeof data.collider === "boolean") {

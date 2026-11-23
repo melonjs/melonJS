@@ -45,8 +45,9 @@ const tileLayer = (name, extra = {}) => {
 	};
 };
 
-const mapJSON = (layers) => {
+const mapJSON = (layers, extra = {}) => {
 	return {
+		...extra,
 		type: "map",
 		version: "1.10",
 		tiledversion: "1.11.0",
@@ -82,10 +83,10 @@ describe.each([
 	let app;
 	let serial = 0;
 
-	const load = async (layers) => {
+	const load = async (layers, extra) => {
 		const name = `ratio-${label}-${serial++}`;
 		await loader.preload(
-			[{ name, type: "tmx", data: mapJSON(layers) }],
+			[{ name, type: "tmx", data: mapJSON(layers, extra) }],
 			undefined,
 			false,
 		);
@@ -215,11 +216,127 @@ describe.each([
 			}
 			expect(firstCell()).toEqual(GROUND);
 			const said = warn.mock.calls.filter(([message]) => {
-				return String(message).includes("property is not a number");
+				return String(message).includes("property cannot be used");
 			});
 			expect(said.length).toBeGreaterThanOrEqual(1);
 		} finally {
 			warn.mockRestore();
+		}
+	});
+
+	it("leaves a scale that cannot be one out, with a warning, and the map loads", async () => {
+		const warn = vi.spyOn(console, "warn").mockImplementation(() => {
+			// kept quiet
+		});
+		try {
+			const map = await load([
+				tileLayer(`zero-${label}`, property("parallaxScale", "float", 0)),
+				tileLayer(`negative-${label}`, property("parallaxScale", "float", -1)),
+				tileLayer(`text-${label}`, property("parallaxScale", "string", "big")),
+				tileLayer(`flag-${label}`, property("parallaxScale", "bool", true)),
+				tileLayer(`endless-${label}`, {
+					attributes: { parallaxScale: Number.POSITIVE_INFINITY },
+				}),
+				tileLayer(`written-${label}`, { attributes: { parallaxScale: "2" } }),
+				// and one that can: a number, also when Tiled writes it as text
+				tileLayer(`good-${label}`, property("parallaxScale", "string", "2")),
+			]);
+			const scales = map.getLayers().map((layer) => {
+				return layer.parallaxScale;
+			});
+			expect(scales).toEqual([1, 1, 1, 1, 1, 1, 2]);
+			for (const scale of scales) {
+				expect(scale).toBeTypeOf("number");
+			}
+			expect(firstCell()).toEqual(GROUND);
+			const said = warn.mock.calls.filter(([message]) => {
+				return String(message).includes(
+					"`parallaxScale` property cannot be used",
+				);
+			});
+			expect(said).toHaveLength(6);
+		} finally {
+			warn.mockRestore();
+		}
+	});
+
+	it("keeps a layer's own origin in a group layer, as outside one", async () => {
+		const own = { attributes: { parallaxOrigin: { x: 32, y: 16 } } };
+		const map = await load([
+			tileLayer("outside", { parallaxx: 0.5, parallaxy: 0.5, ...own }),
+			{
+				type: "group",
+				name: "far",
+				visible: true,
+				opacity: 1,
+				parallaxx: 0.5,
+				parallaxy: 0.5,
+				layers: [tileLayer("inside", own), tileLayer("plain")],
+			},
+		]);
+		const [outside] = map.getLayers();
+		expect([outside.parallaxOrigin.x, outside.parallaxOrigin.y]).toEqual([
+			32, 16,
+		]);
+		const [inside] = app.world.getChildByName("inside");
+		expect([inside.ratio.x, inside.ratio.y]).toEqual([0.5, 0.5]);
+		expect([inside.parallaxOrigin.x, inside.parallaxOrigin.y]).toEqual([
+			32, 16,
+		]);
+		// one that gives none has Tiled's: none, with no map origin
+		const [plain] = app.world.getChildByName("plain");
+		expect([plain.parallaxOrigin.x, plain.parallaxOrigin.y]).toEqual([0, 0]);
+	});
+
+	it("has the origin Tiled gives its ratio, whatever gave the ratio and wherever the layer is", async () => {
+		// a map whose parallax origin is not the map's corner: a layer of
+		// ratio r is in its place when the camera is at -r * origin / (1 - r)
+		const origin = { parallaxoriginx: 100, parallaxoriginy: 50 };
+		const expected = (r) => {
+			return [(-r * 100) / (1 - r), (-r * 50) / (1 - r)];
+		};
+		const map = await load(
+			[
+				// by Tiled's factor
+				tileLayer("factor", { parallaxx: 0.8, parallaxy: 0.8 }),
+				// by a property, over another factor
+				tileLayer("property", {
+					parallaxx: 0.5,
+					parallaxy: 0.5,
+					...property("ratio", "float", 0.8),
+				}),
+				{
+					type: "group",
+					name: "far",
+					visible: true,
+					opacity: 1,
+					parallaxx: 0.8,
+					parallaxy: 0.8,
+					// by the group's factor, and by the group's times a property
+					layers: [
+						tileLayer("grouped"),
+						tileLayer("both", property("ratio", "float", 0.5)),
+					],
+				},
+			],
+			origin,
+		);
+		const [byFactor, byProperty] = map.getLayers();
+		const [grouped] = app.world.getChildByName("grouped");
+		const [both] = app.world.getChildByName("both");
+		for (const [layer, ratio] of [
+			[byFactor, 0.8],
+			[byProperty, 0.8],
+			[grouped, 0.8],
+			[both, 0.4],
+		]) {
+			expect([layer.ratio.x, layer.ratio.y], layer.name).toEqual([
+				ratio,
+				ratio,
+			]);
+			const [x, y] = expected(ratio);
+			expect(layer.parallaxOrigin.x, layer.name).toBeCloseTo(x, 9);
+			expect(layer.parallaxOrigin.y, layer.name).toBeCloseTo(y, 9);
 		}
 	});
 

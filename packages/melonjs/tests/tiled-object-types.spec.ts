@@ -1,9 +1,11 @@
 import { describe, expectTypeOf, it } from "vitest";
 import {
+	ColorLayer,
 	type HexagonalRenderer,
 	type IsometricRenderer,
 	type OrthogonalRenderer,
 	Renderable,
+	registerObjectClass,
 	registerTiledObjectClass,
 	registerTiledObjectFactory,
 	type StaggeredRenderer,
@@ -99,6 +101,9 @@ describe("registerTiledObjectFactory", () => {
 	it("types an unannotated factory's arguments", () => {
 		const register = () => {
 			registerTiledObjectFactory("Typed", (settings, map) => {
+				// (an argument typed `any` would pass any of these: say it is not)
+				expectTypeOf(settings).not.toBeAny();
+				expectTypeOf(map).not.toBeAny();
 				expectTypeOf(settings).toEqualTypeOf<TMXObject>();
 				expectTypeOf(map).toEqualTypeOf<TileMap>();
 				return new Renderable(settings.x, settings.y, 1, 1);
@@ -131,5 +136,17 @@ describe("the map renderers' older names", () => {
 		expectTypeOf<TMXStaggeredRenderer>().toEqualTypeOf<StaggeredRenderer>();
 		// and still name what a map hands out
 		expectTypeOf<ReturnType<TileMap["getRenderer"]>>().toExtend<TMXRenderer>();
+	});
+});
+
+describe("ColorLayer, as a class a level names", () => {
+	it("is taken by the registry, and built with an object's rectangle", () => {
+		const register = () => {
+			registerObjectClass("Zone", ColorLayer);
+			return new ColorLayer(16, 32, { color: "#ff0000", width: 8, height: 8 });
+		};
+		expectTypeOf(register).returns.toEqualTypeOf<ColorLayer>();
+		// and still the way it always was
+		expectTypeOf(ColorLayer).toBeConstructibleWith("background", "#202020", 0);
 	});
 });

@@ -118,11 +118,7 @@ also built for an LDtk entity of that name. (`registerTiledObjectClass` and
 deprecated since 20.18 and still working.)
 
 These are the entry points to use. The registry is the level loader's, held by
-the object factory, and has nothing to do with object pooling. Since 20.18 the
-same two functions also go by `registerObjectClass` and
-`registerObjectFactory`: one registry whatever the editor, so an LDtk entity
-named "Enemy" is built by the class registered for a Tiled object of that
-class.
+the object factory, and has nothing to do with object pooling.
 
 `pool.register(className, classObj)` **also** works and registers a Tiled
 factory as a side effect, under the name and again under an `me.`-prefixed
@@ -666,8 +662,8 @@ file itself, not the files of LDtk's "Super simple export".
   `settings.region`, so a class extending `Sprite` passes the settings straight
   to `super(x, y, settings)`. With no class, an entity is an `LDtkObject`: a
   box with no body, found with `world.getChildByName("PlayerStart")`, showing
-  its tile (a `Sprite`, in LDtk's fill mode) if it has one. It is a
-  `Container`, with that sprite as its child. Only classes the
+  its tile in LDtk's fill mode if it has one (a `Sprite`; a repeated pattern
+  in `Repeat` mode). It is a `Container`, with that renderable as its child. Only classes the
   game registered count: an entity named "Trigger" or "Text" is not built by
   the engine's class of that name unless the game registers it
   (`registerObjectClass("Trigger", Trigger)`).
@@ -976,7 +972,7 @@ layer into the offscreen-bake path instead.
 | a half-transparent isometric (staggered, hexagonal) layer of tall tiles looks flatter than before 20.17 | on the shader path a layer fades as one picture, and a tile no longer shows through the one in front: set that layer's `renderMode` to `"perTile"` (a `renderMode` custom property in Tiled) for the old look |
 | the soft edges of tiles larger than the grid showed a thin dark outline on the shader path | before 20.17 the edge of such a tile was not blended over the tile behind it: update |
 
-| `new TileLayer({ orientation: "isometric" ... })` throws `needs the renderer of its map` | a layer built in code makes its own renderer for an orthogonal grid only: pass `renderer` (a `TMXIsometricRenderer` and the like) for the others |
+| `new TileLayer({ orientation: "isometric" ... })` throws `needs the renderer of its map` | a layer built in code makes its own renderer for an orthogonal grid only: pass `renderer` (an `IsometricRenderer` and the like) for the others |
 | a tile set with `setCell` shows the wrong tile, one off | `setCell` takes a global id: the tileset's `firstgid` (1 by default) plus the tile's id in the tileset; a `PlacedTileLayer`'s `tileId` is the id in the tileset, from 0 |
 | tiles stacked in one cell: only the last shows | a `TileLayer` holds one tile a cell: a second layer, or a `PlacedTileLayer` for the stacked ones |
 | `level format "x" is already registered` | `level.registerFormat` called twice (a hot reload): register once, at start-up |

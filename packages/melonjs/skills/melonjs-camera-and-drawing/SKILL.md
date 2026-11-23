@@ -450,12 +450,12 @@ only (20.18): one of the world when it does not float, one of the screen when
 it does.
 
 ```js
-const cave = new ColorLayer("cave", "#1b1026", 1);
+const cave = new ColorLayer("cave", "#1b1026");
 cave.floating = false;            // a place in the world, not on the screen
 cave.anchorPoint.set(0, 0);       // placed by its top left corner
-cave.pos.set(640, 0, 1);
+cave.pos.x = 640;
 cave.resize(320, 180);
-app.world.addChild(cave);
+app.world.addChild(cave, 1);      // its draw order, given as it is added
 ```
 
 ## Clipping and masking

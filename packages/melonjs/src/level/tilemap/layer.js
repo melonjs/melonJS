@@ -82,10 +82,22 @@ export function setLayerScrolling(layer, settings = {}) {
  * down
  * @ignore
  */
-export const SCROLLING_VECTORS = Object.freeze([
+const SCROLLING_VECTORS = Object.freeze([
 	"ratio",
 	"parallaxOrigin",
 	"parallaxAnchor",
+]);
+
+/**
+ * every scrolling setting of a layer, the origin before the ratio: a layer
+ * that gives both keeps its own origin
+ * @ignore
+ */
+export const SCROLLING_SETTINGS = Object.freeze([
+	"parallaxOrigin",
+	"parallaxAnchor",
+	"parallaxScale",
+	"ratio",
 ]);
 
 /**
@@ -127,7 +139,7 @@ function ratioPart(value) {
  * @ignore
  */
 export function checkParallaxScale(scale) {
-	if (!(scale > 0)) {
+	if (typeof scale !== "number" || !(scale > 0) || scale === Infinity) {
 		throw new Error(
 			`a layer's parallaxScale must be more than 0: ${String(scale)}`,
 		);

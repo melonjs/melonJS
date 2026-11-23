@@ -274,6 +274,112 @@ describe.each([
 		expect(await colours([0, 0], [WIDTH - 1, HEIGHT - 1])).toEqual([RED, RED]);
 	});
 
+	it("fills the canvas while one of its sides is endless", async () => {
+		for (const [width, height] of [
+			[16, Infinity],
+			[Infinity, 16],
+		]) {
+			app.world.reset();
+			const layer = new ColorLayer("band", "#ff0000", 0);
+			layer.resize(width, height);
+			app.world.addChild(layer, 0);
+			expect(
+				await colours([0, 0], [WIDTH - 1, HEIGHT - 1], [40, 30]),
+				`${width} x ${height}`,
+			).toEqual([RED, RED, RED]);
+		}
+	});
+
+	describe("built as an object of a level", () => {
+		it("fills the object's rectangle, in its color, at its place and draw order", async () => {
+			const layer = new ColorLayer(16, 8, {
+				name: "pool",
+				color: "#0000ff",
+				width: 24,
+				height: 16,
+				z: 7,
+			});
+			expect(layer.name).toBe("pool");
+			expect(layer.pos.z).toBe(7);
+			expect(layer.floating).toBe(false);
+			expect([layer.anchorPoint.x, layer.anchorPoint.y]).toEqual([0, 0]);
+			expect([layer.pos.x, layer.pos.y, layer.width, layer.height]).toEqual([
+				16, 8, 24, 16,
+			]);
+			app.world.addChild(layer, 7);
+			expect(await colours([16, 8], [39, 23], [15, 8], [40, 23])).toEqual([
+				BLUE,
+				BLUE,
+				BLACK,
+				BLACK,
+			]);
+		});
+
+		it("takes a size written as text", () => {
+			const layer = new ColorLayer(4, 6, {
+				name: "text",
+				color: "#0000ff",
+				width: "24",
+				height: "16",
+			});
+			expect(layer.floating).toBe(false);
+			expect([layer.pos.x, layer.pos.y, layer.width, layer.height]).toEqual([
+				4, 6, 24, 16,
+			]);
+			expect(layer.width).toBeTypeOf("number");
+		});
+
+		it("fills the canvas when the object has no size, or one that is not a size", async () => {
+			for (const size of [
+				{},
+				{ width: 0, height: 0 },
+				{ width: 0, height: 16 },
+				{ width: 16, height: 0 },
+				{ width: -4, height: 16 },
+				{ width: "wide", height: 16 },
+				{ width: Number.NaN, height: 16 },
+				{ width: Infinity, height: 16 },
+				{ width: null, height: null },
+			]) {
+				const layer = new ColorLayer(4, 6, {
+					name: "point",
+					color: "#ff0000",
+					...size,
+				});
+				const about = JSON.stringify(size);
+				expect(layer.floating, about).toBe(true);
+				expect(
+					[layer.pos.x, layer.pos.y, layer.width, layer.height],
+					about,
+				).toEqual([0, 0, Infinity, Infinity]);
+			}
+			app.world.reset();
+			app.world.addChild(new ColorLayer(4, 6, { color: "#ff0000" }), 0);
+			expect(await colours([0, 0], [WIDTH - 1, HEIGHT - 1])).toEqual([
+				RED,
+				RED,
+			]);
+		});
+
+		it("is black when the object gives no color", async () => {
+			app.world.addChild(new ColorLayer("under", "#ff0000"), 0);
+			app.world.addChild(new ColorLayer(8, 8, { width: 8, height: 8 }), 1);
+			expect(await colours([8, 8], [15, 15], [16, 16])).toEqual([
+				BLACK,
+				BLACK,
+				RED,
+			]);
+		});
+
+		it("is not taken for one when it is given a name, a color and a draw order", () => {
+			const layer = new ColorLayer("3", "#ff0000", 5);
+			expect(layer.name).toBe("3");
+			expect(layer.pos.z).toBe(5);
+			expect(layer.floating).toBe(true);
+			expect([layer.pos.x, layer.pos.y]).toEqual([0, 0]);
+		});
+	});
+
 	it("is built for an object of a level classed ColorLayer, over its rectangle", async () => {
 		const name = `colorlayer-map-${label}`;
 		await loader.preload(

@@ -94,7 +94,6 @@ export function addLevelToContainer(container, level) {
 /**
  * Apply an opacity multiplier to a renderable and its child renderable (if any).
  * @ignore
- * @internal
  * @param {Renderable} obj - the renderable to apply to
  * @param {number} opacity - the opacity multiplier
  */

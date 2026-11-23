@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
 	type Application,
+	ColorLayer,
 	IntGrid,
 	type LDtkEntityReference,
 	type LDtkLevelInfo,
@@ -8,6 +9,7 @@ import {
 	type LDtkProject,
 	LDtkWorld,
 	level,
+	Sprite,
 	type video,
 } from "../../src/index.js";
 import {
@@ -217,6 +219,65 @@ export function worldChecks(
 			// is rounded to the pixel each renderer's own way
 			for (const info of project.levels.slice(0, 2)) {
 				expectView(project, project.levels, info.x, info.y);
+			}
+		});
+
+		it("gives each level of a world its own color over its own area, and its image over that", async () => {
+			const sample = "Test_file_for_API_showing_all_features";
+			const project = projects.get(sample) as LDtkProject;
+			await enter(app, sample, { objects: false });
+			const backgrounds = app.world.getChildByName("background");
+			const colors = backgrounds.filter((child) => {
+				return child instanceof ColorLayer;
+			});
+			const images = backgrounds.filter((child) => {
+				return child instanceof Sprite;
+			});
+			// nothing else goes by that name
+			expect(colors.length + images.length).toBe(backgrounds.length);
+			// one color a level, on the level's area, in the world
+			expect(colors).toHaveLength(project.levels.length);
+			const withImage = project.levels.filter((info) => {
+				return typeof info.json.bgRelPath === "string";
+			});
+			expect(withImage.length).toBeGreaterThan(0);
+			expect(images).toHaveLength(withImage.length);
+			for (const info of project.levels) {
+				const color = colors.find((layer) => {
+					return layer.pos.x === info.x && layer.pos.y === info.y;
+				}) as ColorLayer;
+				expect(color, info.identifier).toBeDefined();
+				expect(color.floating, info.identifier).toBe(false);
+				expect([color.width, color.height], info.identifier).toEqual([
+					info.width,
+					info.height,
+				]);
+				expect(color.color.toHex().toLowerCase(), info.identifier).toBe(
+					info.bgColor.toLowerCase(),
+				);
+				const placed = info.json.__bgPos;
+				if (typeof info.json.bgRelPath !== "string" || !placed) {
+					continue;
+				}
+				// its image where LDtk puts it in the level, the level in the
+				// world, drawn over the color and under everything else of
+				// the level
+				const image = images.find((sprite) => {
+					return (
+						sprite.pos.x === info.x + placed.topLeftPx[0] &&
+						sprite.pos.y === info.y + placed.topLeftPx[1]
+					);
+				});
+				expect(image, info.identifier).toBeDefined();
+				if (image === undefined) {
+					continue;
+				}
+				expect(image.ancestor, info.identifier).toBe(app.world);
+				const zOf = (child: { pos: unknown }) => {
+					return (child.pos as { z: number }).z;
+				};
+				expect(zOf(image), info.identifier).toBeGreaterThan(zOf(color));
+				expect(zOf(image) - zOf(color), info.identifier).toBeLessThan(1);
 			}
 		});
 

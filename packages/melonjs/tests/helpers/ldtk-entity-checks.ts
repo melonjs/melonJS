@@ -3,6 +3,7 @@ import {
 	type Application,
 	ColorLayer,
 	Container,
+	event,
 	type LDtkEntityInstance,
 	LDtkObject,
 	type LDtkObjectSettings,
@@ -553,6 +554,10 @@ export function entityChecks(
 						expect(object, about).toBeInstanceOf(Container);
 						// in the world itself, not in a container of the level's
 						expect(object.ancestor, about).toBe(app.world);
+						// with no body, it is left out of the collision checks,
+						// as the plain renderable it used to be
+						expect(object.isKinematic, about).toBe(true);
+						expect(object.body, about).toBeUndefined();
 						expect(object.floating, about).toBe(false);
 						expect(
 							[object.pos.x, object.pos.y, object.width, object.height],
@@ -695,13 +700,57 @@ export function entityChecks(
 				}
 				expect(close(at(moved, 8 + 20, 8 + 20), empty)).toBe(true);
 
-				// freed with its box: the renderer lets go of the tile's image
-				const image = (object.tileSprite as unknown as { image: unknown })
-					.image;
-				const released: unknown[] = [];
+				// every box showing that tile shares one image of it
+				const images = new Set(
+					list.map((placed) => {
+						return (
+							objectOf(placed).tileSprite as unknown as { image: unknown }
+						).image;
+					}),
+				);
+				expect(images.size).toBe(1);
+				const [image] = images;
+
 				const renderer = app.renderer as unknown as {
 					releaseImage: (image: unknown) => void;
+					createPattern: (image: unknown, repeat: string) => unknown;
 				};
+
+				// the GPU context comes back: each box in the scene makes its
+				// pattern again, and one taken out of it (kept) does not
+				const kept = objectOf(list[1]);
+				const keptTile = kept.tileSprite as unknown as { pattern: unknown };
+				app.world.removeChildNow(kept, true);
+				const keptPattern = keptTile.pattern;
+				const made: unknown[] = [];
+				const createPattern = renderer.createPattern.bind(renderer);
+				renderer.createPattern = (source: unknown, repeat: string) => {
+					made.push(source);
+					return createPattern(source, repeat);
+				};
+				try {
+					event.emit(event.ONCONTEXT_RESTORED, app.renderer);
+				} finally {
+					renderer.createPattern = createPattern;
+				}
+				expect(
+					made.filter((source) => {
+						return source === image;
+					}),
+				).toHaveLength(list.length - 1);
+				expect(keptTile.pattern).toBe(keptPattern);
+				expect(
+					(object.tileSprite as unknown as { pattern: unknown }).pattern,
+				).toBeDefined();
+				// and the picture is the same
+				const restored = frame(app);
+				expect(
+					close(at(restored, 213 + 20, 161 + 20), at(moved, 233, 181)),
+				).toBe(true);
+
+				// the renderer lets go of the tile's image with the last box
+				// that shows it, and not before
+				const released: unknown[] = [];
 				const releaseImage = renderer.releaseImage.bind(renderer);
 				renderer.releaseImage = (freed: unknown) => {
 					released.push(freed);
@@ -709,12 +758,38 @@ export function entityChecks(
 				};
 				try {
 					app.world.removeChildNow(object);
+					expect(released).not.toContain(image);
+					const gone = frame(app);
+					expect(close(at(gone, 213 + 20, 161 + 20), empty)).toBe(true);
+					for (const placed of list.slice(2)) {
+						expect(released, "before the last one").not.toContain(image);
+						app.world.removeChildNow(objectOf(placed));
+					}
+					// the one kept out of the scene still holds it
+					expect(released).not.toContain(image);
+					kept.destroy();
+					expect(
+						released.filter((freed) => {
+							return freed === image;
+						}),
+					).toHaveLength(1);
 				} finally {
 					renderer.releaseImage = releaseImage;
 				}
-				expect(released).toContain(image);
-				const gone = frame(app);
-				expect(close(at(gone, 213 + 20, 161 + 20), empty)).toBe(true);
+
+				// loaded again, the tile is cut again and shown as before
+				await enter(app, "ents:Mode_Repeat");
+				app.viewport.moveTo(0, 0);
+				const again = frame(app);
+				for (const [x, y] of [
+					[3, 2],
+					[40, 30],
+					[63, 63],
+				]) {
+					expect(close(at(again, 8 + x, 8 + y), at(before, 8 + x, 8 + y))).toBe(
+						true,
+					);
+				}
 			});
 
 			it("has no child when LDtk shows the entity with no tile, and is where it is all the same", async () => {

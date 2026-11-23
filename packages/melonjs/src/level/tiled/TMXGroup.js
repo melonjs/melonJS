@@ -116,14 +116,18 @@ export default class TMXGroup {
 				layer.pos.x += this.offsetx;
 				layer.pos.y += this.offsety;
 				// and its parallax factor, times the layer's own (Tiled's
-				// factor, or the layer's `ratio` property)
+				// factor, or the layer's `ratio` property); the origin
+				// follows, unless the layer gave its own
+				const scrolling = tiledParallax(
+					map,
+					tiledParallaxFactor(data.parallaxx) * layer.ratio.x,
+					tiledParallaxFactor(data.parallaxy) * layer.ratio.y,
+				);
 				setLayerScrolling(
 					layer,
-					tiledParallax(
-						map,
-						tiledParallaxFactor(data.parallaxx) * layer.ratio.x,
-						tiledParallaxFactor(data.parallaxy) * layer.ratio.y,
-					),
+					layer._parallaxOriginGiven === true
+						? { ratio: scrolling.ratio }
+						: scrolling,
 				);
 				// set a renderer
 				layer.setRenderer(map.getRenderer());

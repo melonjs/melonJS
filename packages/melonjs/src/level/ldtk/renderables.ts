@@ -143,11 +143,76 @@ interface PatternRenderer {
 	releaseImage(image: unknown): void;
 }
 
+/** a tile cut from its tileset into an image of its own, and how many show it */
+interface CutTile {
+	image: HTMLCanvasElement | OffscreenCanvas;
+	users: number;
+}
+
+/** the tiles cut so far, by their atlas and their region: one image a tile */
+const cutTiles = new WeakMap<TextureAtlas, Map<string, CutTile>>();
+
+/**
+ * the image of a tile on its own, cut from its tileset the first time it is
+ * asked for and shared from then on
+ * @param tile - the tile
+ * @returns the image, with one more user
+ */
+function acquireCutTile(tile: ObjectTile): CutTile {
+	let regions = cutTiles.get(tile.atlas);
+	if (regions === undefined) {
+		regions = new Map();
+		cutTiles.set(tile.atlas, regions);
+	}
+	let cut = regions.get(tile.region);
+	if (cut === undefined) {
+		const image = createCanvas(tile.width, tile.height);
+		// a page's canvas or an offscreen one: both draw in 2D alike
+		(image as HTMLCanvasElement)
+			.getContext("2d")
+			?.drawImage(
+				tile.atlas.getTexture(),
+				tile.x,
+				tile.y,
+				tile.width,
+				tile.height,
+				0,
+				0,
+				tile.width,
+				tile.height,
+			);
+		cut = { image, users: 0 };
+		regions.set(tile.region, cut);
+	}
+	cut.users++;
+	return cut;
+}
+
+/**
+ * let go of a tile's image: with its last user, the texture the renderer
+ * made of it is freed
+ * @param tile - the tile
+ * @param cut - its image
+ * @param renderer - the renderer that drew it, if it was drawn
+ */
+function releaseCutTile(
+	tile: ObjectTile,
+	cut: CutTile,
+	renderer: PatternRenderer | undefined,
+) {
+	cut.users--;
+	if (cut.users <= 0) {
+		cutTiles.get(tile.atlas)?.delete(tile.region);
+		renderer?.releaseImage(cut.image);
+	}
+}
+
 /**
  * A tile repeated to fill a box, the last column and row cut to it: LDtk's
  * `Repeat` mode. It is drawn as a pattern of the renderer's, as an
  * `ImageLayer` that repeats is. A pattern repeats a whole image, so the tile
- * is cut from its tileset once, into an image of its own.
+ * is cut from its tileset once, into an image of its own that every entity
+ * showing that tile shares.
  */
 class RepeatedTile extends Renderable {
 	tile: ObjectTile;
@@ -155,6 +220,8 @@ class RepeatedTile extends Renderable {
 	image: HTMLCanvasElement | OffscreenCanvas;
 	/** the renderer's pattern of it, made when the tile is added to a scene */
 	pattern: unknown;
+	/** the tile's image, shared: let go of with this renderable */
+	private cut: CutTile | undefined;
 	/** the renderer that made the pattern, to free its texture with the tile */
 	private owner: PatternRenderer | undefined;
 	/** makes the pattern: when added to a scene, and when the GPU context comes back */
@@ -169,21 +236,8 @@ class RepeatedTile extends Renderable {
 		super(0, 0, width, height);
 		this.anchorPoint.set(0, 0);
 		this.tile = tile;
-		this.image = createCanvas(tile.width, tile.height);
-		// a page's canvas or an offscreen one: both draw in 2D alike
-		(this.image as HTMLCanvasElement)
-			.getContext("2d")
-			?.drawImage(
-				tile.atlas.getTexture(),
-				tile.x,
-				tile.y,
-				tile.width,
-				tile.height,
-				0,
-				0,
-				tile.width,
-				tile.height,
-			);
+		this.cut = acquireCutTile(tile);
+		this.image = this.cut.image;
 	}
 
 	override onActivateEvent(): void {
@@ -208,10 +262,13 @@ class RepeatedTile extends Renderable {
 		}
 	}
 
-	/** free the texture the renderer made of the tile's image */
+	/** let go of the tile's image, and of its texture with its last user */
 	override destroy(): void {
 		off(ONCONTEXT_RESTORED, this.createPattern);
-		this.owner?.releaseImage(this.image);
+		if (this.cut !== undefined) {
+			releaseCutTile(this.tile, this.cut, this.owner);
+			this.cut = undefined;
+		}
 		this.owner = undefined;
 		this.pattern = undefined;
 		super.destroy();
@@ -364,6 +421,9 @@ export class LDtkObject extends Container {
 	constructor(settings: LDtkObjectSettings) {
 		super(settings.x, settings.y, settings.width, settings.height);
 		this.anchorPoint.set(0, 0);
+		// it has no body: left out of the collision checks, as a plain
+		// renderable is (a container is not, by default)
+		this.isKinematic = true;
 		this.name = settings.name;
 		this.id = settings.id;
 		this.iid = settings.iid;
