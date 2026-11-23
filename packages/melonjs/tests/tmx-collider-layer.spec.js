@@ -17,8 +17,8 @@ import {
 	loader,
 	Rect,
 	Renderable,
+	TileMap,
 	TMXLayer,
-	TMXTileMap,
 	timer,
 	video,
 } from "../src/index.js";
@@ -346,7 +346,7 @@ describe("a Tiled tile layer with the collider property", () => {
 	});
 
 	it("is read by the map itself, built with no level director", () => {
-		const map = new TMXTileMap(
+		const map = new TileMap(
 			"direct",
 			mapJSON([tileLayer("ground", SOLID, true)]),
 		);

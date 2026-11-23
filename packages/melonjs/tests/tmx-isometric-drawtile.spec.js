@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { Application, boot, Rect, TMXTileMap, video } from "../src/index.js";
+import { Application, boot, Rect, TileMap, video } from "../src/index.js";
 import { imgList } from "../src/loader/cache.js";
 import CanvasRenderer from "../src/video/canvas/canvas_renderer.js";
 
@@ -54,7 +54,7 @@ const layerOf = () => {
 	for (let i = 0; i < COLS * ROWS; i++) {
 		data.push(i + 1);
 	}
-	const map = new TMXTileMap("iso-drawtile", {
+	const map = new TileMap("iso-drawtile", {
 		width: COLS,
 		height: ROWS,
 		tilewidth: TW,

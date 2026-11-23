@@ -9,7 +9,7 @@ import TileLayer from "./TileLayer.js";
 /**
  * @import Renderable from "../../renderable/renderable.js";
  * @import TMXObject from "./TMXObject.js";
- * @import TMXTileMap from "./TMXTileMap.js";
+ * @import TileMap from "./TileMap.js";
  */
 
 /**
@@ -145,7 +145,7 @@ export function detectObjectType(settings) {
  * @category Tilemap
  * @template [S=TMXObject]
  * @param {string} type - the object type key (built-in type or Tiled class/name)
- * @param {(settings: S, map: TMXTileMap) => Renderable} factory - factory function, given the object as the level describes it (a {@link TMXObject} for a Tiled map) and the map it is read from
+ * @param {(settings: S, map: TileMap) => Renderable} factory - factory function, given the object as the level describes it (a {@link TMXObject} for a Tiled map) and the map it is read from
  * @example
  * // register a custom factory for "Spine" objects in Tiled
  * // (set the object class to "Spine" in Tiled, and add atlasFile/jsonFile custom properties)
@@ -421,7 +421,7 @@ export const registerTiledObjectClass = registerObjectClass;
  * @function
  * @template [S=TMXObject]
  * @param {string} type - the class or name the level gives the object
- * @param {(settings: S, map: TMXTileMap) => Renderable} factory - given the object's description and the map it is read from
+ * @param {(settings: S, map: TileMap) => Renderable} factory - given the object's description and the map it is read from
  */
 export const registerTiledObjectFactory = registerObjectFactory;
 

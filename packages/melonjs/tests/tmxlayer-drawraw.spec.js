@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { Application, boot, TMXTileMap, video } from "../src/index.js";
+import { Application, boot, TileMap, video } from "../src/index.js";
 import {
 	TMX_FLIP_AD,
 	TMX_FLIP_H,
@@ -73,7 +73,7 @@ function buildOrthogonalMap(data, cols = 4, rows = 3) {
 }
 
 function makeOrthogonalLayer(data, cols = 4, rows = 3) {
-	const map = new TMXTileMap("rawtest", buildOrthogonalMap(data, cols, rows));
+	const map = new TileMap("rawtest", buildOrthogonalMap(data, cols, rows));
 	return map.getLayers()[0];
 }
 

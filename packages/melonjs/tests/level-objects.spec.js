@@ -8,7 +8,7 @@ import {
 	loader,
 	Renderable,
 	registerObjectClass,
-	TMXTileMap,
+	TileMap,
 	video,
 } from "../src/index.js";
 
@@ -199,7 +199,7 @@ describe("the objects of a Tiled level", () => {
 		});
 
 		it("is given by the map itself, built with no level director", () => {
-			const map = new TMXTileMap("direct", mapJSON(things()));
+			const map = new TileMap("direct", mapJSON(things()));
 			const built = map.getObjects(true);
 			expect(
 				built
@@ -213,7 +213,7 @@ describe("the objects of a Tiled level", () => {
 		});
 
 		it("is not made up for an object the level gave none", () => {
-			const map = new TMXTileMap(
+			const map = new TileMap(
 				"no-ids",
 				mapJSON([
 					objectLayer("things", [
@@ -237,7 +237,7 @@ describe("the objects of a Tiled level", () => {
 
 	describe("the objects option", () => {
 		it("is one of the options a Tiled map reads", () => {
-			expect(TMXTileMap.loadOptions).toContain("objects");
+			expect(TileMap.loadOptions).toContain("objects");
 		});
 
 		it("builds every object when left out, or true", async () => {
@@ -336,7 +336,7 @@ describe("the objects of a Tiled level", () => {
 		it("chooses among objects only: a group layer's tile layers are added all the same", () => {
 			// a group layer lists the tile layers inside it with its objects
 			const grouped = () => {
-				return new TMXTileMap(
+				return new TileMap(
 					"grouped",
 					mapJSON([
 						{
@@ -382,7 +382,7 @@ describe("the objects of a Tiled level", () => {
 		});
 
 		it("is read by the map itself, built with no level director", () => {
-			const map = new TMXTileMap("direct", mapJSON(things()));
+			const map = new TileMap("direct", mapJSON(things()));
 			expect(map.getObjects(true, false)).toEqual([]);
 			expect(
 				map

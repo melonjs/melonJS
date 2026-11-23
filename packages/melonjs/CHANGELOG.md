@@ -17,7 +17,8 @@
 ### Deprecated
 - Levels: `registerTiledObjectClass` and `registerTiledObjectFactory`, for `registerObjectClass` and `registerObjectFactory` (the same functions; the old names keep working)
 - Tile maps: `TMXRenderer`, `TMXOrthogonalRenderer`, `TMXIsometricRenderer`, `TMXHexagonalRenderer` and `TMXStaggeredRenderer`, for `TileMapRenderer`, `OrthogonalRenderer`, `IsometricRenderer`, `HexagonalRenderer` and `StaggeredRenderer` (the same classes; the old names keep working)
-- Tile maps: `TMXTilesetGroup`, for `TilesetGroup` (the same class)
+- Tile maps: `TMXTileMap` and `TMXTilesetGroup`, for `TileMap` and `TilesetGroup` (the same classes)
+- Loader: `loader.getTMX`, for `loader.getTileMap` (the same function)
 
 ### Fixed
 - TypeScript: an asset's `data` accepts a parsed map object

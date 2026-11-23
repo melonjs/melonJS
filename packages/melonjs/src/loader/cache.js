@@ -198,11 +198,11 @@ export function getLDtk(name) {
  * @returns {object} the parsed map or tileset, or `null` if none is loaded
  * under that name
  * @example
- * const map = loader.getTMX("map1");
+ * const map = loader.getTileMap("map1");
  * console.log(map.width, map.height, map.layers.length);
  * @category Assets
  */
-export function getTMX(elt) {
+export function getTileMap(elt) {
 	// force as string
 	elt = "" + elt;
 	if (elt in tmxList) {
@@ -210,6 +210,18 @@ export function getTMX(elt) {
 	}
 	return null;
 }
+
+/**
+ * The older name of {@link getTileMap}, from when a Tiled map was the only
+ * kind of tile map: the same function.
+ * @deprecated since 20.18.0, use {@link getTileMap}
+ * @function
+ * @param {string} elt - the asset name
+ * @returns {object} the parsed map or tileset, or `null` if none is loaded
+ * under that name
+ * @category Assets
+ */
+export const getTMX = getTileMap;
 
 /**
  * Get the content of a loaded `"binary"` asset, decoded as UTF-8 text: what

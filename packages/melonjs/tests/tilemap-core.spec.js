@@ -7,6 +7,7 @@ import {
 	HexagonalRenderer,
 	hasObjectFactory,
 	IsometricRenderer,
+	loader,
 	mergeGridRects,
 	OrthogonalRenderer,
 	PlacedTileLayer,
@@ -18,6 +19,7 @@ import {
 	Sprite,
 	StaggeredRenderer,
 	TileLayer,
+	TileMap,
 	TileMapRenderer,
 	Tileset,
 	TilesetGroup,
@@ -27,6 +29,7 @@ import {
 	TMXOrthogonalRenderer,
 	TMXRenderer,
 	TMXStaggeredRenderer,
+	TMXTileMap,
 	TMXTileset,
 	TMXTilesetGroup,
 	timer,
@@ -141,6 +144,27 @@ describe("mergeGridRects", () => {
 	it("covers a room's walls with four rectangles", () => {
 		const rects = cover(["######", "#....#", "#....#", "#....#", "######"]);
 		expect(rects).toHaveLength(4);
+	});
+});
+
+describe("the tile map class and its getter, under their neutral names", () => {
+	it("are what the Tiled names still give", () => {
+		expect(TMXTileMap).toBe(TileMap);
+		expect(loader.getTMX).toBe(loader.getTileMap);
+	});
+
+	it("keep what was tested by the old names true", () => {
+		const map = new TileMap("named", {
+			width: 2,
+			height: 2,
+			tilewidth: 16,
+			tileheight: 16,
+			orientation: "orthogonal",
+			layers: [],
+			tilesets: [],
+		});
+		expect(map).toBeInstanceOf(TMXTileMap);
+		expect(new TMXTileMap("old", map.data)).toBeInstanceOf(TileMap);
 	});
 });
 

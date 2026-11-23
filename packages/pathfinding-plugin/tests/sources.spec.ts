@@ -15,8 +15,8 @@ import {
 	Renderable,
 	type Renderer,
 	state,
+	TileMap,
 	type TMXLayer,
-	TMXTileMap,
 	video,
 } from "melonjs";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -239,7 +239,7 @@ describe("grids from a level", () => {
 
 		it("takes a weight given as an attribute of the placed tile, as Sprite Fusion writes it", () => {
 			// a map in the words of the editor's JSON export, read as it is
-			const fusion = new TMXTileMap("pf-fusion", {
+			const fusion = new TileMap("pf-fusion", {
 				tileSize: T,
 				mapWidth: 3,
 				mapHeight: 2,
@@ -271,7 +271,7 @@ describe("grids from a level", () => {
 			const chunk = new Array(16 * 16).fill(0);
 			chunk[1] = 2;
 			chunk[3] = 1;
-			const wide = new TMXTileMap("pf-wide", {
+			const wide = new TileMap("pf-wide", {
 				...map,
 				infinite: true,
 				layers: [

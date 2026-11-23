@@ -1,5 +1,5 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
-import { Application, boot, Rect, TMXTileMap, video } from "../src/index.js";
+import { Application, boot, Rect, TileMap, video } from "../src/index.js";
 import * as TMXUtils from "../src/level/tiled/TMXUtils.js";
 import { imgList } from "../src/loader/cache.js";
 import CanvasRenderer from "../src/video/canvas/canvas_renderer.js";
@@ -236,7 +236,7 @@ const tmxMap = (orientation, painted = PAINTED) => {
 const FORMATS = { json: jsonMap, tmx: tmxMap };
 
 const layerOf = (format, orientation, painted) => {
-	const map = new TMXTileMap(
+	const map = new TileMap(
 		`infinite-${format}-${orientation}`,
 		FORMATS[format](orientation, painted),
 	);
@@ -451,7 +451,7 @@ describe("TMXLayer on an infinite map", () => {
 		const right = chunk(16);
 		right.data[8] = 1;
 		tilesetImage("infinite-wrap", 32, 32, false);
-		const map = new TMXTileMap("infinite-wrap", {
+		const map = new TileMap("infinite-wrap", {
 			width: 20,
 			height: 16,
 			tilewidth: 32,
@@ -516,7 +516,7 @@ describe("TMXLayer on an infinite map", () => {
 				data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0],
 			},
 		];
-		const layer = new TMXTileMap("infinite-odd", json).getLayers()[0];
+		const layer = new TileMap("infinite-odd", json).getLayers()[0];
 		expect(layer.startx).toEqual(-4);
 		expect(sorted(cellsOf(layer))).toEqual(sorted(painted));
 		// stagger x, odd: an odd column is half a tile lower
@@ -531,7 +531,7 @@ describe("TMXLayer on an infinite map", () => {
 
 	it("a finite map's layer is unchanged: it starts at 0 and is the map's size", () => {
 		tilesetImage("finite-check", 32, 32, false);
-		const map = new TMXTileMap("finite-check", {
+		const map = new TileMap("finite-check", {
 			width: 3,
 			height: 2,
 			tilewidth: 32,
@@ -606,7 +606,7 @@ describe("TMXLayer on an infinite map, WebGL shader path", () => {
 		if (renderer === undefined) {
 			ctx.skip("WebGL2 renderer not available in this environment");
 		}
-		const layer = new TMXTileMap(
+		const layer = new TileMap(
 			"infinite-shader",
 			jsonMap("orthogonal"),
 		).getLayers()[0];

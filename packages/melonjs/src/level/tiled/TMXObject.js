@@ -9,7 +9,7 @@ import Tile from "./TMXTile.js";
 import { applyTMXProperties } from "./TMXUtils.js";
 
 /**
- * @import TMXTileMap from "./TMXTileMap.js";
+ * @import TileMap from "./TileMap.js";
  */
 
 /**
@@ -89,7 +89,7 @@ export default class TMXObject {
 	#isoRatio = 1;
 
 	/**
-	 * @param {TMXTileMap} map - the map the object belongs to
+	 * @param {TileMap} map - the map the object belongs to
 	 * @param {object} settings - the object as parsed from the map
 	 * @param {number} z - the depth of the object's layer
 	 * @ignore

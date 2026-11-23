@@ -11,6 +11,7 @@ import OrthogonalRenderer from "../tilemap/renderer/OrthogonalRenderer.js";
 import StaggeredRenderer from "../tilemap/renderer/StaggeredRenderer.js";
 import TileMapRenderer from "../tilemap/renderer/TileMapRenderer.js";
 import TilesetGroup from "../tilemap/TilesetGroup.js";
+import TileMap from "./TileMap.js";
 
 /**
  * The older name of {@link TileMapRenderer}.
@@ -83,3 +84,15 @@ export const TMXTilesetGroup = TilesetGroup;
  * @deprecated since 20.18.0, use {@link TilesetGroup}
  */
 export type TMXTilesetGroup = TilesetGroup;
+
+/**
+ * The older name of {@link TileMap}.
+ * @deprecated since 20.18.0, use {@link TileMap}
+ * @category Tilemap
+ */
+export const TMXTileMap = TileMap;
+/**
+ * The older name of {@link TileMap}.
+ * @deprecated since 20.18.0, use {@link TileMap}
+ */
+export type TMXTileMap = TileMap;

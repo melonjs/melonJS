@@ -407,7 +407,7 @@ describe("loader", () => {
 	it("should return null for non-existent assets", () => {
 		expect(loader.getImage("nonexistent")).toBeNull();
 		expect(loader.getJSON("nonexistent")).toBeNull();
-		expect(loader.getTMX("nonexistent")).toBeNull();
+		expect(loader.getTileMap("nonexistent")).toBeNull();
 		expect(loader.getBinary("nonexistent")).toBeNull();
 		expect(loader.getVideo("nonexistent")).toBeNull();
 		expect(loader.getFont("nonexistent")).toBeNull();

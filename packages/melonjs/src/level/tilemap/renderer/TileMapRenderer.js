@@ -19,7 +19,7 @@ const OBJECT_ALIGNMENT = new Map([
  * additional import for TypeScript
  * @import CanvasRenderer from "../../../video/canvas/canvas_renderer.js";
  * @import {Rect} from "../../../geometries/rectangle.ts";
- * @import TMXTileMap from "../../tiled/TMXTileMap.js";
+ * @import TileMap from "../../tiled/TileMap.js";
  * @import TMXLayer from "../../tiled/TMXLayer.js";
  * @import Tile from "../Tile.js";
  * @import {Vector2d} from "../../../math/vector2d.ts";
@@ -30,7 +30,7 @@ const OBJECT_ALIGNMENT = new Map([
  * The map renderer base class: the geometry of a tile map's cells for an
  * orientation (where a cell is drawn, which cell a point is in), and the
  * drawing of a tile layer cell by cell. The same for every tile map, whatever
- * it was made with; {@link TMXTileMap#getRenderer} hands out a map's.
+ * it was made with; {@link TileMap#getRenderer} hands out a map's.
  * @category Tilemap
  */
 export default class TileMapRenderer {
@@ -50,7 +50,7 @@ export default class TileMapRenderer {
 
 	/**
 	 * return true if the renderer can render the specified map or layer
-	 * @param {TMXTileMap|TMXLayer} component - TMX Map or Layer
+	 * @param {TileMap|TMXLayer} component - TMX Map or Layer
 	 * @returns {boolean}
 	 */
 	canRender(component) {

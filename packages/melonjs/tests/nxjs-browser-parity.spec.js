@@ -219,7 +219,7 @@ describe("NX.js compatibility: browsers are unchanged", () => {
 			await loader.preload([
 				{ name: "parity-xml", type: "tmx", src: "/data/nxjs/map.tmx" },
 			]);
-			expect(loader.getTMX("parity-xml")).toBeDefined();
+			expect(loader.getTileMap("parity-xml")).toBeDefined();
 		});
 	});
 });

@@ -3,7 +3,7 @@ import {
 	type Application,
 	loader,
 	type Renderable,
-	TMXTileMap,
+	TileMap,
 	type Vector2d,
 	video,
 } from "../../src/index.js";
@@ -51,7 +51,7 @@ export function tiledParallaxChecks(
 			layers: Record<string, unknown>[],
 			extra: Record<string, unknown> = {},
 		) => {
-			return new TMXTileMap(`parallax-map-${String(serial++)}`, {
+			return new TileMap(`parallax-map-${String(serial++)}`, {
 				type: "map",
 				version: "1.10",
 				tiledversion: "1.10.2",
@@ -114,7 +114,7 @@ export function tiledParallaxChecks(
 			};
 		};
 
-		const show = (map: TMXTileMap) => {
+		const show = (map: TileMap) => {
 			app.world.reset();
 			app.world.pos.set(0, 0);
 			app.world.backgroundColor.parseCSS(BACKGROUND);
@@ -139,7 +139,7 @@ export function tiledParallaxChecks(
 		];
 
 		// the frames a map gives at each view
-		const frames = (map: TMXTileMap) => {
+		const frames = (map: TileMap) => {
 			show(map);
 			return VIEWS.map(([x, y]) => {
 				return look(x, y);
@@ -147,7 +147,7 @@ export function tiledParallaxChecks(
 		};
 
 		// the tile layer in the world, and how it follows the camera
-		const parallaxOf = (map: TMXTileMap) => {
+		const parallaxOf = (map: TileMap) => {
 			show(map);
 			const [found] = app.world.getChildByName("tiles") as (Renderable & {
 				ratio: Vector2d;
@@ -206,7 +206,7 @@ export function tiledParallaxChecks(
 		// picture once (on WebGL it spreads the picture's edges over the
 		// view, which is not this test's to tell).
 		const expectAsAnImageLayer = (
-			tiles: TMXTileMap,
+			tiles: TileMap,
 			placing: Placing,
 			what: string,
 			origin: { parallaxoriginx?: number; parallaxoriginy?: number } = {},

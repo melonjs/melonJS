@@ -399,7 +399,7 @@ level.load("map1", { setViewportBounds: false });
 app.viewport.setBounds(0, 0, mapWidth, mapHeight);   // now it's on you
 ```
 
-The same is true if you drive `TMXTileMap.addTo(container, flatten, setViewportBounds)`
+The same is true if you drive `TileMap.addTo(container, flatten, setViewportBounds)`
 directly — note that method's `setViewportBounds` defaults to **`false`**, the
 opposite of `level.load`'s.
 

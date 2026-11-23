@@ -6,7 +6,7 @@ import StaggeredRenderer from "./StaggeredRenderer.js";
 
 /**
  * return a compatible renderer object for the given map
- * @param {TMXTileMap} map
+ * @param {TileMap} map
  * @ignore
  * @internal
  */

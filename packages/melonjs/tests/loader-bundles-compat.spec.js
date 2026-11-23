@@ -243,8 +243,8 @@ describe("loader backward compatibility", () => {
 				["c-u-img", "image", loader.getImage],
 				["c-u-json", "json", loader.getJSON],
 				["c-u-bin", "binary", loader.getBinary],
-				["c-u-tmx", "tmx", loader.getTMX],
-				["c-u-tsx", "tsx", loader.getTMX],
+				["c-u-tmx", "tmx", loader.getTileMap],
+				["c-u-tsx", "tsx", loader.getTileMap],
 			]) {
 				expect(get(name)).not.toBeNull();
 				expect(loader.unload({ name, type })).toBe(true);
@@ -356,7 +356,7 @@ describe("loader backward compatibility", () => {
 			loader.unloadAll();
 			expect(loader.getImage("c-all-img")).toBeNull();
 			expect(loader.getJSON("c-all-json")).toBeNull();
-			expect(loader.getTMX("c-all-tmx")).toBeNull();
+			expect(loader.getTileMap("c-all-tmx")).toBeNull();
 			expect(loader.unload({ name: "silence", type: "audio" })).toBe(false);
 		});
 
@@ -418,11 +418,11 @@ describe("loader backward compatibility", () => {
 			// getImage takes a path too, and reads its base name
 			expect(loader.getImage("some/dir/c-g-img.png")).toBe(imgList["c-g-img"]);
 			expect(loader.getJSON("c-g-json")).toEqual({ ok: true, n: 42 });
-			expect(loader.getTMX("c-g-tmx")).toBe(MAP);
+			expect(loader.getTileMap("c-g-tmx")).toBe(MAP);
 			for (const get of [
 				loader.getImage,
 				loader.getJSON,
-				loader.getTMX,
+				loader.getTileMap,
 				loader.getBinary,
 				loader.getShader,
 				loader.getFont,

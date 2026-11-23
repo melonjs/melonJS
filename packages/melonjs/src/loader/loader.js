@@ -183,7 +183,8 @@ export {
 	getMTL,
 	getOBJ,
 	getShader,
-	getTMX,
+	getTileMap,
+	getTMX, // eslint-disable-line @typescript-eslint/no-deprecated
 	getVideo,
 } from "./cache.js";
 
@@ -1034,10 +1035,10 @@ const alwaysRelative = () => {
  * | `"video"` | a video | `.mp4`, `.webm`, what the browser plays | {@link getVideo} |
  * | `"fontface"` | a web font | `.woff2`, `.woff`, `.ttf` | its name, as a CSS font family; {@link getFont} |
  * | `"shader"` | a shader: an effect body, or a whole program | GLSL and WGSL sources, or inline `data` | {@link getShader} |
- * | `"tmx"` | a [Tiled](https://www.mapeditor.org) map | `.tmx`, `.xml` (XML); `.tmj`, `.json` (JSON) | `level.load(name)`, {@link getTMX} |
- * | `"tsx"` | a Tiled tileset kept in a file of its own | `.tsx`, `.xml` (XML); `.tsj`, `.json` (JSON) | by the maps that name it; {@link getTMX} |
- * | `"tilemap"` | a tile map, whatever tool wrote it: `"tmx"` under a name that is not an editor's | the same as `"tmx"` | `level.load(name)`, {@link getTMX} |
- * | `"spritefusion"` | a [Sprite Fusion](https://www.spritefusion.com) map, with the `spritesheet.png` saved next to it | `map.json`, `map.tmx` | `level.load(name)`, {@link getTMX} |
+ * | `"tmx"` | a [Tiled](https://www.mapeditor.org) map | `.tmx`, `.xml` (XML); `.tmj`, `.json` (JSON) | `level.load(name)`, {@link getTileMap} |
+ * | `"tsx"` | a Tiled tileset kept in a file of its own | `.tsx`, `.xml` (XML); `.tsj`, `.json` (JSON) | by the maps that name it; {@link getTileMap} |
+ * | `"tilemap"` | a tile map, whatever tool wrote it: `"tmx"` under a name that is not an editor's | the same as `"tmx"` | `level.load(name)`, {@link getTileMap} |
+ * | `"spritefusion"` | a [Sprite Fusion](https://www.spritefusion.com) map, with the `spritesheet.png` saved next to it | `map.json`, `map.tmx` | `level.load(name)`, {@link getTileMap} |
  * | `"ldtk"` | an [LDtk](https://ldtk.io) project, with the level files and the images it names | `.ldtk` (and its `.ldtkl`) | `level.load("name:Level")`, `level.load("name")`, {@link getLDtk} |
  * | `"obj"` | a Wavefront model | `.obj` | {@link getOBJ} |
  * | `"mtl"` | a Wavefront material library | `.mtl` | {@link getMTL} |

@@ -14,8 +14,8 @@ import {
 	level,
 	loader,
 	state,
+	TileMap,
 	TMXLayer,
-	TMXTileMap,
 	video,
 } from "../src/index.js";
 import { copyFrame } from "./helpers/pixels.js";
@@ -238,7 +238,7 @@ describe("the asset types of a tile map", () => {
 		]);
 		expect(level.levelCount()).toBe(before + 1);
 		const map = await loadLevel(app, "types-inline");
-		expect(map).toBeInstanceOf(TMXTileMap);
+		expect(map).toBeInstanceOf(TileMap);
 		const [floor] = map.getLayers();
 		expect(floor).toBeInstanceOf(TMXLayer);
 		expect(cellsOf(floor)).toEqual([
@@ -269,7 +269,7 @@ describe("the asset types of a tile map", () => {
 		// the name is taken: nothing is read again under another type name
 		await preload([{ name: "types-once", type: "tmx", data: second }]);
 		await preload([{ name: "types-once", type: "spritefusion", data: second }]);
-		expect(loader.getTMX("types-once")).toBe(first);
+		expect(loader.getTileMap("types-once")).toBe(first);
 		expect(level.levelCount()).toBe(count);
 	});
 
@@ -289,9 +289,9 @@ describe("the asset types of a tile map", () => {
 					data: tiledJSON([tiledLayer("floor", new Array(8).fill(1))]),
 				},
 			]);
-			expect(loader.getTMX(name), name).not.toBeNull();
+			expect(loader.getTileMap(name), name).not.toBeNull();
 			expect(loader.unload({ name, type: freedAs }), name).toBe(true);
-			expect(loader.getTMX(name), name).toBeNull();
+			expect(loader.getTileMap(name), name).toBeNull();
 			expect(loader.unload({ name, type: freedAs }), name).toBe(false);
 		}
 	});
@@ -311,7 +311,7 @@ describe("the asset types of a tile map", () => {
 			expect(level.levelCount(), type).toBe(before + 1);
 			loader.unload(`bundle-${type}`);
 			expect(level.levelCount(), type).toBe(before);
-			expect(loader.getTMX(name), type).toBeNull();
+			expect(loader.getTileMap(name), type).toBeNull();
 		}
 	});
 
@@ -320,7 +320,7 @@ describe("the asset types of a tile map", () => {
 		try {
 			loader.setBaseURL("tilemap", dir);
 			await preload([{ name: "types-base", type: "tilemap", src: "map.tmx" }]);
-			expect(loader.getTMX("types-base")).not.toBeNull();
+			expect(loader.getTileMap("types-base")).not.toBeNull();
 
 			loader.setBaseURL("tilemap", "");
 			loader.setBaseURL("*", dir);
@@ -328,8 +328,8 @@ describe("the asset types of a tile map", () => {
 				{ name: "types-base-all", type: "tilemap", src: "map.tmx" },
 				{ name: "types-base-fusion", type: "spritefusion", src: "map.json" },
 			]);
-			expect(loader.getTMX("types-base-all")).not.toBeNull();
-			expect(loader.getTMX("types-base-fusion")).not.toBeNull();
+			expect(loader.getTileMap("types-base-all")).not.toBeNull();
+			expect(loader.getTileMap("types-base-fusion")).not.toBeNull();
 			// and the spritesheet next to the map is not prefixed twice
 			expect(loader.getImage("types-base-fusion~spritesheet")).not.toBeNull();
 		} finally {
@@ -342,7 +342,7 @@ describe("the asset types of a tile map", () => {
 		await preload([
 			{ name: "types-tileset", type: "tsx", data: tilesetJSON() },
 		]);
-		expect(loader.getTMX("types-tileset")).not.toBeNull();
+		expect(loader.getTileMap("types-tileset")).not.toBeNull();
 		expect(level.levelCount()).toBe(before);
 	});
 });
@@ -377,13 +377,13 @@ describe.each([
 
 	it("is kept as the file has it: nothing is rewritten", async () => {
 		const file = await (await fetch(MAP_JSON)).json();
-		expect(loader.getTMX(json)).toEqual(file);
+		expect(loader.getTileMap(json)).toEqual(file);
 		// nor by reading it into a level, twice
 		await loadLevel(app, json);
 		await loadLevel(app, json);
-		expect(loader.getTMX(json)).toEqual(file);
+		expect(loader.getTileMap(json)).toEqual(file);
 		expect(
-			loader.getTMX(json).layers.map((layer) => {
+			loader.getTileMap(json).layers.map((layer) => {
 				return layer.name;
 			}),
 		).toEqual(["Pickups", "Ground", "Background"]);
@@ -586,7 +586,7 @@ describe("Sprite Fusion maps, each with a spritesheet of its own", () => {
 		expect(loader.getImage("sheets-bundled~spritesheet")).not.toBeNull();
 		loader.unload("sheets-bundle");
 		expect(loader.getImage("sheets-bundled~spritesheet")).toBeNull();
-		expect(loader.getTMX("sheets-bundled")).toBeNull();
+		expect(loader.getTileMap("sheets-bundled")).toBeNull();
 	});
 
 	it("finds its spritesheet whatever the map is called", async () => {
@@ -662,7 +662,7 @@ describe("a Sprite Fusion map under another type, or with no file", () => {
 			{ name: "spritesheet", type: "image", src: SHEET },
 			{ name: "inline-fusion", type: "spritefusion", data: file },
 		]);
-		expect(loader.getTMX("inline-fusion")).toBe(file);
+		expect(loader.getTileMap("inline-fusion")).toBe(file);
 		expect(loader.getImage("inline-fusion~spritesheet")).toBeNull();
 		await loadLevel(app, "inline-fusion");
 		expect(coloursOf(app, 6, 4)).toEqual(PICTURE);
@@ -674,7 +674,7 @@ describe("a Sprite Fusion map under another type, or with no file", () => {
 		await expect(
 			preload([{ name: "no-sheet", type: "spritefusion", src: NO_SHEET_JSON }]),
 		).rejects.toThrow();
-		expect(loader.getTMX("no-sheet")).toBeNull();
+		expect(loader.getTileMap("no-sheet")).toBeNull();
 		expect(loader.getImage("no-sheet~spritesheet")).toBeNull();
 		expect(level.levelCount()).toBe(before);
 	});
@@ -1273,7 +1273,7 @@ describe("attributes beside properties, in a map of Tiled's form", () => {
 			// no attribute was run as code, on the first load or a later one
 			expect(globalThis.__imageLayerRan, `load ${pass}`).toBe(false);
 		}
-		expect(loader.getTMX(name)).toEqual(before);
+		expect(loader.getTileMap(name)).toEqual(before);
 		delete globalThis.__imageLayerRan;
 	});
 });

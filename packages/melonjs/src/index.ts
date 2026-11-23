@@ -16,8 +16,8 @@ import { IntGrid } from "./level/ldtk/intgrid.ts";
 import { LDtkLevel, LDtkWorld } from "./level/ldtk/level.ts";
 import { LDtkProject } from "./level/ldtk/project.ts";
 import { LDtkObject } from "./level/ldtk/renderables.ts";
+import TileMap from "./level/tiled/TileMap.js";
 import TMXLayer from "./level/tiled/TMXLayer.js";
-import TMXTileMap from "./level/tiled/TMXTileMap.js";
 import TMXTileset from "./level/tiled/TMXTileset.js";
 import * as TMXUtils from "./level/tiled/TMXUtils.js";
 import PlacedTileLayer from "./level/tilemap/PlacedTileLayer.js";
@@ -213,6 +213,7 @@ export {
 	TMXOrthogonalRenderer,
 	TMXRenderer,
 	TMXStaggeredRenderer,
+	TMXTileMap,
 	TMXTilesetGroup,
 } from "./level/tiled/aliases.ts";
 export type { default as TMXObject } from "./level/tiled/TMXObject.js";
@@ -420,12 +421,12 @@ export {
 	TextureAtlas,
 	Tile,
 	TileLayer,
+	TileMap,
 	TileMapRenderer,
 	Tileset,
 	TilesetGroup,
 	TintPulseEffect,
 	TMXLayer,
-	TMXTileMap,
 	TMXTileset,
 	TMXUtils,
 	ToneMappingEffect,

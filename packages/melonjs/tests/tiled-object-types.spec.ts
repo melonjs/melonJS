@@ -8,7 +8,9 @@ import {
 	registerTiledObjectFactory,
 	type StaggeredRenderer,
 	type Tile,
+	type TileMap,
 	type TileMapRenderer,
+	type TilesetGroup,
 	type TMXHexagonalRenderer,
 	type TMXIsometricRenderer,
 	type TMXObject,
@@ -16,6 +18,7 @@ import {
 	type TMXRenderer,
 	type TMXStaggeredRenderer,
 	type TMXTileMap,
+	type TMXTilesetGroup,
 } from "../src/index.js";
 
 // type-level only, checked by `tsc` (pnpm test:types): the registrations sit
@@ -97,7 +100,7 @@ describe("registerTiledObjectFactory", () => {
 		const register = () => {
 			registerTiledObjectFactory("Typed", (settings, map) => {
 				expectTypeOf(settings).toEqualTypeOf<TMXObject>();
-				expectTypeOf(map).toEqualTypeOf<TMXTileMap>();
+				expectTypeOf(map).toEqualTypeOf<TileMap>();
 				return new Renderable(settings.x, settings.y, 1, 1);
 			});
 		};
@@ -119,14 +122,14 @@ describe("registerTiledObjectFactory", () => {
 
 describe("the map renderers' older names", () => {
 	it("are the same types as the new ones", () => {
+		expectTypeOf<TMXTileMap>().toEqualTypeOf<TileMap>();
+		expectTypeOf<TMXTilesetGroup>().toEqualTypeOf<TilesetGroup>();
 		expectTypeOf<TMXRenderer>().toEqualTypeOf<TileMapRenderer>();
 		expectTypeOf<TMXOrthogonalRenderer>().toEqualTypeOf<OrthogonalRenderer>();
 		expectTypeOf<TMXIsometricRenderer>().toEqualTypeOf<IsometricRenderer>();
 		expectTypeOf<TMXHexagonalRenderer>().toEqualTypeOf<HexagonalRenderer>();
 		expectTypeOf<TMXStaggeredRenderer>().toEqualTypeOf<StaggeredRenderer>();
 		// and still name what a map hands out
-		expectTypeOf<
-			ReturnType<TMXTileMap["getRenderer"]>
-		>().toExtend<TMXRenderer>();
+		expectTypeOf<ReturnType<TileMap["getRenderer"]>>().toExtend<TMXRenderer>();
 	});
 });

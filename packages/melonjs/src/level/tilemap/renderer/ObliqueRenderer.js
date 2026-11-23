@@ -5,7 +5,7 @@ import OrthogonalRenderer from "./OrthogonalRenderer.js";
 /**
  * additional import for TypeScript
  * @import {Bounds} from "../../../physics/bounds.ts";
- * @import TMXTileMap from "../../tiled/TMXTileMap.js";
+ * @import TileMap from "../../tiled/TileMap.js";
  * @import TMXLayer from "../../tiled/TMXLayer.js";
  */
 /**
@@ -16,7 +16,7 @@ import OrthogonalRenderer from "./OrthogonalRenderer.js";
  */
 export default class ObliqueRenderer extends OrthogonalRenderer {
 	/**
-	 * @param {TMXTileMap} map - the TMX map
+	 * @param {TileMap} map - the TMX map
 	 */
 	constructor(map) {
 		super(map);

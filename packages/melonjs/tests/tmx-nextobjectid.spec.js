@@ -12,7 +12,7 @@
  * The map now seeds the counter past the highest object id it holds.
  */
 import { describe, expect, it } from "vitest";
-import { TMXTileMap, utils } from "../src/index.js";
+import { TileMap, utils } from "../src/index.js";
 
 /** a map's JSON with the given layers, and `nextobjectid` if given */
 const mapJSON = (layers, nextobjectid) => {
@@ -48,14 +48,14 @@ const objects = (...ids) => {
 	};
 };
 
-describe("TMXTileMap#nextobjectid (#1809)", () => {
+describe("TileMap#nextobjectid (#1809)", () => {
 	it("is the map's own value when it has one", () => {
-		const map = new TMXTileMap("with", mapJSON([objects(1, 2)], 20));
+		const map = new TileMap("with", mapJSON([objects(1, 2)], 20));
 		expect(map.nextobjectid).toBe(20);
 	});
 
 	it("without one, is one past the highest object id in the map", () => {
-		const map = new TMXTileMap("without", mapJSON([objects(3, 47, 7)]));
+		const map = new TileMap("without", mapJSON([objects(3, 47, 7)]));
 		expect(map.nextobjectid).toBe(48);
 	});
 
@@ -71,7 +71,7 @@ describe("TMXTileMap#nextobjectid (#1809)", () => {
 				],
 			},
 		];
-		const map = new TMXTileMap("groups", mapJSON(layers));
+		const map = new TileMap("groups", mapJSON(layers));
 		expect(map.nextobjectid).toBe(32);
 	});
 
@@ -83,14 +83,14 @@ describe("TMXTileMap#nextobjectid (#1809)", () => {
 			height: 1,
 			data: [0],
 		};
-		expect(new TMXTileMap("empty", mapJSON([tiles])).nextobjectid).toBe(1);
+		expect(new TileMap("empty", mapJSON([tiles])).nextobjectid).toBe(1);
 	});
 
 	it("so GUIDs of objects added at runtime never meet those of the map's objects", () => {
 		// the Alex 4 case: the boss and the player have no id of their own,
 		// the cherries and stars in the map do
 		const ids = [1, 2, 3, 45, 46, 47];
-		const map = new TMXTileMap("level12", mapJSON([objects(...ids)]));
+		const map = new TileMap("level12", mapJSON([objects(...ids)]));
 		// as level.load() does
 		utils.resetGUID("level12", map.nextobjectid);
 		const authored = ids.map((id) => {

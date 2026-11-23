@@ -1,5 +1,5 @@
 import { game } from "../application/application.ts";
-import { getTMX } from "./../loader/loader.js";
+import { getTileMap } from "./../loader/loader.js";
 import state from "./../state/state.ts";
 import { emit, LEVEL_LOADED } from "../system/event.ts";
 import { defer } from "../utils/function.ts";
@@ -7,7 +7,7 @@ import { resetGUID } from "./../utils/utils.ts";
 import GLTFScene from "./gltf/GLTFScene.js";
 import { LDtkLevel } from "./ldtk/level.ts";
 import { ldtkMaps } from "./ldtk/registry.ts";
-import TMXTileMap from "./tiled/TMXTileMap.js";
+import TileMap from "./tiled/TileMap.js";
 import { bindViewportToLevel, releaseViewport } from "./tilemap/viewport.js";
 
 /**
@@ -173,7 +173,7 @@ function levelIdAt(offset) {
 /**
  * Every option {@link level.load} understands: the three the director handles
  * itself, plus each level format's own, declared next to the code that reads
- * them (`TMXTileMap.loadOptions`, `GLTFScene.loadOptions`).
+ * them (`TileMap.loadOptions`, `GLTFScene.loadOptions`).
  *
  * This exists so that nothing has to keep a SECOND copy of the list. `Trigger`
  * forwards a caller's settings on to `load()` and used to name the options it
@@ -528,7 +528,7 @@ export const level = {
 	 * for a reference to the live instantiated level,
 	 * rather use the container in which it was loaded (e.g. app.world)
 	 * @public
-	 * @returns {TMXTileMap|GLTFScene|LDtkLevel|LDtkWorld} the current level object (a TMXTileMap for Tiled maps, a GLTFScene for glTF/GLB scenes, an LDtkLevel or an LDtkWorld for LDtk)
+	 * @returns {TileMap|GLTFScene|LDtkLevel|LDtkWorld} the current level object (a TileMap for Tiled maps, a GLTFScene for glTF/GLB scenes, an LDtkLevel or an LDtkWorld for LDtk)
 	 */
 	getCurrentLevel() {
 		return levels[this.getCurrentLevelId()];
@@ -660,9 +660,9 @@ export const level = {
 // the formats the engine reads itself
 level.registerFormat("tmx", {
 	create: (levelId) => {
-		return new TMXTileMap(levelId, getTMX(levelId));
+		return new TileMap(levelId, getTileMap(levelId));
 	},
-	loadOptions: TMXTileMap.loadOptions,
+	loadOptions: TileMap.loadOptions,
 });
 level.registerFormat("ldtk", {
 	// made by the loader, with the project they belong to

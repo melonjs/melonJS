@@ -11,8 +11,8 @@ import {
 	registerTiledObjectFactory,
 	Sprite,
 	Text,
+	TileMap,
 	TMXLayer,
-	TMXTileMap,
 	video,
 } from "../src/index.js";
 import {
@@ -674,7 +674,7 @@ class PresetBlendEntity extends Renderable {
 	}
 }
 
-describe("TMXTileMap", () => {
+describe("TileMap", () => {
 	let app;
 	beforeAll(async () => {
 		boot();
@@ -703,7 +703,7 @@ describe("TMXTileMap", () => {
 	// ---------------------------------------------------------------
 	describe("getObjects: unnamed shape objects", () => {
 		it("should create Renderable instances for unnamed objects", () => {
-			const map = new TMXTileMap("test", minimalMap);
+			const map = new TileMap("test", minimalMap);
 			const objects = map.getObjects(true);
 
 			expect(objects.length).toEqual(3);
@@ -713,7 +713,7 @@ describe("TMXTileMap", () => {
 		});
 
 		it("should assign a static body definition to unnamed objects", () => {
-			const map = new TMXTileMap("test", minimalMap);
+			const map = new TileMap("test", minimalMap);
 			const objects = map.getObjects(true);
 
 			for (const obj of objects) {
@@ -726,7 +726,7 @@ describe("TMXTileMap", () => {
 		});
 
 		it("should set position from settings", () => {
-			const map = new TMXTileMap("test", minimalMap);
+			const map = new TileMap("test", minimalMap);
 			const objects = map.getObjects(true);
 
 			// first object at (0,0), second at (32,0)
@@ -737,7 +737,7 @@ describe("TMXTileMap", () => {
 		});
 
 		it("should preserve object type and class", () => {
-			const map = new TMXTileMap("test", collisionMap);
+			const map = new TileMap("test", collisionMap);
 			const objects = map.getObjects(true);
 
 			const platform = objects.find((obj) => {
@@ -748,7 +748,7 @@ describe("TMXTileMap", () => {
 		});
 
 		it("should set anchorPoint to (0,0)", () => {
-			const map = new TMXTileMap("test", minimalMap);
+			const map = new TileMap("test", minimalMap);
 			const objects = map.getObjects(true);
 
 			for (const obj of objects) {
@@ -760,7 +760,7 @@ describe("TMXTileMap", () => {
 		it("should cover the projected shape of a rectangle on an isometric map", () => {
 			// projected, a rectangle reaches left of its origin; the bounds
 			// box (what the broadphase files it by) must still cover it
-			const map = new TMXTileMap("test", {
+			const map = new TileMap("test", {
 				...minimalMap,
 				orientation: "isometric",
 				width: 4,
@@ -803,7 +803,7 @@ describe("TMXTileMap", () => {
 	// ---------------------------------------------------------------
 	describe("getObjects: text objects", () => {
 		it("should create Text instances for text objects", () => {
-			const map = new TMXTileMap("test", textMap);
+			const map = new TileMap("test", textMap);
 			const objects = map.getObjects(true);
 
 			expect(objects.length).toEqual(1);
@@ -811,7 +811,7 @@ describe("TMXTileMap", () => {
 		});
 
 		it("should position text objects correctly", () => {
-			const map = new TMXTileMap("test", textMap);
+			const map = new TileMap("test", textMap);
 			const objects = map.getObjects(true);
 
 			expect(objects[0].pos.x).toEqual(10);
@@ -824,7 +824,7 @@ describe("TMXTileMap", () => {
 	// ---------------------------------------------------------------
 	describe("getObjects: named objects", () => {
 		it("should pull named objects from the pool", () => {
-			const map = new TMXTileMap("test", namedObjectMap);
+			const map = new TileMap("test", namedObjectMap);
 			const objects = map.getObjects(true);
 
 			expect(objects.length).toEqual(1);
@@ -832,7 +832,7 @@ describe("TMXTileMap", () => {
 		});
 
 		it("should pass settings to the named object constructor", () => {
-			const map = new TMXTileMap("test", namedObjectMap);
+			const map = new TileMap("test", namedObjectMap);
 			const objects = map.getObjects(true);
 
 			const entity = objects[0];
@@ -842,7 +842,7 @@ describe("TMXTileMap", () => {
 		});
 
 		it("should position named objects correctly", () => {
-			const map = new TMXTileMap("test", namedObjectMap);
+			const map = new TileMap("test", namedObjectMap);
 			const objects = map.getObjects(true);
 
 			expect(objects[0].pos.x).toEqual(50);
@@ -855,7 +855,7 @@ describe("TMXTileMap", () => {
 	// ---------------------------------------------------------------
 	describe("getObjects: collision groups", () => {
 		it("should set WORLD_SHAPE collision type on unnamed collision objects", () => {
-			const map = new TMXTileMap("test", collisionMap);
+			const map = new TileMap("test", collisionMap);
 			const objects = map.getObjects(true);
 
 			for (const obj of objects) {
@@ -864,7 +864,7 @@ describe("TMXTileMap", () => {
 		});
 
 		it("should mark collision objects as static", () => {
-			const map = new TMXTileMap("test", collisionMap);
+			const map = new TileMap("test", collisionMap);
 			const objects = map.getObjects(true);
 
 			for (const obj of objects) {
@@ -878,7 +878,7 @@ describe("TMXTileMap", () => {
 	// ---------------------------------------------------------------
 	describe("getObjects: per-object opacity and visibility", () => {
 		it("should apply per-object opacity", () => {
-			const map = new TMXTileMap("test", opacityVisibilityMap);
+			const map = new TileMap("test", opacityVisibilityMap);
 			const objects = map.getObjects(true);
 
 			// object with opacity 0.5
@@ -889,7 +889,7 @@ describe("TMXTileMap", () => {
 		});
 
 		it("should set opacity to 0 for invisible objects", () => {
-			const map = new TMXTileMap("test", opacityVisibilityMap);
+			const map = new TileMap("test", opacityVisibilityMap);
 			const objects = map.getObjects(true);
 
 			// object with visible=false
@@ -900,7 +900,7 @@ describe("TMXTileMap", () => {
 		});
 
 		it("should keep full opacity for visible objects with opacity 1", () => {
-			const map = new TMXTileMap("test", opacityVisibilityMap);
+			const map = new TileMap("test", opacityVisibilityMap);
 			const objects = map.getObjects(true);
 
 			const full = objects.find((obj) => {
@@ -915,7 +915,7 @@ describe("TMXTileMap", () => {
 	// ---------------------------------------------------------------
 	describe("getObjects: flatten=false", () => {
 		it("should return Container instances for each group", () => {
-			const map = new TMXTileMap("test", multiGroupMap);
+			const map = new TileMap("test", multiGroupMap);
 			const objects = map.getObjects(false);
 
 			expect(objects.length).toEqual(2);
@@ -925,7 +925,7 @@ describe("TMXTileMap", () => {
 		});
 
 		it("should name containers after groups", () => {
-			const map = new TMXTileMap("test", multiGroupMap);
+			const map = new TileMap("test", multiGroupMap);
 			const objects = map.getObjects(false);
 
 			expect(objects[0].name).toEqual("GroupA");
@@ -933,7 +933,7 @@ describe("TMXTileMap", () => {
 		});
 
 		it("should set container opacity from group", () => {
-			const map = new TMXTileMap("test", multiGroupMap);
+			const map = new TileMap("test", multiGroupMap);
 			const objects = map.getObjects(false);
 
 			const groupA = objects.find((obj) => {
@@ -943,7 +943,7 @@ describe("TMXTileMap", () => {
 		});
 
 		it("should set container blend mode from group", () => {
-			const map = new TMXTileMap("test", multiGroupMap);
+			const map = new TileMap("test", multiGroupMap);
 			const objects = map.getObjects(false);
 
 			const groupA = objects.find((obj) => {
@@ -953,7 +953,7 @@ describe("TMXTileMap", () => {
 		});
 
 		it("should add objects as children of the container", () => {
-			const map = new TMXTileMap("test", multiGroupMap);
+			const map = new TileMap("test", multiGroupMap);
 			const objects = map.getObjects(false);
 
 			const groupB = objects.find((obj) => {
@@ -963,7 +963,7 @@ describe("TMXTileMap", () => {
 		});
 
 		it("should propagate blend mode to children", () => {
-			const map = new TMXTileMap("test", multiGroupMap);
+			const map = new TileMap("test", multiGroupMap);
 			const objects = map.getObjects(false);
 
 			const groupA = objects.find((obj) => {
@@ -982,7 +982,7 @@ describe("TMXTileMap", () => {
 	// ---------------------------------------------------------------
 	describe("getObjects with group blend mode (flatten=true)", () => {
 		it("should propagate group blend mode to children when flattened", () => {
-			const map = new TMXTileMap("test", minimalMap);
+			const map = new TileMap("test", minimalMap);
 			const objects = map.getObjects(true);
 
 			// objects from TestGroup should inherit "multiply" blend mode
@@ -993,7 +993,7 @@ describe("TMXTileMap", () => {
 		});
 
 		it("should not set blend mode on children of groups without mode", () => {
-			const map = new TMXTileMap("test", minimalMap);
+			const map = new TileMap("test", minimalMap);
 			const objects = map.getObjects(true);
 
 			// object from NormalGroup should have default "normal" blend mode
@@ -1004,7 +1004,7 @@ describe("TMXTileMap", () => {
 		});
 
 		it("should apply group opacity multiplied with blend mode", () => {
-			const map = new TMXTileMap("test", minimalMap);
+			const map = new TileMap("test", minimalMap);
 			const objects = map.getObjects(true);
 
 			// TestGroup has opacity 0.8, objects should have opacity <= 0.8
@@ -1022,7 +1022,7 @@ describe("TMXTileMap", () => {
 	// ---------------------------------------------------------------
 	describe("getObjects with group blend mode (flatten=false)", () => {
 		it("should set blend mode on the container", () => {
-			const map = new TMXTileMap("test", minimalMap);
+			const map = new TileMap("test", minimalMap);
 			const objects = map.getObjects(false);
 
 			const container = objects.find((obj) => {
@@ -1033,7 +1033,7 @@ describe("TMXTileMap", () => {
 		});
 
 		it("should set opacity on the container", () => {
-			const map = new TMXTileMap("test", minimalMap);
+			const map = new TileMap("test", minimalMap);
 			const objects = map.getObjects(false);
 
 			const container = objects.find((obj) => {
@@ -1043,7 +1043,7 @@ describe("TMXTileMap", () => {
 		});
 
 		it("should propagate blend mode to children in non-flattened mode", () => {
-			const map = new TMXTileMap("test", minimalMap);
+			const map = new TileMap("test", minimalMap);
 			const objects = map.getObjects(false);
 
 			const container = objects.find((obj) => {
@@ -1066,7 +1066,7 @@ describe("TMXTileMap", () => {
 	// ---------------------------------------------------------------
 	describe("getObjects: collision group name detection", () => {
 		it("should detect collision group with mixed case", () => {
-			const map = new TMXTileMap("test", collisionCaseMap);
+			const map = new TileMap("test", collisionCaseMap);
 			const objects = map.getObjects(true);
 
 			expect(objects.length).toEqual(1);
@@ -1076,7 +1076,7 @@ describe("TMXTileMap", () => {
 		});
 
 		it("should NOT set WORLD_SHAPE on named objects in collision groups", () => {
-			const map = new TMXTileMap("test", collisionNamedMap);
+			const map = new TileMap("test", collisionNamedMap);
 			const objects = map.getObjects(true);
 
 			expect(objects.length).toEqual(1);
@@ -1090,7 +1090,7 @@ describe("TMXTileMap", () => {
 	// ---------------------------------------------------------------
 	describe("getObjects: tint color", () => {
 		it("should convert tintcolor to a tint Color object on settings", () => {
-			const map = new TMXTileMap("test", tintMap);
+			const map = new TileMap("test", tintMap);
 			// access objectGroups after parsing to inspect settings
 			map.getObjects(true);
 			const settings = map.objectGroups[0].objects[0];
@@ -1103,7 +1103,7 @@ describe("TMXTileMap", () => {
 	// ---------------------------------------------------------------
 	describe("getObjects: invisible group", () => {
 		it("should apply zero group opacity to objects in invisible groups", () => {
-			const map = new TMXTileMap("test", invisibleGroupMap);
+			const map = new TileMap("test", invisibleGroupMap);
 			const objects = map.getObjects(true);
 
 			expect(objects.length).toEqual(1);
@@ -1116,7 +1116,7 @@ describe("TMXTileMap", () => {
 	// ---------------------------------------------------------------
 	describe("getObjects: combined object and group opacity", () => {
 		it("should multiply per-object opacity with group opacity", () => {
-			const map = new TMXTileMap("test", combinedOpacityMap);
+			const map = new TileMap("test", combinedOpacityMap);
 			const objects = map.getObjects(true);
 
 			// object opacity 0.5 * group opacity 0.5 = 0.25
@@ -1129,7 +1129,7 @@ describe("TMXTileMap", () => {
 	// ---------------------------------------------------------------
 	describe("getObjects: empty groups", () => {
 		it("should not create containers for empty groups (flatten=false)", () => {
-			const map = new TMXTileMap("test", emptyGroupMap);
+			const map = new TileMap("test", emptyGroupMap);
 			const objects = map.getObjects(false);
 
 			// only NonEmptyGroup should produce a container
@@ -1138,7 +1138,7 @@ describe("TMXTileMap", () => {
 		});
 
 		it("should return no objects for empty groups (flatten=true)", () => {
-			const map = new TMXTileMap("test", {
+			const map = new TileMap("test", {
 				...emptyGroupMap,
 				layers: [emptyGroupMap.layers[0]], // only the empty group
 			});
@@ -1153,7 +1153,7 @@ describe("TMXTileMap", () => {
 	// ---------------------------------------------------------------
 	describe("getObjects: default flatten behavior", () => {
 		it("should default to flatten=true when no argument is passed", () => {
-			const map = new TMXTileMap("test", multiGroupMap);
+			const map = new TileMap("test", multiGroupMap);
 			const objects = map.getObjects();
 
 			// should return flat array of renderables, not containers
@@ -1202,7 +1202,7 @@ describe("TMXTileMap", () => {
 				],
 			};
 
-			const map = new TMXTileMap("test", childRenderableMap);
+			const map = new TileMap("test", childRenderableMap);
 			const objects = map.getObjects(true);
 
 			expect(objects.length).toEqual(1);
@@ -1251,7 +1251,7 @@ describe("TMXTileMap", () => {
 				],
 			};
 
-			const map = new TMXTileMap("test", invisibleEntityMap);
+			const map = new TileMap("test", invisibleEntityMap);
 			const objects = map.getObjects(true);
 
 			expect(objects[0].getOpacity()).toEqual(0);
@@ -1293,7 +1293,7 @@ describe("TMXTileMap", () => {
 				],
 			};
 
-			const map = new TMXTileMap("test", semiEntityMap);
+			const map = new TileMap("test", semiEntityMap);
 			const objects = map.getObjects(true);
 
 			expect(objects[0].getOpacity()).toBeCloseTo(0.6);
@@ -1306,7 +1306,7 @@ describe("TMXTileMap", () => {
 	// ---------------------------------------------------------------
 	describe("getObjects: blend mode should not override preset", () => {
 		it("should not override an object's non-normal blend mode with group blend mode", () => {
-			const map = new TMXTileMap("test", presetBlendMap);
+			const map = new TileMap("test", presetBlendMap);
 			const objects = map.getObjects(true);
 
 			expect(objects.length).toEqual(1);
@@ -1321,7 +1321,7 @@ describe("TMXTileMap", () => {
 	// ---------------------------------------------------------------
 	describe("getObjects: object id", () => {
 		it("should assign object id from settings on unnamed objects", () => {
-			const map = new TMXTileMap("test", collisionMap);
+			const map = new TileMap("test", collisionMap);
 			const objects = map.getObjects(true);
 
 			// collisionMap has objects with id 30 and 31
@@ -1335,7 +1335,7 @@ describe("TMXTileMap", () => {
 	// ---------------------------------------------------------------
 	describe("getObjects: tile objects (gid)", () => {
 		it("should create a renderable from tile gid", () => {
-			const map = new TMXTileMap("test", tileObjectMap);
+			const map = new TileMap("test", tileObjectMap);
 			const objects = map.getObjects(true);
 
 			expect(objects.length).toEqual(1);
@@ -1343,7 +1343,7 @@ describe("TMXTileMap", () => {
 		});
 
 		it("should assign a static body definition to tile objects", () => {
-			const map = new TMXTileMap("test", tileObjectMap);
+			const map = new TileMap("test", tileObjectMap);
 			const objects = map.getObjects(true);
 
 			expect(objects[0].bodyDef).toBeDefined();
@@ -1353,7 +1353,7 @@ describe("TMXTileMap", () => {
 		it("should not project the body of a tile object on an isometric map", () => {
 			// Tiled draws a tile object upright, so the default body covers
 			// the image box rather than a projected diamond
-			const map = new TMXTileMap("test", {
+			const map = new TileMap("test", {
 				...tileObjectMap,
 				orientation: "isometric",
 				tilewidth: 64,
@@ -1373,7 +1373,7 @@ describe("TMXTileMap", () => {
 		});
 
 		it("should position tile objects correctly", () => {
-			const map = new TMXTileMap("test", tileObjectMap);
+			const map = new TileMap("test", tileObjectMap);
 			const objects = map.getObjects(true);
 
 			expect(objects[0].pos.x).toEqual(64);
@@ -1385,7 +1385,7 @@ describe("TMXTileMap", () => {
 	describe("getObjects: tile object size and alignment, as Tiled draws them", () => {
 		// one tile object at (64, 96) over the 32x32 test tiles
 		function tileObject(object, tileset = {}) {
-			const map = new TMXTileMap("test", {
+			const map = new TileMap("test", {
 				...tileObjectMap,
 				tilesets: [{ ...tilesetData, ...tileset }],
 				layers: [
@@ -1639,7 +1639,7 @@ describe("TMXTileMap", () => {
 
 		// tile 0 of the 32x32 test tiles carries `tile`: a class, properties
 		function objectsOf(objects, tile = {}) {
-			const map = new TMXTileMap("test", {
+			const map = new TileMap("test", {
 				...tileObjectMap,
 				tilesets: [{ ...tilesetData, tiles: [{ id: 0, ...tile }] }],
 				layers: [
@@ -1783,7 +1783,7 @@ describe("TMXTileMap", () => {
 			});
 
 			it("resolves the properties of an object that is not a tile", () => {
-				const map = new TMXTileMap("test", {
+				const map = new TileMap("test", {
 					...tileObjectMap,
 					layers: [
 						{
@@ -1860,7 +1860,7 @@ describe("TMXTileMap", () => {
 				</map>`,
 				"text/xml",
 			).documentElement;
-			const map = new TMXTileMap("test", parse(tmx));
+			const map = new TileMap("test", parse(tmx));
 			built.length = 0;
 			const [obj] = map.getObjects(true);
 			expect(obj).toBeInstanceOf(TileClassChest);
@@ -1874,7 +1874,7 @@ describe("TMXTileMap", () => {
 	// ---------------------------------------------------------------
 	describe("getObjects: TMXLayer passthrough", () => {
 		it("should pass TMXLayer instances through directly", () => {
-			const map = new TMXTileMap("test", nestedLayerMap);
+			const map = new TileMap("test", nestedLayerMap);
 			const objects = map.getObjects(true);
 
 			// the nested layer should be included as-is
@@ -1886,7 +1886,7 @@ describe("TMXTileMap", () => {
 		});
 
 		it("should skip per-object opacity but apply group opacity to TMXLayer", () => {
-			const map = new TMXTileMap("test", nestedLayerMap);
+			const map = new TileMap("test", nestedLayerMap);
 			const objects = map.getObjects(true);
 
 			const layer = objects.find((obj) => {
@@ -1898,7 +1898,7 @@ describe("TMXTileMap", () => {
 		});
 
 		it("should include TMXLayer in container when flatten=false", () => {
-			const map = new TMXTileMap("test", nestedLayerMap);
+			const map = new TileMap("test", nestedLayerMap);
 			const objects = map.getObjects(false);
 
 			expect(objects.length).toEqual(1);
@@ -1914,7 +1914,7 @@ describe("TMXTileMap", () => {
 		});
 
 		it("should propagate group blend mode to TMXLayer in flatten mode", () => {
-			const map = new TMXTileMap("test", nestedLayerMap);
+			const map = new TileMap("test", nestedLayerMap);
 			const objects = map.getObjects(true);
 
 			const layer = objects.find((obj) => {
@@ -1982,7 +1982,7 @@ describe("TMXTileMap", () => {
 				],
 			};
 
-			const map = new TMXTileMap("test", customClassMap);
+			const map = new TileMap("test", customClassMap);
 			const objects = map.getObjects(true);
 
 			expect(factoryCalled).toEqual(true);
@@ -1991,7 +1991,7 @@ describe("TMXTileMap", () => {
 		});
 
 		it("should fall through to named factory when class has no registered factory", () => {
-			const map = new TMXTileMap("test", namedObjectMap);
+			const map = new TileMap("test", namedObjectMap);
 			const objects = map.getObjects(true);
 
 			// namedObjectMap uses name "TestEntity" with no class-based factory
@@ -2029,7 +2029,7 @@ describe("TMXTileMap", () => {
 				return originalShapeFactory(settings);
 			});
 
-			const map = new TMXTileMap("test", collisionMap);
+			const map = new TileMap("test", collisionMap);
 			map.getObjects(true);
 
 			expect(shapeFactoryCalled).toEqual(true);
@@ -2086,7 +2086,7 @@ describe("TMXTileMap", () => {
 				],
 			};
 
-			const map = new TMXTileMap("test", poolEntityMap);
+			const map = new TileMap("test", poolEntityMap);
 			const objects = map.getObjects(true);
 
 			expect(objects.length).toEqual(1);
@@ -2133,7 +2133,7 @@ describe("TMXTileMap", () => {
 			pool.register("NonTiledClass", NonTiledClass);
 			pool.autoRegisterTiled = true;
 
-			const map = new TMXTileMap("test", {
+			const map = new TileMap("test", {
 				width: 2,
 				height: 2,
 				tilewidth: 32,
@@ -2300,7 +2300,7 @@ describe("TMXTileMap", () => {
 		});
 
 		it("builds an ImageLayer for an imagelayer, with its offset and parallax", () => {
-			const map = new TMXTileMap("imagelayer-test", {
+			const map = new TileMap("imagelayer-test", {
 				width: 4,
 				height: 4,
 				tilewidth: 32,
@@ -2335,7 +2335,7 @@ describe("TMXTileMap", () => {
 		});
 
 		it("honours repeatx / repeaty on an image layer", () => {
-			const map = new TMXTileMap("imagelayer-repeat", {
+			const map = new TileMap("imagelayer-repeat", {
 				width: 4,
 				height: 4,
 				tilewidth: 32,
@@ -2376,7 +2376,7 @@ describe("TMXTileMap", () => {
 		};
 
 		it("carries tint, blend mode and opacity onto the layer", () => {
-			const map = new TMXTileMap(
+			const map = new TileMap(
 				"il-style",
 				mapWith([
 					{
@@ -2429,7 +2429,7 @@ describe("TMXTileMap", () => {
 				],
 			];
 			for (const [name, flags, expected] of cases) {
-				const map = new TMXTileMap(
+				const map = new TileMap(
 					"il-repeat-" + name,
 					mapWith([
 						{
@@ -2450,7 +2450,7 @@ describe("TMXTileMap", () => {
 		});
 
 		it("folds the map-level parallax origin into the offset, scaled by the ratio", () => {
-			const map = new TMXTileMap(
+			const map = new TileMap(
 				"il-origin",
 				mapWith(
 					[
@@ -2492,7 +2492,7 @@ describe("TMXTileMap", () => {
 		});
 
 		it("builds an ImageLayer for a map-level background image", () => {
-			const map = new TMXTileMap("bg-test", {
+			const map = new TileMap("bg-test", {
 				width: 4,
 				height: 4,
 				tilewidth: 32,
@@ -2513,7 +2513,7 @@ describe("TMXTileMap", () => {
 		});
 
 		it("the background image takes z 0 and pushes the other layers up", () => {
-			const map = new TMXTileMap(
+			const map = new TileMap(
 				"bg-z",
 				mapWith(
 					[

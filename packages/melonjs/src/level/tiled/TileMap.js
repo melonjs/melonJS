@@ -48,7 +48,7 @@ import {
  * the map's own area, grown to every painted tile of its tile layers. Tiled
  * saves whole chunks (16 x 16 cells by default), so a layer's chunks usually
  * reach past its last painted tile: those empty cells are left out
- * @param {TMXTileMap} map - the map
+ * @param {TileMap} map - the map
  * @param {Array<object>} layers - the map's layers
  * @returns {{x: number, y: number, cols: number, rows: number}} the area
  * @ignore
@@ -188,7 +188,7 @@ function readTileset(data, mapTilewidth, mapTileheight) {
  * the world. (The Sprite Fusion editor writes that property for a layer
  * with its "collider" box checked; in Tiled it is a boolean custom property
  * of the layer.)
- * @param {TMXTileMap} map - the map
+ * @param {TileMap} map - the map
  * @param {object} layer - one of its layers
  * @returns {Renderable[]} the walls: none for any other layer
  * @ignore
@@ -248,7 +248,7 @@ function highestObjectId(layers) {
  * read from a map description and added to the world by {@link level.load}.
  *
  * The description is what the loader keeps for a `"tmx"`, `"tilemap"` or
- * `"spritefusion"` asset ({@link loader.getTMX}): a
+ * `"spritefusion"` asset ({@link loader.getTileMap}): a
  * [Tiled](https://www.mapeditor.org) map (Tiled QT +0.7.x format), from XML
  * or JSON, or a [Sprite Fusion](https://www.spritefusion.com) `map.json`. It
  * is read in the words of either editor, and left as it is:
@@ -267,7 +267,7 @@ function highestObjectId(layers) {
  * a tile of a tileset, a tile of a `tiles` list), in a map of either form.
  * @category Tilemap
  */
-export default class TMXTileMap {
+export default class TileMap {
 	/**
 	 * The `level.load()` options this format reads. See
 	 * {@link GLTFScene.loadOptions} for why the list lives here rather than
@@ -291,12 +291,12 @@ export default class TMXTileMap {
 	 * @param {object} data - the map's description: a Tiled map in JSON format, or a Sprite Fusion `map.json`
 	 * @example
 	 * // create a new level object based on the map's description
-	 * let level = new me.TMXTileMap(levelId, me.loader.getTMX(levelId));
+	 * let level = new me.TileMap(levelId, me.loader.getTileMap(levelId));
 	 * // add the level to the game world container
 	 * level.addTo(app.world, true);
 	 * @example
 	 * // a map written by hand, in the shorter words: two tiles, one of them lava
-	 * const map = new TMXTileMap("tiny", {
+	 * const map = new TileMap("tiny", {
 	 *     tileSize: 16,
 	 *     mapWidth: 4,
 	 *     mapHeight: 2,
@@ -481,7 +481,7 @@ export default class TMXTileMap {
 	}
 
 	/**
-	 * the map's width in pixels: its bounds' width (see {@link TMXTileMap#getBounds})
+	 * the map's width in pixels: its bounds' width (see {@link TileMap#getBounds})
 	 * @type {number}
 	 */
 	get width() {
@@ -489,7 +489,7 @@ export default class TMXTileMap {
 	}
 
 	/**
-	 * the map's height in pixels: its bounds' height (see {@link TMXTileMap#getBounds})
+	 * the map's height in pixels: its bounds' height (see {@link TileMap#getBounds})
 	 * @type {number}
 	 */
 	get height() {
@@ -657,7 +657,7 @@ export default class TMXTileMap {
 	 * @param {boolean|Function} [objects=true] - build the map's objects: all of them, none, or the ones a function `(settings) => boolean` says. See {@link level.load}
 	 * @example
 	 * // create a new level object based on the TMX JSON object
-	 * let level = new me.TMXTileMap(levelId, me.loader.getTMX(levelId));
+	 * let level = new me.TileMap(levelId, me.loader.getTileMap(levelId));
 	 * // add the level to the game world container
 	 * level.addTo(app.world, true, true);
 	 */

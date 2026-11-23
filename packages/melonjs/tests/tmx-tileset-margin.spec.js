@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { Application, boot, TMXTileMap, video } from "../src/index.js";
+import { Application, boot, TileMap, video } from "../src/index.js";
 import TMXTileset from "../src/level/tiled/TMXTileset.js";
 import * as TMXUtils from "../src/level/tiled/TMXUtils.js";
 import TilesetGroup from "../src/level/tilemap/TilesetGroup.js";
@@ -97,7 +97,7 @@ describe("TMXTileset gid range", () => {
 	});
 
 	it("the next tileset's gids resolve to it, in a map", () => {
-		const map = new TMXTileMap("margin-map", {
+		const map = new TileMap("margin-map", {
 			width: 3,
 			height: 1,
 			tilewidth: 16,

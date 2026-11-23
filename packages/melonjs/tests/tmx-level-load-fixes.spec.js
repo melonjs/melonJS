@@ -5,7 +5,7 @@ import {
 	event,
 	level,
 	loader,
-	TMXTileMap,
+	TileMap,
 	video,
 } from "../src/index.js";
 
@@ -81,7 +81,7 @@ describe("loading a Tiled level", () => {
 
 	describe("a tile layer's renderMode property", () => {
 		const layerOf = (properties) => {
-			const tmx = new TMXTileMap("render-mode", map("layer", 4, properties));
+			const tmx = new TileMap("render-mode", map("layer", 4, properties));
 			return tmx.getLayers()[0];
 		};
 
@@ -163,7 +163,7 @@ describe("loading a Tiled level", () => {
 		it("a level added without the viewport's bounds registers nothing", async () => {
 			await load("fix-level-a");
 			level.getCurrentLevel().destroy();
-			const tmx = new TMXTileMap("no-bounds", map("free", 8));
+			const tmx = new TileMap("no-bounds", map("free", 8));
 			tmx.addTo(app.world, true, false);
 			expect(boundsSetOnResize()).toEqual([]);
 			tmx.destroy();

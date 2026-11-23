@@ -1,6 +1,6 @@
 ---
 name: melonjs-loading-assets
-description: "Use this skill for loading and managing game assets in melonJS — the resource descriptor format, the full asset type list, organising a multi-level game's assets as bundles (an assets file exporting common plus one bundle per level, passed to loader.preload), loading and freeing a level's bundle, preload versus load, retrieving loaded assets, base URLs and cross-origin settings, and the loading screen. Triggers on: loader, loader.preload, loader.load, resources, resources.js, assets file, getImage, getJSON, getTMX, getLDtk, getGLTF, getVideo, getFont, setBaseURL, setOptions, crossOrigin, withCredentials, credentials, cookies, authenticated assets, CORS, asset, preload, LOADER_COMPLETE, loading screen, unload, unloadAll, bundle, asset bundle, setBundle, getBundle, isLoaded, several levels, per-level assets, free memory between levels, asset type, tmx, tilemap, spritefusion, ldtk, setParser, custom asset type, generated texture, procedural texture."
+description: "Use this skill for loading and managing game assets in melonJS — the resource descriptor format, the full asset type list, organising a multi-level game's assets as bundles (an assets file exporting common plus one bundle per level, passed to loader.preload), loading and freeing a level's bundle, preload versus load, retrieving loaded assets, base URLs and cross-origin settings, and the loading screen. Triggers on: loader, loader.preload, loader.load, resources, resources.js, assets file, getImage, getJSON, getTileMap, getTMX, getLDtk, getGLTF, getVideo, getFont, setBaseURL, setOptions, crossOrigin, withCredentials, credentials, cookies, authenticated assets, CORS, asset, preload, LOADER_COMPLETE, loading screen, unload, unloadAll, bundle, asset bundle, setBundle, getBundle, isLoaded, several levels, per-level assets, free memory between levels, asset type, tmx, tilemap, spritefusion, ldtk, setParser, custom asset type, generated texture, procedural texture."
 license: MIT
 ---
 
@@ -381,7 +381,7 @@ audio asset is preloaded.
 ```js
 loader.getImage("tiles");
 loader.getJSON("atlas");
-loader.getTMX("map1");       // a "tmx", "tilemap", "spritefusion" or "tsx" asset, as parsed data
+loader.getTileMap("map1");       // a "tmx", "tilemap", "spritefusion" or "tsx" asset, as parsed data
 loader.getLDtk("world");     // an "ldtk" project: its levels, worlds and definitions
 loader.getGLTF("diorama");
 loader.getVideo("intro");

@@ -1,4 +1,4 @@
-import { getImage, getJSON, getTMX } from "../../loader/loader.js";
+import { getImage, getJSON, getTileMap } from "../../loader/loader.js";
 import { hasDOM } from "../../system/dom.ts";
 import { getBasename, getExtension } from "../../utils/file.ts";
 import { createCanvas } from "../../video/canvas_factory.js";
@@ -16,7 +16,7 @@ function resolveSource(tileset) {
 		const ext = getExtension(src);
 		if (ext === "tsx" || ext === "xml" || ext === "json" || ext === "tsj") {
 			// load the external tileset (TSX/XML/JSON/TSJ)
-			tileset = getTMX(getBasename(src));
+			tileset = getTileMap(getBasename(src));
 			if (!tileset) {
 				throw new Error(`${src} external tileset not found`);
 			}

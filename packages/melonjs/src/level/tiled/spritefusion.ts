@@ -1,7 +1,7 @@
 /**
  * What is particular to a map saved by
  * [Sprite Fusion](https://www.spritefusion.com), for the tile map reader
- * (`TMXTileMap`) and the map parser.
+ * (`TileMap`) and the map parser.
  *
  * Its TMX export is a Tiled map. Its "JSON" export says the same things in
  * words of its own, which the reader takes as they are: `tileSize`,

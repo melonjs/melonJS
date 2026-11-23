@@ -13,7 +13,7 @@ import {
 	Color,
 	event,
 	Rect,
-	TMXTileMap,
+	TileMap,
 	video,
 } from "../src/index.js";
 import Tile from "../src/level/tiled/TMXTile.js";
@@ -69,7 +69,7 @@ const layerOf = (map, ...tilesets) => {
 	for (let i = 0; i < COLS * ROWS; i++) {
 		data.push(1 + (i % (tilesets.length * 2)));
 	}
-	const tmx = new TMXTileMap(name, {
+	const tmx = new TileMap(name, {
 		width: COLS,
 		height: ROWS,
 		renderorder: "right-down",

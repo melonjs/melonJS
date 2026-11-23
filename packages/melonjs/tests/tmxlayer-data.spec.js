@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { Application, boot, TMXTileMap, video } from "../src/index.js";
+import { Application, boot, TileMap, video } from "../src/index.js";
 import {
 	TMX_CLEAR_BIT_MASK,
 	TMX_FLIP_AD,
@@ -62,7 +62,7 @@ function buildMapJSON(data) {
 }
 
 function makeLayer(data) {
-	const map = new TMXTileMap("test", buildMapJSON(data));
+	const map = new TileMap("test", buildMapJSON(data));
 	const groups = map.getLayers();
 	return groups[0];
 }

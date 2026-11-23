@@ -449,7 +449,7 @@ export default class GLTFScene {
 	}
 
 	/**
-	 * Director cleanup hook (parity with `TMXTileMap.destroy`). Nothing to do —
+	 * Director cleanup hook (parity with `TileMap.destroy`). Nothing to do —
 	 * the meshes and lights are ordinary world children, removed by the
 	 * director's `container.reset()` on the next load.
 	 * @ignore

@@ -4,7 +4,7 @@ import TileMapRenderer from "./TileMapRenderer.js";
 
 /**
  * additional import for TypeScript
- * @import TMXTileMap from "../../tiled/TMXTileMap.js";
+ * @import TileMap from "../../tiled/TileMap.js";
  */
 /**
  * an Isometric Map Renderer
@@ -12,7 +12,7 @@ import TileMapRenderer from "./TileMapRenderer.js";
  */
 export default class IsometricRenderer extends TileMapRenderer {
 	/**
-	 * @param {TMXTileMap} map - the TMX map
+	 * @param {TileMap} map - the TMX map
 	 */
 	constructor(map) {
 		super(map.cols, map.rows, map.tilewidth, map.tileheight);
