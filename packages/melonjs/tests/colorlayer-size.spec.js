@@ -3,6 +3,7 @@ import {
 	Application,
 	boot,
 	ColorLayer,
+	Container,
 	getPool,
 	level,
 	loader,
@@ -334,5 +335,320 @@ describe.each([
 		expect(
 			await colours([16, 16], [47, 31], [15, 16], [48, 31], [16, 32]),
 		).toEqual([BLUE, BLUE, BLACK, BLACK, BLACK]);
+	});
+
+	/**
+	 * Every pixel of the frame, against what a list of rectangles painted in
+	 * turn over black gives: worked out here from the numbers alone.
+	 * Rectangles are in screen pixels, `[x, y, width, height, color]`.
+	 */
+	const expectFrame = async (rects, about) => {
+		await settle();
+		app.world.update(16);
+		app.viewport.update(16);
+		app.repaint();
+		app.draw();
+		const frame = copyFrame(app.renderer);
+		const wrong = [];
+		for (let y = 0; y < HEIGHT; y++) {
+			for (let x = 0; x < WIDTH; x++) {
+				let want = BLACK;
+				for (const [rx, ry, rw, rh, color] of rects) {
+					if (x >= rx && x < rx + rw && y >= ry && y < ry + rh) {
+						want = color;
+					}
+				}
+				const at = (y * frame.width + x) * 4;
+				if (
+					frame.data[at] !== want[0] ||
+					frame.data[at + 1] !== want[1] ||
+					frame.data[at + 2] !== want[2]
+				) {
+					wrong.push(`${x},${y}`);
+				}
+			}
+		}
+		expect(
+			wrong.length,
+			`${about}: ${wrong.length} pixels differ, first at ${wrong[0]}`,
+		).toBe(0);
+	};
+
+	// places a rectangle can be: in the view, across each of its edges and
+	// corners, just outside it, and far away on either side
+	const PLACES = [
+		[0, 0],
+		[16, 8],
+		[1, 1],
+		[WIDTH - 1, HEIGHT - 1],
+		[-10, -6],
+		[-10, 20],
+		[20, -6],
+		[50, 40],
+		[WIDTH, 0],
+		[0, HEIGHT],
+		[-1, -1],
+		[-500, -500],
+		[5000, 3000],
+	];
+	// and sizes it can have: a pixel, a line each way, a box, the view
+	// exactly, one pixel more, and far more than the view
+	const SIZES = [
+		[1, 1],
+		[1, HEIGHT],
+		[WIDTH, 1],
+		[24, 16],
+		[3, 37],
+		[WIDTH, HEIGHT],
+		[WIDTH + 1, HEIGHT + 1],
+		[500, 500],
+		[4096, 4096],
+	];
+
+	describe("whatever its position and its size", () => {
+		it("fills exactly its rectangle of the world", async () => {
+			for (const [x, y] of PLACES) {
+				for (const [width, height] of SIZES) {
+					app.world.reset();
+					app.world.addChild(
+						sized("box", "#0000ff", 1, { x, y, width, height }),
+					);
+					await expectFrame(
+						[[x, y, width, height, BLUE]],
+						`at ${x},${y} of ${width} x ${height}`,
+					);
+				}
+			}
+		});
+
+		it("fills exactly its rectangle wherever the camera is", async () => {
+			const cameras = [
+				[0, 0],
+				[16, 8],
+				[7, 31],
+				[1000, 2000],
+			];
+			for (const [cx, cy] of cameras) {
+				app.viewport.moveTo(cx, cy);
+				for (const [x, y] of PLACES) {
+					for (const [width, height] of [
+						[1, 1],
+						[24, 16],
+						[WIDTH + 1, HEIGHT + 1],
+					]) {
+						app.world.reset();
+						// placed from where the camera is, so each place is tried
+						// against each edge of the view
+						app.world.addChild(
+							sized("box", "#0000ff", 1, {
+								x: cx + x,
+								y: cy + y,
+								width,
+								height,
+							}),
+						);
+						await expectFrame(
+							[[x, y, width, height, BLUE]],
+							`camera ${cx},${cy}, at ${cx + x},${cy + y} of ${width} x ${height}`,
+						);
+					}
+				}
+			}
+		});
+
+		it("fills exactly its rectangle of the screen when it floats, wherever the camera is", async () => {
+			for (const [cx, cy] of [
+				[0, 0],
+				[333, 777],
+			]) {
+				app.viewport.moveTo(cx, cy);
+				for (const [x, y] of PLACES) {
+					for (const [width, height] of [
+						[1, 1],
+						[24, 16],
+						[500, 500],
+					]) {
+						app.world.reset();
+						const panel = sized("panel", "#008000", 1, { x, y, width, height });
+						panel.floating = true;
+						app.world.addChild(panel);
+						await expectFrame(
+							[[x, y, width, height, GREEN]],
+							`camera ${cx},${cy}, panel at ${x},${y} of ${width} x ${height}`,
+						);
+					}
+				}
+			}
+		});
+
+		it("is placed by its anchor point, whichever it is", async () => {
+			for (const [ax, ay] of [
+				[0, 0],
+				[0.5, 0.5],
+				[1, 1],
+				[0.25, 0.75],
+				[1, 0],
+			]) {
+				for (const [x, y] of [
+					[32, 24],
+					[0, 0],
+					[WIDTH, HEIGHT],
+					[-8, 60],
+				]) {
+					for (const [width, height] of [
+						[16, 8],
+						[4, 4],
+						[80, 64],
+					]) {
+						app.world.reset();
+						const layer = new ColorLayer("anchored", "#ff0000", 1);
+						layer.floating = false;
+						layer.anchorPoint.set(ax, ay);
+						layer.pos.x = x;
+						layer.pos.y = y;
+						layer.resize(width, height);
+						app.world.addChild(layer);
+						await expectFrame(
+							[[x - ax * width, y - ay * height, width, height, RED]],
+							`anchor ${ax},${ay}, at ${x},${y} of ${width} x ${height}`,
+						);
+						// and it says it is where it is drawn
+						const bounds = layer.getBounds();
+						expect([
+							bounds.left,
+							bounds.top,
+							bounds.width,
+							bounds.height,
+						]).toEqual([x - ax * width, y - ay * height, width, height]);
+					}
+				}
+			}
+		});
+
+		it("follows its position and its size as they change", async () => {
+			const layer = sized("moving", "#0000ff", 1, {
+				x: 0,
+				y: 0,
+				width: 8,
+				height: 8,
+			});
+			app.world.addChild(layer);
+			for (const [x, y, width, height] of [
+				[0, 0, 8, 8],
+				[40, 30, 8, 8],
+				[40, 30, 2, 12],
+				[-4, -4, 30, 30],
+				[63, 47, 1, 1],
+				[200, 200, 8, 8],
+				[10, 10, 50, 3],
+			]) {
+				layer.pos.x = x;
+				layer.pos.y = y;
+				layer.resize(width, height);
+				await expectFrame(
+					[[x, y, width, height, BLUE]],
+					`moved to ${x},${y} of ${width} x ${height}`,
+				);
+			}
+		});
+
+		it("is drawn in its place among others, by its draw order", async () => {
+			// a canvas-filling one under, three boxes that overlap over it,
+			// added out of order
+			const add = (layer) => {
+				app.world.addChild(layer, layer.pos.z);
+			};
+			add(new ColorLayer("background", "#008000", 0));
+			add(sized("low", "#ff0000", 1, { x: 4, y: 4, width: 30, height: 30 }));
+			add(sized("high", "#0000ff", 3, { x: 20, y: 20, width: 30, height: 20 }));
+			add(
+				sized("middle", "#ff0000", 2, { x: 40, y: 0, width: 24, height: 30 }),
+			);
+			await expectFrame(
+				[
+					[0, 0, WIDTH, HEIGHT, GREEN],
+					[4, 4, 30, 30, RED],
+					[40, 0, 24, 30, RED],
+					[20, 20, 30, 20, BLUE],
+				],
+				"four layers",
+			);
+		});
+
+		it("is placed in its container, wherever that is", async () => {
+			for (const [px, py] of [
+				[0, 0],
+				[20, 10],
+				[-12, 30],
+			]) {
+				for (const [x, y] of [
+					[0, 0],
+					[4, 6],
+					[-3, -3],
+				]) {
+					app.world.reset();
+					const room = new Container(px, py, 200, 200);
+					room.addChild(
+						sized("floor", "#0000ff", 1, { x, y, width: 24, height: 16 }),
+					);
+					app.world.addChild(room);
+					await expectFrame(
+						[[px + x, py + y, 24, 16, BLUE]],
+						`container at ${px},${py}, layer at ${x},${y}`,
+					);
+				}
+			}
+		});
+
+		it("covers what its edges cross when they fall between pixels", async () => {
+			// a pixel wholly inside is the color, one wholly outside is not;
+			// the ones an edge crosses are each renderer's to round
+			for (const [x, y, width, height] of [
+				[10.5, 7.25, 20.5, 12.5],
+				[0.3, 0.3, 5.4, 5.4],
+				[-2.5, 40.75, 30, 30],
+			]) {
+				app.world.reset();
+				app.world.addChild(
+					sized("fine", "#0000ff", 1, { x, y, width, height }),
+				);
+				await settle();
+				app.world.update(16);
+				app.viewport.update(16);
+				app.repaint();
+				app.draw();
+				const frame = copyFrame(app.renderer);
+				for (let py = 0; py < HEIGHT; py++) {
+					for (let px = 0; px < WIDTH; px++) {
+						const inside =
+							px >= x && px + 1 <= x + width && py >= y && py + 1 <= y + height;
+						const outside =
+							px + 1 <= x || px >= x + width || py + 1 <= y || py >= y + height;
+						if (!inside && !outside) {
+							continue;
+						}
+						const at = (py * frame.width + px) * 4;
+						expect(
+							[frame.data[at], frame.data[at + 1], frame.data[at + 2]],
+							`${px},${py} of a box at ${x},${y} of ${width} x ${height}`,
+						).toEqual(inside ? BLUE : BLACK);
+					}
+				}
+			}
+		});
+
+		it("draws nothing for a size of nothing, and does not fail", async () => {
+			for (const [width, height] of [
+				[0, 0],
+				[0, 16],
+				[16, 0],
+			]) {
+				app.world.reset();
+				app.world.addChild(
+					sized("empty", "#0000ff", 1, { x: 8, y: 8, width, height }),
+				);
+				await expectFrame([], `a box of ${width} x ${height}`);
+			}
+		});
 	});
 });
