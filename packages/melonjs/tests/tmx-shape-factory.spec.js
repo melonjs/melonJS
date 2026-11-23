@@ -12,8 +12,8 @@ import {
 	Vector2d,
 	video,
 } from "../src/index.js";
-import { createShapeObject } from "../src/level/tiled/factories/shape.js";
-import { getDefaultShape } from "../src/level/tiled/TMXObjectFactory.js";
+import { createShapeObject } from "../src/level/tilemap/factories/shape.js";
+import { getDefaultShape } from "../src/level/tilemap/objects.js";
 
 describe("createShapeObject — TMX shape factory", () => {
 	let app;

@@ -227,7 +227,7 @@ export function staggeredRegion(layer, rect, tileset, out) {
 	const left = offsetX;
 	const right = lastBox * columnWidth + tileset.tilewidth + offsetX;
 	// (a tile stands on the cell the map lays out, which can be a pixel
-	// less than the map's tile size: see `TMXHexagonalRenderer`)
+	// less than the map's tile size: see `HexagonalRenderer`)
 	const top = map.tileheight - tileset.tileheight + offsetY;
 	const bottom = (lines - 1) * rowHeight + map.tileheight + offsetY;
 

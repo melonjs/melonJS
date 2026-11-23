@@ -1,10 +1,20 @@
 import { describe, expectTypeOf, it } from "vitest";
 import {
+	type HexagonalRenderer,
+	type IsometricRenderer,
+	type OrthogonalRenderer,
 	Renderable,
 	registerTiledObjectClass,
 	registerTiledObjectFactory,
+	type StaggeredRenderer,
 	type Tile,
+	type TileMapRenderer,
+	type TMXHexagonalRenderer,
+	type TMXIsometricRenderer,
 	type TMXObject,
+	type TMXOrthogonalRenderer,
+	type TMXRenderer,
+	type TMXStaggeredRenderer,
 	type TMXTileMap,
 } from "../src/index.js";
 
@@ -104,5 +114,19 @@ describe("registerTiledObjectFactory", () => {
 			);
 		};
 		expectTypeOf(register).toBeFunction();
+	});
+});
+
+describe("the map renderers' older names", () => {
+	it("are the same types as the new ones", () => {
+		expectTypeOf<TMXRenderer>().toEqualTypeOf<TileMapRenderer>();
+		expectTypeOf<TMXOrthogonalRenderer>().toEqualTypeOf<OrthogonalRenderer>();
+		expectTypeOf<TMXIsometricRenderer>().toEqualTypeOf<IsometricRenderer>();
+		expectTypeOf<TMXHexagonalRenderer>().toEqualTypeOf<HexagonalRenderer>();
+		expectTypeOf<TMXStaggeredRenderer>().toEqualTypeOf<StaggeredRenderer>();
+		// and still name what a map hands out
+		expectTypeOf<
+			ReturnType<TMXTileMap["getRenderer"]>
+		>().toExtend<TMXRenderer>();
 	});
 });

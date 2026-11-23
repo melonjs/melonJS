@@ -8,8 +8,8 @@ import {
 	CanvasRenderTarget,
 	math,
 	type Renderer,
+	type TileMapRenderer,
 	type TMXLayer,
-	type TMXRenderer,
 	timer,
 	Vector2d,
 } from "melonjs";
@@ -54,7 +54,7 @@ export class Minimap extends Camera2d {
 	private heroCell = -1;
 	// the floor layer's renderer, which turns cells into world pixels and
 	// back, as when it draws the layer
-	private readonly grid: TMXRenderer;
+	private readonly grid: TileMapRenderer;
 	private readonly cols: number;
 	private readonly rows: number;
 	// the whole map, in world pixels

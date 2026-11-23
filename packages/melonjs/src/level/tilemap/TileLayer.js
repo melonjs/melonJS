@@ -6,7 +6,6 @@ import Renderable from "../../renderable/renderable.js";
 import CanvasRenderer from "../../video/canvas/canvas_renderer";
 import { createCanvas } from "../../video/canvas_factory.js";
 import { TMX_ORIENTATIONS } from "../../video/gpu/tmxlayer_orientation.js";
-import TMXOrthogonalRenderer from "../tiled/renderer/TMXOrthogonalRenderer.js";
 import {
 	FLIP_AD_BIT,
 	FLIP_H_BIT,
@@ -29,11 +28,12 @@ import {
 	untellAncestorsOfDrawArea,
 	viewStart,
 } from "./layer.js";
+import OrthogonalRenderer from "./renderer/OrthogonalRenderer.js";
 import Tile from "./Tile.js";
 
 /**
  * additional import for TypeScript
- * @import TMXRenderer from "../tiled/renderer/TMXRenderer.js";
+ * @import TileMapRenderer from "./renderer/TileMapRenderer.js";
  * @import Tileset from "./Tileset.js";
  * @import TilesetGroup from "./TilesetGroup.js";
  * @import Camera2d from "../../camera/camera2d.ts";
@@ -100,7 +100,7 @@ function gidWithFlips(gid, flipMask) {
  * the renderer of a layer that was given none: its own grid of square-on
  * cells, which is all a layer needs when it does not belong to a map
  * @param {TileLayer} layer - the layer
- * @returns {TMXOrthogonalRenderer} a renderer for the layer's grid
+ * @returns {OrthogonalRenderer} a renderer for the layer's grid
  * @ignore
  */
 function gridRendererFor(layer) {
@@ -109,7 +109,7 @@ function gridRendererFor(layer) {
 			`melonJS: a "${layer.orientation}" tile layer needs the renderer of its map (\`renderer\`)`,
 		);
 	}
-	return new TMXOrthogonalRenderer({
+	return new OrthogonalRenderer({
 		cols: layer.cols,
 		rows: layer.rows,
 		tilewidth: layer.tilewidth,
@@ -171,7 +171,7 @@ export default class TileLayer extends Renderable {
 	 * @param {string} [def.renderorder="right-down"] - the order its tiles are drawn in
 	 * @param {number} [def.startx=0] - the column, in its map's tile coordinates, of its first column
 	 * @param {number} [def.starty=0] - the row, in its map's tile coordinates, of its first row
-	 * @param {TMXRenderer} [def.renderer] - the renderer of the map it belongs to; by default one for its own grid
+	 * @param {TileMapRenderer} [def.renderer] - the renderer of the map it belongs to; by default one for its own grid
 	 */
 	constructor(def) {
 		// super constructor
@@ -1176,7 +1176,7 @@ export default class TileLayer extends Renderable {
 
 	/**
 	 * Set the TMX renderer for this layer object
-	 * @param {TMXRenderer} renderer
+	 * @param {TileMapRenderer} renderer
 	 * @example
 	 * // use the parent map default renderer
 	 * let layer = new me.TMXLayer(...);
@@ -1189,7 +1189,7 @@ export default class TileLayer extends Renderable {
 
 	/**
 	 * Return the layer current renderer object
-	 * @returns {TMXRenderer} renderer
+	 * @returns {TileMapRenderer} renderer
 	 */
 	getRenderer() {
 		return this.renderer;

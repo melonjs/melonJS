@@ -1,5 +1,5 @@
 import { initKeyboardEvent } from "../input/keyboard.ts";
-import { registerBuiltinTiledClass } from "../level/tiled/TMXObjectFactory.js";
+import { registerBuiltinTiledClass } from "../level/tilemap/objects.js";
 import Light2d from "../lighting/light2d.ts";
 import { setNocache } from "../loader/loader.js";
 import Collectable from "../renderable/collectable.js";

@@ -5,21 +5,18 @@ import type Container from "../../renderable/container.js";
 import Renderable from "../../renderable/renderable.js";
 import { createCanvas } from "../../video/canvas_factory.js";
 import { TextureAtlas } from "../../video/texture/atlas.js";
-import { getNewTMXRenderer } from "../tiled/renderer/autodetect.js";
-import type TMXOrthogonalRenderer from "../tiled/renderer/TMXOrthogonalRenderer.js";
-import {
-	createLevelObject,
-	hasObjectFactory,
-} from "../tiled/TMXObjectFactory.js";
 import { applyObjectOpacity } from "../tiled/TMXUtils.js";
 import { createWall, isCollisionLayerName } from "../tilemap/collision.js";
 import type { LayerScrolling } from "../tilemap/layer.js";
+import { createLevelObject, hasObjectFactory } from "../tilemap/objects.js";
 import PlacedTileLayer from "../tilemap/PlacedTileLayer.js";
 import {
 	addLevelToContainer,
 	isObjectWanted,
 	populateContainer,
 } from "../tilemap/populate.js";
+import { getNewTileMapRenderer } from "../tilemap/renderer/autodetect.js";
+import type OrthogonalRenderer from "../tilemap/renderer/OrthogonalRenderer.js";
 import TileLayer, { FLIP_H_BIT, FLIP_V_BIT } from "../tilemap/TileLayer.js";
 import Tileset from "../tilemap/Tileset.js";
 import TilesetGroup from "../tilemap/TilesetGroup.js";
@@ -911,7 +908,7 @@ abstract class LDtkMap {
 	/** @ignore */
 	protected follow: (() => void) | undefined;
 	/** @ignore */
-	protected gridRenderer: TMXOrthogonalRenderer | undefined;
+	protected gridRenderer: OrthogonalRenderer | undefined;
 	/**
 	 * the persistent entities that stayed when their level was taken out,
 	 * by their unique id in LDtk
@@ -966,8 +963,8 @@ abstract class LDtkMap {
 	 * the renderer of the project's default grid: cells to pixels and back
 	 * @returns an orthogonal renderer
 	 */
-	getRenderer(): TMXOrthogonalRenderer {
-		this.gridRenderer ??= getNewTMXRenderer(this);
+	getRenderer(): OrthogonalRenderer {
+		this.gridRenderer ??= getNewTileMapRenderer(this);
 		return this.gridRenderer;
 	}
 

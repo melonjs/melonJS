@@ -5,7 +5,7 @@ import {
 	registerTiledObjectClass,
 	Trigger,
 } from "../src/index.js";
-import { createTMXObject } from "../src/level/tiled/TMXObjectFactory.js";
+import { createTMXObject } from "../src/level/tilemap/objects.js";
 
 /**
  * A game's own class must beat the built-in of the same name.

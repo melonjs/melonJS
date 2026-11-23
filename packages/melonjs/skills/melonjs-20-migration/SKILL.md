@@ -113,6 +113,7 @@ These resolve but should not be used in new code:
 | `setLineWidth()` | 17.3.0 | the `lineWidth` property |
 | `pool.register` / `pool.pull` / `pool.push` | 18.0.0 (a console notice since 20.9) | `createPool()` / `getPool()`; `registerObjectClass()` for a class a level names |
 | `registerTiledObjectClass` / `registerTiledObjectFactory` | 20.18.0 (no console notice) | `registerObjectClass` / `registerObjectFactory`: the same functions, named for every kind of level |
+| `TMXRenderer`, `TMXOrthogonalRenderer`, `TMXIsometricRenderer`, `TMXHexagonalRenderer`, `TMXStaggeredRenderer` | 20.18.0 (no console notice) | `TileMapRenderer`, `OrthogonalRenderer`, `IsometricRenderer`, `HexagonalRenderer`, `StaggeredRenderer`: the same classes |
 | `body.fromJSON()`, a shape list given to `addShape()` | 20.7.0 (the `Body` constructor form throws) | `bodyDef = { type, shapes: "<json asset>", id }` |
 | `body.ignoreGravity` | 19.5.0 | `gravityScale = 0`, or `body.setGravityScale(0)` |
 | `app.updateAverageDelta` | 20.0.0 | `app.lastUpdateDelta` |

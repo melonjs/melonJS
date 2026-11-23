@@ -19,18 +19,21 @@ const OBJECT_ALIGNMENT = new Map([
  * additional import for TypeScript
  * @import CanvasRenderer from "../../../video/canvas/canvas_renderer.js";
  * @import {Rect} from "../../../geometries/rectangle.ts";
- * @import TMXTileMap from "../TMXTileMap.js";
- * @import TMXLayer from "../TMXLayer.js";
- * @import Tile from "../TMXTile.js";
+ * @import TMXTileMap from "../../tiled/TMXTileMap.js";
+ * @import TMXLayer from "../../tiled/TMXLayer.js";
+ * @import Tile from "../Tile.js";
  * @import {Vector2d} from "../../../math/vector2d.ts";
  * @import WebGLRenderer from "../../../video/webgl/webgl_renderer.js";
  * @import Renderer from "../../../video/renderer.js";
  */
 /**
- * The map renderer base class
+ * The map renderer base class: the geometry of a tile map's cells for an
+ * orientation (where a cell is drawn, which cell a point is in), and the
+ * drawing of a tile layer cell by cell. The same for every tile map, whatever
+ * it was made with; {@link TMXTileMap#getRenderer} hands out a map's.
  * @category Tilemap
  */
-export default class TMXRenderer {
+export default class TileMapRenderer {
 	/**
 	 * @param {number} cols - width of the tilemap in tiles
 	 * @param {number} rows - height of the tilemap in tiles

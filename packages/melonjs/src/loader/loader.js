@@ -168,7 +168,7 @@ import { preloadMTL } from "./parsers/mtl.js";
 import { preloadOBJ } from "./parsers/obj.js";
 import { preloadJavascript } from "./parsers/script.js";
 import { preloadShader } from "./parsers/shader.js";
-import { preloadTMX } from "./parsers/tmx.js";
+import { preloadTileMap } from "./parsers/tilemap.js";
 import { preloadVideo } from "./parsers/video.js";
 
 // the cache read accessors live with the caches themselves; re-exported
@@ -871,9 +871,9 @@ function initParsers() {
 	setParser("js", preloadJavascript);
 	// a tile map under its three names (see `MAP_TYPES`), and a tileset
 	for (const type of MAP_TYPES) {
-		setParser(type, preloadTMX);
+		setParser(type, preloadTileMap);
 	}
-	setParser("tsx", preloadTMX);
+	setParser("tsx", preloadTileMap);
 	// an LDtk project keeps what it read with the level formats, and frees
 	// it through the same hook a custom type has
 	setParser("ldtk", preloadLDtk, { unload: unloadLDtk });

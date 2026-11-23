@@ -1,10 +1,10 @@
 import { polygonPool } from "../../geometries/polygon.ts";
 import { vector2dPool } from "../../math/vector2d.ts";
 import { setPoolRegisterCallback } from "../../system/legacy_pool.js";
-import TileLayer from "../tilemap/TileLayer.js";
 import { createShapeObject } from "./factories/shape.js";
 import { createTextObject } from "./factories/text.js";
 import { createTileObject } from "./factories/tile.js";
+import TileLayer from "./TileLayer.js";
 
 /**
  * @import Renderable from "../../renderable/renderable.js";

@@ -1,7 +1,7 @@
 import { collision } from "../../physics/collision.js";
-import { createLevelObject } from "../tiled/TMXObjectFactory.js";
 import { COLLISION_GROUP } from "./constants.js";
 import { mergeGridRects } from "./grid.js";
+import { createLevelObject } from "./objects.js";
 
 /**
  * additional import for TypeScript

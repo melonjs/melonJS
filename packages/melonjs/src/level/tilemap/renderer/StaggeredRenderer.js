@@ -1,12 +1,12 @@
 import { degToRad } from "./../../../math/math.ts";
 import { vector2dPool } from "../../../math/vector2d.ts";
-import TMXHexagonalRenderer from "./TMXHexagonalRenderer.js";
+import HexagonalRenderer from "./HexagonalRenderer.js";
 
 /**
  * a Staggered Map Renderer
  * @category Tilemap
  */
-export default class TMXStaggeredRenderer extends TMXHexagonalRenderer {
+export default class StaggeredRenderer extends HexagonalRenderer {
 	/**
 	 * return true if the renderer can render the specified layer
 	 * @ignore

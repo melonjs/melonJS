@@ -1,12 +1,12 @@
 import { vector2dPool } from "../../../math/vector2d.ts";
 import { boundsPool } from "../../../physics/bounds.ts";
-import TMXOrthogonalRenderer from "./TMXOrthogonalRenderer.js";
+import OrthogonalRenderer from "./OrthogonalRenderer.js";
 
 /**
  * additional import for TypeScript
  * @import {Bounds} from "../../../physics/bounds.ts";
- * @import TMXTileMap from "../TMXTileMap.js";
- * @import TMXLayer from "../TMXLayer.js";
+ * @import TMXTileMap from "../../tiled/TMXTileMap.js";
+ * @import TMXLayer from "../../tiled/TMXLayer.js";
  */
 /**
  * an Oblique Map Renderer (Tiled 1.12+)
@@ -14,7 +14,7 @@ import TMXOrthogonalRenderer from "./TMXOrthogonalRenderer.js";
  * controlled by the map's skewx/skewy attributes.
  * @category Tilemap
  */
-export default class TMXObliqueRenderer extends TMXOrthogonalRenderer {
+export default class ObliqueRenderer extends OrthogonalRenderer {
 	/**
 	 * @param {TMXTileMap} map - the TMX map
 	 */

@@ -10,10 +10,11 @@ import {
 	markWorldShape,
 	tileLayerWalls,
 } from "../tilemap/collision.js";
+import { createTMXObject } from "../tilemap/objects.js";
 import { addLevelToContainer, isObjectWanted } from "../tilemap/populate.js";
+import { getNewTileMapRenderer } from "../tilemap/renderer/autodetect.js";
 import { releaseViewport } from "../tilemap/viewport.js";
 import { TILED_SUPPORTED_VERSION } from "./constants.js";
-import { getNewTMXRenderer } from "./renderer/autodetect.js";
 import {
 	isSpriteFusionMap,
 	SPRITESHEET,
@@ -22,7 +23,6 @@ import {
 } from "./spritefusion.ts";
 import TMXGroup from "./TMXGroup.js";
 import TMXLayer from "./TMXLayer.js";
-import { createTMXObject } from "./TMXObjectFactory.js";
 import TMXTileset from "./TMXTileset.js";
 import TMXTilesetGroup from "./TMXTilesetGroup.js";
 
@@ -30,7 +30,7 @@ import TMXTilesetGroup from "./TMXTilesetGroup.js";
  * additional import for TypeScript
  * @import {Bounds} from "../../physics/bounds.ts";
  * @import Renderable from "../../renderable/renderable.js";
- * @import TMXRenderer from "./renderer/TMXRenderer.js";
+ * @import TileMapRenderer from "../tilemap/renderer/TileMapRenderer.js";
  */
 import {
 	applyObjectOpacity,
@@ -468,14 +468,14 @@ export default class TMXTileMap {
 
 	/**
 	 * Return the map default renderer
-	 * @returns {TMXRenderer} a TMX renderer
+	 * @returns {TileMapRenderer} a TMX renderer
 	 */
 	getRenderer() {
 		if (
 			typeof this.renderer === "undefined" ||
 			!this.renderer.canRender(this)
 		) {
-			this.renderer = getNewTMXRenderer(this);
+			this.renderer = getNewTileMapRenderer(this);
 		}
 		return this.renderer;
 	}

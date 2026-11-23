@@ -1,10 +1,10 @@
 import { Vector2d, vector2dPool } from "../../../math/vector2d.ts";
 import { boundsPool } from "../../../physics/bounds.ts";
-import TMXRenderer from "./TMXRenderer.js";
+import TileMapRenderer from "./TileMapRenderer.js";
 
 /**
  * additional import for TypeScript
- * @import TMXTileMap from "../TMXTileMap.js";
+ * @import TMXTileMap from "../../tiled/TMXTileMap.js";
  */
 // scope global variables & constants
 const offsetsStaggerX = [
@@ -24,7 +24,7 @@ const offsetsStaggerY = [
  * an Hexagonal Map Renderer
  * @category Tilemap
  */
-export default class TMXHexagonalRenderer extends TMXRenderer {
+export default class HexagonalRenderer extends TileMapRenderer {
 	/**
 	 * @param {TMXTileMap} map - the TMX map
 	 */

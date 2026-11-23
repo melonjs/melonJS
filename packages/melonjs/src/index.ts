@@ -16,17 +16,17 @@ import { IntGrid } from "./level/ldtk/intgrid.ts";
 import { LDtkLevel, LDtkWorld } from "./level/ldtk/level.ts";
 import { LDtkProject } from "./level/ldtk/project.ts";
 import { LDtkObject } from "./level/ldtk/renderables.ts";
-import TMXHexagonalRenderer from "./level/tiled/renderer/TMXHexagonalRenderer.js";
-import TMXIsometricRenderer from "./level/tiled/renderer/TMXIsometricRenderer.js";
-import TMXOrthogonalRenderer from "./level/tiled/renderer/TMXOrthogonalRenderer.js";
-import TMXRenderer from "./level/tiled/renderer/TMXRenderer.js";
-import TMXStaggeredRenderer from "./level/tiled/renderer/TMXStaggeredRenderer.js";
 import TMXLayer from "./level/tiled/TMXLayer.js";
 import TMXTileMap from "./level/tiled/TMXTileMap.js";
 import TMXTileset from "./level/tiled/TMXTileset.js";
 import TMXTilesetGroup from "./level/tiled/TMXTilesetGroup.js";
 import * as TMXUtils from "./level/tiled/TMXUtils.js";
 import PlacedTileLayer from "./level/tilemap/PlacedTileLayer.js";
+import HexagonalRenderer from "./level/tilemap/renderer/HexagonalRenderer.js";
+import IsometricRenderer from "./level/tilemap/renderer/IsometricRenderer.js";
+import OrthogonalRenderer from "./level/tilemap/renderer/OrthogonalRenderer.js";
+import StaggeredRenderer from "./level/tilemap/renderer/StaggeredRenderer.js";
+import TileMapRenderer from "./level/tilemap/renderer/TileMapRenderer.js";
 import Tile from "./level/tilemap/Tile.js";
 import TileLayer from "./level/tilemap/TileLayer.js";
 import Tileset from "./level/tilemap/Tileset.js";
@@ -207,7 +207,17 @@ export type {
 } from "./level/ldtk/types.ts";
 export type { LevelLoadOptions } from "./level/level.js";
 export { level } from "./level/level.js";
+/* eslint-disable @typescript-eslint/no-deprecated */
+export {
+	TMXHexagonalRenderer,
+	TMXIsometricRenderer,
+	TMXOrthogonalRenderer,
+	TMXRenderer,
+	TMXStaggeredRenderer,
+} from "./level/tiled/renderers.ts";
 export type { default as TMXObject } from "./level/tiled/TMXObject.js";
+/* eslint-enable @typescript-eslint/no-deprecated */
+export { mergeGridRects } from "./level/tilemap/grid.js";
 export {
 	createLevelObject,
 	hasObjectFactory,
@@ -215,8 +225,7 @@ export {
 	registerObjectFactory,
 	registerTiledObjectClass, // eslint-disable-line @typescript-eslint/no-deprecated
 	registerTiledObjectFactory, // eslint-disable-line @typescript-eslint/no-deprecated
-} from "./level/tiled/TMXObjectFactory.js";
-export { mergeGridRects } from "./level/tilemap/grid.js";
+} from "./level/tilemap/objects.js";
 export type { PlacedTile } from "./level/tilemap/PlacedTileLayer.js";
 export type { TilesetDefinition } from "./level/tilemap/Tileset.js";
 export { Light3d } from "./lighting/light3d.ts";
@@ -353,11 +362,13 @@ export {
 	GlowEffect,
 	Gradient,
 	GradientMapEffect,
+	HexagonalRenderer,
 	HologramEffect,
 	ImageLayer,
 	InstancedMesh,
 	IntGrid,
 	InvertEffect,
+	IsometricRenderer,
 	isPortableTopology,
 	isTopology,
 	isVertexFormat,
@@ -370,6 +381,7 @@ export {
 	Mesh,
 	NineSliceSprite,
 	NoiseTexture2d,
+	OrthogonalRenderer,
 	OutlineEffect,
 	Particle,
 	ParticleEmitter,
@@ -399,6 +411,7 @@ export {
 	Sprite3d,
 	SquishEffect,
 	Stage,
+	StaggeredRenderer,
 	SwayEffect,
 	save,
 	state,
@@ -407,15 +420,11 @@ export {
 	TextureAtlas,
 	Tile,
 	TileLayer,
+	TileMapRenderer,
 	Tileset,
 	TilesetGroup,
 	TintPulseEffect,
-	TMXHexagonalRenderer,
-	TMXIsometricRenderer,
 	TMXLayer,
-	TMXOrthogonalRenderer,
-	TMXRenderer,
-	TMXStaggeredRenderer,
 	TMXTileMap,
 	TMXTileset,
 	TMXTilesetGroup,

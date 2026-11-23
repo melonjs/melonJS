@@ -4,8 +4,11 @@ import {
 	boot,
 	Container,
 	createLevelObject,
+	HexagonalRenderer,
 	hasObjectFactory,
+	IsometricRenderer,
 	mergeGridRects,
+	OrthogonalRenderer,
 	PlacedTileLayer,
 	Renderable,
 	registerObjectClass,
@@ -13,10 +16,17 @@ import {
 	registerTiledObjectClass,
 	registerTiledObjectFactory,
 	Sprite,
+	StaggeredRenderer,
 	TileLayer,
+	TileMapRenderer,
 	Tileset,
 	TilesetGroup,
+	TMXHexagonalRenderer,
+	TMXIsometricRenderer,
 	TMXLayer,
+	TMXOrthogonalRenderer,
+	TMXRenderer,
+	TMXStaggeredRenderer,
 	TMXTileset,
 	TMXTilesetGroup,
 	timer,
@@ -131,6 +141,32 @@ describe("mergeGridRects", () => {
 	it("covers a room's walls with four rectangles", () => {
 		const rects = cover(["######", "#....#", "#....#", "#....#", "######"]);
 		expect(rects).toHaveLength(4);
+	});
+});
+
+describe("the map renderers, under their neutral names", () => {
+	it("are the classes the Tiled names still give", () => {
+		expect(TMXRenderer).toBe(TileMapRenderer);
+		expect(TMXOrthogonalRenderer).toBe(OrthogonalRenderer);
+		expect(TMXIsometricRenderer).toBe(IsometricRenderer);
+		expect(TMXHexagonalRenderer).toBe(HexagonalRenderer);
+		expect(TMXStaggeredRenderer).toBe(StaggeredRenderer);
+	});
+
+	it("keep what was tested by the old names true", () => {
+		const renderer = new OrthogonalRenderer({
+			cols: 4,
+			rows: 2,
+			tilewidth: 16,
+			tileheight: 16,
+		});
+		expect(renderer).toBeInstanceOf(TMXOrthogonalRenderer);
+		expect(renderer).toBeInstanceOf(TMXRenderer);
+		expect(renderer).toBeInstanceOf(TileMapRenderer);
+		// a staggered renderer is a hexagonal one, by either name
+		expect(Object.getPrototypeOf(TMXStaggeredRenderer)).toBe(
+			TMXHexagonalRenderer,
+		);
 	});
 });
 

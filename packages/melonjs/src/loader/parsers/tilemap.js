@@ -62,7 +62,7 @@ async function loadSpritesheet(asset, settings) {
  * @ignore
  * @internal
  */
-export function preloadTMX(tmxData, onload, onerror, settings) {
+export function preloadTileMap(tmxData, onload, onerror, settings) {
 	if (typeof tmxList[tmxData.name] !== "undefined") {
 		// already loaded
 		return 0;

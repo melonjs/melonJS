@@ -1,6 +1,6 @@
 import { boundsPool } from "../../../physics/bounds.ts";
 import Renderable from "../../../renderable/renderable.js";
-import { getDefaultShape } from "../TMXObjectFactory.js";
+import { getDefaultShape } from "../objects.js";
 
 /**
  * create an unnamed shape object (Renderable with a static adapter-managed body)

@@ -4,7 +4,7 @@
 // A fragment's position is in the layer's pixels, measured across from the
 // map's top corner (the renderer takes the map's `originX` and the
 // tileset's `tileoffset` off before it gets here), so the cell maths below
-// is that of `TMXIsometricRenderer` with no origin in it.
+// is that of `IsometricRenderer` with no origin in it.
 //
 // The tile of cell (col, row) is drawn as its whole image, bottom-aligned on
 // the cell's diamond: with u = col - row and s = col + row, its left edge is

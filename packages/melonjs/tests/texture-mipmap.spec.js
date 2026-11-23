@@ -22,7 +22,7 @@ import Renderer from "../src/video/renderer.js";
 import { createAtlas, TextureAtlas } from "../src/video/texture/atlas.js";
 import WebGPULitQuadBatcher from "../src/video/webgpu/batchers/lit_quad_batcher.js";
 import WebGPUQuadBatcher from "../src/video/webgpu/batchers/quad_batcher.js";
-import WebGPUTMXRenderer from "../src/video/webgpu/renderers/tmxlayer/tmxlayer.js";
+import WebGPUTileMapRenderer from "../src/video/webgpu/renderers/tmxlayer/tmxlayer.js";
 import tmxlayerCommonWGSL from "../src/video/webgpu/shaders/tmxlayer-common.wgsl";
 import tmxlayerOrthogonalWGSL from "../src/video/webgpu/shaders/tmxlayer-orthogonal.wgsl";
 import {
@@ -556,7 +556,7 @@ describe("linear-mipmap texture filter (WebGPU, mock renderer)", () => {
 			renderer.setBatcher = () => {
 				return batcher;
 			};
-			const tmx = new WebGPUTMXRenderer(renderer, "orthogonal");
+			const tmx = new WebGPUTileMapRenderer(renderer, "orthogonal");
 			tmx.draw(layer(atlas()), {
 				pos: { x: 0, y: 0 },
 				width: 64,

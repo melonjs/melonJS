@@ -1,4 +1,4 @@
-import { getDefaultShape } from "../TMXObjectFactory.js";
+import { getDefaultShape } from "../objects.js";
 
 /**
  * create a renderable from an embedded tile object

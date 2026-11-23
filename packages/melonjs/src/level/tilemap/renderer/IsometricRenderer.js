@@ -1,16 +1,16 @@
 import { vector2dPool } from "../../../math/vector2d.ts";
 import { boundsPool } from "../../../physics/bounds.ts";
-import TMXRenderer from "./TMXRenderer.js";
+import TileMapRenderer from "./TileMapRenderer.js";
 
 /**
  * additional import for TypeScript
- * @import TMXTileMap from "../TMXTileMap.js";
+ * @import TMXTileMap from "../../tiled/TMXTileMap.js";
  */
 /**
  * an Isometric Map Renderer
  * @category Tilemap
  */
-export default class TMXIsometricRenderer extends TMXRenderer {
+export default class IsometricRenderer extends TileMapRenderer {
 	/**
 	 * @param {TMXTileMap} map - the TMX map
 	 */

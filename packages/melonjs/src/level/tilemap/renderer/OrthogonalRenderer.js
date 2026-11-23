@@ -1,15 +1,15 @@
 import { vector2dPool } from "../../../math/vector2d.ts";
-import TMXRenderer from "./TMXRenderer.js";
+import TileMapRenderer from "./TileMapRenderer.js";
 
 /**
  * additional import for TypeScript
- * @import TMXTileMap from "../TMXTileMap.js";
+ * @import TMXTileMap from "../../tiled/TMXTileMap.js";
  */
 /**
  * an Orthogonal Map Renderer
  * @category Tilemap
  */
-export default class TMXOrthogonalRenderer extends TMXRenderer {
+export default class OrthogonalRenderer extends TileMapRenderer {
 	/**
 	 * @param {TMXTileMap} map - the TMX map
 	 */

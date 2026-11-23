@@ -324,7 +324,7 @@ describe("Tile rendering raw path (drawTileRaw)", () => {
 		});
 	});
 
-	describe("TMXOrthogonalRenderer.drawTileRaw", () => {
+	describe("OrthogonalRenderer.drawTileRaw", () => {
 		it("matches drawTile for every flip combination", () => {
 			const layer = makeOrthogonalLayer([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 			const tmxRenderer = layer.getRenderer();
