@@ -77,7 +77,7 @@ describe("the GPU texture of a tile layer that leaves the world", () => {
 	/** the layers the GPU tile renderers keep a texture for */
 	const kept = () => {
 		const layers = [];
-		for (const gpu of renderer._tmxGPURenderers?.values() ?? []) {
+		for (const gpu of renderer._tileLayerRenderers?.values() ?? []) {
 			layers.push(...gpu.resources.keys());
 		}
 		return layers;

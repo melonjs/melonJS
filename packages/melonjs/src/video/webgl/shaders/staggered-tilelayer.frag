@@ -1,5 +1,5 @@
-// The staggered and hexagonal part of the TMX layer fragment shader:
-// appended to `tmxlayer-common.frag`.
+// The staggered and hexagonal part of the tile layer fragment shader:
+// appended to `tilelayer-common.frag`.
 //
 // Both maps are one geometry, in the layer's pixels (the renderer takes the
 // tileset's `tileoffset` off before a position gets here). Cells stand in
@@ -22,7 +22,7 @@
 // texel behind the ones before it until the fragment is opaque.
 //
 // `MAX_ROWS` and `MAX_COLS`, the bounds of the two runs, are declared ahead
-// of this file (see `TMX_ORIENTATIONS` in `gpu/tmxlayer_orientation.js`): a
+// of this file (see `TILELAYER_ORIENTATIONS` in `gpu/tilelayer_orientation.js`): a
 // layer of larger tiles is left to the CPU renderer.
 
 uniform vec2 uStagger;       // (columnwidth, rowheight)

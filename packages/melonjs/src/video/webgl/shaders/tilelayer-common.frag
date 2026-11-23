@@ -7,10 +7,10 @@
 precision highp float;
 precision highp int;
 
-// Fragment shader for the TMX layer GPU renderers (WebGL2 / GLSL ES 3.00):
+// Fragment shader for the tile layer GPU renderers (WebGL2 / GLSL ES 3.00):
 // the part every map orientation shares. An orientation's own file follows
-// it in the program (`orthogonal-tmxlayer.frag`, `isometric-tmxlayer.frag`,
-// `staggered-tmxlayer.frag` for staggered and hexagonal maps) and gives the two things that differ: where a cell's tile is drawn
+// it in the program (`orthogonal-tilelayer.frag`, `isometric-tilelayer.frag`,
+// `staggered-tilelayer.frag` for staggered and hexagonal maps) and gives the two things that differ: where a cell's tile is drawn
 // (`tileOrigin`), and which cells could cover a fragment, front to back
 // (`main`).
 //
@@ -132,7 +132,7 @@ bool tryRenderCell(int cx, int cy, vec2 worldPx, Footprint fp, out vec4 outColor
 		return false;
 	}
 
-	// flip mask + axis-swap trick: see TMX shader-path flip spec.
+	// flip mask + axis-swap trick: see tile layer shader-path flip spec.
 	// AD performs a transpose; with AD set, H and V swap their effective
 	// axes (matches the legacy `buildFlipTransform`).
 	int flipMask = int(cell.b);

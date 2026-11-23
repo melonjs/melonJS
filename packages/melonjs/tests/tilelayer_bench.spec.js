@@ -31,7 +31,7 @@ import {
  * view named, with a sixteenth of the pixels for the software rasterizer.
  *
  * It runs only when asked for: `BENCH=1 pnpm vitest run --config
- * packages/melonjs/vitest.config.ts tests/tmxlayer_bench.spec.js`, from the
+ * packages/melonjs/vitest.config.ts tests/tilelayer_bench.spec.js`, from the
  * repository's root.
  */
 

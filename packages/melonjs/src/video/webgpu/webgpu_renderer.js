@@ -25,7 +25,7 @@ import BlendEffect from "../effects/blendEffect.js";
 import { meshHostingBlocker } from "../effects/mesh_splice.js";
 import RadialGradientEffect from "../effects/radialGradient.js";
 import { frameClampMode } from "../gpu/frame.js";
-import { TMX_ORIENTATIONS } from "../gpu/tmxlayer_orientation.js";
+import { TILELAYER_ORIENTATIONS } from "../gpu/tilelayer_orientation.js";
 import { Gradient } from "../gradient.js";
 import Renderer from "../renderer.js";
 import RenderTargetPool from "../rendertarget/render_target_pool.js";
@@ -55,7 +55,7 @@ import WebGPUBufferArena from "./buffer/arena.js";
 import WebGPUUniformRing from "./buffer/uniformring.js";
 import { buildEffectGPU } from "./effect_binding.js";
 import WebGPUPipelineCache, { DEPTH_STENCIL_FORMAT } from "./pipeline/cache.js";
-import TMXLayerGPURenderer from "./renderers/tmxlayer/tmxlayer.js";
+import TileLayerGPURenderer from "./renderers/tilelayer/tilelayer.js";
 import { COMPRESSION_FEATURES } from "./texture/compressed.js";
 import { WebGPUFrameTexture } from "./texture/frametexture.js";
 import WebGPUTextureStore from "./texture/store.js";
@@ -191,7 +191,7 @@ export default class WebGPURenderer extends Renderer {
 
 		// capability flags describe what the backend can DO today
 
-		// orthogonal TMX layers draw through the WGSL shader tile path
+		// orthogonal tile layers draw through the WGSL shader tile path
 		this.supportsShaderTileLayers = true;
 		// the mesh tier: depth-tested drawing (the depth half of the shared
 		// attachment) and retained model-space mesh geometry — Camera3d
@@ -219,7 +219,7 @@ export default class WebGPURenderer extends Renderer {
 		// (device-scoped: dropped on device loss, rebuilt on first use)
 		/** @ignore
 		 * @internal */
-		this.tmxRenderers = new Map();
+		this.tileLayerRenderers = new Map();
 
 		// create a texture cache
 		/**
@@ -2504,11 +2504,11 @@ export default class WebGPURenderer extends Renderer {
 	}
 
 	/**
-	 * Draw a TMX tile layer: WGSL-eligible layers (`renderMode ===
+	 * Draw a tile layer: WGSL-eligible layers (`renderMode ===
 	 * "shader"`) draw through the GPU tile path — one quad per tileset,
 	 * GID lookup in a per-layer index texture; everything else falls
 	 * through to the base per-tile loop.
-	 * @param {object} layer - the TMXLayer to draw
+	 * @param {object} layer - the TileLayer to draw
 	 * @param {object} rect - the visible region in world coords
 	 * @override
 	 */
@@ -2517,16 +2517,16 @@ export default class WebGPURenderer extends Renderer {
 		// still drawn, tile by tile
 		if (
 			layer.renderMode === "shader" &&
-			TMX_ORIENTATIONS[layer.orientation]?.draws(layer) === true
+			TILELAYER_ORIENTATIONS[layer.orientation]?.draws(layer) === true
 		) {
 			// device-scoped, lazily (re)built: a device loss rebuilds the
 			// pipeline cache, detected via the epoch stamp
-			let tmx = this.tmxRenderers.get(layer.orientation);
-			if (tmx === undefined || tmx.epoch !== this.pipelineCache.epoch) {
-				tmx = new TMXLayerGPURenderer(this, layer.orientation);
-				this.tmxRenderers.set(layer.orientation, tmx);
+			let gpu = this.tileLayerRenderers.get(layer.orientation);
+			if (gpu === undefined || gpu.epoch !== this.pipelineCache.epoch) {
+				gpu = new TileLayerGPURenderer(this, layer.orientation);
+				this.tileLayerRenderers.set(layer.orientation, gpu);
 			}
-			tmx.draw(layer, rect);
+			gpu.draw(layer, rect);
 			return;
 		}
 		super.drawTileLayer(layer, rect);
@@ -2537,8 +2537,8 @@ export default class WebGPURenderer extends Renderer {
 	 * @internal
 	 */
 	releaseTileLayer(layer) {
-		for (const tmx of this.tmxRenderers.values()) {
-			tmx.release(layer);
+		for (const gpu of this.tileLayerRenderers.values()) {
+			gpu.release(layer);
 		}
 	}
 
@@ -4763,7 +4763,7 @@ export default class WebGPURenderer extends Renderer {
 		this.currentRenderTarget = null;
 		// tile-path lookup textures died with the device; the epoch check
 		// in drawTileLayer rebuilds the renderers lazily
-		this.tmxRenderers.clear();
+		this.tileLayerRenderers.clear();
 		this.depthTexture = null;
 		this.msaaDepthTexture = null;
 		this.msaaColorTexture = null;
@@ -4820,8 +4820,8 @@ export default class WebGPURenderer extends Renderer {
 		this.effectPassDepth = 0;
 		this.customShader = undefined;
 		// level transition: free the per-layer/per-tileset lookup textures
-		this.tmxRenderers.forEach((tmx) => {
-			tmx.reset();
+		this.tileLayerRenderers.forEach((gpu) => {
+			gpu.reset();
 		});
 		super.reset();
 		// re-init batchers when recovering from a device loss, plain reset
@@ -4887,7 +4887,7 @@ export default class WebGPURenderer extends Renderer {
 			this.pipelineCache?.clear();
 			this.captureTexture?.destroy();
 			this.captureTexture = undefined;
-			this.tmxRenderers.clear();
+			this.tileLayerRenderers.clear();
 			this._renderTargetPool?.destroy();
 			this._renderTargetPool = null;
 			this.effectUniformArena?.destroy();

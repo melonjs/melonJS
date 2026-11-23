@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { boot } from "../src/index.js";
 import { BufferTextureResource } from "../src/video/texture/resource.js";
-import TMXLayerGPURenderer from "../src/video/webgl/renderers/tmxlayer/tmxlayer.js";
+import TileLayerGPURenderer from "../src/video/webgl/renderers/tilelayer/tilelayer.js";
 import {
 	getWebGLRenderer,
 	releaseWebGLRenderer,
@@ -41,10 +41,10 @@ describe("TMXLayer shader path", () => {
 
 	it("lazily constructs the GPU renderer when first asked", (ctx) => {
 		requireWebGL2(ctx);
-		// `_getTMXGPURendererFor` is the lazy factory on WebGLRenderer
-		const r1 = renderer._getTMXGPURendererFor("orthogonal");
-		const r2 = renderer._getTMXGPURendererFor("orthogonal");
-		expect(r1).toBeInstanceOf(TMXLayerGPURenderer);
+		// `_getTileLayerRendererFor` is the lazy factory on WebGLRenderer
+		const r1 = renderer._getTileLayerRendererFor("orthogonal");
+		const r2 = renderer._getTileLayerRendererFor("orthogonal");
+		expect(r1).toBeInstanceOf(TileLayerGPURenderer);
 		expect(r2).toBe(r1);
 	});
 
@@ -62,7 +62,7 @@ describe("TMXLayer shader path", () => {
 	 */
 	it("allocates the index texture's unit through the standard cache", (ctx) => {
 		requireWebGL2(ctx);
-		const gpu = renderer._getTMXGPURendererFor("orthogonal");
+		const gpu = renderer._getTileLayerRendererFor("orthogonal");
 
 		const cols = 4;
 		const rows = 3;
@@ -103,7 +103,7 @@ describe("TMXLayer shader path", () => {
 	it("preserves GID bytes through upload (no premultiply alpha)", (ctx) => {
 		requireWebGL2(ctx);
 		const gl = renderer.gl;
-		const gpu = renderer._getTMXGPURendererFor("orthogonal");
+		const gpu = renderer._getTileLayerRendererFor("orthogonal");
 
 		const cols = 2;
 		const rows = 1;
@@ -153,7 +153,7 @@ describe("TMXLayer shader path", () => {
 	 */
 	it("drops every cached layer resource on reset()", (ctx) => {
 		requireWebGL2(ctx);
-		const gpu = renderer._getTMXGPURendererFor("orthogonal");
+		const gpu = renderer._getTileLayerRendererFor("orthogonal");
 		const batcher = renderer.setBatcher("quad");
 
 		const makeLayer = (cols, rows) => {
@@ -186,7 +186,7 @@ describe("TMXLayer shader path", () => {
 	 */
 	it("survives reset() even when currentBatcher is not a MaterialBatcher", (ctx) => {
 		requireWebGL2(ctx);
-		const gpu = renderer._getTMXGPURendererFor("orthogonal");
+		const gpu = renderer._getTileLayerRendererFor("orthogonal");
 		const quad = renderer.setBatcher("quad");
 
 		const layer = {
@@ -219,7 +219,7 @@ describe("TMXLayer shader path", () => {
 	 */
 	it("only allocates an animation lookup for animated tilesets", (ctx) => {
 		requireWebGL2(ctx);
-		const gpu = renderer._getTMXGPURendererFor("orthogonal");
+		const gpu = renderer._getTileLayerRendererFor("orthogonal");
 
 		const staticTileset = {
 			isAnimated: false,
@@ -252,7 +252,7 @@ describe("TMXLayer shader path", () => {
 	 */
 	it("marks the animation lookup dirty when a frame changes", (ctx) => {
 		requireWebGL2(ctx);
-		const gpu = renderer._getTMXGPURendererFor("orthogonal");
+		const gpu = renderer._getTileLayerRendererFor("orthogonal");
 
 		const anim = { cur: { tileid: 10 } };
 		const tileset = { isAnimated: true, animations: new Map([[10, anim]]) };
@@ -281,7 +281,7 @@ describe("TMXLayer shader path", () => {
 	it("preserves animation lookup bytes through upload", (ctx) => {
 		requireWebGL2(ctx);
 		const gl = renderer.gl;
-		const gpu = renderer._getTMXGPURendererFor("orthogonal");
+		const gpu = renderer._getTileLayerRendererFor("orthogonal");
 		const batcher = renderer.setBatcher("quad");
 
 		// tile 0 → frame 3 (lo=3, hi=0), tile 1 → frame 256 (lo=0, hi=1)
@@ -335,7 +335,7 @@ describe("TMXLayer shader path", () => {
 	 */
 	it("drops every animation lookup on reset()", (ctx) => {
 		requireWebGL2(ctx);
-		const gpu = renderer._getTMXGPURendererFor("orthogonal");
+		const gpu = renderer._getTileLayerRendererFor("orthogonal");
 
 		gpu._getOrUpdateAnimLookup(
 			{ isAnimated: true, animations: new Map([[0, { cur: { tileid: 0 } }]]) },

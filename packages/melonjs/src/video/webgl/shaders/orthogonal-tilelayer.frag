@@ -1,5 +1,5 @@
-// The orthogonal part of the TMX layer fragment shader: appended to
-// `tmxlayer-common.frag`.
+// The orthogonal part of the tile layer fragment shader: appended to
+// `tilelayer-common.frag`.
 //
 // Fast path: when the tileset has no oversized tiles (`uOverflow == (0, 0)`)
 // — the common case for grid-aligned maps — only the geometric cell can
@@ -16,7 +16,7 @@
 // cells a tile reaches past its own, across and up.
 
 // `MAX_OVERFLOW`, the bound of both loops, is declared ahead of this file
-// (see `TMX_ORIENTATIONS` in `gpu/tmxlayer_orientation.js`): a layer whose
+// (see `TILELAYER_ORIENTATIONS` in `gpu/tilelayer_orientation.js`): a layer whose
 // tiles reach further is left to the CPU renderer.
 
 // a tile is bottom-aligned on its cell, and left-aligned

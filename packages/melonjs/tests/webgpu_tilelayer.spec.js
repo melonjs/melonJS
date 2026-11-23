@@ -1,7 +1,7 @@
 import "./helpers/webgpu-globals.js";
 import { beforeEach, describe, expect, it } from "vitest";
 import WebGPUQuadBatcher from "../src/video/webgpu/batchers/quad_batcher.js";
-import TMXLayerGPURenderer from "../src/video/webgpu/renderers/tmxlayer/tmxlayer.js";
+import TileLayerGPURenderer from "../src/video/webgpu/renderers/tilelayer/tilelayer.js";
 import { createMockWebGPURenderer } from "./helpers/webgpu-mock-renderer.js";
 
 /**
@@ -58,13 +58,13 @@ describe("WebGPU orthogonal TMX layer renderer (mock)", () => {
 			renderer.currentBatcher ??= new WebGPUQuadBatcher(renderer);
 			return renderer.currentBatcher;
 		};
-		tmx = new TMXLayerGPURenderer(renderer, "orthogonal");
+		tmx = new TileLayerGPURenderer(renderer, "orthogonal");
 	});
 
 	it("registers the shader family once with the quad vertex layout", () => {
 		expect(tmx.key).toMatch(/^effect:/);
 		// a second instance (device-loss rebuild) reuses the module text
-		const again = new TMXLayerGPURenderer(renderer, "orthogonal");
+		const again = new TileLayerGPURenderer(renderer, "orthogonal");
 		expect(again.key).toBe(tmx.key);
 	});
 
@@ -225,7 +225,7 @@ describe("WebGPU orthogonal TMX layer renderer (mock)", () => {
  * module, one pass with the layer's one tileset whatever the map has, and
  * the two run lengths its shader walks in place of the orthogonal overflow.
  * What it draws is compared with the CPU renderer, pixel by pixel, on a real
- * device in `webgpu_tmxlayer_isometric.spec.js`.
+ * device in `webgpu_tilelayer_isometric.spec.js`.
  */
 describe("WebGPU isometric TMX layer renderer (mock)", () => {
 	let renderer;
@@ -279,11 +279,11 @@ describe("WebGPU isometric TMX layer renderer (mock)", () => {
 			renderer.currentBatcher ??= new WebGPUQuadBatcher(renderer);
 			return renderer.currentBatcher;
 		};
-		tmx = new TMXLayerGPURenderer(renderer, "isometric");
+		tmx = new TileLayerGPURenderer(renderer, "isometric");
 	});
 
 	it("has a shader module of its own", () => {
-		const orthogonal = new TMXLayerGPURenderer(renderer, "orthogonal");
+		const orthogonal = new TileLayerGPURenderer(renderer, "orthogonal");
 		expect(tmx.key).toMatch(/^effect:/);
 		expect(tmx.key).not.toBe(orthogonal.key);
 	});
@@ -369,15 +369,15 @@ describe("WebGPU staggered and hexagonal TMX layer renderer (mock)", () => {
 	});
 
 	it("one shader module for both, apart from the other orientations'", () => {
-		const staggered = new TMXLayerGPURenderer(renderer, "staggered");
-		const hexagonal = new TMXLayerGPURenderer(renderer, "hexagonal");
-		const isometric = new TMXLayerGPURenderer(renderer, "isometric");
+		const staggered = new TileLayerGPURenderer(renderer, "staggered");
+		const hexagonal = new TileLayerGPURenderer(renderer, "hexagonal");
+		const isometric = new TileLayerGPURenderer(renderer, "isometric");
 		expect(hexagonal.key).toBe(staggered.key);
 		expect(staggered.key).not.toBe(isometric.key);
 	});
 
 	it("hands the shader the map's lines: their spacing, axis and index", () => {
-		const tmx = new TMXLayerGPURenderer(renderer, "hexagonal");
+		const tmx = new TileLayerGPURenderer(renderer, "hexagonal");
 		// a hexagon side of 12 along x: columns 20 apart, rows of 12
 		tmx.draw(
 			layerOf("hexagonal", {
@@ -396,7 +396,7 @@ describe("WebGPU staggered and hexagonal TMX layer renderer (mock)", () => {
 		// 28 pixels wide in spacings of 40, 48 tall in rows of 12
 		expect([uniforms[6], uniforms[7]]).toEqual([1, 4]);
 
-		const other = new TMXLayerGPURenderer(renderer, "staggered");
+		const other = new TileLayerGPURenderer(renderer, "staggered");
 		other.draw(
 			layerOf("staggered", {
 				columnwidth: 14,
@@ -413,7 +413,7 @@ describe("WebGPU staggered and hexagonal TMX layer renderer (mock)", () => {
 	});
 
 	it("leaves them at 0 for the other orientations", () => {
-		const tmx = new TMXLayerGPURenderer(renderer, "isometric");
+		const tmx = new TileLayerGPURenderer(renderer, "isometric");
 		const layer = layerOf("isometric", { originX: 8 * 14 });
 		tmx.draw(layer, RECT);
 		expect(renderer.calls.drawIndexed).toEqual([6]);

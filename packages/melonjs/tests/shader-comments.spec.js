@@ -8,10 +8,10 @@ import { describe, expect, it } from "vitest";
 import { stripShaderComments } from "../scripts/strip-shader-comments.ts";
 import meshLitFragment from "../src/video/webgl/shaders/mesh-lit.frag";
 import quadVertex from "../src/video/webgl/shaders/quad.vert";
-import tileLayerFragment from "../src/video/webgl/shaders/tmxlayer-common.frag";
+import tileLayerFragment from "../src/video/webgl/shaders/tilelayer-common.frag";
 import meshLitWGSL from "../src/video/webgpu/shaders/mesh-lit.wgsl";
 import quadWGSL from "../src/video/webgpu/shaders/quad.wgsl";
-import tileLayerWGSL from "../src/video/webgpu/shaders/tmxlayer-common.wgsl";
+import tileLayerWGSL from "../src/video/webgpu/shaders/tilelayer-common.wgsl";
 
 describe("stripShaderComments", () => {
 	it("takes out a line comment, with the spaces before it", () => {
@@ -88,10 +88,10 @@ describe("the shaders the tests compile", () => {
 	const shaders = {
 		"quad.vert": quadVertex,
 		"mesh-lit.frag": meshLitFragment,
-		"tmxlayer-common.frag": tileLayerFragment,
+		"tilelayer-common.frag": tileLayerFragment,
 		"quad.wgsl": quadWGSL,
 		"mesh-lit.wgsl": meshLitWGSL,
-		"tmxlayer-common.wgsl": tileLayerWGSL,
+		"tilelayer-common.wgsl": tileLayerWGSL,
 	};
 
 	for (const [name, source] of Object.entries(shaders)) {

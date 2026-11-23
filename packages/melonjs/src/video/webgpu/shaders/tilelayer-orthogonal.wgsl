@@ -1,30 +1,30 @@
-// The orthogonal part of the TMX layer shader: appended to
-// tmxlayer-common.wgsl. The WGSL port of orthogonal-tmxlayer.frag.
+// The orthogonal part of the tile layer shader: appended to
+// tilelayer-common.wgsl. The WGSL port of orthogonal-tilelayer.frag.
 //
 // `uOverflow` is how many cells a tile reaches past its own, across and up.
 
 // `MAX_OVERFLOW`, the bound of both loops, is declared ahead of this file
-// (see `TMX_ORIENTATIONS` in gpu/tmxlayer_orientation.js).
+// (see `TILELAYER_ORIENTATIONS` in gpu/tilelayer_orientation.js).
 
 // a tile is bottom-aligned on its cell, and left-aligned
 fn tileOrigin(cx : i32, cy : i32) -> vec2f {
 	return vec2f(
-		f32(cx) * tmx.uCellSize.x,
-		(f32(cy) + 1.0) * tmx.uCellSize.y - tmx.uTileSize.y,
+		f32(cx) * tileLayer.uCellSize.x,
+		(f32(cy) + 1.0) * tileLayer.uCellSize.y - tileLayer.uTileSize.y,
 	);
 }
 
 @fragment
 fn fragment_main(in : VSOut) -> @location(0) vec4f {
-	let tileCoord = tmx.uVisibleStart + in.vRegion * tmx.uVisibleSize;
+	let tileCoord = tileLayer.uVisibleStart + in.vRegion * tileLayer.uVisibleSize;
 	let geomCell = floor(tileCoord);
-	let worldPx = tileCoord * tmx.uCellSize;
+	let worldPx = tileCoord * tileLayer.uCellSize;
 	let fp = footprint(worldPx);
 
 	let gx = i32(geomCell.x);
 	let gy = i32(geomCell.y);
-	let overflowX = i32(tmx.uOverflow.x + 0.5);
-	let overflowY = i32(tmx.uOverflow.y + 0.5);
+	let overflowX = i32(tileLayer.uOverflow.x + 0.5);
+	let overflowY = i32(tileLayer.uOverflow.y + 0.5);
 
 	// fast path: tiles fit the cell exactly — only the geometric cell can
 	// contain this fragment's tile

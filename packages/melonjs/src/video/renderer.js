@@ -201,7 +201,7 @@ export default class Renderer {
 		this.parentApplication = undefined;
 
 		/**
-		 * Whether this renderer backend can draw TMX tile layers through a
+		 * Whether this renderer backend can draw tile layers through a
 		 * GPU shader path (see the `gpuTilemap` application setting).
 		 * `false` here on the base/Canvas renderer; GPU backends flip it.
 		 * A capability flag rather than a version/class check so future
@@ -1896,16 +1896,16 @@ export default class Renderer {
 	releaseTileLayer(layer) {}
 
 	/**
-	 * Draw a TMX tile layer. Default behavior:
+	 * Draw a tile layer. Default behavior:
 	 *   - if `layer.canvasRenderer` is set (preRender bake), blit the cached
 	 *     offscreen canvas in a single `drawImage` call;
-	 *   - otherwise delegate to the layer's TMX orientation renderer for
+	 *   - otherwise delegate to the layer's map renderer for
 	 *     the per-tile loop.
 	 *
 	 * `WebGLRenderer` overrides this to add the procedural shader fast
 	 * path on top (when `layer.renderMode === "shader"`) and fall through
 	 * to this base behavior for all other layers.
-	 * @param {object} layer - the TMXLayer to draw
+	 * @param {object} layer - the TileLayer to draw
 	 * @param {Rect} rect - the visible region in world coords
 	 */
 	drawTileLayer(layer, rect) {

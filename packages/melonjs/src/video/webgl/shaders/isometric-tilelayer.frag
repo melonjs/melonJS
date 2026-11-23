@@ -1,5 +1,5 @@
-// The isometric part of the TMX layer fragment shader: appended to
-// `tmxlayer-common.frag`.
+// The isometric part of the tile layer fragment shader: appended to
+// `tilelayer-common.frag`.
 //
 // A fragment's position is in the layer's pixels, measured across from the
 // map's top corner (the renderer takes the map's `originX` and the
@@ -22,7 +22,7 @@
 // behind it.
 
 // `MAX_ROWS` and `MAX_COLS`, the bounds of the two runs, are declared ahead
-// of this file (see `TMX_ORIENTATIONS` in `gpu/tmxlayer_orientation.js`): a
+// of this file (see `TILELAYER_ORIENTATIONS` in `gpu/tilelayer_orientation.js`): a
 // layer of larger tiles is left to the CPU renderer.
 
 // the left of the cell's diamond, and as far above its bottom as the tile

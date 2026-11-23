@@ -614,7 +614,7 @@ describe("TMXLayer on an infinite map, WebGL shader path", () => {
 		// moves the renderer to that cell's place, (-4, -4) tiles of 32px,
 		// and gives it the view in the grid's own coordinates
 		layer.renderMode = "shader";
-		const gpu = renderer._getTMXGPURendererFor("orthogonal");
+		const gpu = renderer._getTileLayerRendererFor("orthogonal");
 		const calls = [];
 		const draw = gpu.draw;
 		gpu.draw = (l, rect) => {

@@ -5,7 +5,7 @@ import { boundsPool } from "../../physics/bounds.ts";
 import Renderable from "../../renderable/renderable.js";
 import CanvasRenderer from "../../video/canvas/canvas_renderer";
 import { createCanvas } from "../../video/canvas_factory.js";
-import { TMX_ORIENTATIONS } from "../../video/gpu/tmxlayer_orientation.js";
+import { TILELAYER_ORIENTATIONS } from "../../video/gpu/tilelayer_orientation.js";
 import {
 	FLIP_AD_BIT,
 	FLIP_H_BIT,
@@ -43,9 +43,10 @@ export { FLIP_AD_BIT, FLIP_H_BIT, FLIP_V_BIT };
 
 // The largest tiles the shader path draws are the bounds of the loops of the
 // fragment shaders, which are declared from the same numbers (see
-// `TMX_ORIENTATIONS`). An orthogonal tile can reach so many cells past its
+// `TILELAYER_ORIENTATIONS`). An orthogonal tile can reach so many cells past its
 // own.
-const ORTHOGONAL_MAX_OVERFLOW = TMX_ORIENTATIONS.orthogonal.limits.MAX_OVERFLOW;
+const ORTHOGONAL_MAX_OVERFLOW =
+	TILELAYER_ORIENTATIONS.orthogonal.limits.MAX_OVERFLOW;
 // "an isometric", "a staggered", "a hexagonal": a layer's kind, in a reason
 const kindOf = (orientation) => {
 	return `${orientation === "isometric" ? "an" : "a"} ${orientation}`;
@@ -818,7 +819,7 @@ export default class TileLayer extends Renderable {
 		if (!renderer || renderer.supportsShaderTileLayers !== true) {
 			return { ok: false, reason: "no-gpu-renderer" };
 		}
-		if (TMX_ORIENTATIONS[this.orientation] === undefined) {
+		if (TILELAYER_ORIENTATIONS[this.orientation] === undefined) {
 			return {
 				ok: false,
 				reason: `no gpu renderer supported yet for "${this.orientation}" orientation`,
@@ -1089,7 +1090,8 @@ export default class TileLayer extends Renderable {
 		// in a line. On an isometric map the lines are half a grid height
 		// apart and their cells a grid width; on the others, a row height
 		// and two column widths
-		const { MAX_ROWS, MAX_COLS } = TMX_ORIENTATIONS[this.orientation].limits;
+		const { MAX_ROWS, MAX_COLS } =
+			TILELAYER_ORIENTATIONS[this.orientation].limits;
 		const map = this.getRenderer();
 		const isometric = this.orientation === "isometric";
 		const maxWidth =

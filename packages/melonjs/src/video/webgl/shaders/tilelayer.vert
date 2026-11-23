@@ -1,6 +1,6 @@
 #version 300 es
 
-// Vertex shader for the orthogonal TMX layer GPU renderer.
+// Vertex shader for the orthogonal tile layer GPU renderer.
 //
 // Matches the quad batcher's vertex layout (`aVertex`, `aRegion`, `aColor`,
 // `uProjectionMatrix`) so the standard `setBatcher("quad", this.shader)` +

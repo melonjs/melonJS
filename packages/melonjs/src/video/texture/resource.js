@@ -86,7 +86,7 @@ export class TextureResource {
 
 /**
  * A texture sourced from a raw byte buffer. Used for synthesized
- * textures (TMX layer GID index, font atlases, color LUTs, signed-
+ * textures (tile layer GID index, font atlases, color LUTs, signed-
  * distance fields, palette tables, etc.) — any case where the texture
  * data isn't an image file.
  *

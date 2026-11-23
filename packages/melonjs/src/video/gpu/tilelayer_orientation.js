@@ -1,7 +1,7 @@
 /**
  * What the GPU tile layer renderers need to know of a map orientation, the
  * same on WebGL and WebGPU: each backend brings the shader text, and reads
- * the rest from here ({@link TMX_ORIENTATIONS}).
+ * the rest from here ({@link TILELAYER_ORIENTATIONS}).
  *
  * - `region`: the part of a layer a view shows, for the tiles of one
  *   tileset. A region is the quad to draw (`x`, `y`, `width`, `height`, in
@@ -14,7 +14,7 @@
  * - `limits`: the bounds of the loops of the orientation's fragment shader,
  *   declared in it as constants of the same names, and what a layer is
  *   checked against before it takes the GPU path.
- * @import { default as TMXLayer } from "../../level/tiled/TMXLayer.js";
+ * @import { default as TileLayer } from "../../level/tilemap/TileLayer.js";
  */
 
 /**
@@ -44,7 +44,7 @@ export function createRegion() {
 /**
  * The cells of an orthogonal layer a view shows, for the tiles of one
  * tileset: the quad covers them, and the shader works in cells.
- * @param {TMXLayer} layer - the layer
+ * @param {TileLayer} layer - the layer
  * @param {object} rect - the visible viewport rect (world coords)
  * @param {object} tileset - the tileset whose tiles are drawn
  * @param {object} out - the region to fill
@@ -151,7 +151,7 @@ function viewIn(rect, left, top, right, bottom, originX, originY, out) {
  * The shader works in the layer's pixels, measured across from the map's top
  * corner and with the `tileoffset` taken off: both are in `startX` /
  * `startY`, and the shader needs neither.
- * @param {TMXLayer} layer - the layer
+ * @param {TileLayer} layer - the layer
  * @param {object} rect - the visible viewport rect (world coords)
  * @param {object} tileset - the tileset whose tiles are drawn
  * @param {object} out - the region to fill
@@ -191,13 +191,13 @@ export function isometricRegion(layer, rect, tileset, out) {
 
 /**
  * The part of a staggered or hexagonal layer a view shows, for the tiles of
- * one tileset: the two are one geometry (see `staggered-tmxlayer.frag`),
+ * one tileset: the two are one geometry (see `staggered-tilelayer.frag`),
  * the second with cells longer by its `hexsidelength`.
  *
  * As on an isometric map, the quad is the view, cut to where the tileset's
  * tiles can be, and the shader works in the layer's pixels with the
  * `tileoffset` taken off.
- * @param {TMXLayer} layer - the layer
+ * @param {TileLayer} layer - the layer
  * @param {object} rect - the visible viewport rect (world coords)
  * @param {object} tileset - the tileset whose tiles are drawn
  * @param {object} out - the region to fill
@@ -293,7 +293,7 @@ export function atlasRows(tileset) {
  */
 const ONE_TILESET = {
 	/**
-	 * @param {TMXLayer} layer - the layer
+	 * @param {TileLayer} layer - the layer
 	 * @param {object[]} scratch - an array to fill
 	 * @returns {object[]} that tileset, or none for an empty layer
 	 */
@@ -308,7 +308,7 @@ const ONE_TILESET = {
 	 * not a layer with no tileset to draw with: one that was never
 	 * checked, or whose tiles come from several (`null`; an empty layer
 	 * has `undefined`, and draws nothing)
-	 * @param {TMXLayer} layer - the layer
+	 * @param {TileLayer} layer - the layer
 	 * @returns {boolean} whether the layer can be drawn
 	 */
 	draws(layer) {
@@ -321,12 +321,12 @@ const ONE_TILESET = {
  * @ignore
  * @internal
  */
-export const TMX_ORIENTATIONS = {
+export const TILELAYER_ORIENTATIONS = {
 	orthogonal: {
 		region: orthogonalRegion,
 		/**
 		 * every tileset of the map: a pass shows the tiles of its own
-		 * @param {TMXLayer} layer - the layer
+		 * @param {TileLayer} layer - the layer
 		 * @returns {object[]} the tilesets
 		 */
 		tilesetsOf(layer) {
@@ -335,7 +335,7 @@ export const TMX_ORIENTATIONS = {
 		/**
 		 * not a layer found unfit for this path, or made so by a tile set
 		 * since (a layer never checked is drawn)
-		 * @param {TMXLayer} layer - the layer
+		 * @param {TileLayer} layer - the layer
 		 * @returns {boolean} whether the layer can be drawn
 		 */
 		draws(layer) {

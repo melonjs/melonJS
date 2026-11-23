@@ -24,7 +24,7 @@ import {
 import AmbientLightEffect from "../effects/ambientlight.js";
 import BlendEffect from "../effects/blendEffect.js";
 import RadialGradientEffect from "../effects/radialGradient.js";
-import { TMX_ORIENTATIONS } from "../gpu/tmxlayer_orientation.js";
+import { TILELAYER_ORIENTATIONS } from "../gpu/tilelayer_orientation.js";
 import { Gradient } from "../gradient.js";
 import Renderer from "./../renderer.js";
 import RenderTargetPool from "../rendertarget/render_target_pool.js";
@@ -47,7 +47,7 @@ import PrimitiveBatcher from "./batchers/primitive_batcher";
 import QuadBatcher from "./batchers/quad_batcher";
 import { markContextLost } from "./buffer/deletable.js";
 import { createLightUniformScratch, packLights } from "./lighting/pack.ts";
-import TMXLayerGPURenderer from "./renderers/tmxlayer/tmxlayer.js";
+import TileLayerGPURenderer from "./renderers/tilelayer/tilelayer.js";
 import { WebGLTextureStore } from "./texture/store.js";
 import { resolveMaxTextures } from "./utils/maxtextures.js";
 import { getMaxShaderPrecision } from "./utils/precision.js";
@@ -522,7 +522,7 @@ export default class WebGLRenderer extends Renderer {
 		// set the renderer type
 		this.type = "WebGL2";
 
-		// this backend renders TMX tile layers on the GPU (see TMXLayer)
+		// this backend renders tile layers on the GPU (see TileLayer)
 		this.supportsShaderTileLayers = true;
 		this.maxTextureSize = this.gl.getParameter(this.gl.MAX_TEXTURE_SIZE);
 
@@ -582,7 +582,7 @@ export default class WebGLRenderer extends Renderer {
 				this.currentBlendMode = undefined;
 				this.setBlendMode(this.settings.blendMode);
 
-				// reset() re-inits batchers, FBO pool, light shader, TMX renderer
+				// reset() re-inits batchers, FBO pool, light shader, tile layer renderer
 				this.reset();
 
 				// stale per-source unit assignments — force re-upload on next draw
@@ -1356,7 +1356,7 @@ export default class WebGLRenderer extends Renderer {
 		// drop every per-layer GPU tilemap texture — tile layers churn on
 		// game reset and we'd otherwise leak a WebGLTexture per layer
 		// across each level transition
-		this._tmxGPURenderers?.forEach((gpu) => {
+		this._tileLayerRenderers?.forEach((gpu) => {
 			gpu?.reset();
 		});
 
@@ -1445,7 +1445,7 @@ export default class WebGLRenderer extends Renderer {
 		}
 		this._canvasCaptured = false;
 
-		// Context-loss-only cleanup for the TMX GPU renderer: the cached
+		// Context-loss-only cleanup for the tile layer GPU renderer: the cached
 		// `GLShader` and per-layer GL textures reference the OLD context
 		// and are invalid. On a regular `GAME_RESET` (context still
 		// valid) we already dropped per-layer textures via `.reset()`
@@ -1457,22 +1457,22 @@ export default class WebGLRenderer extends Renderer {
 			 * @ignore
 			 * @internal
 			 */
-			this._tmxGPURenderers = undefined;
+			this._tileLayerRenderers = undefined;
 		}
 	}
 
 	/**
-	 * Draw a TMX tile layer through whichever path the layer's `renderMode`
+	 * Draw a tile layer through whichever path the layer's `renderMode`
 	 * resolves to. WebGL2-eligible layers (`renderMode === "shader"`) take
 	 * the procedural shader path — one quad per tileset, GID lookup in a
 	 * per-layer data texture. All other layers fall through to the base
 	 * `Renderer.drawTileLayer` (preRender blit or per-tile loop).
-	 * @param {object} layer - the TMXLayer to draw
+	 * @param {object} layer - the TileLayer to draw
 	 * @param {object} rect - the visible region in world coords
 	 */
 	drawTileLayer(layer, rect) {
 		if (layer.renderMode === "shader") {
-			const gpu = this._getTMXGPURendererFor(layer.orientation);
+			const gpu = this._getTileLayerRendererFor(layer.orientation);
 			// a layer asked for this path after it was found unfit for it
 			// is still drawn, tile by tile
 			if (gpu !== undefined && gpu.orientation.draws(layer)) {
@@ -1488,7 +1488,7 @@ export default class WebGLRenderer extends Renderer {
 	 * @internal
 	 */
 	releaseTileLayer(layer) {
-		for (const gpu of this._tmxGPURenderers?.values() ?? []) {
+		for (const gpu of this._tileLayerRenderers?.values() ?? []) {
 			gpu?.release(layer);
 		}
 	}
@@ -1525,16 +1525,16 @@ export default class WebGLRenderer extends Renderer {
 	 * @ignore
 	 * @internal
 	 */
-	_getTMXGPURendererFor(orientation) {
-		if (TMX_ORIENTATIONS[orientation] === undefined) {
+	_getTileLayerRendererFor(orientation) {
+		if (TILELAYER_ORIENTATIONS[orientation] === undefined) {
 			// an oblique map: drawn by the legacy renderer
 			return undefined;
 		}
-		this._tmxGPURenderers ??= new Map();
-		let gpu = this._tmxGPURenderers.get(orientation);
+		this._tileLayerRenderers ??= new Map();
+		let gpu = this._tileLayerRenderers.get(orientation);
 		if (gpu === undefined) {
 			try {
-				gpu = new TMXLayerGPURenderer(this, orientation);
+				gpu = new TileLayerGPURenderer(this, orientation);
 			} catch (err) {
 				// shader compile / link failure on this driver — disable
 				// the GPU path permanently for the rest of the session
@@ -1548,7 +1548,7 @@ export default class WebGLRenderer extends Renderer {
 				);
 				gpu = null;
 			}
-			this._tmxGPURenderers.set(orientation, gpu);
+			this._tileLayerRenderers.set(orientation, gpu);
 		}
 		return gpu || undefined;
 	}

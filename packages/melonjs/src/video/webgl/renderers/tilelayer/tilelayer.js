@@ -2,19 +2,19 @@ import {
 	atlasColumns,
 	atlasRows,
 	createRegion,
-	TMX_ORIENTATIONS,
-} from "../../../gpu/tmxlayer_orientation.js";
+	TILELAYER_ORIENTATIONS,
+} from "../../../gpu/tilelayer_orientation.js";
 import { BufferTextureResource } from "../../../texture/resource.js";
 import GLShader from "../../glshader.js";
-import isometricFragment from "../../shaders/isometric-tmxlayer.frag";
-import orthogonalFragment from "../../shaders/orthogonal-tmxlayer.frag";
-import staggeredFragment from "../../shaders/staggered-tmxlayer.frag";
-import tmxLayerVertex from "../../shaders/tmxlayer.vert";
-import tmxLayerCommonFragment from "../../shaders/tmxlayer-common.frag";
+import isometricFragment from "../../shaders/isometric-tilelayer.frag";
+import orthogonalFragment from "../../shaders/orthogonal-tilelayer.frag";
+import staggeredFragment from "../../shaders/staggered-tilelayer.frag";
+import tileLayerVertex from "../../shaders/tilelayer.vert";
+import tileLayerCommonFragment from "../../shaders/tilelayer-common.frag";
 
 /**
  * additional imports for TypeScript
- * @import { default as TMXLayer } from "../../../../level/tiled/TMXLayer.js";
+ * @import { default as TileLayer } from "../../../../level/tilemap/TileLayer.js";
  * @import { default as WebGLRenderer } from "../../webgl_renderer.js";
  */
 
@@ -32,7 +32,7 @@ const FRAGMENTS = {
 const DEFAULT_TINT = new Float32Array([1, 1, 1, 1]);
 
 /**
- * GPU-accelerated renderer for TMX tile layers (WebGL2): what every map
+ * GPU-accelerated renderer for tile layers (WebGL2): what every map
  * orientation shares. Draws the visible region of a layer as one
  * screen-aligned quad per tileset — the fragment shader samples a per-layer
  * GID index texture and the tileset atlas, eliminating the per-tile draw
@@ -41,8 +41,8 @@ const DEFAULT_TINT = new Float32Array([1, 1, 1, 1]);
  * and re-uploaded only when `layer.dataVersion` changes (mutations from
  * `setTile`/`clearTile`).
  *
- * There is one of these per map orientation drawn (see `TMX_ORIENTATIONS`
- * in `gpu/tmxlayer_orientation.js`). Two things differ from one to the next:
+ * There is one of these per map orientation drawn (see `TILELAYER_ORIENTATIONS`
+ * in `gpu/tilelayer_orientation.js`). Two things differ from one to the next:
  * its part of the fragment shader (where a cell's tile is, and which cells
  * can cover a fragment), and the part of a layer a view shows.
  *
@@ -53,7 +53,7 @@ const DEFAULT_TINT = new Float32Array([1, 1, 1, 1]);
  * filter all come for free; nothing here pokes `gl.bindTexture` or
  * `gl.activeTexture` directly.
  *
- * Cache lifecycle: one `BufferTextureResource` per `TMXLayer`. Tile
+ * Cache lifecycle: one `BufferTextureResource` per `TileLayer`. Tile
  * layers don't come and go individually — they only churn on game reset
  * — so the cache is freed in bulk via `reset()`, called from
  * `WebGLRenderer.reset()` (which the `GAME_RESET` event already
@@ -62,11 +62,11 @@ const DEFAULT_TINT = new Float32Array([1, 1, 1, 1]);
  * @ignore
  * @internal
  */
-export default class TMXLayerGPURenderer {
+export default class TileLayerGPURenderer {
 	/**
 	 * @param {WebGLRenderer} renderer - the WebGL renderer instance
 	 * @param {string} orientation - the map orientation to draw, one of
-	 * `TMX_ORIENTATIONS`
+	 * `TILELAYER_ORIENTATIONS`
 	 */
 	constructor(renderer, orientation) {
 		this.renderer = renderer;
@@ -75,7 +75,7 @@ export default class TMXLayerGPURenderer {
 		 * @ignore
 		 * @internal
 		 */
-		this.orientation = TMX_ORIENTATIONS[orientation];
+		this.orientation = TILELAYER_ORIENTATIONS[orientation];
 		// the bounds of the shader's loops, declared ahead of its own part
 		const limits = Object.entries(this.orientation.limits)
 			.map(([name, value]) => {
@@ -94,8 +94,8 @@ export default class TMXLayerGPURenderer {
 		// only the per-fragment math gets cleaner.
 		this.shader = new GLShader(
 			renderer.gl,
-			tmxLayerVertex,
-			`${tmxLayerCommonFragment}\n${limits}\n${FRAGMENTS[orientation]}`,
+			tileLayerVertex,
+			`${tileLayerCommonFragment}\n${limits}\n${FRAGMENTS[orientation]}`,
 			renderer.shaderPrecision,
 		);
 		// per-layer `BufferTextureResource`. `Map` (not `WeakMap`) so we
@@ -104,7 +104,7 @@ export default class TMXLayerGPURenderer {
 		// strong ref to each layer anyway, so this doesn't change layer
 		// lifetime.
 		this.resources = new Map();
-		// per-tileset animation-lookup resources, keyed by `TMXTileset`.
+		// per-tileset animation-lookup resources, keyed by `Tileset`.
 		// Only allocated for tilesets that actually have animated tiles
 		// (`tileset.isAnimated === true`).
 		this.animLookups = new Map();
@@ -315,7 +315,7 @@ export default class TMXLayerGPURenderer {
 
 	/**
 	 * Get-or-create the per-layer index `BufferTextureResource`.
-	 * @param {TMXLayer} layer
+	 * @param {TileLayer} layer
 	 * @returns {BufferTextureResource}
 	 * @ignore
 	 * @internal
@@ -352,7 +352,7 @@ export default class TMXLayerGPURenderer {
 	/**
 	 * Bind the layer's shader and what all its tilesets share: called for
 	 * the first tileset the view shows something of.
-	 * @param {TMXLayer} layer - the layer
+	 * @param {TileLayer} layer - the layer
 	 * @returns {object} the quad batcher, on this renderer's shader
 	 * @ignore
 	 * @internal
@@ -393,8 +393,8 @@ export default class TMXLayerGPURenderer {
 	}
 
 	/**
-	 * Draw a TMX layer through the shader path.
-	 * @param {TMXLayer} layer
+	 * Draw a tile layer through the shader path.
+	 * @param {TileLayer} layer
 	 * @param {object} rect - the visible viewport rect (world coords)
 	 */
 	draw(layer, rect) {

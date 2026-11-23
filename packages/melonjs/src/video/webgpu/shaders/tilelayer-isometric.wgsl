@@ -1,5 +1,5 @@
-// The isometric part of the TMX layer shader: appended to
-// tmxlayer-common.wgsl. The WGSL port of isometric-tmxlayer.frag, where the
+// The isometric part of the tile layer shader: appended to
+// tilelayer-common.wgsl. The WGSL port of isometric-tilelayer.frag, where the
 // cell maths is explained.
 //
 // A fragment's position is in the layer's pixels, measured across from the
@@ -10,34 +10,34 @@
 // the fragment is opaque.
 
 // `MAX_ROWS` and `MAX_COLS`, the bounds of the two runs, are declared ahead
-// of this file (see `TMX_ORIENTATIONS` in gpu/tmxlayer_orientation.js).
+// of this file (see `TILELAYER_ORIENTATIONS` in gpu/tilelayer_orientation.js).
 
 // the left of the cell's diamond, and as far above its bottom as the tile
 // is tall
 fn tileOrigin(cx : i32, cy : i32) -> vec2f {
 	return vec2f(
-		f32(cx - cy - 1) * tmx.uCellSize.x * 0.5,
-		f32(cx + cy + 2) * tmx.uCellSize.y * 0.5 - tmx.uTileSize.y,
+		f32(cx - cy - 1) * tileLayer.uCellSize.x * 0.5,
+		f32(cx + cy + 2) * tileLayer.uCellSize.y * 0.5 - tileLayer.uTileSize.y,
 	);
 }
 
 @fragment
 fn fragment_main(in : VSOut) -> @location(0) vec4f {
-	let worldPx = tmx.uVisibleStart + in.vRegion * tmx.uVisibleSize;
+	let worldPx = tileLayer.uVisibleStart + in.vRegion * tileLayer.uVisibleSize;
 	let fp = footprint(worldPx);
 
-	let halfCell = tmx.uCellSize * 0.5;
+	let halfCell = tileLayer.uCellSize * 0.5;
 	// the rightmost and the lowest cell whose image can reach the fragment
 	let uMax = i32(floor(worldPx.x / halfCell.x)) + 1;
-	let sMax = i32(floor((worldPx.y + tmx.uTileSize.y) / halfCell.y)) - 2;
-	let spanU = i32(tmx.uOverflow.x + 0.5);
-	let spanS = i32(tmx.uOverflow.y + 0.5);
+	let sMax = i32(floor((worldPx.y + tileLayer.uTileSize.y) / halfCell.y)) - 2;
+	let spanU = i32(tileLayer.uOverflow.x + 0.5);
+	let spanS = i32(tileLayer.uOverflow.y + 0.5);
 
 	var result = vec4f(0.0);
 	var opaque = false;
 	// rows past the map's last one, or before its first, hold no cell: most
 	// of a fragment's run, along the bottom of the map and above its top
-	let sLast = i32(tmx.uMapSize.x) + i32(tmx.uMapSize.y) - 2;
+	let sLast = i32(tileLayer.uMapSize.x) + i32(tileLayer.uMapSize.y) - 2;
 	for (var j = max(sMax - sLast, 0); j < MAX_ROWS; j++) {
 		let s = sMax - j;
 		if (j >= spanS || s < 0) {
