@@ -43,8 +43,9 @@ freed with `loader.unload("map1")` and brought back with
 loop back simply keeps them all loaded. `melonjs-loading-assets` covers the
 pattern.
 
-Asset `type` is `"tmx"` for maps and `"tsx"` for external tilesets — those are
-the only two type strings the loader knows. The *file* can be `.tmx` / `.tsx`
+Asset `type` is `"tmx"` for maps and `"tsx"` for external tilesets (`"tilemap"`
+is another name for `"tmx"`, see "A map written by another tool" below). The
+*file* can be `.tmx` / `.tsx`
 (XML), or `.json` / `.tmj` / `.tsj`; the parser branches on the extension, not
 on the type. `type: "tmj"` throws `unknown or invalid resource type`. You can
 also skip `src` and pass the map inline via `data`, as the parsed JSON object
@@ -319,6 +320,10 @@ data and tags, a Sprite Fusion tile's attributes.
 ```js
 const props = board.getTileProperties(col, row);   // { kind: "floor" }, or undefined
 ```
+
+It is a method of a `TileLayer`. An LDtk layer that stacks tiles or places
+them off its grid is a `PlacedTileLayer`, which has no cells to ask: test
+`layer instanceof TileLayer` on an LDtk level before calling it.
 
 They are those of the tile in its tileset, with those the one cell has of its
 own over them: `board.setTileProperties(col, row, { locked: true })` gives a
@@ -841,8 +846,13 @@ placed.
 
 A Tiled tile layer's parallax factor (and its group's, multiplied) is its
 `ratio` (20.18), so that it moves exactly as an image layer of the same
-factor does and the two stay together. An object layer's factor is not
-applied: its objects are things of the map.
+factor does and the two stay together. A custom property named `ratio` on the
+tile layer sets it too, as on an image layer (a number, for both axes). An
+object layer's factor is not applied: its objects are things of the map.
+
+In a definition a part left out keeps its value (`ratio: { x: 0.5 }` leaves
+`y` at 1), and a value that is not a number throws. On the vector itself, set
+both parts: `ratio.set(0.5, 0.5)`.
 
 `mergeGridRects(cols, rows, (col, row) => boolean)` covers the cells that pass
 a test with few rectangles, in cells: one static body per wall instead of one
@@ -978,6 +988,8 @@ layer into the offscreen-bake path instead.
 | a Tiled parallax layer is not where Tiled shows it at the start of the level | Tiled measures a factor from the centre of its own view to the map's parallax origin; the engine measures from the camera's position, for tile and image layers alike: move the layer with its offset, or set `layer.parallaxOrigin` and `layer.parallaxAnchor` yourself |
 | `getTile` finds nothing under a tile of a layer with a `ratio` | the ratio moves where the layer is drawn, not its cells: they are where the layer was placed |
 | a tile layer with `ratio: 0.5` scrolls the wrong way round | 1 scrolls with the world and 0 stays on the screen, as for an `ImageLayer`; LDtk's own factor is the other way round, and is converted when a level is loaded |
+| `a layer's ratio must be a number, or an {x, y} of numbers` | a tile layer's definition gave `ratio` (or `parallaxOrigin`, `parallaxAnchor`) a text, a list or `NaN`: give a number, or `{ x, y }` |
+| `layer.getTileProperties is not a function` on an LDtk level | that layer stacks tiles or places them off its grid, so it is a `PlacedTileLayer`, which has no cells: test `layer instanceof TileLayer` first |
 | the player disappears when walking out of its first LDtk level | it is an entity of that level, taken out with it: set `isPersistent = true` on it |
 | the coins again after coming back to an LDtk level | a level loaded again builds its objects again: the `objects` option leaves out what was taken |
 | two LDtk levels are drawn over each other, with walls from both | they are on different world depths, at the same place: pass the player's depth to `streamAround` and `levelsAt` |

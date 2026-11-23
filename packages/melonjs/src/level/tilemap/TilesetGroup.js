@@ -85,4 +85,19 @@ export default class TilesetGroup {
 		}
 		throw new Error(`no matching tileset found for gid ${gid}`);
 	}
+
+	/**
+	 * the tileset a gid belongs to, or undefined when none of the group has
+	 * it: {@link TilesetGroup#getTilesetByGid} for a caller that expects there
+	 * may be none
+	 * @param {number} gid
+	 * @returns {Tileset|undefined} the tileset, if any
+	 */
+	findTileset(gid) {
+		try {
+			return this.getTilesetByGid(gid);
+		} catch {
+			return undefined;
+		}
+	}
 }

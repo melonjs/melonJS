@@ -64,22 +64,60 @@ export function applyLayerDefinition(layer, def) {
  * @ignore
  */
 export function setLayerScrolling(layer, settings = {}) {
-	const { ratio, parallaxOrigin, parallaxAnchor, parallaxScale } = settings;
-	if (typeof ratio === "number") {
-		layer.ratio.set(ratio, ratio);
-	} else if (ratio !== undefined && ratio !== null) {
-		layer.ratio.set(ratio.x, ratio.y);
-	}
-	if (parallaxOrigin !== undefined && parallaxOrigin !== null) {
-		layer.parallaxOrigin.set(parallaxOrigin.x, parallaxOrigin.y);
-	}
-	if (parallaxAnchor !== undefined && parallaxAnchor !== null) {
-		layer.parallaxAnchor.set(parallaxAnchor.x, parallaxAnchor.y);
+	const { parallaxScale } = settings;
+	for (const name of SCROLLING_VECTORS) {
+		const value = settings[name];
+		if (value !== undefined && value !== null) {
+			setPair(layer[name], value, name);
+		}
 	}
 	if (parallaxScale !== undefined && parallaxScale !== null) {
 		layer.parallaxScale = parallaxScale;
 	}
 	layer.isDirty = true;
+}
+
+/**
+ * the scrolling settings of a layer that are a pair of numbers, across and
+ * down
+ * @ignore
+ */
+export const SCROLLING_VECTORS = Object.freeze([
+	"ratio",
+	"parallaxOrigin",
+	"parallaxAnchor",
+]);
+
+/**
+ * Set a pair of numbers from one number, for both, or from an `{x, y}`. A
+ * part left out keeps the value it has. A part that is not a number throws:
+ * a layer placed by one would be drawn nowhere.
+ * @param {Vector2d} pair - the pair to set
+ * @param {number|{x?: number, y?: number}} value - what to set it to
+ * @param {string} name - the setting, for the error
+ * @ignore
+ */
+function setPair(pair, value, name) {
+	const single = typeof value === "number";
+	const parts = typeof value === "object" && !Array.isArray(value);
+	const x = single ? value : parts ? (value.x ?? pair.x) : Number.NaN;
+	const y = single ? value : parts ? (value.y ?? pair.y) : Number.NaN;
+	if (!Number.isFinite(x) || !Number.isFinite(y)) {
+		throw new Error(
+			`a layer's ${name} must be a number, or an {x, y} of numbers: ${JSON.stringify(value)}`,
+		);
+	}
+	pair.set(x, y);
+}
+
+/**
+ * a part of a layer's ratio as the placement reads it: a part that is not a
+ * number (the vector set with one argument, the field replaced) scrolls
+ * with the world, rather than placing the layer nowhere
+ * @ignore
+ */
+function ratioPart(value) {
+	return Number.isFinite(value) ? value : 1;
 }
 
 /**
@@ -106,7 +144,9 @@ export function checkParallaxScale(scale) {
  */
 export function hasParallax(layer) {
 	return (
-		layer.ratio.x !== 1 || layer.ratio.y !== 1 || layer.parallaxScale !== 1
+		ratioPart(layer.ratio?.x) !== 1 ||
+		ratioPart(layer.ratio?.y) !== 1 ||
+		layer.parallaxScale !== 1
 	);
 }
 
@@ -203,10 +243,14 @@ export function parallaxPlacement(
 	// a ratio of 1 scrolls with the world: the layer stays on its origin
 	out.scale = layer.parallaxScale;
 	out.x = Math.round(
-		origin.x + (viewX + viewWidth * anchor.x - origin.x) * (1 - layer.ratio.x),
+		origin.x +
+			(viewX + viewWidth * anchor.x - origin.x) *
+				(1 - ratioPart(layer.ratio?.x)),
 	);
 	out.y = Math.round(
-		origin.y + (viewY + viewHeight * anchor.y - origin.y) * (1 - layer.ratio.y),
+		origin.y +
+			(viewY + viewHeight * anchor.y - origin.y) *
+				(1 - ratioPart(layer.ratio?.y)),
 	);
 	return out;
 }

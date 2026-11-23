@@ -589,6 +589,29 @@ describe("Sprite Fusion maps, each with a spritesheet of its own", () => {
 		expect(loader.getTMX("sheets-bundled")).toBeNull();
 	});
 
+	it("finds its spritesheet whatever the map is called", async () => {
+		// an image is looked up by its name with any path and extension
+		// taken off: the map's name has to come through that whole
+		await preload([{ name: "spritesheet", type: "image", src: SHEET }]);
+		const names = ["probe.v2", "world:probe", "maps/probe", "a\\b", "50%.done"];
+		await preload(
+			names.map((name) => {
+				return { name, type: "spritefusion", src: INSTANCE_JSON };
+			}),
+		);
+		const images = new Set();
+		for (const name of names) {
+			const map = await loadLevel(app, name);
+			const image = map.getLayers()[0].tileset.image;
+			// its own sheet, not the game's of the editor's file name
+			expect(image, name).not.toBe(loader.getImage("spritesheet"));
+			expect(coloursOf(app, 4, 2)[1][0], name).toEqual(OTHER_FLOOR);
+			images.add(image);
+		}
+		// and each its own, not one shared by two names that look alike
+		expect(images.size).toBe(names.length);
+	});
+
 	it("leaves an image the game loaded as spritesheet alone", async () => {
 		await preload([{ name: "spritesheet", type: "image", src: SHEET }]);
 		const own = loader.getImage("spritesheet");
@@ -775,6 +798,9 @@ describe("a Sprite Fusion file that is odd, or wrong", () => {
 		const [layer] = map.getLayers();
 		expect(cellsOf(layer)[1]).toEqual([0, 4, 2, 0]);
 		expect(layer.getTileProperties(1, 1)).toEqual({ second: true });
+		// the tile placed over one that had attributes has none of them
+		expect(layer.getTileProperties(2, 1)).toBeUndefined();
+		expect(layer.cellProperties.size).toBe(1);
 	});
 
 	it("reads a layer with no tiles, and skips one that lists none", async () => {
@@ -1053,6 +1079,19 @@ describe("attributes beside properties, in a map of Tiled's form", () => {
 		expect(map.gravity).toBe(0.5);
 		const [door] = app.world.getChildByName("door");
 		expect(door).toBeDefined();
+		// what the object's class is given: the property and the attribute
+		const seen = [];
+		await level.load(level.getCurrentLevelId(), {
+			container: app.world,
+			async: true,
+			objects: (settings) => {
+				seen.push(settings);
+				return true;
+			},
+		});
+		expect(seen).toHaveLength(1);
+		expect(seen[0].locked).toBe(true);
+		expect(seen[0].key).toBe("red");
 	});
 
 	it("reads both on a tile of a tileset", async () => {
@@ -1166,6 +1205,77 @@ describe("attributes beside properties, in a map of Tiled's form", () => {
 		expect(app.world.getChildByName("backdrop")).toHaveLength(1);
 		expect(map.getLayers()).toHaveLength(2);
 	});
+
+	it("gives an image layer its attributes, with or without properties", async () => {
+		const imageLayer = (name, extra) => {
+			return {
+				type: "imagelayer",
+				name,
+				image: "spritesheet.png",
+				visible: true,
+				opacity: 1,
+				x: 0,
+				y: 0,
+				...extra,
+			};
+		};
+		await load(
+			tiledJSON([
+				tiledLayer("floor", new Array(8).fill(1)),
+				imageLayer("by-attribute", { attributes: { repeat: "repeat-x" } }),
+				imageLayer("by-property", {
+					properties: [{ name: "repeat", type: "string", value: "repeat-y" }],
+				}),
+				imageLayer("by-both", {
+					properties: [{ name: "repeat", type: "string", value: "repeat-y" }],
+					attributes: { repeat: "no-repeat" },
+				}),
+			]),
+		);
+		const repeatOf = (name) => {
+			return app.world.getChildByName(name)[0].repeat;
+		};
+		expect(repeatOf("by-attribute")).toBe("repeat-x");
+		expect(repeatOf("by-property")).toBe("repeat-y");
+		expect(repeatOf("by-both")).toBe("no-repeat");
+	});
+
+	it("leaves the map as it was read, however many times it is loaded", async () => {
+		globalThis.__imageLayerRan = false;
+		const data = tiledJSON(
+			[
+				tiledLayer("floor", new Array(8).fill(1), {
+					properties: [{ name: "speed", type: "int", value: 3 }],
+					attributes: { mood: "calm" },
+				}),
+				{
+					type: "imagelayer",
+					name: "backdrop",
+					image: "spritesheet.png",
+					visible: true,
+					opacity: 1,
+					x: 0,
+					y: 0,
+					// the older form of properties, a plain object: what an
+					// attribute copied into it would be read as the next time
+					properties: { other: "x" },
+					attributes: { code: "eval:(globalThis.__imageLayerRan = true)" },
+				},
+			],
+			{ attributes: { gravity: 0.5 } },
+		);
+		const before = JSON.parse(JSON.stringify(data));
+		const name = `both-${serial++}`;
+		await preload([{ name, type: "tilemap", data }]);
+		for (let pass = 0; pass < 3; pass++) {
+			await loadLevel(app, name);
+			expect(app.world.getChildByName("backdrop")).toHaveLength(1);
+			// no attribute was run as code, on the first load or a later one
+			expect(globalThis.__imageLayerRan, `load ${pass}`).toBe(false);
+		}
+		expect(loader.getTMX(name)).toEqual(before);
+		delete globalThis.__imageLayerRan;
+	});
 });
 
 describe("the properties of a cell", () => {
@@ -1259,6 +1369,19 @@ describe("the properties of a cell", () => {
 		layer.setTileProperties(1, 0, own);
 		layer.setCell(0, 0, 3);
 		expect(layer.getTileProperties(1, 0)).toEqual({ ...SHARED, cursed: true });
+	});
+
+	it("says nothing of a tile none of the tilesets has, and does not throw", () => {
+		layer.setCell(0, 0, 999);
+		expect(() => {
+			return layer.getTileProperties(0, 0);
+		}).not.toThrow();
+		expect(layer.getTileProperties(0, 0)).toBeUndefined();
+		// what the cell was given of its own is still there
+		layer.setTileProperties(0, 0, { odd: true });
+		expect(layer.getTileProperties(0, 0)).toEqual({ odd: true });
+		expect(layer.tilesets.findTileset(999)).toBeUndefined();
+		expect(layer.tilesets.findTileset(2)).toBe(layer.tileset);
 	});
 
 	it("has none while it holds no tile, whatever it was given", () => {

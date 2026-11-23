@@ -1,4 +1,5 @@
 import { warnOnce } from "../../lang/console.js";
+import { SCROLLING_VECTORS, setLayerScrolling } from "../tilemap/layer.js";
 import TileLayer, {
 	FLIP_AD_BIT,
 	FLIP_H_BIT,
@@ -87,16 +88,33 @@ function setLayerData(layer, data, x, y, width, height, chunk = false) {
 }
 
 /**
- * whether one of the tilesets has a tile of this gid
+ * Apply a layer's custom properties (and attributes) to the layer, as its
+ * fields. One named as a scrolling field of the layer (`ratio`, the property
+ * an image layer takes) sets that field, rather than taking its place: the
+ * layer is drawn by it. A value that is not a number is left out, with a
+ * warning.
  * @ignore
  * @internal
  */
-function hasTile(tilesets, gid) {
-	try {
-		tilesets.getTilesetByGid(gid);
-		return true;
-	} catch {
-		return false;
+function applyLayerProperties(layer, data) {
+	const kept = {};
+	for (const name of SCROLLING_VECTORS) {
+		kept[name] = layer[name];
+	}
+	TMXUtils.applyTMXProperties(layer, data);
+	for (const name of SCROLLING_VECTORS) {
+		const given = layer[name];
+		if (given === kept[name]) {
+			continue;
+		}
+		layer[name] = kept[name];
+		try {
+			setLayerScrolling(layer, { [name]: given });
+		} catch {
+			warnOnce(
+				`melonJS: layer "${layer.name}": its \`${name}\` property is not a number, nor an {x, y} of numbers: left out`,
+			);
+		}
 	}
 }
 
@@ -136,7 +154,7 @@ function setPlacedTiles(layer, tiles) {
 		const gid = firstgid + id;
 		// a tile no tileset has (a spritesheet replaced by a smaller one)
 		// would throw each time the layer is drawn
-		if (!hasTile(layer.tilesets, gid)) {
+		if (layer.tilesets.findTileset(gid) === undefined) {
 			warnOnce(
 				`melonJS: layer "${layer.name}" places tile ${id}, which the map's tilesets do not have: left out`,
 			);
@@ -144,11 +162,13 @@ function setPlacedTiles(layer, tiles) {
 		}
 		layerData[(row * cols + col) * 2] = gid;
 		// what this one tile was given, on top of what its tileset says
+		// (and nothing of a tile listed earlier for the same cell)
+		let own;
 		if (tile.properties !== undefined || tile.attributes !== undefined) {
-			const own = {};
+			own = {};
 			TMXUtils.applyTMXProperties(own, tile);
-			layer.setTileProperties(col, row, own);
 		}
+		layer.setTileProperties(col, row, own);
 	}
 }
 
@@ -246,7 +266,7 @@ export default class TMXLayer extends TileLayer {
 					layer.tint.parseHex(data.tintcolor, true);
 				}
 				// check if we have any user-defined properties
-				TMXUtils.applyTMXProperties(layer, data);
+				applyLayerProperties(layer, data);
 				// the `collider` property, when the layer has it as a field
 				// of its own (Sprite Fusion's JSON)
 				if (typeof data.collider === "boolean") {

@@ -51,6 +51,16 @@ export const gltfList = {};
 export const shaderList = {};
 
 /**
+ * The asset types that are a tile map, which the level director loads: one
+ * parser and one cache under three names, `"tmx"` being the first. `"tsx"`, a
+ * tileset on its own, shares both without being a level.
+ * @type {readonly string[]}
+ * @internal
+ * @ignore
+ */
+export const MAP_TYPES = Object.freeze(["tmx", "tilemap", "spritefusion"]);
+
+/**
  * Which cache holds each asset type.
  *
  * The mapping belongs here rather than in a `switch` in `loader.js`, so that
@@ -62,10 +72,12 @@ const cacheByType = {
 	binary: binList,
 	image: imgList,
 	json: jsonList,
-	tmx: tmxList,
+	...Object.fromEntries(
+		MAP_TYPES.map((type) => {
+			return [type, tmxList];
+		}),
+	),
 	tsx: tmxList,
-	tilemap: tmxList,
-	spritefusion: tmxList,
 	video: videoList,
 	obj: objList,
 	gltf: gltfList,

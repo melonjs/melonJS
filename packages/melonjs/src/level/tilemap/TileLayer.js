@@ -331,12 +331,16 @@ export default class TileLayer extends Renderable {
 		this.starty = def.starty ?? 0;
 
 		/**
-		 * The layer's scrolling ratio, as an {@link ImageLayer}'s: the
-		 * share of the camera's movement the layer makes in the world. At
-		 * (1, 1) it scrolls with the world, as any layer does; at (0, 0) it
-		 * stays where it is on the screen; at (0.5, 0.5) it scrolls at half
-		 * the pace, as a backdrop further away; above 1, faster, as a
-		 * foreground. A Tiled layer's parallax factor is read into it.
+		 * The layer's scrolling ratio, as an {@link ImageLayer}'s: how fast
+		 * the layer scrolls across the screen, as a share of the world's
+		 * pace. At (1, 1) it scrolls with the world, as any layer does; at
+		 * (0, 0) it stays where it is on the screen; at (0.5, 0.5) it
+		 * scrolls at half the pace, as a backdrop further away; above 1,
+		 * faster, as a foreground. A Tiled layer's parallax factor is read
+		 * into it, and so is a `ratio` custom property of the layer.
+		 *
+		 * Set both parts (`ratio.set(0.5, 0.5)`): a part that is not a
+		 * number scrolls with the world.
 		 *
 		 * It changes where the layer is drawn, for each camera, and nothing
 		 * else: `getTile`, `cellAt` and the layer's bounds are those of the
@@ -1253,6 +1257,25 @@ export default class TileLayer extends Renderable {
 	}
 
 	/**
+	 * the slot of a cell in the layer's data, by its column and row in the
+	 * map's tile coordinates: -1 for one outside the layer, or for a position
+	 * that is not a number
+	 * @param {number} x - column, in the map's tile coordinates
+	 * @param {number} y - row, in the map's tile coordinates
+	 * @returns {number} the slot, or -1
+	 * @ignore
+	 * @internal
+	 */
+	_slotOf(x, y) {
+		const cx = Math.floor(x) - this.startx;
+		const cy = Math.floor(y) - this.starty;
+		if (!(cx >= 0 && cx < this.cols && cy >= 0 && cy < this.rows)) {
+			return -1;
+		}
+		return cy * this.cols + cx;
+	}
+
+	/**
 	 * Write a cell: the tile id and the flips, with everything that has to
 	 * follow a change of the layer's data. What `setTile`, `setCell` and
 	 * `clearTile` have in common.
@@ -1268,12 +1291,10 @@ export default class TileLayer extends Renderable {
 	_writeCell(x, y, gid, flipMask, caller) {
 		x = Math.floor(x);
 		y = Math.floor(y);
-		const cx = x - this.startx;
-		const cy = y - this.starty;
-		if (cx < 0 || cx >= this.cols || cy < 0 || cy >= this.rows) {
+		const slot = this._slotOf(x, y);
+		if (slot === -1) {
 			return -1;
 		}
-		const slot = cy * this.cols + cx;
 		const idx = slot * 2;
 		// `layerData` is a Uint16Array; writes silently truncate above
 		// 0xFFFF. Warn once so a GID >= 65536 doesn't corrupt the cell
@@ -1408,7 +1429,9 @@ export default class TileLayer extends Renderable {
 	 * ({@link Tileset#getTileProperties}), with those the cell has of its own
 	 * over them ({@link TileLayer#setTileProperties}). One call whatever the
 	 * map was made with: a Tiled tile's custom properties, an LDtk tile's
-	 * custom data and tags, a Sprite Fusion tile's attributes.
+	 * custom data and tags, a Sprite Fusion tile's attributes. (An LDtk layer
+	 * that stacks tiles or places them off its grid is a
+	 * {@link PlacedTileLayer}, which has no cells to ask.)
 	 *
 	 * Read it, do not write to it: the object may be the one the tileset keeps
 	 * for every tile of that id.
@@ -1423,18 +1446,17 @@ export default class TileLayer extends Renderable {
 	 * }
 	 */
 	getTileProperties(x, y) {
-		const cx = Math.floor(x) - this.startx;
-		const cy = Math.floor(y) - this.starty;
-		if (!(cx >= 0 && cx < this.cols && cy >= 0 && cy < this.rows)) {
+		const slot = this._slotOf(x, y);
+		if (slot === -1) {
 			return undefined;
 		}
-		const slot = cy * this.cols + cx;
 		const gid = this.layerData[slot * 2];
 		if (gid === 0) {
 			return undefined;
 		}
 		const own = this.cellProperties?.get(slot);
-		const shared = this.tilesets?.getTilesetByGid(gid)?.getTileProperties(gid);
+		// (a tile none of the tilesets has says nothing of itself)
+		const shared = this.tilesets?.findTileset(gid)?.getTileProperties(gid);
 		if (own === undefined || shared === undefined) {
 			return own ?? shared;
 		}
@@ -1455,12 +1477,10 @@ export default class TileLayer extends Renderable {
 	 * layer.setTileProperties(12, 4, { locked: true });
 	 */
 	setTileProperties(x, y, properties) {
-		const cx = Math.floor(x) - this.startx;
-		const cy = Math.floor(y) - this.starty;
-		if (!(cx >= 0 && cx < this.cols && cy >= 0 && cy < this.rows)) {
+		const slot = this._slotOf(x, y);
+		if (slot === -1) {
 			return;
 		}
-		const slot = cy * this.cols + cx;
 		if (properties === undefined || properties === null) {
 			this.cellProperties?.delete(slot);
 			return;

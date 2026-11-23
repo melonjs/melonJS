@@ -307,6 +307,44 @@ describe("a Tiled tile layer with the collider property", () => {
 		expect(wallsIn(group)).toEqual(moved);
 	});
 
+	it("puts the walls where the tiles are, on a map that starts left of and above 0", async () => {
+		// a chunk of 16 x 16 cells at (-16, -16): two tiles side by side in
+		// its second row, and one alone in its last cell
+		const chunk = new Array(16 * 16).fill(0);
+		chunk[16 + 2] = 1;
+		chunk[16 + 3] = 1;
+		chunk[16 * 16 - 1] = 1;
+		await load(
+			[
+				{
+					type: "tilelayer",
+					name: "wide",
+					visible: true,
+					opacity: 1,
+					x: 0,
+					y: 0,
+					offsetx: 8,
+					startx: -16,
+					starty: -16,
+					width: 16,
+					height: 16,
+					chunks: [{ x: -16, y: -16, width: 16, height: 16, data: chunk }],
+					properties: [{ name: "collider", type: "bool", value: true }],
+				},
+			],
+			{},
+			{ infinite: true },
+		);
+		const [wide] = app.world.getChildByName("wide");
+		expect([wide.startx, wide.starty]).toEqual([-16, -16]);
+		expect(wallsIn()).toEqual([
+			// cells (-14, -15) and (-13, -15), moved by the layer's offset
+			[-14 * TILE + 8, -15 * TILE, 2 * TILE, TILE],
+			// cell (-1, -1)
+			[-1 * TILE + 8, -1 * TILE, TILE, TILE],
+		]);
+	});
+
 	it("is read by the map itself, built with no level director", () => {
 		const map = new TMXTileMap(
 			"direct",

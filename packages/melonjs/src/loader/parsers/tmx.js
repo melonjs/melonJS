@@ -3,21 +3,13 @@ import {
 	isSpriteFusionMap,
 	SPRITESHEET,
 	spritesheetName,
+	usesSpritesheet,
 } from "../../level/tiled/spritefusion.ts";
 import * as TMXUtils from "../../level/tiled/TMXUtils.js";
 import { fetchData } from "../../utils/fetchdata.js";
-import { getBasename, getExtension } from "../../utils/file.ts";
-import { tmxList } from "../cache.js";
+import { getExtension } from "../../utils/file.ts";
+import { MAP_TYPES, tmxList } from "../cache.js";
 import { loadReference } from "../loader.js";
-
-/**
- * The asset types that are a tile map, which the level director loads: one
- * parser and one cache under three names. `"tsx"`, a tileset on its own,
- * shares both without being a level.
- * @ignore
- * @internal
- */
-export const MAP_TYPES = Object.freeze(["tmx", "tilemap", "spritefusion"]);
 
 /**
  * whether a map draws from the image Sprite Fusion saves with it: a map of
@@ -25,17 +17,11 @@ export const MAP_TYPES = Object.freeze(["tmx", "tilemap", "spritefusion"]);
  * @ignore
  * @internal
  */
-function usesSpritesheet(map) {
+function drawsFromSpritesheet(map) {
 	if (isSpriteFusionMap(map)) {
 		return true;
 	}
-	const tilesets = Array.isArray(map?.tilesets) ? map.tilesets : [];
-	return tilesets.some((tileset) => {
-		return (
-			typeof tileset.image === "string" &&
-			getBasename(tileset.image) === SPRITESHEET
-		);
-	});
+	return Array.isArray(map?.tilesets) && map.tilesets.some(usesSpritesheet);
 }
 
 /**
@@ -152,7 +138,7 @@ export function preloadTMX(tmxData, onload, onerror, settings) {
 			}
 
 			// a Sprite Fusion map comes with its spritesheet
-			if (tmxData.type === "spritefusion" && usesSpritesheet(result)) {
+			if (tmxData.type === "spritefusion" && drawsFromSpritesheet(result)) {
 				await loadSpritesheet(tmxData, settings);
 			}
 

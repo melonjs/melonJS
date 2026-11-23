@@ -4,7 +4,6 @@ import { vector2dPool } from "../../math/vector2d.ts";
 import { boundsPool } from "../../physics/bounds.ts";
 import Container from "../../renderable/container.js";
 import ImageLayer from "../../renderable/imagelayer.js";
-import { getBasename } from "../../utils/file.ts";
 import { checkVersion } from "../../utils/utils.ts";
 import {
 	isCollisionLayerName,
@@ -19,6 +18,7 @@ import {
 	isSpriteFusionMap,
 	SPRITESHEET,
 	spritesheetName,
+	usesSpritesheet,
 } from "./spritefusion.ts";
 import TMXGroup from "./TMXGroup.js";
 import TMXLayer from "./TMXLayer.js";
@@ -111,14 +111,16 @@ function readImageLayer(map, data, z) {
 	// resolve embedded JSON image data if present
 	resolveEmbeddedImage(data);
 
-	// Normalize properties
-	applyTMXProperties(data.properties, data);
+	// the layer's custom values, read into an object of their own: the
+	// map's data is left as it is, to be read again on the next load
+	const properties = {};
+	applyTMXProperties(properties, data);
 
 	// derive repeat mode: legacy custom "repeat" property takes precedence
 	// (for backward compatibility), then Tiled 1.8+ native repeatx/repeaty
 	const repX = data.repeatx === true || data.repeatx === "1";
 	const repY = data.repeaty === true || data.repeaty === "1";
-	let repeat = data.properties?.repeat;
+	let repeat = properties.repeat;
 	if (typeof repeat === "undefined" && (repX || repY)) {
 		if (repX && repY) {
 			repeat = "repeat";
@@ -157,7 +159,7 @@ function readImageLayer(map, data, z) {
 				z: z,
 				repeat: repeat,
 			},
-			data.properties,
+			properties,
 		),
 	);
 
@@ -539,11 +541,7 @@ export default class TMXTileMap {
 			const tilesets = data.tilesets;
 			for (let i = 0, len = tilesets.length; i < len; i++) {
 				let tileset = tilesets[i];
-				if (
-					sheet !== SPRITESHEET &&
-					typeof tileset.image === "string" &&
-					getBasename(tileset.image) === SPRITESHEET
-				) {
+				if (sheet !== SPRITESHEET && usesSpritesheet(tileset)) {
 					tileset = { ...tileset, image: sheet };
 				}
 				this.tilesets.add(

@@ -12,17 +12,36 @@
  * and it lists the layer on top first.
  */
 
+import { getBasename } from "../../utils/file.ts";
+
 /** the name the editor gives the image it saves with a map */
 export const SPRITESHEET = "spritesheet";
 
 /**
  * The name the spritesheet of a `"spritefusion"` asset is loaded under: one
  * for each map, as every map of the editor's comes with a `spritesheet.png`.
+ * An image is found by its name with any path and extension taken off
+ * (`getImage`), so the map's name goes in with the characters that would be
+ * taken for one written out.
  * @param mapName - the name of the map asset
  * @returns the name of its image
  */
 export function spritesheetName(mapName: string): string {
-	return `${mapName}~${SPRITESHEET}`;
+	const safe = mapName.replace(/[%./\\:]/g, (char) => {
+		return `%${char.charCodeAt(0).toString(16).toUpperCase()}`;
+	});
+	return `${safe}~${SPRITESHEET}`;
+}
+
+/**
+ * whether a tileset of a map is cut from the image the editor saves with the
+ * map: its TMX export names it, as `spritesheet.png`
+ * @param tileset - a tileset, as a map describes it
+ * @returns true if it is
+ */
+export function usesSpritesheet(tileset: unknown): boolean {
+	const image = (tileset as { image?: unknown } | null)?.image;
+	return typeof image === "string" && getBasename(image) === SPRITESHEET;
 }
 
 /**

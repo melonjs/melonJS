@@ -542,7 +542,7 @@ export function applyTMXProperties(obj, data) {
 		applyProperties(obj, data);
 	}
 	const attributes = data.attributes;
-	if (obj && typeof attributes === "object" && attributes !== null) {
+	if (typeof attributes === "object" && attributes !== null) {
 		Object.assign(obj, attributes);
 	}
 }

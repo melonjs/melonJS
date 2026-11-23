@@ -205,7 +205,7 @@ export interface LDtkLayerDef {
 	/**
 	 * how much of the camera's movement the layer's tiles follow, from -1
 	 * to 1, 0 for a layer that scrolls with its level: the layers built from
-	 * it carry it as their `ratio`
+	 * it carry 1 minus it as their `ratio`
 	 */
 	parallaxFactorX?: number;
 	parallaxFactorY?: number;

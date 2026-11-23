@@ -149,6 +149,7 @@ import {
 	getShader,
 	hasAsset,
 	imgList,
+	MAP_TYPES,
 } from "./cache.js";
 import { preloadAseprite } from "./parsers/aseprite.js";
 import {
@@ -167,7 +168,7 @@ import { preloadMTL } from "./parsers/mtl.js";
 import { preloadOBJ } from "./parsers/obj.js";
 import { preloadJavascript } from "./parsers/script.js";
 import { preloadShader } from "./parsers/shader.js";
-import { MAP_TYPES, preloadTMX } from "./parsers/tmx.js";
+import { preloadTMX } from "./parsers/tmx.js";
 import { preloadVideo } from "./parsers/video.js";
 
 // the cache read accessors live with the caches themselves; re-exported
@@ -365,10 +366,10 @@ export function setBaseURL(type, url = "./") {
 		baseURL["image"] = url;
 		baseURL["json"] = url;
 		baseURL["js"] = url;
-		baseURL["tmx"] = url;
+		for (const type of MAP_TYPES) {
+			baseURL[type] = url;
+		}
 		baseURL["tsx"] = url;
-		baseURL["tilemap"] = url;
-		baseURL["spritefusion"] = url;
 		baseURL["ldtk"] = url;
 		baseURL["fontface"] = url;
 		baseURL["aseprite"] = url;
@@ -450,9 +451,13 @@ const inflight = new Map();
  */
 const KEY_ALIASES = {
 	tsx: "tmx",
-	tilemap: "tmx",
-	spritefusion: "tmx",
 	glb: "gltf",
+	// a tile map under any of its type names
+	...Object.fromEntries(
+		MAP_TYPES.map((type) => {
+			return [type, MAP_TYPES[0]];
+		}),
+	),
 };
 
 /**
@@ -865,9 +870,9 @@ function initParsers() {
 	setParser("json", preloadJSON);
 	setParser("js", preloadJavascript);
 	// a tile map under its three names (see `MAP_TYPES`), and a tileset
-	setParser("tmx", preloadTMX);
-	setParser("tilemap", preloadTMX);
-	setParser("spritefusion", preloadTMX);
+	for (const type of MAP_TYPES) {
+		setParser(type, preloadTMX);
+	}
 	setParser("tsx", preloadTMX);
 	// an LDtk project keeps what it read with the level formats, and frees
 	// it through the same hook a custom type has

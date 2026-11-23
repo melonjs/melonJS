@@ -265,6 +265,46 @@ describe("grids from a level", () => {
 			]).toEqual([4, 1, 1, 9]);
 		});
 
+		it("reads the weight of the right cell on a layer that starts left of 0", () => {
+			// a chunk at column -16: mud in its second cell, a wall tile given
+			// a weight of its own in its fourth
+			const chunk = new Array(16 * 16).fill(0);
+			chunk[1] = 2;
+			chunk[3] = 1;
+			const wide = new TMXTileMap("pf-wide", {
+				...map,
+				infinite: true,
+				layers: [
+					{
+						id: 1,
+						name: "wide",
+						type: "tilelayer",
+						visible: true,
+						opacity: 1,
+						x: 0,
+						y: 0,
+						startx: -16,
+						starty: 0,
+						width: 16,
+						height: 16,
+						chunks: [{ x: -16, y: 0, width: 16, height: 16, data: chunk }],
+					},
+				],
+			});
+			const [layer] = wide.getLayers();
+			expect(layer.startx).toBe(-16);
+			layer.setTileProperties(-13, 0, { weight: 6 });
+			const grid = Grid.fromTileLayer(layer, { solid: () => false });
+			// the grid's cells count from the layer's first column
+			expect([
+				grid.getWeight(0, 0),
+				grid.getWeight(1, 0),
+				grid.getWeight(2, 0),
+				grid.getWeight(3, 0),
+				grid.getWeight(13, 0),
+			]).toEqual([1, 3, 1, 6, 1]);
+		});
+
 		it("takes the tile's weight from its tileset on an engine with no cell properties", () => {
 			const layer = wallsLayer();
 			const open = { solid: () => false };

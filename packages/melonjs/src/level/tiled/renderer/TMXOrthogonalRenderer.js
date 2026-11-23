@@ -116,8 +116,9 @@ export default class TMXOrthogonalRenderer extends TMXRenderer {
 		end.y = Math.min(end.y, layer.rows);
 
 		// a view wholly outside the layer: no tile to draw (and a loop
-		// stepping toward an end it has passed would never stop)
-		if (end.x <= start.x || end.y <= start.y) {
+		// stepping toward an end it has passed would never stop, nor one
+		// toward an end that is not a number)
+		if (!(end.x > start.x && end.y > start.y)) {
 			vector2dPool.release(start);
 			vector2dPool.release(end);
 			return;

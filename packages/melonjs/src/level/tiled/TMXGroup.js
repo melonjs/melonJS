@@ -115,15 +115,14 @@ export default class TMXGroup {
 				// the group's offset, on top of the layer's own
 				layer.pos.x += this.offsetx;
 				layer.pos.y += this.offsety;
-				// and its parallax factor, times the layer's own
+				// and its parallax factor, times the layer's own (Tiled's
+				// factor, or the layer's `ratio` property)
 				setLayerScrolling(
 					layer,
 					tiledParallax(
 						map,
-						tiledParallaxFactor(data.parallaxx) *
-							tiledParallaxFactor(layers[i].parallaxx),
-						tiledParallaxFactor(data.parallaxy) *
-							tiledParallaxFactor(layers[i].parallaxy),
+						tiledParallaxFactor(data.parallaxx) * layer.ratio.x,
+						tiledParallaxFactor(data.parallaxy) * layer.ratio.y,
 					),
 				);
 				// set a renderer
