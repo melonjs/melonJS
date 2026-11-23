@@ -629,6 +629,94 @@ export function entityChecks(
 				}
 			});
 
+			it("repeats a tile as a pattern of the renderer's, from the box's corner, and frees it with the box", async () => {
+				await enter(app, "ents:Mode_Repeat");
+				app.viewport.moveTo(0, 0);
+				const list = entitiesOf("Mode_Repeat");
+				for (const placed of list) {
+					const repeated = objectOf(placed).tileSprite as unknown as {
+						image: { width: number; height: number };
+						pattern: unknown;
+						pos: { x: number; y: number };
+						width: number;
+						height: number;
+					};
+					// the tile alone, cut from the tileset: 32 x 16
+					expect([repeated.image.width, repeated.image.height]).toEqual([
+						RECT.w,
+						RECT.h,
+					]);
+					expect(repeated.pattern).toBeDefined();
+					// filling the box, from its corner
+					expect([repeated.pos.x, repeated.pos.y]).toEqual([0, 0]);
+					expect([repeated.width, repeated.height]).toEqual([
+						placed.width,
+						placed.height,
+					]);
+				}
+
+				// the first box, 64 x 64 at 8, 8: two tiles across, four down
+				const object = objectOf(list[0]);
+				const before = frame(app);
+				const empty = at(before, 310, 10);
+				// the tile starts again at each multiple of its size
+				for (const [x, y] of [
+					[3, 2],
+					[20, 9],
+					[31, 15],
+				]) {
+					for (const [col, row] of [
+						[1, 0],
+						[0, 1],
+						[1, 3],
+					]) {
+						expect(
+							close(
+								at(before, 8 + x + col * RECT.w, 8 + y + row * RECT.h),
+								at(before, 8 + x, 8 + y),
+							),
+							`tile ${String(col)},${String(row)} at ${String(x)},${String(y)}`,
+						).toBe(true);
+					}
+				}
+
+				// moved by amounts that are no multiple of the tile: the
+				// pattern starts at the box's corner, not at the screen's
+				object.pos.x += 205;
+				object.pos.y += 153;
+				const moved = frame(app);
+				for (let y = 0; y < 64; y += 7) {
+					for (let x = 0; x < 64; x += 5) {
+						expect(
+							close(at(moved, 213 + x, 161 + y), at(before, 8 + x, 8 + y)),
+							`moved ${String(x)},${String(y)}`,
+						).toBe(true);
+					}
+				}
+				expect(close(at(moved, 8 + 20, 8 + 20), empty)).toBe(true);
+
+				// freed with its box: the renderer lets go of the tile's image
+				const image = (object.tileSprite as unknown as { image: unknown })
+					.image;
+				const released: unknown[] = [];
+				const renderer = app.renderer as unknown as {
+					releaseImage: (image: unknown) => void;
+				};
+				const releaseImage = renderer.releaseImage.bind(renderer);
+				renderer.releaseImage = (freed: unknown) => {
+					released.push(freed);
+					releaseImage(freed);
+				};
+				try {
+					app.world.removeChildNow(object);
+				} finally {
+					renderer.releaseImage = releaseImage;
+				}
+				expect(released).toContain(image);
+				const gone = frame(app);
+				expect(close(at(gone, 213 + 20, 161 + 20), empty)).toBe(true);
+			});
+
 			it("has no child when LDtk shows the entity with no tile, and is where it is all the same", async () => {
 				await enter(app, "ents:Named");
 				const bare = entitiesOf("Named").filter((placed) => {

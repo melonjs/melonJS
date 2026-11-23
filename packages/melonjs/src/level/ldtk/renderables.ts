@@ -1,5 +1,7 @@
 import Container from "../../renderable/container.js";
 import Renderable from "../../renderable/renderable.js";
+import { ONCONTEXT_RESTORED, off, on } from "../../system/event.ts";
+import { createCanvas } from "../../video/canvas_factory.js";
 import type Renderer from "../../video/renderer.js";
 import type { TextureAtlas } from "../../video/texture/atlas.js";
 
@@ -128,40 +130,91 @@ export function regionSprite(
 	return made as unknown as Renderable;
 }
 
+/** what every renderer has to draw an image repeated: see `ImageLayer` */
+interface PatternRenderer {
+	createPattern(image: unknown, repeat: string): unknown;
+	drawPattern(
+		pattern: unknown,
+		x: number,
+		y: number,
+		width: number,
+		height: number,
+	): void;
+	releaseImage(image: unknown): void;
+}
+
 /**
  * A tile repeated to fill a box, the last column and row cut to it: LDtk's
- * `Repeat` mode, which no renderable of the engine draws from a region of an
- * image (a pattern repeats a whole image).
+ * `Repeat` mode. It is drawn as a pattern of the renderer's, as an
+ * `ImageLayer` that repeats is. A pattern repeats a whole image, so the tile
+ * is cut from its tileset once, into an image of its own.
  */
 class RepeatedTile extends Renderable {
 	tile: ObjectTile;
+	/** the tile on its own */
+	image: HTMLCanvasElement | OffscreenCanvas;
+	/** the renderer's pattern of it, made when the tile is added to a scene */
+	pattern: unknown;
+	/** the renderer that made the pattern, to free its texture with the tile */
+	private owner: PatternRenderer | undefined;
+	/** makes the pattern: when added to a scene, and when the GPU context comes back */
+	private readonly createPattern = () => {
+		this.owner = this.parentApp?.renderer as unknown as
+			| PatternRenderer
+			| undefined;
+		this.pattern = this.owner?.createPattern(this.image, "repeat");
+	};
 
 	constructor(tile: ObjectTile, width: number, height: number) {
 		super(0, 0, width, height);
 		this.anchorPoint.set(0, 0);
 		this.tile = tile;
+		this.image = createCanvas(tile.width, tile.height);
+		// a page's canvas or an offscreen one: both draw in 2D alike
+		(this.image as HTMLCanvasElement)
+			.getContext("2d")
+			?.drawImage(
+				tile.atlas.getTexture(),
+				tile.x,
+				tile.y,
+				tile.width,
+				tile.height,
+				0,
+				0,
+				tile.width,
+				tile.height,
+			);
+	}
+
+	override onActivateEvent(): void {
+		this.createPattern();
+		on(ONCONTEXT_RESTORED, this.createPattern);
+	}
+
+	override onDeactivateEvent(): void {
+		off(ONCONTEXT_RESTORED, this.createPattern);
 	}
 
 	override draw(renderer: Renderer): void {
-		const { x, y, width: tw, height: th } = this.tile;
-		const image = this.tile.atlas.getTexture() as TileImage;
-		for (let dy = 0; dy < this.height; dy += th) {
-			const sh = Math.min(th, this.height - dy);
-			for (let dx = 0; dx < this.width; dx += tw) {
-				const sw = Math.min(tw, this.width - dx);
-				renderer.drawImage(
-					image,
-					x,
-					y,
-					sw,
-					sh,
-					this.pos.x + dx,
-					this.pos.y + dy,
-					sw,
-					sh,
-				);
-			}
+		if (this.pattern !== undefined) {
+			// repeated from the box's corner, and cut to the box
+			(renderer as unknown as PatternRenderer).drawPattern(
+				this.pattern,
+				this.pos.x,
+				this.pos.y,
+				this.width,
+				this.height,
+			);
 		}
+	}
+
+	/** free the texture the renderer made of the tile's image */
+	override destroy(): void {
+		off(ONCONTEXT_RESTORED, this.createPattern);
+		this.owner?.releaseImage(this.image);
+		this.owner = undefined;
+		this.pattern = undefined;
+		super.destroy();
 	}
 }
 
