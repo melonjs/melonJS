@@ -273,7 +273,7 @@ const pendingBuiltins = [];
 /**
  * Queue a class for registration as a Tiled object factory.
  * Registrations are applied when initFactories() runs (on first
- * createTMXObject call), avoiding circular import issues at module load time.
+ * createLevelObject call), avoiding circular import issues at module load time.
  * @param {string} name - the Tiled class or name to match
  * @param {Function} Constructor - class constructor with signature (x, y, settings)
  * @ignore
@@ -311,7 +311,7 @@ function applyBuiltinTiledClass(name, Constructor) {
 
 /**
  * Register built-in factories and apply pending class registrations.
- * Called lazily on first createTMXObject call, after all modules are fully loaded.
+ * Called lazily on first createLevelObject call, after all modules are fully loaded.
  * @ignore
  * @internal
  */
@@ -354,15 +354,20 @@ function initFactories() {
 }
 
 /**
- * Instantiate a TMX object based on its settings, using the registered factory
- * for its detected type.
- * @param {object} settings - TMX object settings
- * @param {TMXTileMap} map - the parent tile map
- * @returns {Renderable} the instantiated object
- * @ignore
- * @internal
+ * Build the object a level describes, with the class or factory registered for
+ * it ({@link registerObjectClass}, {@link registerObjectFactory}): by the
+ * description's `class`, then its `name`. This is what the Tiled loader calls
+ * for each object of a map; a reader for another level format calls it for its
+ * own. With nothing registered under either, the description is taken as a
+ * Tiled object's: a text, a tile, or a shape with a static body of the
+ * description's `width` and `height`. Use {@link hasObjectFactory} first to do
+ * otherwise.
+ * @category Tilemap
+ * @param {object} settings - the object's description: `x`, `y`, `z`, `width`, `height`, `name`, `class`, and whatever else its class reads
+ * @param {object} [map] - the map the object is read from, handed to a factory
+ * @returns {Renderable} the object
  */
-export function createTMXObject(settings, map) {
+export function createLevelObject(settings, map) {
 	if (!factoriesInitialized) {
 		initFactories();
 	}
@@ -444,24 +449,6 @@ export function hasObjectFactory(name, gameOnly = false) {
 		return false;
 	}
 	return factories.has(name);
-}
-
-/**
- * Build the object a level describes, with the class or factory registered for
- * it ({@link registerObjectClass}, {@link registerObjectFactory}): by the
- * description's `class`, then its `name`. This is what the Tiled loader calls
- * for each object of a map; a reader for another level format calls it for its
- * own. With nothing registered under either, the description is taken as a
- * Tiled object's: a text, a tile, or a shape with a static body of the
- * description's `width` and `height`. Use {@link hasObjectFactory} first to do
- * otherwise.
- * @category Tilemap
- * @param {object} settings - the object's description: `x`, `y`, `z`, `width`, `height`, `name`, `class`, and whatever else its class reads
- * @param {object} [map] - the map the object is read from, handed to a factory
- * @returns {Renderable} the object
- */
-export function createLevelObject(settings, map) {
-	return createTMXObject(settings, map);
 }
 
 // Wire `pool.register()` to register a Tiled object factory too, so the older

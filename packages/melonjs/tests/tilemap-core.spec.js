@@ -495,6 +495,8 @@ describe.each([
 			expect(() => {
 				return group.getTilesetByGid(99);
 			}).toThrow(/no matching tileset/);
+			// the Tiled name is the same class
+			expect(TMXTilesetGroup).toBe(TilesetGroup);
 			expect(new TMXTilesetGroup()).toBeInstanceOf(TilesetGroup);
 		});
 	});

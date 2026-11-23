@@ -19,7 +19,6 @@ import { LDtkObject } from "./level/ldtk/renderables.ts";
 import TMXLayer from "./level/tiled/TMXLayer.js";
 import TMXTileMap from "./level/tiled/TMXTileMap.js";
 import TMXTileset from "./level/tiled/TMXTileset.js";
-import TMXTilesetGroup from "./level/tiled/TMXTilesetGroup.js";
 import * as TMXUtils from "./level/tiled/TMXUtils.js";
 import PlacedTileLayer from "./level/tilemap/PlacedTileLayer.js";
 import HexagonalRenderer from "./level/tilemap/renderer/HexagonalRenderer.js";
@@ -214,7 +213,8 @@ export {
 	TMXOrthogonalRenderer,
 	TMXRenderer,
 	TMXStaggeredRenderer,
-} from "./level/tiled/renderers.ts";
+	TMXTilesetGroup,
+} from "./level/tiled/aliases.ts";
 export type { default as TMXObject } from "./level/tiled/TMXObject.js";
 /* eslint-enable @typescript-eslint/no-deprecated */
 export { mergeGridRects } from "./level/tilemap/grid.js";
@@ -427,7 +427,6 @@ export {
 	TMXLayer,
 	TMXTileMap,
 	TMXTileset,
-	TMXTilesetGroup,
 	TMXUtils,
 	ToneMappingEffect,
 	Trail,

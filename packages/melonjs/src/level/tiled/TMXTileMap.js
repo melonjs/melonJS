@@ -10,9 +10,10 @@ import {
 	markWorldShape,
 	tileLayerWalls,
 } from "../tilemap/collision.js";
-import { createTMXObject } from "../tilemap/objects.js";
+import { createLevelObject } from "../tilemap/objects.js";
 import { addLevelToContainer, isObjectWanted } from "../tilemap/populate.js";
 import { getNewTileMapRenderer } from "../tilemap/renderer/autodetect.js";
+import TilesetGroup from "../tilemap/TilesetGroup.js";
 import { releaseViewport } from "../tilemap/viewport.js";
 import { TILED_SUPPORTED_VERSION } from "./constants.js";
 import {
@@ -24,7 +25,6 @@ import {
 import TMXGroup from "./TMXGroup.js";
 import TMXLayer from "./TMXLayer.js";
 import TMXTileset from "./TMXTileset.js";
-import TMXTilesetGroup from "./TMXTilesetGroup.js";
 
 /**
  * additional import for TypeScript
@@ -527,7 +527,7 @@ export default class TMXTileMap {
 		// Tileset information
 		if (!this.tilesets) {
 			// make sure we have a TilesetGroup Object
-			this.tilesets = new TMXTilesetGroup();
+			this.tilesets = new TilesetGroup();
 		}
 
 		// a Sprite Fusion map draws from the spritesheet saved with it: the
@@ -763,7 +763,7 @@ export default class TMXTileMap {
 				}
 
 				// instantiate the object based on its type
-				const obj = createTMXObject(settings, this);
+				const obj = createLevelObject(settings, this);
 
 				// an unnamed object of a collision group is a wall of the world
 				if (isCollisionGroup && !settings.name) {

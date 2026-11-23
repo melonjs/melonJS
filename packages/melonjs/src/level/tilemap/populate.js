@@ -90,3 +90,20 @@ export function addLevelToContainer(container, level) {
 	}
 	return follow;
 }
+
+/**
+ * Apply an opacity multiplier to a renderable and its child renderable (if any).
+ * @ignore
+ * @internal
+ * @param {Renderable} obj - the renderable to apply to
+ * @param {number} opacity - the opacity multiplier
+ */
+export function applyObjectOpacity(obj, opacity) {
+	obj.setOpacity(obj.getOpacity() * opacity);
+	if (
+		typeof obj.renderable !== "undefined" &&
+		obj.renderable.isRenderable === true
+	) {
+		obj.renderable.setOpacity(obj.renderable.getOpacity() * opacity);
+	}
+}

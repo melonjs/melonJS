@@ -5,13 +5,13 @@ import type Container from "../../renderable/container.js";
 import Renderable from "../../renderable/renderable.js";
 import { createCanvas } from "../../video/canvas_factory.js";
 import { TextureAtlas } from "../../video/texture/atlas.js";
-import { applyObjectOpacity } from "../tiled/TMXUtils.js";
 import { createWall, isCollisionLayerName } from "../tilemap/collision.js";
 import type { LayerScrolling } from "../tilemap/layer.js";
 import { createLevelObject, hasObjectFactory } from "../tilemap/objects.js";
 import PlacedTileLayer from "../tilemap/PlacedTileLayer.js";
 import {
 	addLevelToContainer,
+	applyObjectOpacity,
 	isObjectWanted,
 	populateContainer,
 } from "../tilemap/populate.js";

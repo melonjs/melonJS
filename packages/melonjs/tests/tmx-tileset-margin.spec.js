@@ -1,8 +1,8 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { Application, boot, TMXTileMap, video } from "../src/index.js";
 import TMXTileset from "../src/level/tiled/TMXTileset.js";
-import TMXTilesetGroup from "../src/level/tiled/TMXTilesetGroup.js";
 import * as TMXUtils from "../src/level/tiled/TMXUtils.js";
+import TilesetGroup from "../src/level/tilemap/TilesetGroup.js";
 import { imgList, tmxList } from "../src/loader/cache.js";
 
 /**
@@ -161,7 +161,7 @@ describe("TMXTileset gid range", () => {
 		// as the loader stores a parsed .tsx
 		const parsed = TMXUtils.parse(doc);
 		tmxList["margin-tsx"] = parsed.map || parsed.tilesets[0] || parsed;
-		const group = new TMXTilesetGroup();
+		const group = new TilesetGroup();
 		group.add(new TMXTileset({ firstgid: 1, source: "margin-tsx.tsx" }));
 		group.add(
 			new TMXTileset({
@@ -199,7 +199,7 @@ describe("TMXTileset gid range", () => {
 		expect(collection.contains(2)).toEqual(true);
 		expect(collection.contains(4)).toEqual(true);
 		expect(collection.contains(5)).toEqual(false);
-		const group = new TMXTilesetGroup();
+		const group = new TilesetGroup();
 		group.add(collection);
 		group.add(
 			new TMXTileset({

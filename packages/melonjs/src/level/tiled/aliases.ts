@@ -1,14 +1,16 @@
 /**
- * The map renderers under the names they had when a Tiled map was the only
- * kind of tile map. They are the same classes as the ones in
- * `level/tilemap/renderer/`: a value and a type under each old name, so that
- * `instanceof` and type annotations written with them go on working.
+ * The classes of a tile map that belong to no map editor, under the names
+ * they had when a Tiled map was the only kind of tile map. They are the same
+ * classes as the ones in `level/tilemap/`: a value and a type under each old
+ * name, so that `instanceof` and type annotations written with them go on
+ * working.
  */
 import HexagonalRenderer from "../tilemap/renderer/HexagonalRenderer.js";
 import IsometricRenderer from "../tilemap/renderer/IsometricRenderer.js";
 import OrthogonalRenderer from "../tilemap/renderer/OrthogonalRenderer.js";
 import StaggeredRenderer from "../tilemap/renderer/StaggeredRenderer.js";
 import TileMapRenderer from "../tilemap/renderer/TileMapRenderer.js";
+import TilesetGroup from "../tilemap/TilesetGroup.js";
 
 /**
  * The older name of {@link TileMapRenderer}.
@@ -69,3 +71,15 @@ export const TMXStaggeredRenderer = StaggeredRenderer;
  * @deprecated since 20.18.0, use {@link StaggeredRenderer}
  */
 export type TMXStaggeredRenderer = StaggeredRenderer;
+
+/**
+ * The older name of {@link TilesetGroup}.
+ * @deprecated since 20.18.0, use {@link TilesetGroup}
+ * @category Tilemap
+ */
+export const TMXTilesetGroup = TilesetGroup;
+/**
+ * The older name of {@link TilesetGroup}.
+ * @deprecated since 20.18.0, use {@link TilesetGroup}
+ */
+export type TMXTilesetGroup = TilesetGroup;

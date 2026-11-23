@@ -15,7 +15,7 @@ import * as TMXUtils from "./TMXUtils.js";
 
 /**
  * additional import for TypeScript
- * @import TMXTilesetGroup from "./TMXTilesetGroup.js";
+ * @import TilesetGroup from "../tilemap/TilesetGroup.js";
  */
 
 /**
@@ -218,7 +218,7 @@ export default class TMXLayer extends TileLayer {
 	 * @param {number} tilewidth - width of each tile in pixels
 	 * @param {number} tileheight - height of each tile in pixels
 	 * @param {string} orientation - "isometric" or "orthogonal"
-	 * @param {TMXTilesetGroup} tilesets - tileset as defined in Tiled
+	 * @param {TilesetGroup} tilesets - tileset as defined in Tiled
 	 * @param {number} z - z-index position
 	 */
 	constructor(map, data, tilewidth, tileheight, orientation, tilesets, z) {

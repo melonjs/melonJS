@@ -66,23 +66,6 @@ export function tiledBlendMode(mode) {
 }
 
 /**
- * Apply an opacity multiplier to a renderable and its child renderable (if any).
- * @ignore
- * @internal
- * @param {Renderable} obj - the renderable to apply to
- * @param {number} opacity - the opacity multiplier
- */
-export function applyObjectOpacity(obj, opacity) {
-	obj.setOpacity(obj.getOpacity() * opacity);
-	if (
-		typeof obj.renderable !== "undefined" &&
-		obj.renderable.isRenderable === true
-	) {
-		obj.renderable.setOpacity(obj.renderable.getOpacity() * opacity);
-	}
-}
-
-/**
  * Propagate a blend mode to a renderable and its child renderable (if any).
  * Only applies when the object still has the default "normal" blend mode.
  * @ignore
@@ -518,6 +501,9 @@ function normalizeTMX(obj, item, parse) {
 
 // re-export generic decode utilities so existing consumers of TMXUtils can still access them
 export { decode, setInflateFunction } from "../../utils/decode.ts";
+// what places the objects of any level, kept here for those who read it
+// from this namespace
+export { applyObjectOpacity } from "../tilemap/populate.js";
 
 /**
  * Parse a XML TMX object and returns the corresponding javascript object

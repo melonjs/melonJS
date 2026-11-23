@@ -72,8 +72,8 @@ export function preloadTileMap(tmxData, onload, onerror, settings) {
 	 * @ignore
 	 * @internal
 	 */
-	function addToTMXList(data) {
-		// set the TMX content
+	function addMap(data) {
+		// keep the map
 		tmxList[tmxData.name] = data;
 
 		// add the map to the level manager
@@ -84,7 +84,7 @@ export function preloadTileMap(tmxData, onload, onerror, settings) {
 
 	//if the data is in the tmxData object, don't get it via a XMLHTTPRequest
 	if (tmxData.data) {
-		addToTMXList(tmxData.data);
+		addMap(tmxData.data);
 		if (typeof onload === "function") {
 			onload();
 		}
@@ -142,7 +142,7 @@ export function preloadTileMap(tmxData, onload, onerror, settings) {
 				await loadSpritesheet(tmxData, settings);
 			}
 
-			addToTMXList(result);
+			addMap(result);
 
 			if (typeof onload === "function") {
 				onload();
