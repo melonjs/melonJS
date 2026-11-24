@@ -232,119 +232,13 @@ describe("spritesheet parser on a non-divisible (padded) sheet", () => {
 	});
 });
 
-// issue #1915: a tool that writes the TexturePacker or Aseprite JSON layout
-// under its own `meta.app` is recognised from the structure of the file
-describe("atlas from an exporter unknown by name", () => {
-	const UNKNOWN_APP = "https://example.com/my-packer";
-
-	const packedFrame = (x, extra = {}) => {
-		return {
-			frame: { x, y: 0, w: 16, h: 16 },
-			rotated: false,
-			trimmed: false,
-			spriteSourceSize: { x: 0, y: 0, w: 16, h: 16 },
-			sourceSize: { w: 16, h: 16 },
-			...extra,
-		};
-	};
-
-	const meta = (extra = {}) => {
-		return {
-			app: UNKNOWN_APP,
-			version: "1.0",
-			image: "sheet.png",
-			format: "RGBA8888",
-			size: { w: 32, h: 16 },
-			scale: "1",
-			...extra,
-		};
-	};
-
-	it("loads a TexturePacker JSON (Array) file", () => {
-		const atlas = new TextureAtlas(
-			{
-				frames: [
-					packedFrame(0, { filename: "a" }),
-					packedFrame(16, { filename: "b" }),
-				],
-				meta: meta(),
-			},
-			fakeImage(32, 16),
-			false,
-		);
-		expect(atlas.format).toBe("texturepacker");
-		const b = atlas.getRegion("b");
-		expect(b.offset.x).toBe(16);
-		expect(b.width).toBe(16);
-		expect(Array.from(b.uvs)).toEqual([0.5, 0, 1, 1]);
-	});
-
-	it("loads a TexturePacker JSON (Hash) file", () => {
-		const atlas = new TextureAtlas(
-			{
-				frames: { a: packedFrame(0), b: packedFrame(16) },
-				meta: meta(),
-			},
-			fakeImage(32, 16),
-			false,
-		);
-		expect(atlas.format).toBe("texturepacker");
-		expect(atlas.getRegion("a").name).toBe("a");
-		expect(Array.from(atlas.getRegion("b").uvs)).toEqual([0.5, 0, 1, 1]);
-	});
-
-	it("loads an Aseprite JSON file, with its animations", () => {
-		const json = makeAsepriteJSON();
-		json.meta.app = UNKNOWN_APP;
-		const atlas = new TextureAtlas(json, fakeImage(128, 64), false);
-		expect(atlas.format).toBe("aseprite");
-		expect(atlas.getRegion("hero 1.png").width).toBe(32);
-		const walk = Object.values(atlas.getAtlas().anims)[0];
-		expect(walk.name).toBe("walk");
-		expect(walk.index.length).toBe(3);
-	});
-
-	it("loads a file that has no meta.app at all", () => {
-		const atlas = new TextureAtlas(
-			{
-				frames: [packedFrame(0, { filename: "a" })],
-				meta: meta({ app: undefined }),
-			},
-			fakeImage(32, 16),
-			false,
-		);
-		expect(atlas.format).toBe("texturepacker");
-	});
-
-	it("still throws when the structure is not one it reads", () => {
-		// no frame rectangles
-		expect(() => {
-			return new TextureAtlas(
-				{ frames: [{ filename: "a", x: 0, y: 0 }], meta: meta() },
-				fakeImage(32, 16),
-				false,
-			);
-		}).toThrow("Unknown texture atlas format: " + UNKNOWN_APP);
-		// no sheet size
-		expect(() => {
-			return new TextureAtlas(
-				{
-					frames: [packedFrame(0, { filename: "a" })],
-					meta: meta({ size: undefined }),
-				},
-				fakeImage(32, 16),
-				false,
-			);
-		}).toThrow(/Unknown texture atlas format/);
-		// no frames
-		expect(() => {
-			return new TextureAtlas({ meta: meta() }, fakeImage(32, 16), false);
-		}).toThrow(/Unknown texture atlas format/);
-	});
-});
-
-describe("TexturePacker JSON (Hash)", () => {
-	it("reads frames keyed by name, as the array form does", () => {
+// issue #1915: TexturePacker's "JSON (Hash)" keys the frames by name, under a
+// known tool name and an unknown one alike
+describe.each([
+	"https://www.codeandweb.com/texturepacker",
+	"https://spritesheet.dev/",
+])("TexturePacker JSON (Hash), meta.app %s", (app) => {
+	it("gives the region the array form gives", () => {
 		const entry = {
 			frame: { x: 10, y: 20, w: 28, h: 30 },
 			rotated: true,
@@ -353,11 +247,7 @@ describe("TexturePacker JSON (Hash)", () => {
 			sourceSize: { w: 32, h: 32 },
 			pivot: { x: 0.5, y: 0.5 },
 		};
-		const meta = {
-			app: "https://www.codeandweb.com/texturepacker",
-			image: "sheet.png",
-			size: { w: 64, h: 64 },
-		};
+		const meta = { app, image: "sheet.png", size: { w: 64, h: 64 } };
 		const hash = new TextureAtlas(
 			{ frames: { "hero.png": entry }, meta },
 			fakeImage(64, 64),
@@ -369,14 +259,21 @@ describe("TexturePacker JSON (Hash)", () => {
 			false,
 		).getRegion("hero.png");
 
+		// what the file says, not only what the other form gives
 		expect(hash.name).toBe("hero.png");
+		expect(hash.texture).toBe("sheet.png");
+		expect(hash.width).toBe(28);
+		expect(hash.height).toBe(30);
+		expect(hash.offset.x).toBe(10);
+		expect(hash.offset.y).toBe(20);
 		expect(hash.angle).toBe(-ETA);
+		expect(hash.trimmed).toBe(true);
 		expect(hash.trim).toEqual({ x: 2, y: 1, w: 28, h: 30 });
 		expect(hash.sourceSize).toEqual({ w: 32, h: 32 });
-		expect(hash.offset.x).toBe(array.offset.x);
-		expect(hash.offset.y).toBe(array.offset.y);
-		expect(hash.anchorPoint.x).toBeCloseTo(array.anchorPoint.x);
-		expect(hash.anchorPoint.y).toBeCloseTo(array.anchorPoint.y);
-		expect(Array.from(hash.uvs)).toEqual(Array.from(array.uvs));
+		// pivot at the centre of the 32 × 32 source, less the trim
+		expect(hash.anchorPoint.x).toBeCloseTo(14 / 28);
+		expect(hash.anchorPoint.y).toBeCloseTo(15 / 30);
+		// and the whole region, as the array form gives it
+		expect(hash).toEqual(array);
 	});
 });

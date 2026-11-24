@@ -24,6 +24,7 @@
 - Loader: `loader.getTMX`, for `loader.getTileMap` (the same function)
 
 ### Fixed
+- `TextureAtlas`: a ShoeBox atlas made with the melonJS exporter was refused with `Unknown texture atlas format: ShoeBox`
 - TypeScript: an asset's `data` accepts a parsed map object
 - Tile maps: a floating tile layer disappeared once the camera moved
 - Tile maps: two tilesets cut from one image at different tile sizes drew the same tiles

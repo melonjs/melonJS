@@ -95,7 +95,8 @@ export function identifyFormat(atlas) {
 	const app = typeof meta.app === "string" ? meta.app : "";
 	if (app.includes("texturepacker") || app.includes("free-tex-packer")) {
 		return "texturepacker";
-	} else if (app.includes("shoebox")) {
+	} else if (app.toLowerCase().includes("shoebox")) {
+		// the melonJS exporter for ShoeBox writes "ShoeBox"
 		return "shoebox";
 	} else if (app.includes("aseprite")) {
 		return "aseprite";
@@ -103,7 +104,8 @@ export function identifyFormat(atlas) {
 		return "melonJS";
 	}
 
-	// an unknown tool: both parsers need the frames and the sheet size
+	// an unknown tool: the file has to be one a parser reads in full, that
+	// is the sheet size and, for every frame, its rectangle
 	const frames = atlas.frames;
 	if (
 		typeof frames === "object" &&
@@ -111,13 +113,24 @@ export function identifyFormat(atlas) {
 		typeof meta.size?.w === "number" &&
 		typeof meta.size?.h === "number"
 	) {
-		if (Array.isArray(meta.frameTags)) {
+		const entries = Object.values(frames);
+		const hasFrames =
+			entries.length > 0 &&
+			entries.every((entry) => {
+				return typeof entry?.frame === "object" && entry.frame !== null;
+			});
+		if (hasFrames && Array.isArray(meta.frameTags)) {
 			// animation tags are Aseprite's
 			return "aseprite";
 		}
-		// frames as a list ("JSON (Array)") or keyed by name ("JSON (Hash)")
-		const first = Array.isArray(frames) ? frames[0] : Object.values(frames)[0];
-		if (typeof first?.frame === "object" && first.frame !== null) {
+		// frames keyed by name ("JSON (Hash)"), or a list of them
+		// ("JSON (Array)") that each carry their name
+		const isNamed =
+			!Array.isArray(frames) ||
+			frames.every((entry) => {
+				return typeof entry.filename === "string";
+			});
+		if (hasFrames && isNamed) {
 			return "texturepacker";
 		}
 	}
@@ -274,72 +287,40 @@ export class TextureAtlas extends Texture2d {
 				if (typeof atlas.meta !== "undefined") {
 					this.format = identifyFormat(atlas);
 					this.repeat = atlas.meta.repeat || "no-repeat";
-					switch (this.format) {
-						case "texturepacker":
-						case "aseprite":
-							// set the texture
-							if (typeof src === "undefined") {
-								// get the texture name from the atlas meta data
-								const image = getImage(atlas.meta.image);
-								if (!image) {
-									throw new Error("Atlas texture '" + image + "' not found");
-								}
-								this.sources.set(atlas.meta.image, image);
-							} else {
-								this.sources.set(
-									atlas.meta.image || "default",
-									typeof src === "string" ? getImage(src) : src,
-								);
-							}
-							// initialize the atlas
-							if (this.format === "texturepacker") {
-								this.atlases.set(
-									atlas.meta.image || "default",
-									parseTexturePacker(atlas, this),
-								);
-							} else {
-								this.atlases.set(
-									atlas.meta.image || "default",
-									parseAseprite(atlas, this),
-								);
-							}
-							break;
-						case "shoebox":
-							if (
-								!atlas.meta.exporter ||
-								!atlas.meta.exporter.includes("melonJS")
-							) {
-								throw new Error(
-									"ShoeBox requires the JSON exporter : " +
-										"https://github.com/melonjs/melonJS/tree/master/media/shoebox_JSON_export.sbx",
-								);
-							}
-							this.sources.set(
-								"default",
-								typeof src === "string" ? getImage(src) : src,
-							);
-							// initialize the atlas
-							this.atlases.set(
-								atlas.meta.image || "default",
-								parseTexturePacker(atlas, this),
-							);
-							break;
-						case "melonJS":
-							this.sources.set(
-								"default",
-								typeof src === "string" ? getImage(src) : src,
-							);
-							// initialize the atlas
-							this.atlases.set(
-								atlas.meta.image || "default",
-								parseTexturePacker(atlas, this),
-							);
-							break;
-						default:
-							throw new Error(
-								"Unknown texture atlas format: " + atlas.meta.app,
-							);
+					if (
+						this.format === "shoebox" &&
+						(!atlas.meta.exporter || !atlas.meta.exporter.includes("melonJS"))
+					) {
+						throw new Error(
+							"ShoeBox requires the JSON exporter : " +
+								"https://github.com/melonjs/melonJS/tree/master/media/shoebox_JSON_export.sbx",
+						);
 					}
+					// set the texture
+					if (this.format === "shoebox" || this.format === "melonJS") {
+						this.sources.set(
+							"default",
+							typeof src === "string" ? getImage(src) : src,
+						);
+					} else if (typeof src === "undefined") {
+						// get the texture name from the atlas meta data
+						const image = getImage(atlas.meta.image);
+						if (!image) {
+							throw new Error(
+								"Atlas texture '" + atlas.meta.image + "' not found",
+							);
+						}
+						this.sources.set(atlas.meta.image, image);
+					} else {
+						this.sources.set(
+							atlas.meta.image || "default",
+							typeof src === "string" ? getImage(src) : src,
+						);
+					}
+					// initialize the atlas
+					const parse =
+						this.format === "aseprite" ? parseAseprite : parseTexturePacker;
+					this.atlases.set(atlas.meta.image || "default", parse(atlas, this));
 				} else {
 					// a regular spritesheet
 					if (

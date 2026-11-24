@@ -45,17 +45,45 @@ const frameTags = () => {
 };
 
 const layouts = [
-	{ layout: "TexturePacker JSON (Array)", frames: arrayFrames, tags: false },
-	{ layout: "TexturePacker JSON (Hash)", frames: hashFrames, tags: false },
-	{ layout: "Aseprite JSON (Array)", frames: arrayFrames, tags: true },
-	{ layout: "Aseprite JSON (Hash)", frames: hashFrames, tags: true },
+	{
+		layout: "TexturePacker JSON (Array)",
+		frames: arrayFrames,
+		tags: false,
+		byStructure: "texturepacker",
+	},
+	{
+		layout: "TexturePacker JSON (Hash)",
+		frames: hashFrames,
+		tags: false,
+		byStructure: "texturepacker",
+	},
+	{
+		layout: "Aseprite JSON (Array)",
+		frames: arrayFrames,
+		tags: true,
+		byStructure: "aseprite",
+	},
+	{
+		layout: "Aseprite JSON (Hash)",
+		frames: hashFrames,
+		tags: true,
+		byStructure: "aseprite",
+	},
 ];
 
-// `parser` is what a known name selects; undefined leaves it to the structure
+// `parser` is what a known name selects whatever the layout; an unknown name
+// leaves it to the structure, spelled out per layout in `byStructure`
 const apps = [
 	{ app: "https://www.codeandweb.com/texturepacker", parser: "texturepacker" },
 	{ app: "http://free-tex-packer.com", parser: "texturepacker" },
 	{ app: "https://www.aseprite.org/", parser: "aseprite" },
+	{
+		// as the melonJS exporter for ShoeBox writes it
+		app: "ShoeBox",
+		parser: "texturepacker",
+		format: "shoebox",
+		meta: { exporter: "melonJS" },
+	},
 	{
 		app: "shoebox",
 		parser: "texturepacker",
@@ -67,6 +95,8 @@ const apps = [
 	{ app: "https://example.com/my-packer" },
 	{ app: "" },
 	{ app: undefined },
+	// not a string
+	{ app: 42 },
 ];
 
 const makeAtlas = (app, layout, image = "sheet.png") => {
@@ -92,7 +122,7 @@ const fakeImage = { width: 32, height: 16, src: "sheet.png" };
 describe.each(apps)("an atlas whose meta.app is $app", (app) => {
 	describe.each(layouts)("in the $layout layout", (layout) => {
 		// by name when the name is known, else by structure
-		const parser = app.parser ?? (layout.tags ? "aseprite" : "texturepacker");
+		const parser = app.parser ?? layout.byStructure;
 		// the Aseprite parser names the frames of a list by their position
 		const names =
 			parser === "aseprite" && Array.isArray(layout.frames())
@@ -155,18 +185,29 @@ describe.each(apps)("an atlas whose meta.app is $app", (app) => {
 	});
 });
 
-describe("an Aseprite export without tags, from an unknown tool", () => {
-	it.each([
-		{ form: "Array", frames: arrayFrames },
-		{ form: "Hash", frames: hashFrames },
-	])("$form: is read through the TexturePacker parser", ({ frames }) => {
-		const atlas = new TextureAtlas(
-			makeAtlas({ app: "https://spritesheet.dev/" }, { frames, tags: false }),
-			fakeImage,
-			false,
-		);
-		expect(atlas.format).toBe("texturepacker");
+describe("an Aseprite export with an empty list of tags, from an unknown tool", () => {
+	it("is read as Aseprite, with no animation", () => {
+		const json = makeAtlas({ app: "https://spritesheet.dev/" }, layouts[3]);
+		json.meta.frameTags = [];
+		const atlas = new TextureAtlas(json, fakeImage, false);
+		expect(atlas.format).toBe("aseprite");
+		expect(atlas.getAtlas().anims).toEqual({});
 		expect(atlas.getRegion("b.png").offset.x).toBe(16);
+	});
+});
+
+describe("a ShoeBox export, as the melonJS exporter writes it", () => {
+	it("leaves out the entry that closes its list of frames", () => {
+		const json = makeAtlas(
+			{ app: "ShoeBox", meta: { exporter: "melonJS" } },
+			layouts[0],
+		);
+		json.frames.push({ EOL: "true" });
+		const atlas = new TextureAtlas(json, fakeImage, false);
+		expect(atlas.format).toBe("shoebox");
+		expect(Object.keys(atlas.getAnimationSettings().atlasIndices)).toEqual(
+			NAMES,
+		);
 	});
 });
 
@@ -183,6 +224,28 @@ describe("a multipack atlas from an unknown tool", () => {
 		expect(atlas.getRegion("b.png").texture).toBe("sheet-0.png");
 		expect(atlas.getRegion("d.png").texture).toBe("sheet-1.png");
 		expect(atlas.getRegion("d.png").offset.x).toBe(16);
+		expect(Array.from(atlas.sources.keys())).toEqual([
+			"sheet-0.png",
+			"sheet-1.png",
+		]);
+	});
+
+	it("reads each page by its own structure", () => {
+		const app = { app: "https://spritesheet.dev/" };
+		const tagged = makeAtlas(app, layouts[3], "sheet-1.png");
+		tagged.frames = { "c.png": entry(0), "d.png": entry(1) };
+		const atlas = new TextureAtlas(
+			[makeAtlas(app, layouts[1], "sheet-0.png"), tagged],
+			fakeImage,
+			false,
+		);
+		expect(atlas.getRegion("a.png").texture).toBe("sheet-0.png");
+		expect(atlas.getRegion("c.png").texture).toBe("sheet-1.png");
+		// only the tagged page carries animations
+		expect(atlas.getAtlas("sheet-0.png").anims).toBeUndefined();
+		expect(Object.values(atlas.getAtlas("sheet-1.png").anims)[0].name).toBe(
+			"blink",
+		);
 	});
 });
 
@@ -215,6 +278,51 @@ describe("an atlas that is in no layout it reads", () => {
 			},
 		},
 		{
+			what: "a frame further down the list without a rectangle",
+			change: (json) => {
+				delete json.frames[1].frame;
+			},
+		},
+		{
+			what: "a frame further down the hash without a rectangle",
+			change: (json) => {
+				json.frames = { "a.png": entry(0), "b.png": { x: 16, y: 0 } };
+			},
+		},
+		{
+			what: "a null frame",
+			change: (json) => {
+				json.frames = { "a.png": entry(0), "b.png": null };
+			},
+		},
+		{
+			what: "a list of frames that have no filename",
+			change: (json) => {
+				json.frames = [{ name: "a.png", ...entry(0) }];
+			},
+		},
+		{
+			what: "tags, and frames without a rectangle",
+			change: (json) => {
+				json.meta.frameTags = [];
+				json.frames = [{ filename: "a.png", x: 0, y: 0 }];
+			},
+		},
+		{
+			what: "tags, and an empty list of frames",
+			change: (json) => {
+				json.meta.frameTags = [];
+				json.frames = [];
+			},
+		},
+		{
+			what: "tags that are not a list, and frames without a filename",
+			change: (json) => {
+				json.meta.frameTags = "blink";
+				json.frames = [entry(0)];
+			},
+		},
+		{
 			what: "tags but no sheet size",
 			change: (json) => {
 				json.meta.frameTags = frameTags();
@@ -229,10 +337,20 @@ describe("an atlas that is in no layout it reads", () => {
 		}).toThrow("Unknown texture atlas format: " + unknown.app);
 	});
 
+	it("names the image it did not find, when none is passed", () => {
+		expect(() => {
+			return new TextureAtlas(
+				makeAtlas(unknown, layouts[1], "not-loaded.png"),
+				undefined,
+				false,
+			);
+		}).toThrow("Atlas texture 'not-loaded.png' not found");
+	});
+
 	it("ShoeBox still requires the melonJS exporter", () => {
 		expect(() => {
 			return new TextureAtlas(
-				makeAtlas({ app: "shoebox" }, layouts[0]),
+				makeAtlas({ app: "ShoeBox" }, layouts[0]),
 				fakeImage,
 				false,
 			);
