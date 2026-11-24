@@ -273,7 +273,7 @@ another matrix:
 
 ```js
 m.setTransform(a, b, c, d, e, f, g, h, i, j, k, l, p, q, r, s);
-m.copy(other);                 // Float32Array.set under the hood
+m.copy(other);                 // sixteen plain stores, nothing allocated
 ```
 
 Both are fine occasionally. In a per-frame loop, prefer writing `val` or

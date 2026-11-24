@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { Matrix3d, Vector2d, Vector3d } from "../src/index.js";
+import { Matrix2d, Matrix3d, Vector2d, Vector3d } from "../src/index.js";
 
 describe("Matrix3d", () => {
 	it("should be initialized to a 4x4 identity matrix", () => {
@@ -246,5 +246,20 @@ describe("Matrix3d", () => {
 
 		// and we should have back the original vector values
 		expect(matA.equals(matB)).toEqual(true);
+	});
+
+	it("copy, given a 3x3 Matrix2d from JavaScript, takes its nine values", () => {
+		// typed to take a Matrix3d, but plain JavaScript can pass anything: a
+		// Matrix2d fills the first nine entries and leaves the other seven
+		const mat2 = new Matrix2d();
+		for (let i = 0; i < 9; i++) {
+			mat2.val[i] = i + 2;
+		}
+		// @ts-expect-error a Matrix2d is not a Matrix3d
+		const matB = new Matrix3d().copy(mat2);
+
+		expect(Array.from(matB.val)).toEqual([
+			2, 3, 4, 5, 6, 7, 8, 9, 10, 0, 1, 0, 0, 0, 0, 1,
+		]);
 	});
 });

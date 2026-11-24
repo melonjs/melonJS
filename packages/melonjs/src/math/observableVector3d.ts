@@ -1,22 +1,8 @@
-import { TupleToUnion } from "type-fest";
 import { Point } from "../geometries/point.ts";
 import { createPool } from "../system/pool.ts";
 import { clamp, damp, lerp } from "./math.ts";
 import { Vector2d } from "./vector2d";
 import { Vector3d } from "./vector3d";
-
-const propertiesToObserve = ["x", "y", "z"] as const;
-type ObservableProperty = keyof Pick<
-	Vector3d,
-	TupleToUnion<typeof propertiesToObserve>
->;
-const setOfProperties = new Set<ObservableProperty>(propertiesToObserve);
-
-const isObservableProperty = (
-	property: string | symbol,
-): property is ObservableProperty => {
-	return setOfProperties.has(property as any);
-};
 
 /**
  * Working room for {@link ObservableVector3d.slerp}, which has to arrive at
@@ -24,6 +10,16 @@ const isObservableProperty = (
  * @ignore
  */
 const _slerpScratch = new Vector3d();
+
+/**
+ * What a revoked ObservableVector3d holds instead of its Vector3d: a proxy revoked
+ * here, so reading or writing the ObservableVector3d after {@link ObservableVector3d#revoke}
+ * throws a `TypeError`, as it does on any revoked proxy. A live ObservableVector3d
+ * keeps a plain Vector3d — no proxy on its hot path.
+ * @ignore
+ */
+const _revoked = Proxy.revocable(new Vector3d(), {});
+_revoked.revoke();
 
 /**
  * Represents a point in a 3D coordinate vector that can be observed for changes.
@@ -40,11 +36,6 @@ export class ObservableVector3d {
 	 * @internal
 	 */
 	private _vector3d: Vector3d;
-	/**
-	 * @ignore
-	 * @internal
-	 */
-	private _revoke: () => void;
 
 	private callBackEnabled: boolean = true;
 
@@ -61,21 +52,7 @@ export class ObservableVector3d {
 		z: number = 0,
 		callback?: () => void,
 	) {
-		const { proxy, revoke } = Proxy.revocable(new Vector3d(x, y, z), {
-			set: (target, property, value) => {
-				if (isObservableProperty(property)) {
-					Reflect.set(target, property, value);
-					if (this.callBackEnabled) {
-						this._callback?.();
-					}
-					return true;
-				}
-				return false;
-			},
-		});
-
-		this._revoke = revoke;
-		this._vector3d = proxy;
+		this._vector3d = new Vector3d(x, y, z);
 
 		if (callback) {
 			this.setCallback(callback);
@@ -128,6 +105,9 @@ export class ObservableVector3d {
 	 */
 	set x(value: number) {
 		this._vector3d.x = value;
+		if (this.callBackEnabled) {
+			this._callback?.();
+		}
 	}
 
 	/**
@@ -143,6 +123,9 @@ export class ObservableVector3d {
 	 */
 	set y(value: number) {
 		this._vector3d.y = value;
+		if (this.callBackEnabled) {
+			this._callback?.();
+		}
 	}
 
 	get z() {
@@ -151,6 +134,9 @@ export class ObservableVector3d {
 
 	set z(value: number) {
 		this._vector3d.z = value;
+		if (this.callBackEnabled) {
+			this._callback?.();
+		}
 	}
 
 	/**
@@ -637,10 +623,10 @@ export class ObservableVector3d {
 	}
 
 	/**
-	 * Revokes the proxy object, preventing further access to the ObservablePoint instance.
+	 * Revokes this instance: reading or writing it afterwards throws a `TypeError`.
 	 */
 	revoke() {
-		this._revoke();
+		this._vector3d = _revoked.proxy;
 	}
 }
 

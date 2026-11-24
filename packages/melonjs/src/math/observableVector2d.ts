@@ -1,20 +1,6 @@
-import { TupleToUnion } from "type-fest";
 import { createPool } from "../system/pool.ts";
 import { clamp, damp, lerp } from "./math.ts";
 import { Vector2d } from "./vector2d.ts";
-
-const propertiesToObserve = ["x", "y"] as const;
-type ObservableProperty = keyof Pick<
-	Vector2d,
-	TupleToUnion<typeof propertiesToObserve>
->;
-const setOfProperties = new Set<ObservableProperty>(propertiesToObserve);
-
-const isObservableProperty = (
-	property: string | symbol,
-): property is ObservableProperty => {
-	return setOfProperties.has(property as any);
-};
 
 /**
  * Working room for {@link ObservableVector2d.slerp}, which has to arrive at
@@ -22,6 +8,16 @@ const isObservableProperty = (
  * @ignore
  */
 const _slerpScratch = new Vector2d();
+
+/**
+ * What a revoked ObservableVector2d holds instead of its Vector2d: a proxy revoked
+ * here, so reading or writing the ObservableVector2d after {@link ObservableVector2d#revoke}
+ * throws a `TypeError`, as it does on any revoked proxy. A live ObservableVector2d
+ * keeps a plain Vector2d — no proxy on its hot path.
+ * @ignore
+ */
+const _revoked = Proxy.revocable(new Vector2d(), {});
+_revoked.revoke();
 
 /**
  * Represents a point in a 2D coordinate vector that can be observed for changes.
@@ -38,11 +34,6 @@ export class ObservableVector2d {
 	 * @internal
 	 */
 	private _vector2d: Vector2d;
-	/**
-	 * @ignore
-	 * @internal
-	 */
-	private _revoke: () => void;
 
 	private callBackEnabled: boolean = true;
 
@@ -53,21 +44,7 @@ export class ObservableVector2d {
 	 * @param callback - The callback function to be called when the point changes. Default is undefined.
 	 */
 	constructor(x: number = 0, y: number = 0, callback?: () => void) {
-		const { proxy, revoke } = Proxy.revocable(new Vector2d(x, y), {
-			set: (target, property, value) => {
-				if (isObservableProperty(property)) {
-					Reflect.set(target, property, value);
-					if (this.callBackEnabled) {
-						this._callback?.();
-					}
-					return true;
-				}
-				return false;
-			},
-		});
-
-		this._revoke = revoke;
-		this._vector2d = proxy;
+		this._vector2d = new Vector2d(x, y);
 
 		if (callback) {
 			this.setCallback(callback);
@@ -116,6 +93,9 @@ export class ObservableVector2d {
 	 */
 	set x(value: number) {
 		this._vector2d.x = value;
+		if (this.callBackEnabled) {
+			this._callback?.();
+		}
 	}
 
 	/**
@@ -131,6 +111,9 @@ export class ObservableVector2d {
 	 */
 	set y(value: number) {
 		this._vector2d.y = value;
+		if (this.callBackEnabled) {
+			this._callback?.();
+		}
 	}
 
 	/**
@@ -555,10 +538,10 @@ export class ObservableVector2d {
 	}
 
 	/**
-	 * Revokes the proxy object, preventing further access to the ObservablePoint instance.
+	 * Revokes this instance: reading or writing it afterwards throws a `TypeError`.
 	 */
 	revoke() {
-		this._revoke();
+		this._vector2d = _revoked.proxy;
 	}
 }
 
