@@ -762,8 +762,8 @@ export default class Renderable extends Rect {
 	 * camera.setPosition(0, 0, -300).lookAt(player);
 	 */
 	setPosition(x, y, z) {
-		// ONE batched write, not three component assignments. `pos` is a
-		// proxied observable: every component write fires its callback, which
+		// ONE batched write, not three component assignments. `pos` is an
+		// observable: every component write fires its callback, which
 		// runs `updateBounds()`. `set` mutes that and fires once, so this
 		// costs one bounds recompute where assigning `pos.x`, `pos.y` and
 		// `depth` in turn costs three. That matters because the paths this

@@ -347,15 +347,51 @@ export class Bounds {
 			}
 			return;
 		}
-		// transformed: walk the 4 corners through `m` via `addPoint`.
-		// Reuse the module-level scratch — `m.apply` mutates in place
-		// and `addPoint` reads x/y immediately after, so the same Point
-		// can shuttle through all four corners.
-		const v = _addFrameScratch;
-		this.addPoint(v.set(x0, y0), m);
-		this.addPoint(v.set(x1, y0), m);
-		this.addPoint(v.set(x0, y1), m);
-		this.addPoint(v.set(x1, y1), m);
+		// affine (every Matrix2d, and a Matrix3d with no perspective, whose w
+		// is 1): each corner gets the same arithmetic `apply` gives a 2D
+		// point (z = 1), in the same order, without the scratch point, the
+		// checks for a z and the divide by w
+		const a = m.val;
+		let xa: number;
+		let ya: number;
+		let xb: number;
+		let yb: number;
+		let xc: number;
+		let yc: number;
+		let xd: number;
+		let yd: number;
+		if (a.length === 9) {
+			xa = x0 * a[0] + y0 * a[3] + a[6];
+			ya = x0 * a[1] + y0 * a[4] + a[7];
+			xb = x1 * a[0] + y0 * a[3] + a[6];
+			yb = x1 * a[1] + y0 * a[4] + a[7];
+			xc = x0 * a[0] + y1 * a[3] + a[6];
+			yc = x0 * a[1] + y1 * a[4] + a[7];
+			xd = x1 * a[0] + y1 * a[3] + a[6];
+			yd = x1 * a[1] + y1 * a[4] + a[7];
+		} else if (a[3] === 0 && a[7] === 0 && a[11] === 0 && a[15] === 1) {
+			xa = a[0] * x0 + a[4] * y0 + a[8] + a[12];
+			ya = a[1] * x0 + a[5] * y0 + a[9] + a[13];
+			xb = a[0] * x1 + a[4] * y0 + a[8] + a[12];
+			yb = a[1] * x1 + a[5] * y0 + a[9] + a[13];
+			xc = a[0] * x0 + a[4] * y1 + a[8] + a[12];
+			yc = a[1] * x0 + a[5] * y1 + a[9] + a[13];
+			xd = a[0] * x1 + a[4] * y1 + a[8] + a[12];
+			yd = a[1] * x1 + a[5] * y1 + a[9] + a[13];
+		} else {
+			// perspective: each corner divides by its own w
+			const v = _addFrameScratch;
+			this.addPoint(v.set(x0, y0), m);
+			this.addPoint(v.set(x1, y0), m);
+			this.addPoint(v.set(x0, y1), m);
+			this.addPoint(v.set(x1, y1), m);
+			return;
+		}
+		// Math.min/max, as `addPoint` folds them: a NaN corner spreads
+		this.min.x = Math.min(this.min.x, xa, xb, xc, xd);
+		this.max.x = Math.max(this.max.x, xa, xb, xc, xd);
+		this.min.y = Math.min(this.min.y, ya, yb, yc, yd);
+		this.max.y = Math.max(this.max.y, ya, yb, yc, yd);
 	}
 
 	/**

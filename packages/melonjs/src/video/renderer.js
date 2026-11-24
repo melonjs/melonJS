@@ -48,6 +48,14 @@ const drawnTransform = new Float64Array(6);
 const _savedView = new Matrix3d();
 
 /**
+ * The effect chain of a renderable that has none, shared rather than built
+ * for each one drawn; frozen, as it is handed out to every caller.
+ * @ignore
+ * @internal
+ */
+const NO_EFFECTS = Object.freeze([]);
+
+/**
  * a base renderer object
  * @category Rendering
  */
@@ -1650,6 +1658,10 @@ export default class Renderer {
 	 * @internal
 	 */
 	beginPostEffect(renderable) {
+		if (renderable.postEffects.length === 0) {
+			this.customShader = undefined;
+			return false;
+		}
 		// on Canvas, only set customShader for single-effect fast path
 		const effects = renderable.postEffects.filter((fx) => {
 			return fx.enabled !== false;
@@ -2139,6 +2151,11 @@ export default class Renderer {
 	 * @internal
 	 */
 	_effectChainFor(renderable) {
+		// nearly every renderable has none: nothing to build for it, and
+		// this runs twice for every one drawn (as it starts and as it ends)
+		if (renderable.postEffects.length === 0) {
+			return NO_EFFECTS;
+		}
 		const effects = renderable.postEffects.filter((fx) => {
 			return fx.enabled !== false;
 		});

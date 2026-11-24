@@ -531,7 +531,14 @@ export class Color {
 		if (typeof color === "string") {
 			return this.parseCSS(color);
 		} else {
-			this.normalizedRGBA.set(color.normalizedRGBA);
+			// by element: `TypedArray#set` is a builtin call, several times
+			// slower than four stores, and this runs for every save/restore
+			const a = this.normalizedRGBA;
+			const b = color.normalizedRGBA;
+			a[0] = b[0];
+			a[1] = b[1];
+			a[2] = b[2];
+			a[3] = b[3];
 			return this;
 		}
 	}

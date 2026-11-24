@@ -71,6 +71,28 @@ function isPerspective(renderer) {
 }
 
 /**
+ * Whether `obj` is visible: {@link Camera2d#isVisible} asked of the stage's
+ * cameras in the order they were added, and settled by the first one that
+ * sees it. Its answer is {@link Renderable#inViewport}, whose changes fire
+ * {@link Renderable#onVisibilityChange}. A plain loop, not a `forEach`
+ * callback: this runs for every child of every container, every frame.
+ * @param {Map<string, Camera2d>} cameras - the stage's cameras
+ * @param {Renderable} obj - the child to test
+ * @param {boolean} floating - whether it draws in screen space
+ * @returns {boolean} true if a camera sees it
+ * @ignore
+ * @internal
+ */
+function isVisible(cameras, obj, floating) {
+	for (const camera of cameras.values()) {
+		if (camera.isVisible(obj, floating)) {
+			return true;
+		}
+	}
+	return false;
+}
+
+/**
  * Send `onActivateEvent` to a child that has not had one yet.
  * @ignore
  * @internal
@@ -1706,7 +1728,6 @@ export default class Container extends Renderable {
 	 * @returns {boolean} true if the Container is dirty
 	 */
 	update(dt) {
-		let isFloating = false;
 		const isPaused = state.isPaused();
 		// The frame boundary, and the reason the counter below cannot strand
 		// the world. Saving and restoring it around a child is idempotent but
@@ -1734,8 +1755,8 @@ export default class Container extends Renderable {
 		// its animation, physics and timers.
 		//
 		// Iterating a snapshot fixes that at the cost of one array copy per
-		// container per frame, which is nothing beside the per-child closure
-		// the camera-visibility loop below already allocates. Children added
+		// container per frame, which is nothing beside the per-child work
+		// the camera-visibility check below already does. Children added
 		// during the pass are still not visited until the next frame, matching
 		// the previous behaviour (the loop started from a captured length).
 		const pass = children.slice();
@@ -1766,7 +1787,7 @@ export default class Container extends Renderable {
 				continue;
 			}
 
-			isFloating = globalFloatingCounter > 0 || obj.floating;
+			const isFloating = globalFloatingCounter > 0 || obj.floating;
 			if (isFloating) {
 				globalFloatingCounter++;
 			}
@@ -1790,13 +1811,7 @@ export default class Container extends Renderable {
 			// local and assign ONCE: assigning `false` then `true` through
 			// the setter would fire `onVisibilityChange` (a change-detecting
 			// setter) twice per frame for every continuously-visible object
-			let inViewport = false;
-			// iterate through all cameras
-			cameras.forEach((camera) => {
-				if (camera.isVisible(obj, isFloating)) {
-					inViewport = true;
-				}
-			});
+			let inViewport = isVisible(cameras, obj, isFloating);
 			// A container measured from its children re-measures itself at
 			// the end of its own update (below), and only runs that update
 			// while it is in view. Culled, it would keep the bounds of where
@@ -1810,11 +1825,7 @@ export default class Container extends Renderable {
 				typeof obj.updateBounds === "function"
 			) {
 				obj.updateBounds();
-				cameras.forEach((camera) => {
-					if (camera.isVisible(obj, isFloating)) {
-						inViewport = true;
-					}
-				});
+				inViewport = isVisible(cameras, obj, isFloating);
 			}
 			obj.inViewport = inViewport;
 

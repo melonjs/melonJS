@@ -21,6 +21,9 @@
 - Tile maps: `TMXTileMap` and `TMXTilesetGroup`, for `TileMap` and `TilesetGroup` (the same classes)
 - Loader: `loader.getTMX`, for `loader.getTileMap` (the same function)
 
+### Performance
+- Rendering: sprites take about **45%** less CPU time to update and draw on WebGL and WebGPU (10,000 sprites on WebGL: 8.6 to 4.9 ms a frame), and about **60%** less when they rotate
+
 ### Fixed
 - TypeScript: an asset's `data` accepts a parsed map object
 - Tile maps: a floating tile layer disappeared once the camera moved
