@@ -202,9 +202,7 @@ export function tiledParallaxChecks(
 
 		// A tile layer is where an image layer of the same picture, offset
 		// and factor is, at every view: by the image layers' rule, painted
-		// here, and against an image layer itself where one draws its
-		// picture once (on WebGL it spreads the picture's edges over the
-		// view, which is not this test's to tell).
+		// here, and against an image layer itself, drawing its picture once.
 		const expectAsAnImageLayer = (
 			tiles: TileMap,
 			placing: Placing,
@@ -219,15 +217,13 @@ export function tiledParallaxChecks(
 					`${what}, from ${String(x)}, ${String(y)}: ${result.first}`,
 				).toBe(0);
 			}
-			if (renderer === video.CANVAS) {
-				const picture = frames(tiledMap([imageLayer({ ...placing })], origin));
-				for (const [i, [x, y]] of VIEWS.entries()) {
-					const result = diff(got[i], picture[i], tolerance);
-					expect(
-						result.different,
-						`${what}, against an image layer, from ${String(x)}, ${String(y)}: ${result.first}`,
-					).toBe(0);
-				}
+			const picture = frames(tiledMap([imageLayer({ ...placing })], origin));
+			for (const [i, [x, y]] of VIEWS.entries()) {
+				const result = diff(got[i], picture[i], tolerance);
+				expect(
+					result.different,
+					`${what}, against an image layer, from ${String(x)}, ${String(y)}: ${result.first}`,
+				).toBe(0);
 			}
 			return got;
 		};

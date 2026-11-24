@@ -653,8 +653,9 @@ describe("ImageLayer", () => {
 					expect(rect.x).toBeLessThanOrEqual(0);
 					// and the drawn pattern reaches the right edge
 					expect(rect.x + rect.w).toBeGreaterThanOrEqual(VW);
-					// non-tiling axis still draws exactly the source extent (#1290)
-					expect(rect.h).toEqual(layer.height);
+					// the non-tiling axis draws exactly the source extent
+					// (#1290): the picture's height, not the view's
+					expect(rect.h).toEqual(image.height);
 				});
 			}
 		}
@@ -678,7 +679,7 @@ describe("ImageLayer", () => {
 				expect(rect.y).toBeGreaterThan(-image.height);
 				expect(rect.y).toBeLessThanOrEqual(0);
 				expect(rect.y + rect.h).toBeGreaterThanOrEqual(VH);
-				expect(rect.w).toEqual(layer.width);
+				expect(rect.w).toEqual(image.width);
 			});
 		}
 

@@ -95,7 +95,7 @@ option and resolve the same value they return — so `if (level.next())` becomes
 `if (await level.next({ async: true }))`. Running out of levels reports `false`
 either way rather than throwing. `level.getCurrentLevelId()` and
 `level.levelCount()` round out the namespace. `flatten: false` wraps each Tiled
-object group in its own `Container` named after the group.
+object layer and group layer in its own `Container` named after it.
 
 ## Spawning entities from Tiled objects
 
@@ -371,10 +371,18 @@ board.getTile(pointer.x, pointer.y); // still the tile under the pointer
 
 The other layers follow their offset in Tiled too: an image layer is placed by
 it, an object layer's objects are created that far from where they were drawn
-(collision shapes with them), and a group layer's offset moves the tile layers
-inside it, on top of their own. A group can only hold tile layers: with an
-object layer, an image layer or another group inside a group, the map fails
-to load.
+(collision shapes with them), and a group layer's offset moves the layers
+inside it, on top of their own.
+
+A group layer holds layers of any kind: tile layers, object layers, image
+layers and other groups (object layers, image layers and nested groups since
+20.18). As in Tiled, the group gives the layers inside it its offset, its
+opacity, its parallax factor, its blend mode, and its tint where a layer has
+none of its own. Every layer takes a depth (`pos.z`) of its own in Tiled's
+order, the ones inside a group included, so the layer that follows a group
+draws over everything in the group. With `flatten: false`, a group is a
+`Container` named after it, holding its tile and image layers, and a
+container for each object layer or group inside it.
 
 The map's own custom properties (Map → Map Properties in Tiled) are set on the
 map object, which `level.getCurrentLevel()` returns once it is loaded: a
@@ -568,7 +576,9 @@ the point it belongs with, such as `door.pos.y - dust.pos.y`.
 ## Image layers
 
 `ImageLayer` gives parallax backgrounds with a ratio per axis, set in Tiled or in
-code. Repeat behaviour matches Tiled's.
+code. Repeat behaviour matches Tiled's: `repeat` (the default in code),
+`repeat-x`, `repeat-y`, or `no-repeat` for a picture drawn once, where the
+layer is.
 
 ## Compressed maps need a plugin
 
@@ -962,7 +972,9 @@ layer into the offscreen-bake path instead.
 | thin lines between tiles on the Canvas renderer, with smoothing on | filtering blends in the next tile of the tileset or its spacing, which a canvas cannot prevent: set `antiAlias: false`, or `preRender` the layer. WebGL and WebGPU keep each tile to itself |
 | a tile layer given an offset in Tiled (a roof nudged up, a shadow shifted) is drawn where the others are, or the objects of an object layer with an offset are not where Tiled shows them | before 20.17 only image layers followed their offset; tile layers (and their `pos`), object layers and group layers ignored it: update |
 | after updating to 20.17 a tile layer, or the objects of an object layer, sit away from where they did | the layer (or the group it is in) has an offset in Tiled that was ignored until then, and now moves it as in the editor: clear the layer's Offset in Tiled if it was not meant |
-| the map fails to load with a group layer in it | the group holds an object layer, an image layer or another group: a group can only hold tile layers. Move those layers out of the group |
+| the map fails to load with a group layer in it (`Cannot read properties of undefined (reading 'length')`) | before 20.18 a group could only hold tile layers: an object layer, an image layer or another group inside it broke the load. Update, or move those layers out of the group |
+| a layer of the map is hidden under the layers of the group before it | before 20.18 a group of three or more layers took depths the next layers of the map took too: update. Layers after a group now have a higher `pos.z` than they had |
+| an image layer set not to repeat fills the view with streaks of its edge colors on WebGL, or a backdrop larger than the screen is cut off as the camera moves | before 20.18 an axis that does not repeat was drawn over the view's size, not the picture's: update |
 | a map smaller than the screen (centred by `level.load`) had the tops of its tall tiles cut on WebGL or WebGPU | before 20.17 a layer read the camera's view as if it stood at the world's origin, and so did a layer in a container the game had moved: update |
 | the tops of tall tiles vanish when the map itself scrolls out of view | before 20.17 a layer was skipped once its grid left the view, though tiles larger than a cell (or moved by a `tileoffset`) still reached in: update |
 | an orthogonal layer warns `tiles larger than the grid, of more than one tileset in a layer` | tiles larger than a cell overlap, and the shader path keeps their order within one tileset: put each tileset's large tiles on a layer of their own (trees apart from the ground they stand on) |

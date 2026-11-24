@@ -29,6 +29,10 @@
 - Tiled: a frame drawn right after a level loaded could show its layers back to front
 - Tiled: a `renderMode` property on a tile layer was ignored
 - Tiled: each level load leaked a viewport-resize handler
+- Tiled: a map with an object layer, an image layer or another group inside a group layer failed to load
+- Tiled: the layers of a group of three or more were drawn over the map layers that follow the group; a layer after a group now takes the depth that follows the group's last layer
+- Tiled: a group layer's tint is applied to the tile layers inside it
+- `ImageLayer`: a layer that does not repeat on an axis smeared its edge pixels across the view on WebGL, and a picture larger than the view was cut off as the camera moved over it
 
 ## [20.17.0] (melonJS 2) - _2026-11-22_
 
