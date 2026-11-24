@@ -504,11 +504,11 @@ export class WaterTextureObj extends me.Sprite {
 
 /** name every class the TMX can place */
 export const registerEntities = () => {
-	me.registerTiledObjectClass("spriteTP", SpriteTP);
-	me.registerTiledObjectClass("collisionTP", CollisionTP);
-	me.registerTiledObjectClass("cloud", Cloud);
-	me.registerTiledObjectClass("foodie", Foodie);
-	me.registerTiledObjectClass("portal", Portal);
-	me.registerTiledObjectClass("cookingArea", CookingArea);
-	me.registerTiledObjectClass("male", Male);
+	me.registerObjectClass("spriteTP", SpriteTP);
+	me.registerObjectClass("collisionTP", CollisionTP);
+	me.registerObjectClass("cloud", Cloud);
+	me.registerObjectClass("foodie", Foodie);
+	me.registerObjectClass("portal", Portal);
+	me.registerObjectClass("cookingArea", CookingArea);
+	me.registerObjectClass("male", Male);
 };

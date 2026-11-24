@@ -201,7 +201,7 @@ export default class Renderer {
 		this.parentApplication = undefined;
 
 		/**
-		 * Whether this renderer backend can draw TMX tile layers through a
+		 * Whether this renderer backend can draw tile layers through a
 		 * GPU shader path (see the `gpuTilemap` application setting).
 		 * `false` here on the base/Canvas renderer; GPU backends flip it.
 		 * A capability flag rather than a version/class check so future
@@ -1885,16 +1885,27 @@ export default class Renderer {
 	/* eslint-enable no-unused-vars, @typescript-eslint/no-unused-vars */
 
 	/**
-	 * Draw a TMX tile layer. Default behavior:
+	 * Let go of what the renderer keeps for a tile layer (its index texture
+	 * on the GPU): called when the layer leaves the world. Nothing to do
+	 * here; the GPU renderers free their per-layer textures.
+	 * @param {object} layer - the tile layer
+	 * @ignore
+	 * @internal
+	 */
+	// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+	releaseTileLayer(layer) {}
+
+	/**
+	 * Draw a tile layer. Default behavior:
 	 *   - if `layer.canvasRenderer` is set (preRender bake), blit the cached
 	 *     offscreen canvas in a single `drawImage` call;
-	 *   - otherwise delegate to the layer's TMX orientation renderer for
+	 *   - otherwise delegate to the layer's map renderer for
 	 *     the per-tile loop.
 	 *
 	 * `WebGLRenderer` overrides this to add the procedural shader fast
 	 * path on top (when `layer.renderMode === "shader"`) and fall through
 	 * to this base behavior for all other layers.
-	 * @param {object} layer - the TMXLayer to draw
+	 * @param {object} layer - the TileLayer to draw
 	 * @param {Rect} rect - the visible region in world coords
 	 */
 	drawTileLayer(layer, rect) {

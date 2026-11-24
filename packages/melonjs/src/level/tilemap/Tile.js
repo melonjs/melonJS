@@ -1,0 +1,245 @@
+import { degToRad } from "../../math/math.ts";
+import { Matrix2d } from "../../math/matrix2d.ts";
+import { Bounds } from "../../physics/bounds.ts";
+import Sprite from "../../renderable/sprite.js";
+
+/**
+ * additional import for TypeScript
+ * @import Renderable from "../../renderable/renderable.js";
+ * @import Tileset from "./Tileset.js";
+ */
+import {
+	FLIP_AD_BIT,
+	FLIP_H_BIT,
+	FLIP_V_BIT,
+	GID_FLIP_AD,
+	GID_FLIP_H,
+	GID_FLIP_V,
+	GID_MASK,
+} from "./constants.js";
+
+/**
+ * Apply a flip-mask transform to a Matrix2d in-place. Resets the matrix to
+ * identity first, then applies the H / V / AD operations to flip / rotate a
+ * tile of `width × height` pixels around its center.
+ *
+ * This is the typed-array equivalent of `Tile.setTileTransform()` — both share
+ * the same math, but this variant is driven by a packed 3-bit mask (H=1, V=2,
+ * AD=4) so callers that have raw layerData bytes can build a flip transform
+ * without constructing a Tile.
+ *
+ * @param {Matrix2d} transform - the matrix to fill (mutated in place)
+ * @param {number} flipMask - 3-bit packed flip mask
+ * @param {number} width - tile width in pixels
+ * @param {number} height - tile height in pixels
+ * @returns {Matrix2d} the same matrix, for chaining
+ * @ignore
+ * @internal
+ */
+export function buildFlipTransform(transform, flipMask, width, height) {
+	transform.identity();
+	return applyFlip(transform, flipMask, width, height);
+}
+
+/**
+ * Flip a tile of `width` x `height` pixels around its centre, on top of what
+ * the matrix already holds: the H / V / AD operations of a packed 3-bit mask
+ * (H=1, V=2, AD=4).
+ * @param {Matrix2d} transform - the matrix to apply the flip to
+ * @param {number} flipMask - 3-bit packed flip mask
+ * @param {number} width - tile width in pixels
+ * @param {number} height - tile height in pixels
+ * @returns {Matrix2d} the same matrix, for chaining
+ * @ignore
+ * @internal
+ */
+function applyFlip(transform, flipMask, width, height) {
+	const halfW = width / 2;
+	const halfH = height / 2;
+	const flippedH = (flipMask & FLIP_H_BIT) !== 0;
+	const flippedV = (flipMask & FLIP_V_BIT) !== 0;
+	const flippedAD = (flipMask & FLIP_AD_BIT) !== 0;
+
+	transform.translate(halfW, halfH);
+	if (flippedAD) {
+		transform.rotate(degToRad(-90));
+		transform.scale(-1, 1);
+	}
+	if (flippedH) {
+		transform.scale(flippedAD ? 1 : -1, flippedAD ? -1 : 1);
+	}
+	if (flippedV) {
+		transform.scale(flippedAD ? -1 : 1, flippedAD ? 1 : -1);
+	}
+	transform.translate(-halfW, -halfH);
+	return transform;
+}
+
+/**
+ * a basic tile object
+ * @category Tilemap
+ */
+export default class Tile extends Bounds {
+	/**
+	 * @param {number} x - x index of the Tile in the map
+	 * @param {number} y - y index of the Tile in the map
+	 * @param {number} gid - tile gid
+	 * @param {Tileset} tileset - the corresponding tileset object
+	 */
+	constructor(x, y, gid, tileset) {
+		super();
+
+		// determine the tile size from per-tile image or tileset grid
+		let width;
+		let height;
+		if (tileset.isCollection) {
+			const tileImage = tileset.getTileImage(gid & GID_MASK);
+			width = tileImage.width;
+			height = tileImage.height;
+		} else {
+			width = tileset.tilewidth;
+			height = tileset.tileheight;
+		}
+
+		this.setMinMax(0, 0, width, height);
+
+		/**
+		 * the corresponding tileset
+		 * @type {Tileset}
+		 */
+		this.tileset = tileset;
+
+		/**
+		 * the tile transformation matrix (if flipped)
+		 * @type {Matrix2d|null}
+		 * @ignore
+		 * @internal
+		 */
+		this.currentTransform = null;
+
+		/**
+		 * tile column position in the map
+		 * @type {number}
+		 */
+		this.col = x;
+
+		/**
+		 * tile row position in the map
+		 * @type {number}
+		 */
+		this.row = y;
+
+		/**
+		 * the global tile ID (with flip bits cleared)
+		 * @type {number}
+		 */
+		this.tileId = gid;
+
+		/**
+		 * True if the tile is flipped horizontally
+		 * @type {boolean}
+		 */
+		this.flippedX = (this.tileId & GID_FLIP_H) !== 0;
+
+		/**
+		 * True if the tile is flipped vertically
+		 * @type {boolean}
+		 */
+		this.flippedY = (this.tileId & GID_FLIP_V) !== 0;
+
+		/**
+		 * True if the tile is flipped anti-diagonally
+		 * @type {boolean}
+		 */
+		this.flippedAD = (this.tileId & GID_FLIP_AD) !== 0;
+
+		/**
+		 * Global flag that indicates if the tile is flipped
+		 * @type {boolean}
+		 */
+		this.flipped = this.flippedX || this.flippedY || this.flippedAD;
+
+		// create and apply transformation matrix if required
+		if (this.flipped) {
+			this.currentTransform = new Matrix2d();
+			this.setTileTransform(this.currentTransform.identity());
+		}
+
+		// clear out the flip flags and keep the actual tileId
+		this.tileId &= GID_MASK;
+	}
+
+	/**
+	 * set the transformation matrix for this tile
+	 * @param {Matrix2d} transform - the transformation matrix to apply
+	 * @ignore
+	 * @internal
+	 */
+	setTileTransform(transform) {
+		const mask =
+			(this.flippedX ? FLIP_H_BIT : 0) |
+			(this.flippedY ? FLIP_V_BIT : 0) |
+			(this.flippedAD ? FLIP_AD_BIT : 0);
+		applyFlip(transform, mask, this.width, this.height);
+	}
+
+	/**
+	 * return a renderable object for this Tile object
+	 * @param {object} [settings] - see {@link Sprite}
+	 * @returns {Renderable} a me.Sprite object
+	 */
+	getRenderable(settings) {
+		let renderable;
+		const tileset = this.tileset;
+
+		const localId = this.tileId - tileset.firstgid;
+
+		if (tileset.animations.has(localId)) {
+			// animated tile — create an animated sprite
+			const frames = [];
+			const frameId = [];
+			for (const frame of tileset.animations.get(localId).frames) {
+				frameId.push(frame.tileid);
+				// named by position: the sprite's atlas holds the frames in
+				// this order, and a spritesheet atlas refuses string names
+				frames.push({
+					name: frames.length,
+					delay: frame.duration,
+				});
+			}
+			renderable = tileset
+				.getAnimationTexture()
+				.createAnimationFromName(frameId, settings);
+			renderable.addAnimation(localId, frames);
+			renderable.setCurrentAnimation(localId);
+		} else if (tileset.isCollection) {
+			// collection tile — create a sprite from the tile image
+			const image = tileset.getTileImage(this.tileId);
+			renderable = new Sprite(0, 0, { image, rotation: settings?.rotation });
+			renderable.anchorPoint.set(0, 0);
+		} else {
+			// regular tile — create a sprite from the tileset atlas
+			renderable = tileset.texture.createSpriteFromName(
+				this.tileId - tileset.firstgid,
+				settings,
+			);
+			renderable.anchorPoint.set(0, 0);
+		}
+
+		// stretch the tile to the object's size, as Tiled draws a resized
+		// tile object: after the rotation, which turns the stretched box,
+		// and before the flip, which turns the tile around its own center
+		if (settings?.width > 0 && settings.height > 0) {
+			const scaleX = settings.width / this.width;
+			const scaleY = settings.height / this.height;
+			if (scaleX !== 1 || scaleY !== 1) {
+				renderable.scale(scaleX, scaleY);
+			}
+		}
+
+		// apply any H/V/AD flip transforms
+		this.setTileTransform(renderable.currentTransform);
+
+		return renderable;
+	}
+}

@@ -134,7 +134,7 @@ describe("loader bundles: edge cases", () => {
 
 			// the descriptor form frees the map only, and leaves its level
 			expect(loader.unload({ name: "ad-map", type: "tmx" })).toBe(true);
-			expect(loader.getTMX("ad-map")).toBeNull();
+			expect(loader.getTileMap("ad-map")).toBeNull();
 			expect(loader.getImage("ad-map-img")).not.toBeNull();
 			expect(await levelExists("ad-map")).toBe(true);
 			expect(loader.isLoaded("ad-map")).toBe(false);
@@ -143,7 +143,7 @@ describe("loader bundles: edge cases", () => {
 			await loader.load("ad-map");
 			expect(loader.isLoaded("ad-map")).toBe(true);
 			expect(loader.unload("ad-map")).toBe(true);
-			expect(loader.getTMX("ad-map")).toBeNull();
+			expect(loader.getTileMap("ad-map")).toBeNull();
 			expect(loader.getImage("ad-map-img")).toBeNull();
 			expect(await levelExists("ad-map")).toBe(false);
 		});

@@ -16,8 +16,8 @@ import {
 	plugin,
 	state,
 	type Tile,
+	type TileMap,
 	type TMXLayer,
-	type TMXTileMap,
 	TMXUtils,
 	video,
 } from "melonjs";
@@ -119,7 +119,7 @@ const enter = async (name: string) => {
 		setViewportBounds: false,
 		async: true,
 	});
-	const map = level.getCurrentLevel() as TMXTileMap;
+	const map = level.getCurrentLevel() as TileMap;
 	return new Map(map.getLayers().map((layer) => [layer.name, layer]));
 };
 

@@ -85,9 +85,11 @@ const createGame = async () => {
 	plugin.register(TiledInflatePlugin);
 
 	loader.preload(resources, () => {
+		// the game's state first: it brings its own viewport, and a handler
+		// registered on the loading screen's would be left behind with it
+		state.change(state.DEFAULT, true);
 		event.on(event.KEYDOWN, onKeyPressed);
 		input.registerPointerEvent("wheel", game.viewport, onScroll);
-		state.change(state.DEFAULT, true);
 		loadLevel("village");
 	});
 };

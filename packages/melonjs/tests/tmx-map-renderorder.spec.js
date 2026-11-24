@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { Application, boot, Rect, TMXTileMap, video } from "../src/index.js";
+import { Application, boot, Rect, TileMap, video } from "../src/index.js";
 import * as TMXUtils from "../src/level/tiled/TMXUtils.js";
 import { imgList } from "../src/loader/cache.js";
 import CanvasRenderer from "../src/video/canvas/canvas_renderer.js";
@@ -122,7 +122,7 @@ describe("a tile layer takes the map's render order", () => {
 
 	describe.each(Object.keys(FORMATS))("%s", (format) => {
 		const layerOf = (renderorder) => {
-			const map = new TMXTileMap(
+			const map = new TileMap(
 				`renderorder-${format}-${renderorder}`,
 				FORMATS[format](renderorder),
 			);
@@ -148,7 +148,7 @@ describe("a tile layer takes the map's render order", () => {
 	it("a map without a render order still renders right-down", () => {
 		const data = jsonMap("right-down");
 		delete data.renderorder;
-		const map = new TMXTileMap("renderorder-none", data);
+		const map = new TileMap("renderorder-none", data);
 		expect(map.renderorder).toEqual("right-down");
 		expect(map.getLayers()[0].renderorder).toEqual("right-down");
 	});
@@ -156,7 +156,7 @@ describe("a tile layer takes the map's render order", () => {
 	it("a render order given on the layer itself still wins", () => {
 		const data = jsonMap("right-down");
 		data.layers[0].renderorder = "left-down";
-		const map = new TMXTileMap("renderorder-layer", data);
+		const map = new TileMap("renderorder-layer", data);
 		expect(map.getLayers()[0].renderorder).toEqual("left-down");
 		expect(overlapColour(map.getLayers()[0])).toEqual(RED);
 	});

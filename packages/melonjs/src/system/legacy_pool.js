@@ -32,7 +32,7 @@ function warnDeprecated(method) {
 	warning(
 		"pool." + method + "()",
 		'getPool("tween") / createPool() to pool instances, or ' +
-			"registerTiledObjectClass() to let a Tiled map name a class",
+			"registerObjectClass() to let a Tiled map name a class",
 		"18.0.0",
 	);
 }
@@ -54,11 +54,11 @@ function warnDeprecated(method) {
  * and the rest are typed, so a wrong name is a compile error rather than a
  * throw, and a pool can be created for any class with `createPool`. For
  * registering a class so a Tiled map can name it, use
- * {@link registerTiledObjectClass}, which is what this now delegates to.
+ * {@link registerObjectClass}, which is what this now delegates to.
  *
  * The engine itself no longer uses this pool for anything.
  * @deprecated since 18.0.0, use {@link getPool} / `createPool`, and
- * {@link registerTiledObjectClass} for Tiled classes
+ * {@link registerObjectClass} for Tiled classes
  * @see {@link pool} the default global instance of ObjectPool
  */
 class ObjectPool {
@@ -91,7 +91,7 @@ class ObjectPool {
 	 * Registered classes are also automatically available as Tiled object factories,
 	 * meaning objects placed in a Tiled map with a matching class or name will be
 	 * instantiated using the registered constructor. For more control, use
-	 * {@link registerTiledObjectClass} or {@link registerTiledObjectFactory} instead.
+	 * {@link registerObjectClass} or {@link registerObjectFactory} instead.
 	 * @param {string} className - as defined in the Name field of the Object Properties (in Tiled)
 	 * @param {object} classObj - corresponding Class to be instantiated
 	 * @param {boolean} [recycling=false] - enables object recycling for the specified class

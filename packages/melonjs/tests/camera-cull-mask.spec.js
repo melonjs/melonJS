@@ -16,7 +16,7 @@ import {
 	Renderable,
 	Stage,
 	state,
-	TMXTileMap,
+	TileMap,
 	video,
 } from "../src/index.js";
 import { resetRenderableState } from "../src/renderable/renderable.js";
@@ -524,7 +524,7 @@ describe("visibilityLayer and cullMask", () => {
 		});
 
 		it("is read from an object's custom property in a Tiled map", () => {
-			const map = new TMXTileMap("layers", {
+			const map = new TileMap("layers", {
 				width: 2,
 				height: 2,
 				tilewidth: 32,

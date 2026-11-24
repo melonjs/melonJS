@@ -1,6 +1,6 @@
 ---
 name: melonjs-tilemaps
-description: "Use this skill for Tiled maps in melonJS — loading TMX/TSX levels, spawning entities from Tiled objects, collision shapes authored in Tiled, isometric and hexagonal maps, and image layers, and reading or changing tiles while the game runs. Covers registerTiledObjectClass and the pool.register name contract, camera bounds, compressed maps needing the inflate plugin, and the level director API. Triggers on: Tiled, TMX, TSX, tilemap, setTile, clearTile, cellAt, getTile, getTileById, change a tile, tile at run time, game board, grid, tile properties at run time, getTileProperties, map properties, level.load, level.load async, await level.load, tileset, ImageLayer, infinite map, render order, isometric, hexagonal, staggered, pool.register, Collectable, Trigger, object layer, collision layer, parallax, registerTiledObjectClass, registerTiledObjectFactory, TMXObject, resolvedProperty, resolvedProperties, tile class, tile properties."
+description: "Use this skill for tile maps in melonJS: Tiled maps, LDtk levels, Sprite Fusion maps, and tile layers built in code. Loading TMX/TSX, .ldtk and Sprite Fusion exports, spawning entities from Tiled objects, collision shapes authored in Tiled, isometric and hexagonal maps, image layers, and reading or changing tiles while the game runs. Covers registerObjectClass and the pool.register name contract, camera bounds, compressed maps needing the inflate plugin, and the level director API. Triggers on: Tiled, TMX, TSX, LDtk, .ldtk, IntGrid, Sprite Fusion, spritefusion, tilemap, setTile, clearTile, cellAt, getTile, getTileById, change a tile, game board, grid, getTileProperties, setTileProperties, tile attributes, level.load, tileset, ImageLayer, infinite map, render order, isometric, hexagonal, staggered, pool.register, Trigger, object layer, collision layer, collider, parallax, registerTiledObjectClass, TileLayer, Tileset, PlacedTileLayer, setCell, mergeGridRects, level.registerFormat, TMXObject, tile class."
 license: MIT
 ---
 
@@ -9,6 +9,15 @@ license: MIT
 > melonJS's flagship content pipeline. Maps are authored in
 > [Tiled](https://www.mapeditor.org/) and loaded through the `level` director —
 > you rarely touch the `TMX*` classes directly.
+>
+> Levels made with [LDtk](https://ldtk.io) load the same way, from the
+> `.ldtk` project file as the editor saves it: see "LDtk levels" below. What
+> this skill says of tile layers, the level director and the object registry
+> holds for them too.
+>
+> A map made with [Sprite Fusion](https://www.spritefusion.com) loads as it is
+> exported, `map.json` or `map.tmx`, under the asset type `"spritefusion"`:
+> see "Sprite Fusion maps" below.
 
 ## Loading a level
 
@@ -34,8 +43,9 @@ freed with `loader.unload("map1")` and brought back with
 loop back simply keeps them all loaded. `melonjs-loading-assets` covers the
 pattern.
 
-Asset `type` is `"tmx"` for maps and `"tsx"` for external tilesets — those are
-the only two type strings the loader knows. The *file* can be `.tmx` / `.tsx`
+Asset `type` is `"tmx"` for maps and `"tsx"` for external tilesets (`"tilemap"`
+is another name for `"tmx"`, see "A map written by another tool" below). The
+*file* can be `.tmx` / `.tsx`
 (XML), or `.json` / `.tmj` / `.tsj`; the parser branches on the extension, not
 on the type. `type: "tmj"` throws `unknown or invalid resource type`. You can
 also skip `src` and pass the map inline via `data`, as the parsed JSON object
@@ -51,7 +61,8 @@ project).
 
 `level.load(levelId, options)` accepts `container` (default `game.world`),
 `onLoaded` (default `game.onLevelLoaded`), `flatten` (default `game.mergeGroup`),
-`setViewportBounds` (default **`true`**) and `async` (default `false`). It throws
+`setViewportBounds` (default **`true`**), `objects` (default `true`, see
+below) and `async` (default `false`). It throws
 `level <id> not found` for an unknown id — synchronously, in both forms, because
 that is a typo rather than a load failure.
 
@@ -94,15 +105,20 @@ its own, its **tile's class**, then the structural fallbacks `"text"`,
 `"tile"` and `"shape"`.
 
 ```js
-import { registerTiledObjectClass, registerTiledObjectFactory } from "melonjs";
+import { registerObjectClass, registerObjectFactory } from "melonjs";
 
-registerTiledObjectClass("Enemy", Enemy);   // ← matches Tiled class OR name
-registerTiledObjectFactory("Spine", (settings, map) => { /* → Renderable */ });
+registerObjectClass("Enemy", Enemy);   // ← matches Tiled class OR name
+registerObjectFactory("Spine", (settings, map) => { /* → Renderable */ });
 level.load("map1");
 ```
 
-These are the entry points to use. The registry is Tiled's own, held by the
-object factory, and has nothing to do with object pooling.
+The registry is the same for every kind of level: a class registered here is
+also built for an LDtk entity of that name. (`registerTiledObjectClass` and
+`registerTiledObjectFactory` are the older names of these two functions,
+deprecated since 20.18 and still working.)
+
+These are the entry points to use. The registry is the level loader's, held by
+the object factory, and has nothing to do with object pooling.
 
 `pool.register(className, classObj)` **also** works and registers a Tiled
 factory as a side effect, under the name and again under an `me.`-prefixed
@@ -117,16 +133,16 @@ class you spawn constantly, give it a `createPool` and register it for Tiled
 separately:
 
 ```js
-registerTiledObjectClass("mainPlayer", PlayerEntity);
+registerObjectClass("mainPlayer", PlayerEntity);
 ```
 
 Register **before** loading. With no match the object falls through to the
 structural factory and becomes a plain `Renderable` with a static body — it does
 not error, it just has none of your behaviour.
 
-`registerTiledObjectClass` **throws** if you register a *different* constructor
+`registerObjectClass` **throws** if you register a *different* constructor
 under a name already taken (re-registering the same one is a no-op).
-`registerTiledObjectFactory` overwrites and only `console.warn`s, so it is the
+`registerObjectFactory` overwrites and only `console.warn`s, so it is the
 one to use for replacing something already registered.
 
 **Overriding a built-in name always works.** The engine's own classes are
@@ -134,11 +150,35 @@ DEFAULTS: they fill a name nothing else has claimed, and yours takes it over
 whenever you register, before or after a map has loaded.
 
 ```js
-registerTiledObjectClass("Trigger", MyTrigger);   // whenever you like
+registerObjectClass("Trigger", MyTrigger);   // whenever you like
 ```
 
 The throw is for a clash between two of *your* classes under one name. For
-that case `registerTiledObjectFactory` overwrites and only warns.
+that case `registerObjectFactory` overwrites and only warns.
+
+### Finding an object, and choosing which are built
+
+An object in the world is found as any child is, by the name or the id its
+level gives it, whatever class built it and whatever the editor:
+
+```js
+const [player] = app.world.getChildByName("Player");
+const [door] = app.world.getChildByProp("id", 12);   // Tiled's object id; LDtk's iid, a string
+```
+
+The id is put on the object for you when its class does not take it (a class
+that sets its own `id` keeps it). The name is the class's business: a `Sprite`
+or an `Entity` takes the level's, a `Trigger` is always named "Trigger" (find
+one by its id, or with `getChildByType(Trigger)`).
+
+`objects` chooses which objects a load builds: `false` for none, or a function
+given each object's settings, the same its class would be given, before
+anything is built:
+
+```js
+// a level that comes back without what the player took
+level.load("map1", { objects: (settings) => !taken.has(settings.id) });
+```
 
 ### Classes and properties set on tiles
 
@@ -158,7 +198,7 @@ every object placed from that tile shows them as its own. melonJS follows:
   plain tile sprite.
 
 ```ts
-import { registerTiledObjectClass, Sprite, type TMXObject } from "melonjs";
+import { registerObjectClass, Sprite, type TMXObject } from "melonjs";
 
 // the custom properties set on the object itself, by name
 interface DoorSettings extends TMXObject {
@@ -175,7 +215,7 @@ class Door extends Sprite {
         this.facing = settings.resolvedProperty("facing") ?? "N";
     }
 }
-registerTiledObjectClass("Door", Door);   // and give the door tile the class "Door"
+registerObjectClass("Door", Door);   // and give the door tile the class "Door"
 ```
 
 `TMXObject` is the type of the `settings` a registered class (or factory)
@@ -190,12 +230,13 @@ or an animated tile alike, with no region names to build by hand.
 melonJS pre-registers `Renderable`, `Sprite`, `NineSliceSprite`, `Text`,
 `BitmapText`, `ImageLayer`, `ColorLayer`, `Light2d`, `Collectable`, `Trigger`
 and `Entity` as Tiled classes, so `Collectable` and `Trigger` work out of the
-box. Each is registered under its `me.`-prefixed alias as well, so a map
+box. A rectangle object of class `ColorLayer` with a `color` property is
+filled with that color (20.18). Each is registered under its `me.`-prefixed alias as well, so a map
 authored against melonJS 1.x finds them where it looks.
 
 A `Trigger` forwards a **fixed list** of settings to `level.load()` — not
 whatever you pass it. Today that list is `container`, `onLoaded`, `flatten`,
-`setViewportBounds` and the glTF scene options: `scale`, `rightHanded`,
+`setViewportBounds`, `objects` and the glTF scene options: `scale`, `rightHanded`,
 `lights`, `lightIntensityScale` and the ground-shadow settings
 (`castGroundShadow`, `shadowGroundY`, `shadowOpacity`, `shadowScale`,
 `shadowOffset`, `shadowStretch`, `shadowDirectionX`, `shadowDirectionZ`,
@@ -269,8 +310,24 @@ app.viewport.setBounds(b.left, b.top, b.width, b.height);
 A `Tile` carries `tileId` (its **global** id), `col`, `row` and `tileset`.
 Tiled shows a tile's *local* id in the tileset editor; the global id is
 `tileset.firstgid + localId`, and only the global one works with `setTile`.
-The tile's custom properties and class, set in Tiled's tileset editor, come
-from its tileset by global id:
+The properties of the tile in a cell come from the layer (20.18), whatever
+the map was made with: a Tiled tile's custom properties, an LDtk tile's custom
+data and tags, a Sprite Fusion tile's attributes.
+
+```js
+const props = board.getTileProperties(col, row);   // { kind: "floor" }, or undefined
+```
+
+It is a method of a `TileLayer`. An LDtk layer that stacks tiles or places
+them off its grid is a `PlacedTileLayer`, which has no cells to ask: test
+`layer instanceof TileLayer` on an LDtk level before calling it.
+
+They are those of the tile in its tileset, with those the one cell has of its
+own over them: `board.setTileProperties(col, row, { locked: true })` gives a
+cell some, which last until the cell is written (`setTile`, `setCell`,
+`clearTile`). Read the object, do not write to it: it may be the tileset's.
+
+The tileset's alone, and the tile's class, come from the tileset by global id:
 
 ```js
 const tile = board.cellAt(col, row);
@@ -339,7 +396,7 @@ level.load("map1", { setViewportBounds: false });
 app.viewport.setBounds(0, 0, mapWidth, mapHeight);   // now it's on you
 ```
 
-The same is true if you drive `TMXTileMap.addTo(container, flatten, setViewportBounds)`
+The same is true if you drive `TileMap.addTo(container, flatten, setViewportBounds)`
 directly — note that method's `setViewportBounds` defaults to **`false`**, the
 opposite of `level.load`'s.
 
@@ -367,6 +424,73 @@ on the settings object passed to your entity's constructor. Properties set on
 the object's tile are read with `settings.resolvedProperty(name)`. One is also
 applied to the object the map creates: an `int` property named
 `visibilityLayer` sets which cameras draw it (see `melonjs-camera-and-drawing`).
+
+### Solid tile layers: the `collider` property
+
+A tile layer is solid when it has a boolean custom property named `collider`
+set to true (20.18): each run of its tiles becomes one static `WORLD_SHAPE`
+body, as an unnamed shape of a collision layer does. No object layer to draw.
+
+```js
+// in Tiled: select the tile layer, add a custom property `collider` (bool), check it
+level.load("map1");   // the layer's tiles hold the player up
+```
+
+- The walls are built when the level is loaded, from the tiles the layer has
+  then: `setTile` / `clearTile` afterwards does not change them.
+- Each wall carries the layer's name as `wall.layer`, to tell them apart in a
+  collision handler. The layer itself is still the only thing found by
+  `getChildByName`.
+- They are part of the layer, not objects: `objects: false` leaves them in.
+- Orthogonal maps only; on another orientation the property is ignored, with
+  a warning.
+
+### Sprite Fusion maps
+
+A map made with [Sprite Fusion](https://www.spritefusion.com) loads as the
+editor exports it, under the asset type `"spritefusion"` (20.18). Either
+export does: `map.json` ("JSON") or `map.tmx` ("TMX"). Unzip the export, keep
+`spritesheet.png` next to the map, and give the loader the map alone:
+
+```js
+await loader.preload([
+    { name: "level1", type: "spritefusion", src: "maps/level1/map.json" },
+    { name: "level2", type: "spritefusion", src: "maps/level2/map.json" },
+]);
+level.load("level1");
+```
+
+- **The spritesheet comes with the map**: it is loaded from the map's folder,
+  kept for that map (two maps each have their own `spritesheet.png`), and
+  freed with it. Nothing to preload.
+- **Collider layers are solid**: a layer with the editor's "collider" box
+  checked gets walls, as above.
+- **Tile attributes** are read by the cell, each value of its type:
+  `layer.getTileProperties(col, row)` gives
+  `{ type: "lava", damage: 25, isSolid: false }`. That one call reads both
+  exports. (The TMX export puts them on the tile in the tileset, the JSON on
+  each placed tile: `tileset.getTileProperties` only finds the first.)
+- **Per-tile instance attributes** (the project setting that gives one placed
+  tile its own) are in the JSON export only: the editor refuses a TMX export
+  while it is on. Use `map.json` for those.
+- The layers are in the editor's order, the bottom one first, and a layer
+  hidden in the editor is left out of the export.
+- Under `"tilemap"` or `"tmx"` the same files load too, but nothing is loaded
+  with them: preload the image yourself, under the name `spritesheet`.
+
+### A map written by another tool, or by hand
+
+`"tilemap"` is the type for a tile map that is nobody's in particular: the
+same loader as `"tmx"`, for the many tools that write Tiled's format. The
+reader also takes the shorter words Sprite Fusion uses, which are handy in a
+map written by hand or by a generator:
+
+- `attributes`, a plain object of values, wherever `properties` is read (the
+  map, a layer, an object, a tile of a tileset). An attribute is kept as
+  written: no text is converted. Where both name a value, the attribute wins.
+- a tile layer's `tiles`, a list of `{ id, x, y, attributes }` (the tile's id
+  in the map's first tileset, and its cell), in place of `data`, the gid of
+  every cell.
 
 ## Map orientations
 
@@ -462,6 +586,289 @@ plugin.register(TiledInflatePlugin);   // before preloading any compressed map
 Uncompressed base64 and CSV layer data need no plugin. If a map loads in Tiled
 but not in melonJS, check the layer compression setting first.
 
+## LDtk levels
+
+Levels made with [LDtk](https://ldtk.io) load from the project file as the
+editor saves it (20.18): nothing to export, nothing to register. The `.ldtk`
+file is one asset, and its levels are the level director's.
+
+```js
+import { level, loader, registerObjectClass } from "melonjs";
+
+registerObjectClass("Player", Player);             // an entity's identifier → its class
+
+await loader.preload([{ name: "world", type: "ldtk", src: "data/world.ldtk" }]);
+level.load("world:Level_0");                       // "<asset name>:<level identifier>"
+// level.load("world");                            // the whole world, levels where LDtk puts them
+```
+
+A complete game on an LDtk world, with everything below in use, is the
+[LDtk Platformer](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/ldtkPlatformer)
+example: its `world/` folder is the loading and the streaming.
+
+### Building the world in LDtk
+
+What is set up in the editor, and what the game gets from it. Nothing here
+is required: a project with one level and one tile layer loads.
+
+| in LDtk | in the game |
+|---|---|
+| a **Tiles**, **AutoLayer** or **IntGrid** layer with rules | drawn, in LDtk's layer order, with its opacity, its offset and its parallax factors; a layer hidden in LDtk is not drawn |
+| an **IntGrid** layer named like "Collisions" (its identifier contains "collision") | walls: every cell with a value is solid. Name its values in LDtk ("walls", "water"...) to read them by name |
+| an **Entities** layer | one object per entity, built by the class registered under the entity's **identifier** |
+| an entity's **fields** | `settings.fields`, typed as in LDtk (see "Field values" below) |
+| an entity's **tile**, from a tileset of the project | what the entity is drawn with when no class is registered for it. LDtk's built-in icons are not in the project's files: an entity shown with one is invisible in the game |
+| an entity's size, when it is **resizable** | `settings.width` / `settings.height`: an area (a ladder, a zone, a door) |
+| "**Add to table of content**" on an entity definition | the entity is listed in the project with its level and its place, before any level is loaded: the player's start |
+| an **Entity ref** field | a link to another entity, in any level: a door's or a teleport's destination |
+| a level's **identifier** and its **custom fields** | the level's id (`"world:<identifier>"`), and `fields` on the level's description |
+| a level's background color or image | drawn behind its layers |
+| the **world layout** (Free, GridVania, Linear) | where each level is when the whole world is loaded |
+| the **world depth** of a level | levels on different depths can cover the same place: the game loads one depth at a time |
+
+Keep the project's folder as LDtk has it: the tileset images, the level
+backgrounds and the level files ("Save levels to separate files") are loaded
+from where the project file says they are, relative to it. Load the `.ldtk`
+file itself, not the files of LDtk's "Super simple export".
+
+### What a level becomes
+
+- **The images load with the project**: its tilesets (PNG or Aseprite), its
+  levels' backgrounds, the level files it saves apart. Each image is kept
+  under its file's name (`atlas/tiles.png` as `tiles`), and freed with the
+  last project that uses it, unless a bundle lists it or the game loaded it
+  too. An image the game loaded itself under that name is used instead of
+  the file.
+- **Layers**: each LDtk layer becomes one or more renderables named after it,
+  in LDtk's order: a `TileLayer` where its tiles fit a grid (drawn by the GPU,
+  like a Tiled layer), a `PlacedTileLayer` for tiles stacked in a cell, off the
+  grid or faded. `level.getCurrentLevel().layers` lists them.
+- **Walls** come from IntGrid layers whose identifier contains "collision",
+  the convention of a Tiled collision layer: one static `WORLD_SHAPE` body per
+  run of cells, built by the same "shape" factory, carrying `intGridValue` and
+  `intGridName`. Other layers with `collisionLayers: ["Walls"]`, some values
+  only with `solidValues: [1]`, as options of `level.load`.
+- **IntGrid values** are read from the level, for what is not a wall (water,
+  ice, a ladder): `level.getCurrentLevel().getIntGrid("Collisions")`, then
+  `valueAtPixel(x, y)`, `valueAt(col, row)`, `nameAt(col, row)`, `names` (the
+  name LDtk gives each value) and `rects(test)` for areas as rectangles.
+- **Entities** (LDtk's word for what Tiled calls objects) are built by the class the game registered under their
+  identifier: `new Player(x, y, settings)`, `x` and `y` being the top left
+  corner of the entity's box whatever its pivot in LDtk (`settings.px` is the
+  pivot). `settings.fields` holds its fields, also copied onto the settings
+  where the name is free (`settings.life`; not `type` or `width`), and
+  `settings.id` is its unique id in LDtk (`iid`). An entity
+  LDtk draws with a tile carries it as `settings.image` (a texture atlas) and
+  `settings.region`, so a class extending `Sprite` passes the settings straight
+  to `super(x, y, settings)`. With no class, an entity is an `LDtkObject`: a
+  box with no body, found with `world.getChildByName("PlayerStart")`, showing
+  its tile in LDtk's fill mode if it has one (a `Sprite`; a repeated pattern
+  in `Repeat` mode). It is a `Container`, with that renderable as its child. Only classes the
+  game registered count: an entity named "Trigger" or "Text" is not built by
+  the engine's class of that name unless the game registers it
+  (`registerObjectClass("Trigger", Trigger)`).
+- **Field values** are LDtk's `__value`: a number, a string or a boolean, a
+  color as `"#rrggbb"`, an enum as its value's name, a `Point` as
+  `{ cx, cy }` in cells, an `EntityRef` as
+  `{ entityIid, layerIid, levelIid, worldIid }`, a `Tile` as a rectangle of
+  its tileset, arrays of those, and `null` where nothing was set.
+- **Parallax**: a layer's parallax factors (and "parallax scaling") move and
+  scale its tiles with the camera as the editor does, on every renderer. The
+  layer's entities and walls are things of the level and stay in it. The
+  layers built carry it as their `ratio` (see below), to read or change:
+  LDtk's factor is the share of the camera's movement the layer follows, so
+  a factor of 0.25 is a `ratio` of 0.75.
+- Options of `level.load`, besides `collisionLayers` and `solidValues`:
+  `showIntGrid: true` draws IntGrid layers that have no tiles, in LDtk's
+  colors; `objects` chooses the entities that are built (`false` for none);
+  `levels` is for a world, below.
+
+### A world, loaded around the player
+
+`level.load("world")` adds every level of the world, where LDtk puts it:
+fine for a small one. A large world is loaded a few levels at a time: the
+ones around the player come in and the others leave, with their layers,
+their walls and their objects.
+
+```js
+import { level, loader } from "melonjs";
+
+const project = loader.getLDtk("world");
+// where the player starts, known before any level is loaded (the "Player"
+// entity has "Add to table of content" checked in LDtk)
+const [start] = project.getTableOfContent("Player");
+let depth = start.level.depth;
+let room;                                  // the level the player is in
+const taken = new Set();                   // the ids of what the player took
+
+level.load("world", {
+    levels: [start.level.identifier],      // the levels to start with
+    setViewportBounds: false,              // the camera is held to a level, below
+    // a level that comes back builds its objects again: not the ones taken
+    objects: (settings) => !taken.has(settings.id),
+});
+
+// each frame, from the player's update(): the level the player is in
+function trackRoom(app, x, y) {
+    const world = level.getCurrentLevel();
+    const here = world.levelsAt(x, y, 0, 0, depth);
+    // in no level, or still in the same one (two levels share an edge)
+    if (here.length === 0 || here.includes(room)) {
+        return;
+    }
+    room = here[0];
+    app.viewport.setBounds(room.x, room.y, room.width, room.height);
+    // keep this level and the ones within 1 px of it; unload the others
+    world.streamAround(room.x, room.y, room.width, room.height, 1, depth);
+}
+```
+
+- **The player** is an entity of the level it starts in, and would leave
+  with it: make it persistent (`this.isPersistent = true`, as for a player
+  that outlives a level change). It stays when its level is taken out, and
+  is not built again when the level comes back.
+- **`streamAround(x, y, w, h, margin, depth)`** loads the levels that touch
+  the area grown by `margin` and unloads the others, and returns what it
+  did (`{ loaded, unloaded }`, by identifier). `loadLevel(identifier)` and
+  `unloadLevel(identifier)` do one; `loadedLevels()` and `isLoaded()` tell.
+  Unloading takes a level's objects out at the end of the frame, as any
+  `removeChild` does.
+- **Depths**: levels stacked on LDtk's world depths cover the same place.
+  Give `streamAround` and `levelsAt` the depth the player is on and the
+  levels of the others are left out; without it, every depth is loaded on
+  top of the others.
+- **Coordinates** are LDtk's world coordinates, and can be negative. A level
+  loaded alone (`"world:Level_0"`) starts at 0, 0 instead.
+- **A door to another level** is the engine's `Trigger`, registered under the
+  entity's name (`registerObjectClass("Door", Trigger)`): it reads the
+  entity's fields as its settings, so `to` (`"world:Level_2"`), `duration`,
+  `transition` (`"mask"`), `shape` and `center` (`"touching"`) are set on
+  the entity in LDtk, and the transition's color is the entity's own in
+  LDtk.
+- **An `EntityRef` field** (a teleport's destination) is resolved with
+  `project.findObject(ref)`: its `level`, and its `x` / `y` in the world,
+  whether that level is loaded or not; once it is,
+  `app.world.getChildByProp("id", ref.entityIid)[0]` is the object.
+- **IntGrid values in a world** are read per level:
+  `world.getIntGrid(room.identifier, "Collisions")`.
+- Another world of a multi-world project is `"world@<world identifier>"`.
+
+### The project
+
+`loader.getLDtk("world")` is the project, with no level loaded:
+
+- its `levels` (each with its `identifier`, its place and size in the world,
+  its `depth`, its `fields` and its `neighbours`) and its `worlds`;
+- **the table of content**, `project.getTableOfContent("PlayerStart")`: the
+  entities whose definition has "Add to table of content" checked in LDtk,
+  each with its `level`, its `x` / `y` in the world, its size and the fields
+  listed with it;
+- `getTileData` / `getTileTags` for a tile's custom data and enum tags, by
+  LDtk's own tile ids. From a tile of a level they are its properties, as
+  for a Tiled tile: `layer.getTileProperties(col, row)` gives
+  `{ customData, tags }`;
+- `project.json`, the file itself. It is read as LDtk's JSON schema for
+  games defines it (1.x): the `LDtk*Json` types name every field of it, so
+  `project.json` and an entity's `source` are typed down to the file. Find
+  things by `iid` rather than `uid` where both exist: LDtk plans to drop
+  the integer ids.
+
+Not supported: the editor's built-in entity icons (they are not in the
+project's files). A tile layer whose tiles are not the size of its cells
+is drawn from each cell's top left corner, as the file gives it: the
+layer's tile pivot is the editor's own. A nine-slice entity tile keeps
+LDtk's left and top borders on both sides (a `NineSliceSprite` has one
+border per axis).
+
+## Tile layers without Tiled
+
+The classes a Tiled map is made of do not need Tiled (20.18). A layer built in
+code, for a generated dungeon or a board:
+
+```js
+import { TileLayer, Tileset, TilesetGroup } from "melonjs";
+
+const tileset = new Tileset({ name: "ground", image: "ground", tilewidth: 16, tileheight: 16 });
+const layer = new TileLayer({
+    name: "floor", cols: 40, rows: 30, tilewidth: 16, tileheight: 16,
+    tilesets: new TilesetGroup([tileset]),
+});
+layer.setCell(3, 2, tileset.firstgid + 5);       // the tileset's sixth tile
+layer.setCell(4, 2, tileset.firstgid + 5, 1);    // mirrored across (2: down, 4: diagonal)
+app.world.addChild(layer, 1);
+```
+
+It is the same class as a Tiled layer (`TMXLayer` extends it): drawn by the
+GPU where it can, read and changed with `cellAt`, `getTile`, `setTile`,
+`clearTile`. `image` is a loaded image's name or the image itself; a tileset's
+tiles are numbered from `firstgid` (1 by default) row by row, and `setCell`
+takes that global id, 0 to clear. `setTileProperty`, `setTileClass` and
+`setTileAnimation` on the tileset give a tile what Tiled's tileset editor would.
+
+A grid holds one tile a cell. For tiles stacked on one another, off the grid,
+or each with its own opacity, use a `PlacedTileLayer`: a list of tiles at pixel
+positions, drawn in order, only the ones in view:
+
+```js
+const decals = new PlacedTileLayer({
+    name: "decals", tileset,
+    tiles: [{ x: 40, y: 12, tileId: 7 }, { x: 44, y: 16, tileId: 9, flip: 1, alpha: 0.5 }],
+});
+decals.addTile(100, 60, 3);          // tileId is the tile's id IN the tileset, from 0
+```
+
+Either kind scrolls at a pace of its own with `ratio`, the same as an
+`ImageLayer`'s: a backdrop that scrolls slower than the level, a foreground
+that scrolls faster.
+
+```js
+hills.ratio.set(0.5, 0.5);                 // half the level's pace
+new TileLayer({ /* ... */ ratio: 0.5 });   // or in its definition: a number, or { x, y }
+```
+
+`ratio` is a vector, (1, 1) by default: 1 scrolls with the world, 0 stays
+where it is on the screen, above 1 scrolls faster than the world. Three more
+settings go with it, each optional, on the layer and in its definition:
+
+- `parallaxOrigin` (a vector, (0, 0)): where the camera is when the layer is
+  where it was placed, in the layer's container's coordinates;
+- `parallaxAnchor` (a vector, (0, 0)): the point of the view that is measured.
+  (0, 0) is the camera's position, its top left corner, as for an image
+  layer; (0.5, 0.5) is its centre;
+- `parallaxScale` (a number, 1): the layer drawn smaller or larger from its
+  origin, as one further away or nearer.
+
+It is worked out for each camera as it draws, and changes nothing else:
+`getTile`, `cellAt` and the layer's bounds are the layer's where it was
+placed.
+
+A Tiled tile layer's parallax factor (and its group's, multiplied) is its
+`ratio` (20.18), so that it moves exactly as an image layer of the same
+factor does and the two stay together. A custom property named `ratio` on the
+tile layer sets it too, as on an image layer (a number, for both axes). An
+object layer's factor is not applied: its objects are things of the map.
+
+In a definition a part left out keeps its value (`ratio: { x: 0.5 }` leaves
+`y` at 1), and a value that is not a number throws. On the vector itself, set
+both parts: `ratio.set(0.5, 0.5)`.
+
+`mergeGridRects(cols, rows, (col, row) => boolean)` covers the cells that pass
+a test with few rectangles, in cells: one static body per wall instead of one
+per tile. Its example in the API reference builds the bodies.
+
+### A level format of your own
+
+To have `level.load`, `level.next`, `level.reload` and `Trigger` work with
+levels read from another format, register it: `level.registerFormat("rooms",
+{ create: (levelId) => levelObject, loadOptions: [...] })`, then
+`level.add("rooms", id)` for each level (from a parser registered with
+`loader.setParser`). The level object needs `addTo(container, options)` and
+`destroy()`. In `addTo`, `level.followViewport(container, bounds)` gives the
+viewport handling of a Tiled map (keep the function it returns and call it in
+`destroy`), and `createLevelObject(settings, map)` builds an object from the
+registry (`hasObjectFactory(name)` says whether the game registered one).
+The engine's own LDtk support is built exactly this way.
+
 ## Rendering
 
 Each tile layer resolves to one of three `renderMode`s — `"shader"`,
@@ -520,6 +927,12 @@ layer into the offscreen-bake path instead.
 | `No inflate function set` at parse time | compressed layers without the tiled-inflate plugin |
 | `@melonjs/tiled-inflate-plugin: cannot read ... compressed layer data` | that layer's data is damaged (a checksum or its length does not match), cut short, or edited by hand: save the map again from Tiled |
 | `Tiled layer "…" has N tiles of data for its W x H cells` | the layer's data does not fill it, as Tiled would refuse too: written by another tool or edited by hand. Save the map again from Tiled |
+| the player falls through a tile layer drawn as the floor | tiles are not solid by themselves: give the layer a `collider` (bool) property set to true, or draw shapes on a collision object layer |
+| a Sprite Fusion map loads and nothing is solid (before 20.18) | the `collider` property of its layers was not read: update |
+| `'spritesheet' file for tileset 'spritefusion' not found` | a Sprite Fusion `map.json` loaded as `"tilemap"` / `"tmx"`, or given inline: use the type `"spritefusion"` with the file, or preload the image as `spritesheet` |
+| `Sprite Fusion map "…": its spritesheet could not be loaded` | `spritesheet.png` is not in the folder of the map file: keep the two together, as exported |
+| a Sprite Fusion tile's attributes are `undefined` | read with `tileset.getTileProperties`, which only has those of the TMX export: use `layer.getTileProperties(col, row)` |
+| `layer "…" places tile N, which the map's tilesets do not have` | the spritesheet is smaller than the one the map was made with: export the map and its spritesheet again, together |
 | collision shapes are not solid | the object layer's name does not contain `"collision"`, or the objects are named |
 | isometric objects overlap wrongly | `world.sortOn` not set to `"y"` |
 | a character is always in front of (or behind) every wall | the walls are on a tile layer, or on another object layer than the character: each layer has its own `z`, compared before `y` |
@@ -558,6 +971,31 @@ layer into the offscreen-bake path instead.
 | an isometric (staggered, hexagonal) layer warns `tiles of more than one tileset in an isometric layer` and is slow | the shader path draws such a layer with one tileset: put the tiles of each tileset on a layer of their own, or pack them into one tileset |
 | a half-transparent isometric (staggered, hexagonal) layer of tall tiles looks flatter than before 20.17 | on the shader path a layer fades as one picture, and a tile no longer shows through the one in front: set that layer's `renderMode` to `"perTile"` (a `renderMode` custom property in Tiled) for the old look |
 | the soft edges of tiles larger than the grid showed a thin dark outline on the shader path | before 20.17 the edge of such a tile was not blended over the tile behind it: update |
+
+| `new TileLayer({ orientation: "isometric" ... })` throws `needs the renderer of its map` | a layer built in code makes its own renderer for an orthogonal grid only: pass `renderer` (an `IsometricRenderer` and the like) for the others |
+| a tile set with `setCell` shows the wrong tile, one off | `setCell` takes a global id: the tileset's `firstgid` (1 by default) plus the tile's id in the tileset; a `PlacedTileLayer`'s `tileId` is the id in the tileset, from 0 |
+| tiles stacked in one cell: only the last shows | a `TileLayer` holds one tile a cell: a second layer, or a `PlacedTileLayer` for the stacked ones |
+| `level format "x" is already registered` | `level.registerFormat` called twice (a hot reload): register once, at start-up |
+
+| `level Level_0 not found` for an LDtk level | a level's id is `"<asset name>:<level identifier>"` (`"world:Level_0"`) |
+| `level.load("world")` shows every level of the LDtk project at once | the asset's name alone is the whole world; a single level is `"world:<level identifier>"` |
+| an LDtk level loads with no tiles, and a warning that a tileset's image is not loaded | the image is not where the project file says, relative to it (the folder was reorganised) |
+| LDtk entities are invisible in the game | no class is registered for them (`registerObjectClass(identifier, Class)`), and their icon is LDtk's own, which is not in the files: give them a tile from a tileset of the project, or a class |
+| the player falls through an LDtk level | no IntGrid layer is named like "collision": pass `collisionLayers` to `level.load` |
+| a tile layer set to scroll slower than the level in Tiled scrolls with it (before 20.18) | a Tiled tile layer's parallax factor was not read (an image layer's was): update |
+| a Tiled parallax layer is not where Tiled shows it at the start of the level | Tiled measures a factor from the centre of its own view to the map's parallax origin; the engine measures from the camera's position, for tile and image layers alike: move the layer with its offset, or set `layer.parallaxOrigin` and `layer.parallaxAnchor` yourself |
+| `getTile` finds nothing under a tile of a layer with a `ratio` | the ratio moves where the layer is drawn, not its cells: they are where the layer was placed |
+| a tile layer with `ratio: 0.5` scrolls the wrong way round | 1 scrolls with the world and 0 stays on the screen, as for an `ImageLayer`; LDtk's own factor is the other way round, and is converted when a level is loaded |
+| `a layer's ratio must be a number, or an {x, y} of numbers` | a tile layer's definition gave `ratio` (or `parallaxOrigin`, `parallaxAnchor`) a text, a list or `NaN`: give a number, or `{ x, y }` |
+| `layer.getTileProperties is not a function` on an LDtk level | that layer stacks tiles or places them off its grid, so it is a `PlacedTileLayer`, which has no cells: test `layer instanceof TileLayer` first |
+| the player disappears when walking out of its first LDtk level | it is an entity of that level, taken out with it: set `isPersistent = true` on it |
+| the coins again after coming back to an LDtk level | a level loaded again builds its objects again: the `objects` option leaves out what was taken |
+| two LDtk levels are drawn over each other, with walls from both | they are on different world depths, at the same place: pass the player's depth to `streamAround` and `levelsAt` |
+| a `Sprite` class for an LDtk entity throws `'undefined' image/texture not found` | the entity's tile is one of LDtk's built-in icons (a tileset with `embedAtlas`): they are not in the project's files, and LDtk does not allow redistributing them, so `settings.image` is not set. Use art of your own, or a tile of one of the project's tilesets |
+| an LDtk entity is placed half its size off | `x`, `y` are its box's top left corner; its pivot is `settings.px` |
+| an LDtk field reads `undefined` on the settings | its name is one of the settings' own (`type`, `name`, `width`...): read `settings.fields.type` |
+| `getChildByName("Door")` is empty for an object the level names "Door" | its class names itself (a `Trigger` is always "Trigger"): find it by its id, `getChildByProp("id", id)`, or with `getChildByType` |
+| an LDtk entity named "Trigger" (or "Sprite", "Text"...) does nothing | an entity's name is not taken for the engine's class: register it, `registerObjectClass("Trigger", Trigger)`, and give the entity the fields the class reads |
 
 ## Related skills
 

@@ -1,256 +1,62 @@
-import { game } from "../../application/application.ts";
-import { getImage, getJSON, getTMX } from "../../loader/loader.js";
-import { Matrix2d } from "../../math/matrix2d.ts";
-import { Vector2d } from "../../math/vector2d.ts";
+import { getImage, getJSON, getTileMap } from "../../loader/loader.js";
 import { hasDOM } from "../../system/dom.ts";
-import timer from "../../system/timer.ts";
 import { getBasename, getExtension } from "../../utils/file.ts";
 import { createCanvas } from "../../video/canvas_factory.js";
-import { TextureAtlas } from "../../video/texture/atlas.js";
-import { buildFlipTransform } from "./TMXTile.js";
+import Tileset from "../tilemap/Tileset.js";
 import { applyTransparentColor, resolveEmbeddedImage } from "./TMXUtils.js";
 
-// shared scratch matrix for flip-transform construction in drawTileRaw — avoids
-// per-call allocation in the hot path. Single-threaded JS means it's safe to
-// share across all tilesets without contention.
-const SCRATCH_MATRIX = new Matrix2d();
+/**
+ * the tileset a map names by its file: the TSX/XML/JSON/TSJ it was loaded from
+ * @ignore
+ * @internal
+ */
+function resolveSource(tileset) {
+	if (tileset.source !== undefined) {
+		const src = tileset.source;
+		const ext = getExtension(src);
+		if (ext === "tsx" || ext === "xml" || ext === "json" || ext === "tsj") {
+			// load the external tileset (TSX/XML/JSON/TSJ)
+			tileset = getTileMap(getBasename(src));
+			if (!tileset) {
+				throw new Error(`${src} external tileset not found`);
+			}
+		}
+	}
+	return tileset;
+}
 
 /**
- * a TMX Tile Set Object
+ * a TMX Tile Set Object: a {@link Tileset} read from a Tiled map, or from the
+ * tileset file the map names
  * @category Tilemap
  */
-export default class TMXTileset {
+export default class TMXTileset extends Tileset {
 	/**
 	 *  @param {object} tileset - tileset data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#tileset})
 	 *  @param {number} [mapTilewidth] - the map's tile grid width in pixels
 	 *  @param {number} [mapTileheight] - the map's tile grid height in pixels
 	 */
 	constructor(tileset, mapTilewidth, mapTileheight) {
-		/**
-		 * per-tile properties indexed by gid
-		 * @type {Map<number, object>}
-		 * @ignore
-		 * @internal
-		 */
-		this.tileProperties = new Map();
+		// the map gives the first gid, the tileset file the rest
+		const firstgid = +tileset.firstgid;
+		tileset = resolveSource(tileset);
 
-		/**
-		 * per-tile class indexed by gid
-		 * @type {Map<number, string>}
-		 * @ignore
-		 * @internal
-		 */
-		this.tileClasses = new Map();
-
-		/**
-		 * per-tile images for "Collection of Image" tilesets, indexed by gid
-		 * @type {Map<number, HTMLImageElement|HTMLCanvasElement>}
-		 * @ignore
-		 * @internal
-		 */
-		this.imageCollection = new Map();
-
-		/**
-		 * the first global tile ID of this tileset
-		 * @type {number}
-		 */
-		this.firstgid = +tileset.firstgid;
-
-		/**
-		 * the last global tile ID of this tileset
-		 * @type {number}
-		 */
-		this.lastgid = this.firstgid;
-
-		// check if an external tileset is defined
-		if (tileset.source !== undefined) {
-			const src = tileset.source;
-			const ext = getExtension(src);
-			if (ext === "tsx" || ext === "xml" || ext === "json" || ext === "tsj") {
-				// load the external tileset (TSX/XML/JSON/TSJ)
-				tileset = getTMX(getBasename(src));
-				if (!tileset) {
-					throw new Error(`${src} external tileset not found`);
-				}
-			}
-		}
-
-		/**
-		 * the tileset name
-		 * @type {string}
-		 */
-		this.name = tileset.name;
-
-		/**
-		 * the width of each tile in pixels
-		 * @type {number}
-		 */
-		this.tilewidth = +tileset.tilewidth;
-
-		/**
-		 * the height of each tile in pixels
-		 * @type {number}
-		 */
-		this.tileheight = +tileset.tileheight;
-
-		/**
-		 * the spacing between tiles in pixels
-		 * @type {number}
-		 * @default 0
-		 */
-		this.spacing = +(tileset.spacing ?? 0);
-
-		/**
-		 * the margin around tiles in pixels
-		 * @type {number}
-		 * @default 0
-		 */
-		this.margin = +(tileset.margin ?? 0);
-
-		/**
-		 * tile drawing offset
-		 * @type {Vector2d}
-		 */
-		this.tileoffset = new Vector2d();
-
-		/**
-		 * Tileset contains animated tiles
-		 * @type {boolean}
-		 */
-		this.isAnimated = false;
-
-		/**
-		 * true if the tileset is a "Collection of Image" Tileset
-		 * @type {boolean}
-		 */
-		this.isCollection = false;
-
-		/**
-		 * the tileset class (since Tiled 1.9, renamed back to type on tile/object in 1.10)
-		 * @type {string}
-		 */
-		this.class = tileset.class ?? tileset.type;
-
-		/**
-		 * how tiles render relative to the grid (since Tiled 1.9)
-		 * @type {string}
-		 * @default "tile"
-		 */
-		this.tilerendersize = tileset.tilerendersize ?? "tile";
-
-		/**
-		 * fill mode when tiles are not rendered at native size (since Tiled 1.9)
-		 * @type {string}
-		 * @default "stretch"
-		 */
-		this.fillmode = tileset.fillmode ?? "stretch";
-
-		/**
-		 * the point of a tile object from this tileset that sits at its
-		 * position: "topleft", "top", "topright", "left", "center", "right",
-		 * "bottomleft", "bottom" or "bottomright". "unspecified" means the
-		 * bottom left, or the bottom center on an isometric map
-		 * @type {string}
-		 * @default "unspecified"
-		 */
-		this.objectalignment = tileset.objectalignment ?? "unspecified";
-
-		/**
-		 * the map's tile grid width (used for tilerendersize="grid")
-		 * @type {number}
-		 * @ignore
-		 * @internal
-		 */
-		this.mapTilewidth = mapTilewidth ?? this.tilewidth;
-
-		/**
-		 * the map's tile grid height (used for tilerendersize="grid")
-		 * @type {number}
-		 * @ignore
-		 * @internal
-		 */
-		this.mapTileheight = mapTileheight ?? this.tileheight;
-
-		/**
-		 * precomputed render scale for tilerendersize="grid" (spritesheet only)
-		 * @private
-		 * @ignore
-		 * @internal
-		 */
-		this._renderScaleX = 1;
-		/**
-		 * @ignore
-		 * @internal
-		 */
-		this._renderScaleY = 1;
-		/**
-		 * @ignore
-		 * @internal
-		 */
-		this._renderDw = this.tilewidth;
-		/**
-		 * @ignore
-		 * @internal
-		 */
-		this._renderDh = this.tileheight;
-		/**
-		 * @ignore
-		 * @internal
-		 */
-		this._renderDyOffset = 0;
-		/**
-		 * @ignore
-		 * @internal
-		 */
-		this._renderDxCenter = 0;
-		/**
-		 * @ignore
-		 * @internal
-		 */
-		this._renderDyCenter = 0;
-
-		if (this.tilerendersize === "grid") {
-			this._renderScaleX = this.mapTilewidth / this.tilewidth;
-			this._renderScaleY = this.mapTileheight / this.tileheight;
-
-			if (this.fillmode === "preserve-aspect-fit") {
-				const minScale = Math.min(this._renderScaleX, this._renderScaleY);
-				this._renderScaleX = minScale;
-				this._renderScaleY = minScale;
-			}
-
-			this._renderDw = this.tilewidth * this._renderScaleX;
-			this._renderDh = this.tileheight * this._renderScaleY;
-			this._renderDyOffset = this.tileheight - this._renderDh;
-
-			if (this.fillmode === "preserve-aspect-fit") {
-				this._renderDxCenter = (this.mapTilewidth - this._renderDw) / 2;
-				this._renderDyCenter = -(this.mapTileheight - this._renderDh) / 2;
-			}
-		}
-
-		/**
-		 * per-tile sub-rectangles (Tiled 1.9+), indexed by local tile id
-		 * @type {Map<number, {x: number, y: number, width: number, height: number}>}
-		 * @ignore
-		 * @internal
-		 */
-		this.tileSubRects = new Map();
-
-		/**
-		 * Tileset animations
-		 * @private
-		 * @type {Map}
-		 */
-		this.animations = new Map();
-
-		/**
-		 * Remember the last update timestamp to prevent too many animation updates
-		 * @private
-		 * @ignore
-		 * @internal
-		 */
-		this._lastUpdate = 0;
+		super({
+			firstgid,
+			name: tileset.name,
+			tilewidth: tileset.tilewidth,
+			tileheight: tileset.tileheight,
+			spacing: tileset.spacing,
+			margin: tileset.margin,
+			tileoffset: tileset.tileoffset,
+			// the tileset class (since Tiled 1.9, renamed back to type on tile/object in 1.10)
+			class: tileset.class ?? tileset.type,
+			tilerendersize: tileset.tilerendersize,
+			fillmode: tileset.fillmode,
+			objectalignment: tileset.objectalignment,
+			mapTilewidth,
+			mapTileheight,
+		});
 
 		// resolve embedded JSON image data on the tileset itself
 		resolveEmbeddedImage(tileset);
@@ -269,13 +75,6 @@ export default class TMXTileset {
 			}
 		}
 
-		// set tile offset
-		const offset = tileset.tileoffset;
-		if (offset) {
-			this.tileoffset.x = +offset.x;
-			this.tileoffset.y = +offset.y;
-		}
-
 		// set tile properties from old JSON format (tileproperties)
 		const tileInfo = tileset.tileproperties;
 		if (tileInfo) {
@@ -286,7 +85,21 @@ export default class TMXTileset {
 
 		// initialize atlas for spritesheet tilesets
 		if (!this.isCollection) {
-			this._initAtlas(tileset);
+			// get the global tileset texture, its transparent color applied
+			const image = applyTransparentColor(
+				getImage(tileset.image),
+				tileset.transparentcolor,
+			);
+			if (!image) {
+				throw new Error(
+					`melonJS: '${tileset.image}' file for tileset '${this.name}' not found!`,
+				);
+			}
+			this._initAtlas({
+				image,
+				columns: tileset.columns,
+				tilecount: tileset.tilecount,
+			});
 			// if the tileset image was loaded from an .aseprite file, the
 			// loader produces a JSON sidecar with frame tags. Synthesize per-tile
 			// animations from those tags so animated tilesets authored in
@@ -364,13 +177,7 @@ export default class TMXTileset {
 			if (this.animations.has(tag.from)) {
 				continue;
 			}
-			this.isAnimated = true;
-			this.animations.set(tag.from, {
-				dt: 0,
-				idx: 0,
-				frames: anim,
-				cur: anim[0],
-			});
+			this.setTileAnimation(tag.from, anim);
 		}
 	}
 
@@ -402,35 +209,36 @@ export default class TMXTileset {
 			// the tile's class: `class` in Tiled 1.9, `type` before and since 1.10
 			const tileClass = tile.class ?? tile.type;
 			if (typeof tileClass === "string" && tileClass !== "") {
-				this.tileClasses.set(tileId + this.firstgid, tileClass);
+				this.setTileClass(tileId + this.firstgid, tileClass);
 			}
 
 			// parse animation frames
 			if (tile.animation) {
-				this.isAnimated = true;
-				const anim = tile.animation;
 				// key by the tile's own local id, not the first frame's tileid
-				this.animations.set(tileId, {
-					dt: 0,
-					idx: 0,
-					frames: anim,
-					cur: anim[0],
-				});
+				this.setTileAnimation(tileId, tile.animation);
 			}
 
 			// set tile properties, if any
+			let tileProperty;
 			if (tile.properties) {
 				if (Array.isArray(tile.properties)) {
 					// JSON (new format) — array of { name, value }
-					const tileProperty = {};
+					tileProperty = {};
 					for (const prop of tile.properties) {
 						tileProperty[prop.name] = prop.value;
 					}
-					this.setTileProperty(tileId + this.firstgid, tileProperty);
 				} else {
 					// XML format — flat object
-					this.setTileProperty(tileId + this.firstgid, tile.properties);
+					tileProperty = tile.properties;
 				}
+			}
+			// and its `attributes`: the same thing as a plain object of
+			// values, which a map written by another editor, or by hand, gives
+			if (typeof tile.attributes === "object" && tile.attributes !== null) {
+				tileProperty = { ...tileProperty, ...tile.attributes };
+			}
+			if (tileProperty !== undefined) {
+				this.setTileProperty(tileId + this.firstgid, tileProperty);
 			}
 
 			// resolve embedded JSON image data on individual tiles
@@ -498,435 +306,6 @@ export default class TMXTileset {
 					this.imageCollection.set(tileId + this.firstgid, image);
 				}
 			}
-		}
-	}
-
-	/**
-	 * Initialize the texture atlas for a spritesheet tileset.
-	 * @param {object} tileset - tileset data
-	 * @ignore
-	 * @internal
-	 */
-	_initAtlas(tileset) {
-		// get the global tileset texture, its transparent color applied
-		this.image = applyTransparentColor(
-			getImage(tileset.image),
-			tileset.transparentcolor,
-		);
-
-		if (!this.image) {
-			throw new Error(
-				`melonJS: '${tileset.image}' file for tileset '${this.name}' not found!`,
-			);
-		}
-
-		// create a texture atlas for the given tileset
-		this.texture = game.renderer.cache.get(this.image, {
-			framewidth: this.tilewidth,
-			frameheight: this.tileheight,
-			margin: this.margin,
-			spacing: this.spacing,
-		});
-		this.atlas = this.texture.getAtlas();
-
-		// the tiles the image holds, counted as Tiled does: whole tiles only,
-		// from the margin, a tile plus the spacing apart (Tiled lets the
-		// last column and row go without their outer margin). A partial
-		// tile at the right or bottom edge is not one, and must not take a
-		// gid of the next tileset
-		const columns = Math.max(
-			Math.floor(
-				(this.image.width - this.margin + this.spacing) /
-					(this.tilewidth + this.spacing),
-			),
-			0,
-		);
-		const rows = Math.max(
-			Math.floor(
-				(this.image.height - this.margin + this.spacing) /
-					(this.tileheight + this.spacing),
-			),
-			0,
-		);
-		const computed = (+tileset.columns || columns) * rows;
-		// the tile count Tiled saved (always, since Tiled 0.13) is the one
-		// its gids were given by
-		const tilecount = +tileset.tilecount > 0 ? +tileset.tilecount : computed;
-		// compute the last gid value in the tileset
-		this.lastgid = this.firstgid + Math.max(tilecount - 1, 0);
-		if (+tileset.tilecount > 0 && computed < tilecount) {
-			console.warn(
-				`melonJS: tileset '${this.name}' image holds ${computed} tiles, fewer than its tilecount (${tilecount})`,
-			);
-		}
-	}
-
-	/**
-	 * return the tile image from a "Collection of Image" tileset
-	 * @param {number} gid
-	 * @returns {HTMLImageElement|HTMLCanvasElement|undefined} corresponding image or undefined
-	 */
-	getTileImage(gid) {
-		return this.imageCollection.get(gid);
-	}
-
-	/**
-	 * the texture the sprite of an animated tile object is cut from: the
-	 * tileset image, or for an image collection the images its animations
-	 * show, painted side by side once and named by their tile id
-	 * @returns {TextureAtlas}
-	 * @ignore
-	 * @internal
-	 */
-	getAnimationTexture() {
-		if (!this.isCollection) {
-			return this.texture;
-		}
-		if (this._animationTexture === undefined) {
-			const ids = new Set();
-			for (const animation of this.animations.values()) {
-				for (const frame of animation.frames) {
-					ids.add(+frame.tileid);
-				}
-			}
-			let width = 0;
-			let height = 0;
-			for (const id of ids) {
-				const image = this.getTileImage(id + this.firstgid);
-				width += image.width;
-				height = Math.max(height, image.height);
-			}
-			const canvas = createCanvas(width, height);
-			const context = canvas.getContext("2d");
-			const frames = [];
-			let x = 0;
-			for (const id of ids) {
-				const image = this.getTileImage(id + this.firstgid);
-				context.drawImage(image, x, 0);
-				frames.push({
-					filename: "" + id,
-					frame: { x, y: 0, w: image.width, h: image.height },
-				});
-				x += image.width;
-			}
-			this._animationTexture = new TextureAtlas(
-				{ meta: { app: "melonJS", size: { w: width, h: height } }, frames },
-				canvas,
-			);
-		}
-		return this._animationTexture;
-	}
-
-	/**
-	 * set the tile properties
-	 * @param {number} gid - global tile ID
-	 * @param {object} prop - property object
-	 * @ignore
-	 * @internal
-	 */
-	setTileProperty(gid, prop) {
-		this.tileProperties.set(gid, prop);
-	}
-
-	/**
-	 * return true if the gid belongs to the tileset
-	 * @param {number} gid
-	 * @returns {boolean}
-	 */
-	contains(gid) {
-		return gid >= this.firstgid && gid <= this.lastgid;
-	}
-
-	/**
-	 * Get the view (local) tile ID from a GID, with animations applied
-	 * @param {number} gid - Global tile ID
-	 * @returns {number} View tile ID
-	 */
-	getViewTileId(gid) {
-		const localId = gid - this.firstgid;
-
-		// return the current corresponding tile id if animated
-		const anim = this.animations.get(localId);
-		if (anim !== undefined) {
-			return anim.cur.tileid;
-		}
-
-		return localId;
-	}
-
-	/**
-	 * return the properties of the specified tile
-	 * @param {number} tileId - global tile ID
-	 * @returns {object|undefined} tile properties or undefined
-	 */
-	getTileProperties(tileId) {
-		return this.tileProperties.get(tileId);
-	}
-
-	/**
-	 * return the class of the specified tile, as set on the tile in Tiled's
-	 * tileset editor. A tile object with no class of its own is matched by it.
-	 * @param {number} tileId - global tile ID
-	 * @returns {string|undefined} the tile's class, or undefined if it has none
-	 */
-	getTileClass(tileId) {
-		return this.tileClasses.get(tileId);
-	}
-
-	/**
-	 * update tile animations
-	 * @param {number} dt - time delta in milliseconds
-	 * @returns {boolean} true if any animation frame changed
-	 * @ignore
-	 * @internal
-	 */
-	update(dt) {
-		const now = timer.getTime();
-		let result = false;
-
-		if (this._lastUpdate !== now) {
-			this._lastUpdate = now;
-
-			for (const anim of this.animations.values()) {
-				anim.dt += dt;
-				let duration = anim.cur.duration;
-				while (anim.dt >= duration) {
-					anim.dt -= duration;
-					anim.idx = (anim.idx + 1) % anim.frames.length;
-					anim.cur = anim.frames[anim.idx];
-					duration = anim.cur.duration;
-					result = true;
-				}
-			}
-		}
-
-		return result;
-	}
-
-	/**
-	 * draw a tile at the specified position
-	 * @param {Renderer} renderer - a renderer instance
-	 * @param {number} dx - destination x position
-	 * @param {number} dy - destination y position
-	 * @param {Tile} tmxTile - the tile object to draw
-	 * @ignore
-	 * @internal
-	 */
-	drawTile(renderer, dx, dy, tmxTile) {
-		let dw, dh;
-
-		if (this.isCollection) {
-			// collection tiles can have varying sizes; compute scale per-tile
-			if (this.tilerendersize === "grid") {
-				let scaleX = this.mapTilewidth / tmxTile.width;
-				let scaleY = this.mapTileheight / tmxTile.height;
-
-				if (this.fillmode === "preserve-aspect-fit") {
-					const scale = Math.min(scaleX, scaleY);
-					scaleX = scale;
-					scaleY = scale;
-				}
-
-				dw = tmxTile.width * scaleX;
-				dh = tmxTile.height * scaleY;
-
-				// bottom-align against tileset baseline (renderer uses tileset.tileheight)
-				dy += this.tileheight - dh;
-
-				if (this.fillmode === "preserve-aspect-fit") {
-					dx += (this.mapTilewidth - dw) / 2;
-					dy -= (this.mapTileheight - dh) / 2;
-				}
-			} else {
-				dw = tmxTile.width;
-				dh = tmxTile.height;
-				// bottom-align against tileset baseline (renderer uses
-				// tileset.tileheight, the tallest image of the collection)
-				dy += this.tileheight - dh;
-			}
-		} else {
-			// spritesheet: use precomputed values
-			dw = this._renderDw;
-			dh = this._renderDh;
-			dy += this._renderDyOffset;
-			dx += this._renderDxCenter;
-			dy += this._renderDyCenter;
-		}
-
-		// a tile the tileset's image does not hold: nothing to draw (see
-		// `drawTileRaw`)
-		const frame = this.isCollection
-			? undefined
-			: this.atlas[this.getViewTileId(tmxTile.tileId)];
-		if (!this.isCollection && frame === undefined) {
-			return;
-		}
-
-		// check if any transformation is required
-		if (tmxTile.flipped) {
-			renderer.save();
-			// apply the tile current transform
-			renderer.translate(dx, dy);
-			renderer.transform(tmxTile.currentTransform);
-			// reset both values as managed through transform()
-			dx = dy = 0;
-		}
-
-		// check if the tile has an associated image
-		if (this.isCollection) {
-			// draw the tile from the image collection
-			renderer.drawImage(
-				this.imageCollection.get(tmxTile.tileId),
-				0,
-				0,
-				tmxTile.width,
-				tmxTile.height,
-				dx,
-				dy,
-				dw,
-				dh,
-			);
-		} else {
-			// use the tileset texture atlas
-			const offset = frame.offset;
-			renderer.drawImage(
-				this.image,
-				offset.x,
-				offset.y,
-				this.tilewidth,
-				this.tileheight,
-				dx,
-				dy,
-				dw,
-				dh,
-			);
-		}
-
-		if (tmxTile.flipped) {
-			// restore the context to the previous state
-			renderer.restore();
-		}
-	}
-
-	/**
-	 * draw a tile at the specified position from raw (gid, flipMask) data
-	 *
-	 * Like {@link drawTile} but bypasses the {@link Tile} object entirely:
-	 * the renderer hot loop can pass the GID and flip mask straight from
-	 * `layer.layerData` without ever allocating a Tile instance.
-	 *
-	 * @param {Renderer} renderer - a renderer instance
-	 * @param {number} dx - destination x position
-	 * @param {number} dy - destination y position
-	 * @param {number} gid - the tile's global id (with flip bits already stripped)
-	 * @param {number} flipMask - 3-bit packed flip mask (H=1, V=2, AD=4)
-	 * @ignore
-	 * @internal
-	 */
-	drawTileRaw(renderer, dx, dy, gid, flipMask) {
-		let dw, dh;
-		let tileImage;
-
-		if (this.isCollection) {
-			// collection tiles can have varying sizes; compute scale per-tile
-			tileImage = this.imageCollection.get(gid);
-			const tileWidth = tileImage.width;
-			const tileHeight = tileImage.height;
-
-			if (this.tilerendersize === "grid") {
-				let scaleX = this.mapTilewidth / tileWidth;
-				let scaleY = this.mapTileheight / tileHeight;
-
-				if (this.fillmode === "preserve-aspect-fit") {
-					const scale = Math.min(scaleX, scaleY);
-					scaleX = scale;
-					scaleY = scale;
-				}
-
-				dw = tileWidth * scaleX;
-				dh = tileHeight * scaleY;
-
-				// bottom-align against tileset baseline (renderer uses tileset.tileheight)
-				dy += this.tileheight - dh;
-
-				if (this.fillmode === "preserve-aspect-fit") {
-					dx += (this.mapTilewidth - dw) / 2;
-					dy -= (this.mapTileheight - dh) / 2;
-				}
-			} else {
-				dw = tileWidth;
-				dh = tileHeight;
-				// bottom-align against tileset baseline (renderer uses
-				// tileset.tileheight, the tallest image of the collection)
-				dy += this.tileheight - dh;
-			}
-		} else {
-			// spritesheet: use precomputed values
-			dw = this._renderDw;
-			dh = this._renderDh;
-			dy += this._renderDyOffset;
-			dx += this._renderDxCenter;
-			dy += this._renderDyCenter;
-		}
-
-		// a tile the tileset's image does not hold (an image cropped since the
-		// map was saved, a `tilecount` larger than the image has): nothing
-		// to draw, as in Tiled
-		const frame = this.isCollection
-			? undefined
-			: this.atlas[this.getViewTileId(gid)];
-		if (!this.isCollection && frame === undefined) {
-			return;
-		}
-
-		// check if any transformation is required
-		if (flipMask !== 0) {
-			renderer.save();
-			renderer.translate(dx, dy);
-			// rebuild the flip transform into the shared scratch matrix
-			// (size driven by the tileset's tile dims for spritesheets, the
-			// tile image's dims for collections)
-			renderer.transform(
-				buildFlipTransform(
-					SCRATCH_MATRIX,
-					flipMask,
-					this.isCollection ? tileImage.width : this.tilewidth,
-					this.isCollection ? tileImage.height : this.tileheight,
-				),
-			);
-			dx = dy = 0;
-		}
-
-		// draw the tile image
-		if (this.isCollection) {
-			renderer.drawImage(
-				tileImage,
-				0,
-				0,
-				tileImage.width,
-				tileImage.height,
-				dx,
-				dy,
-				dw,
-				dh,
-			);
-		} else {
-			const offset = frame.offset;
-			renderer.drawImage(
-				this.image,
-				offset.x,
-				offset.y,
-				this.tilewidth,
-				this.tileheight,
-				dx,
-				dy,
-				dw,
-				dh,
-			);
-		}
-
-		if (flipMask !== 0) {
-			renderer.restore();
 		}
 	}
 }

@@ -111,7 +111,11 @@ These resolve but should not be used in new code:
 | `loader.onload` / `onProgress` / `onError` | 18.2.0, **removed 20.3** | the `LOADER_*` events, or `preload(assets, onloadcb)` |
 | `response.overlap` / `overlapN` / `overlapV` | 19.5.0 | `response.depth` / `response.normal` |
 | `setLineWidth()` | 17.3.0 | the `lineWidth` property |
-| `pool.register` / `pool.pull` / `pool.push` | 18.0.0 (a console notice since 20.9) | `createPool()` / `getPool()`; `registerTiledObjectClass()` for a class a Tiled map names |
+| `pool.register` / `pool.pull` / `pool.push` | 18.0.0 (a console notice since 20.9) | `createPool()` / `getPool()`; `registerObjectClass()` for a class a level names |
+| `registerTiledObjectClass` / `registerTiledObjectFactory` | 20.18.0 (no console notice) | `registerObjectClass` / `registerObjectFactory`: the same functions, named for every kind of level |
+| `TMXRenderer`, `TMXOrthogonalRenderer`, `TMXIsometricRenderer`, `TMXHexagonalRenderer`, `TMXStaggeredRenderer` | 20.18.0 (no console notice) | `TileMapRenderer`, `OrthogonalRenderer`, `IsometricRenderer`, `HexagonalRenderer`, `StaggeredRenderer`: the same classes |
+| `TMXTileMap`, `TMXTilesetGroup` | 20.18.0 (no console notice) | `TileMap`, `TilesetGroup`: the same classes |
+| `loader.getTMX` | 20.18.0 (no console notice) | `loader.getTileMap`: the same function |
 | `body.fromJSON()`, a shape list given to `addShape()` | 20.7.0 (the `Body` constructor form throws) | `bodyDef = { type, shapes: "<json asset>", id }` |
 | `body.ignoreGravity` | 19.5.0 | `gravityScale = 0`, or `body.setGravityScale(0)` |
 | `app.updateAverageDelta` | 20.0.0 | `app.lastUpdateDelta` |

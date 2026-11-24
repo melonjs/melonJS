@@ -15,6 +15,7 @@ import {
 	Renderable,
 	type Renderer,
 	state,
+	TileMap,
 	type TMXLayer,
 	video,
 } from "melonjs";
@@ -155,6 +156,8 @@ describe("grids from a level", () => {
 		await loader.preload(
 			[
 				{ name: "pf-tiles", type: "image", src: image.toDataURL() },
+				// the image a Sprite Fusion map draws from
+				{ name: "spritesheet", type: "image", src: image.toDataURL() },
 				// an inline map, which the loader takes though `Asset.data` is
 				// typed for shader sources
 				{ name: "pf-map", type: "tmx", data: map as unknown as string },
@@ -207,6 +210,119 @@ describe("grids from a level", () => {
 			});
 			expect(grid.getWeight(4, 1)).toBe(3);
 			expect(grid.getWeight(0, 0)).toBe(1);
+		});
+
+		it("takes the weight one placed tile was given, over its tile's", () => {
+			const layer = wallsLayer();
+			const open = { solid: () => false };
+			try {
+				// the mud, heavier here; and a wall tile, which has none
+				layer.setTileProperties(4, 1, { weight: 7 });
+				layer.setTileProperties(2, 0, { weight: 5 });
+				// what is not a weight leaves the tile's own
+				layer.setTileProperties(2, 1, { slippery: true });
+				const grid = Grid.fromTileLayer(layer, open);
+				expect(grid.getWeight(4, 1)).toBe(7);
+				expect(grid.getWeight(2, 0)).toBe(5);
+				expect(grid.getWeight(2, 1)).toBe(1);
+				expect(grid.getWeight(2, 2)).toBe(1);
+				// taken back, and the grid read again
+				layer.setTileProperties(4, 1);
+				grid.refreshCell(4, 1);
+				expect(grid.getWeight(4, 1)).toBe(3);
+			} finally {
+				layer.setTileProperties(4, 1);
+				layer.setTileProperties(2, 0);
+				layer.setTileProperties(2, 1);
+			}
+		});
+
+		it("takes a weight given as an attribute of the placed tile, as Sprite Fusion writes it", () => {
+			// a map in the words of the editor's JSON export, read as it is
+			const fusion = new TileMap("pf-fusion", {
+				tileSize: T,
+				mapWidth: 3,
+				mapHeight: 2,
+				layers: [
+					{
+						name: "ground",
+						tiles: [
+							{ id: "0", x: 0, y: 0, attributes: { weight: 4 } },
+							{ id: "0", x: 1, y: 0 },
+							{ id: "0", x: 2, y: 1, attributes: { weight: 9, type: "swamp" } },
+						],
+						collider: false,
+					},
+				],
+			});
+			const [ground] = fusion.getLayers();
+			const grid = Grid.fromTileLayer(ground, { solid: () => false });
+			expect([
+				grid.getWeight(0, 0),
+				grid.getWeight(1, 0),
+				grid.getWeight(2, 0),
+				grid.getWeight(2, 1),
+			]).toEqual([4, 1, 1, 9]);
+		});
+
+		it("reads the weight of the right cell on a layer that starts left of 0", () => {
+			// a chunk at column -16: mud in its second cell, a wall tile given
+			// a weight of its own in its fourth
+			const chunk = new Array(16 * 16).fill(0);
+			chunk[1] = 2;
+			chunk[3] = 1;
+			const wide = new TileMap("pf-wide", {
+				...map,
+				infinite: true,
+				layers: [
+					{
+						id: 1,
+						name: "wide",
+						type: "tilelayer",
+						visible: true,
+						opacity: 1,
+						x: 0,
+						y: 0,
+						startx: -16,
+						starty: 0,
+						width: 16,
+						height: 16,
+						chunks: [{ x: -16, y: 0, width: 16, height: 16, data: chunk }],
+					},
+				],
+			});
+			const [layer] = wide.getLayers();
+			expect(layer.startx).toBe(-16);
+			layer.setTileProperties(-13, 0, { weight: 6 });
+			const grid = Grid.fromTileLayer(layer, { solid: () => false });
+			// the grid's cells count from the layer's first column
+			expect([
+				grid.getWeight(0, 0),
+				grid.getWeight(1, 0),
+				grid.getWeight(2, 0),
+				grid.getWeight(3, 0),
+				grid.getWeight(13, 0),
+			]).toEqual([1, 3, 1, 6, 1]);
+		});
+
+		it("takes the tile's weight from its tileset on an engine with no cell properties", () => {
+			const layer = wallsLayer();
+			const open = { solid: () => false };
+			try {
+				layer.setTileProperties(4, 1, { weight: 7 });
+				// as a layer of melonJS before 20.18
+				Object.defineProperty(layer, "getTileProperties", {
+					value: undefined,
+					configurable: true,
+				});
+				const grid = Grid.fromTileLayer(layer, open);
+				expect(grid.getWeight(4, 1)).toBe(3);
+				expect(grid.getWeight(2, 0)).toBe(1);
+			} finally {
+				delete (layer as { getTileProperties?: unknown }).getTileProperties;
+				layer.setTileProperties(4, 1);
+			}
+			expect(Grid.fromTileLayer(layer, open).getWeight(4, 1)).toBe(3);
 		});
 
 		it("finds a way round the wall", () => {

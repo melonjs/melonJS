@@ -1620,8 +1620,8 @@ export function isometricScenarios(renderer, type) {
 			const options = { views: [[0, 0]], layers };
 			await same(scene, options);
 			const gpu =
-				app.renderer._tmxGPURenderers?.get("isometric") ??
-				app.renderer.tmxRenderers?.get("isometric");
+				app.renderer._tileLayerRenderers?.get("isometric") ??
+				app.renderer.tileLayerRenderers?.get("isometric");
 			expect(gpu.resources.size).toBe(1);
 			app.renderer.reset();
 			expect(gpu.resources.size).toBe(0);

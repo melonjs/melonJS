@@ -10,7 +10,7 @@ import {
 	audio,
 	loader,
 	plugin,
-	registerTiledObjectClass,
+	registerObjectClass,
 	state,
 } from "melonjs";
 import { VIEW_H, VIEW_W } from "./constants";
@@ -52,12 +52,12 @@ export const createGame = async () => {
 	// the classes in the map: the hero's spawn point has its own, the rest
 	// are set on tiles in the tileset, and every object placed from one of
 	// those tiles is built by its class
-	registerTiledObjectClass("Hero", Hero);
-	registerTiledObjectClass("Chest", Chest);
-	registerTiledObjectClass("Door", Door);
-	registerTiledObjectClass("Gate", Gate);
-	registerTiledObjectClass("Exit", Exit);
-	registerTiledObjectClass("WallTorch", WallTorch);
+	registerObjectClass("Hero", Hero);
+	registerObjectClass("Chest", Chest);
+	registerObjectClass("Door", Door);
+	registerObjectClass("Gate", Gate);
+	registerObjectClass("Exit", Exit);
+	registerObjectClass("WallTorch", WallTorch);
 
 	// must be called before loading any audio
 	audio.init("mp3,ogg");

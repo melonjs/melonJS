@@ -66,23 +66,6 @@ export function tiledBlendMode(mode) {
 }
 
 /**
- * Apply an opacity multiplier to a renderable and its child renderable (if any).
- * @ignore
- * @internal
- * @param {Renderable} obj - the renderable to apply to
- * @param {number} opacity - the opacity multiplier
- */
-export function applyObjectOpacity(obj, opacity) {
-	obj.setOpacity(obj.getOpacity() * opacity);
-	if (
-		typeof obj.renderable !== "undefined" &&
-		obj.renderable.isRenderable === true
-	) {
-		obj.renderable.setOpacity(obj.renderable.getOpacity() * opacity);
-	}
-}
-
-/**
  * Propagate a blend mode to a renderable and its child renderable (if any).
  * Only applies when the object still has the default "normal" blend mode.
  * @ignore
@@ -518,6 +501,9 @@ function normalizeTMX(obj, item, parse) {
 
 // re-export generic decode utilities so existing consumers of TMXUtils can still access them
 export { decode, setInflateFunction } from "../../utils/decode.ts";
+// what places the objects of any level, kept here for those who read it
+// from this namespace
+export { applyObjectOpacity } from "../tilemap/populate.js";
 
 /**
  * Parse a XML TMX object and returns the corresponding javascript object
@@ -529,15 +515,31 @@ export function parse(xml) {
 }
 
 /**
- * Apply TMX Properties to the given object
+ * Apply the custom values of a map element to the given object: its
+ * `properties`, as Tiled writes them, and its `attributes`, the same thing as
+ * a plain object of values (which Sprite Fusion writes, and is the shorter
+ * one to write by hand). An attribute is taken as it is; where both name a
+ * value, the attribute is the one kept.
  * @param {object} obj - object to apply the properties to
  * @param {object} data - TMX data object
  */
 export function applyTMXProperties(obj, data) {
-	const properties = data.properties;
-	if (properties === undefined) {
-		return;
+	if (data.properties !== undefined) {
+		applyProperties(obj, data);
 	}
+	const attributes = data.attributes;
+	if (typeof attributes === "object" && attributes !== null) {
+		Object.assign(obj, attributes);
+	}
+}
+
+/**
+ * apply the `properties` of a map element, in any of the forms Tiled has
+ * written them
+ * @ignore
+ */
+function applyProperties(obj, data) {
+	const properties = data.properties;
 
 	// new Tiled JSON format: array of { name, type, value }
 	if (Array.isArray(properties)) {
@@ -579,4 +581,49 @@ export function applyTMXProperties(obj, data) {
 			obj[key] = coerceTMXValue(key, type, prop);
 		}
 	}
+}
+
+/**
+ * How a Tiled layer scrolls with the camera by its parallax factor, as a
+ * tile layer takes it (see `TileLayer#ratio`).
+ *
+ * Tiled's factor is a layer's scrolling ratio: 1 scrolls with the map, 0
+ * stays with the camera. The layer is where an image layer of the same
+ * factor is (see `readImageLayer`): in its place when the camera is at the
+ * map's origin, and moved from there by the map's parallax origin times
+ * the factor.
+ * @param {object} map - the map the layer belongs to
+ * @param {number} factorX - the layer's parallax factor across, its groups' included
+ * @param {number} factorY - the layer's parallax factor down, its groups' included
+ * @returns {{ratio: {x: number, y: number}, parallaxOrigin: {x: number, y: number}}} the layer's scrolling settings
+ * @ignore
+ */
+export function tiledParallax(map, factorX, factorY) {
+	const originX = +(map.data?.parallaxoriginx ?? 0);
+	const originY = +(map.data?.parallaxoriginy ?? 0);
+	return {
+		ratio: { x: factorX, y: factorY },
+		// where the camera is when the layer is in its place
+		parallaxOrigin: {
+			x:
+				factorX === 1 || originX === 0
+					? 0
+					: (-factorX * originX) / (1 - factorX),
+			y:
+				factorY === 1 || originY === 0
+					? 0
+					: (-factorY * originY) / (1 - factorY),
+		},
+	};
+}
+
+/**
+ * a Tiled layer's parallax factor on one axis
+ * @param {number|string} [value] - `parallaxx` or `parallaxy`, as read
+ * @returns {number} the factor, 1 for a layer with none
+ * @ignore
+ */
+export function tiledParallaxFactor(value) {
+	const factor = +(value ?? 1);
+	return Number.isFinite(factor) ? factor : 1;
 }

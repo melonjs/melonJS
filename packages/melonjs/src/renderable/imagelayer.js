@@ -81,7 +81,7 @@ export default class ImageLayer extends Sprite {
 		// bare-number shorthand (anchors both axes) — normalize BEFORE super():
 		// the Sprite base constructor consumes the same settings.anchorPoint,
 		// and the shared resolver doesn't accept bare numbers (pre-super
-		// settings mutation has precedent, e.g. Entity / TMXTileMap)
+		// settings mutation has precedent, e.g. Entity / TileMap)
 		if (typeof settings.anchorPoint === "number") {
 			settings.anchorPoint = {
 				x: settings.anchorPoint,

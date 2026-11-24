@@ -84,8 +84,8 @@ world.
 18.0.0.** `pool.register(name, Class, true)` / `pool.pull(name)` still work and
 print a one-off console notice, but a recycled object is no longer returned on
 removal, so pooling through it now costs an allocation per spawn. To register a
-class so a Tiled map can name it, use `registerTiledObjectClass` — that is a
-separate registry and is not deprecated.
+class so a level can name it, use `registerObjectClass` (named
+`registerTiledObjectClass` before 20.18) — that is a separate registry.
 
 Two rules that cause subtle bugs when missed:
 

@@ -1095,9 +1095,12 @@ export default class Camera2d extends Renderable {
 		// What a renderable draws can reach past its bounds (a tile layer's
 		// tiles, taller than their cell, stand above its grid): it says so
 		// with `getDrawBounds`
+		// (and a layer with a parallax, in another place for each camera)
 		const drawn = (
-			obj as Renderable & { getDrawBounds?: () => Bounds }
-		).getDrawBounds?.();
+			obj as Renderable & {
+				getDrawBounds?: (camera: Camera2d) => Bounds | undefined;
+			}
+		).getDrawBounds?.(this);
 		return (drawn ?? obj.getBounds()).overlaps(this.worldView);
 	}
 

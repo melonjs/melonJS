@@ -22,9 +22,9 @@ import Renderer from "../src/video/renderer.js";
 import { createAtlas, TextureAtlas } from "../src/video/texture/atlas.js";
 import WebGPULitQuadBatcher from "../src/video/webgpu/batchers/lit_quad_batcher.js";
 import WebGPUQuadBatcher from "../src/video/webgpu/batchers/quad_batcher.js";
-import WebGPUTMXRenderer from "../src/video/webgpu/renderers/tmxlayer/tmxlayer.js";
-import tmxlayerCommonWGSL from "../src/video/webgpu/shaders/tmxlayer-common.wgsl";
-import tmxlayerOrthogonalWGSL from "../src/video/webgpu/shaders/tmxlayer-orthogonal.wgsl";
+import WebGPUTileLayerRenderer from "../src/video/webgpu/renderers/tilelayer/tilelayer.js";
+import tilelayerCommonWGSL from "../src/video/webgpu/shaders/tilelayer-common.wgsl";
+import tilelayerOrthogonalWGSL from "../src/video/webgpu/shaders/tilelayer-orthogonal.wgsl";
 import {
 	getWebGLRenderer,
 	releaseWebGLRenderer,
@@ -32,7 +32,7 @@ import {
 import { createMockWebGPURenderer } from "./helpers/webgpu-mock-renderer.js";
 
 // the orthogonal tile shader's module, as its renderer puts it together
-const tmxlayerWGSL = `${tmxlayerCommonWGSL}\n${tmxlayerOrthogonalWGSL}`;
+const tilelayerWGSL = `${tilelayerCommonWGSL}\n${tilelayerOrthogonalWGSL}`;
 
 const SIZE = 64;
 
@@ -256,7 +256,7 @@ describe("linear-mipmap texture filter (WebGL)", () => {
 			renderer.translate(x, y);
 			renderer.scale(scale, scale);
 			renderer
-				._getTMXGPURendererFor("orthogonal")
+				._getTileLayerRendererFor("orthogonal")
 				.draw(layer, { pos: { x: 0, y: 0 }, width: 224, height: 224 });
 			renderer.flush();
 			renderer.restore();
@@ -317,7 +317,7 @@ describe("linear-mipmap texture filter (WebGL)", () => {
 				renderer.save();
 				renderer.setGlobalAlpha(alpha);
 				try {
-					renderer._getTMXGPURendererFor("orthogonal").draw(
+					renderer._getTileLayerRendererFor("orthogonal").draw(
 						{
 							cols: 2,
 							rows: 2,
@@ -556,8 +556,8 @@ describe("linear-mipmap texture filter (WebGPU, mock renderer)", () => {
 			renderer.setBatcher = () => {
 				return batcher;
 			};
-			const tmx = new WebGPUTMXRenderer(renderer, "orthogonal");
-			tmx.draw(layer(atlas()), {
+			const gpu = new WebGPUTileLayerRenderer(renderer, "orthogonal");
+			gpu.draw(layer(atlas()), {
 				pos: { x: 0, y: 0 },
 				width: 64,
 				height: 64,
@@ -582,25 +582,25 @@ describe("linear-mipmap texture filter (WebGPU, mock renderer)", () => {
 
 		it("fades its premultiplied texels, color and alpha alike, and tints them", () => {
 			// the WGSL twin of the WebGL pixel tests above
-			const code = tmxlayerWGSL.replace(/\/\/.*$/gm, "");
+			const code = tilelayerWGSL.replace(/\/\/.*$/gm, "");
 			expect(code).toContain(
-				"return texel * tmx.uOpacity * vec4f(tmx.uTint.rgb, 1.0);",
+				"return texel * tileLayer.uOpacity * vec4f(tileLayer.uTint.rgb, 1.0);",
 			);
 			// every color the fragment stage returns goes through it: the
 			// single cell of the fast path, and what the cells add up to
 			expect(code.match(/return layerColor\(/g)).toHaveLength(2);
-			expect(code).not.toMatch(/\.a \* tmx\.uOpacity/);
+			expect(code).not.toMatch(/\.a \* tileLayer\.uOpacity/);
 		});
 
 		it("keeps each sample half a texel inside its tile, mipmaps or not", () => {
 			// the level read, 0 without mipmaps: the WGSL twin of what the
 			// WebGL pixel test above measures
-			const code = tmxlayerWGSL.replace(/\/\/.*$/gm, "");
+			const code = tilelayerWGSL.replace(/\/\/.*$/gm, "");
 			expect(code).toContain(
-				"let inset = min(vec2f(0.5 * exp2(lod * tmx.uMipmaps)), tmx.uTileSize * 0.5);",
+				"let inset = min(vec2f(0.5 * exp2(lod * tileLayer.uMipmaps)), tileLayer.uTileSize * 0.5);",
 			);
 			expect(code).toContain(
-				"texelPx = clamp(texelPx, tileOriginPx + fp.inset, tileOriginPx + tmx.uTileSize - fp.inset);",
+				"texelPx = clamp(texelPx, tileOriginPx + fp.inset, tileOriginPx + tileLayer.uTileSize - fp.inset);",
 			);
 		});
 	});

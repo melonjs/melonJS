@@ -1,6 +1,6 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
-import { Application, boot, Rect, TMXTileMap, video } from "../src/index.js";
-import TMXStaggeredRenderer from "../src/level/tiled/renderer/TMXStaggeredRenderer.js";
+import { Application, boot, Rect, TileMap, video } from "../src/index.js";
+import StaggeredRenderer from "../src/level/tilemap/renderer/StaggeredRenderer.js";
 import { imgList } from "../src/loader/cache.js";
 import CanvasRenderer from "../src/video/canvas/canvas_renderer.js";
 
@@ -64,7 +64,7 @@ const tileHolding = (axis, index, x, y) => {
 };
 
 const rendererFor = (axis, index) => {
-	return new TMXStaggeredRenderer({
+	return new StaggeredRenderer({
 		cols: COLS,
 		rows: ROWS,
 		tilewidth: TW,
@@ -109,7 +109,7 @@ const layerFor = (
 	for (let i = 0; i < COLS * ROWS; i++) {
 		data.push(i + 1);
 	}
-	const map = new TMXTileMap(name, {
+	const map = new TileMap(name, {
 		width: COLS,
 		height: ROWS,
 		tilewidth: TW,

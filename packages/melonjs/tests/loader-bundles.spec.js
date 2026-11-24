@@ -689,7 +689,7 @@ describe("loader bundles", () => {
 			const count = level.levelCount();
 			// the descriptor form behaves as it always has
 			loader.unload(tmx("bt-desc"));
-			expect(loader.getTMX("bt-desc")).toBeNull();
+			expect(loader.getTileMap("bt-desc")).toBeNull();
 			expect(level.levelCount()).toBe(count);
 			expect(loader.isLoaded("lv-desc")).toBe(false);
 		});

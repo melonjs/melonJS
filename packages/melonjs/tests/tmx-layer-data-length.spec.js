@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { Application, boot, TMXTileMap, video } from "../src/index.js";
+import { Application, boot, TileMap, video } from "../src/index.js";
 import * as TMXUtils from "../src/level/tiled/TMXUtils.js";
 import { imgList } from "../src/loader/cache.js";
 
@@ -121,7 +121,7 @@ const infiniteMap = (second) => {
 };
 
 const layerOf = (name, data) => {
-	return new TMXTileMap(name, data).getLayers()[0];
+	return new TileMap(name, data).getLayers()[0];
 };
 
 describe("a tile layer's data must fill its cells", () => {

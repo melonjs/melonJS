@@ -1,5 +1,5 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
-import { Application, boot, Rect, TMXTileMap, video } from "../src/index.js";
+import { Application, boot, Rect, TileMap, video } from "../src/index.js";
 import { imgList } from "../src/loader/cache.js";
 import CanvasRenderer from "../src/video/canvas/canvas_renderer.js";
 
@@ -44,7 +44,7 @@ const layerFor = (name, map) => {
 	for (let i = 0; i < COLS * ROWS; i++) {
 		data.push(i + 1);
 	}
-	return new TMXTileMap(name, {
+	return new TileMap(name, {
 		width: COLS,
 		height: ROWS,
 		renderorder: "right-down",

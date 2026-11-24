@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { Application, boot, TMXTileMap, video } from "../src/index.js";
+import { Application, boot, TileMap, video } from "../src/index.js";
 import { imgList } from "../src/loader/cache.js";
 
 /**
@@ -91,7 +91,7 @@ const infiniteMap = (orientation, painted, extraChunks = []) => {
 	const { map } = ORIENTATIONS[orientation];
 	const name = `level-bounds-${orientation}`;
 	const chunks = [...chunksOf(painted), ...extraChunks];
-	return new TMXTileMap(`level-bounds-${mapId++}`, {
+	return new TileMap(`level-bounds-${mapId++}`, {
 		width: MAP_COLS,
 		height: MAP_ROWS,
 		renderorder: "right-down",
@@ -231,7 +231,7 @@ describe("an infinite map's level bounds cover every painted tile", () => {
 
 	it("a finite map's bounds are unchanged", () => {
 		const name = "level-bounds-finite";
-		const map = new TMXTileMap(name, {
+		const map = new TileMap(name, {
 			width: MAP_COLS,
 			height: MAP_ROWS,
 			tilewidth: 32,
@@ -301,7 +301,7 @@ describe("an infinite map's level bounds cover every painted tile", () => {
 		it("a level smaller than the camera is still centred in it", () => {
 			// one painted tile, a 4 x 4 map of 8 px tiles: 32 x 32 in a 64 x 64 view
 			const name = "level-bounds-small";
-			const map = new TMXTileMap(name, {
+			const map = new TileMap(name, {
 				width: 4,
 				height: 4,
 				tilewidth: 8,

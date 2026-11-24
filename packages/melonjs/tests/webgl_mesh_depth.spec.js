@@ -40,7 +40,7 @@ import {
  *   correctness goal: the closer mesh wins per pixel via the GPU's depth
  *   test even when the painter sort would have drawn it first.
  *
- * Like the existing `tmxlayer-shader.spec.js`, both layers skip when
+ * Like the existing `tilelayer-shader.spec.js`, both layers skip when
  * WebGL2 isn't available (headless CI without GPU flags) — they run
  * locally and on GPU-backed runners.
  */
@@ -66,7 +66,7 @@ describe("Mesh depth handling (issue #1468)", () => {
 		// Restore the video subsystem to AUTO so this spec doesn't leak
 		// a forced-WebGL renderer into other test files that share the
 		// `video` global. Mirrors the cleanup pattern in the existing
-		// `tmxlayer-shader.spec.js` / `texture-resource.spec.js` WebGL2
+		// `tilelayer-shader.spec.js` / `texture-resource.spec.js` WebGL2
 		// integration specs.
 		try {
 			releaseWebGLRenderer();

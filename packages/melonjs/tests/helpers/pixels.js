@@ -159,13 +159,26 @@ export async function grabFrame(renderer) {
 		return new ImageData(out, width, height);
 	}
 
-	// WebGL and Canvas: copied through a 2D canvas, while the frame is there
+	return copyFrame(renderer);
+}
+
+/**
+ * The frame a Canvas or WebGL renderer has just drawn, at once: copied
+ * through a 2D canvas, while the frame is there. For a test that draws and
+ * compares many frames in a row with nothing to await; {@link grabFrame}
+ * is the one that also reads a WebGPU frame.
+ * @param {object} renderer - a Canvas or WebGL renderer
+ * @returns {ImageData} the frame, rows top-down
+ */
+export function copyFrame(renderer) {
+	renderer.flush?.();
+	const source = renderer.getCanvas();
 	const canvas = document.createElement("canvas");
-	canvas.width = width;
-	canvas.height = height;
+	canvas.width = source.width;
+	canvas.height = source.height;
 	const context = canvas.getContext("2d", { willReadFrequently: true });
 	context.drawImage(source, 0, 0);
-	return context.getImageData(0, 0, width, height);
+	return context.getImageData(0, 0, source.width, source.height);
 }
 
 /**
@@ -295,4 +308,28 @@ export function compositeReference(mode, backdrop, source, alpha) {
 		const B = Math.min(1, Math.max(0, fn(Cb, Cs)));
 		return Math.round(255 * (alpha * B + (1 - alpha) * Cb));
 	});
+}
+
+/**
+ * Paint a tile on a 2D canvas, for a reference picture: a square cut of an
+ * image, mirrored and faded as asked, with nothing of the engine in it.
+ * @param {CanvasRenderingContext2D} c - the canvas to paint on
+ * @param {CanvasImageSource} image - the tileset's image
+ * @param {number} sx - the tile's left edge in the image
+ * @param {number} sy - the tile's top edge in the image
+ * @param {number} size - the tile's size
+ * @param {number} x - where its left edge goes
+ * @param {number} y - where its top edge goes
+ * @param {number} [flip=0] - 1: mirrored across; 2: mirrored down; 3: both
+ * @param {number} [alpha=1] - its opacity
+ */
+export function paintTile(c, image, sx, sy, size, x, y, flip = 0, alpha = 1) {
+	const across = (flip & 1) !== 0;
+	const down = (flip & 2) !== 0;
+	c.save();
+	c.globalAlpha = alpha;
+	c.translate(x + (across ? size : 0), y + (down ? size : 0));
+	c.scale(across ? -1 : 1, down ? -1 : 1);
+	c.drawImage(image, sx, sy, size, size, 0, 0, size, size);
+	c.restore();
 }

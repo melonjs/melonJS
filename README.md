@@ -172,6 +172,8 @@ melonJS is supporting the below tools and frameworks natively or through our off
  [![PhysicsEditor](https://github.com/melonjs/melonJS/raw/master/media/icons/physicseditor.svg "PhysicsEditor")](https://www.codeandweb.com/physicseditor)
  [![ShoeBox](https://user-images.githubusercontent.com/4033090/136762705-92027d94-d87c-4a95-b051-26647410248d.png "ShoeBox")](https://renderhjs.net/shoebox/)
  [![Tiled](https://user-images.githubusercontent.com/4033090/136762999-5a7f377b-4136-4205-9fe0-83728c90cb9b.png "Tiled")](https://www.mapeditor.org)
+ [![LDtk](https://github.com/melonjs/melonJS/raw/master/media/icons/ldtk.png "LDtk")](https://ldtk.io)
+ [![Sprite Fusion](https://github.com/melonjs/melonJS/raw/master/media/icons/spritefusion.png "Sprite Fusion")](https://www.spritefusion.com)
  [![Cordova](https://user-images.githubusercontent.com/4033090/136763147-6d157ce6-6921-437e-bb8f-0287b86109da.png "Cordova")](https://cordova.apache.org)
  [![Capacitor](https://github.com/melonjs/melonJS/raw/master/media/icons/capacitor.svg "Capacitor")](https://capacitorjs.com)
 [![Spine](https://github.com/melonjs/melonJS/assets/4033090/7a8d81b8-bc80-47bd-80dc-d9a054c78c96 "Spine")](http://esotericsoftware.com)
@@ -200,6 +202,8 @@ Examples
 
 * [Platformer](https://melonjs.github.io/melonJS/examples/#/platformer) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/platformer))
 * [Isometric Dungeon](https://melonjs.github.io/melonJS/examples/#/isometric-dungeon) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/isometricDungeon)) — click to move along paths found by `@melonjs/pathfinding-plugin` on the isometric map
+* [LDtk Level Loader](https://melonjs.github.io/melonJS/examples/#/ldtk-level-loader) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/ldtkLoader)) — the sample projects that come with the [LDtk](https://ldtk.io) level editor, loaded as the editor saves them
+* [LDtk Platformer](https://melonjs.github.io/melonJS/examples/#/ldtk-platformer) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/ldtkPlatformer)) — a platformer in a world made with [LDtk](https://ldtk.io), its rooms loaded and freed around the player
 * [SVG Shapes](https://melonjs.github.io/melonJS/examples/#/svg-shapes) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/svgShapes))
 * [Particle Editor](https://melonjs.github.io/melonJS/examples/#/particle-editor) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/particleEditor)) — tune a `ParticleEmitter` live in 2D or 3D, from presets or a random roll, and copy the matching code or JSON
 * [Graphics](https://melonjs.github.io/melonJS/examples/#/graphics) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/graphics))

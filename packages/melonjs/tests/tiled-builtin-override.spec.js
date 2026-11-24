@@ -5,20 +5,20 @@ import {
 	registerTiledObjectClass,
 	Trigger,
 } from "../src/index.js";
-import { createTMXObject } from "../src/level/tiled/TMXObjectFactory.js";
+import { createLevelObject } from "../src/level/tilemap/objects.js";
 
 /**
  * A game's own class must beat the built-in of the same name.
  *
  * This needs a spec file of its own: the factory registry initialises LAZILY,
- * on the first `createTMXObject`, and the thing under test is what happens
+ * on the first `createLevelObject`, and the thing under test is what happens
  * when a game registers BEFORE that. Any spec that has already built a Tiled
  * object has passed the moment this is about, and would instead exercise the
  * documented post-init conflict throw.
  */
 describe("a game's class beats the built-in of the same name", () => {
 	const tmxObject = (cls) => {
-		return createTMXObject(
+		return createLevelObject(
 			{ name: "o", class: cls, x: 0, y: 0, width: 8, height: 8, z: 0 },
 			{ tilewidth: 32, tileheight: 32 },
 		);

@@ -37,8 +37,9 @@ it: a project outside the first list is better served by something else.
   WeChat), or an app wrapped with Capacitor or Cordova. `melonjs-platforms`
   covers each.
 - **It is 2D, of any kind**: tile maps authored in Tiled (orthogonal,
-  isometric, staggered, hexagonal), sprites and atlases, polygon collision,
-  particles, dynamic lighting, shaders, a UI kit, bitmap and system text.
+  isometric, staggered, hexagonal), LDtk or Sprite Fusion, sprites and
+  atlases, polygon collision, particles, dynamic lighting, shaders, a UI kit,
+  bitmap and system text.
 - **It is 2.5D or light 3D**: a perspective or orthographic `Camera3d`, meshes,
   glTF models with skeletal animation, instancing, toon shading, billboards,
   fog, picking, and Rapier 3D physics. Arcade 3D, low-poly, isometric with
@@ -78,7 +79,7 @@ the few stale calls some examples still carry.)
 
 | the game | read | start from |
 |---|---|---|
-| platformer | `melonjs-tilemaps`, `melonjs-physics` (its table by game type picks the adapter: built-in, or planck, matter or Rapier for slopes and moving platforms), `melonjs-sprites-and-animation`, `melonjs-input`, `melonjs-camera-and-drawing`; on phones, `@melonjs/gamepad-plugin` for the stick and buttons | [Platformer](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/platformer) |
+| platformer | `melonjs-tilemaps`, `melonjs-physics` (its table by game type picks the adapter: built-in, or planck, matter or Rapier for slopes and moving platforms), `melonjs-sprites-and-animation`, `melonjs-input`, `melonjs-camera-and-drawing`; on phones, `@melonjs/gamepad-plugin` for the stick and buttons | [Platformer](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/platformer); [LDtk Platformer](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/ldtkPlatformer) for a world made in LDtk, loaded room by room |
 | top-down adventure or RPG | `melonjs-tilemaps`, `melonjs-physics`, `melonjs-ui-and-text` for dialogue and menus, `@melonjs/pathfinding-plugin` for enemies that chase and click to move, `@melonjs/gamepad-plugin` for touch | [Isometric Dungeon](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/isometricDungeon); [Line of Sight](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/lineOfSight) for what an enemy can see |
 | grid or tile puzzle, match-3, board game | `melonjs-tilemaps` (a tile layer is the board: `cellAt` / `setTile`), `melonjs-input`, `melonjs-scenes-and-state` for tweens | [Whac-A-Mole](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/whac-a-mole) for the pointer, score and sound of a small game |
 | shoot-'em-up, bullet hell | `melonjs-performance` for pooling, `melonjs-physics`, `melonjs-particles-and-trails`, `melonjs-sprites-and-animation`; `@melonjs/gamepad-plugin` for touch | [AfterBurner Clone](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/afterBurner) (3D, but its pooled shots and enemies and its HUD carry over) |
@@ -112,7 +113,7 @@ what it is called here:
 | a tween, an animation of a property | `Tween` | `melonjs-scenes-and-state` |
 | a sprite sheet, an animated sprite | `Sprite` with `addAnimation`, frames from a `TextureAtlas` | `melonjs-sprites-and-animation` |
 | a rigid body, a collider, a trigger | a `body` built from a `bodyDef`, on the built-in world or an adapter | `melonjs-physics` |
-| a tile map | a Tiled map loaded with `level.load` | `melonjs-tilemaps` |
+| a tile map | a Tiled map, an LDtk project or a Sprite Fusion map, loaded with `level.load` | `melonjs-tilemaps` |
 | the camera | `app.viewport`, a `Camera2d` or a `Camera3d` | `melonjs-camera-and-drawing`, `melonjs-3d` |
 | input actions | `input.bindKey`, then `input.isKeyPressed` | `melonjs-input` |
 | a material, a shader, a post-process | a `ShaderEffect`, attached with `addPostEffect` | `melonjs-effects-and-shaders` |
@@ -134,7 +135,7 @@ what it is called here:
 | [melonjs-input](../melonjs-input/SKILL.md) | Keyboard actions, pointer and touch handling, drag, gamepad, virtual controls (fixed or floating sticks and buttons, tap to act). |
 | [melonjs-physics](../melonjs-physics/SKILL.md) | Collision, bodies, movement, spatial queries, and the planck / matter / Rapier / Rapier 3D adapters. |
 | [melonjs-math](../melonjs-math/SKILL.md) | Vectors and matrices: what mutates, what allocates, and interpolating with lerp, slerp, damp or moveTowards. |
-| [melonjs-tilemaps](../melonjs-tilemaps/SKILL.md) | Tiled maps — TMX/TSX loading, spawning entities from objects, collision layers, isometric maps, reading and changing tiles at run time (a tile layer as the game board). |
+| [melonjs-tilemaps](../melonjs-tilemaps/SKILL.md) | Tiled maps, LDtk levels and Sprite Fusion maps — TMX/TSX, `.ldtk` and Sprite Fusion loading, spawning entities from objects, collision layers, isometric maps, reading and changing tiles at run time (a tile layer as the game board). |
 | [melonjs-audio](../melonjs-audio/SKILL.md) | Sound effects, music, audio sprites, spatial audio, procedural tone and noise. |
 | [melonjs-effects-and-shaders](../melonjs-effects-and-shaders/SKILL.md) | Post effects, custom GLSL/WGSL shaders, blend modes, colour grading, palette swaps, a dithered retro look, screen capture. |
 | [melonjs-3d](../melonjs-3d/SKILL.md) | Anything 3D or 2.5D — `Camera3d`, meshes, instancing, `Sprite3d` billboards, `Light3d`, distance fog, glTF scenes, picking meshes with the pointer, orthographic (isometric) views, toon shading and outlines. |
@@ -279,7 +280,9 @@ check for:
   level door (`shape: "touching"`, `center: "touching"`), `state.pause()` / `state.resume()` behind a pause menu,
   `save` for localStorage-backed persistence, `createPool` / `getPool` for
   recycling.
-- **Levels:** Tiled tile layers read and changed with `cellAt` / `setTile`,
+- **Levels:** Tiled maps and LDtk projects, both loaded with `level.load`
+  (LDtk's `.ldtk` file as the editor saves it, nothing to convert); tile
+  layers read and changed with `cellAt` / `setTile`,
   and asset bundles (`loader.preload({ common: [...], level1: [...] })`, then
   `loader.unload("level1")` / `loader.load("level1")`) to free and reload a
   level's assets.

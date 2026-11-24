@@ -1,0 +1,61 @@
+{
+	"tileSize": 16,
+	"mapWidth": 6,
+	"mapHeight": 4,
+	"layers": [
+		{
+			"name": "Doors",
+			"tiles": [
+				{
+					"id": "3",
+					"x": 0,
+					"y": 0,
+					"attributes": {
+						"locked": true,
+						"key": "red"
+					}
+				},
+				{
+					"id": "3",
+					"x": 2,
+					"y": 0,
+					"attributes": {
+						"locked": false
+					}
+				},
+				{
+					"id": "3",
+					"x": 3,
+					"y": 1
+				}
+			],
+			"collider": false
+		},
+		{
+			"name": "Floor",
+			"tiles": [
+				{
+					"id": "0",
+					"x": 0,
+					"y": 1
+				},
+				{
+					"id": "0",
+					"x": 1,
+					"y": 1
+				},
+				{
+					"id": "0",
+					"x": 2,
+					"y": 1
+				},
+				{
+					"id": "0",
+					"x": 3,
+					"y": 1
+				}
+			],
+			"collider": true
+		}
+	]
+}

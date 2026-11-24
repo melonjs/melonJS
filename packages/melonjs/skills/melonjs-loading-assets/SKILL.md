@@ -1,6 +1,6 @@
 ---
 name: melonjs-loading-assets
-description: "Use this skill for loading and managing game assets in melonJS — the resource descriptor format, the full asset type list, organising a multi-level game's assets as bundles (an assets file exporting common plus one bundle per level, passed to loader.preload), loading and freeing a level's bundle, preload versus load, retrieving loaded assets, base URLs and cross-origin settings, and the loading screen. Triggers on: loader, loader.preload, loader.load, resources, resources.js, assets file, getImage, getJSON, getTMX, getGLTF, getVideo, getFont, setBaseURL, setOptions, crossOrigin, withCredentials, credentials, cookies, authenticated assets, CORS, asset, preload, LOADER_COMPLETE, loading screen, unload, unloadAll, bundle, asset bundle, setBundle, getBundle, isLoaded, several levels, per-level assets, free memory between levels, setParser, custom asset type, generated texture, procedural texture."
+description: "Use this skill for loading and managing game assets in melonJS — the resource descriptor format, the full asset type list, organising a multi-level game's assets as bundles (an assets file exporting common plus one bundle per level, passed to loader.preload), loading and freeing a level's bundle, preload versus load, retrieving loaded assets, base URLs and cross-origin settings, and the loading screen. Triggers on: loader, loader.preload, loader.load, resources, resources.js, assets file, getImage, getJSON, getTileMap, getTMX, getLDtk, getGLTF, getVideo, getFont, setBaseURL, setOptions, crossOrigin, withCredentials, credentials, cookies, authenticated assets, CORS, asset, preload, LOADER_COMPLETE, loading screen, unload, unloadAll, bundle, asset bundle, setBundle, getBundle, isLoaded, several levels, per-level assets, free memory between levels, asset type, tmx, tilemap, spritefusion, ldtk, setParser, custom asset type, generated texture, procedural texture."
 license: MIT
 ---
 
@@ -25,17 +25,59 @@ The type strings are melonJS-specific — this is not a generic loader:
 |---|---|
 | `"image"` | textures, sprite sheets, normal maps; `src` may be an array tried in order, such as compressed formats (`.ktx`, `.ktx2`, `.dds`, `.pvr`, `.pkm`) by priority with a PNG last |
 | `"json"` | data, texture-atlas descriptors, collision shapes from a shape editor |
-| `"tmx"` / `"tsx"` | Tiled maps and external tilesets |
+| `"tmx"` / `"tsx"` | [Tiled](https://www.mapeditor.org) maps (`.tmx`, `.tmj`, `.json`, `.xml`) and external tilesets (`.tsx`, `.tsj`, `.json`, `.xml`) |
+| `"tilemap"` | a tile map, whatever editor wrote it (`.tmx`, `.tmj`, `.json`, `.xml`): the same as `"tmx"`, under a name that is not an editor's (20.18) |
+| `"spritefusion"` | a [Sprite Fusion](https://www.spritefusion.com) map, `map.json` or `map.tmx`: the same again, and the `spritesheet.png` next to it is loaded with it (20.18; see `melonjs-tilemaps`) |
+| `"ldtk"` | an [LDtk](https://ldtk.io) project (`.ldtk`, with its `.ldtkl` level files): its levels, with the tileset images and level files it names (20.18; see `melonjs-tilemaps`) |
 | `"audio"` | sound — **`src` is a directory**, see below |
 | `"video"` | video textures |
 | `"binary"` | raw data, bitmap font `.fnt` descriptors |
 | `"fontface"` | web fonts (`.ttf`, `.woff`) |
-| `"aseprite"` | Aseprite JSON + image |
+| `"aseprite"` | [Aseprite](https://www.aseprite.org) JSON + image |
 | `"shader"` | GLSL/WGSL shader sources — `src` **or** inline via `data` |
 | `"obj"` / `"mtl"` | Wavefront models and materials |
 | `"gltf"` / `"glb"` | glTF scenes |
 | `"js"` | scripts |
 | any type you register | your own formats, and things you generate rather than download — see [Custom asset types](#custom-asset-types) |
+
+### Levels from a map editor
+
+Four of the types are levels made in an editor. Each is loaded as the editor
+saves it, and registers with the level director under the asset's name:
+
+```js
+await loader.preload([
+    // Tiled: the map, any external tileset, and the tileset images by file name
+    { name: "cave",  type: "tmx",   src: "data/map/cave.tmx" },
+    { name: "tiles", type: "image", src: "data/img/tiles.png" },
+    // a tile map written by another tool, in Tiled's format: same loader
+    { name: "maze",  type: "tilemap", src: "data/map/maze.json" },
+    // Sprite Fusion: the map alone (map.json or map.tmx), spritesheet.png is next to it
+    { name: "tower", type: "spritefusion", src: "data/tower/map.json" },
+    // LDtk: the project alone, with its level files and its images
+    { name: "world", type: "ldtk", src: "data/world/world.ldtk" },
+]);
+
+level.load("cave");
+level.load("tower");
+level.load("world:Entrance");   // one level of the LDtk project; "world" loads its whole world
+```
+
+| type | files | also loads | `level.load(...)` |
+|---|---|---|---|
+| `"tmx"` | `.tmx`, `.xml`, `.tmj`, `.json` | nothing: list the tilesets (`"tsx"`) and the images | the asset's name |
+| `"tilemap"` | the same | nothing | the asset's name |
+| `"spritefusion"` | `map.json`, `map.tmx` | `spritesheet.png` from the map's folder | the asset's name |
+| `"ldtk"` | `.ldtk` | the `.ldtkl` level files and the images the project names | `"<asset>:<level>"`, or `"<asset>"` |
+
+- The file's extension says whether a map is XML or JSON: `.tmj` and `.tsj`
+  are extensions, not asset types (`"tmx"` / `"tsx"` load them).
+- `"tmx"`, `"tilemap"` and `"spritefusion"` are one loader and one cache: a
+  name is used once across them, and an asset is unloaded under any of them.
+- What a map loaded with it is freed with it: unloading a Sprite Fusion map
+  frees its spritesheet, an LDtk project its images, unless something else
+  still holds them.
+- `melonjs-tilemaps` covers what each becomes in the world.
 
 ## Organise the assets: `common` plus one bundle per level
 
@@ -339,7 +381,8 @@ audio asset is preloaded.
 ```js
 loader.getImage("tiles");
 loader.getJSON("atlas");
-loader.getTMX("map1");
+loader.getTileMap("map1");       // a "tmx", "tilemap", "spritefusion" or "tsx" asset, as parsed data
+loader.getLDtk("world");     // an "ldtk" project: its levels, worlds and definitions
 loader.getGLTF("diorama");
 loader.getVideo("intro");
 loader.getFont("font");
@@ -390,10 +433,17 @@ The contract:
   value, and `loader.getImage` and friends will not find your result. Keep it
   yourself, keyed by `asset.name`, and read it from there.
 - **`name` and `type` are a complete entry.** `src` is only for a type that
-  fetches something. `data` is typed for the built-in uses (a string, or a
-  `{glsl, wgsl}` pair), so for a generator's settings, keep a table in your own
-  module keyed by name and let the entry carry only the name. That also keeps
+  fetches something, and `data` carries inline content in its place: whatever
+  your parser reads there (an object type-checks since 20.18; before, only a
+  string or a `{glsl, wgsl}` pair did). For a generator's settings, a table in
+  your own module keyed by name, with the entry carrying only the name, keeps
   the preload and the stages from disagreeing on a seed.
+- **Free what you kept, with `unload`** (20.18): a third argument,
+  `loader.setParser(type, parser, { unload(asset) { ... } })`, is called when
+  the asset's bundle is unloaded or `loader.unload(asset)` is given its
+  descriptor. Delete your entry there and return `false` if there was none.
+  Without it, unloading a bundle leaves a custom type's assets to you, and
+  `loader.unload` of one throws.
 - **Base URLs:** a `src` is prefixed only by `setBaseURL(yourType, …)`. The `"*"`
   wildcard does not cover custom types.
 - **Do not hold the main thread for the whole bake.** A parser runs alongside
@@ -440,6 +490,10 @@ The `"*"` wildcard deliberately **skips `obj`, `mtl`, `gltf` and `glb`**: those
 resolve their own internal references (a `map_Kd` texture, a glTF `.bin`)
 relative to their file, so a global prefix would double-prefix them. Set those
 types individually.
+
+It does cover `"tmx"`, `"tsx"`, `"tilemap"`, `"spritefusion"` and `"ldtk"`. What
+a map brings with it (a Sprite Fusion spritesheet, an LDtk project's level
+files and images) is found next to the map's file, wherever the prefix put it.
 
 ## Progress and completion
 

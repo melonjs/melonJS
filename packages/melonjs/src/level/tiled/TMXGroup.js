@@ -1,7 +1,13 @@
 import { clamp } from "../../math/math.ts";
+import { setLayerScrolling } from "../tilemap/layer.js";
 import TMXLayer from "./TMXLayer.js";
 import TMXObject from "./TMXObject.js";
-import { applyTMXProperties, tiledBlendMode } from "./TMXUtils.js";
+import {
+	applyTMXProperties,
+	tiledBlendMode,
+	tiledParallax,
+	tiledParallaxFactor,
+} from "./TMXUtils.js";
 
 /**
  * object group definition as defined in Tiled.
@@ -109,6 +115,20 @@ export default class TMXGroup {
 				// the group's offset, on top of the layer's own
 				layer.pos.x += this.offsetx;
 				layer.pos.y += this.offsety;
+				// and its parallax factor, times the layer's own (Tiled's
+				// factor, or the layer's `ratio` property); the origin
+				// follows, unless the layer gave its own
+				const scrolling = tiledParallax(
+					map,
+					tiledParallaxFactor(data.parallaxx) * layer.ratio.x,
+					tiledParallaxFactor(data.parallaxy) * layer.ratio.y,
+				);
+				setLayerScrolling(
+					layer,
+					layer._parallaxOriginGiven === true
+						? { ratio: scrolling.ratio }
+						: scrolling,
+				);
 				// set a renderer
 				layer.setRenderer(map.getRenderer());
 				// resize container accordingly

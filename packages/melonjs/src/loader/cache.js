@@ -1,3 +1,4 @@
+import { ldtkProjects } from "../level/ldtk/registry.ts";
 import { getBasename } from "../utils/file.ts";
 
 /**
@@ -8,6 +9,7 @@ import { getBasename } from "../utils/file.ts";
  * the generated declarations, which `tsc` does not report.
  * @import {CompressedImage} from "./parsers/compressed_textures/compressed_image.js";
  * @import {GLTFData} from "./parsers/gltf.js";
+ * @import {LDtkProject} from "../level/ldtk/project.ts";
  * @import GLShader from "../video/webgl/glshader.js";
  * @import ShaderEffect from "../video/effects/shadereffect.js";
  */
@@ -49,18 +51,32 @@ export const gltfList = {};
 export const shaderList = {};
 
 /**
+ * The asset types that are a tile map, which the level director loads: one
+ * parser and one cache under three names, `"tmx"` being the first. `"tsx"`, a
+ * tileset on its own, shares both without being a level.
+ * @type {readonly string[]}
+ * @internal
+ * @ignore
+ */
+export const MAP_TYPES = Object.freeze(["tmx", "tilemap", "spritefusion"]);
+
+/**
  * Which cache holds each asset type.
  *
  * The mapping belongs here rather than in a `switch` in `loader.js`, so that
  * adding a cache is one edit in one file. Several types share a cache, which
- * is the point of the indirection: `tmx` and `tsx` are the same store, as are
- * `gltf` and `glb`.
+ * is the point of the indirection: `tmx`, `tsx`, `tilemap` and `spritefusion`
+ * are the same store, as are `gltf` and `glb`.
  */
 const cacheByType = {
 	binary: binList,
 	image: imgList,
 	json: jsonList,
-	tmx: tmxList,
+	...Object.fromEntries(
+		MAP_TYPES.map((type) => {
+			return [type, tmxList];
+		}),
+	),
 	tsx: tmxList,
 	video: videoList,
 	obj: objList,
@@ -155,18 +171,38 @@ export function assetNames(type) {
  */
 
 /**
- * Get a loaded Tiled map or tileset (a `"tmx"` or `"tsx"` asset) as parsed
- * data: the map's JSON structure, whether it was loaded from XML or JSON.
+ * Get a loaded LDtk project (an `"ldtk"` asset): its levels with their ids,
+ * sizes, fields and neighbours, its worlds, and the definitions they are read
+ * with. Most code never needs it: `level.load("<name>:<level>")` builds a
+ * level from it.
+ * @param {string} name - the asset name
+ * @returns {LDtkProject|null} the project, or `null` if none is loaded under
+ * that name
+ * @example
+ * for (const info of loader.getLDtk("world").levels) {
+ *     console.log(info.id, info.width, info.height);
+ * }
+ * @category Assets
+ */
+export function getLDtk(name) {
+	return ldtkProjects.get("" + name) ?? null;
+}
+
+/**
+ * Get a loaded tile map or tileset (a `"tmx"`, `"tilemap"`, `"spritefusion"`
+ * or `"tsx"` asset) as parsed data: the map's JSON structure, whether it was
+ * loaded from XML or JSON. A Sprite Fusion `map.json` is kept as the file has
+ * it (`tileSize`, `mapWidth`, `mapHeight`, `layers`).
  * Most code never needs it: `level.load(name)` builds the level from it.
  * @param {string} elt - the asset name
  * @returns {object} the parsed map or tileset, or `null` if none is loaded
  * under that name
  * @example
- * const map = loader.getTMX("map1");
+ * const map = loader.getTileMap("map1");
  * console.log(map.width, map.height, map.layers.length);
  * @category Assets
  */
-export function getTMX(elt) {
+export function getTileMap(elt) {
 	// force as string
 	elt = "" + elt;
 	if (elt in tmxList) {
@@ -174,6 +210,18 @@ export function getTMX(elt) {
 	}
 	return null;
 }
+
+/**
+ * The older name of {@link getTileMap}, from when a Tiled map was the only
+ * kind of tile map: the same function.
+ * @deprecated since 20.18.0, use {@link getTileMap}
+ * @function
+ * @param {string} elt - the asset name
+ * @returns {object} the parsed map or tileset, or `null` if none is loaded
+ * under that name
+ * @category Assets
+ */
+export const getTMX = getTileMap;
 
 /**
  * Get the content of a loaded `"binary"` asset, decoded as UTF-8 text: what

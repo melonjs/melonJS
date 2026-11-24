@@ -1,11 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
-import {
-	Application,
-	boot,
-	ImageLayer,
-	TMXTileMap,
-	video,
-} from "../src/index.js";
+import { Application, boot, ImageLayer, TileMap, video } from "../src/index.js";
 import { applyTransparentColor, parse } from "../src/level/tiled/TMXUtils.js";
 import { imgList } from "../src/loader/cache.js";
 
@@ -200,7 +194,7 @@ describe("Tiled transparent color", () => {
 		});
 
 		const mapOf = (tileset, layers = []) => {
-			const map = new TMXTileMap(`trans-${Math.random()}`, {
+			const map = new TileMap(`trans-${Math.random()}`, {
 				width: 1,
 				height: 1,
 				tilewidth: 2,

@@ -1,5 +1,35 @@
 # Changelog
 
+## [20.18.0] (melonJS 2) - _unreleased_
+
+### Added
+- LDtk: built-in support for the [LDtk](https://ldtk.io) level format: load a `.ldtk` file as an `"ldtk"` asset, then `level.load("<asset>:<level>")`, or `level.load("<asset>")` for the whole world
+- Sprite Fusion: built-in support for [Sprite Fusion](https://www.spritefusion.com) maps: load `map.json` or `map.tmx` as a `"spritefusion"` asset, its spritesheet comes with it
+- Tile maps: parallax is now supported on tile layers, through `ratio`, as on an `ImageLayer`; a Tiled tile layer's parallax factor sets it
+- Tile maps: tile layers can be built in code with `TileLayer`, `Tileset`, `TilesetGroup` and `PlacedTileLayer`, plus `mergeGridRects` for collision bodies
+- Tiled: a tile layer with a `collider` property set to true is solid
+- Tile maps: `"tilemap"` asset type, a neutral name for `"tmx"`, for maps written by other tools
+- Tile maps: `layer.getTileProperties(col, row)` gives the properties of the tile at a position, and `setTileProperties` gives that one tile its own
+- `ColorLayer`: given a size, it fills that rectangle where it is instead of the whole canvas; a map object of class `ColorLayer` fills its rectangle
+- Levels: `registerObjectClass` and `registerObjectFactory` register the classes a level builds, whatever editor it comes from
+- Levels: `level.load` takes `objects`, to choose which objects of a level are built
+- Levels: an object built from a level carries the level's `id`, so `getChildByProp("id", id)` finds it
+
+### Deprecated
+- Levels: `registerTiledObjectClass` and `registerTiledObjectFactory`, for `registerObjectClass` and `registerObjectFactory` (the same functions; the old names keep working)
+- Tile maps: `TMXRenderer`, `TMXOrthogonalRenderer`, `TMXIsometricRenderer`, `TMXHexagonalRenderer` and `TMXStaggeredRenderer`, for `TileMapRenderer`, `OrthogonalRenderer`, `IsometricRenderer`, `HexagonalRenderer` and `StaggeredRenderer` (the same classes; the old names keep working)
+- Tile maps: `TMXTileMap` and `TMXTilesetGroup`, for `TileMap` and `TilesetGroup` (the same classes)
+- Loader: `loader.getTMX`, for `loader.getTileMap` (the same function)
+
+### Fixed
+- TypeScript: an asset's `data` accepts a parsed map object
+- Tile maps: a floating tile layer disappeared once the camera moved
+- Tile maps: two tilesets cut from one image at different tile sizes drew the same tiles
+- Tile maps: a tile layer removed at run time kept its GPU texture until the next level
+- Tiled: a frame drawn right after a level loaded could show its layers back to front
+- Tiled: a `renderMode` property on a tile layer was ignored
+- Tiled: each level load leaked a viewport-resize handler
+
 ## [20.17.0] (melonJS 2) - _2026-11-22_
 
 **Highlights:** isometric, staggered and hexagonal Tiled maps are now drawn by the GPU, as orthogonal ones are: up to **98%** less of the main thread's time per tile layer, with nothing to enable. Also new: mask transitions shaped like an image or a sprite that close on the player, and two effects, `GradientMapEffect` (palette swaps, duotones) and `DitherEffect` (a retro limited-color look). A map with layer offsets now looks as it does in Tiled: the offsets were ignored before.

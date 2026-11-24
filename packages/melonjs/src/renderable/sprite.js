@@ -1,7 +1,7 @@
 import { game } from "../application/application.ts";
 // `cache.js`, not `loader.js`: the accessor lives with its data, and this
 // file must not reach the whole loader. `loader.js` pulls in the glTF parser
-// and through it `level.js` and `TMXTileMap.js`, which imports `ImageLayer`,
+// and through it `level.js` and `TileMap.js`, which imports `ImageLayer`,
 // which `extends Sprite` — and reading `Sprite` while THIS file is still
 // loading is a `Cannot access 'Sprite' before initialization` at startup.
 import { getImage } from "./../loader/cache.js";

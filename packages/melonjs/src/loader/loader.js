@@ -15,6 +15,22 @@
  *   game with several levels or screens. Each key becomes a bundle: a named
  *   list of the same descriptors, with a lifetime of its own (see below).
  *
+ * **Asset types.** The `type` of a descriptor picks its parser; {@link Asset}
+ * lists every one, with the files it takes and how the asset is read back.
+ * In short: `"image"`, `"aseprite"`, `"json"`, `"binary"`, `"js"`, `"audio"`,
+ * `"video"`, `"fontface"` and `"shader"` for what a game draws, plays and
+ * reads; `"tmx"`, `"tsx"`, `"tilemap"`, `"spritefusion"` and `"ldtk"` for
+ * levels made in a map editor; `"obj"`, `"mtl"`, `"gltf"` and `"glb"` for 3D.
+ *
+ * **Levels.** A map is an asset like any other, and loading one also
+ * registers it with the level director: {@link level.load} then takes its
+ * name. That goes for a Tiled map (`"tmx"`), a tile map from any other tool
+ * (`"tilemap"`), a Sprite Fusion map (`"spritefusion"`), each level and each
+ * world of an LDtk project (`"ldtk"`) and a glTF scene (`"gltf"` / `"glb"`).
+ * A Tiled map's images are assets of their own, to list beside it; a Sprite
+ * Fusion map and an LDtk project bring theirs with them, and free them when
+ * they are unloaded.
+ *
  * **preload or load.** {@link preload} is the boot call: it switches to the
  * loading screen, loads everything it is given, warms the shaders, then calls
  * its callback, emits `LOADER_COMPLETE` and resolves. {@link load} loads a
@@ -63,6 +79,20 @@
  * ]);
  * state.change(state.PLAY);
  * @example
+ * // levels from a map editor, each loaded as the editor saves it
+ * await loader.preload([
+ *     // Tiled: the map, and the image its tileset names, under the file's name
+ *     { name: "cave",  type: "tmx",   src: "data/map/cave.tmx" },
+ *     { name: "tiles", type: "image", src: "data/img/tiles.png" },
+ *     // Sprite Fusion: the map alone, spritesheet.png is next to it
+ *     { name: "tower", type: "spritefusion", src: "data/tower/map.json" },
+ *     // LDtk: the project alone, with every level it holds
+ *     { name: "world", type: "ldtk", src: "data/world/world.ldtk" },
+ * ]);
+ * level.load("cave");
+ * level.load("tower");
+ * level.load("world:Entrance");   // one level of the project, by its identifier
+ * @example
  * // a game with several levels: an assets file exporting one bundle for
  * // what every level uses, and one per level
  *
@@ -99,6 +129,7 @@
  */
 
 import { warnOnce } from "../lang/console.js";
+import { ldtkProjects } from "../level/ldtk/registry.ts";
 import { level } from "../level/level.js";
 import state from "./../state/state.ts";
 import { hasDOM } from "../system/dom.ts";
@@ -118,6 +149,7 @@ import {
 	getShader,
 	hasAsset,
 	imgList,
+	MAP_TYPES,
 } from "./cache.js";
 import { preloadAseprite } from "./parsers/aseprite.js";
 import {
@@ -131,11 +163,12 @@ import { preloadFontFace } from "./parsers/fontface.js";
 import { preloadGLTF } from "./parsers/gltf.js";
 import { preloadImage } from "./parsers/image.js";
 import { preloadJSON } from "./parsers/json.js";
+import { preloadLDtk, unloadLDtk } from "./parsers/ldtk.ts";
 import { preloadMTL } from "./parsers/mtl.js";
 import { preloadOBJ } from "./parsers/obj.js";
 import { preloadJavascript } from "./parsers/script.js";
 import { preloadShader } from "./parsers/shader.js";
-import { preloadTMX } from "./parsers/tmx.js";
+import { preloadTileMap } from "./parsers/tilemap.js";
 import { preloadVideo } from "./parsers/video.js";
 
 // the cache read accessors live with the caches themselves; re-exported
@@ -146,10 +179,12 @@ export {
 	getGLTF,
 	getImage,
 	getJSON,
+	getLDtk,
 	getMTL,
 	getOBJ,
 	getShader,
-	getTMX,
+	getTileMap,
+	getTMX, // eslint-disable-line @typescript-eslint/no-deprecated
 	getVideo,
 } from "./cache.js";
 
@@ -294,15 +329,28 @@ export function setOptions(options) {
  * buffer) relative to their file and would be prefixed twice: set those one
  * by one. Custom types registered with {@link setParser} are not covered by
  * `"*"` either.
+ *
+ * What a map brings with it (a Sprite Fusion map's spritesheet, an LDtk
+ * project's level files and images) is found next to the map's file,
+ * wherever the base URL put it: nothing to set for those.
  * @param {string} type - the asset type ("audio", "video", "binary", "image",
- * "json", "js", "tmx", "tsx", "fontface", "aseprite", "shader", "obj", "mtl",
- * "gltf", "glb", or a custom type), or `"*"`
+ * "json", "js", "tmx", "tsx", "tilemap", "spritefusion", "ldtk", "fontface",
+ * "aseprite", "shader", "obj", "mtl", "gltf", "glb", or a custom type), or `"*"`
  * @param {string} [url="./"] - the base URL, ending with a `/`
  * @example
  * // a relative path for the images
  * loader.setBaseURL("image", "data/img/");
  * // so that a descriptor names the file alone: loads data/img/player.png
  * await loader.preload([{ name: "player", type: "image", src: "player.png" }]);
+ *
+ * // one folder for the maps of every editor
+ * for (const type of ["tmx", "tsx", "tilemap", "spritefusion", "ldtk"]) {
+ *     loader.setBaseURL(type, "data/map/");
+ * }
+ * await loader.preload([
+ *     { name: "cave",  type: "tmx",          src: "cave.tmx" },
+ *     { name: "tower", type: "spritefusion", src: "tower/map.json" }, // and data/map/tower/spritesheet.png
+ * ]);
  *
  * // or an absolute URL for every 2D asset type at once
  * loader.setBaseURL("*", "https://cdn.example.com/");
@@ -319,8 +367,11 @@ export function setBaseURL(type, url = "./") {
 		baseURL["image"] = url;
 		baseURL["json"] = url;
 		baseURL["js"] = url;
-		baseURL["tmx"] = url;
+		for (const type of MAP_TYPES) {
+			baseURL[type] = url;
+		}
 		baseURL["tsx"] = url;
+		baseURL["ldtk"] = url;
 		baseURL["fontface"] = url;
 		baseURL["aseprite"] = url;
 		baseURL["shader"] = url;
@@ -373,7 +424,11 @@ const bundles = new Map();
  * `load` with a descriptor, which no bundle unload frees. An asset nobody
  * holds is freed by the bundle unload that released it last. An entry only
  * exists while somebody holds the asset.
- * @type {Map<string, {pinned: boolean, bundles: Set<string>}>}
+ *
+ * An asset can also be held by another ASSET that refers to it (`holders`):
+ * the tileset image an LDtk project names is the project's, loaded with it
+ * and freed with it, unless a bundle or the game holds it too.
+ * @type {Map<string, {pinned: boolean, bundles: Set<string>, holders: Set<string>}>}
  * @ignore
  * @internal
  */
@@ -395,7 +450,16 @@ const inflight = new Map();
  * @ignore
  * @internal
  */
-const KEY_ALIASES = { tsx: "tmx", glb: "gltf" };
+const KEY_ALIASES = {
+	tsx: "tmx",
+	glb: "gltf",
+	// a tile map under any of its type names
+	...Object.fromEntries(
+		MAP_TYPES.map((type) => {
+			return [type, MAP_TYPES[0]];
+		}),
+	),
+};
 
 /**
  * The identity of an asset for ownership: its type (aliases folded onto the
@@ -442,7 +506,7 @@ function ownerRecord(asset) {
 	const key = assetKey(asset);
 	let record = owners.get(key);
 	if (record === undefined) {
-		record = { pinned: false, bundles: new Set() };
+		record = { pinned: false, bundles: new Set(), holders: new Set() };
 		owners.set(key, record);
 	}
 	return record;
@@ -485,15 +549,168 @@ function adopt(asset, requesters) {
  */
 function release(asset) {
 	owners.delete(assetKey(asset));
-	// a custom type has nothing in the loader to free
+	// a custom type has nothing in the loader to free: its parser frees what
+	// it kept, when it said how
 	if (
 		CACHED_TYPES.includes(asset.type) ||
-		UNCACHED_TYPES.includes(asset.type)
+		UNCACHED_TYPES.includes(asset.type) ||
+		parsers.get(asset.type)?.unload !== undefined
 	) {
 		freeAsset(asset);
 	}
-	if (asset.type === "tmx" || asset.type === "gltf" || asset.type === "glb") {
+	if (
+		MAP_TYPES.includes(asset.type) ||
+		asset.type === "gltf" ||
+		asset.type === "glb"
+	) {
 		level.remove(asset.name);
+	}
+}
+
+/**
+ * Loads of referenced assets still in flight, keyed by {@link assetKey}, with
+ * every asset waiting for each.
+ * @type {Map<string, {promise: Promise<void>, holders: Set<string>, src: string}>}
+ * @ignore
+ * @internal
+ */
+const references = new Map();
+
+/**
+ * Where each asset loaded as a reference was loaded from, keyed by
+ * {@link assetKey}: two files of one name are told apart by it.
+ * @type {Map<string, string>}
+ * @ignore
+ * @internal
+ */
+const referenceSources = new Map();
+
+/**
+ * Where an asset loaded for another asset was loaded from.
+ * @param {Asset} asset - the asset descriptor (`name` and `type`)
+ * @returns {string|undefined} its source, or undefined when it was not loaded as a reference (the game's own, or not loaded)
+ * @ignore
+ * @internal
+ */
+export function referenceSource(asset) {
+	const key = assetKey(asset);
+	// loaded, or on its way
+	return referenceSources.get(key) ?? references.get(key)?.src;
+}
+
+/**
+ * Load an asset that another asset refers to, on its behalf: the tileset
+ * image a level file names, say. The referring asset (`holder`) holds it as a
+ * bundle holds its assets: it is fetched once however many ask for it, stays
+ * while any of them, a bundle or the game holds it, and is freed by
+ * {@link releaseReferences} when the last one lets go.
+ *
+ * `asset.src` is already resolved against the referring file, so the type's
+ * base URL is not applied (it would be applied twice).
+ *
+ * An asset of that name already in memory is used as it is: the game's own,
+ * loaded under the name the file uses, takes the place of the file's.
+ * @param {Asset} holder - the asset that refers to it (`name` and `type`)
+ * @param {Asset} asset - what to load: `name`, `type` and a resolved `src`
+ * @param {object} [settings] - the loader's request settings, as a parser is given them
+ * @returns {Promise<void>} settles when it is loaded
+ * @ignore
+ * @internal
+ */
+export function loadReference(holder, asset, settings) {
+	if (parserInitialized === false) {
+		initParsers();
+	}
+	const key = assetKey(asset);
+	const holderKey = assetKey(holder);
+	const pending = references.get(key);
+	if (pending !== undefined) {
+		pending.holders.add(holderKey);
+		return pending.promise;
+	}
+	const hold = () => {
+		// held by someone already (the game, a bundle, another asset): this
+		// one holds it too. Resident with no record, it is nobody's to free
+		const record = owners.get(key);
+		if (record !== undefined) {
+			record.holders.add(holderKey);
+		}
+	};
+	if (isResident(asset)) {
+		hold();
+		return Promise.resolve();
+	}
+	// on its way for a bundle: wait for that load rather than start another
+	const bundled = inflight.get(key);
+	if (bundled !== undefined) {
+		return bundled.promise.then(hold);
+	}
+	const parser = parsers.get(asset.type);
+	if (parser === undefined) {
+		return Promise.reject(
+			new Error("load : unknown or invalid resource type : " + asset.type),
+		);
+	}
+	const entry = {
+		holders: new Set([holderKey]),
+		promise: undefined,
+		src: asset.src,
+	};
+	entry.promise = new Promise((resolve, reject) => {
+		if (parser.parse(asset, resolve, reject, settings) === 0) {
+			resolve();
+		}
+	}).then(
+		() => {
+			references.delete(key);
+			referenceSources.set(key, asset.src);
+			const record = ownerRecord(asset);
+			for (const waiting of entry.holders) {
+				record.holders.add(waiting);
+			}
+			// every asset that asked for it gave up while it was loading
+			if (
+				record.holders.size === 0 &&
+				record.bundles.size === 0 &&
+				!record.pinned
+			) {
+				referenceSources.delete(key);
+				release(asset);
+			}
+		},
+		(error) => {
+			references.delete(key);
+			throw error;
+		},
+	);
+	references.set(key, entry);
+	return entry.promise;
+}
+
+/**
+ * An asset lets go of everything it held through {@link loadReference}:
+ * each is freed once no other asset, no bundle and not the game holds it.
+ * @param {Asset} holder - the asset that referred to them (`name` and `type`)
+ * @ignore
+ * @internal
+ */
+export function releaseReferences(holder) {
+	const holderKey = assetKey(holder);
+	// still loading: not this asset's when it arrives
+	for (const entry of references.values()) {
+		entry.holders.delete(holderKey);
+	}
+	for (const [key, record] of [...owners]) {
+		if (
+			record.holders.delete(holderKey) &&
+			record.holders.size === 0 &&
+			record.bundles.size === 0 &&
+			!record.pinned
+		) {
+			referenceSources.delete(key);
+			const split = key.indexOf(":");
+			release({ type: key.slice(0, split), name: key.slice(split + 1) });
+		}
 	}
 }
 
@@ -653,8 +870,14 @@ function initParsers() {
 	setParser("image", preloadImage);
 	setParser("json", preloadJSON);
 	setParser("js", preloadJavascript);
-	setParser("tmx", preloadTMX);
-	setParser("tsx", preloadTMX);
+	// a tile map under its three names (see `MAP_TYPES`), and a tileset
+	for (const type of MAP_TYPES) {
+		setParser(type, preloadTileMap);
+	}
+	setParser("tsx", preloadTileMap);
+	// an LDtk project keeps what it read with the level formats, and frees
+	// it through the same hook a custom type has
+	setParser("ldtk", preloadLDtk, { unload: unloadLDtk });
 	setParser("audio", preloadAudio);
 	setParser("fontface", preloadFontFace);
 	setParser("video", preloadVideo);
@@ -798,12 +1021,36 @@ const alwaysRelative = () => {
  * @property {string} name - the name the asset is kept and read back under
  * (`loader.getImage(name)`, `new Sprite(x, y, { image: name })`,
  * `level.load(name)`, `audio.play(name)`)
- * @property {string} type - the type of the asset, which picks its parser:
- * "audio", "binary", "image", "json", "js", "tmx", "tsx", "fontface", "video",
- * "aseprite", "shader", "obj", "mtl", "gltf" or "glb". JSON-serialised Tiled
- * maps and tilesets (`.tmj` / `.tsj`) load under `"tmx"` / `"tsx"`: those are
- * file extensions, not asset types. Any other type is one registered with
- * {@link loader.setParser}.
+ * @property {string} type - the type of the asset, which picks its parser.
+ * The types, the files each takes, and how the asset is read back:
+ *
+ * | type | loads | files | read back with |
+ * | --- | --- | --- | --- |
+ * | `"image"` | an image, or a compressed texture | `.png`, `.jpg`, `.webp`, `.gif`, `.svg`, a data URI; compressed: `.ktx`, `.ktx2`, `.dds`, `.pvr`, `.pkm` | `image: name` on a renderable, {@link getImage} |
+ * | `"aseprite"` | an [Aseprite](https://www.aseprite.org) file: its frames as one image, and their description | `.aseprite` | as an `"image"` and a `"json"` of that name |
+ * | `"json"` | JSON data: a texture atlas, collision shapes, your own | `.json` | {@link getJSON} |
+ * | `"binary"` | a file's content as it is: a bitmap font's `.fnt`, a tracker tune | any | {@link getBinary} |
+ * | `"js"` | a script, run once loaded | `.js` | nothing is kept |
+ * | `"audio"` | a sound or a music | a directory: the name and the extensions given to `audio.init()` are added | `audio.play(name)` |
+ * | `"video"` | a video | `.mp4`, `.webm`, what the browser plays | {@link getVideo} |
+ * | `"fontface"` | a web font | `.woff2`, `.woff`, `.ttf` | its name, as a CSS font family; {@link getFont} |
+ * | `"shader"` | a shader: an effect body, or a whole program | GLSL and WGSL sources, or inline `data` | {@link getShader} |
+ * | `"tmx"` | a [Tiled](https://www.mapeditor.org) map | `.tmx`, `.xml` (XML); `.tmj`, `.json` (JSON) | `level.load(name)`, {@link getTileMap} |
+ * | `"tsx"` | a Tiled tileset kept in a file of its own | `.tsx`, `.xml` (XML); `.tsj`, `.json` (JSON) | by the maps that name it; {@link getTileMap} |
+ * | `"tilemap"` | a tile map, whatever tool wrote it: `"tmx"` under a name that is not an editor's | the same as `"tmx"` | `level.load(name)`, {@link getTileMap} |
+ * | `"spritefusion"` | a [Sprite Fusion](https://www.spritefusion.com) map, with the `spritesheet.png` saved next to it | `map.json`, `map.tmx` | `level.load(name)`, {@link getTileMap} |
+ * | `"ldtk"` | an [LDtk](https://ldtk.io) project, with the level files and the images it names | `.ldtk` (and its `.ldtkl`) | `level.load("name:Level")`, `level.load("name")`, {@link getLDtk} |
+ * | `"obj"` | a Wavefront model | `.obj` | {@link getOBJ} |
+ * | `"mtl"` | a Wavefront material library | `.mtl` | {@link getMTL} |
+ * | `"gltf"`, `"glb"` | a glTF scene | `.gltf`, `.glb` | `level.load(name)`, {@link getGLTF} |
+ *
+ * Any other type is one registered with {@link loader.setParser}.
+ *
+ * The three tile map types share one parser: they differ only in name, and
+ * in `"spritefusion"` loading the map's spritesheet with it. The extension of
+ * the file says whether a map is XML or JSON (`.tmj` and `.tsj` are
+ * extensions, not asset types), and a Sprite Fusion `map.json` is read under
+ * any of the three.
  * @property {string|string[]} [src] - the URL of the file, relative to the
  * page or to the type's base URL ({@link setBaseURL}), or a data URI.
  * For `"audio"` it is the **directory** holding the clip: the loader appends
@@ -813,11 +1060,14 @@ const alwaysRelative = () => {
  * a fallback chain, such as compressed texture formats by priority with a PNG
  * last.
  * For `"shader"` it may be an object of URLs instead (see the example).
- * @property {string|{glsl?: string, wgsl?: string}} [data] - inline content
- * in place of a `src`: the parsed Tiled JSON map or tileset (an object) for
- * `"tmx"` / `"tsx"`, the GLSL source of an effect body for `"shader"`, or a
+ * @property {string|{glsl?: string, wgsl?: string}|object} [data] - inline content
+ * in place of a `src`: the parsed JSON map or tileset (an object) for
+ * `"tmx"` / `"tilemap"` / `"spritefusion"` / `"tsx"`, the parsed project for
+ * `"ldtk"` (one that keeps its levels in the project file), the GLSL source
+ * of an effect body for `"shader"`, or a
  * `{glsl, wgsl}` pair of them so that one asset serves both backends (either
- * half may be omitted)
+ * half may be omitted). A type registered with {@link loader.setParser} reads
+ * what its parser expects there
  * @property {boolean} [stream=false] - audio and video: start playing before
  * the whole file is downloaded, rather than waiting for it
  * @property {boolean} [autoplay=false] - audio and video: start playing once
@@ -840,6 +1090,15 @@ const alwaysRelative = () => {
  * { name: "map2",    type: "tmx", src: "data/map/map2.tmj" }
  * { name: "tileset", type: "tsx", src: "data/map/tileset.tsx" }
  * { name: "map3",    type: "tmx", data: { width: 20, height: 15, tilewidth: 32, tileheight: 32, layers: [], tilesets: [] } }
+ * // a tile map from any tool that writes Tiled's format
+ * { name: "map4",    type: "tilemap", src: "data/map/map4.json" }
+ * // Sprite Fusion: either export; the spritesheet.png next to it comes with it
+ * { name: "map5",    type: "spritefusion", src: "data/map5/map.json" }
+ * { name: "map6",    type: "spritefusion", src: "data/map6/map.tmx" }
+ * // LDtk: a project; its level files and its images come with it
+ * { name: "world",   type: "ldtk", src: "data/world/world.ldtk" }
+ * // Aseprite: the file as saved, read back as an image and a JSON of that name
+ * { name: "hero",    type: "aseprite", src: "data/img/hero.aseprite" }
  * // audio: src is the directory, the extension comes from audio.init()
  * { name: "cling",   type: "audio", src: "data/sfx/" }
  * { name: "bgmusic", type: "audio", src: "data/bgm/", stream: true }
@@ -887,8 +1146,17 @@ const alwaysRelative = () => {
  * warning, so do it once rather than in code that runs on every scene.
  * A `src` is prefixed by {@link loader.setBaseURL} only when one is set for
  * this type by name: the `"*"` wildcard does not cover custom types.
+ *
+ * The loader does not know what a custom type keeps, so it cannot free it:
+ * give `options.unload` for that. It is called with the asset's descriptor
+ * when a bundle holding the asset is unloaded and nothing else holds it, and
+ * when {@link loader.unload} is given that descriptor. Without it, unloading
+ * a bundle leaves the asset to the game, and `loader.unload` of its
+ * descriptor throws.
  * @param {string} type - asset type
  * @param {Function} parserFn - parser function, as described above
+ * @param {object} [options] - what else the loader should know of the type
+ * @param {Function} [options.unload] - `unload(asset)`: free what the parser kept for this asset; return `false` when there was nothing to free
  * @throws {Error} when `parserFn` is not a function
  * @see {@link Asset.type}
  * @example
@@ -928,7 +1196,7 @@ const alwaysRelative = () => {
  * await loader.preload([{ name: "level1", type: "csv", src: "level1.csv" }]);
  * @category Assets
  */
-export function setParser(type, parserFn) {
+export function setParser(type, parserFn, options) {
 	if (typeof parserFn !== "function") {
 		throw new Error("invalid parser function for " + type);
 	}
@@ -941,6 +1209,8 @@ export function setParser(type, parserFn) {
 		parse: parserFn,
 		normalizeSrc: parserFn.normalizeSrc ?? keepSrc,
 		needsBaseURL: parserFn.needsBaseURL ?? alwaysRelative,
+		// how a type the loader keeps nothing for frees what it kept
+		unload: typeof options?.unload === "function" ? options.unload : undefined,
 	});
 }
 
@@ -1616,6 +1886,10 @@ const UNCACHED_TYPES = ["js", "audio", "fontface", "shader", "aseprite"];
  *
  * Either way, freeing an image also frees the texture the renderer uploaded
  * from it, a shader its GPU program, a font its place in `document.fonts`.
+ * A Sprite Fusion map (`"spritefusion"`) frees the spritesheet loaded with
+ * it, and an LDtk project the images loaded with it, unless something else
+ * still holds them. A tile map is freed under any of its type names
+ * (`"tmx"`, `"tilemap"`, `"spritefusion"`): they are one cache.
  * A shader handed out by {@link loader.getShader} is not tracked once handed
  * out, so an effect that outlives a level (a HUD's, a camera's) belongs in a
  * bundle that outlives it too, or it is freed under whatever still uses it.
@@ -1625,7 +1899,8 @@ const UNCACHED_TYPES = ["js", "audio", "fontface", "shader", "aseprite"];
  * loaded; with a descriptor, `false` when the asset was not in memory
  * @throws {Error} synchronously, on an unknown bundle id, or a descriptor
  * whose type the loader keeps nothing for (a type registered with
- * {@link loader.setParser}: the game keeps those assets itself)
+ * {@link loader.setParser} without an `unload`: the game keeps those assets
+ * itself)
  * @example
  * // level 1 is behind the player for good: free what only it uses
  * await level.load("level2", { async: true });
@@ -1642,6 +1917,7 @@ export function unload(asset) {
 	const unloaded = freeAsset(asset);
 	// whoever held it, it is gone now: the bundles listing it see it missing
 	owners.delete(assetKey(asset));
+	referenceSources.delete(assetKey(asset));
 	return unloaded;
 }
 
@@ -1668,7 +1944,11 @@ function unloadBundle(id) {
 		if (record === undefined || !record.bundles.delete(id)) {
 			continue;
 		}
-		if (record.bundles.size === 0 && !record.pinned) {
+		if (
+			record.bundles.size === 0 &&
+			!record.pinned &&
+			record.holders.size === 0
+		) {
 			release(asset);
 		}
 	}
@@ -1735,12 +2015,21 @@ function freeAsset(asset) {
 			// throws, as it always has: `load` throws for one too, and a typo
 			// that is loud going in should not be silent coming out
 			if (!CACHED_TYPES.includes(asset.type)) {
+				// a type of the game's own, whose parser said how to free it
+				const custom = parsers.get(asset.type);
+				if (custom?.unload !== undefined) {
+					return custom.unload(asset) !== false;
+				}
 				throw new Error(
 					"unload : unknown or invalid resource type : " + asset.type,
 				);
 			}
 			if (asset.type === "image") {
 				releaseImageTexture(asset.name);
+			}
+			if (MAP_TYPES.includes(asset.type)) {
+				// the spritesheet a Sprite Fusion map was loaded with
+				releaseReferences(asset);
 			}
 			return deleteAsset(asset.type, asset.name);
 	}
@@ -1795,6 +2084,12 @@ export function unloadAll() {
 	// and the audio, which keeps its own store
 	unloadAllAudio();
 
+	// and the LDtk projects, kept with their levels
+	for (const name of [...ldtkProjects.keys()]) {
+		unloadLDtk({ name, type: "ldtk" });
+	}
+
+	referenceSources.clear();
 	// nobody holds anything now; the bundles stay declared, ready to load
 	// again, and a load of one still in flight no longer hands it its assets
 	owners.clear();

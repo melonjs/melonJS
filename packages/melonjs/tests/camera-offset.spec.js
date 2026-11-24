@@ -14,7 +14,7 @@ import {
 	ImageLayer,
 	Renderable,
 	ShakeEffect,
-	TMXTileMap,
+	TileMap,
 	Vector2d,
 	video,
 } from "../src/index.js";
@@ -313,7 +313,7 @@ describe("Camera2d offset", () => {
 			ctx.fillStyle = "#ff0000";
 			ctx.fillRect(0, 0, TILE * 2, TILE);
 			imgList["camera-offset-tiles"] = canvas;
-			const map = new TMXTileMap("camera-offset", {
+			const map = new TileMap("camera-offset", {
 				width: COLS,
 				height: ROWS,
 				tilewidth: TILE,

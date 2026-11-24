@@ -10,7 +10,7 @@
  * with soft ones (`alpha`), to a rounding step or two.
  */
 import { expect, vi } from "vitest";
-import { Application, boot, TMXTileMap, timer } from "../../src/index.js";
+import { Application, boot, TileMap, timer } from "../../src/index.js";
 import { imgList } from "../../src/loader/cache.js";
 import Renderer from "../../src/video/renderer.js";
 import { drawOffscreen, grabFrame } from "./pixels.js";
@@ -148,7 +148,7 @@ export function makeTileset(options) {
  * @param {object[]} options.layers - `{ data }` (gids, row by row) or
  * `{ chunks }` for an infinite map, plus any Tiled layer property
  * @param {object} [options.extra] - more Tiled map properties
- * @returns {TMXTileMap} the map
+ * @returns {TileMap} the map
  */
 export function makeMap(options) {
 	const {
@@ -167,7 +167,7 @@ export function makeMap(options) {
 		firstgid += tileset.tilecount;
 		return set;
 	});
-	return new TMXTileMap(`tile-compare-map-${nextName++}`, {
+	return new TileMap(`tile-compare-map-${nextName++}`, {
 		width: cols,
 		height: rows,
 		tilewidth: tw,
@@ -418,7 +418,7 @@ export async function makeApp(renderer, type, width = 320, height = 240) {
 /**
  * Put a map's layers in the world, in place of whatever was there.
  * @param {Application} app - the application
- * @param {TMXTileMap} map - the map
+ * @param {TileMap} map - the map
  * @param {string} [renderMode] - a render mode to ask of every layer before
  * it is activated ("prerender" needs asking then: it bakes at activation)
  * @param {boolean} [centered=false] - as `level.load` adds a map: one

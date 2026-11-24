@@ -1,0 +1,300 @@
+import { vector2dPool } from "../../../math/vector2d.ts";
+import { boundsPool } from "../../../physics/bounds.ts";
+import TileMapRenderer from "./TileMapRenderer.js";
+
+/**
+ * additional import for TypeScript
+ * @import TileMap from "../../tiled/TileMap.js";
+ */
+/**
+ * an Isometric Map Renderer
+ * @category Tilemap
+ */
+export default class IsometricRenderer extends TileMapRenderer {
+	/**
+	 * @param {TileMap} map - the TMX map
+	 */
+	constructor(map) {
+		super(map.cols, map.rows, map.tilewidth, map.tileheight);
+
+		this.hTilewidth = this.tilewidth / 2;
+		this.hTileheight = this.tileheight / 2;
+		this.originX = this.rows * this.hTilewidth;
+	}
+
+	/**
+	 * return true if the renderer can render the specified layer
+	 * @ignore
+	 * @internal
+	 */
+	canRender(layer) {
+		return layer.orientation === "isometric" && super.canRender(layer);
+	}
+
+	/**
+	 * return the bounding rect for this map renderer
+	 * @ignore
+	 * @internal
+	 */
+	getBounds(layer) {
+		const isLayer = layer !== undefined;
+		const bounds = isLayer ? boundsPool.get() : this.bounds;
+		// a layer can have more cells than the map (an infinite map's): its
+		// first column still starts at the map's origin, and its rows reach
+		// left of it
+		const cols = isLayer ? layer.cols : this.cols;
+		const rows = isLayer ? layer.rows : this.rows;
+		bounds.setMinMax(
+			this.originX - rows * this.hTilewidth,
+			0,
+			this.originX + cols * this.hTilewidth,
+			(cols + rows) * this.hTileheight,
+		);
+		return bounds;
+	}
+
+	/**
+	 * return the tile position corresponding to the specified pixel
+	 * @ignore
+	 * @internal
+	 */
+	pixelToTileCoords(x, y, v) {
+		const ret = v || vector2dPool.get();
+		return ret.set(
+			y / this.tileheight + (x - this.originX) / this.tilewidth,
+			y / this.tileheight - (x - this.originX) / this.tilewidth,
+		);
+	}
+
+	/**
+	 * return the pixel position corresponding of the specified tile
+	 * @ignore
+	 * @internal
+	 */
+	tileToPixelCoords(x, y, v) {
+		const ret = v || vector2dPool.get();
+		return ret.set(
+			(x - y) * this.hTilewidth + this.originX,
+			(x + y) * this.hTileheight,
+		);
+	}
+
+	/**
+	 * fix the position of Objects to match
+	 * the way Tiled places them
+	 * @ignore
+	 * @internal
+	 */
+	adjustPosition(obj) {
+		// Tiled stores isometric object positions unprojected, measured in
+		// tileheight along both map axes
+		const tileX = obj.x / this.tileheight;
+		const tileY = obj.y / this.tileheight;
+		const isoPos = vector2dPool.get();
+
+		this.tileToPixelCoords(tileX, tileY, isoPos);
+
+		obj.x = isoPos.x;
+		obj.y = isoPos.y;
+
+		// unless their tileset says otherwise, tile objects are aligned to
+		// their bottom center on isometric maps
+		if (typeof obj.gid === "number") {
+			this.alignTileObject(obj, "bottom");
+		}
+
+		vector2dPool.release(isoPos);
+	}
+
+	/**
+	 * draw the tile map (legacy entry point — accepts a fully-constructed Tile)
+	 * @ignore
+	 * @internal
+	 */
+	drawTile(renderer, x, y, tmxTile) {
+		const tileset = tmxTile.tileset;
+		const pos = this._tileDrawPosition(x, y, tileset, vector2dPool.get());
+		tileset.drawTile(renderer, pos.x, pos.y, tmxTile);
+		vector2dPool.release(pos);
+	}
+
+	/**
+	 * draw a tile from raw (gid, flipMask, tileset) data — used by the hot
+	 * rendering loop to bypass Tile construction
+	 * @ignore
+	 * @internal
+	 */
+	drawTileRaw(renderer, x, y, gid, flipMask, tileset) {
+		const pos = this._tileDrawPosition(x, y, tileset, vector2dPool.get());
+		tileset.drawTileRaw(renderer, pos.x, pos.y, gid, flipMask);
+		vector2dPool.release(pos);
+	}
+
+	/**
+	 * where a tile of `tileset` in cell (x, y) is drawn from: the left of its
+	 * cell's diamond, and as far above the cell's bottom as the tile is tall,
+	 * moved by the tileset's offset. The same place `drawTileLayer` draws it
+	 * @param {number} x - the cell's column
+	 * @param {number} y - the cell's row
+	 * @param {object} tileset - the tile's tileset
+	 * @param {Vector2d} v - the vector to set
+	 * @returns {Vector2d} v
+	 * @ignore
+	 * @internal
+	 */
+	_tileDrawPosition(x, y, tileset, v) {
+		this.tileToPixelCoords(x, y, v);
+		return v.set(
+			v.x - this.hTilewidth + tileset.tileoffset.x,
+			v.y + this.tileheight - tileset.tileheight + tileset.tileoffset.y,
+		);
+	}
+
+	/**
+	 * draw the tile map
+	 * @ignore
+	 * @internal
+	 */
+	drawTileLayer(renderer, layer, rect) {
+		// cache a couple of useful references
+		let tileset = layer.tileset;
+
+		// get top-left and bottom-right tile position: the view, widened by
+		// the largest tile of ANY of the layer's tilesets, as a tile is drawn
+		// from its cell up, and by how far a `tileoffset` moves one. By the
+		// first tileset's size alone, the tall tiles of another one went
+		// missing along the bottom of the view, where their cell is below it
+		// and their image still reaches in, and so did tiles moved into view
+		// by an offset larger than a tile
+		// (by a cell at least: the corners below are rounded to whole
+		// cells, half a cell either way, which a tile narrower than that
+		// does not make up for)
+		const reachX =
+			Math.max(layer.maxTileSize.width, this.tilewidth) +
+			(layer.maxTileOffset?.x ?? 0);
+		const reachY =
+			Math.max(layer.maxTileSize.height, this.tileheight) +
+			(layer.maxTileOffset?.y ?? 0);
+		const rowItr = this.pixelToTileCoords(
+			rect.pos.x - reachX,
+			rect.pos.y - reachY,
+			vector2dPool.get(),
+		).floorSelf();
+		const tileEnd = this.pixelToTileCoords(
+			rect.pos.x + rect.width + reachX,
+			rect.pos.y + rect.height + reachY,
+			vector2dPool.get(),
+		).ceilSelf();
+
+		const rectEnd = this.tileToPixelCoords(
+			tileEnd.x,
+			tileEnd.y,
+			vector2dPool.get(),
+		);
+
+		// Determine the tile and pixel coordinates to start at
+		const startPos = this.tileToPixelCoords(
+			rowItr.x,
+			rowItr.y,
+			vector2dPool.get(),
+		);
+		startPos.x -= this.hTilewidth;
+		startPos.y += this.tileheight;
+
+		/* Determine in which half of the tile the top-left corner of the area we
+		 * need to draw is. If we're in the upper half, we need to start one row
+		 * up due to those tiles being visible as well. How we go up one row
+		 * depends on whether we're in the left or right half of the tile.
+		 */
+		const inUpperHalf = startPos.y - rect.pos.y > this.hTileheight;
+		const inLeftHalf = rect.pos.x - startPos.x < this.hTilewidth;
+
+		if (inUpperHalf) {
+			if (inLeftHalf) {
+				rowItr.x--;
+				startPos.x -= this.hTilewidth;
+			} else {
+				rowItr.y--;
+				startPos.x += this.hTilewidth;
+			}
+			startPos.y -= this.hTileheight;
+		}
+
+		// Determine whether the current row is shifted half a tile to the right
+		let shifted = inUpperHalf ^ inLeftHalf;
+
+		// initialize the columnItr vector
+		const columnItr = vector2dPool.get().setV(rowItr);
+
+		// main drawing loop — read (gid, flipMask) straight from the typed
+		// array and resolve the tileset with a short-circuit cache.
+		// NOTE: the iso hot loop bypasses `this.drawTileRaw` because it has
+		// already computed pixel coords (`x`, `y/2`) from the staggered scan;
+		// going through drawTileRaw would re-derive them from layer-cell coords
+		// and lose the precomputation.
+		const layerCols = layer.cols;
+		const layerRows = layer.rows;
+		const data = layer.layerData;
+		const tilesets = layer.tilesets;
+		let tilesetCache = tileset;
+		if (tilesetCache === null) {
+			vector2dPool.release(columnItr);
+			vector2dPool.release(rowItr);
+			vector2dPool.release(tileEnd);
+			vector2dPool.release(rectEnd);
+			vector2dPool.release(startPos);
+			return;
+		}
+		for (
+			let y = startPos.y * 2;
+			y - this.tileheight * 2 < rectEnd.y * 2;
+			y += this.tileheight
+		) {
+			columnItr.setV(rowItr);
+			for (let x = startPos.x; x < rectEnd.x; x += this.tilewidth) {
+				const cx = columnItr.x;
+				const cy = columnItr.y;
+				// bounds check (this loop didn't disable it in the old path)
+				if (cx >= 0 && cx < layerCols && cy >= 0 && cy < layerRows) {
+					const idx = (cy * layerCols + cx) * 2;
+					const gid = data[idx];
+					if (gid !== 0) {
+						const flipMask = data[idx + 1];
+						if (!tilesetCache.contains(gid)) {
+							tilesetCache = tilesets.getTilesetByGid(gid);
+						}
+						const offset = tilesetCache.tileoffset;
+						tilesetCache.drawTileRaw(
+							renderer,
+							offset.x + x,
+							offset.y + y / 2 - tilesetCache.tileheight,
+							gid,
+							flipMask,
+						);
+					}
+				}
+
+				// Advance to the next column
+				columnItr.x++;
+				columnItr.y--;
+			}
+
+			// Advance to the next row
+			if (!shifted) {
+				rowItr.x++;
+				startPos.x += this.hTilewidth;
+				shifted = true;
+			} else {
+				rowItr.y++;
+				startPos.x -= this.hTilewidth;
+				shifted = false;
+			}
+		}
+
+		vector2dPool.release(columnItr);
+		vector2dPool.release(rowItr);
+		vector2dPool.release(tileEnd);
+		vector2dPool.release(rectEnd);
+		vector2dPool.release(startPos);
+	}
+}
