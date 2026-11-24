@@ -81,11 +81,18 @@ export function createAtlas(
 }
 
 /**
- * return a string that identifies the texture atlas type
+ * return a string that identifies the texture atlas type: from the name of
+ * the tool in `meta.app` when it is a known one, else from the structure of
+ * the file, so that any exporter writing the TexturePacker or Aseprite JSON
+ * layout is accepted under its own name
+ * @param {object} atlas - the atlas description (with a `meta` object)
+ * @returns {string} "texturepacker", "shoebox", "aseprite" or "melonJS"
  * @ignore
  * @internal
  */
-export function identifyFormat(app) {
+export function identifyFormat(atlas) {
+	const meta = atlas.meta;
+	const app = typeof meta.app === "string" ? meta.app : "";
 	if (app.includes("texturepacker") || app.includes("free-tex-packer")) {
 		return "texturepacker";
 	} else if (app.includes("shoebox")) {
@@ -94,18 +101,39 @@ export function identifyFormat(app) {
 		return "aseprite";
 	} else if (app.includes("melonJS")) {
 		return "melonJS";
-	} else {
-		throw new Error("Unknown texture atlas format: " + app);
 	}
+
+	// an unknown tool: both parsers need the frames and the sheet size
+	const frames = atlas.frames;
+	if (
+		typeof frames === "object" &&
+		frames !== null &&
+		typeof meta.size?.w === "number" &&
+		typeof meta.size?.h === "number"
+	) {
+		if (Array.isArray(meta.frameTags)) {
+			// animation tags are Aseprite's
+			return "aseprite";
+		}
+		// frames as a list ("JSON (Array)") or keyed by name ("JSON (Hash)")
+		const first = Array.isArray(frames) ? frames[0] : Object.values(frames)[0];
+		if (typeof first?.frame === "object" && first.frame !== null) {
+			return "texturepacker";
+		}
+	}
+
+	throw new Error("Unknown texture atlas format: " + meta.app);
 }
 
 /**
  * A Texture atlas class, currently supports : <br>
- * - [TexturePacker]{@link http://www.codeandweb.com/texturepacker/} : through JSON export (standard and multipack texture atlas) <br>
+ * - [TexturePacker]{@link http://www.codeandweb.com/texturepacker/} : through JSON export, "JSON (Array)" or "JSON (Hash)" (standard and multipack texture atlas) <br>
  * - [Free Texture Packer]{@link http://free-tex-packer.com/app/} : through JSON export (standard and multipack texture atlas) <br>
  * - [aseprite]{@link https://www.aseprite.org/} : through JSON export (standard and multipack texture atlas) <br>
  * - [ShoeBox]{@link http://renderhjs.net/shoebox/} : through JSON export using the
  * melonJS setting [file]{@link https://github.com/melonjs/melonJS/raw/master/media/shoebox_JSON_export.sbx} <br>
+ * - any other tool that writes the TexturePacker or Aseprite JSON layout, such as [spritesheet.dev]{@link https://spritesheet.dev/} : the format is
+ * recognised from the structure of the file when `meta.app` is not one of the names above <br>
  * - Standard (fixed cell size) spritesheet : through a {framewidth:xx, frameheight:xx, anchorPoint:me.Vector2d} object
  * );
  * @category Game Objects
@@ -244,7 +272,7 @@ export class TextureAtlas extends Texture2d {
 				const atlas = atlases[i];
 
 				if (typeof atlas.meta !== "undefined") {
-					this.format = identifyFormat(atlas.meta.app);
+					this.format = identifyFormat(atlas);
 					this.repeat = atlas.meta.repeat || "no-repeat";
 					switch (this.format) {
 						case "texturepacker":

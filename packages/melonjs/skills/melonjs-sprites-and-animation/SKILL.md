@@ -129,8 +129,9 @@ many it kept.
 
 | source | how |
 |---|---|
-| TexturePacker / Free Texture Packer JSON | `new TextureAtlas(loader.getJSON(name), loader.getImage(name))` |
+| TexturePacker / Free Texture Packer JSON, "JSON (Array)" or "JSON (Hash)" | `new TextureAtlas(loader.getJSON(name), loader.getImage(name))` |
 | Aseprite **JSON export** | same as TexturePacker — the format is detected from `meta.app` |
+| another tool writing either layout (spritesheet.dev, your own exporter) | same call. Since 20.18 an unknown `meta.app` is recognised from the file's structure: `meta.frameTags` reads as Aseprite, frames with a `frame` rectangle as TexturePacker. Before, it threw `Unknown texture atlas format` |
 | Aseprite **`.aseprite` / `.ase` binary** | loader type `"aseprite"`, which stores the composited image *and* a JSON sidecar under the one asset name |
 | ShoeBox | JSON export using the melonJS exporter settings file; same call as TexturePacker |
 | fixed-cell spritesheet | `new TextureAtlas({ framewidth, frameheight, anchorPoint }, loader.getImage(name))` |

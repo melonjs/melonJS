@@ -480,7 +480,7 @@ function composite(parsed) {
 
 /**
  * Build the JSON sidecar in the shape expected by parseAseprite()
- * in src/video/texture/parser/aseprite.js — meta.app must include
+ * in src/video/texture/parser/aseprite.js — meta.app includes
  * "aseprite" so identifyFormat() picks the right route.
  * @ignore
  * @internal

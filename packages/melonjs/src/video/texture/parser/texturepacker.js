@@ -12,9 +12,16 @@ import { Vector2d } from "../../../math/vector2d.ts";
 export function parseTexturePacker(data, textureAtlas) {
 	const atlas = {};
 
-	data.frames.forEach((frame) => {
+	// "JSON (Array)" lists the frames, each with its `filename`;
+	// "JSON (Hash)" keys them by that name
+	const frames = data.frames;
+	const isArray = Array.isArray(frames);
+
+	Object.keys(frames).forEach((key) => {
+		const frame = frames[key];
 		// fix wrongly formatted JSON (e.g. last dummy object in ShoeBox)
-		if (frame.hasOwnProperty("filename")) {
+		if (!isArray || frame.hasOwnProperty("filename")) {
+			const name = isArray ? frame.filename : key;
 			// Source coordinates
 			const s = frame.frame;
 			const trimmed = !!frame.trimmed;
@@ -39,8 +46,8 @@ export function parseTexturePacker(data, textureAtlas) {
 				originY = frame.sourceSize.h * frame.pivot.y - (trimmed ? trim.y : 0);
 			}
 
-			atlas[frame.filename] = {
-				name: frame.filename, // frame name
+			atlas[name] = {
+				name: name, // frame name
 				texture: data.meta.image || "default", // the source texture
 				offset: new Vector2d(s.x, s.y),
 				anchorPoint: hasTextureAnchorPoint
@@ -53,12 +60,7 @@ export function parseTexturePacker(data, textureAtlas) {
 				sourceSize: frame.sourceSize || { w: s.w, h: s.h },
 				angle: frame.rotated === true ? -ETA : 0,
 			};
-			textureAtlas.addUVs(
-				atlas,
-				frame.filename,
-				data.meta.size.w,
-				data.meta.size.h,
-			);
+			textureAtlas.addUVs(atlas, name, data.meta.size.w, data.meta.size.h);
 		}
 	});
 	return atlas;

@@ -14,6 +14,8 @@
 - Levels: `registerObjectClass` and `registerObjectFactory` register the classes a level builds, whatever editor it comes from
 - Levels: `level.load` takes `objects`, to choose which objects of a level are built
 - Levels: an object built from a level carries the level's `id`, so `getChildByProp("id", id)` finds it
+- `TextureAtlas`: an atlas from a tool it does not know by name (such as [spritesheet.dev](https://spritesheet.dev/)) loads when it has the TexturePacker or Aseprite JSON layout, instead of throwing `Unknown texture atlas format`
+- `TextureAtlas`: TexturePacker's "JSON (Hash)" export is supported, as "JSON (Array)" is
 
 ### Deprecated
 - Levels: `registerTiledObjectClass` and `registerTiledObjectFactory`, for `registerObjectClass` and `registerObjectFactory` (the same functions; the old names keep working)
