@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { Application, boot, TextureAtlas, video } from "../src/index.js";
+import { imgList } from "../src/loader/cache.js";
 import { grabFrame } from "./helpers/pixels.js";
 
 /**
@@ -249,6 +250,52 @@ describe("a multipack atlas from an unknown tool", () => {
 	});
 });
 
+describe("the image of an atlas from an unknown tool", () => {
+	const app = { app: "https://spritesheet.dev/" };
+	const loaded = { width: 32, height: 16, src: "loaded-sheet.png" };
+
+	beforeAll(() => {
+		imgList["loaded-sheet"] = loaded;
+	});
+
+	afterAll(() => {
+		delete imgList["loaded-sheet"];
+	});
+
+	it.each(layouts)(
+		"$layout: is the one meta.image names, when none is passed",
+		(layout) => {
+			const atlas = new TextureAtlas(
+				makeAtlas(app, layout, "loaded-sheet.png"),
+				undefined,
+				false,
+			);
+			expect(atlas.sources.get("loaded-sheet.png")).toBe(loaded);
+			expect(atlas.getTexture()).toBe(loaded);
+		},
+	);
+
+	it.each(layouts)(
+		"$layout: is the loaded image of the name passed",
+		(layout) => {
+			const atlas = new TextureAtlas(
+				makeAtlas(app, layout, "sheet.png"),
+				"loaded-sheet",
+				false,
+			);
+			expect(atlas.sources.get("sheet.png")).toBe(loaded);
+		},
+	);
+
+	it('is stored as "default" when the file names none', () => {
+		const json = makeAtlas(app, layouts[1]);
+		delete json.meta.image;
+		const atlas = new TextureAtlas(json, fakeImage, false);
+		expect(atlas.sources.get("default")).toBe(fakeImage);
+		expect(atlas.getRegion("b.png").texture).toBe("default");
+	});
+});
+
 describe("an atlas that is in no layout it reads", () => {
 	const unknown = { app: "https://example.com/my-packer" };
 
@@ -275,6 +322,30 @@ describe("an atlas that is in no layout it reads", () => {
 			what: "no sheet size",
 			change: (json) => {
 				delete json.meta.size;
+			},
+		},
+		{
+			what: "a sheet width but no height",
+			change: (json) => {
+				delete json.meta.size.h;
+			},
+		},
+		{
+			what: "a sheet size written as text",
+			change: (json) => {
+				json.meta.size = { w: "32", h: "16" };
+			},
+		},
+		{
+			what: "null for frames",
+			change: (json) => {
+				json.frames = null;
+			},
+		},
+		{
+			what: "text for frames",
+			change: (json) => {
+				json.frames = "a.png";
 			},
 		},
 		{
