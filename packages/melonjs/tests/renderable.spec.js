@@ -334,6 +334,30 @@ describe("Renderable", () => {
 			expect(renderer.customShader).toBeUndefined();
 		});
 
+		it("a child with no effects of its own drops its container's shader", () => {
+			// in the order Container#draw calls them: the child draws inside
+			// its container's preDraw/postDraw, and starts without its shader
+			const renderer = app.renderer;
+			const group = new Container(0, 0, 100, 100);
+			const effect = { enabled: true };
+			group.addPostEffect(effect);
+			const child = new Renderable(10, 10, 10, 10);
+
+			// recorded, and checked once every save has its restore, so a
+			// failure here leaves the renderer as the next test expects it
+			const seen = [];
+			group.preDraw(renderer);
+			seen.push(renderer.customShader);
+			child.preDraw(renderer);
+			seen.push(renderer.customShader);
+			child.postDraw(renderer);
+			seen.push(renderer.customShader);
+			group.postDraw(renderer);
+			seen.push(renderer.customShader);
+
+			expect(seen).toEqual([effect, undefined, effect, undefined]);
+		});
+
 		it("disabled single effect should not be set as customShader", () => {
 			const renderer = app.renderer;
 			const renderable = new Renderable(0, 0, 100, 100);

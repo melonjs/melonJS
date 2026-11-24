@@ -41,6 +41,37 @@ export function transformQuadCorners(
 	h: number,
 	z: number,
 ): Vector3d[] {
+	if (m && !m.isIdentity()) {
+		const a = m.val;
+		if (a[3] === 0 && a[7] === 0 && a[11] === 0 && a[15] === 1) {
+			// affine (every 2D transform, and a Camera3d view), so w is 1:
+			// each corner gets the same arithmetic `apply` gives it, in the
+			// same order, without its checks and its divide by w
+			const x1 = x + w;
+			const y1 = y + h;
+			corners[0].set(
+				a[0] * x + a[4] * y + a[8] * z + a[12],
+				a[1] * x + a[5] * y + a[9] * z + a[13],
+				a[2] * x + a[6] * y + a[10] * z + a[14],
+			);
+			corners[1].set(
+				a[0] * x1 + a[4] * y + a[8] * z + a[12],
+				a[1] * x1 + a[5] * y + a[9] * z + a[13],
+				a[2] * x1 + a[6] * y + a[10] * z + a[14],
+			);
+			corners[2].set(
+				a[0] * x + a[4] * y1 + a[8] * z + a[12],
+				a[1] * x + a[5] * y1 + a[9] * z + a[13],
+				a[2] * x + a[6] * y1 + a[10] * z + a[14],
+			);
+			corners[3].set(
+				a[0] * x1 + a[4] * y1 + a[8] * z + a[12],
+				a[1] * x1 + a[5] * y1 + a[9] * z + a[13],
+				a[2] * x1 + a[6] * y1 + a[10] * z + a[14],
+			);
+			return corners;
+		}
+	}
 	corners[0].set(x, y, z);
 	corners[1].set(x + w, y, z);
 	corners[2].set(x, y + h, z);

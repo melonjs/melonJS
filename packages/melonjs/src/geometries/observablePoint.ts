@@ -1,6 +1,16 @@
 import { Point } from "./point.ts";
 
 /**
+ * What a revoked ObservablePoint holds instead of its Point: a proxy revoked
+ * here, so reading or writing the ObservablePoint after {@link ObservablePoint#revoke}
+ * throws a `TypeError`, as it does on any revoked proxy. A live ObservablePoint
+ * keeps a plain Point — no proxy on its hot path.
+ * @ignore
+ */
+const _revoked = Proxy.revocable(new Point(), {});
+_revoked.revoke();
+
+/**
  * Represents a point in a 2D coordinate system that can be observed for changes.
  */
 /**
@@ -11,17 +21,12 @@ export class ObservablePoint {
 	 * @ignore
 	 * @internal
 	 */
-	private _callback: () => void;
+	private _callback: (() => void) | undefined;
 	/**
 	 * @ignore
 	 * @internal
 	 */
 	private _point: Point;
-	/**
-	 * @ignore
-	 * @internal
-	 */
-	private _revoke: () => void;
 
 	private callBackEnabled: boolean = true;
 
@@ -34,22 +39,7 @@ export class ObservablePoint {
 	 * @param callback - The callback function to be called when the point changes. Default is undefined.
 	 */
 	constructor(x: number = 0, y: number = 0, callback?: () => void) {
-		const { proxy, revoke } = Proxy.revocable(new Point(x, y), {
-			set: (target, property, value) => {
-				if (property === "x" || property === "y") {
-					Reflect.set(target, property, value);
-					if (this.callBackEnabled) {
-						this._callback?.();
-					}
-					return true;
-				}
-				return false;
-			},
-		});
-
-		this.callBackEnabled = true;
-		this._revoke = revoke;
-		this._point = proxy;
+		this._point = new Point(x, y);
 
 		if (callback) {
 			this.setCallback(callback);
@@ -98,6 +88,9 @@ export class ObservablePoint {
 	 */
 	set x(value: number) {
 		this._point.x = value;
+		if (this.callBackEnabled) {
+			this._callback?.();
+		}
 	}
 
 	/**
@@ -113,6 +106,9 @@ export class ObservablePoint {
 	 */
 	set y(value: number) {
 		this._point.y = value;
+		if (this.callBackEnabled) {
+			this._callback?.();
+		}
 	}
 
 	/**
@@ -144,9 +140,9 @@ export class ObservablePoint {
 	}
 
 	/**
-	 * Revokes the proxy object, preventing further access to the ObservablePoint instance.
+	 * Revokes this instance: reading or writing it afterwards throws a `TypeError`.
 	 */
 	revoke() {
-		this._revoke();
+		this._point = _revoked.proxy;
 	}
 }

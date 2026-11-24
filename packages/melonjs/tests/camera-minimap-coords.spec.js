@@ -81,7 +81,7 @@ describe("Camera2d coordinate conversion with an offset world", () => {
 	 * draw a 20px square at (10, 10) to (30, 30) in a world offset by
 	 * `worldX`, through the main camera and, if given, a minimap
 	 */
-	const drawScene = ({ worldX = 20, minimap } = {}) => {
+	const drawScene = ({ worldX = 20, minimap, squareY = 10 } = {}) => {
 		camera.setBounds(0, 0, 1000, 1000);
 		camera.moveTo(0, 0);
 		let view;
@@ -97,7 +97,7 @@ describe("Camera2d coordinate conversion with an offset world", () => {
 			stage.cameras.set("minimap", view);
 		}
 		app.world.pos.set(worldX, 0, 0);
-		app.world.addChild(new Square(10, 10, 20, "#0000ff"), 1);
+		app.world.addChild(new Square(10, squareY, 20, "#0000ff"), 1);
 		app.world.sortNow();
 		app.world.update(0);
 		app.repaint();
@@ -173,6 +173,17 @@ describe("Camera2d coordinate conversion with an offset world", () => {
 			const w = camera.localToWorld(40, 40, new Vector2d());
 			expect({ x: w.x, y: w.y }).toEqual({ x: 20, y: 20 });
 		});
+	});
+
+	it("a minimap draws only inside its own corner", () => {
+		// the square crosses the minimap's bottom edge, so it is drawn, and
+		// what lies past that edge is cut off: below the corner is the main
+		// view's, where there is nothing
+		drawScene({ minimap: {}, squareY: 30 });
+		const empty = at({ x: 5, y: 95 });
+		expect(empty).not.toBe(BLUE);
+		expect(at({ x: 80, y: 35 })).toBe(BLUE);
+		expect(at({ x: 80, y: 45 })).toBe(empty);
 	});
 
 	it("without a world offset, every camera is unchanged", () => {
