@@ -14,6 +14,8 @@
 - Levels: `registerObjectClass` and `registerObjectFactory` register the classes a level builds, whatever editor it comes from
 - Levels: `level.load` takes `objects`, to choose which objects of a level are built
 - Levels: an object built from a level carries the level's `id`, so `getChildByProp("id", id)` finds it
+- `TextureAtlas`: an atlas from a tool it does not know by name (such as [spritesheet.dev](https://spritesheet.dev/)) loads when it has the TexturePacker or Aseprite JSON layout, instead of throwing `Unknown texture atlas format`
+- `TextureAtlas`: TexturePacker's "JSON (Hash)" export is supported, as "JSON (Array)" is
 
 ### Deprecated
 - Levels: `registerTiledObjectClass` and `registerTiledObjectFactory`, for `registerObjectClass` and `registerObjectFactory` (the same functions; the old names keep working)
@@ -25,6 +27,7 @@
 - Rendering: sprites take about **45%** less CPU time to update and draw on WebGL and WebGPU (10,000 sprites on WebGL: 8.6 to 4.9 ms a frame), and about **60%** less when they rotate
 
 ### Fixed
+- `TextureAtlas`: a ShoeBox atlas made with the melonJS exporter was refused with `Unknown texture atlas format: ShoeBox`
 - TypeScript: an asset's `data` accepts a parsed map object
 - Tile maps: a floating tile layer disappeared once the camera moved
 - Tile maps: two tilesets cut from one image at different tile sizes drew the same tiles

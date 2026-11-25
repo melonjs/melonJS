@@ -179,6 +179,10 @@ melonJS is supporting the below tools and frameworks natively or through our off
 [![Spine](https://github.com/melonjs/melonJS/assets/4033090/7a8d81b8-bc80-47bd-80dc-d9a054c78c96 "Spine")](http://esotericsoftware.com)
 [![aseprite](https://github.com/melonjs/melonJS/assets/4033090/65d19fef-2eba-461a-b925-cc2ad3bb270c "aseprite")](https://www.aseprite.org)
 
+Any other tool that exports the TexturePacker ("JSON (Array)" or "JSON (Hash)") or Aseprite JSON layout works as well, such as [spritesheet.dev](https://spritesheet.dev/).
+
+3D scenes come from [Blender](https://www.blender.org) or any other tool that exports glTF (`.glb` or `.gltf`), such as Maya, 3ds Max or Cinema 4D.
+
 Tools integration and usage with melonJS is documented in our [Wiki](https://github.com/melonjs/melonJS/wiki#third-party-tools-usage).
 
 Getting Started

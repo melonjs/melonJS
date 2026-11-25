@@ -1,5 +1,4 @@
-import { ETA } from "../../../math/math.ts";
-import { Vector2d } from "../../../math/vector2d.ts";
+import { addFrame } from "./frame.js";
 
 /**
  * parse the given data and return a corresponding atlas
@@ -21,47 +20,10 @@ export function parseAseprite(data, textureAtlas) {
 		// in aseprite's JSON export (hash and array forms alike), `trimmed`,
 		// `spriteSourceSize`, `sourceSize`, `rotated`, `pivot` and `duration`
 		// are SIBLINGS of the `frame` rect on each entry — same layout as
-		// TexturePacker's (see texturepacker.js)
+		// TexturePacker's (see frame.js)
 		const entry = frames[name];
-		const frame = entry.frame;
-		const trimmed = !!entry.trimmed;
-
-		let trim;
-
-		if (trimmed) {
-			trim = {
-				x: entry.spriteSourceSize.x,
-				y: entry.spriteSourceSize.y,
-				w: entry.spriteSourceSize.w,
-				h: entry.spriteSourceSize.h,
-			};
-		}
-
-		let originX;
-		let originY;
-		// Pixel-based offset origin from the top-left of the source frame
-		const hasTextureAnchorPoint = entry.sourceSize && entry.pivot;
-		if (hasTextureAnchorPoint) {
-			originX = entry.sourceSize.w * entry.pivot.x - (trimmed ? trim.x : 0);
-			originY = entry.sourceSize.h * entry.pivot.y - (trimmed ? trim.y : 0);
-		}
-
-		atlas[name] = {
-			name: name, // frame name
-			texture: data.meta.image || "default", // the source texture
-			offset: new Vector2d(frame.x, frame.y),
-			anchorPoint: hasTextureAnchorPoint
-				? new Vector2d(originX / frame.w, originY / frame.h)
-				: null,
-			trimmed: trimmed,
-			trim: trim,
-			width: frame.w,
-			height: frame.h,
-			sourceSize: entry.sourceSize || { w: frame.w, h: frame.h },
-			angle: entry.rotated === true ? -ETA : 0,
-		};
+		addFrame(atlas, name, entry, data, textureAtlas);
 		frameDurations.push(entry.duration);
-		textureAtlas.addUVs(atlas, name, data.meta.size.w, data.meta.size.h);
 	}
 
 	const anims = {};
