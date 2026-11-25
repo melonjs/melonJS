@@ -238,6 +238,9 @@ Two consequences:
 | sprites do not batch | more distinct textures in one frame than `renderer.maxTextures` |
 | nine-slice corners stretch anyway | `insetX`/`insetY` instead of `insetx`/`insety` |
 | an atlas animation blinks: the sprite vanishes on some of its frames (before 20.17) | the frames the packer stored rotated were drawn off the screen unless the sprite was at (0, 0); a nine-slice sprite from a rotated frame was stretched along the wrong axis. Update; on an older version, turn rotation off in the packer |
+| `Unknown texture atlas format: <name or URL>` from `new TextureAtlas` | before 20.18, an atlas whose `meta.app` named a tool the engine did not know, even in the TexturePacker or Aseprite layout (and `ShoeBox`, matched in lowercase only); since 20.18, a file that is in neither layout: no `meta.size`, a frame with no `frame` rectangle, or a list of frames with no `filename` |
+| `frames.forEach is not a function` from `new TextureAtlas` | before 20.18, a TexturePacker "JSON (Hash)" export; re-export as "JSON (Array)" or update |
+| a frame of an Aseprite JSON export is not found by its name | exported as "Array": the frames are then named by their position (`"0"`, `"1"`…); export as "Hash" to keep the names |
 | a tint will not turn the sprite the colour asked for, only a darker one | a tint multiplies the art's own colours: recolour with a `GradientMapEffect`, flash with a `FlashEffect` |
 
 ## Related skills
