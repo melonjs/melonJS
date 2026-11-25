@@ -23,6 +23,7 @@ import {
 	usesSpritesheet,
 } from "./spritefusion.ts";
 import TMXGroup from "./TMXGroup.js";
+import { readImageLayer } from "./TMXImageLayer.js";
 import TMXLayer from "./TMXLayer.js";
 import TMXTileset from "./TMXTileset.js";
 
@@ -35,12 +36,8 @@ import TMXTileset from "./TMXTileset.js";
 import {
 	applyObjectOpacity,
 	applyTMXProperties,
-	applyTransparentColor,
 	parseTintColor,
 	propagateBlendMode,
-	resolveEmbeddedImage,
-	tiledBlendMode,
-	tiledParallaxFactor,
 } from "./TMXUtils.js";
 
 /**
@@ -103,77 +100,6 @@ function readLayer(map, data, z) {
 }
 
 /**
- * read the Image Layer Data
- * @ignore
- * @internal
- */
-function readImageLayer(map, data, z) {
-	// resolve embedded JSON image data if present
-	resolveEmbeddedImage(data);
-
-	// the layer's custom values, read into an object of their own: the
-	// map's data is left as it is, to be read again on the next load
-	const properties = {};
-	applyTMXProperties(properties, data);
-
-	// derive repeat mode: legacy custom "repeat" property takes precedence
-	// (for backward compatibility), then Tiled 1.8+ native repeatx/repeaty
-	const repX = data.repeatx === true || data.repeatx === "1";
-	const repY = data.repeaty === true || data.repeaty === "1";
-	let repeat = properties.repeat;
-	if (typeof repeat === "undefined" && (repX || repY)) {
-		if (repX && repY) {
-			repeat = "repeat";
-		} else if (repX) {
-			repeat = "repeat-x";
-		} else {
-			repeat = "repeat-y";
-		}
-	}
-
-	// Tiled 1.8+ parallax origin (map-level, baked into layer offset)
-	const pox = +(map.data.parallaxoriginx ?? 0);
-	const poy = +(map.data.parallaxoriginy ?? 0);
-	const ratioX = tiledParallaxFactor(data.parallaxx);
-	const ratioY = tiledParallaxFactor(data.parallaxy);
-	const ox = +(data.offsetx ?? data.x ?? 0) + pox * ratioX;
-	const oy = +(data.offsety ?? data.y ?? 0) + poy * ratioY;
-
-	// create the layer
-	const imageLayer = new ImageLayer(
-		ox,
-		oy,
-		Object.assign(
-			{
-				name: data.name,
-				// its transparent color applied, when Tiled gives one
-				image:
-					typeof data.transparentcolor === "string"
-						? (applyTransparentColor(
-								getImage(data.image),
-								data.transparentcolor,
-							) ?? data.image)
-						: data.image,
-				ratio: vector2dPool.get(ratioX, ratioY),
-				tint: parseTintColor(data.tintcolor),
-				z: z,
-				repeat: repeat,
-			},
-			properties,
-		),
-	);
-
-	// set some additional flags
-	const visible = data.visible ?? true;
-	imageLayer.setOpacity(visible ? +data.opacity : 0);
-
-	// layer blend mode (Tiled 1.12+)
-	imageLayer.blendMode = tiledBlendMode(data.mode);
-
-	return imageLayer;
-}
-
-/**
  * read the tileset Data
  * @ignore
  * @internal
@@ -205,6 +131,139 @@ function colliderWalls(map, layer) {
 		return [];
 	}
 	return tileLayerWalls(layer, map);
+}
+
+/**
+ * Build what an object layer or a group layer of the map holds: the objects
+ * of an object layer, and for a group layer its tile layers, its image
+ * layers, and the object layers and groups inside it, each built the same
+ * way.
+ * @param {TileMap} map - the map
+ * @param {TMXGroup} group - the object layer or group layer
+ * @param {boolean} [flatten=true] - hand everything to `add` as it is built;
+ * when false, a `Container` is made for the layer, and for each layer of
+ * objects and each group inside it
+ * @param {boolean|Function} [wanted=true] - the objects to build
+ * @param {number} opacity - what the groups around this one fade it by, for
+ * when no container of theirs does it
+ * @param {(object: Renderable) => void} add - takes what is built
+ * @ignore
+ * @internal
+ */
+function buildGroup(map, group, flatten, wanted, opacity, add) {
+	// check if this is the collision shape group
+	const isCollisionGroup = isCollisionLayerName(group.name);
+	// with no container to carry the group's opacity, what it holds does
+	const faded = opacity * group.opacity;
+	let targetContainer;
+	let put = add;
+
+	if (flatten === false) {
+		// create a new container
+		targetContainer = new Container(0, 0, map.width, map.height);
+
+		// tiled uses 0,0 by default
+		targetContainer.anchorPoint.set(0, 0);
+
+		// set additional properties
+		targetContainer.name = group.name;
+		targetContainer.pos.z = group.z;
+		targetContainer.setOpacity(group.opacity);
+		targetContainer.blendMode = group.blendMode;
+
+		// disable auto-sort and auto-depth
+		targetContainer.autoSort = false;
+		targetContainer.autoDepth = false;
+
+		put = (object) => {
+			targetContainer.addChild(object);
+		};
+	}
+
+	// iterate through the group and add all objects into their
+	// corresponding target Container
+	for (let o = 0; o < group.objects.length; o++) {
+		const settings = group.objects[o];
+
+		// a layer of objects, or a group, inside a group layer
+		if (settings instanceof TMXGroup) {
+			buildGroup(map, settings, flatten, wanted, faded, put);
+			continue;
+		}
+
+		// A tile layer or an image layer of a group layer is listed with
+		// the group's objects: it is a layer, already built, and is added
+		// whatever the choice of objects
+		const isLayer =
+			settings instanceof TMXLayer || settings instanceof ImageLayer;
+
+		// An object the game does not want is left out
+		if (!isLayer && !isObjectWanted(wanted, settings)) {
+			continue;
+		}
+
+		// Tiled uses 0,0 by default
+		if (typeof settings.anchorPoint === "undefined") {
+			settings.anchorPoint = { x: 0, y: 0 };
+		}
+		// convert to melonJS renderable argument name
+		if (!isLayer && typeof settings.tintcolor !== "undefined") {
+			settings.tint = parseTintColor(settings.tintcolor);
+		}
+
+		// instantiate the object based on its type
+		const obj = isLayer ? settings : createLevelObject(settings, map);
+
+		// an unnamed object of a collision group is a wall of the world
+		if (isCollisionGroup && !isLayer && !settings.name) {
+			markWorldShape(obj);
+		}
+
+		// apply per-object opacity and visibility (a layer has its own)
+		if (obj.isRenderable === true && !isLayer) {
+			if (!settings.visible) {
+				obj.setOpacity(0);
+				if (
+					typeof obj.renderable !== "undefined" &&
+					obj.renderable.isRenderable === true
+				) {
+					obj.renderable.setOpacity(0);
+				}
+			} else if (settings.opacity < 1) {
+				applyObjectOpacity(obj, settings.opacity);
+			}
+		}
+
+		// the layers the cameras draw it on, from a custom property
+		if (typeof settings.visibilityLayer === "number") {
+			obj.visibilityLayer = settings.visibilityLayer;
+		}
+
+		// propagate group blend mode to child objects
+		propagateBlendMode(obj, group.blendMode);
+
+		// apply group opacity when flattened
+		if (flatten !== false && obj.isRenderable === true) {
+			applyObjectOpacity(obj, faded);
+		}
+		put(obj);
+
+		// a solid tile layer of a group layer comes with its walls
+		for (const wall of colliderWalls(map, settings)) {
+			put(wall);
+		}
+	}
+
+	// if we created a new container with children
+	if (flatten === false && targetContainer.getChildren().length > 0) {
+		// re-enable auto-sort and auto-depth
+		targetContainer.autoSort = true;
+		targetContainer.autoDepth = true;
+
+		// add our container where its layer is: the world, or the
+		// container of the group it is in
+		add(targetContainer);
+	}
 }
 
 /**
@@ -592,9 +651,13 @@ export default class TileMap {
 					break;
 
 				case "objectgroup":
-				case "group":
-					this.objectGroups.push(readObjectGroup(this, layer, zOrder++));
+				case "group": {
+					// a group layer takes a depth for each layer inside it
+					const group = readObjectGroup(this, layer, zOrder);
+					zOrder = group.zEnd;
+					this.objectGroups.push(group);
 					break;
+				}
 
 				default:
 					break;
@@ -709,119 +772,14 @@ export default class TileMap {
 	 */
 	getObjects(flatten, wanted) {
 		const objects = [];
-		let targetContainer;
 
 		// parse the map for objects
 		this.readMapObjects(this.data);
 
 		for (let g = 0; g < this.objectGroups.length; g++) {
-			const group = this.objectGroups[g];
-
-			// check if this is the collision shape group
-			const isCollisionGroup = isCollisionLayerName(group.name);
-
-			if (flatten === false) {
-				// create a new container
-				targetContainer = new Container(0, 0, this.width, this.height);
-
-				// tiled uses 0,0 by default
-				targetContainer.anchorPoint.set(0, 0);
-
-				// set additional properties
-				targetContainer.name = group.name;
-				targetContainer.pos.z = group.z;
-				targetContainer.setOpacity(group.opacity);
-				targetContainer.blendMode = group.blendMode;
-
-				// disable auto-sort and auto-depth
-				targetContainer.autoSort = false;
-				targetContainer.autoDepth = false;
-			}
-
-			// iterate through the group and add all objects into their
-			// corresponding target Container
-			for (let o = 0; o < group.objects.length; o++) {
-				const settings = group.objects[o];
-
-				// An object the game does not want is left out. A tile layer
-				// of a group layer is listed with the group's objects: it is
-				// a layer, and is added whatever the choice of objects
-				if (
-					!(settings instanceof TMXLayer) &&
-					!isObjectWanted(wanted, settings)
-				) {
-					continue;
-				}
-
-				// Tiled uses 0,0 by default
-				if (typeof settings.anchorPoint === "undefined") {
-					settings.anchorPoint = { x: 0, y: 0 };
-				}
-				// convert to melonJS renderable argument name
-				if (typeof settings.tintcolor !== "undefined") {
-					settings.tint = parseTintColor(settings.tintcolor);
-				}
-
-				// instantiate the object based on its type
-				const obj = createLevelObject(settings, this);
-
-				// an unnamed object of a collision group is a wall of the world
-				if (isCollisionGroup && !settings.name) {
-					markWorldShape(obj);
-				}
-
-				// apply per-object opacity and visibility (skip TMXLayer)
-				if (obj.isRenderable === true && !(settings instanceof TMXLayer)) {
-					if (!settings.visible) {
-						obj.setOpacity(0);
-						if (
-							typeof obj.renderable !== "undefined" &&
-							obj.renderable.isRenderable === true
-						) {
-							obj.renderable.setOpacity(0);
-						}
-					} else if (settings.opacity < 1) {
-						applyObjectOpacity(obj, settings.opacity);
-					}
-				}
-
-				// the layers the cameras draw it on, from a custom property
-				if (typeof settings.visibilityLayer === "number") {
-					obj.visibilityLayer = settings.visibilityLayer;
-				}
-
-				// propagate group blend mode to child objects
-				propagateBlendMode(obj, group.blendMode);
-
-				if (flatten !== false) {
-					// apply group opacity when flattened
-					if (obj.isRenderable === true) {
-						applyObjectOpacity(obj, group.opacity);
-					}
-					objects.push(obj);
-				} else {
-					targetContainer.addChild(obj);
-				}
-
-				// a solid tile layer of a group layer comes with its walls
-				for (const wall of colliderWalls(this, settings)) {
-					if (flatten !== false) {
-						objects.push(wall);
-					} else {
-						targetContainer.addChild(wall);
-					}
-				}
-			}
-
-			// if we created a new container with children
-			if (flatten === false && targetContainer.getChildren().length > 0) {
-				// re-enable auto-sort and auto-depth
-				targetContainer.autoSort = true;
-				targetContainer.autoDepth = true;
-
-				// add our container to the world
-				objects.push(targetContainer);
-			}
+			buildGroup(this, this.objectGroups[g], flatten, wanted, 1, (object) => {
+				objects.push(object);
+			});
 		}
 		return objects;
 	}

@@ -361,25 +361,25 @@ export default class ImageLayer extends Sprite {
 		renderer.translate(x * vZoom, y * vZoom);
 		renderer.scale(vZoom, vZoom);
 
-		// Clamp the draw extent to the source dimensions on any axis we
-		// are NOT tiling. Asking the renderer to fill past the source on
-		// a non-tiling axis is what makes Canvas (transparent fill per
-		// HTML spec) and WebGL (GL_CLAMP_TO_EDGE stretches the edge
-		// pixel) diverge — Canvas leaves the overflow transparent while
-		// WebGL stretches the bottom row (repeat-x) or right column
-		// (repeat-y) to fill it. By drawing exactly the source extent on
-		// the non-tiling axis, neither renderer enters its overflow path
-		// and the two outputs converge (issue #1290).
+		// On an axis that is not tiling, the pattern is drawn over the
+		// picture's own extent, no more and no less. More, and the two
+		// renderers part: Canvas leaves what is past the picture
+		// transparent, as the HTML spec says, while WebGL and WebGPU repeat
+		// its last row or column over it (GL_CLAMP_TO_EDGE; issue #1290).
+		// Less, and a picture larger than the view is cut where the view
+		// ends, though the camera scrolls over the rest of it. (The layer's
+		// own size on such an axis is the view's: it is what the layer is
+		// anchored by, not what it draws.)
 		// On a tiling axis the offset is wrapped into (-imageSize, 0], so
 		// the pattern must reach at least `viewport + imageSize` to cover
 		// the viewport, also when the image is larger than the viewport
 		// (and never less than the historical `viewport * 2`).
 		const drawW = this.repeatX
 			? viewport.width + Math.max(viewport.width, this.image.width)
-			: width;
+			: this.image.width;
 		const drawH = this.repeatY
 			? viewport.height + Math.max(viewport.height, this.image.height)
-			: height;
+			: this.image.height;
 
 		// apply flip — pivot at the centre of the drawn pattern in the
 		// post-zoom local frame, so the mirror lands in the visible viewport
