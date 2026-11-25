@@ -171,17 +171,15 @@ melonJS is supporting the below tools and frameworks natively or through our off
  [![SpriteIlluminator](https://github.com/melonjs/melonJS/raw/master/media/icons/spriteilluminator.svg "SpriteIlluminator")](https://www.codeandweb.com/spriteilluminator)
  [![PhysicsEditor](https://github.com/melonjs/melonJS/raw/master/media/icons/physicseditor.svg "PhysicsEditor")](https://www.codeandweb.com/physicseditor)
  [![ShoeBox](https://user-images.githubusercontent.com/4033090/136762705-92027d94-d87c-4a95-b051-26647410248d.png "ShoeBox")](https://renderhjs.net/shoebox/)
+ [![SpriteSheet.dev](https://github.com/melonjs/melonJS/raw/master/media/icons/spritesheetdev.svg "SpriteSheet.dev")](https://spritesheet.dev)
  [![Tiled](https://user-images.githubusercontent.com/4033090/136762999-5a7f377b-4136-4205-9fe0-83728c90cb9b.png "Tiled")](https://www.mapeditor.org)
  [![LDtk](https://github.com/melonjs/melonJS/raw/master/media/icons/ldtk.png "LDtk")](https://ldtk.io)
  [![Sprite Fusion](https://github.com/melonjs/melonJS/raw/master/media/icons/spritefusion.png "Sprite Fusion")](https://www.spritefusion.com)
+ [![Blender](https://github.com/melonjs/melonJS/raw/master/media/icons/blender.svg "Blender")](https://www.blender.org)
  [![Cordova](https://user-images.githubusercontent.com/4033090/136763147-6d157ce6-6921-437e-bb8f-0287b86109da.png "Cordova")](https://cordova.apache.org)
  [![Capacitor](https://github.com/melonjs/melonJS/raw/master/media/icons/capacitor.svg "Capacitor")](https://capacitorjs.com)
 [![Spine](https://github.com/melonjs/melonJS/assets/4033090/7a8d81b8-bc80-47bd-80dc-d9a054c78c96 "Spine")](http://esotericsoftware.com)
 [![aseprite](https://github.com/melonjs/melonJS/assets/4033090/65d19fef-2eba-461a-b925-cc2ad3bb270c "aseprite")](https://www.aseprite.org)
-
-Any other tool that exports the TexturePacker ("JSON (Array)" or "JSON (Hash)") or Aseprite JSON layout works as well, such as [spritesheet.dev](https://spritesheet.dev/).
-
-3D scenes come from [Blender](https://www.blender.org) or any other tool that exports glTF (`.glb` or `.gltf`), such as Maya, 3ds Max or Cinema 4D.
 
 Tools integration and usage with melonJS is documented in our [Wiki](https://github.com/melonjs/melonJS/wiki#third-party-tools-usage).
 
