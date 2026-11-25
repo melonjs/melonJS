@@ -231,3 +231,49 @@ describe("spritesheet parser on a non-divisible (padded) sheet", () => {
 		expect(frame1.uvs[0]).toBeCloseTo(32 / 70);
 	});
 });
+
+// issue #1915: TexturePacker's "JSON (Hash)" keys the frames by name, under a
+// known tool name and an unknown one alike
+describe.each([
+	"https://www.codeandweb.com/texturepacker",
+	"https://spritesheet.dev/",
+])("TexturePacker JSON (Hash), meta.app %s", (app) => {
+	it("gives the region the array form gives", () => {
+		const entry = {
+			frame: { x: 10, y: 20, w: 28, h: 30 },
+			rotated: true,
+			trimmed: true,
+			spriteSourceSize: { x: 2, y: 1, w: 28, h: 30 },
+			sourceSize: { w: 32, h: 32 },
+			pivot: { x: 0.5, y: 0.5 },
+		};
+		const meta = { app, image: "sheet.png", size: { w: 64, h: 64 } };
+		const hash = new TextureAtlas(
+			{ frames: { "hero.png": entry }, meta },
+			fakeImage(64, 64),
+			false,
+		).getRegion("hero.png");
+		const array = new TextureAtlas(
+			{ frames: [{ filename: "hero.png", ...entry }], meta },
+			fakeImage(64, 64),
+			false,
+		).getRegion("hero.png");
+
+		// what the file says, not only what the other form gives
+		expect(hash.name).toBe("hero.png");
+		expect(hash.texture).toBe("sheet.png");
+		expect(hash.width).toBe(28);
+		expect(hash.height).toBe(30);
+		expect(hash.offset.x).toBe(10);
+		expect(hash.offset.y).toBe(20);
+		expect(hash.angle).toBe(-ETA);
+		expect(hash.trimmed).toBe(true);
+		expect(hash.trim).toEqual({ x: 2, y: 1, w: 28, h: 30 });
+		expect(hash.sourceSize).toEqual({ w: 32, h: 32 });
+		// pivot at the centre of the 32 × 32 source, less the trim
+		expect(hash.anchorPoint.x).toBeCloseTo(14 / 28);
+		expect(hash.anchorPoint.y).toBeCloseTo(15 / 30);
+		// and the whole region, as the array form gives it
+		expect(hash).toEqual(array);
+	});
+});

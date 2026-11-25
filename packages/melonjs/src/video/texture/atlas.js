@@ -81,31 +81,72 @@ export function createAtlas(
 }
 
 /**
- * return a string that identifies the texture atlas type
+ * return a string that identifies the texture atlas type: from the name of
+ * the tool in `meta.app` when it is a known one, else from the structure of
+ * the file, so that any exporter writing the TexturePacker or Aseprite JSON
+ * layout is accepted under its own name
+ * @param {object} atlas - the atlas description (with a `meta` object)
+ * @returns {string} "texturepacker", "shoebox", "aseprite" or "melonJS"
  * @ignore
  * @internal
  */
-export function identifyFormat(app) {
+export function identifyFormat(atlas) {
+	const meta = atlas.meta;
+	const app = typeof meta.app === "string" ? meta.app : "";
 	if (app.includes("texturepacker") || app.includes("free-tex-packer")) {
 		return "texturepacker";
-	} else if (app.includes("shoebox")) {
+	} else if (app.toLowerCase().includes("shoebox")) {
+		// the melonJS exporter for ShoeBox writes "ShoeBox"
 		return "shoebox";
 	} else if (app.includes("aseprite")) {
 		return "aseprite";
 	} else if (app.includes("melonJS")) {
 		return "melonJS";
-	} else {
-		throw new Error("Unknown texture atlas format: " + app);
 	}
+
+	// an unknown tool: the file has to be one a parser reads in full, that
+	// is the sheet size and, for every frame, its rectangle
+	const frames = atlas.frames;
+	if (
+		typeof frames === "object" &&
+		frames !== null &&
+		typeof meta.size?.w === "number" &&
+		typeof meta.size?.h === "number"
+	) {
+		const entries = Object.values(frames);
+		const hasFrames =
+			entries.length > 0 &&
+			entries.every((entry) => {
+				return typeof entry?.frame === "object" && entry.frame !== null;
+			});
+		if (hasFrames && Array.isArray(meta.frameTags)) {
+			// animation tags are Aseprite's
+			return "aseprite";
+		}
+		// frames keyed by name ("JSON (Hash)"), or a list of them
+		// ("JSON (Array)") that each carry their name
+		const isNamed =
+			!Array.isArray(frames) ||
+			frames.every((entry) => {
+				return typeof entry.filename === "string";
+			});
+		if (hasFrames && isNamed) {
+			return "texturepacker";
+		}
+	}
+
+	throw new Error("Unknown texture atlas format: " + meta.app);
 }
 
 /**
  * A Texture atlas class, currently supports : <br>
- * - [TexturePacker]{@link http://www.codeandweb.com/texturepacker/} : through JSON export (standard and multipack texture atlas) <br>
+ * - [TexturePacker]{@link http://www.codeandweb.com/texturepacker/} : through JSON export, "JSON (Array)" or "JSON (Hash)" (standard and multipack texture atlas) <br>
  * - [Free Texture Packer]{@link http://free-tex-packer.com/app/} : through JSON export (standard and multipack texture atlas) <br>
  * - [aseprite]{@link https://www.aseprite.org/} : through JSON export (standard and multipack texture atlas) <br>
  * - [ShoeBox]{@link http://renderhjs.net/shoebox/} : through JSON export using the
  * melonJS setting [file]{@link https://github.com/melonjs/melonJS/raw/master/media/shoebox_JSON_export.sbx} <br>
+ * - any other tool that writes the TexturePacker or Aseprite JSON layout, such as [spritesheet.dev]{@link https://spritesheet.dev/} : the format is
+ * recognised from the structure of the file when `meta.app` is not one of the names above <br>
  * - Standard (fixed cell size) spritesheet : through a {framewidth:xx, frameheight:xx, anchorPoint:me.Vector2d} object
  * );
  * @category Game Objects
@@ -125,7 +166,9 @@ export class TextureAtlas extends Texture2d {
 	 * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|CompressedImage|string|OffscreenCanvas[]|HTMLImageElement[]|HTMLCanvasElement[]|string[]} [src=atlas.meta.image] - Image source
 	 * @param {boolean|object} [options] - either a boolean (legacy `cache` flag — `false` disables `TextureCache` registration; default behavior is to cache) or an options object `{ cache?: boolean, normalMap?: HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap|string }`. When `normalMap` is provided, the atlas exposes a paired normal-map texture sharing the same UVs as the color texture, used for per-pixel lighting by the GPU renderers, WebGL and WebGPU (the Canvas renderer draws its sprites unlit; see {@link Sprite#normalMap}). An `HTMLVideoElement` is refused with a `TypeError`: a normal map is uploaded to the GPU once, so a video would stay on its first frame.
 	 * @example
-	 * // create a texture atlas from a JSON Object
+	 * // create a texture atlas from a JSON Object: a TexturePacker
+	 * // ("JSON (Array)" or "JSON (Hash)") or Aseprite export, or the same
+	 * // layout written by any other tool
 	 * game.texture = new me.TextureAtlas(
 	 *     me.loader.getJSON("texture")
 	 * );
@@ -244,74 +287,42 @@ export class TextureAtlas extends Texture2d {
 				const atlas = atlases[i];
 
 				if (typeof atlas.meta !== "undefined") {
-					this.format = identifyFormat(atlas.meta.app);
+					this.format = identifyFormat(atlas);
 					this.repeat = atlas.meta.repeat || "no-repeat";
-					switch (this.format) {
-						case "texturepacker":
-						case "aseprite":
-							// set the texture
-							if (typeof src === "undefined") {
-								// get the texture name from the atlas meta data
-								const image = getImage(atlas.meta.image);
-								if (!image) {
-									throw new Error("Atlas texture '" + image + "' not found");
-								}
-								this.sources.set(atlas.meta.image, image);
-							} else {
-								this.sources.set(
-									atlas.meta.image || "default",
-									typeof src === "string" ? getImage(src) : src,
-								);
-							}
-							// initialize the atlas
-							if (this.format === "texturepacker") {
-								this.atlases.set(
-									atlas.meta.image || "default",
-									parseTexturePacker(atlas, this),
-								);
-							} else {
-								this.atlases.set(
-									atlas.meta.image || "default",
-									parseAseprite(atlas, this),
-								);
-							}
-							break;
-						case "shoebox":
-							if (
-								!atlas.meta.exporter ||
-								!atlas.meta.exporter.includes("melonJS")
-							) {
-								throw new Error(
-									"ShoeBox requires the JSON exporter : " +
-										"https://github.com/melonjs/melonJS/tree/master/media/shoebox_JSON_export.sbx",
-								);
-							}
-							this.sources.set(
-								"default",
-								typeof src === "string" ? getImage(src) : src,
-							);
-							// initialize the atlas
-							this.atlases.set(
-								atlas.meta.image || "default",
-								parseTexturePacker(atlas, this),
-							);
-							break;
-						case "melonJS":
-							this.sources.set(
-								"default",
-								typeof src === "string" ? getImage(src) : src,
-							);
-							// initialize the atlas
-							this.atlases.set(
-								atlas.meta.image || "default",
-								parseTexturePacker(atlas, this),
-							);
-							break;
-						default:
-							throw new Error(
-								"Unknown texture atlas format: " + atlas.meta.app,
-							);
+					if (
+						this.format === "shoebox" &&
+						(!atlas.meta.exporter || !atlas.meta.exporter.includes("melonJS"))
+					) {
+						throw new Error(
+							"ShoeBox requires the JSON exporter : " +
+								"https://github.com/melonjs/melonJS/tree/master/media/shoebox_JSON_export.sbx",
+						);
 					}
+					// set the texture
+					if (this.format === "shoebox" || this.format === "melonJS") {
+						this.sources.set(
+							"default",
+							typeof src === "string" ? getImage(src) : src,
+						);
+					} else if (typeof src === "undefined") {
+						// get the texture name from the atlas meta data
+						const image = getImage(atlas.meta.image);
+						if (!image) {
+							throw new Error(
+								"Atlas texture '" + atlas.meta.image + "' not found",
+							);
+						}
+						this.sources.set(atlas.meta.image, image);
+					} else {
+						this.sources.set(
+							atlas.meta.image || "default",
+							typeof src === "string" ? getImage(src) : src,
+						);
+					}
+					// initialize the atlas
+					const parse =
+						this.format === "aseprite" ? parseAseprite : parseTexturePacker;
+					this.atlases.set(atlas.meta.image || "default", parse(atlas, this));
 				} else {
 					// a regular spritesheet
 					if (
