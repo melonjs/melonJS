@@ -166,7 +166,9 @@ export class TextureAtlas extends Texture2d {
 	 * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|CompressedImage|string|OffscreenCanvas[]|HTMLImageElement[]|HTMLCanvasElement[]|string[]} [src=atlas.meta.image] - Image source
 	 * @param {boolean|object} [options] - either a boolean (legacy `cache` flag — `false` disables `TextureCache` registration; default behavior is to cache) or an options object `{ cache?: boolean, normalMap?: HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap|string }`. When `normalMap` is provided, the atlas exposes a paired normal-map texture sharing the same UVs as the color texture, used for per-pixel lighting by the GPU renderers, WebGL and WebGPU (the Canvas renderer draws its sprites unlit; see {@link Sprite#normalMap}). An `HTMLVideoElement` is refused with a `TypeError`: a normal map is uploaded to the GPU once, so a video would stay on its first frame.
 	 * @example
-	 * // create a texture atlas from a JSON Object
+	 * // create a texture atlas from a JSON Object: a TexturePacker
+	 * // ("JSON (Array)" or "JSON (Hash)") or Aseprite export, or the same
+	 * // layout written by any other tool
 	 * game.texture = new me.TextureAtlas(
 	 *     me.loader.getJSON("texture")
 	 * );

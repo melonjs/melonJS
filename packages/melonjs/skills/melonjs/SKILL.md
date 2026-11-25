@@ -131,7 +131,7 @@ what it is called here:
 | [melonjs-20-migration](../melonjs-20-migration/SKILL.md) | Code based on melonJS 19.x or earlier, or an API that "should exist" but doesn't — `video.init`, `Entity`, `renderable.shader =`. |
 | [melonjs-scenes-and-state](../melonjs-scenes-and-state/SKILL.md) | `Stage` subclasses, the state manager, transitions, pausing, the update loop, timers, tweens, saved data. |
 | [melonjs-renderables](../melonjs-renderables/SKILL.md) | Subclassing `Renderable`, custom `draw()`, draw order, anchors, `floating`, post effects on an object. |
-| [melonjs-sprites-and-animation](../melonjs-sprites-and-animation/SKILL.md) | `Sprite`, frame animation, texture atlases (TexturePacker / Aseprite / ShoeBox), tint, flip, pooling. |
+| [melonjs-sprites-and-animation](../melonjs-sprites-and-animation/SKILL.md) | `Sprite`, frame animation, texture atlases (TexturePacker / Aseprite / ShoeBox, or any tool exporting their JSON layout), tint, flip, pooling. |
 | [melonjs-input](../melonjs-input/SKILL.md) | Keyboard actions, pointer and touch handling, drag, gamepad, virtual controls (fixed or floating sticks and buttons, tap to act). |
 | [melonjs-physics](../melonjs-physics/SKILL.md) | Collision, bodies, movement, spatial queries, and the planck / matter / Rapier / Rapier 3D adapters. |
 | [melonjs-math](../melonjs-math/SKILL.md) | Vectors and matrices: what mutates, what allocates, and interpolating with lerp, slerp, damp or moveTowards. |
@@ -272,7 +272,8 @@ check for:
   `UICheckbox` (a radio button with a `group`), `UISlider`, `ProgressBar`,
   `UISpriteElement`, keyboard and gamepad navigation between widgets once one
   has `focus()`, `NineSliceSprite`, `Draggable` / `DropTarget`, `BitmapText`.
-- **Art:** `TextureAtlas` (TexturePacker, ShoeBox, Aseprite),
+- **Art:** `TextureAtlas` (TexturePacker, ShoeBox, Aseprite, and any tool that
+  exports the TexturePacker or Aseprite JSON layout),
   `CanvasRenderTarget` for bake-once drawing, `NoiseTexture2d`.
 - **Game flow:** `state.transition()` (`"fade"`, `"mask"` or `"pixelate"`)
   between screens, with a mask shaped like an image or the player's own sprite
