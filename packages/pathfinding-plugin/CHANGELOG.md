@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.1.1] - _unreleased_
+## [1.1.1] - _2026-11-26_
 
 ### Fixed
 - `PathfindingPlugin`: the grid of an LDtk world (melonJS 20.18) is placed where the world is

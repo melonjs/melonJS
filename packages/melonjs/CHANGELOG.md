@@ -1,6 +1,8 @@
 # Changelog
 
-## [20.18.0] (melonJS 2) - _unreleased_
+## [20.18.0] (melonJS 2) - _2026-11-26_
+
+**Highlights:** [LDtk](https://ldtk.io) levels and [Sprite Fusion](https://www.spritefusion.com) maps now load with `level.load`, as Tiled maps do. Sprites take about **45%** less CPU time to update and draw on WebGL and WebGPU. `TextureAtlas` is more generic: it reads more formats and tools, such as [spritesheet.dev](https://spritesheet.dev/).
 
 ### Added
 - LDtk: built-in support for the [LDtk](https://ldtk.io) level format: load a `.ldtk` file as an `"ldtk"` asset, then `level.load("<asset>:<level>")`, or `level.load("<asset>")` for the whole world
