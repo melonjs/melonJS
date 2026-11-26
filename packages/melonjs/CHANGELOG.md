@@ -1,6 +1,8 @@
 # Changelog
 
-## [20.18.0] (melonJS 2) - _unreleased_
+## [20.18.0] (melonJS 2) - _2026-11-26_
+
+**Highlights:** levels made with [LDtk](https://ldtk.io) and [Sprite Fusion](https://www.spritefusion.com) now load as Tiled maps do, with `level.load`, from the file the editor saves. Tile layers can be built in code and take parallax, and sprites cost about **45%** less CPU time to update and draw on WebGL and WebGPU. A Tiled group layer can now hold any kind of layer, and a texture atlas from any tool that exports the TexturePacker or Aseprite JSON layout loads.
 
 ### Added
 - LDtk: built-in support for the [LDtk](https://ldtk.io) level format: load a `.ldtk` file as an `"ldtk"` asset, then `level.load("<asset>:<level>")`, or `level.load("<asset>")` for the whole world
