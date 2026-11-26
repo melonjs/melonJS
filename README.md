@@ -166,7 +166,7 @@ Tools integration
 -------------------------------------------------------------------------------
 melonJS is supporting the below tools and frameworks natively or through our official plugin(s) :
 
- [![Free Texture Packer](https://user-images.githubusercontent.com/4033090/136762061-1d3a0dfe-dbe0-4d3d-808d-47a49ecf5309.png "Free Texture Packer")](http://free-tex-packer.com)
+ [![Free Texture Packer](https://user-images.githubusercontent.com/4033090/136762061-1d3a0dfe-dbe0-4d3d-808d-47a49ecf5309.png "Free Texture Packer")](https://github.com/odrick/free-tex-packer)
  [![TexturePacker](https://github.com/melonjs/melonJS/raw/master/media/icons/texturepacker.svg "TexturePacker")](https://www.codeandweb.com/texturepacker)
  [![SpriteIlluminator](https://github.com/melonjs/melonJS/raw/master/media/icons/spriteilluminator.svg "SpriteIlluminator")](https://www.codeandweb.com/spriteilluminator)
  [![PhysicsEditor](https://github.com/melonjs/melonJS/raw/master/media/icons/physicseditor.svg "PhysicsEditor")](https://www.codeandweb.com/physicseditor)
