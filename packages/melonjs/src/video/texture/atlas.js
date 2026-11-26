@@ -141,7 +141,7 @@ export function identifyFormat(atlas) {
 /**
  * A Texture atlas class, currently supports : <br>
  * - [TexturePacker]{@link http://www.codeandweb.com/texturepacker/} : through JSON export, "JSON (Array)" or "JSON (Hash)" (standard and multipack texture atlas) <br>
- * - [Free Texture Packer]{@link http://free-tex-packer.com/app/} : through JSON export (standard and multipack texture atlas) <br>
+ * - [Free Texture Packer]{@link https://github.com/odrick/free-tex-packer} : through JSON export (standard and multipack texture atlas) <br>
  * - [aseprite]{@link https://www.aseprite.org/} : through JSON export (standard and multipack texture atlas) <br>
  * - [ShoeBox]{@link http://renderhjs.net/shoebox/} : through JSON export using the
  * melonJS setting [file]{@link https://github.com/melonjs/melonJS/raw/master/media/shoebox_JSON_export.sbx} <br>
